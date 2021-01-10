@@ -1,0 +1,210 @@
+<html lang="de">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="">
+		<meta name="author" content="Philipp Engler">
+		<meta name="generator" content="Jekyll v4.1.1">
+		<title>eufy Security AddOn für HomeMatic</title>
+		
+		<!-- Bootstrap core CSS -->
+		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
+		
+		<style>
+			.bd-placeholder-img {
+				font-size: 1.125rem;
+				text-anchor: middle;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+			
+			@media (min-width: 768px) {
+				.bd-placeholder-img-lg {
+					font-size: 3.5rem;
+				}
+			}
+		</style>
+		
+		<!-- Custom styles for this template -->
+		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
+		<link href="assets/dist/css/footer.css" rel="stylesheet">
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+			<a class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarCollapse">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item">
+						<a class="nav-link" href="/addons/eufySecurity">Home</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="devices.html">Geräte</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="statechange.html">Statusänderung</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="settings.html">Einstellungen</a>
+					</li>
+					<li class="nav-item active">
+						<a class="nav-link" href="logfiles.html">Logateien<span class="sr-only">(current)</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="info.html">Über</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		
+		<main role="main" class="container-fluid">
+			<div id="browserWarning">
+			</div>
+			<h3>Logdateien</h3>
+			<p>
+			<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-2">
+				<div class="col">
+					<div class="card mb-3">
+						<h5 class="card-header">Inhalt der Logdatei</h5>
+						<div class="row no-gutters">
+							<div class="col-md-12">
+								<div class="card-body">
+									<div id="log"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<div class="card mb-3">
+						<h5 class="card-header">Inhalt der Logdatei für Fehler</h5>
+						<div class="row no-gutters">
+							<div class="col-md-12">
+								<div class="card-body">
+									<div id="err"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			</p>
+		</main>
+		
+		<footer class="footer">
+			<div class="container-fluid">
+				<span class="text-muted">2020-2021 Philipp Engler und andere</span>
+			</div>
+		</footer>
+		
+		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
+		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
+		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
+		<script src="assets/dist/js/bootstrap.min.js"></script>
+		<script>
+			checkIE();
+			loadLog(true);
+			loadErr(true);
+			
+			function checkIE()
+			{
+				if (window.document.documentMode)
+				{
+					var warning = "";
+					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
+					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
+					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
+					warning += "						<span aria-hidden=\"true\">&times;</span>";
+					warning += "					</button>";
+					warning += "				</div>";
+					document.getElementById("browserWarning").innerHTML = warning;
+				}
+			}
+			
+			function loadLog(showLoading)
+			{
+				var xmlHttp, objResp, info = "";
+				var imagepath="";
+				var type="";
+				var state="";
+				var buttons="";
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/getLogFileContent";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						var log = this.responseText;
+						log = log.replace(/<[^>]*>/g, '');
+						log = log.replace(/\n/g, "<br >");
+						document.getElementById("log").innerHTML = "<code>" + log + "</code>";
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						document.getElementById("log").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei.</div>";
+					}
+					else
+					{
+						if(showLoading==true)
+						{
+							document.getElementById("log").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Logdatei...</strong></div>";
+						}
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+			
+			function loadErr(showLoading)
+			{
+				var xmlHttp, objResp, info = "";
+				var imagepath="";
+				var type="";
+				var state="";
+				var buttons="";
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/getErrorFileContent";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						var err = this.responseText;
+						err = err.replace(/<[^>]*>/g, '');
+						err = err.replace(/\n/g, "<br >");
+						document.getElementById("err").innerHTML = "<code>" + err + "</code>";
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						document.getElementById("err").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei für Fehler.</div>";
+					}
+					else
+					{
+						if(showLoading==true)
+						{
+							document.getElementById("err").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Logdatei für Fehler...</strong></div>";
+						}
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+		</script>
+	</body>
+</html>

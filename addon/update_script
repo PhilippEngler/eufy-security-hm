@@ -1,0 +1,64 @@
+#!/bin/sh
+
+ADDONNAME=eufySecurity
+CONFIG_DIR=/usr/local/etc/config
+ADDON_DIR=/usr/local/addons/${ADDONNAME}
+RCD_DIR=${CONFIG_DIR}/rc.d
+WWW_DIR=${CONFIG_DIR}/addons/www/${ADDONNAME}
+
+# mount /usr/local if not already mounted
+mount | grep /usr/local 2>&1 >/dev/null
+if [ $? -eq 1 ]; then
+  mount /usr/local
+fi
+
+# create necessary directories
+mkdir -p ${ADDON_DIR}
+chmod 755 ${ADDON_DIR}
+mkdir -p ${RCD_DIR}
+chmod 755 ${RCD_DIR}
+
+# copy addon files
+cp -af eufySecurity/* ${ADDON_DIR}/
+cp -af eufySecurity-addon.cfg ${ADDON_DIR}/
+cp -af VERSION ${ADDON_DIR}/
+
+# copy default config only when no config available
+if [ ! -e ${ADDON_DIR}/config.ini ]; then
+  cp -af config.ini.default ${ADDON_DIR}/config.ini
+fi
+
+# make node executable
+chmod 755 ${ADDON_DIR}/bin/node
+chmod 755 ${ADDON_DIR}/bin/npm
+
+# exclude some directories from backup
+# (user will NEED to reinstall plugin after restore)
+touch ${ADDON_DIR}/bin/.nobackup
+touch ${ADDON_DIR}/node_modules/.nobackup
+
+# copy startup script
+cp -af rc.d/* ${RCD_DIR}
+chmod 755 ${RCD_DIR}/eufySecurity
+
+# create www link
+if [ ! -e ${WWW_DIR} ]; then
+  ln -sf ${ADDON_DIR}/www ${WWW_DIR}
+fi
+
+# add menu entry
+#if [ "$(cat /usr/local/etc/config/hm_addons.cfg | grep "CONFIG_NAME eufySecurity")" == "" ]; then
+#  touch /usr/local/etc/config/hm_addons.cfg
+#  ${ADDON_DIR}/bin/update_addon hm_pdetect ${ADDON_DIR}/etc/eufySecurity-addon.cfg
+#fi
+
+sync
+
+# exit with 0 to signal install succeeded
+# if device is raspberrymatic then no reboot is requiered
+# and so we must start the service
+# the original ccu will restart by default
+if [ "$1" = "HM-RASPBERRYMATIC" ]; then
+  ${RCD_DIR}/eufySecurity start
+fi
+exit 0

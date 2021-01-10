@@ -1,0 +1,100 @@
+! eufy Systemvariablen erzeugen
+! v3.0 - 20210109 [PhilippEngler]
+
+string svName;
+object svObj;
+
+! Systemvariable eufyCurrentState erstellen
+svName="eufyCurrentState";
+svObj=dom.GetObject(svName);
+if(!svObj)
+{
+	svObj = dom.CreateObject(OT_VARDP);
+	dom.GetObject(ID_SYSTEM_VARIABLES).Add(svObj.ID());
+	svObj.Name(svName);
+	svObj.ValueType(ivtString);
+	svObj.ValueSubType(istChar8859);
+	svObj.DPInfo("aktueller Modus des eufy Systems");
+	svObj.ValueUnit("");
+	svObj.DPArchive(false);
+	svObj.State("???");
+	svObj.Internal(false);
+	svObj.Visible(true);
+	dom.RTUpdate(false);
+}
+
+! Systemvariable eufyLastConnectionResult erstellen
+svName="eufyLastConnectionResult";
+svObj=dom.GetObject(svName);
+if(!svObj)
+{
+	svObj = dom.CreateObject(OT_VARDP);
+	dom.GetObject(ID_SYSTEM_VARIABLES).Add(svObj.ID());
+	svObj.Name(svName);
+	svObj.ValueType(ivtString);
+	svObj.ValueSubType(istChar8859);
+	svObj.DPInfo("Ergebnis der letzten Kommunikation mit eufy");
+	svObj.ValueUnit("");
+	svObj.DPArchive(false);
+	svObj.State("???");
+	svObj.Internal(false);
+	svObj.Visible(true);
+	dom.RTUpdate(false);
+}
+
+! Systemvariable eufyLastConnectionTime erstellen
+svName="eufyLastConnectionTime";
+svObj=dom.GetObject(svName);
+if(!svObj)
+{
+	svObj = dom.CreateObject(OT_VARDP);
+	dom.GetObject(ID_SYSTEM_VARIABLES).Add(svObj.ID());
+	svObj.Name(svName);
+	svObj.ValueType(ivtString);
+	svObj.ValueSubType(istChar8859);
+	svObj.DPInfo("Zeitpunkt der letzten Kommunikation mit eufy");
+	svObj.ValueUnit("");
+	svObj.DPArchive(false);
+	svObj.State("???");
+	svObj.Internal(false);
+	svObj.Visible(true);
+	dom.RTUpdate(false);
+}
+
+! Systemvariable eufyLastLinkUpdateTime erstellen
+svName="eufyLastLinkUpdateTime";
+svObj=dom.GetObject(svName);
+if(!svObj)
+{
+	svObj = dom.CreateObject(OT_VARDP);
+	dom.GetObject(ID_SYSTEM_VARIABLES).Add(svObj.ID());
+	svObj.Name(svName);
+	svObj.ValueType(ivtString);
+	svObj.ValueSubType(istChar8859);
+	svObj.DPInfo("letzte Aktualisierung der eufy Links");
+	svObj.ValueUnit("");
+	svObj.DPArchive(false);
+	svObj.State("???");
+	svObj.Internal(false);
+	svObj.Visible(true);
+	dom.RTUpdate(false);
+}
+
+! Systemvariable eufyLastStatusUpdateTime erstellen
+svName="eufyLastStatusUpdateTime";
+svObj=dom.GetObject(svName);
+if(!svObj)
+{
+	svObj = dom.CreateObject(OT_VARDP);
+	dom.GetObject(ID_SYSTEM_VARIABLES).Add(svObj.ID());
+	svObj.Name(svName);
+	svObj.ValueType(ivtString);
+	svObj.ValueSubType(istChar8859);
+	svObj.DPInfo("letzte Aktualisierung des eufy Systemstatus");
+	svObj.ValueUnit("");
+	svObj.DPArchive(false);
+	svObj.State("???");
+	svObj.Internal(false);
+	svObj.Visible(true);
+	dom.RTUpdate(false);
+}

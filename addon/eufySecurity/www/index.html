@@ -1,0 +1,104 @@
+<html lang="de">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="">
+		<meta name="author" content="Philipp Engler">
+		<meta name="generator" content="Jekyll v4.1.1">
+		<title>eufy Security AddOn für HomeMatic</title>
+		
+		<!-- Bootstrap core CSS -->
+		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
+		
+		<style>
+			.bd-placeholder-img {
+				font-size: 1.125rem;
+				text-anchor: middle;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+			
+			@media (min-width: 768px) {
+				.bd-placeholder-img-lg {
+					font-size: 3.5rem;
+				}
+			}
+		</style>
+		
+		<!-- Custom styles for this template -->
+		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
+		<link href="assets/dist/css/footer.css" rel="stylesheet">
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+			<a class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarCollapse">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item active">
+						<a class="nav-link" href="/addons/eufySecurity">Home<span class="sr-only">(current)</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="devices.html">Geräte</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="statechange.html">Statusänderung</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="settings.html">Einstellungen</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="logfiles.html">Logateien</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="info.html">Über</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		
+		<main role="main" class="container-fluid">
+			<div id="browserWarning">
+			</div>
+			<div class="jumbotron">
+				<h1>eufy Security AddOn für HomeMatic</h1>
+				<p class="lead">Dieses AddOn ermöglicht die Steuerung Ihres eufy Security Systems mit Ihre CCU.</p>
+			</div>
+			<p>Sie finden auf dieser Webseite alle Basisstationen und Kameras, die für den in den Einstellungen hinterlegten eufy Security Account verfügbar sind. Es werden Informationen zu den Geräten angezeigt und Sie können den aktuellen Modus Ihrers eufy Security Systems überprüfen und ändern.</p>
+			<p>Mit Hilfe der durch das AddOn bereitgestellten API haben Sie die Möglichkeit, den Status Ihrer Geräte auch in Ihrer CCU abbilden zu können und Sie können ebenfalls den Modus überprüfen und ändern. Dazu gibt es verschiedene Endpunkte, die in der Hilfe beschrieben werden.</p>
+		</main>
+		
+		<footer class="footer">
+			<div class="container-fluid">
+				<span class="text-muted">2020-2021 Philipp Engler und andere</span>
+			</div>
+		</footer>
+		
+		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
+		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
+		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
+		<script>
+			checkIE();
+			
+			async function checkIE()
+			{
+				if (window.document.documentMode)
+				{
+					var warning = "";
+					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
+					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
+					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
+					warning += "						<span aria-hidden=\"true\">&times;</span>";
+					warning += "					</button>";
+					warning += "				</div>";
+					document.getElementById("browserWarning").innerHTML = warning;
+				}
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "eufy-security-hm",
+  "version": "0.9.0",
+  "description": "eufy Security AddOn for HomeMatic",
+  "main": "apiServer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "eufy",
+    "security",
+    "addon",
+    "homematic",
+    "ccu",
+    "raspberrymatic"
+  ],
+  "author": "PhilippEngler",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/ini": "^1.3.30",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "got": "^11.8.1",
+    "ini": "^2.0.0",
+    "protobuf-typescript": "^6.8.8"
+  }
+}

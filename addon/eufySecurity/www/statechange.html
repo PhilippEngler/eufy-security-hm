@@ -1,0 +1,454 @@
+<html lang="de">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="">
+		<meta name="author" content="Philipp Engler">
+		<meta name="generator" content="Jekyll v4.1.1">
+		<title>eufy Security AddOn für HomeMatic</title>
+		
+		<!-- Bootstrap core CSS -->
+		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
+		
+		<style>
+			.bd-placeholder-img {
+				font-size: 1.125rem;
+				text-anchor: middle;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+			
+			@media (min-width: 768px) {
+				.bd-placeholder-img-lg {
+					font-size: 3.5rem;
+				}
+			}
+		</style>
+		
+		<!-- Custom styles for this template -->
+		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+			<a class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarCollapse">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item">
+						<a class="nav-link" href="/addons/eufySecurity">Home</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="devices.html">Geräte</a>
+					</li>
+					<li class="nav-item active">
+						<a class="nav-link" href="statechange.html">Statusänderung<span class="sr-only">(current)</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="settings.html">Einstellungen</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="logfiles.html">Logateien</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="info.html">Über</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		
+		<main role="main" class="container-fluid">
+			<div id="browserWarning">
+			</div>
+			<h3>Statusänderung</h3>
+			<p>Hier finden Sie den aktuellen Status Ihrer Basisstationen und können diesen entweder für eine Basisstation oder für alle Basisstationen ändern.</p>
+			<p>
+				<div id="allbases"></div>
+				<div id="bases"></div>
+			</p>
+			</div>
+			<p id="demo"></p>
+		</main>
+		
+		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
+		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
+		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
+		<script src="assets/dist/js/bootstrap.min.js"></script>
+		<script>
+			checkIE();
+			loadData(true);
+			
+			function checkIE()
+			{
+				if (window.document.documentMode)
+				{
+					var warning = "";
+					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
+					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
+					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
+					warning += "						<span aria-hidden=\"true\">&times;</span>";
+					warning += "					</button>";
+					warning += "				</div>";
+					document.getElementById("browserWarning").innerHTML = warning;
+				}
+			}
+			
+			function loadData(showLoading)
+			{
+				var xmlHttp, objResp, objIter, allbases, bases = "";
+				var imagepath="";
+				var type="";
+				var state="";
+				var buttons="";
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}var url=location.protocol + "//" + location.hostname + port + "/getBases";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						objResp = JSON.parse(this.responseText);
+						if(objResp.success == true)
+						{
+							allbases  = "		<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
+							allbases += "					<div class=\"col\">";
+							allbases += "						<div class=\"card mb-3\">";
+							allbases += "							<h5 class=\"card-header\">Status aller Basen</h5>";
+							allbases += "							<div class=\"row no-gutters\">";
+							allbases += "								<div class=\"col-md-12\">";
+							allbases += "									<div class=\"card-body\" >";
+							allbases += "										<h6 class=\"card-subtitle mb-2 text-muted\">Ändern des Status:</h6>";
+							allbases += "										<!--<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">abwesend</a>";
+							allbases += "										<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">zu Hause</a>";
+							allbases += "										<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">Zeitsteuerung</a>";
+							allbases += "										<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">deaktiviert</a>-->";
+							allbases += "										<button id=\"armAll\" onclick=\"setArm('')\" type=\"button\" class=\"btn btn-primary mb-1\">abwesend</button>";
+							allbases += "										<button id=\"homeAll\" onclick=\"setHome('')\" type=\"button\" class=\"btn btn-primary mb-1\">zu Hause</button>";
+							allbases += "										<button id=\"scheduleAll\" onclick=\"setSchedule('')\" type=\"button\" class=\"btn btn-primary mb-1\">Zeitsteuerung</button>";
+							allbases += "										<button id=\"disarmAll\" onclick=\"setDisarm('')\" type=\"button\" class=\"btn btn-primary mb-1\">deaktiviert</button>";
+							allbases += "									</div>";
+							allbases += "								</div>";
+							allbases += "							</div>";
+							allbases += "							<!--<div class=\"card-footer\">";
+							allbases += "								<small class=\"text-muted\">Last updated 3 mins ago</small>";
+							allbases += "							</div>-->";
+							allbases += "						</div>";
+							allbases += "					</div>";
+							allbases += "				</div>";
+							allbases += "				</div>";
+							bases = "		<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
+							for (objIter in objResp.data)
+							{
+								if(objResp.data[objIter].device_type == "basestation")
+								{
+									switch (objResp.data[objIter].model)
+									{
+										case "T8001":
+											imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase\">";
+											type="HomeBase";
+											break;
+										case "T8002":
+											imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase E\">";
+											type="HomeBase E";
+											break;
+										case "T8010":
+											imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase 2\">";
+											type="HomeBase 2";
+											break;
+										default:
+											imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase\">";
+											type="HomeBase";
+									}
+									switch (objResp.data[objIter].guard_mode)
+									{
+										case "0":
+											state = "abwesend";
+											buttons =  "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>abwesend</button>";
+											buttons += "					<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">zu Hause</button>";
+											buttons += "					<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">Zeitsteuerung</button>";
+											buttons += "					<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">deaktiviert</button>";
+											break;
+										case "1":
+											state = "zu Hause";
+											buttons =  "					<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">abwesend</button>";
+											buttons += "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>zu Hause</button>";
+											buttons += "					<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">Zeitsteuerung</button>";
+											buttons += "					<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">deaktiviert</button>";
+											break;
+										case "2":
+											state = "Zeitsteuerung";
+											buttons =  "					<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">abwesend</button>";
+											buttons += "					<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">zu Hause</button>";
+											buttons += "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>Zeitsteuerung</button>";
+											buttons += "					<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">deaktiviert</button>";
+											break;
+										case "63":
+											state = "deaktiviert";
+											buttons =  "					<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">abwesend</button>";
+											buttons += "					<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">zu Hause</button>";
+											buttons += "					<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">Zeitsteuerung</button>";
+											buttons += "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>deaktiviert</button>";
+											break;
+										default:
+											state="unbekannt";
+									}
+									bases += "					<div class=\"col\">";
+									bases += "						<div class=\"card mb-3\">";
+									bases += "							<h5 class=\"card-header\">" + objResp.data[objIter].name + "</h5>";
+									bases += "							<div class=\"row no-gutters\">";
+									bases += "								<div class=\"col-md-4\">";
+									bases += "									" + imagepath;
+									bases += "								</div>";
+									bases += "								<div class=\"col-md-8\">";
+									bases += "									<div class=\"card-body\" style=\"margin-left: -1rem\">";
+									bases += "										<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
+									bases += "										<p class=\"card-text\">" + objResp.data[objIter].base_id + "<br />Status: <span id=\"state_" + objResp.data[objIter].base_id + "\">" + state + "</span></p>";
+									bases += "									</div>";
+									bases += "								</div>";
+									bases += "							</div>";
+									bases += "							<div class=\"card-footer\">";
+									bases += "								" + buttons;
+									bases += "							</div>";
+									bases += "						</div>";
+									bases += "					</div>";
+								}
+							}
+							document.getElementById("allbases").innerHTML = allbases;
+							document.getElementById("bases").innerHTML = bases;
+							type="";
+						}
+						else
+						{
+							document.getElementById("allbases").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							document.getElementById("bases").innerHTML = "";
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						//if(showLoading == true)
+						//{
+							document.getElementById("allbases").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							document.getElementById("bases").innerHTML = "";
+						//}
+					}
+					else
+					{
+						if(showLoading==true)
+						{
+							document.getElementById("allbases").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+							document.getElementById("bases").innerHTML = "";
+						}
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+			
+			function setArm(baseserial)
+			{
+				var baseserial
+				if(baseserial=="")
+				{
+					document.getElementById("demo").innerHTML = "arm";
+					document.getElementById("armAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/away";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								document.getElementById("demo").innerHTML = this.responseText;
+								loadData(false);
+							}
+						}
+						else if (this.status == 200 || this.readyState == 4)
+						{
+							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+						}
+						else
+						{
+							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
+				}
+				else
+				{
+					document.getElementById("demo").innerHTML = "arm '" + baseserial + "'";
+					document.getElementById("arm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/away";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								document.getElementById("demo").innerHTML = this.responseText;
+								loadData(false);
+							}
+							else
+							{
+								document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							}
+						}
+						else if (this.status == 200 || this.readyState == 4)
+						{
+							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+						}
+						else
+						{
+							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
+				}
+			}
+			
+			function setHome(baseserial)
+			{
+				var baseserial
+				if(baseserial=="")
+				{
+					document.getElementById("demo").innerHTML = "home";
+					document.getElementById("homeAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
+				}
+				else
+				{
+					document.getElementById("demo").innerHTML = "home '" + baseserial + "'";
+				}
+			}
+			
+			function setSchedule(baseserial)
+			{
+				var baseserial
+				if(baseserial=="")
+				{
+					document.getElementById("demo").innerHTML = "schedule";
+					document.getElementById("scheduleAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
+				}
+				else
+				{
+					document.getElementById("demo").innerHTML = "schedule '" + baseserial + "'";
+				}
+			}
+			
+			function setDisarm(baseserial)
+			{
+				var baseserial;
+				if(baseserial=="")
+				{
+					document.getElementById("demo").innerHTML = "disarm";
+					document.getElementById("disarmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/disarmed";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								document.getElementById("demo").innerHTML = this.responseText;
+								loadData(false);
+							}
+							else
+							{
+								document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							}
+						}
+						else if (this.status == 200 && this.readyState != 4)
+						{
+							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+						}
+						else
+						{
+							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
+				}
+				else
+				{
+					document.getElementById("demo").innerHTML = "disarm '" + baseserial + "'";
+					document.getElementById("disarm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/disarmed";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								document.getElementById("demo").innerHTML = this.responseText;
+								loadData(false);
+							}
+							else
+							{
+								document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							}
+						}
+						else if (this.status == 200 && this.readyState != 4)
+						{
+							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+						}
+						else
+						{
+							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
+				}
+			}
+		</script>
+	</body>
+</html>

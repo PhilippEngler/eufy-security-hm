@@ -1,0 +1,451 @@
+<html lang="de">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="">
+		<meta name="author" content="Philipp Engler">
+		<meta name="generator" content="Jekyll v4.1.1">
+		<title>eufy Security AddOn für HomeMatic</title>
+		
+		<!-- Bootstrap core CSS -->
+		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
+		
+		<style>
+			.bd-placeholder-img {
+				font-size: 1.125rem;
+				text-anchor: middle;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+			
+			@media (min-width: 768px) {
+				.bd-placeholder-img-lg {
+					font-size: 3.5rem;
+				}
+			}
+		</style>
+		
+		<!-- Custom styles for this template -->
+		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+			<a class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarCollapse">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item">
+						<a class="nav-link" href="/addons/eufySecurity">Home</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="devices.html">Geräte</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="statechange.html">Statusänderung</a>
+					</li>
+					<li class="nav-item active">
+						<a class="nav-link" href="settings.html">Einstellungen<span class="sr-only">(current)</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="logfiles.html">Logateien</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="info.html">Über</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		
+		<main role="main" class="container-fluid">
+			<div id="browserWarning">
+			</div>
+			<form action="javascript:saveConfig();" method="post" id="configform">
+			<h3>Einstellungen</h3>
+			<p>
+			<div id="resultLoading">
+			</div>
+			<div id="resultMessage">
+			</div>
+			
+			<div class="card mb-3">
+				<h5 class="card-header">Zugangsdaten eufy Security Account</h5>
+				<div class="row no-gutters">
+					<div class="col-md-12">
+						<div class="card-body" >
+							<div class="alert alert-warning alert-dismissible fade show" role="alert">
+								Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn und geben Sie dessen Zugangsdaten hier ein.<br />
+								<small class="text-muted">Wenn Sie keinen zusätzlichen Account anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</small>
+								<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="form-label-group" class="container-fluid">
+								<label for="password">Benutzername des angelegten eufy Security Accounts.</label>
+								<input type="email" name="email" id="username" class="form-control" placeholder="eMail-Adresse" required> <!--autofocus-->
+								<small id="passwordHelp" class="form-text text-muted">Der Benutzername entspricht der eMail-Adresse, mit der der eufy Security Account angelegt wurde.</small>
+							</div>
+							<br />
+							<div class="form-label-group" class="container-fluid">
+								<label for="password">Passwort des angelegten eufy Security Accounts.</label>
+								<input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+							</div> 
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="card mb-3">
+				<h5 class="card-header">Konfiguration des Services</h5>
+				<div class="row no-gutters">
+					<div class="col-md-12">
+						<div class="card-body" >
+							<div class="custom-control custom-switch" id="checkBoxUseHttp">
+								<input type="checkbox" name="useHttp" class="custom-control-input" id="useHttp">
+								<label class="custom-control-label" for="useHttp">HTTP aktiv</label>
+							</div>
+							<br />
+							<div class="form-label-group" class="container-fluid">
+								<label for="apiporthttp">Port über den die eufy Security API (via HTTP) erreichbar sein soll.</label>
+								<input type="text" name="portHttp" id="apiporthttp" class="form-control" placeholder="API-Port" disabled>
+								<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
+							</div>
+							<br />
+							<div class="custom-control custom-switch" id="checkBoxUseHttps">
+								<input type="checkbox" name="useHttps" class="custom-control-input" id="useHttps">
+								<label class="custom-control-label" for="useHttps">HTTPS aktiv</label>
+							</div>
+							<br />
+							<div class="form-label-group" class="container-fluid">
+								<label for="portHttpsport">Port über den die eufy Security API (via HTTPS) erreichbar sein soll.</label>
+								<input type="text" name="portHttps" id="apiporthttps" class="form-control" placeholder="API-Port" disabled>
+								<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
+							</div>
+							<!--<br />
+							<div class="form-group">
+								<label for="inputState">Schlüsseltyp</label>
+								<select id="inputState" class="form-control">
+									<option selected>Bitte auswählen...</option>
+									<option>Schlüssel- und Passwortdatei</option>
+									<option>Schlüsseldatei und Passwort</option>
+								</select>
+							</div>-->
+							<br />
+							<div class="form-label-group" class="container-fluid">
+								<label for="apikeyhttps">Speicherort der Datei mit dem privaten Schlüssel des Zertifikats.</label>
+								<input type="text" name="keyFile" id="apikeyhttps" class="form-control" placeholder="Schlüsseldatei">
+								<small id="apikeyhttpsHelp" class="form-text text-muted">Speicherort der Schlüsseldatei auf der CCU.</small>
+							</div>
+							<br />
+							<div class="form-label-group" class="container-fluid">
+								<label for="apicerthttps">Speicherort des Zertifikats.</label>
+								<input type="text" name="certFile" id="apicerthttps" class="form-control" placeholder="Zertifikatsdatei">
+								<small id="apicerthttpsHelp" class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="container-fluid">
+				<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
+			</div>
+			</form>
+			
+			<div class="card mb-3">
+				<h5 class="card-header">Systemvariablen</h5>
+				<div class="row no-gutters">
+					<div class="col-md-12">
+						<div class="card-body" >
+							<div class="alert alert-primary fade show" role="alert">
+								In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die entsprechende Spalte grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
+								<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind.</small>
+							</div>
+							<div id="divSystemVariables">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			</p>
+		</main>
+		
+		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
+		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
+		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
+		<script>
+			checkIE();
+			loadData();
+			loadSystemVariables();
+			
+			function checkIE()
+			{
+				if (window.document.documentMode)
+				{
+					var warning = "";
+					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
+					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
+					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
+					warning += "						<span aria-hidden=\"true\">&times;</span>";
+					warning += "					</button>";
+					warning += "				</div>";
+					document.getElementById("browserWarning").innerHTML = warning;
+				}
+			}
+			
+			function loadData()
+			{
+				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}var url=location.protocol + "//" + location.hostname + port + "/getConfig";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+						objResp = JSON.parse(this.responseText);
+						if(objResp.success == true)
+						{
+							for (objIter in objResp.data)
+							{
+								username = objResp.data[objIter].username;
+								password = objResp.data[objIter].password;
+								apiusehttp = objResp.data[objIter].api_http_active;
+								apiporthttp = objResp.data[objIter].api_http_port;
+								apiusehttps = objResp.data[objIter].api_https_active;
+								apiporthttps = objResp.data[objIter].api_https_port;
+								apikeyhttps = objResp.data[objIter].api_https_key_file;
+								apicerthttps = objResp.data[objIter].api_https_cert_file;
+							}
+							var text = document.getElementById('username');
+							text.value = username;
+							text = document.getElementById('password');
+							text.value = password;
+							if(apiusehttp == "true")
+							{
+								document.getElementById("checkBoxUseHttp").innerHTML = "<input type=\"checkbox\" name=\"useHttp\" class=\"custom-control-input\" id=\"useHttp\" checked>";
+								document.getElementById("checkBoxUseHttp").innerHTML += "<label class=\"custom-control-label\" for=\"useHttp\">HTTP aktiv</label>";
+							}
+							text = document.getElementById('apiporthttp');
+							text.value = apiporthttp;
+							if(apiusehttps == "true")
+							{
+								document.getElementById("checkBoxUseHttps").innerHTML = "<input type=\"checkbox\" name=\"useHttps\" class=\"custom-control-input\" id=\"useHttps\" checked>";
+								document.getElementById("checkBoxUseHttps").innerHTML += "<label class=\"custom-control-label\" for=\"useHttps\">HTTPS aktiv</label>";
+							}
+							text = document.getElementById('apiporthttps');
+							text.value = apiporthttps;
+							text = document.getElementById('apikeyhttps');
+							text.value = apikeyhttps;
+							text = document.getElementById('apicerthttps');
+							text.value = apicerthttps;
+							document.getElementById("resultLoading").innerHTML = "";
+						}
+						else
+						{
+							document.getElementById("resultLoading").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+						}
+						}
+						catch (e)
+						{
+							document.getElementById("resultLoading").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						document.getElementById("resultLoading").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+					}
+					else
+					{
+						document.getElementById("resultLoading").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Laden der Einstellungen...</strong></div>";
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+			
+			function loadSystemVariables()
+			{
+				var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, text="";
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}var url=location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				text = "<table class=\"table\"><thead><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+						objResp = JSON.parse(this.responseText);
+						if(objResp.success == true)
+						{
+							for (objIter in objResp.data)
+							{
+								sysVarName = objResp.data[objIter].sysVar_name;
+								sysVarInfo = objResp.data[objIter].sysVar_info;
+								sysVarAvailable = objResp.data[objIter].sysVar_available;
+								if(sysVarAvailable==true)
+								{
+									text += "<tr class=\"table-success\"><th scope=\"row\">angelegt</th>";
+								}
+								else
+								{
+									text += "<tr class=\"table-danger\"><th scope=\"row\">nicht angelegt</th>";
+								}
+								text += "<td>" + sysVarName + "</td>";
+
+								if(sysVarAvailable==true)
+								{
+									text += "<td><button id=\"btn" + sysVarName + "\" type=\"button\" class=\"btn btn-primary mb-1\" disabled>Systemvariable anlegen</button></td>";
+								}
+								else
+								{
+									text += "<td><button id=\"btn" + sysVarName + "\" onclick=\"createSysVar('" + sysVarName + "', '" + sysVarInfo + "')\" type=\"button\" class=\"btn btn-primary mb-1\">Systemvariable anlegen</button></td>";
+								}
+
+								text += "</tr>";
+							}
+							
+							document.getElementById("divSystemVariables").innerHTML = text + "</tbody></table>";
+						}
+						else
+						{
+							document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						}
+						}
+						catch (e)
+						{
+							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+					}
+					else
+					{
+						document.getElementById("divSystemVariables").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Laden der Systemvariablen...</strong></div>";
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+			
+			function saveConfig()
+			{
+				var xmlHttp, obfFD, x, username, passwort, apiport;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}var url=location.protocol + "//" + location.hostname + port + "/setConfig";
+				
+				xmlHttp = new XMLHttpRequest();
+				
+				obfFD=new FormData(document.getElementById("configform"));
+				
+				xmlHttp.addEventListener("load", function(event) {
+					//loadData();
+				} );
+				
+				xmlHttp.addEventListener( "error", function( event ) {
+					document.getElementById("resultMessage").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Beim Speichern der Einstellungen ist ein Fehler aufgetreten.</div>";
+				} );
+				
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+						obfFD = JSON.parse(this.responseText);
+						if(obfFD.success == true)
+						{
+							document.getElementById("resultMessage").innerHTML = "				<div class=\"alert alert-success\" role=\"alert\">Einstellungen wurden erfolgreich gespeichert.</div>";
+						}
+						else
+						{
+							document.getElementById("resultMessage").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Beim Speichern der Einstellungen ist ein Fehler aufgetreten.</div>";
+						}
+						}
+						catch (e)
+						{
+							document.getElementById("resultMessage").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						document.getElementById("resultMessage").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+					}
+					else
+					{
+						document.getElementById("resultMessage").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Einstellungen werden gespeichert...</strong></div>";
+					}
+				};
+				
+				xmlHttp.open("POST", url);
+				xmlHttp.send(obfFD);
+			}
+			
+			function createSysVar(varName, varInfo)
+			{
+				var xmlHttp, objResp, objIter, sysVarName, sysVarAvailable, text="";
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}var url=location.protocol + "//" + location.hostname + port + "/createSystemVariable/" + varName + "/" + varInfo;
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				text = "<table class=\"table\"><thead><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+						objResp = JSON.parse(this.responseText);
+						if(objResp.success == true)
+						{
+							loadSystemVariables();
+						}
+						else
+						{
+							document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						}
+						}
+						catch (e)
+						{
+							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+					}
+					else
+					{
+						document.getElementById("divSystemVariables").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Laden der Systemvariablen...</strong></div>";
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+		</script>
+	</body>
+</html>
