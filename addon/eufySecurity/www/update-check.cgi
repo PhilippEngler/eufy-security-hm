@@ -1,7 +1,7 @@
 #!/bin/tclsh
 
-set checkURL    "https://raw.githubusercontent.com/PhilippEngler/eufy-security-hm/main/VERSION"
-set downloadURL "https://raw.githubusercontent.com/PhilippEngler/eufy-security-hm/main/VERSION"
+set checkURL    "https://raw.githubusercontent.com/PhilippEngler/eufy-security-hm/master/VERSION"
+set downloadURL "https://github.com/PhilippEngler/eufy-security-hm/releases"
 
 catch {
   set input $env(QUERY_STRING)
