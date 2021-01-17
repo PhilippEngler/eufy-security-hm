@@ -12,9 +12,9 @@ export class Bases
 {
     private api : EufySecurityApi;
     private httpService : HttpService;
+    private serialNumbers : string[];
     private resBases !: Hub[];
     private bases : {[key:string]:Base} = {};
-    private serialNumbers !: string[];
 
     /**
      * Create the Bases objects holding all bases in the account.
@@ -34,11 +34,12 @@ export class Bases
     public async loadBases() : Promise<void>
     {
         this.resBases = await this.httpService.listHubs();
+        var resBase : Hub;
         var base : Base;
 
-        for (var stat of this.resBases)
+        for (resBase of this.resBases)
         {
-            base = new Base(this.httpService, stat);
+            base = new Base(this.api, this.httpService, resBase);
             this.bases[base.getSerialNumber()] = base;
             this.serialNumbers.push(base.getSerialNumber());
         }
@@ -100,6 +101,7 @@ export class Bases
  */
 export class Base
 {
+    private api : EufySecurityApi;
     private device_info : Hub;
     private httpService : HttpService;
     private localLookupService : LocalLookupService;
@@ -113,8 +115,9 @@ export class Base
      * @param httpService The httpService.
      * @param device_info The device_info object with the data for the base.
      */
-    constructor(httpService : HttpService, device_info : Hub)
+    constructor(api : EufySecurityApi, httpService : HttpService, device_info : Hub)
     {
+        this.api = api;
         this.httpService = httpService;
         this.device_info = device_info;
         this.localLookupService = new LocalLookupService();
@@ -287,7 +290,7 @@ export class Base
         try
         {
             var address = await this.localLookupService.lookup(this.getLocalIpAddress());
-            console.log('Found address', address);
+            this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
             var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
 
             await devClientService.connect();
@@ -316,7 +319,7 @@ export class Base
         }
         catch (e)
         {
-            console.error("ERROR: setGuardMode: " + e);
+            this.api.addToErr("ERROR: setGuardMode: " + e);
             
             return false;
         }
