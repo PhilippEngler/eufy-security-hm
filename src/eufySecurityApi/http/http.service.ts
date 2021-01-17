@@ -108,11 +108,18 @@ export class HttpService {
 
   private async getToken(): Promise<string> {
     if (!this.api.getToken() || this.isTokenOutdated()) {
-      this.api.addToLog("TOKEN INVALID");
+      this.api.addToLog("No token or token outdated. Create new token.");
       this.currentLoginResult = await this.login(this.username, this.password);
-      //this.api.addToLog("writeNewTokenToConfig " + this.currentLoginResult.auth_token);
-      this.api.setTokenData(this.currentLoginResult.auth_token, this.currentLoginResult.token_expires_at.toString());
-      this.api.writeConfig();
+      if (this.currentLoginResult)
+      {
+        this.api.setTokenData(this.currentLoginResult.auth_token, this.currentLoginResult.token_expires_at.toString());
+        this.api.writeConfig();
+        this.api.addToLog("Got new token.");
+      }
+      else
+      {
+        this.api.addToErr("Login failed.");
+      }
     }
 
     //return this.currentLoginResult.auth_token;
