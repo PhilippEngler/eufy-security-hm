@@ -34,9 +34,10 @@ class Bases {
     loadBases() {
         return __awaiter(this, void 0, void 0, function* () {
             this.resBases = yield this.httpService.listHubs();
+            var resBase;
             var base;
-            for (var stat of this.resBases) {
-                base = new Base(this.httpService, stat);
+            for (resBase of this.resBases) {
+                base = new Base(this.api, this.httpService, resBase);
                 this.bases[base.getSerialNumber()] = base;
                 this.serialNumbers.push(base.getSerialNumber());
             }
@@ -97,10 +98,11 @@ class Base {
      * @param httpService The httpService.
      * @param device_info The device_info object with the data for the base.
      */
-    constructor(httpService, device_info) {
+    constructor(api, httpService, device_info) {
         this.dskKeyExpire = 0;
         this.localIp = "";
         this.guardMode = "";
+        this.api = api;
         this.httpService = httpService;
         this.device_info = device_info;
         this.localLookupService = new p2p_1.LocalLookupService();
@@ -235,7 +237,7 @@ class Base {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 var address = yield this.localLookupService.lookup(this.getLocalIpAddress());
-                console.log('Found address', address);
+                this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
                 var devClientService = new p2p_1.DeviceClientService(address, this.getP2pDid(), this.getActorId());
                 yield devClientService.connect();
                 devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
@@ -258,7 +260,7 @@ class Base {
                 return true;
             }
             catch (e) {
-                console.error("ERROR: setGuardMode: " + e);
+                this.api.addToErr("ERROR: setGuardMode: " + e);
                 return false;
             }
         });
