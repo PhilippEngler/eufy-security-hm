@@ -134,10 +134,10 @@ export class Base
         {
             switch (param.param_type)
             {
-                case 1176:
+                case CommandType.CMD_GET_HUB_LAN_IP:
                     this.localIp = param.param_value;
                     break;
-                case 1224:
+                case CommandType.CMD_SET_ARMING:
                     this.guardMode = param.param_value;
                     break;
             }

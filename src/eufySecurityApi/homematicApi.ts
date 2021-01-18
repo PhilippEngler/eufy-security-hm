@@ -1,6 +1,6 @@
-import got from "got-hm";
+import got from 'got-hm';
 import { existsSync, readFileSync } from 'fs';
-import { Logger } from "./utils/logging";
+import { Logger } from './utils/logging';
 
 /**
  * Working with the CCU.
@@ -23,7 +23,7 @@ export class HomematicApi
      */
     public async isSystemVariableAvailable(variableName : string) : Promise<boolean>
     {
-        var res = await this.getSystemVariable(variableName)
+        var res = await this.getSystemVariable(variableName);
         if(res == "null")
         {
             return false;

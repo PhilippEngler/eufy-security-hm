@@ -52,7 +52,7 @@ export class Config
     {
         if(filecontent.indexOf("config_file_version") == -1)
         {
-            this.logger.log("Logfile needs Stage1 update. Adding 'config_file_version'.")
+            this.logger.log("Logfile needs Stage1 update. Adding 'config_file_version'.");
             filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
             this.hasChanged = true;
         }
@@ -68,7 +68,7 @@ export class Config
 
         if(this.filecontent.indexOf("api_use_system_variables") == -1)
         {
-            this.logger.log("Logfile needs Stage2 update. Adding 'api_use_system_variables'.")
+            this.logger.log("Logfile needs Stage2 update. Adding 'api_use_system_variables'.");
             this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
             this.config = parse(this.filecontent);
             updated = true;
@@ -76,7 +76,7 @@ export class Config
         }
         if(this.filecontent.indexOf("api_camera_default_image") == -1)
         {
-            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_image'.")
+            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_image'.");
             this.filecontent = this.filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
             this.config = parse(this.filecontent);
             updated = true;
@@ -84,7 +84,7 @@ export class Config
         }
         if(this.filecontent.indexOf("api_camera_default_video") == -1)
         {
-            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_video'.")
+            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_video'.");
             this.filecontent = this.filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
             this.config = parse(this.filecontent);
             updated = true;
@@ -135,7 +135,7 @@ export class Config
         fc += "email=\r\n";
         fc += "password=\r\n\r\n";
         fc += "[EufyTokenData]\r\n";
-        fc += "token=\r\n",
+        fc += "token=\r\n";
         fc += "tokenexpires=0\r\n\r\n";
         fc += "[EufyAPIServiceData]\r\n";
         fc += "api_http_active=true\r\n";

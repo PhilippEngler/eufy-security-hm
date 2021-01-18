@@ -36,7 +36,7 @@ export class EufySecurityApi
     {
         if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
         {
-            this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set email and password at least to run this programm.")
+            this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set email and password at least to run this programm.");
         }
         else
         {
@@ -79,7 +79,7 @@ export class EufySecurityApi
                     {
                         json += ",";
                     }
-                    json += "{"
+                    json += "{";
                     json += "\"device_id\":\"" + dev.getSerialNumber() + "\",";
                     json += "\"eufy_device_id\":\"" + dev.getId() + "\",";
                     json += "\"device_type\":\"" + dev.getDeviceTypeString() + "\",";
@@ -113,7 +113,7 @@ export class EufySecurityApi
 
     private makeJSONforBase(base : Base) : string
     {
-        var json = "{"
+        var json = "{";
         json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
         json += "\"eufy_device_id\":\"" + base.getId() + "\",";
         json += "\"device_type\":\"" + base.getDeviceTypeString() + "\",";
@@ -579,7 +579,7 @@ export class EufySecurityApi
     public getConfig() : string
     {
         var json = "{\"success\":true,\"data\":[";
-        json += "{"
+        json += "{";
         json += "\"username\":\"" + this.config.getEmailAddress() + "\",";
         json += "\"password\":\"" + this.config.getPassword() + "\",";
         json += "\"api_http_active\":\"" + this.config.getApiUseHttp() + "\",";
