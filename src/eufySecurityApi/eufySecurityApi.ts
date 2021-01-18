@@ -22,8 +22,8 @@ export class EufySecurityApi
      */
     constructor()
     {
-        this.config = new Config();
         this.logger = new Logger();
+        this.config = new Config(this.logger);
         this.homematicApi = new HomematicApi(this.logger);
         
         this.initialize();
@@ -469,11 +469,18 @@ export class EufySecurityApi
                         {
                             this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerialNumber(), this.makeDateTimeString(dev.getLastImageTime()*1000));
                         }
-                        this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), dev.getLastImageUrl());
+                        if(dev.getLastImageUrl() == undefined)
+                        {
+                            this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), this.config.getApiCameraDefaultImage());
+                        }
+                        else
+                        {
+                            this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), dev.getLastImageUrl());
+                        }
                     }
                 }
                 json = "{\"success\":true,\"data\":[" + json + "]}";
-                this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date())
+                this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
                 this.setLastConnectionInfo(true);
             }
             else
@@ -580,7 +587,10 @@ export class EufySecurityApi
         json += "\"api_https_active\":\"" + this.config.getApiUseHttps() + "\",";
         json += "\"api_https_port\":\"" + this.config.getApiPortHttps() + "\",";
         json += "\"api_https_key_file\":\"" + this.config.getApiKeyFileHttps() + "\",";
-        json += "\"api_https_cert_file\":\"" + this.config.getApiCertFileHttps() + "\"";
+        json += "\"api_https_cert_file\":\"" + this.config.getApiCertFileHttps() + "\",";
+        json += "\"api_use_system_variables\":\"" + this.config.getApiUseSystemVariables() + "\",";
+        json += "\"api_camera_default_image\":\"" + this.config.getApiCameraDefaultImage() + "\",";
+        json += "\"api_camera_default_video\":\"" + this.config.getApiCameraDefaultVideo() + "\"";
         json += "}";
         json += "]}";
     
@@ -598,8 +608,14 @@ export class EufySecurityApi
      * @param api_key_https The key for https.
      * @param api_cert_https The cert for https.
      */
-    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string) : string
+    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string) : string
     {
+        var serviceRestart = false;
+        if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https)
+        {
+            serviceRestart = true;
+        }
+
         this.config.setEmailAddress(username);
         this.config.setPassword(password);
         this.config.setApiUseHttp(api_use_http);
@@ -607,16 +623,23 @@ export class EufySecurityApi
         this.config.setApiUseHttps(api_use_https);
         this.config.setApiPortHttps(api_port_https);
         this.config.setApiKeyFileHttps(api_key_https);
-        this.config.setApiCertFileHttps(api_cert_https)
+        this.config.setApiCertFileHttps(api_cert_https);
+        this.config.setApiUseSystemVariables(api_use_system_variables);
+        this.config.setApiCameraDefaultImage(api_camera_default_image);
+        this.config.setApiCameraDefaultVideo(api_camera_default_video);
 
         var res = this.config.writeConfig();
-        if(res == true)
+        if(res == "saved")
         {
-            return "{\"success\":true,\"message\":\"Config saved.\"}";
+            return "{\"success\":true,\"serviceRestart\":" + serviceRestart + ",\"message\":\"Config saved.\"}";
+        }
+        else if(res == "ok")
+        {
+            return "{\"success\":true,\"serviceRestart\":" + serviceRestart + ",\"message\":\"No change in config. Write config not neccesary.\"}";
         }
         else
         {
-            return "{\"success\":true,\"message\":\"No change in config. Write config not neccesary.\"}";
+            return "{\"success\":false,\"serviceRestart\":false,\"message\":\"Error during writing config.\"}";
         }
     }
 
@@ -626,13 +649,17 @@ export class EufySecurityApi
     public writeConfig() : string
     {
         var res = this.config.writeConfig();
-        if(res == true)
+        if(res == "saved")
         {
             return "{\"success\":true,\"message\":\"Config saved.\"}";
         }
-        else
+        else if(res == "ok")
         {
             return "{\"success\":true,\"message\":\"No new values in config. Write config not neccesary.\"}";
+        }
+        else
+        {
+            return "{\"success\":false,\"serviceRestart\":false,\"message\":\"Error during writing config.\"}";
         }
     }
 
@@ -805,7 +832,10 @@ export class EufySecurityApi
      */
     private setSystemVariableString(systemVariable : string, newValue : string)
     {
-        this.homematicApi.setSystemVariable(systemVariable, newValue);
+        if(this.config.getApiUseSystemVariables() == true)
+        {
+            this.homematicApi.setSystemVariable(systemVariable, newValue);
+        }
     }
 
     /**
