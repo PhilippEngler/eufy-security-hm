@@ -297,32 +297,3 @@ class Device {
     }
 }
 exports.Device = Device;
-/*class Camera extends Device
-{
-    constructor(device_info : FullDevice)
-    {
-        super(device_info);
-    }
-
-    public isCamera() : boolean
-    {
-        return true;
-    }
-}
-
-class Doorbell extends Device
-{
-    constructor(device_info : FullDevice)
-    {
-        super(device_info);
-    }
-}
-
-class Floodlight extends Device
-{
-    constructor(device_info : FullDevice)
-    {
-        super(device_info);
-    }
-}
-*/ 

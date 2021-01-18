@@ -115,10 +115,10 @@ class Base {
     pullValues() {
         for (var param of this.device_info.params) {
             switch (param.param_type) {
-                case 1176:
+                case p2p_1.CommandType.CMD_GET_HUB_LAN_IP:
                     this.localIp = param.param_value;
                     break;
-                case 1224:
+                case p2p_1.CommandType.CMD_SET_ARMING:
                     this.guardMode = param.param_value;
                     break;
             }
