@@ -286,13 +286,42 @@ class ApiServer {
                                 apicertfile = apicertfile.replace("\r\n", "");
                                 apicertfile = apicertfile.substr(2, apicertfile.indexOf("----") - 4);
                             }
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile);
+                            var useSystemVariables = false;
+                            if (body.indexOf("useSystemVariables") >= 0) {
+                                var useSystemVariablesStr = body.substring(body.indexOf("useSystemVariables") + 19);
+                                useSystemVariablesStr = useSystemVariablesStr.substr(2, useSystemVariablesStr.indexOf("----") - 4);
+                                if (useSystemVariablesStr.trim() == "on") {
+                                    useSystemVariables = true;
+                                }
+                                else {
+                                    useSystemVariables = false;
+                                }
+                            }
+                            var apicameradefaultimage = "";
+                            if (body.indexOf("imagePath") >= 0) {
+                                apicameradefaultimage = body.substring(body.indexOf("imagePath") + 10);
+                                apicameradefaultimage = apicameradefaultimage.replace("\r\n", "");
+                                apicameradefaultimage = apicameradefaultimage.substr(2, apicameradefaultimage.indexOf("----") - 4);
+                            }
+                            var apicameradefaultvideo = "";
+                            if (body.indexOf("videoPath") >= 0) {
+                                apicameradefaultvideo = body.substring(body.indexOf("videoPath") + 10);
+                                apicameradefaultvideo = apicameradefaultvideo.replace("\r\n", "");
+                                apicameradefaultvideo = apicameradefaultvideo.substr(2, apicameradefaultvideo.indexOf("----") - 4);
+                            }
+                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                            var resJSON = JSON.parse(responseString);
                             response.setHeader('Access-Control-Allow-Origin', '*');
                             response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                             response.writeHead(200);
                             response.end(responseString);
-                            logger.log("Settings saved. Restarting apiServer.");
-                            restartServer();
+                            if (resJSON.serviceRestart == true) {
+                                logger.log("Settings saved. Restarting apiServer.");
+                                restartServer();
+                            }
+                            else {
+                                logger.log("Settings saved.");
+                            }
                         });
                     }
                     else {
