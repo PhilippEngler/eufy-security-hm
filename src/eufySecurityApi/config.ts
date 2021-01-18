@@ -1,19 +1,27 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { parse, stringify } from 'ini';
+import { Logger } from './utils/logging';
 
 export class Config
 {
     private filecontent !: string;
     private config : any;
     private hasChanged : boolean;
+    private logger : Logger;
     
     /**
      * Constructor, read the config file and provide values to the variables.
      */
-    constructor()
+    constructor(logger : Logger)
     {
+        this.logger = logger;
         this.loadConfig();
         this.hasChanged = false;
+    }
+
+    private getConfigFileTemplateVersion() : number
+    {
+        return 1;
     }
 
     /**
@@ -23,9 +31,12 @@ export class Config
     {
         try
         {
-            this.filecontent = readFileSync('./config.ini', 'utf-8');
-            this.config = parse(this.filecontent);
             this.hasChanged = false;
+            this.filecontent = readFileSync('./config.ini', 'utf-8');
+            this.filecontent = this.updateConfigFileTemplateStage1(this.filecontent);
+            this.config = parse(this.filecontent);
+            this.updateConfigFileTemplateStage2();
+            this.writeConfig();
         }
         catch (ENOENT)
         {
@@ -34,19 +45,81 @@ export class Config
     }
 
     /**
+     * Check and add config entries to the config string before parsed.
+     * @param filecontent The string to check.
+     */
+    private updateConfigFileTemplateStage1(filecontent : string) : string
+    {
+        if(filecontent.indexOf("config_file_version") == -1)
+        {
+            this.logger.log("Logfile needs Stage1 update. Adding 'config_file_version'.")
+            filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
+            this.hasChanged = true;
+        }
+        return filecontent;
+    }
+
+    /**
+     * Check and add config entries to the config string after parsed.
+     */
+    private updateConfigFileTemplateStage2() : boolean
+    {
+        var updated = false;
+
+        if(this.filecontent.indexOf("api_use_system_variables") == -1)
+        {
+            this.logger.log("Logfile needs Stage2 update. Adding 'api_use_system_variables'.")
+            this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
+            this.config = parse(this.filecontent);
+            updated = true;
+            this.hasChanged = true;
+        }
+        if(this.filecontent.indexOf("api_camera_default_image") == -1)
+        {
+            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_image'.")
+            this.filecontent = this.filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
+            this.config = parse(this.filecontent);
+            updated = true;
+            this.hasChanged = true;
+        }
+        if(this.filecontent.indexOf("api_camera_default_video") == -1)
+        {
+            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_video'.")
+            this.filecontent = this.filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
+            this.config = parse(this.filecontent);
+            updated = true;
+            this.hasChanged = true;
+        }
+
+        if(updated)
+        {
+            this.config = parse(this.filecontent);
+            this.config['ConfigFileInfo']['config_file_version'] = this.getConfigFileTemplateVersion();
+        }
+        return updated;
+    }
+
+    /**
      * Write Configuration to file.
      */
-    public writeConfig() : boolean
+    public writeConfig() : string
     {
         if(this.hasChanged == true)
         {
-            writeFileSync('./config.ini', stringify(this.config));
-            this.hasChanged = false;
-            return true;
+            try
+            {
+                writeFileSync('./config.ini', stringify(this.config));
+                this.hasChanged = false;
+                return "saved";
+            }
+            catch
+            {
+                return "failed";
+            }
         }
         else
         {
-            return false;
+            return "ok";
         }
     }
 
@@ -57,6 +130,7 @@ export class Config
     {
         var fc = "";
 
+        fc += "[ConfigFileInfo]\r\nconfig_file_version=" + this.getConfigFileTemplateVersion() + "\r\n\r\n";
         fc += "[EufyAPILoginData]\r\n";
         fc += "email=\r\n";
         fc += "password=\r\n\r\n";
@@ -72,6 +146,9 @@ export class Config
         fc += "api_https_pkey_file=/usr/local/etc/config/server.pem\r\n";
         fc += "api_https_cert_file=/usr/local/etc/config/server.pem\r\n";
         fc += "api_https_pkey_string=\r\n";
+        fc += "api_use_system_variables=false\r\n";
+        fc += "api_camera_default_image=\r\n";
+        fc += "api_camera_default_video=\r\n";
 
         writeFileSync('./config.ini', fc);
         this.loadConfig();
@@ -168,6 +245,34 @@ export class Config
         if(this.config['EufyAPILoginData']['password'] != password)
         {
             this.config['EufyAPILoginData']['password'] = password;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get a boolean value if the api shoud set system variables on the CCU.
+     */
+    public getApiUseSystemVariables() : boolean
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_use_system_variables'];
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set a boolean value if the api shoud set system variables on the CCU.
+     * @param apiusesystemvariables Set system variables on the CCU.
+     */
+    public setApiUseSystemVariables(apiusesystemvariables : boolean) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_use_system_variables'] != apiusesystemvariables)
+        {
+            this.config['EufyAPIServiceData']['api_use_system_variables'] = apiusesystemvariables;
             this.hasChanged = true;
         }
     }
@@ -364,6 +469,90 @@ export class Config
         if(this.config['EufyAPIServiceData']['api_https_cert_file'] != apicert)
         {
             this.config['EufyAPIServiceData']['api_https_cert_file'] = apicert;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the key as string for https.
+     */
+    public getApiKeyAsString() : string
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_https_pkey_string'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the key as string for https.
+     * @param apikeyasstring The key for https as string.
+     */
+    public setApiKeyAsString(apikeyasstring : string) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_https_pkey_string'] != apikeyasstring)
+        {
+            this.config['EufyAPIServiceData']['api_https_pkey_string'] = apikeyasstring;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the default image for cameras.
+     */
+    public getApiCameraDefaultImage() : string
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_camera_default_image'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the default image for cameras.
+     * @param apicameradefaultimage The path to the default camera image.
+     */
+    public setApiCameraDefaultImage(apicameradefaultimage : string) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_camera_default_image'] != apicameradefaultimage)
+        {
+            this.config['EufyAPIServiceData']['api_camera_default_image'] = apicameradefaultimage;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the default video for cameras.
+     */
+    public getApiCameraDefaultVideo() : string
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_camera_default_video'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the default video for cameras.
+     * @param apicameradefaultvideo The path to the default camera video.
+     */
+    public setApiCameraDefaultVideo(apicameradefaultvideo : string) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_camera_default_video'] != apicameradefaultvideo)
+        {
+            this.config['EufyAPIServiceData']['api_camera_default_video'] = apicameradefaultvideo;
             this.hasChanged = true;
         }
     }
