@@ -51,7 +51,7 @@
 						<a class="nav-link" href="settings.html">Einstellungen<span class="sr-only">(current)</span></a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" href="logfiles.html">Logateien</a>
+						<a class="nav-link" href="logfiles.html">Logdateien</a>
 					</li>
 					<li class="nav-item">
 						<a class="nav-link" href="info.html">Über</a>
@@ -113,7 +113,7 @@
 								<input type="text" name="portHttp" id="apiporthttp" class="form-control" placeholder="API-Port" disabled>
 								<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
 							</div>
-							<br />
+							<hr>
 							<div class="custom-control custom-switch" id="checkBoxUseHttps">
 								<input type="checkbox" name="useHttps" class="custom-control-input" id="useHttps">
 								<label class="custom-control-label" for="useHttps">HTTPS aktiv</label>
@@ -144,6 +144,23 @@
 								<label for="apicerthttps">Speicherort des Zertifikats.</label>
 								<input type="text" name="certFile" id="apicerthttps" class="form-control" placeholder="Zertifikatsdatei">
 								<small id="apicerthttpsHelp" class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
+							</div>
+							<hr>
+							<div class="custom-control custom-switch" id="checkBoxUseSystemVariables">
+								<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="useSystemVariables">
+								<label class="custom-control-label" for="useSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
+							</div>
+							<hr>
+							<div class="form-label-group" class="container-fluid">
+								<label for="apidefaultimage">Standardbild für Kameras.</label>
+								<input type="text" name="imagePath" id="apidefaultimage" class="form-control" placeholder="Link zum Standardbild">
+								<small id="apidefaultimageHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Standbild zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+							</div>
+							<hr>
+							<div class="form-label-group" class="container-fluid">
+								<label for="apidefaultvideo">Standardvideo für Kameras.</label>
+								<input type="text" name="videoPath" id="apidefaultvideo" class="form-control" placeholder="Link zum Standardvideo.">
+								<small id="apidefaultvideoHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
 							</div>
 						</div>
 					</div>
@@ -199,7 +216,7 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps;
+				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo;
 				var port = ":52789";
 				if(location.protocol == "https:")
 				{
@@ -226,6 +243,9 @@
 								apiporthttps = objResp.data[objIter].api_https_port;
 								apikeyhttps = objResp.data[objIter].api_https_key_file;
 								apicerthttps = objResp.data[objIter].api_https_cert_file;
+								apiusesystemvariables = objResp.data[objIter].api_use_system_variables;
+								apicameradefaultimage = objResp.data[objIter].api_camera_default_image;
+								apicameradefaultvideo = objResp.data[objIter].api_camera_default_video;
 							}
 							var text = document.getElementById('username');
 							text.value = username;
@@ -249,6 +269,15 @@
 							text.value = apikeyhttps;
 							text = document.getElementById('apicerthttps');
 							text.value = apicerthttps;
+							if(apiusesystemvariables == "true")
+							{
+								document.getElementById("checkBoxUseSystemVariables").innerHTML = "<input type=\"checkbox\" name=\"useSystemVariables\" class=\"custom-control-input\" id=\"useSystemVariables\" checked>";
+								document.getElementById("checkBoxUseSystemVariables").innerHTML += "<label class=\"custom-control-label\" for=\"useSystemVariables\">Systemvariablen bei API Aktionen automatisch aktualisieren</label>";
+							}
+							text = document.getElementById('apidefaultimage');
+							text.value = apicameradefaultimage;
+							text = document.getElementById('apidefaultvideo');
+							text.value = apicameradefaultvideo;
 							document.getElementById("resultLoading").innerHTML = "";
 						}
 						else
