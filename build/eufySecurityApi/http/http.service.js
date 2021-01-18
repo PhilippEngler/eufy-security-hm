@@ -110,15 +110,10 @@ class HttpService {
                     this.api.addToErr("Login failed.");
                 }
             }
-            //return this.currentLoginResult.auth_token;
             return this.api.getToken();
         });
     }
     isTokenOutdated() {
-        // Removed because we save the token, so we need only a new login if the token expired.
-        /*if (!this.currentLoginResult) {
-          return true;
-        }*/
         const now = Math.floor(+new Date() / 1000);
         return parseInt(this.api.getTokenExpire()) <= now;
     }
