@@ -64,149 +64,161 @@
 		
 		<main role="main" class="container-fluid">
 			<div id="browserWarning">
+
 			</div>
 			<form action="javascript:saveConfig();" method="post" id="configform">
-			<h3>Einstellungen</h3>
-			<p>
-			<div id="resultLoading">
-			</div>
-			<div id="resultMessage">
-			</div>
-			
-			<div class="card mb-3">
-				<h5 class="card-header">Zugangsdaten eufy Security Account</h5>
-				<div class="row no-gutters">
-					<div class="col-md-12">
-						<div class="card-body" >
-							<div class="alert alert-warning alert-dismissible fade show" role="alert">
-								Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn und geben Sie dessen Zugangsdaten hier ein.<br />
-								<small class="text-muted">Wenn Sie keinen zusätzlichen Account anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</small>
-								<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-									<span aria-hidden="true">&times;</span>
-								</button>
-							</div>
-							<div class="form-label-group" class="container-fluid">
-								<label for="password">Benutzername des angelegten eufy Security Accounts.</label>
-								<input type="email" name="email" id="username" class="form-control" placeholder="eMail-Adresse" required> <!--autofocus-->
-								<small id="passwordHelp" class="form-text text-muted">Der Benutzername entspricht der eMail-Adresse, mit der der eufy Security Account angelegt wurde.</small>
-							</div>
-							<br />
-							<div class="form-label-group" class="container-fluid">
-								<label for="password">Passwort des angelegten eufy Security Accounts.</label>
-								<input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
-							</div> 
-						</div>
+				<h3>Einstellungen</h3>
+				<p>
+					<div id="resultLoading">
+
 					</div>
-				</div>
-			</div>
+					<div id="resultMessage">
+
+					</div>
+				</p>
 			
-			<div class="card mb-3">
-				<h5 class="card-header">Konfiguration des Services</h5>
-				<div class="row no-gutters">
-					<div class="col-md-12">
-						<div class="card-body" >
-							<div class="custom-control custom-switch" id="checkBoxUseHttp">
-								<input type="checkbox" name="useHttp" class="custom-control-input" id="useHttp">
-								<label class="custom-control-label" for="useHttp">HTTP aktiv</label>
-							</div>
-							<br />
-							<div class="form-label-group" class="container-fluid">
-								<label for="apiporthttp">Port über den die eufy Security API (via HTTP) erreichbar sein soll.</label>
-								<input type="text" name="portHttp" id="apiporthttp" class="form-control" placeholder="API-Port" disabled>
-								<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
-							</div>
-							<hr>
-							<div class="custom-control custom-switch" id="checkBoxUseHttps">
-								<input type="checkbox" name="useHttps" class="custom-control-input" id="useHttps">
-								<label class="custom-control-label" for="useHttps">HTTPS aktiv</label>
-							</div>
-							<br />
-							<div class="form-label-group" class="container-fluid">
-								<label for="portHttpsport">Port über den die eufy Security API (via HTTPS) erreichbar sein soll.</label>
-								<input type="text" name="portHttps" id="apiporthttps" class="form-control" placeholder="API-Port" disabled>
-								<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
-							</div>
-							<!--<br />
-							<div class="form-group">
-								<label for="inputState">Schlüsseltyp</label>
-								<select id="inputState" class="form-control">
-									<option selected>Bitte auswählen...</option>
-									<option>Schlüssel- und Passwortdatei</option>
-									<option>Schlüsseldatei und Passwort</option>
-								</select>
-							</div>-->
-							<br />
-							<div class="form-label-group" class="container-fluid">
-								<label for="apikeyhttps">Speicherort der Datei mit dem privaten Schlüssel des Zertifikats.</label>
-								<input type="text" name="keyFile" id="apikeyhttps" class="form-control" placeholder="Schlüsseldatei">
-								<small id="apikeyhttpsHelp" class="form-text text-muted">Speicherort der Schlüsseldatei auf der CCU.</small>
-							</div>
-							<br />
-							<div class="form-label-group" class="container-fluid">
-								<label for="apicerthttps">Speicherort des Zertifikats.</label>
-								<input type="text" name="certFile" id="apicerthttps" class="form-control" placeholder="Zertifikatsdatei">
-								<small id="apicerthttpsHelp" class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
-							</div>
-							<hr>
-							<div class="custom-control custom-switch" id="checkBoxUseSystemVariables">
-								<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="useSystemVariables">
-								<label class="custom-control-label" for="useSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
-							</div>
-							<hr>
-							<div class="form-label-group" class="container-fluid">
-								<label for="apidefaultimage">Standardbild für Kameras.</label>
-								<input type="text" name="imagePath" id="apidefaultimage" class="form-control" placeholder="Link zum Standardbild">
-								<small id="apidefaultimageHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Standbild zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
-							</div>
-							<hr>
-							<div class="form-label-group" class="container-fluid">
-								<label for="apidefaultvideo">Standardvideo für Kameras.</label>
-								<input type="text" name="videoPath" id="apidefaultvideo" class="form-control" placeholder="Link zum Standardvideo.">
-								<small id="apidefaultvideoHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+				<div class="row">
+					<div class="col">
+						<div class="card mb-3">
+							<h5 class="card-header">Zugangsdaten eufy Security Account</h5>
+							<div class="row no-gutters">
+								<div class="col-md-12">
+									<div class="card-body" >
+										<div class="alert alert-warning alert-dismissible fade show" role="alert">
+											Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn und geben Sie dessen Zugangsdaten hier ein.<br />
+											<small class="text-muted">Wenn Sie keinen zusätzlichen Account anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</small>
+											<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="form-label-group" class="container-fluid">
+											<label for="password">Benutzername des angelegten eufy Security Accounts.</label>
+											<input type="email" name="email" id="username" class="form-control" placeholder="eMail-Adresse" required> <!--autofocus-->
+											<small id="passwordHelp" class="form-text text-muted">Der Benutzername entspricht der eMail-Adresse, mit der der eufy Security Account angelegt wurde.</small>
+										</div>
+										<br />
+										<div class="form-label-group" class="container-fluid">
+											<label for="password">Passwort des angelegten eufy Security Accounts.</label>
+											<input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+										</div> 
+									</div>
+								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-			</div>
-			
-			<div class="container-fluid">
-				<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
-			</div>
-			</form>
-			
-			<div class="card mb-3">
-				<h5 class="card-header">Systemvariablen</h5>
-				<div class="row no-gutters">
-					<div class="col-md-12">
-						<div class="card-body" >
-							<div class="alert alert-primary fade show" role="alert">
-								In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die entsprechende Spalte grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
-								<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind.</small>
+
+						<div class="card mb-3">
+							<h5 class="card-header">Konfiguration des Services</h5>
+							<div class="row no-gutters">
+								<div class="col-md-12">
+									<div class="card-body" >
+										<div class="custom-control custom-switch" id="checkBoxUseHttp">
+											<input type="checkbox" name="useHttp" class="custom-control-input" id="useHttp">
+											<label class="custom-control-label" for="useHttp">HTTP aktiv</label>
+										</div>
+										<br />
+										<div class="form-label-group" class="container-fluid">
+											<label for="apiporthttp">Port über den die eufy Security API (via HTTP) erreichbar sein soll.</label>
+											<input type="text" name="portHttp" id="apiporthttp" class="form-control" placeholder="API-Port" disabled>
+											<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
+										</div>
+										<hr>
+										<div class="custom-control custom-switch" id="checkBoxUseHttps">
+											<input type="checkbox" name="useHttps" class="custom-control-input" id="useHttps">
+											<label class="custom-control-label" for="useHttps">HTTPS aktiv</label>
+										</div>
+										<br />
+										<div class="form-label-group" class="container-fluid">
+											<label for="portHttpsport">Port über den die eufy Security API (via HTTPS) erreichbar sein soll.</label>
+											<input type="text" name="portHttps" id="apiporthttps" class="form-control" placeholder="API-Port" disabled>
+											<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
+										</div>
+										<br />
+										<!--<div class="form-group">
+											<label for="inputState">Schlüsseltyp</label>
+											<select id="inputState" class="form-control">
+												<option selected>Bitte auswählen...</option>
+												<option>Schlüssel- und Passwortdatei</option>
+												<option>Schlüsseldatei und Passwort</option>
+											</select>
+										</div>-->
+										<br />
+										<div class="form-label-group" class="container-fluid">
+											<label for="apikeyhttps">Speicherort der Datei mit dem privaten Schlüssel des Zertifikats.</label>
+											<input type="text" name="keyFile" id="apikeyhttps" class="form-control" placeholder="Schlüsseldatei">
+											<small id="apikeyhttpsHelp" class="form-text text-muted">Speicherort der Schlüsseldatei auf der CCU.</small>
+										</div>
+										<br />
+										<div class="form-label-group" class="container-fluid">
+											<label for="apicerthttps">Speicherort des Zertifikats.</label>
+											<input type="text" name="certFile" id="apicerthttps" class="form-control" placeholder="Zertifikatsdatei">
+											<small id="apicerthttpsHelp" class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
+										</div>
+										<hr>
+										<div class="custom-control custom-switch" id="checkBoxUseSystemVariables">
+											<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="useSystemVariables">
+											<label class="custom-control-label" for="useSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
+										</div>
+										<hr>
+										<div class="form-label-group" class="container-fluid">
+											<label for="apidefaultimage">Standardbild für Kameras.</label>
+											<input type="text" name="imagePath" id="apidefaultimage" class="form-control" placeholder="Link zum Standardbild">
+											<small id="apidefaultimageHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Standbild zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+										</div>
+										<hr>
+										<div class="form-label-group" class="container-fluid">
+											<label for="apidefaultvideo">Standardvideo für Kameras.</label>
+											<input type="text" name="videoPath" id="apidefaultvideo" class="form-control" placeholder="Link zum Standardvideo.">
+											<small id="apidefaultvideoHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+										</div>
+									</div>
+								</div>
 							</div>
-							<div id="divSystemVariables">
+						</div>
+
+						<div class="mb-3">
+							<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
+						</div></form>
+
+					<div class="card mb-3">
+						<h5 class="card-header">Systemvariablen</h5>
+						<div class="row no-gutters">
+							<div class="col-md-12">
+								<div class="card-body" >
+									<div class="alert alert-primary fade show" role="alert">
+										In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die entsprechende Spalte grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
+										<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind.</small>
+									</div>
+									<div id="divSystemVariables">
+
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			</div>
-			</p>
-			<br />
-			<div id="toastOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
-				<div class="toast-header">
-					<strong class="mr-auto">Speicherung der Einstellungen.</strong>
-					<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
-				</div>
-				<div class="toast-body text-white">
-					Die Einstellungen wurden erfolgreich gespeichert.
-				</div>
-			</div>
-			<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
-				<div class="toast-header">
-					<strong class="mr-auto">Speicherung der Einstellungen</strong>
-					<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
-				</div>
-				<div class="toast-body text-white">
-					Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
+
+					<div id="toastOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+						<div class="toast-header">
+							<strong class="mr-auto">Speicherung der Einstellungen.</strong>
+							<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+								&times;
+							</button>
+						</div>
+						<div class="toast-body text-white">
+							Die Einstellungen wurden erfolgreich gespeichert.
+						</div>
+					</div>
+					
+					<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+						<div class="toast-header">
+							<strong class="mr-auto">Speicherung der Einstellungen</strong>
+							<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+								&times;
+							</button>
+						</div>
+						<div class="toast-body text-white">
+							Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
+						</div>
+					</div>
 				</div>
 			</div>
 		</main>
