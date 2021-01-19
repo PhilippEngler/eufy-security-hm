@@ -334,6 +334,21 @@ export class Device
     }
 
     /**
+     * Get the url of the last video (only for cameras).
+     */
+    public getLastVideoUrl() : string
+    {
+        if(this.isCamera())
+        {
+            return "";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
      * Get the battery charge in percent (only for battery eqipped devices).
      */
     public getBatteryCharge() : string
