@@ -374,8 +374,24 @@ class EufySecurityApi {
                             }
                             json += "{";
                             json += "\"device_id\":\"" + dev.getSerialNumber() + "\",";
-                            json += "\"last_camera_image_time\":\"" + dev.getLastImageTime() + "\",";
-                            json += "\"last_camera_image_url\":\"" + dev.getLastImageUrl() + "\"";
+                            if (dev.getLastImageTime() == undefined) {
+                                json += "\"last_camera_image_time\":\"\",";
+                            }
+                            else {
+                                json += "\"last_camera_image_time\":\"" + dev.getLastImageTime() + "\",";
+                            }
+                            if (dev.getLastImageUrl() == undefined) {
+                                json += "\"last_camera_image_url\":\"" + this.config.getApiCameraDefaultImage() + "\",";
+                            }
+                            else {
+                                json += "\"last_camera_image_url\":\"" + dev.getLastImageUrl() + "\",";
+                            }
+                            if (dev.getLastVideoUrl() == "") {
+                                json += "\"last_camera_video_url\":\"" + this.config.getApiCameraDefaultVideo() + "\"";
+                            }
+                            else {
+                                json += "\"last_camera_video_url\":\"" + dev.getLastImageUrl() + "\"";
+                            }
                             json += "}";
                             if (dev.getLastImageTime() == undefined) {
                                 this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerialNumber(), "");
@@ -388,6 +404,12 @@ class EufySecurityApi {
                             }
                             else {
                                 this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), dev.getLastImageUrl());
+                            }
+                            if (dev.getLastVideoUrl() == "") {
+                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerialNumber(), this.config.getApiCameraDefaultVideo());
+                            }
+                            else {
+                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerialNumber(), dev.getLastImageUrl());
                             }
                         }
                     }
@@ -600,11 +622,23 @@ class EufySecurityApi {
                     if (json.endsWith("}")) {
                         json += ",";
                     }
-                    device = devices[key];
                     json += "{";
                     json += "\"sysVar_name\":\"eufyCameraVideoTime" + device.getSerialNumber() + "\",";
                     json += "\"sysVar_info\":\"Zeitpunkt des letzten Videos der Kamera " + device.getSerialNumber() + "\",";
                     if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraVideoTime" + device.getSerialNumber())) == true) {
+                        json += "\"sysVar_available\":true";
+                    }
+                    else {
+                        json += "\"sysVar_available\":false";
+                    }
+                    json += "}";
+                    if (json.endsWith("}")) {
+                        json += ",";
+                    }
+                    json += "{";
+                    json += "\"sysVar_name\":\"eufyCameraVideoURL" + device.getSerialNumber() + "\",";
+                    json += "\"sysVar_info\":\"letztes Video der Kamera " + device.getSerialNumber() + "\",";
+                    if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraVideoURL" + device.getSerialNumber())) == true) {
                         json += "\"sysVar_available\":true";
                     }
                     else {

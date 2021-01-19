@@ -103,8 +103,8 @@ class Config {
         fc += "email=\r\n";
         fc += "password=\r\n\r\n";
         fc += "[EufyTokenData]\r\n";
-        fc += "token=\r\n",
-            fc += "tokenexpires=0\r\n\r\n";
+        fc += "token=\r\n";
+        fc += "tokenexpires=0\r\n\r\n";
         fc += "[EufyAPIServiceData]\r\n";
         fc += "api_http_active=true\r\n";
         fc += "api_http_port=52789\r\n";

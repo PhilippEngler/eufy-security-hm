@@ -274,6 +274,17 @@ class Device {
         }
     }
     /**
+     * Get the url of the last video (only for cameras).
+     */
+    getLastVideoUrl() {
+        if (this.isCamera()) {
+            return "";
+        }
+        else {
+            return "";
+        }
+    }
+    /**
      * Get the battery charge in percent (only for battery eqipped devices).
      */
     getBatteryCharge() {
@@ -297,32 +308,3 @@ class Device {
     }
 }
 exports.Device = Device;
-/*class Camera extends Device
-{
-    constructor(device_info : FullDevice)
-    {
-        super(device_info);
-    }
-
-    public isCamera() : boolean
-    {
-        return true;
-    }
-}
-
-class Doorbell extends Device
-{
-    constructor(device_info : FullDevice)
-    {
-        super(device_info);
-    }
-}
-
-class Floodlight extends Device
-{
-    constructor(device_info : FullDevice)
-    {
-        super(device_info);
-    }
-}
-*/ 
