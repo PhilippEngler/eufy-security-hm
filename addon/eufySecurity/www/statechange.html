@@ -70,7 +70,24 @@
 				<div id="bases"></div>
 			</p>
 			</div>
-			<p id="demo"></p>
+			<div id="toastOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+				<div class="toast-header">
+					<strong class="mr-auto">Änderung des Status.</strong>
+					<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+				</div>
+				<div class="toast-body text-white">
+					Die Änderung des Status wurde erfolgreich durchgeführt.
+				</div>
+			</div>
+			<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+				<div class="toast-header">
+					<strong class="mr-auto">Änderung des Status.</strong>
+					<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+				</div>
+				<div class="toast-body text-white">
+					Bei der Änderung des Status ist ein Fehler aufgetreten.
+				</div>
+			</div>
 		</main>
 		
 		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
@@ -254,10 +271,9 @@
 			
 			function setArm(baseserial)
 			{
-				var baseserial
+				var baseserial;
 				if(baseserial=="")
 				{
-					document.getElementById("demo").innerHTML = "arm";
 					document.getElementById("armAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
@@ -276,17 +292,21 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								document.getElementById("demo").innerHTML = this.responseText;
+								$("#toastOK").toast('show');
 								loadData(false);
+							}
+							else
+							{
+								$("#toastFailed").toast('show');
 							}
 						}
 						else if (this.status == 200 || this.readyState == 4)
 						{
-							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							//$("#toastFailed").toast('show');
 						}
 						else
 						{
-							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+							//$("#toastFailed").toast('show');
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -294,7 +314,6 @@
 				}
 				else
 				{
-					document.getElementById("demo").innerHTML = "arm '" + baseserial + "'";
 					document.getElementById("arm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
@@ -313,21 +332,21 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								document.getElementById("demo").innerHTML = this.responseText;
+								$("#toastOK").toast('show');
 								loadData(false);
 							}
 							else
 							{
-								document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+								$("#toastFailed").toast('show');
 							}
 						}
 						else if (this.status == 200 || this.readyState == 4)
 						{
-							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							//$("#toastFailed").toast('show');
 						}
 						else
 						{
-							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+							//$("#toastFailed").toast('show');
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -340,26 +359,168 @@
 				var baseserial
 				if(baseserial=="")
 				{
-					document.getElementById("demo").innerHTML = "home";
 					document.getElementById("homeAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/home";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								$("#toastOK").toast('show');
+								loadData(false);
+							}
+							else
+							{
+								$("#toastFailed").toast('show');
+							}
+						}
+						else if (this.status == 200 || this.readyState == 4)
+						{
+							//$("#toastFailed").toast('show');
+						}
+						else
+						{
+							//$("#toastFailed").toast('show');
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
 				}
 				else
 				{
-					document.getElementById("demo").innerHTML = "home '" + baseserial + "'";
+					document.getElementById("home" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/home";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								$("#toastOK").toast('show');
+								loadData(false);
+							}
+							else
+							{
+								$("#toastFailed").toast('show');
+							}
+						}
+						else if (this.status == 200 || this.readyState == 4)
+						{
+							//$("#toastFailed").toast('show');
+						}
+						else
+						{
+							//$("#toastFailed").toast('show');
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
 				}
 			}
 			
 			function setSchedule(baseserial)
 			{
-				var baseserial
+				var baseserial;
 				if(baseserial=="")
 				{
-					document.getElementById("demo").innerHTML = "schedule";
 					document.getElementById("scheduleAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/schedule";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								$("#toastOK").toast('show');
+								loadData(false);
+							}
+							else
+							{
+								$("#toastFailed").toast('show');
+							}
+						}
+						else if (this.status == 200 || this.readyState == 4)
+						{
+							//$("#toastFailed").toast('show');
+						}
+						else
+						{
+							//$("#toastFailed").toast('show');
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
 				}
 				else
 				{
-					document.getElementById("demo").innerHTML = "schedule '" + baseserial + "'";
+					document.getElementById("schedule" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
+					var xmlHttp, objResp, objIter, bases = "";
+					var imagepath="";
+					var port = ":52789";
+					if(location.protocol == "https:")
+					{
+						port = ":52790";
+					}
+					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/schedule";
+					xmlHttp = new XMLHttpRequest();
+					xmlHttp.overrideMimeType('application/json');
+					xmlHttp.onreadystatechange = function()
+					{
+						if (this.readyState == 4 && this.status == 200)
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								$("#toastOK").toast('show');
+								loadData(false);
+							}
+							else
+							{
+								$("#toastFailed").toast('show');
+							}
+						}
+						else if (this.status == 200 || this.readyState == 4)
+						{
+							//$("#toastFailed").toast('show');
+						}
+						else
+						{
+							//$("#toastFailed").toast('show');
+						}
+					};
+					xmlHttp.open("GET", url, true);
+					xmlHttp.send();
 				}
 			}
 			
@@ -368,7 +529,6 @@
 				var baseserial;
 				if(baseserial=="")
 				{
-					document.getElementById("demo").innerHTML = "disarm";
 					document.getElementById("disarmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
@@ -387,21 +547,21 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								document.getElementById("demo").innerHTML = this.responseText;
+								$("#toastOK").toast('show');
 								loadData(false);
 							}
 							else
 							{
-								document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+								$("#toastFailed").toast('show');
 							}
 						}
 						else if (this.status == 200 && this.readyState != 4)
 						{
-							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							//$("#toastFailed").toast('show');
 						}
 						else
 						{
-							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+							//$("#toastFailed").toast('show');
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -409,7 +569,6 @@
 				}
 				else
 				{
-					document.getElementById("demo").innerHTML = "disarm '" + baseserial + "'";
 					document.getElementById("disarm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
@@ -428,21 +587,21 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								document.getElementById("demo").innerHTML = this.responseText;
+								$("#toastOK").toast('show');
 								loadData(false);
 							}
 							else
 							{
-								document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+								$("#toastFailed").toast('show');
 							}
 						}
 						else if (this.status == 200 && this.readyState != 4)
 						{
-							document.getElementById("demo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							//$("#toastFailed").toast('show');
 						}
 						else
 						{
-							document.getElementById("demo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+							//$("#toastFailed").toast('show');
 						}
 					};
 					xmlHttp.open("GET", url, true);

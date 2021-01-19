@@ -188,6 +188,24 @@
 				</div>
 			</div>
 			</p>
+			<div id="toastOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+				<div class="toast-header">
+					<strong class="mr-auto">Speicherung der Einstellungen.</strong>
+					<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+				</div>
+				<div class="toast-body text-white">
+					Die Einstellungen wurden erfolgreich gespeichert.
+				</div>
+			</div>
+			<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+				<div class="toast-header">
+					<strong class="mr-auto">Speicherung der Einstellungen</strong>
+					<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+				</div>
+				<div class="toast-body text-white">
+					Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
+				</div>
+			</div>
 		</main>
 		
 		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
@@ -393,7 +411,8 @@
 				} );
 				
 				xmlHttp.addEventListener( "error", function( event ) {
-					document.getElementById("resultMessage").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Beim Speichern der Einstellungen ist ein Fehler aufgetreten.</div>";
+					document.getElementById("resultMessage").innerHTML = "";
+					$("#toastFailed").toast('show');
 				} );
 				
 				xmlHttp.onreadystatechange = function()
@@ -402,15 +421,17 @@
 					{
 						try
 						{
-						obfFD = JSON.parse(this.responseText);
-						if(obfFD.success == true)
-						{
-							document.getElementById("resultMessage").innerHTML = "				<div class=\"alert alert-success\" role=\"alert\">Einstellungen wurden erfolgreich gespeichert.</div>";
-						}
-						else
-						{
-							document.getElementById("resultMessage").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Beim Speichern der Einstellungen ist ein Fehler aufgetreten.</div>";
-						}
+							obfFD = JSON.parse(this.responseText);
+							if(obfFD.success == true)
+							{
+								document.getElementById("resultMessage").innerHTML = "";
+								$("#toastOK").toast('show');
+							}
+							else
+							{
+								document.getElementById("resultMessage").innerHTML = "";
+								$("#toastFailed").toast('show');
+							}
 						}
 						catch (e)
 						{
