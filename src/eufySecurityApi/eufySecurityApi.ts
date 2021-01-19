@@ -970,6 +970,6 @@ export class EufySecurityApi
      */
     public getApiVersion() : string
     {
-        return "{\"success\":true,\"api_version\":\"0.9.1\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
+        return "{\"success\":true,\"api_version\":\"0.9.2\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
     }
 }
