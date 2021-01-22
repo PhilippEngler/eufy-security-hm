@@ -1,8 +1,7 @@
 import { EufySecurityApi } from './eufySecurityApi';
 import { HttpService } from './http';
-import { LocalLookupService, DeviceClientService, CommandType } from './p2p';
+import { CloudLookupService, LocalLookupService, DeviceClientService, CommandType } from './p2p';
 import { Hub, GuardMode, DeviceType } from './http/http-response.models';
-import { CloudLookupService } from './p2p/cloud-lookup.service';
 import { sleep } from './push';
 
 /**
