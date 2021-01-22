@@ -36,7 +36,6 @@ class ApiServer
      */
     public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string, logger : Logger)
     {
-        logger.log("[GOT FROM CONFIG: HTTP: " + portHttp + " / HTTPS: "+ portHttps + "]");
         if(httpActive == true)
         {
             logger.log("Starting http server...");

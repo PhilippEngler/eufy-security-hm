@@ -42,7 +42,6 @@ class ApiServer {
      */
     startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
         return __awaiter(this, void 0, void 0, function* () {
-            logger.log("[GOT FROM CONFIG: HTTP: " + portHttp + " / HTTPS: " + portHttps + "]");
             if (httpActive == true) {
                 logger.log("Starting http server...");
                 serverHttp.on("request", this.requestListener);

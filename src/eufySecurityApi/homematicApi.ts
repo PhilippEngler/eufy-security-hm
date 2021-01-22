@@ -140,6 +140,6 @@ export class HomematicApi
      */
     public getHomematicApiInfo() : string
     {
-        return "0.9.3";
+        return "1.0.0";
     }
 }
