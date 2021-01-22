@@ -47,7 +47,7 @@ class ApiServer {
                 logger.log("Starting http server...");
                 serverHttp.on("request", this.requestListener);
                 serverHttp.listen(portHttp);
-                logger.log("SERVER (HTTP) STARTED. LISTENING ON PORT '" + portHttp + "'");
+                logger.log("...started. http listening on port '" + portHttp + "'");
             }
             if (httpsActive == true) {
                 logger.log("Starting https server...");
@@ -59,10 +59,10 @@ class ApiServer {
                     serverHttps.setSecureContext(options);
                     serverHttps.on("request", this.requestListener);
                     serverHttps.listen(portHttps);
-                    logger.log("SERVER (HTTPS) STARTED. LISTENING ON PORT '" + portHttps + "'");
+                    logger.log("...started. https listening on port '" + portHttps + "'");
                 }
                 else {
-                    logger.log("FAILED TO START SERVER (HTTPS): key or cert file not found.");
+                    logger.err("FAILED TO START SERVER (HTTPS): key or cert file not found.");
                 }
             }
         });

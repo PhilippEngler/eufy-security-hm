@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CommandType = exports.DeviceClientService = exports.LocalLookupService = void 0;
+exports.CommandType = exports.DeviceClientService = exports.LocalLookupService = exports.CloudLookupService = void 0;
+var cloud_lookup_service_1 = require("./cloud-lookup.service");
+Object.defineProperty(exports, "CloudLookupService", { enumerable: true, get: function () { return cloud_lookup_service_1.CloudLookupService; } });
 var local_lookup_service_1 = require("./local-lookup.service");
 Object.defineProperty(exports, "LocalLookupService", { enumerable: true, get: function () { return local_lookup_service_1.LocalLookupService; } });
 var device_client_service_1 = require("./device-client.service");

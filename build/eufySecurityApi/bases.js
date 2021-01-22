@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Base = exports.Bases = void 0;
 const p2p_1 = require("./p2p");
 const http_response_models_1 = require("./http/http-response.models");
-const cloud_lookup_service_1 = require("./p2p/cloud-lookup.service");
 /**
  * Represents all the Bases in the account.
  */
@@ -106,7 +105,7 @@ class Base {
         this.httpService = httpService;
         this.device_info = device_info;
         this.localLookupService = new p2p_1.LocalLookupService();
-        this.cloudLookupService = new cloud_lookup_service_1.CloudLookupService();
+        this.cloudLookupService = new p2p_1.CloudLookupService();
         this.pullValues();
     }
     /**
