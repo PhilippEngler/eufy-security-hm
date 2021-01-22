@@ -23,14 +23,8 @@ cp -af eufySecurity/* ${ADDON_DIR}/
 cp -af eufySecurity-addon.cfg ${ADDON_DIR}/
 cp -af VERSION ${ADDON_DIR}/
 
-# copy default config only when no config available
-if [ ! -e ${ADDON_DIR}/config.ini ]; then
-  cp -af config.ini.default ${ADDON_DIR}/config.ini
-fi
-
 # make node executable
 chmod 755 ${ADDON_DIR}/bin/node
-chmod 755 ${ADDON_DIR}/bin/npm
 
 # exclude some directories from backup
 # (user will NEED to reinstall plugin after restore)
@@ -45,12 +39,6 @@ chmod 755 ${RCD_DIR}/eufySecurity
 if [ ! -e ${WWW_DIR} ]; then
   ln -sf ${ADDON_DIR}/www ${WWW_DIR}
 fi
-
-# add menu entry
-#if [ "$(cat /usr/local/etc/config/hm_addons.cfg | grep "CONFIG_NAME eufySecurity")" == "" ]; then
-#  touch /usr/local/etc/config/hm_addons.cfg
-#  ${ADDON_DIR}/bin/update_addon hm_pdetect ${ADDON_DIR}/etc/eufySecurity-addon.cfg
-#fi
 
 sync
 

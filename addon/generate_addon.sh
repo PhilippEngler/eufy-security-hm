@@ -12,7 +12,6 @@ chmod 755 tmp/update_script
 cp -a rc.d tmp/
 cp -a eufySecurity tmp/
 cp -a eufySecurity-addon.cfg tmp/
-cp -a config.ini.default tmp/
 cp -a VERSION tmp/
 
 # generate archive
