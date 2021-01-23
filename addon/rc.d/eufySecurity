@@ -97,9 +97,9 @@ case "$1" in
         VER=$(cat $dir/VERSION)
         echo "Version: $VER"
         echo "Info: <b>eufy Security AddOn</b><br>"
-		echo "Info: Ermöglicht die Steuerung des eufy Security Systems.<br>"
+		echo "Info: ErmÃ¶glicht die Steuerung des eufy Security Systems.<br>"
         echo "Info: &copy; 2020-2021 Philipp Engler und andere<br>"
-        echo "Info: <a href='http://www.engler.intern'>Projektseite</a>"
+        echo "Info: <a href='https://github.com/PhilippEngler/eufy-security-hm'>Projektseite</a>"
         echo "Name: eufy SECURITY"
         echo "Operations: uninstall restart"
         echo "Config-Url: /addons/eufySecurity"
