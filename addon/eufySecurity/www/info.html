@@ -79,14 +79,14 @@
 				<li><code>/getMode/<i>BASE_SERIAL</i></code>: Liefert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> als JSON-String zurück.</li>
 				<li><code>/setMode/<i>MODE</i></code>: Ändert den Status aller Basisstationen auf <i>MODE</i>. <i>MODE</i> kann einer der folgenden Werte sein. Die Antwort ist ein JSON-String.</li>
 				<ul>
-					<li><code>away</code>: Abwesend</li>
+					<li><code>away</code>: abwesend</li>
 					<li><code>custom1</code>: Benutzerdefiniert 1</li>
 					<li><code>custom2</code>: Benutzerdefiniert 2</li>
 					<li><code>custom3</code>: Benutzerdefiniert 3</li>
-					<li><code>disarmed</code>: Deaktiviert</li>
+					<li><code>disarmed</code>: deaktiviert</li>
 					<li><code>geo</code>: Geofencing</li>
 					<li><code>home</code>: zu Hause</li>
-					<li><code>off</code>: Ausgeschaltet</li>
+					<li><code>off</code>: ausgeschaltet</li>
 					<li><code>schedule</code>: Zeitplan</li>
 				</ul>
 				<li><code>/setMode/<i>BASE_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
@@ -94,6 +94,7 @@
 			</ul>
 			<p>Über Skripte können Sie die API abfragen. Möchten Sie die Antwort nicht auswerten, können Sie beispielsweise mittels <code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code> im Hintergrund ausführen. Es werden die entsprechenden Systemvariablen automatisch gesetzt.</p>
 			<p>Möchten Sie die Antwort auswerten, können Sie wie folgt vorgehen: <code>string res; string err; system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code>. Die JSON-Antwort finden Sie im String <code>res</code>.</p>
+			<p>Verwenden Sie anstelle von 127.0.0.1 die IP-Adresse Ihrer CCU, wenn Sie mit einem Browser auf die API zugreifen möchten.</p>
 			<h4>Informationen zum Projekt</h4>
 			<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
 			<h5>eufy Security API:</h5>
