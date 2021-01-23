@@ -111,6 +111,10 @@ export class EufySecurityApi
         return json;
     }
 
+    /**
+     * Create a JSON STring for a given base.
+     * @param base The base the JSON string created for.
+     */
     private makeJSONforBase(base : Base) : string
     {
         var json = "{";
