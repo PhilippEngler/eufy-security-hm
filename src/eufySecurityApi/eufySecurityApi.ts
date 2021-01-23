@@ -646,6 +646,10 @@ export class EufySecurityApi
             serviceRestart = true;
         }
 
+        if(this.config.getEmailAddress() != username)
+        {
+            this.setTokenData("","0");
+        }
         this.config.setEmailAddress(username);
         this.config.setPassword(password);
         this.config.setApiUseHttp(api_use_http);
