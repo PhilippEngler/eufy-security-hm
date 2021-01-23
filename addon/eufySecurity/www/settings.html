@@ -226,8 +226,20 @@
 				Die Einstellungen wurden erfolgreich gespeichert.
 			</div>
 		</div>
+
+		<div id="toastOKRestart" class="toast bg-success" role="alert" data-autohide="true" data-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="mr-auto">Speicherung der Einstellungen.</strong>
+				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+					&times;
+				</button>
+			</div>
+			<div class="toast-body text-white">
+				Die Einstellungen wurden erfolgreich gespeichert. Der Service wird neu gestartet.
+			</div>
+		</div>
 		
-		<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="mr-auto">Speicherung der Einstellungen</strong>
 				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
@@ -482,8 +494,16 @@
 							obfFD = JSON.parse(this.responseText);
 							if(obfFD.success == true)
 							{
-								document.getElementById("resultMessage").innerHTML = "";
-								$("#toastOK").toast('show');
+								if(obfFD.serviceRestart == true)
+								{
+									document.getElementById("resultMessage").innerHTML = "";
+									$("#toastOKRestart").toast('show');
+								}
+								else
+								{
+									document.getElementById("resultMessage").innerHTML = "";
+									$("#toastOK").toast('show');
+								}
 							}
 							else
 							{
