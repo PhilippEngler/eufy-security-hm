@@ -67,6 +67,10 @@ class ApiServer
         }
     }
 
+    /**
+     * The error listener for the webserver.
+     * @param error The error object.
+     */
     private async errorListener (error : any) : Promise<void>
     {
         if(error.code == "EADDRINUSE")
@@ -235,6 +239,14 @@ class ApiServer
                         break;
                     case "removeTokenData":
                         responseString = api.setTokenData("", "0");
+                        break;
+                    case "clearLogFile":
+                        emptyLogFile();
+                        responseString = "{\"success\":true}";
+                        break;
+                    case "clearErrFile":
+                        emptyErrFile();
+                        responseString = "{\"success\":true}";
                         break;
                     default:
                         responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
@@ -461,6 +473,24 @@ async function restartServer()
 {
     logger.log("Going to restart with apiServerRestarter...");
     exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
+}
+
+/**
+ * Clear the logfile
+ */
+function emptyLogFile()
+{
+    exec("rm /var/log/eufySecurity.log");
+    exec("touch /var/log/eufySecurity.log");
+}
+
+/**
+ * Clear the errorlogfile
+ */
+function emptyErrFile()
+{
+    exec("rm /var/log/eufySecurity.err");
+    exec("touch /var/log/eufySecurity.err");
 }
 
 /**

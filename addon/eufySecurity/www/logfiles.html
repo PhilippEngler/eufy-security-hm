@@ -78,6 +78,9 @@
 								</div>
 							</div>
 						</div>
+						<div class="card-footer">
+							<button id="deleteLogfileData" onclick="emptyLogfileData()" type="button" class="btn btn-primary">Entferne alle Einträge</button>
+						</div>
 					</div>
 				</div>
 				<div class="col">
@@ -89,6 +92,9 @@
 									<div id="err"></div>
 								</div>
 							</div>
+						</div>
+						<div class="card-footer">
+							<button id="deleteErrfileData" onclick="emptyErrfileData()" type="button" class="btn btn-primary">Entferne alle Einträge</button>
 						</div>
 					</div>
 				</div>
@@ -205,6 +211,88 @@
 				};
 				xmlHttp.open("GET", url, true);
 				xmlHttp.send();
+			}
+			
+			function emptyLogfileData()
+			{
+				var xmlhttp, myObj;
+				var cams="";
+				var imagepath="";
+				var type="";
+				var lastVideo="keine Aufnahme";
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}var url=location.protocol + "//" + location.hostname + port + "/clearLogFile";
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.overrideMimeType('application/json');
+				xmlhttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						myObj = JSON.parse(this.responseText);
+						if(myObj.success == true)
+						{
+							loadLog();
+						}
+						else
+						{
+							
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						
+					}
+					else
+					{
+						
+					}
+				};
+				xmlhttp.open("GET", url, true);
+				xmlhttp.send();
+			}
+			
+			function emptyErrfileData()
+			{
+				var xmlhttp, myObj;
+				var cams="";
+				var imagepath="";
+				var type="";
+				var lastVideo="keine Aufnahme";
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}var url=location.protocol + "//" + location.hostname + port + "/clearErrFile";
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.overrideMimeType('application/json');
+				xmlhttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						myObj = JSON.parse(this.responseText);
+						if(myObj.success == true)
+						{
+							loadErr();
+						}
+						else
+						{
+							
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						
+					}
+					else
+					{
+						
+					}
+				};
+				xmlhttp.open("GET", url, true);
+				xmlhttp.send();
 			}
 		</script>
 	</body>
