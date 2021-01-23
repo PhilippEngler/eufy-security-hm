@@ -28,15 +28,22 @@ export class Devices
         this.resDevices = await this.httpService.listDevices();
         var device : Device;
 
-        for (var dev of this.resDevices)
+        if(this.resDevices != null && this.resDevices.length > 0)
         {
-            device = new Device(dev);
-            this.devices[device.getSerialNumber()] = device;
+            for (var dev of this.resDevices)
+            {
+                device = new Device(dev);
+                this.devices[device.getSerialNumber()] = device;
+            }
+        }
+        else
+        {
+            this.devices = {};
         }
     }
 
     /**
-     * Returns a JSON-Representation of all Devices.
+     * Returns all Devices.
      */
     public getDevices() : {[key: string]: Device} 
     {
