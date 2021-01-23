@@ -39,6 +39,7 @@ class ApiServer
         if(httpActive == true)
         {
             logger.log("Starting http server...");
+            serverHttp.on("error", this.errorListener)
             serverHttp.on("request", this.requestListener);
             serverHttp.listen(portHttp);
             logger.log("...started. http listening on port '"+ portHttp + "'");
@@ -54,6 +55,7 @@ class ApiServer
                     cert: readFileSync(certHttps)
                 };
                 serverHttps.setSecureContext(options);
+                serverHttps.on("error", this.errorListener)
                 serverHttps.on("request", this.requestListener);
                 serverHttps.listen(portHttps);
                 logger.log("...started. https listening on port '"+ portHttps + "'");
@@ -62,6 +64,18 @@ class ApiServer
             {
                 logger.err("FAILED TO START SERVER (HTTPS): key or cert file not found.");
             }
+        }
+    }
+
+    private async errorListener (error : any) : Promise<void>
+    {
+        if(error.code == "EADDRINUSE")
+        {
+            logger.err("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
+        }
+        else
+        {
+            logger.err("ERROR: " + error.code + ": " + error.message);
         }
     }
     
