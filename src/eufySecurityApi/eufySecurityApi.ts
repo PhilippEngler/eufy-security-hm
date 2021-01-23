@@ -548,11 +548,22 @@ export class EufySecurityApi
      * @param token The token.
      * @param tokenExpire The time the token exprire.
      */
-    public setTokenData(token : string, tokenExpire : string) : void
+    public setTokenData(token : string, tokenExpire : string) : string
     {
+        var res;
+        var json = "";
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
-        this.config.writeConfig();
+        res = this.config.writeConfig();
+        if(res == "saved")
+        {
+            json = "{\"success\":true,\"dataRemoved\":true}";
+        }
+        else
+        {
+            json = "{\"success\":false,\"dataRemoved\":false}";
+        }
+        return json;
     }
 
     /**

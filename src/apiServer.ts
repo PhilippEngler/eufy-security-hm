@@ -233,6 +233,9 @@ class ApiServer
                     case "getErrorFileContent":
                         responseString = await api.getErrorFileContent();
                         break;
+                    case "removeTokenData":
+                        responseString = api.setTokenData("", "0");
+                        break;
                     default:
                         responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
                         

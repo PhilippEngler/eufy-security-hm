@@ -100,7 +100,7 @@
 										<div class="form-label-group" class="container-fluid">
 											<label for="password">Passwort des angelegten eufy Security Accounts.</label>
 											<input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
-										</div> 
+										</div>
 									</div>
 								</div>
 							</div>
@@ -168,50 +168,45 @@
 
 						<div class="mb-3">
 							<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
-						</div></form>
+						</div>
 
-					<div class="card mb-3">
-						<h5 class="card-header">Systemvariablen</h5>
-						<div class="row no-gutters">
-							<div class="col-md-12">
-								<div class="card-body" >
-									<div class="alert alert-primary fade show" role="alert">
-										In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die entsprechende Spalte grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
-										<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind.</small>
+						<div class="card mb-3">
+							<h5 class="card-header">Systemvariablen</h5>
+							<div class="row no-gutters">
+								<div class="col-md-12">
+									<div class="card-body" >
+										<div class="alert alert-primary fade show" role="alert">
+											In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die entsprechende Spalte grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
+											<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind.</small>
+										</div>
+										<div id="divSystemVariables">
+
+										</div>
 									</div>
-									<div id="divSystemVariables">
+								</div>
+							</div>
+						</div>
 
+						<div class="card mb-3">
+							<h5 class="card-header">Fehlerbehebung</h5>
+							<div class="row no-gutters">
+								<div class="col-md-12">
+									<div class="card-body" >
+										<div class="alert alert-primary fade show" role="alert">
+											Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen.<br />
+											<small class="text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen Daten und Einstellungen löschen oder verändern.</small>
+										</div>
+										<div class="form-label-group" class="container-fluid">
+											<label for="deleteTokenData">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
+											<button id="deleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-primary">Lösche Token</button>
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-
-					<div id="toastOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
-						<div class="toast-header">
-							<strong class="mr-auto">Speicherung der Einstellungen.</strong>
-							<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
-								&times;
-							</button>
-						</div>
-						<div class="toast-body text-white">
-							Die Einstellungen wurden erfolgreich gespeichert.
-						</div>
-					</div>
-					
-					<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
-						<div class="toast-header">
-							<strong class="mr-auto">Speicherung der Einstellungen</strong>
-							<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
-								&times;
-							</button>
-						</div>
-						<div class="toast-body text-white">
-							Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
-						</div>
-					</div>
 				</div>
-			</div>
+			</form>
 		</main>
 		
 		<footer class="footer">
@@ -219,6 +214,54 @@
 				<span class="text-muted">&copy; 2020-2021 Philipp Engler</span>
 			</div>
 		</footer>
+
+		<div id="toastOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="mr-auto">Speicherung der Einstellungen.</strong>
+				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+					&times;
+				</button>
+			</div>
+			<div class="toast-body text-white">
+				Die Einstellungen wurden erfolgreich gespeichert.
+			</div>
+		</div>
+		
+		<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="mr-auto">Speicherung der Einstellungen</strong>
+				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+					&times;
+				</button>
+			</div>
+			<div class="toast-body text-white">
+				Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
+			</div>
+		</div>
+		
+		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="mr-auto">Tokendaten löschen.</strong>
+				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+					&times;
+				</button>
+			</div>
+			<div class="toast-body text-white">
+				Die Tokendaten wurden erfolgreich gelöscht.
+			</div>
+		</div>
+		
+		<div id="toastRemoveTokenFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="mr-auto">Tokendaten löschen.</strong>
+				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+					&times;
+				</button>
+			</div>
+			<div class="toast-body text-white">
+				Bei dem Löschen der Tokendaten ist ein Fehler aufgetreten.
+			</div>
+		</div>
 		
 		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
 		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
@@ -251,7 +294,8 @@
 				if(location.protocol == "https:")
 				{
 					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/getConfig";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/getConfig";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -340,7 +384,8 @@
 				if(location.protocol == "https:")
 				{
 					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				text = "<table class=\"table\"><thead><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
@@ -412,7 +457,8 @@
 				if(location.protocol == "https:")
 				{
 					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/setConfig";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/setConfig";
 				
 				xmlHttp = new XMLHttpRequest();
 				
@@ -471,7 +517,8 @@
 				if(location.protocol == "https:")
 				{
 					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/createSystemVariable/" + varName + "/" + varInfo;
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/createSystemVariable/" + varName + "/" + varInfo;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				text = "<table class=\"table\"><thead><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
@@ -503,6 +550,51 @@
 					else
 					{
 						document.getElementById("divSystemVariables").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Laden der Systemvariablen...</strong></div>";
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function removeTokenData()
+			{
+				var xmlHttp, objResp;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/removeTokenData";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true && objResp.dataRemoved == true)
+							{
+								$("#toastRemoveTokenOK").toast('show');
+							}
+							else
+							{
+								$("#toastRemoveTokenFailed").toast('show');
+							}
+						}
+						catch (e)
+						{
+							$("#toastRemoveTokenFailed").toast('show');
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						
+					}
+					else
+					{
+						
 					}
 				};
 				xmlHttp.open("GET", url, true);
