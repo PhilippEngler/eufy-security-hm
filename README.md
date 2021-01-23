@@ -21,7 +21,7 @@ To install this addon on your CCU follow these steps:
 6. When the installation is done, you can navigate to http://<IP_OF_CCU>/addons/eufySecurity and start configuration of the addon.
 
 ## Configuration
-On the website of the addon (http://<IP_OF_CCU>/addons/eufySecurity), navigate to "Einstellungen" and provide your eufy security account data. Please note, that this eufy security account does not use 2FA and is only used for this addon. After you click on "Einstellungen speichern", the addon will be restarting the API and you will see your devices under "Geräte". More information how to use this addon you will find on the "Über" page in the addon website.
+On the website of the addon (http://<IP_OF_CCU>/addons/eufySecurity), navigate to "Einstellungen" and provide your eufy security account data. Please note, that this eufy security account does not use 2FA, is only used for this addon and the bases and cams are shared with this account. After you click on "Einstellungen speichern", the addon will be restarting the API and you will see your devices under "Geräte". More information how to use this addon you will find on the "Über" page in the addon website.
 
 For creating the needed system variables you have two alternatives.
 The first is the use of the two HM-Script files provided in the HMScript folder. On your CCUs WebUI you navigate to "Programme und Verknüpfungen" -> "Programme & Zentralenverknüpfungen" and click on "Skript testen" on the bottom of the website. Than copy the HM-Script into the window and execute both.
