@@ -36,14 +36,21 @@ export class Bases
         var resBase : Hub;
         var base : Base;
 
-        for (resBase of this.resBases)
+        if(this.resBases != null && this.resBases.length > 0)
         {
-            base = new Base(this.api, this.httpService, resBase);
-            this.bases[base.getSerialNumber()] = base;
-            this.serialNumbers.push(base.getSerialNumber());
-        }
+            for (resBase of this.resBases)
+            {
+                base = new Base(this.api, this.httpService, resBase);
+                this.bases[base.getSerialNumber()] = base;
+                this.serialNumbers.push(base.getSerialNumber());
+            }
 
-        await this.saveBasesSettings();
+            await this.saveBasesSettings();
+        }
+        else
+        {
+            this.bases = {};
+        }
     }
 
     /**
