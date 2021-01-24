@@ -25,20 +25,28 @@ export class Devices
      */
     public async loadDevices() : Promise<void>
     {
-        this.resDevices = await this.httpService.listDevices();
-        var device : Device;
-
-        if(this.resDevices != null && this.resDevices.length > 0)
+        try
         {
-            for (var dev of this.resDevices)
+            this.resDevices = await this.httpService.listDevices();
+            var device : Device;
+
+            if(this.resDevices != null && this.resDevices.length > 0)
             {
-                device = new Device(dev);
-                this.devices[device.getSerialNumber()] = device;
+                for (var dev of this.resDevices)
+                {
+                    device = new Device(dev);
+                    this.devices[device.getSerialNumber()] = device;
+                }
+            }
+            else
+            {
+                this.devices = {};
             }
         }
-        else
+        catch (e)
         {
             this.devices = {};
+            throw new Error(e);
         }
     }
 
