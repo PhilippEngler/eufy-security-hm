@@ -44,6 +44,7 @@ class ApiServer {
         return __awaiter(this, void 0, void 0, function* () {
             if (httpActive == true) {
                 logger.log("Starting http server...");
+                serverHttp.on("error", this.errorListener);
                 serverHttp.on("request", this.requestListener);
                 serverHttp.listen(portHttp);
                 logger.log("...started. http listening on port '" + portHttp + "'");
@@ -56,6 +57,7 @@ class ApiServer {
                         cert: fs_1.readFileSync(certHttps)
                     };
                     serverHttps.setSecureContext(options);
+                    serverHttps.on("error", this.errorListener);
                     serverHttps.on("request", this.requestListener);
                     serverHttps.listen(portHttps);
                     logger.log("...started. https listening on port '" + portHttps + "'");
@@ -63,6 +65,20 @@ class ApiServer {
                 else {
                     logger.err("FAILED TO START SERVER (HTTPS): key or cert file not found.");
                 }
+            }
+        });
+    }
+    /**
+     * The error listener for the webserver.
+     * @param error The error object.
+     */
+    errorListener(error) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (error.code == "EADDRINUSE") {
+                logger.err("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
+            }
+            else {
+                logger.err("ERROR: " + error.code + ": " + error.message);
             }
         });
     }
@@ -201,6 +217,21 @@ class ApiServer {
                             break;
                         case "getErrorFileContent":
                             responseString = yield api.getErrorFileContent();
+                            break;
+                        case "removeTokenData":
+                            responseString = api.setTokenData("", "0");
+                            break;
+                        case "clearLogFile":
+                            emptyLogFile();
+                            responseString = "{\"success\":true}";
+                            break;
+                        case "clearErrFile":
+                            emptyErrFile();
+                            responseString = "{\"success\":true}";
+                            break;
+                        case "restartService":
+                            restartServer();
+                            responseString = "{\"success\":true}";
                             break;
                         default:
                             responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
@@ -374,6 +405,20 @@ function restartServer() {
         logger.log("Going to restart with apiServerRestarter...");
         child_process_1.exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
     });
+}
+/**
+ * Clear the logfile
+ */
+function emptyLogFile() {
+    child_process_1.exec("rm /var/log/eufySecurity.log");
+    child_process_1.exec("touch /var/log/eufySecurity.log");
+}
+/**
+ * Clear the errorlogfile
+ */
+function emptyErrFile() {
+    child_process_1.exec("rm /var/log/eufySecurity.err");
+    child_process_1.exec("touch /var/log/eufySecurity.err");
 }
 /**
  * Wait-function for waing between stop and start when restarting.

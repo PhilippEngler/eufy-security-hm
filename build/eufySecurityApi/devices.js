@@ -29,16 +29,27 @@ class Devices {
      */
     loadDevices() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.resDevices = yield this.httpService.listDevices();
-            var device;
-            for (var dev of this.resDevices) {
-                device = new Device(dev);
-                this.devices[device.getSerialNumber()] = device;
+            try {
+                this.resDevices = yield this.httpService.listDevices();
+                var device;
+                if (this.resDevices != null && this.resDevices.length > 0) {
+                    for (var dev of this.resDevices) {
+                        device = new Device(dev);
+                        this.devices[device.getSerialNumber()] = device;
+                    }
+                }
+                else {
+                    this.devices = {};
+                }
+            }
+            catch (e) {
+                this.devices = {};
+                throw new Error(e);
             }
         });
     }
     /**
-     * Returns a JSON-Representation of all Devices.
+     * Returns all Devices.
      */
     getDevices() {
         return this.devices;

@@ -32,15 +32,26 @@ class Bases {
      */
     loadBases() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.resBases = yield this.httpService.listHubs();
-            var resBase;
-            var base;
-            for (resBase of this.resBases) {
-                base = new Base(this.api, this.httpService, resBase);
-                this.bases[base.getSerialNumber()] = base;
-                this.serialNumbers.push(base.getSerialNumber());
+            try {
+                this.resBases = yield this.httpService.listHubs();
+                var resBase;
+                var base;
+                if (this.resBases != null && this.resBases.length > 0) {
+                    for (resBase of this.resBases) {
+                        base = new Base(this.api, this.httpService, resBase);
+                        this.bases[base.getSerialNumber()] = base;
+                        this.serialNumbers.push(base.getSerialNumber());
+                    }
+                    yield this.saveBasesSettings();
+                }
+                else {
+                    this.bases = {};
+                }
             }
-            yield this.saveBasesSettings();
+            catch (e) {
+                this.bases = {};
+                throw new Error(e);
+            }
         });
     }
     /**

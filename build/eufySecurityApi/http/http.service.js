@@ -92,8 +92,28 @@ class HttpService {
     }
     requestWithToken(path, body, headers) {
         return __awaiter(this, void 0, void 0, function* () {
-            const token = yield this.getToken();
-            return yield http_utils_1.postRequest(`${this.baseUrl}${path}`, body, token, headers);
+            try {
+                const token = yield this.getToken();
+                return yield http_utils_1.postRequest(`${this.baseUrl}${path}`, body, token, headers);
+            }
+            catch (e) {
+                if (e.message.indexOf("401") > 0) {
+                    try {
+                        this.api.addToErr("HTTPError 401: removing token data and retry.");
+                        this.api.setTokenData("", "0");
+                        const token = yield this.getToken();
+                        return yield http_utils_1.postRequest(`${this.baseUrl}${path}`, body, token, headers);
+                    }
+                    catch (e) {
+                        this.api.addToErr("HTTPError 401: please check your account data.");
+                        throw new Error(e);
+                    }
+                }
+                else {
+                    this.api.addToErr(e + " | call: " + this.baseUrl + path);
+                    throw new Error(e);
+                }
+            }
         });
     }
     getToken() {

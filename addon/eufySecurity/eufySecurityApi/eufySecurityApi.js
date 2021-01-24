@@ -49,8 +49,14 @@ class EufySecurityApi {
      */
     loadData() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.devices.loadDevices();
-            yield this.bases.loadBases();
+            try {
+                yield this.devices.loadDevices();
+            }
+            catch (_a) { }
+            try {
+                yield this.bases.loadBases();
+            }
+            catch (_b) { }
         });
     }
     /**
@@ -58,46 +64,55 @@ class EufySecurityApi {
      */
     getDevices() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.devices) {
-                yield this.devices.loadDevices();
-                var devices = this.devices.getDevices();
-                var dev;
-                var json = "";
-                if (devices) {
-                    for (var key in devices) {
-                        dev = devices[key];
-                        if (json.endsWith("}")) {
-                            json += ",";
+            try {
+                if (this.devices) {
+                    yield this.devices.loadDevices();
+                    var devices = this.devices.getDevices();
+                    var dev;
+                    var json = "";
+                    if (devices) {
+                        for (var key in devices) {
+                            dev = devices[key];
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            json += "{";
+                            json += "\"device_id\":\"" + dev.getSerialNumber() + "\",";
+                            json += "\"eufy_device_id\":\"" + dev.getId() + "\",";
+                            json += "\"device_type\":\"" + dev.getDeviceTypeString() + "\",";
+                            json += "\"model\":\"" + dev.getModel() + "\",";
+                            json += "\"name\":\"" + dev.getName() + "\",";
+                            json += "\"hardware_Version\":\"" + dev.getHardwareVersion() + "\",";
+                            json += "\"software_version\":\"" + dev.getSoftwareVersion() + "\",";
+                            json += "\"base_serial\":\"" + dev.getBaseSerialConnected() + "\",";
+                            json += "\"battery_charge\":\"" + dev.getBatteryCharge() + "\",";
+                            json += "\"battery_temperature\":\"" + dev.getBatteryTemperature() + "\",";
+                            json += "\"last_camera_image_time\":\"" + dev.getLastImageTime() + "\",";
+                            json += "\"last_camera_image_url\":\"" + dev.getLastImageUrl() + "\"";
+                            json += "}";
                         }
-                        json += "{";
-                        json += "\"device_id\":\"" + dev.getSerialNumber() + "\",";
-                        json += "\"eufy_device_id\":\"" + dev.getId() + "\",";
-                        json += "\"device_type\":\"" + dev.getDeviceTypeString() + "\",";
-                        json += "\"model\":\"" + dev.getModel() + "\",";
-                        json += "\"name\":\"" + dev.getName() + "\",";
-                        json += "\"hardware_Version\":\"" + dev.getHardwareVersion() + "\",";
-                        json += "\"software_version\":\"" + dev.getSoftwareVersion() + "\",";
-                        json += "\"base_serial\":\"" + dev.getBaseSerialConnected() + "\",";
-                        json += "\"battery_charge\":\"" + dev.getBatteryCharge() + "\",";
-                        json += "\"battery_temperature\":\"" + dev.getBatteryTemperature() + "\",";
-                        json += "\"last_camera_image_time\":\"" + dev.getLastImageTime() + "\",";
-                        json += "\"last_camera_image_url\":\"" + dev.getLastImageUrl() + "\"";
-                        json += "}";
+                        json = "{\"success\":true,\"data\":[" + json + "]}";
+                        this.setLastConnectionInfo(true);
                     }
-                    json = "{\"success\":true,\"data\":[" + json + "]}";
-                    this.setLastConnectionInfo(true);
+                    else {
+                        json = "{\"success\":false,\"reason\":\"No devices found.\"}";
+                        this.setLastConnectionInfo(false);
+                    }
                 }
                 else {
-                    json = "{\"success\":false,\"reason\":\"No devices found.\"}";
-                    this.setLastConnectionInfo(false);
+                    json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                 }
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
     }
+    /**
+     * Create a JSON STring for a given base.
+     * @param base The base the JSON string created for.
+     */
     makeJSONforBase(base) {
         var json = "{";
         json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
@@ -119,29 +134,34 @@ class EufySecurityApi {
      */
     getBases() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.bases) {
-                yield this.bases.loadBases();
-                var bases = this.bases.getBases();
-                var json = "";
-                var base;
-                if (bases) {
-                    for (var key in bases) {
-                        base = bases[key];
-                        if (json.endsWith("}")) {
-                            json += ",";
+            try {
+                if (this.bases) {
+                    yield this.bases.loadBases();
+                    var bases = this.bases.getBases();
+                    var json = "";
+                    var base;
+                    if (bases) {
+                        for (var key in bases) {
+                            base = bases[key];
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            json += this.makeJSONforBase(base);
                         }
-                        json += this.makeJSONforBase(base);
+                        json = "{\"success\":true,\"data\":[" + json + "]}";
+                        this.setLastConnectionInfo(true);
                     }
-                    json = "{\"success\":true,\"data\":[" + json + "]}";
-                    this.setLastConnectionInfo(true);
+                    else {
+                        json = "{\"success\":false,\"reason\":\"No bases found.\"}";
+                        this.setLastConnectionInfo(false);
+                    }
                 }
                 else {
-                    json = "{\"success\":false,\"reason\":\"No bases found.\"}";
-                    this.setLastConnectionInfo(false);
+                    json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                 }
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
@@ -446,9 +466,18 @@ class EufySecurityApi {
      * @param tokenExpire The time the token exprire.
      */
     setTokenData(token, tokenExpire) {
+        var res;
+        var json = "";
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
-        this.config.writeConfig();
+        res = this.config.writeConfig();
+        if (res == "saved") {
+            json = "{\"success\":true,\"dataRemoved\":true}";
+        }
+        else {
+            json = "{\"success\":false,\"dataRemoved\":false}";
+        }
+        return json;
     }
     /**
      * Returns if the api use HTTP
@@ -522,6 +551,9 @@ class EufySecurityApi {
         var serviceRestart = false;
         if (this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https) {
             serviceRestart = true;
+        }
+        if (this.config.getEmailAddress() != username) {
+            this.setTokenData("", "0");
         }
         this.config.setEmailAddress(username);
         this.config.setPassword(password);
@@ -778,7 +810,7 @@ class EufySecurityApi {
      * Return the version of this API.
      */
     getApiVersion() {
-        return "{\"success\":true,\"api_version\":\"1.0.0\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
+        return "{\"success\":true,\"api_version\":\"1.0.1\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;
