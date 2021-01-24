@@ -32,11 +32,11 @@ export class EufySecurityApi
     /**
      * Initialize the api and make basic settings check. 
      */
-    private async initialize(): Promise<void>
+    private async initialize() : Promise<void>
     {
         if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
         {
-            this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set email and password at least to run this programm.");
+            this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
         }
         else
         {
