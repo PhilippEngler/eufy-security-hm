@@ -248,6 +248,10 @@ class ApiServer
                         emptyErrFile();
                         responseString = "{\"success\":true}";
                         break;
+                    case "restartService":
+                        restartServer();
+                        responseString = "{\"success\":true}";
+                        break;
                     default:
                         responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
                         
