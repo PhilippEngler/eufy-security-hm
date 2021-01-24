@@ -125,84 +125,91 @@
 						myObj = JSON.parse(this.responseText);
 						if(myObj.success == true)
 						{
-							cams += "			<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5\" id=\"cameras\"><!-- xl-2 col-lg-3 col-md-4 col-sm-6 col-12 -->";
-							for (x in myObj.data)
+							if(myObj.data.length > 0)
 							{
-								if(myObj.data[x].device_type == "camera")
+								cams += "			<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5\" id=\"cameras\"><!-- xl-2 col-lg-3 col-md-4 col-sm-6 col-12 -->";
+								for (x in myObj.data)
 								{
-									switch (myObj.data[x].model)
+									if(myObj.data[x].device_type == "camera")
 									{
-										case "T8111":
-											imagepath = "							<img src=\"assets/devices/eufyCamE.png\" class=\"card-img-top\" alt=\"...\">";
-											type="eufyCam";
-											break;
-										case "T8112":
-											imagepath = "							<img src=\"assets/devices/eufyCamE.png\" class=\"card-img-top\" alt=\"...\">";
-											type="eufyCam E";
-											break;
-										case "T8113":
-											imagepath = "							<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
-											type="eufyCam 2C";
-											break;
-										case "T8114":
-											imagepath = "							<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
-											type="eufyCam 2";
-											break;
-										case "T8140":
-											imagepath = "							<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
-											type="eufyCam 2 Pro";
-											break;
-										case "T8142":
-											imagepath = "							<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
-											type="eufyCam 2C Pro";
-											break;
-										case "T8420":
-											imagepath = "							<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
-											type="Floodlight Camera";
-											break;
-										default:
-											imagepath = "							<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
+										switch (myObj.data[x].model)
+										{
+											case "T8111":
+												imagepath = "							<img src=\"assets/devices/eufyCamE.png\" class=\"card-img-top\" alt=\"...\">";
+												type="eufyCam";
+												break;
+											case "T8112":
+												imagepath = "							<img src=\"assets/devices/eufyCamE.png\" class=\"card-img-top\" alt=\"...\">";
+												type="eufyCam E";
+												break;
+											case "T8113":
+												imagepath = "							<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
+												type="eufyCam 2C";
+												break;
+											case "T8114":
+												imagepath = "							<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
+												type="eufyCam 2";
+												break;
+											case "T8140":
+												imagepath = "							<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
+												type="eufyCam 2 Pro";
+												break;
+											case "T8142":
+												imagepath = "							<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
+												type="eufyCam 2C Pro";
+												break;
+											case "T8420":
+												imagepath = "							<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
+												type="Floodlight Camera";
+												break;
+											default:
+												imagepath = "							<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
+										}
+										if(myObj.data[x].last_camera_image_time != "" && myObj.data[x].last_camera_image_time != "undefined")
+										{
+											var date = new Date(parseInt(myObj.data[x].last_camera_image_time)*1000);
+											lastVideo = "";
+											lastVideo += ("0" + date.getDate()).slice(-2);
+											lastVideo += ".";
+											lastVideo += ("0" + (date.getMonth()+1)).slice(-2);
+											lastVideo += ".";
+											lastVideo += date.getFullYear();
+											lastVideo += " ";
+											lastVideo += ("0" + date.getHours()).slice(-2);
+											lastVideo += ":";
+											lastVideo += ("0" + date.getMinutes()).slice(-2);
+											lastVideo += ":";
+											lastVideo += ("0" + date.getSeconds()).slice(-2);
+											lastVideo += " | <a href=\"" + myObj.data[x].last_camera_image_url + "\">Standbild</a>";
+										}
+										cams += "					<div class=\"col mb-3\">";
+										cams += "						<div class=\"card\">";
+										cams += "							<h5 class=\"card-header\">" + myObj.data[x].name + "</h5>";
+										cams += "							<div class=\"row no-gutters\">";
+										cams += "								<div class=\"col-md-4\">";
+										cams += "									" + imagepath;
+										cams += "								</div>";
+										cams += "								<div class=\"col-md-8\">";
+										cams += "									<div class=\"card-body\" style=\"margin-left: -1rem\">";
+										cams += "										<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
+										cams += "										<p class=\"card-text\">" + myObj.data[x].device_id + "<br />SW: " + myObj.data[x].software_version + "<br />Akku: " + myObj.data[x].battery_charge + "% / " + myObj.data[x].battery_temperature + "&deg;C</p>";
+										cams += "									</div>";
+										cams += "								</div>";
+										cams += "							</div>";
+										cams += "							<div class=\"card-footer\">";
+										cams += "								<small class=\"text-muted\">Letzte Aufnahme: " + lastVideo + "</small>";
+										cams += "							</div>";
+										cams += "						</div>";
+										cams += "					</div>";
 									}
-									if(myObj.data[x].last_camera_image_time != "" && myObj.data[x].last_camera_image_time != "undefined")
-									{
-										var date = new Date(parseInt(myObj.data[x].last_camera_image_time)*1000);
-										lastVideo = "";
-										lastVideo += ("0" + date.getDate()).slice(-2);
-										lastVideo += ".";
-										lastVideo += ("0" + (date.getMonth()+1)).slice(-2);
-										lastVideo += ".";
-										lastVideo += date.getFullYear();
-										lastVideo += " ";
-										lastVideo += ("0" + date.getHours()).slice(-2);
-										lastVideo += ":";
-										lastVideo += ("0" + date.getMinutes()).slice(-2);
-										lastVideo += ":";
-										lastVideo += ("0" + date.getSeconds()).slice(-2);
-										lastVideo += " | <a href=\"" + myObj.data[x].last_camera_image_url + "\">Standbild</a>";
-									}
-									cams += "					<div class=\"col mb-3\">";
-									cams += "						<div class=\"card\">";
-									cams += "							<h5 class=\"card-header\">" + myObj.data[x].name + "</h5>";
-									cams += "							<div class=\"row no-gutters\">";
-									cams += "								<div class=\"col-md-4\">";
-									cams += "									" + imagepath;
-									cams += "								</div>";
-									cams += "								<div class=\"col-md-8\">";
-									cams += "									<div class=\"card-body\" style=\"margin-left: -1rem\">";
-									cams += "										<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
-									cams += "										<p class=\"card-text\">" + myObj.data[x].device_id + "<br />SW: " + myObj.data[x].software_version + "<br />Akku: " + myObj.data[x].battery_charge + "% / " + myObj.data[x].battery_temperature + "&deg;C</p>";
-									cams += "									</div>";
-									cams += "								</div>";
-									cams += "							</div>";
-									cams += "							<div class=\"card-footer\">";
-									cams += "								<small class=\"text-muted\">Letzte Aufnahme: " + lastVideo + "</small>";
-									cams += "							</div>";
-									cams += "						</div>";
-									cams += "					</div>";
+									lastVideo =  "keine Aufnahme";
 								}
-								lastVideo =  "keine Aufnahme";
+								cams += "			</div>";
 							}
-							cams += "			</div>";
+							else
+							{
+								cams += "			<div class=\"alert alert-danger\" role=\"alert\">Es wurden keine Kameras gefunden.</div>";
+							}
 							document.getElementById("cameras").innerHTML = cams;
 							type="";
 						}
@@ -244,68 +251,75 @@
 						myObj = JSON.parse(this.responseText);
 						if(myObj.success == true)
 						{
-							bases += "			<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
-							for (x in myObj.data)
+							if(myObj.data.length > 0)
 							{
-								if(myObj.data[x].device_type == "basestation")
+								bases += "			<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
+								for (x in myObj.data)
 								{
-									switch (myObj.data[x].model)
+									if(myObj.data[x].device_type == "basestation")
 									{
-										case "T8001":
-											imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase\">";
-											type="HomeBase";
-											break;
-										case "T8002":
-											imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase E\">";
-											type="HomeBase E";
-											break;
-										case "T8010":
-											imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase 2\">";
-											type="HomeBase 2";
-											break;
-										default:
-											imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase\">";
-											type="HomeBase";
+										switch (myObj.data[x].model)
+										{
+											case "T8001":
+												imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase\">";
+												type="HomeBase";
+												break;
+											case "T8002":
+												imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase E\">";
+												type="HomeBase E";
+												break;
+											case "T8010":
+												imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase 2\">";
+												type="HomeBase 2";
+												break;
+											default:
+												imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase\">";
+												type="HomeBase";
+										}
+										switch (myObj.data[x].guard_mode)
+										{
+											case "0":
+												state = "abwesend";
+												break;
+											case "63":
+												state = "deaktiviert";
+												break;
+											default:
+												state="unbekannt";
+										}
+										bases += "				<div class=\"col\">";
+										bases += "					<div class=\"card mb-3\">";
+										bases += "						<h5 class=\"card-header\">" + myObj.data[x].name + "</h5>";
+										bases += "						<div class=\"row no-gutters\">";
+										bases += "							<div class=\"col-md-4\">";
+										bases += "								" + imagepath;
+										bases += "							</div>";
+										bases += "							<div class=\"col-md-8\">";
+										bases += "								<div class=\"card-body\" style=\"margin-left: -1rem\">";
+										bases += "									<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
+										bases += "									<p class=\"card-text\">" + myObj.data[x].base_id + "<br />SW: " + myObj.data[x].software_version + "<br />Status: " + state + "</p>";
+										bases += "								</div>";
+										bases += "							</div>";
+										bases += "						</div>";
+										bases += "						<div class=\"card-footer\">";
+										bases += "							<small class=\"text-muted\">IP-Adresse: " + myObj.data[x].local_ip_address + " (" + myObj.data[x].external_ip_address + ")</small>";
+										bases += "						</div>";
+										bases += "					</div>";
+										bases += "				</div>";
 									}
-									switch (myObj.data[x].guard_mode)
-									{
-										case "0":
-											state = "abwesend";
-											break;
-										case "63":
-											state = "deaktiviert";
-											break;
-										default:
-											state="unbekannt";
-									}
-									bases += "				<div class=\"col\">";
-									bases += "					<div class=\"card mb-3\">";
-									bases += "						<h5 class=\"card-header\">" + myObj.data[x].name + "</h5>";
-									bases += "						<div class=\"row no-gutters\">";
-									bases += "							<div class=\"col-md-4\">";
-									bases += "								" + imagepath;
-									bases += "							</div>";
-									bases += "							<div class=\"col-md-8\">";
-									bases += "								<div class=\"card-body\" style=\"margin-left: -1rem\">";
-									bases += "									<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
-									bases += "									<p class=\"card-text\">" + myObj.data[x].base_id + "<br />SW: " + myObj.data[x].software_version + "<br />Status: " + state + "</p>";
-									bases += "								</div>";
-									bases += "							</div>";
-									bases += "						</div>";
-									bases += "						<div class=\"card-footer\">";
-									bases += "							<small class=\"text-muted\">IP-Adresse: " + myObj.data[x].local_ip_address + " (" + myObj.data[x].external_ip_address + ")</small>";
-									bases += "						</div>";
-									bases += "					</div>";
-									bases += "				</div>";
 								}
+								bases += "			</div>";
 							}
-							bases += "			</div>";
+							else
+							{
+								bases += "			<div class=\"alert alert-danger\" role=\"alert\">Es wurden keine Basisstationen gefunden.</div>";
+							}
 							document.getElementById("basestations").innerHTML = bases;
 							type="";
 						}
 						else
 						{
-							document.getElementById("cameras").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+							document.getElementById("basestations").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
 						}
 					}
 					else if (this.status == 200 || this.readyState == 4)
