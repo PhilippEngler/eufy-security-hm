@@ -200,6 +200,11 @@
 											<label for="deleteTokenData">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
 											<button id="deleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-primary">Lösche Token</button>
 										</div>
+										<br />
+										<div class="form-label-group" class="container-fluid">
+											<label for="restartSvr">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
+											<button id="restartSvr" onclick="restartService()" type="button" class="btn btn-primary">Service neu starten</button>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -241,7 +246,7 @@
 		
 		<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Speicherung der Einstellungen</strong>
+				<strong class="mr-auto">Speicherung der Einstellungen.</strong>
 				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
@@ -272,6 +277,30 @@
 			</div>
 			<div class="toast-body text-white">
 				Bei dem Löschen der Tokendaten ist ein Fehler aufgetreten.
+			</div>
+		</div>
+
+		<div id="toastRestartOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="mr-auto">Service neu starten.</strong>
+				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+					&times;
+				</button>
+			</div>
+			<div class="toast-body text-white">
+				Der Service wird neu gestartet.
+			</div>
+		</div>
+		
+		<div id="toastRestartFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="mr-auto">Service neu starten.</strong>
+				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+					&times;
+				</button>
+			</div>
+			<div class="toast-body text-white">
+				Bei dem Neustart des Services ist ein Fehler aufgetreten.
 			</div>
 		</div>
 		
@@ -606,6 +635,51 @@
 						catch (e)
 						{
 							$("#toastRemoveTokenFailed").toast('show');
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						
+					}
+					else
+					{
+						
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function restartService()
+			{
+				var xmlHttp, objResp;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/restartService";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								$("#toastRestartOK").toast('show');
+							}
+							else
+							{
+								$("#toastRestartFailed").toast('show');
+							}
+						}
+						catch (e)
+						{
+							$("#toastRestartFailed").toast('show');
 						}
 					}
 					else if (this.status == 200 || this.readyState == 4)
