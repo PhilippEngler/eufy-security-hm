@@ -102,8 +102,34 @@ export class HttpService {
     body?: Record<string, unknown> | undefined,
     headers?: Record<string, unknown>,
   ): Promise<T> {
-    const token = await this.getToken();
-    return await postRequest(`${this.baseUrl}${path}`, body, token, headers);
+    try
+    {
+      const token = await this.getToken();
+      return await postRequest(`${this.baseUrl}${path}`, body, token, headers);
+    }
+    catch (e)
+    {
+      if(e.message.indexOf("401") > 0)
+      {
+        try
+        {
+          this.api.addToErr("HTTPError 401: removing token data and retry.");
+          this.api.setTokenData("", "0");
+          const token = await this.getToken();
+          return await postRequest(`${this.baseUrl}${path}`, body, token, headers);
+        }
+        catch (e)
+        {
+          this.api.addToErr("HTTPError 401: please check your account data.");
+          throw new Error(e);
+        }
+      }
+      else
+      {
+        this.api.addToErr(e + " | call: " + this.baseUrl + path);
+        throw new Error(e);
+      }
+    }
   }
 
   private async getToken(): Promise<string> {
