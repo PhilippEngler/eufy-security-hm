@@ -32,24 +32,32 @@ export class Bases
      */
     public async loadBases() : Promise<void>
     {
-        this.resBases = await this.httpService.listHubs();
-        var resBase : Hub;
-        var base : Base;
-
-        if(this.resBases != null && this.resBases.length > 0)
+        try
         {
-            for (resBase of this.resBases)
-            {
-                base = new Base(this.api, this.httpService, resBase);
-                this.bases[base.getSerialNumber()] = base;
-                this.serialNumbers.push(base.getSerialNumber());
-            }
+            this.resBases = await this.httpService.listHubs();
+            var resBase : Hub;
+            var base : Base;
 
-            await this.saveBasesSettings();
+            if(this.resBases != null && this.resBases.length > 0)
+            {
+                for (resBase of this.resBases)
+                {
+                    base = new Base(this.api, this.httpService, resBase);
+                    this.bases[base.getSerialNumber()] = base;
+                    this.serialNumbers.push(base.getSerialNumber());
+                }
+                
+                await this.saveBasesSettings();
+            }
+            else
+            {
+                this.bases = {};
+            }
         }
-        else
+        catch (e)
         {
             this.bases = {};
+            throw new Error(e);
         }
     }
 
