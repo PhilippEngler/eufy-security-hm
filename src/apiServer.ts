@@ -91,6 +91,8 @@ class ApiServer
     private async requestListener (request : IncomingMessage, response : ServerResponse) : Promise<void>
     {
         var responseString = "";
+        var contentType = "application/json";
+        var fileName = "";
 
         var url = request.url?.split("/");
 
@@ -252,23 +254,46 @@ class ApiServer
                         restartServer();
                         responseString = "{\"success\":true}";
                         break;
+                    case "downloadConfig":
+                        api.writeConfig();
+                        responseString = readFileSync('config.ini', 'utf-8');
+                        contentType = "text/plain";
+                        fileName = "config.ini";
+                        break;
+                    case "downloadLogFile":
+                        responseString = readFileSync('/var/log/eufySecurity.log', 'utf-8');
+                        contentType = "text/plain";
+                        fileName = "eufySecurity.log";
+                        break;
+                    case "downloadErrFile":
+                        responseString = readFileSync('/var/log/eufySecurity.err', 'utf-8');
+                        contentType = "text/plain";
+                        fileName = "eufySecurity.err";
+                        break;
                     default:
                         responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
-                        
                 }
                 
                 response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                response.setHeader('Content-Type', contentType + '; charset=UTF-8');
 
-                response.writeHead(200);
-                response.end(responseString);
+                if(contentType == "application/json")
+                {
+                    response.writeHead(200);
+                    response.end(responseString);
+                }
+                else
+                {
+                    response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+                    response.end(readFileSync('config.ini', 'utf-8'));
+                }
             }
             else
             {
                 responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
                 
                 response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                response.setHeader('Content-Type', '; charset=UTF-8');
 
                 response.writeHead(200);
                 response.end(responseString);

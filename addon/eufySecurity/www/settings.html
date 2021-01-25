@@ -197,8 +197,12 @@
 											<small class="text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen Daten und Einstellungen löschen oder verändern.</small>
 										</div>
 										<div class="form-label-group" class="container-fluid">
+											<label for="downlConfigFile">Sie haben die Möglichkeit, Ihre aktuelle Konfiguration herunterzuladen.<br /><small class="text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
+											<button id="downlConfigFile" onclick="downloadConfigFile()" type="button" class="btn btn-primary">Konfiguration herunterladen</button>
+										</div>
+										<br /><div class="form-label-group" class="container-fluid">
 											<label for="deleteTokenData">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
-											<button id="deleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-primary">Lösche Token</button>
+											<button id="deleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-primary">Token löschen</button>
 										</div>
 										<br />
 										<div class="form-label-group" class="container-fluid">
@@ -693,6 +697,63 @@
 				};
 				xmlHttp.open("GET", url, true);
 				xmlHttp.send();
+			}
+
+			function restartService()
+			{
+				var xmlHttp, objResp;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/restartService";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								$("#toastRestartOK").toast('show');
+							}
+							else
+							{
+								$("#toastRestartFailed").toast('show');
+							}
+						}
+						catch (e)
+						{
+							$("#toastRestartFailed").toast('show');
+						}
+					}
+					else if (this.status == 200 || this.readyState == 4)
+					{
+						
+					}
+					else
+					{
+						
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function downloadConfigFile()
+			{
+				var xmlHttp, objResp;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/downloadConfig";
+				window.open(url);
 			}
 		</script>
 	</body>

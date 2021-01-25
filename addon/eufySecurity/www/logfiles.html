@@ -79,6 +79,7 @@
 							</div>
 						</div>
 						<div class="card-footer">
+							<button id="downlLogfile" onclick="downloadLogfile()" type="button" class="btn btn-primary mr-3">Download</button>
 							<button id="deleteLogfileData" onclick="emptyLogfileData()" type="button" class="btn btn-primary">Entferne alle Einträge</button>
 						</div>
 					</div>
@@ -94,6 +95,7 @@
 							</div>
 						</div>
 						<div class="card-footer">
+							<button id="downlErrfile" onclick="downloadErrfile()" type="button" class="btn btn-primary mr-3">Download</button>
 							<button id="deleteErrfileData" onclick="emptyErrfileData()" type="button" class="btn btn-primary">Entferne alle Einträge</button>
 						</div>
 					</div>
@@ -293,6 +295,30 @@
 				};
 				xmlhttp.open("GET", url, true);
 				xmlhttp.send();
+			}
+
+			function downloadLogfile()
+			{
+				var xmlHttp, objResp;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/downloadLogFile";
+				window.open(url);
+			}
+
+			function downloadErrfile()
+			{
+				var xmlHttp, objResp;
+				var port = ":52789";
+				if(location.protocol == "https:")
+				{
+					port = ":52790";
+				}
+				var url=location.protocol + "//" + location.hostname + port + "/downloadErrFile";
+				window.open(url);
 			}
 		</script>
 	</body>
