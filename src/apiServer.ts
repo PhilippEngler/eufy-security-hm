@@ -285,7 +285,7 @@ class ApiServer
                 else
                 {
                     response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
-                    response.end(readFileSync('config.ini', 'utf-8'));
+                    response.end(responseString);
                 }
             }
             else
