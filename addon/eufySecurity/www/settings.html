@@ -193,12 +193,12 @@
 								<div class="col-md-12">
 									<div class="card-body" >
 										<div class="alert alert-warning fade show" role="alert">
-											<div class="row row-cols-12 row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12">
+											<div class="row row-cols-12 row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 align-items-center">
 												<div class="col-5 col-sm-4 col-md-3 col-lg-2 col-xl-2">
-													<button id="enableTroubleShooting" onclick="enableButtons()" type="button" class="btn btn-warning btn-block">Fehlerbehebung aktivieren</button>
+													<div id="enableTS"><button id="enableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">Fehlerbehebung aktivieren</button></div>
 												</div>
 												<div class="col-7 col-sm-8 col-md-9 col-lg-10 col-xl-10">
-													Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen.<br />
+													Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen. Um ungewollte Änderungen zu vermeiden, müssen Sie die Bearbeitung für einige Aufgaben zuerst freischalten.<br />
 													<small class="text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen Daten und Einstellungen löschen oder verändern.</small>
 												</div>
 											</div>
@@ -464,7 +464,7 @@
 								{
 									text += "<tr class=\"table-danger\"><th scope=\"row\">nicht angelegt</th>";
 								}
-								text += "<td>" + sysVarName + "</td>";
+								text += "<td class=\"text-break\">" + sysVarName + "</td>";
 
 								if(sysVarAvailable==true)
 								{
@@ -764,10 +764,20 @@
 				window.open(url);
 			}
 
-			function enableButtons()
+			function enableButtons(enable)
 			{
-				document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" onclick=\"removeTokenData()\" type=\"button\" class=\"btn btn-outline-primary\">Token löschen</button></div>";
-				document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" onclick=\"restartService()\" type=\"button\" class=\"btn btn-outline-primary\">Service neu starten</button></div>";
+				if(enable == true)
+				{
+					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(false)\" type=\"button\" class=\"btn btn-warning btn-block\">Fehlerbehebung deaktivieren</button>";
+					document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" onclick=\"removeTokenData()\" type=\"button\" class=\"btn btn-outline-primary\">Token löschen</button></div>";
+					document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" onclick=\"restartService()\" type=\"button\" class=\"btn btn-outline-primary\">Service neu starten</button></div>";
+				}
+				else
+				{
+					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(true)\" type=\"button\" class=\"btn btn-outline-warning btn-block\">Fehlerbehebung aktivieren</button>";
+					document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" type=\"button\" class=\"btn btn-outline-primary disabled\">Token löschen</button></div>";
+					document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" type=\"button\" class=\"btn btn-outline-primary disabled\">Service neu starten</button></div>";
+				}
 			}
 		</script>
 	</body>
