@@ -583,7 +583,7 @@ export class EufySecurityApi
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
         res = this.config.writeConfig();
-        if(res == "saved")
+        if(res == "saved" || res == "ok")
         {
             json = "{\"success\":true,\"dataRemoved\":true}";
         }
