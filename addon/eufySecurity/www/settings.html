@@ -176,8 +176,8 @@
 								<div class="col-md-12">
 									<div class="card-body" >
 										<div class="alert alert-primary fade show" role="alert">
-											In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die entsprechende Spalte grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
-											<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind.</small>
+											Haben Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert, aktualisiert das AddOn entsprechende Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die entsprechende Spalte grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
+											<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind, falls Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert haben.</small>
 										</div>
 										<div id="divSystemVariables">
 
@@ -210,12 +210,12 @@
 										<hr />
 										<div class="form-label-group" class="container-fluid">
 											<label for="deleteTokenData">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
-											<div id="delTokData"><button id="deleteTokenData" type="button" class="btn btn-outline-primary disabled">Token löschen</button></div>
+											<div id="delTokData"><button id="deleteTokenData" type="button" class="btn btn-outline-primary" disabled>Token löschen</button></div>
 										</div>
 										<hr />
 										<div class="form-label-group" class="container-fluid">
 											<label for="restartSvr">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
-											<div id="restSvr"><button id="restartSvr" type="button" class="btn btn-outline-primary disabled">Service neu starten</button></div>
+											<div id="restSvr"><button id="restartSvr" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button></div>
 										</div>
 									</div>
 								</div>
@@ -441,58 +441,67 @@
 				var url=location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
-				text = "<table class=\"table mb-0\"><thead class=\"thead-dark\"><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
 				xmlHttp.onreadystatechange = function()
 				{
 					if (this.readyState == 4 && this.status == 200)
 					{
 						try
 						{
-						objResp = JSON.parse(this.responseText);
-						if(objResp.success == true)
-						{
-							for (objIter in objResp.data)
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
 							{
-								sysVarName = objResp.data[objIter].sysVar_name;
-								sysVarInfo = objResp.data[objIter].sysVar_info;
-								sysVarAvailable = objResp.data[objIter].sysVar_available;
-								if(sysVarAvailable==true)
+								text = "<table class=\"table mb-0\"><thead class=\"thead-dark\"><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
+								for (objIter in objResp.data)
 								{
-									text += "<tr class=\"table-success \"><th scope=\"row\" class=\"align-middle\">angelegt</th>";
-								}
-								else
-								{
-									text += "<tr class=\"table-danger\"><th scope=\"row\" class=\"align-middle\">nicht angelegt</th>";
-								}
-								text += "<td class=\"text-break align-middle\">" + sysVarName + "</td>";
+									sysVarName = objResp.data[objIter].sysVar_name;
+									sysVarInfo = objResp.data[objIter].sysVar_info;
+									sysVarAvailable = objResp.data[objIter].sysVar_available;
+									if(sysVarAvailable==true)
+									{
+										text += "<tr class=\"table-success \"><th scope=\"row\" class=\"align-middle\">angelegt</th>";
+									}
+									else
+									{
+										text += "<tr class=\"table-danger\"><th scope=\"row\" class=\"align-middle\">nicht angelegt</th>";
+									}
+									text += "<td class=\"text-break align-middle\">" + sysVarName + "</td>";
 
-								if(sysVarAvailable==true)
-								{
-									text += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" type=\"button\" class=\"btn btn-primary mb-1\" disabled>Systemvariable anlegen</button></td>";
-								}
-								else
-								{
-									text += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" onclick=\"createSysVar('" + sysVarName + "', '" + sysVarInfo + "')\" type=\"button\" class=\"btn btn-primary mb-1\">Systemvariable anlegen</button></td>";
+									if(sysVarAvailable==true)
+									{
+										text += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" type=\"button\" class=\"btn btn-primary mb-1\" disabled>Systemvariable anlegen</button></td>";
+									}
+									else
+									{
+										text += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" onclick=\"createSysVar('" + sysVarName + "', '" + sysVarInfo + "')\" type=\"button\" class=\"btn btn-primary mb-1\">Systemvariable anlegen</button></td>";
+									}
+
+									text += "</tr>";
 								}
 
-								text += "</tr>";
+								text += "</tbody></table>";
+
+								document.getElementById("divSystemVariables").innerHTML = text;
 							}
-							
-							document.getElementById("divSystemVariables").innerHTML = text + "</tbody></table>";
-						}
-						else
-						{
-							document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
-						}
+							else
+							{
+								if(objResp.reason = "System variables in config disabled.")
+								{
+									document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-info mb-0\" role=\"alert\">Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.</div>";
+								}
+								else
+								{
+									document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+								}
+							}
 						}
 						catch (e)
 						{
-							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 						}
 					}
 					else if (this.status == 200 || this.readyState == 4)
 					{
-						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger mb-o\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 					}
 					else
 					{
@@ -775,8 +784,8 @@
 				else
 				{
 					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(true)\" type=\"button\" class=\"btn btn-outline-warning btn-block\">Fehlerbehebung aktivieren</button>";
-					document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" type=\"button\" class=\"btn btn-outline-primary disabled\">Token löschen</button></div>";
-					document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" type=\"button\" class=\"btn btn-outline-primary disabled\">Service neu starten</button></div>";
+					document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Token löschen</button></div>";
+					document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Service neu starten</button></div>";
 				}
 			}
 		</script>

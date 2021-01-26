@@ -7,6 +7,7 @@ import { Hub, GuardMode, DeviceType } from './http/http-response.models';
 import { Devices, Device } from './devices'
 import { Bases, Base } from './bases';
 import { sleep } from './push';
+import { settings } from 'cluster';
 
 export class EufySecurityApi
 {
@@ -741,125 +742,132 @@ export class EufySecurityApi
      */
     public async checkSystemVariables() : Promise<string>
     {
-        if(this.bases && this.devices)
+        if(this.config.getApiUseSystemVariables() == true)
         {
-            await this.loadData();
-
-            var base : Base;
-            var device : Device;
-            var bases = this.bases.getBases();
-            var devices = this.devices.getDevices();
-
-            var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime"];
-            var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "letzte Aktualisierung der eufy Links", "letzte Aktualisierung des eufy Systemstatus"];
-
-            var json = "";
-            var i = 0;
-
-            for (var sv of commonSystemVariablesName)
+            if(this.bases && this.devices)
             {
-                json += "{";
-                json += "\"sysVar_name\":\"" + sv + "\",";
-                json += "\"sysVar_info\":\"" + commonSystemVariablesInfo[i] + "\",";
-                if(await this.homematicApi.isSystemVariableAvailable(sv) == true)
-                {
-                    json += "\"sysVar_available\":true";
-                }
-                else
-                {
-                    json += "\"sysVar_available\":false";
-                }
-                json += "},";
-                i = i + 1;
-            }
+                await this.loadData();
 
-            for (var key in bases)
+                var base : Base;
+                var device : Device;
+                var bases = this.bases.getBases();
+                var devices = this.devices.getDevices();
+
+                var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime"];
+                var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "letzte Aktualisierung der eufy Links", "letzte Aktualisierung des eufy Systemstatus"];
+
+                var json = "";
+                var i = 0;
+
+                for (var sv of commonSystemVariablesName)
+                {
+                    json += "{";
+                    json += "\"sysVar_name\":\"" + sv + "\",";
+                    json += "\"sysVar_info\":\"" + commonSystemVariablesInfo[i] + "\",";
+                    if(await this.homematicApi.isSystemVariableAvailable(sv) == true)
+                    {
+                        json += "\"sysVar_available\":true";
+                    }
+                    else
+                    {
+                        json += "\"sysVar_available\":false";
+                    }
+                    json += "},";
+                    i = i + 1;
+                }
+
+                for (var key in bases)
+                {
+                    if(json.endsWith("}"))
+                    {
+                        json += ",";
+                    }
+                    base = bases[key];
+                    
+                    json += "{";
+                    json += "\"sysVar_name\":\"eufyCentralState" + base.getSerialNumber() + "\",";
+                    json += "\"sysVar_info\":\"aktueller Status der Basis " + base.getSerialNumber() + "\",";
+                    
+                    if(await this.homematicApi.isSystemVariableAvailable("eufyCentralState" + base.getSerialNumber()) == true)
+                    {
+                        json += "\"sysVar_available\":true";
+                    }
+                    else
+                    {
+                        json += "\"sysVar_available\":false";
+                    }
+
+                    json += "}";
+                }
+                
+                for (var key in devices)
+                {
+                    if(json.endsWith("}"))
+                    {
+                        json += ",";
+                    }
+                    device = devices[key];
+                    
+                    json += "{";
+                    json += "\"sysVar_name\":\"eufyCameraImageURL" + device.getSerialNumber() + "\",";
+                    json += "\"sysVar_info\":\"Standbild der Kamera " + device.getSerialNumber() + "\",";
+                    if(await this.homematicApi.isSystemVariableAvailable("eufyCameraImageURL" + device.getSerialNumber()) == true)
+                    {
+                        json += "\"sysVar_available\":true";
+                    }
+                    else
+                    {
+                        json += "\"sysVar_available\":false";
+                    }
+                    json += "}";
+
+                    if(json.endsWith("}"))
+                    {
+                        json += ",";
+                    }
+                    
+                    json += "{";
+                    json += "\"sysVar_name\":\"eufyCameraVideoTime" + device.getSerialNumber() + "\",";
+                    json += "\"sysVar_info\":\"Zeitpunkt des letzten Videos der Kamera " + device.getSerialNumber() + "\",";
+                    if(await this.homematicApi.isSystemVariableAvailable("eufyCameraVideoTime" + device.getSerialNumber()) == true)
+                    {
+                        json += "\"sysVar_available\":true";
+                    }
+                    else
+                    {
+                        json += "\"sysVar_available\":false";
+                    }
+                    json += "}";
+
+                    if(json.endsWith("}"))
+                    {
+                        json += ",";
+                    }
+                    
+                    json += "{";
+                    json += "\"sysVar_name\":\"eufyCameraVideoURL" + device.getSerialNumber() + "\",";
+                    json += "\"sysVar_info\":\"letztes Video der Kamera " + device.getSerialNumber() + "\",";
+                    if(await this.homematicApi.isSystemVariableAvailable("eufyCameraVideoURL" + device.getSerialNumber()) == true)
+                    {
+                        json += "\"sysVar_available\":true";
+                    }
+                    else
+                    {
+                        json += "\"sysVar_available\":false";
+                    }
+                    json += "}";
+                }
+
+                json = "{\"success\":true,\"data\":[" + json + "]}";
+            }
+            else
             {
-                if(json.endsWith("}"))
-                {
-                    json += ",";
-                }
-                base = bases[key];
-                
-                json += "{";
-                json += "\"sysVar_name\":\"eufyCentralState" + base.getSerialNumber() + "\",";
-                json += "\"sysVar_info\":\"aktueller Status der Basis " + base.getSerialNumber() + "\",";
-                
-                if(await this.homematicApi.isSystemVariableAvailable("eufyCentralState" + base.getSerialNumber()) == true)
-                {
-                    json += "\"sysVar_available\":true";
-                }
-                else
-                {
-                    json += "\"sysVar_available\":false";
-                }
-
-                json += "}";
+                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
             }
-            
-            for (var key in devices)
-            {
-                if(json.endsWith("}"))
-                {
-                    json += ",";
-                }
-                device = devices[key];
-                
-                json += "{";
-                json += "\"sysVar_name\":\"eufyCameraImageURL" + device.getSerialNumber() + "\",";
-                json += "\"sysVar_info\":\"Standbild der Kamera " + device.getSerialNumber() + "\",";
-                if(await this.homematicApi.isSystemVariableAvailable("eufyCameraImageURL" + device.getSerialNumber()) == true)
-                {
-                    json += "\"sysVar_available\":true";
-                }
-                else
-                {
-                    json += "\"sysVar_available\":false";
-                }
-                json += "}";
-
-                if(json.endsWith("}"))
-                {
-                    json += ",";
-                }
-                
-                json += "{";
-                json += "\"sysVar_name\":\"eufyCameraVideoTime" + device.getSerialNumber() + "\",";
-                json += "\"sysVar_info\":\"Zeitpunkt des letzten Videos der Kamera " + device.getSerialNumber() + "\",";
-                if(await this.homematicApi.isSystemVariableAvailable("eufyCameraVideoTime" + device.getSerialNumber()) == true)
-                {
-                    json += "\"sysVar_available\":true";
-                }
-                else
-                {
-                    json += "\"sysVar_available\":false";
-                }
-                json += "}";
-
-                if(json.endsWith("}"))
-                {
-                    json += ",";
-                }
-                
-                json += "{";
-                json += "\"sysVar_name\":\"eufyCameraVideoURL" + device.getSerialNumber() + "\",";
-                json += "\"sysVar_info\":\"letztes Video der Kamera " + device.getSerialNumber() + "\",";
-                if(await this.homematicApi.isSystemVariableAvailable("eufyCameraVideoURL" + device.getSerialNumber()) == true)
-                {
-                    json += "\"sysVar_available\":true";
-                }
-                else
-                {
-                    json += "\"sysVar_available\":false";
-                }
-                json += "}";
-            }
-
-            json = "{\"success\":true,\"data\":[" + json + "]}";
         }
         else
         {
-            json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            json = "{\"success\":false,\"reason\":\"System variables in config disabled.\"}";
         }
 
         return json;
