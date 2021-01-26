@@ -192,22 +192,30 @@
 							<div class="row no-gutters">
 								<div class="col-md-12">
 									<div class="card-body" >
-										<div class="alert alert-primary fade show" role="alert">
-											Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen.<br />
-											<small class="text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen Daten und Einstellungen löschen oder verändern.</small>
+										<div class="alert alert-warning fade show" role="alert">
+											<div class="row row-cols-12 row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12">
+												<div class="col-5 col-sm-4 col-md-3 col-lg-2 col-xl-2">
+													<button id="enableTroubleShooting" onclick="enableButtons()" type="button" class="btn btn-warning btn-block">Fehlerbehebung aktivieren</button>
+												</div>
+												<div class="col-7 col-sm-8 col-md-9 col-lg-10 col-xl-10">
+													Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen.<br />
+													<small class="text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen Daten und Einstellungen löschen oder verändern.</small>
+												</div>
+											</div>
 										</div>
 										<div class="form-label-group" class="container-fluid">
 											<label for="downlConfigFile">Sie haben die Möglichkeit, Ihre aktuelle Konfiguration herunterzuladen.<br /><small class="text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
-											<button id="downlConfigFile" onclick="downloadConfigFile()" type="button" class="btn btn-primary">Konfiguration herunterladen</button>
+											<button id="downlConfigFile" onclick="downloadConfigFile()" type="button" class="btn btn-outline-primary">Konfiguration herunterladen</button>
 										</div>
-										<br /><div class="form-label-group" class="container-fluid">
+										<hr />
+										<div class="form-label-group" class="container-fluid">
 											<label for="deleteTokenData">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
-											<button id="deleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-primary">Token löschen</button>
+											<div id="delTokData"><button id="deleteTokenData" type="button" class="btn btn-outline-primary disabled">Token löschen</button></div>
 										</div>
-										<br />
+										<hr />
 										<div class="form-label-group" class="container-fluid">
 											<label for="restartSvr">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
-											<button id="restartSvr" onclick="restartService()" type="button" class="btn btn-primary">Service neu starten</button>
+											<div id="restSvr"><button id="restartSvr" type="button" class="btn btn-outline-primary disabled">Service neu starten</button></div>
 										</div>
 									</div>
 								</div>
@@ -754,6 +762,12 @@
 				}
 				var url=location.protocol + "//" + location.hostname + port + "/downloadConfig";
 				window.open(url);
+			}
+
+			function enableButtons()
+			{
+				document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" onclick=\"removeTokenData()\" type=\"button\" class=\"btn btn-outline-primary\">Token löschen</button></div>";
+				document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" onclick=\"restartService()\" type=\"button\" class=\"btn btn-outline-primary\">Service neu starten</button></div>";
 			}
 		</script>
 	</body>
