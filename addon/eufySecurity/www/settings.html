@@ -208,14 +208,14 @@
 											<button id="downlConfigFile" onclick="downloadConfigFile()" type="button" class="btn btn-outline-primary">Konfiguration herunterladen</button>
 										</div>
 										<hr />
-										<div class="form-label-group" class="container-fluid">
-											<label for="deleteTokenData">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
-											<div id="delTokData"><button id="deleteTokenData" type="button" class="btn btn-outline-primary" disabled>Token löschen</button></div>
+										<div class="form-label-group" class="container-fluid" id="delTokData">
+											<label for="deleteTokenData" class="text-muted">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
+											<button id="deleteTokenData" type="button" class="btn btn-outline-primary" disabled>Token löschen</button>
 										</div>
 										<hr />
-										<div class="form-label-group" class="container-fluid">
-											<label for="restartSvr">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
-											<div id="restSvr"><button id="restartSvr" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button></div>
+										<div class="form-label-group" class="container-fluid" id="restSvr">
+											<label for="restartSvr" class="text-muted">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
+											<button id="restartSvr" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button>
 										</div>
 									</div>
 								</div>
@@ -778,14 +778,14 @@
 				if(enable == true)
 				{
 					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(false)\" type=\"button\" class=\"btn btn-warning btn-block\">Fehlerbehebung deaktivieren</button>";
-					document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" onclick=\"removeTokenData()\" type=\"button\" class=\"btn btn-outline-primary\">Token löschen</button></div>";
-					document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" onclick=\"restartService()\" type=\"button\" class=\"btn btn-outline-primary\">Service neu starten</button></div>";
+					document.getElementById("delTokData").innerHTML = "<label for=\"deleteTokenData\">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br /><button id=\"deleteTokenData\" onclick=\"removeTokenData()\" type=\"button\" class=\"btn btn-outline-primary\">Token löschen</button></div>";
+					document.getElementById("restSvr").innerHTML = "<label for=\"restartSvr\">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br /><button id=\"restartSvr\" onclick=\"restartService()\" type=\"button\" class=\"btn btn-outline-primary\">Service neu starten</button></div>";
 				}
 				else
 				{
 					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(true)\" type=\"button\" class=\"btn btn-outline-warning btn-block\">Fehlerbehebung aktivieren</button>";
-					document.getElementById("delTokData").innerHTML = "<button id=\"deleteTokenData\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Token löschen</button></div>";
-					document.getElementById("restSvr").innerHTML = "<button id=\"restartSvr\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Service neu starten</button></div>";
+					document.getElementById("delTokData").innerHTML = "<label for=\"deleteTokenData\" class=\"text-muted\">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br /><button id=\"deleteTokenData\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Token löschen</button></div>";
+					document.getElementById("restSvr").innerHTML = "<label for=\"restartSvr\" class=\"text-muted\">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br /><button id=\"restartSvr\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Service neu starten</button></div>";
 				}
 			}
 		</script>
