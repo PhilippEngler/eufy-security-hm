@@ -299,7 +299,7 @@ class ApiServer
                 response.end(responseString);
             }
         }
-        // We must handele the change config throught POST because of the form data we send...
+        // We must handele the change config throught POST based on the form data we receive...
         else if(request.method == "POST")
         {
             if(url.length > 1)
@@ -484,7 +484,7 @@ function main()
 }
 
 /**
- * Will stop the server and exit.
+ * Will write config, stop the server and exit.
  */
 function stopServer()
 {
