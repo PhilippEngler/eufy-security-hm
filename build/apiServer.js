@@ -91,6 +91,8 @@ class ApiServer {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             var responseString = "";
+            var contentType = "application/json";
+            var fileName = "";
             var url = (_a = request.url) === null || _a === void 0 ? void 0 : _a.split("/");
             if (url == undefined) {
                 url = [];
@@ -233,23 +235,45 @@ class ApiServer {
                             restartServer();
                             responseString = "{\"success\":true}";
                             break;
+                        case "downloadConfig":
+                            api.writeConfig();
+                            responseString = fs_1.readFileSync('config.ini', 'utf-8');
+                            contentType = "text/plain";
+                            fileName = "config.ini";
+                            break;
+                        case "downloadLogFile":
+                            responseString = fs_1.readFileSync('/var/log/eufySecurity.log', 'utf-8');
+                            contentType = "text/plain";
+                            fileName = "eufySecurity.log";
+                            break;
+                        case "downloadErrFile":
+                            responseString = fs_1.readFileSync('/var/log/eufySecurity.err', 'utf-8');
+                            contentType = "text/plain";
+                            fileName = "eufySecurity.err";
+                            break;
                         default:
                             responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
                     }
                     response.setHeader('Access-Control-Allow-Origin', '*');
-                    response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-                    response.writeHead(200);
-                    response.end(responseString);
+                    response.setHeader('Content-Type', contentType + '; charset=UTF-8');
+                    if (contentType == "application/json") {
+                        response.writeHead(200);
+                        response.end(responseString);
+                    }
+                    else {
+                        response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+                        response.end(responseString);
+                    }
                 }
                 else {
                     responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
                     response.setHeader('Access-Control-Allow-Origin', '*');
-                    response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                    response.setHeader('Content-Type', '; charset=UTF-8');
                     response.writeHead(200);
                     response.end(responseString);
                 }
             }
-            // We must handele the change config throught POST because of the form data we send...
+            // We must handele the change config throught POST based on the form data we receive...
             else if (request.method == "POST") {
                 if (url.length > 1) {
                     if (url[1] == "setConfig") {
@@ -388,7 +412,7 @@ function main() {
     apiServer = new ApiServer();
 }
 /**
- * Will stop the server and exit.
+ * Will write config, stop the server and exit.
  */
 function stopServer() {
     logger.log("Write config...");

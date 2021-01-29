@@ -34,7 +34,7 @@ class EufySecurityApi {
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.config.getEmailAddress() == "" || this.config.getPassword() == "") {
-                this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set email and password at least to run this programm.");
+                this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
             }
             else {
                 this.httpService = new http_1.HttpService(this.config.getEmailAddress(), this.config.getPassword(), this);
@@ -52,11 +52,17 @@ class EufySecurityApi {
             try {
                 yield this.devices.loadDevices();
             }
-            catch (_a) { }
+            catch (_a) {
+                this.logger.err("Error occured at loadData() -> loadDevices");
+                this.setLastConnectionInfo(false);
+            }
             try {
                 yield this.bases.loadBases();
             }
-            catch (_b) { }
+            catch (_b) {
+                this.logger.err("Error occured at loadData() -> loadBases");
+                this.setLastConnectionInfo(false);
+            }
         });
     }
     /**
@@ -104,6 +110,8 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
+                this.logger.err("Error occured at getDevices()");
+                this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
@@ -161,6 +169,8 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
+                this.logger.err("Error occured at getBases()");
+                this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
@@ -199,45 +209,52 @@ class EufySecurityApi {
      */
     getGuardMode() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.bases) {
-                yield this.bases.loadBases();
-                var mode = -1;
-                var bases = this.bases.getBases();
-                var json = "";
-                var base;
-                if (bases) {
-                    for (var key in bases) {
-                        base = bases[key];
-                        if (json.endsWith("}")) {
-                            json += ",";
+            try {
+                if (this.bases) {
+                    yield this.bases.loadBases();
+                    var mode = -1;
+                    var bases = this.bases.getBases();
+                    var json = "";
+                    var base;
+                    if (bases) {
+                        for (var key in bases) {
+                            base = bases[key];
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            json += this.makeJSONforBase(base);
+                            if (mode == -1) {
+                                mode = Number.parseInt(base.getGuardMode());
+                            }
+                            else if (mode != Number.parseInt(base.getGuardMode())) {
+                                mode = -2;
+                            }
+                            this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
                         }
-                        json += this.makeJSONforBase(base);
-                        if (mode == -1) {
-                            mode = Number.parseInt(base.getGuardMode());
+                        json = "{\"success\":true,\"data\":[" + json + "]}";
+                        if (mode > -1) {
+                            this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(mode));
+                            this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                         }
-                        else if (mode != Number.parseInt(base.getGuardMode())) {
-                            mode = -2;
+                        else {
+                            this.setSystemVariableString("eufyCurrentState", "unbenkannt");
+                            this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                         }
-                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
-                    }
-                    json = "{\"success\":true,\"data\":[" + json + "]}";
-                    if (mode > -1) {
-                        this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(mode));
-                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        this.setLastConnectionInfo(true);
                     }
                     else {
-                        this.setSystemVariableString("eufyCurrentState", "unbenkannt");
-                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        json = "{\"success\":false,\"reason\":\"No Bases found.\"";
+                        this.setLastConnectionInfo(false);
                     }
-                    this.setLastConnectionInfo(true);
                 }
                 else {
-                    json = "{\"success\":false,\"reason\":\"No Bases found.\"";
-                    this.setLastConnectionInfo(false);
+                    json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                 }
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                this.logger.err("Error occured at getGuardMode()");
+                this.setLastConnectionInfo(false);
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
@@ -247,28 +264,35 @@ class EufySecurityApi {
      */
     getGuardModeBase(key) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.bases) {
-                yield this.bases.loadBases();
-                var bases = this.bases.getBases();
-                var json = "";
-                var base;
-                base = bases[key];
-                if (base) {
-                    json += this.makeJSONforBase(base);
-                    json += "]}";
-                    json = "{\"success\":true,\"data\":[" + json;
-                    this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
-                    this.setLastConnectionInfo(true);
-                    this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+            try {
+                if (this.bases) {
+                    yield this.bases.loadBases();
+                    var bases = this.bases.getBases();
+                    var json = "";
+                    var base;
+                    base = bases[key];
+                    if (base) {
+                        json += this.makeJSONforBase(base);
+                        json += "]}";
+                        json = "{\"success\":true,\"data\":[" + json;
+                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        this.setLastConnectionInfo(true);
+                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    }
+                    else {
+                        json = "{\"success\":false,\"reason\":\"No such base found.\"}";
+                        this.setLastConnectionInfo(false);
+                    }
                 }
                 else {
-                    json = "{\"success\":false,\"reason\":\"No such base found.\"}";
+                    json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                     this.setLastConnectionInfo(false);
                 }
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                this.logger.err("Error occured at getGuardModeBase()");
                 this.setLastConnectionInfo(false);
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
@@ -279,54 +303,61 @@ class EufySecurityApi {
      */
     setGuardMode(guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.bases) {
-                var err = 0;
-                yield this.bases.setGuardMode(guardMode);
-                yield push_1.sleep(2500);
-                yield this.bases.loadBases();
-                var bases = this.bases.getBases();
-                var base;
-                var json = "";
-                for (var key in bases) {
-                    if (json.endsWith("}")) {
-                        json += ",";
+            try {
+                if (this.bases) {
+                    var err = 0;
+                    yield this.bases.setGuardMode(guardMode);
+                    yield push_1.sleep(2500);
+                    yield this.bases.loadBases();
+                    var bases = this.bases.getBases();
+                    var base;
+                    var json = "";
+                    for (var key in bases) {
+                        if (json.endsWith("}")) {
+                            json += ",";
+                        }
+                        base = bases[key];
+                        if (guardMode.toString() == base.getGuardMode()) {
+                            json += "{";
+                            json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                            json += "\"result\":\"success\",";
+                            json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                            json += "}";
+                            this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        }
+                        else {
+                            err = err + 1;
+                            json += "{";
+                            json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                            json += "\"result\":\"failure\",";
+                            json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                            json += "}";
+                            this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        }
                     }
-                    base = bases[key];
-                    if (guardMode.toString() == base.getGuardMode()) {
-                        json += "{";
-                        json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                        json += "\"result\":\"success\",";
-                        json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                        json += "}";
-                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                    if (err == 0) {
+                        json = "{\"success\":true,\"data\":[" + json;
+                        this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
+                        this.setLastConnectionInfo(true);
+                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     }
                     else {
-                        err = err + 1;
-                        json += "{";
-                        json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                        json += "\"result\":\"failure\",";
-                        json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                        json += "}";
-                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        json = "{\"success\":false,\"data\":[" + json;
+                        this.setSystemVariableString("eufyCurrentState", "unbekannt");
+                        this.setLastConnectionInfo(false);
+                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     }
-                }
-                if (err == 0) {
-                    json = "{\"success\":true,\"data\":[" + json;
-                    this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
-                    this.setLastConnectionInfo(true);
-                    this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    json += "]}";
                 }
                 else {
-                    json = "{\"success\":false,\"data\":[" + json;
-                    this.setSystemVariableString("eufyCurrentState", "unbekannt");
+                    json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                     this.setLastConnectionInfo(false);
-                    this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                 }
-                json += "]}";
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                this.logger.err("Error occured at setGuardMode()");
                 this.setLastConnectionInfo(false);
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
@@ -338,39 +369,46 @@ class EufySecurityApi {
      */
     setGuardModeBase(baseSerial, guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.bases) {
-                yield this.bases.setGuardModeBase(baseSerial, guardMode);
-                yield push_1.sleep(2500);
-                yield this.bases.loadBases();
-                var bases = this.bases.getBases();
-                var base;
-                base = bases[baseSerial];
-                var json = "";
-                if (guardMode.toString() == base.getGuardMode()) {
-                    json = "{\"success\":true,\"data\":[";
-                    json += "{";
-                    json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                    json += "\"result\":\"success\",";
-                    json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                    json += "}";
-                    this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
-                    this.setLastConnectionInfo(true);
+            try {
+                if (this.bases) {
+                    yield this.bases.setGuardModeBase(baseSerial, guardMode);
+                    yield push_1.sleep(2500);
+                    yield this.bases.loadBases();
+                    var bases = this.bases.getBases();
+                    var base;
+                    base = bases[baseSerial];
+                    var json = "";
+                    if (guardMode.toString() == base.getGuardMode()) {
+                        json = "{\"success\":true,\"data\":[";
+                        json += "{";
+                        json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                        json += "\"result\":\"success\",";
+                        json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                        json += "}";
+                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        this.setLastConnectionInfo(true);
+                    }
+                    else {
+                        json = "{\"success\":false,\"data\":[";
+                        json += "{";
+                        json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                        json += "\"result\":\"failure\",";
+                        json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                        json += "}";
+                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        this.setLastConnectionInfo(false);
+                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    }
+                    json += "]}";
                 }
                 else {
-                    json = "{\"success\":false,\"data\":[";
-                    json += "{";
-                    json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                    json += "\"result\":\"failure\",";
-                    json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                    json += "}";
-                    this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
-                    this.setLastConnectionInfo(false);
-                    this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                 }
-                json += "]}";
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                this.logger.err("Error occured at setGuardModeBase()");
+                this.setLastConnectionInfo(false);
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
@@ -380,70 +418,77 @@ class EufySecurityApi {
      */
     getLibrary() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.devices) {
-                yield this.devices.loadDevices();
-                var devices = this.devices.getDevices();
-                var dev;
-                var json = "";
-                if (devices) {
-                    for (var key in devices) {
-                        dev = devices[key];
-                        if (dev.getDeviceTypeString() == "camera") {
-                            if (json.endsWith("}")) {
-                                json += ",";
-                            }
-                            json += "{";
-                            json += "\"device_id\":\"" + dev.getSerialNumber() + "\",";
-                            if (dev.getLastImageTime() == undefined) {
-                                json += "\"last_camera_image_time\":\"\",";
-                            }
-                            else {
-                                json += "\"last_camera_image_time\":\"" + dev.getLastImageTime() + "\",";
-                            }
-                            if (dev.getLastImageUrl() == undefined) {
-                                json += "\"last_camera_image_url\":\"" + this.config.getApiCameraDefaultImage() + "\",";
-                            }
-                            else {
-                                json += "\"last_camera_image_url\":\"" + dev.getLastImageUrl() + "\",";
-                            }
-                            if (dev.getLastVideoUrl() == "") {
-                                json += "\"last_camera_video_url\":\"" + this.config.getApiCameraDefaultVideo() + "\"";
-                            }
-                            else {
-                                json += "\"last_camera_video_url\":\"" + dev.getLastImageUrl() + "\"";
-                            }
-                            json += "}";
-                            if (dev.getLastImageTime() == undefined) {
-                                this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerialNumber(), "");
-                            }
-                            else {
-                                this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerialNumber(), this.makeDateTimeString(dev.getLastImageTime() * 1000));
-                            }
-                            if (dev.getLastImageUrl() == undefined) {
-                                this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), this.config.getApiCameraDefaultImage());
-                            }
-                            else {
-                                this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), dev.getLastImageUrl());
-                            }
-                            if (dev.getLastVideoUrl() == "") {
-                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerialNumber(), this.config.getApiCameraDefaultVideo());
-                            }
-                            else {
-                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerialNumber(), dev.getLastImageUrl());
+            try {
+                if (this.devices) {
+                    yield this.devices.loadDevices();
+                    var devices = this.devices.getDevices();
+                    var dev;
+                    var json = "";
+                    if (devices) {
+                        for (var key in devices) {
+                            dev = devices[key];
+                            if (dev.getDeviceTypeString() == "camera") {
+                                if (json.endsWith("}")) {
+                                    json += ",";
+                                }
+                                json += "{";
+                                json += "\"device_id\":\"" + dev.getSerialNumber() + "\",";
+                                if (dev.getLastImageTime() == undefined) {
+                                    json += "\"last_camera_image_time\":\"\",";
+                                }
+                                else {
+                                    json += "\"last_camera_image_time\":\"" + dev.getLastImageTime() + "\",";
+                                }
+                                if (dev.getLastImageUrl() == undefined) {
+                                    json += "\"last_camera_image_url\":\"" + this.config.getApiCameraDefaultImage() + "\",";
+                                }
+                                else {
+                                    json += "\"last_camera_image_url\":\"" + dev.getLastImageUrl() + "\",";
+                                }
+                                if (dev.getLastVideoUrl() == "") {
+                                    json += "\"last_camera_video_url\":\"" + this.config.getApiCameraDefaultVideo() + "\"";
+                                }
+                                else {
+                                    json += "\"last_camera_video_url\":\"" + dev.getLastImageUrl() + "\"";
+                                }
+                                json += "}";
+                                if (dev.getLastImageTime() == undefined) {
+                                    this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerialNumber(), "");
+                                }
+                                else {
+                                    this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerialNumber(), this.makeDateTimeString(dev.getLastImageTime() * 1000));
+                                }
+                                if (dev.getLastImageUrl() == undefined) {
+                                    this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), this.config.getApiCameraDefaultImage());
+                                }
+                                else {
+                                    this.setSystemVariableString("eufyCameraImageURL" + dev.getSerialNumber(), dev.getLastImageUrl());
+                                }
+                                if (dev.getLastVideoUrl() == "") {
+                                    this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerialNumber(), this.config.getApiCameraDefaultVideo());
+                                }
+                                else {
+                                    this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerialNumber(), dev.getLastImageUrl());
+                                }
                             }
                         }
+                        json = "{\"success\":true,\"data\":[" + json + "]}";
+                        this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
+                        this.setLastConnectionInfo(true);
                     }
-                    json = "{\"success\":true,\"data\":[" + json + "]}";
-                    this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
-                    this.setLastConnectionInfo(true);
+                    else {
+                        json = "{\"success\":false,\"reason\":\"No devices found.\"}";
+                        this.setLastConnectionInfo(false);
+                    }
                 }
                 else {
-                    json = "{\"success\":false,\"reason\":\"No devices found.\"}";
-                    this.setLastConnectionInfo(false);
+                    json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                 }
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                this.logger.err("Error occured at getLibrary()");
+                this.setLastConnectionInfo(false);
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
@@ -471,7 +516,7 @@ class EufySecurityApi {
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
         res = this.config.writeConfig();
-        if (res == "saved") {
+        if (res == "saved" || res == "ok") {
             json = "{\"success\":true,\"dataRemoved\":true}";
         }
         else {
@@ -597,91 +642,103 @@ class EufySecurityApi {
      */
     checkSystemVariables() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.bases && this.devices) {
-                yield this.loadData();
-                var base;
-                var device;
-                var bases = this.bases.getBases();
-                var devices = this.devices.getDevices();
-                var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime"];
-                var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "letzte Aktualisierung der eufy Links", "letzte Aktualisierung des eufy Systemstatus"];
-                var json = "";
-                var i = 0;
-                for (var sv of commonSystemVariablesName) {
-                    json += "{";
-                    json += "\"sysVar_name\":\"" + sv + "\",";
-                    json += "\"sysVar_info\":\"" + commonSystemVariablesInfo[i] + "\",";
-                    if ((yield this.homematicApi.isSystemVariableAvailable(sv)) == true) {
-                        json += "\"sysVar_available\":true";
+            try {
+                if (this.config.getApiUseSystemVariables() == true) {
+                    if (this.bases && this.devices) {
+                        yield this.loadData();
+                        var base;
+                        var device;
+                        var bases = this.bases.getBases();
+                        var devices = this.devices.getDevices();
+                        var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime"];
+                        var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "letzte Aktualisierung der eufy Links", "letzte Aktualisierung des eufy Systemstatus"];
+                        var json = "";
+                        var i = 0;
+                        for (var sv of commonSystemVariablesName) {
+                            json += "{";
+                            json += "\"sysVar_name\":\"" + sv + "\",";
+                            json += "\"sysVar_info\":\"" + commonSystemVariablesInfo[i] + "\",";
+                            if ((yield this.homematicApi.isSystemVariableAvailable(sv)) == true) {
+                                json += "\"sysVar_available\":true";
+                            }
+                            else {
+                                json += "\"sysVar_available\":false";
+                            }
+                            json += "},";
+                            i = i + 1;
+                        }
+                        for (var key in bases) {
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            base = bases[key];
+                            json += "{";
+                            json += "\"sysVar_name\":\"eufyCentralState" + base.getSerialNumber() + "\",";
+                            json += "\"sysVar_info\":\"aktueller Status der Basis " + base.getSerialNumber() + "\",";
+                            if ((yield this.homematicApi.isSystemVariableAvailable("eufyCentralState" + base.getSerialNumber())) == true) {
+                                json += "\"sysVar_available\":true";
+                            }
+                            else {
+                                json += "\"sysVar_available\":false";
+                            }
+                            json += "}";
+                        }
+                        for (var key in devices) {
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            device = devices[key];
+                            json += "{";
+                            json += "\"sysVar_name\":\"eufyCameraImageURL" + device.getSerialNumber() + "\",";
+                            json += "\"sysVar_info\":\"Standbild der Kamera " + device.getSerialNumber() + "\",";
+                            if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraImageURL" + device.getSerialNumber())) == true) {
+                                json += "\"sysVar_available\":true";
+                            }
+                            else {
+                                json += "\"sysVar_available\":false";
+                            }
+                            json += "}";
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            json += "{";
+                            json += "\"sysVar_name\":\"eufyCameraVideoTime" + device.getSerialNumber() + "\",";
+                            json += "\"sysVar_info\":\"Zeitpunkt des letzten Videos der Kamera " + device.getSerialNumber() + "\",";
+                            if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraVideoTime" + device.getSerialNumber())) == true) {
+                                json += "\"sysVar_available\":true";
+                            }
+                            else {
+                                json += "\"sysVar_available\":false";
+                            }
+                            json += "}";
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            json += "{";
+                            json += "\"sysVar_name\":\"eufyCameraVideoURL" + device.getSerialNumber() + "\",";
+                            json += "\"sysVar_info\":\"letztes Video der Kamera " + device.getSerialNumber() + "\",";
+                            if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraVideoURL" + device.getSerialNumber())) == true) {
+                                json += "\"sysVar_available\":true";
+                            }
+                            else {
+                                json += "\"sysVar_available\":false";
+                            }
+                            json += "}";
+                        }
+                        json = "{\"success\":true,\"data\":[" + json + "]}";
                     }
                     else {
-                        json += "\"sysVar_available\":false";
+                        json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                     }
-                    json += "},";
-                    i = i + 1;
                 }
-                for (var key in bases) {
-                    if (json.endsWith("}")) {
-                        json += ",";
-                    }
-                    base = bases[key];
-                    json += "{";
-                    json += "\"sysVar_name\":\"eufyCentralState" + base.getSerialNumber() + "\",";
-                    json += "\"sysVar_info\":\"aktueller Status der Basis " + base.getSerialNumber() + "\",";
-                    if ((yield this.homematicApi.isSystemVariableAvailable("eufyCentralState" + base.getSerialNumber())) == true) {
-                        json += "\"sysVar_available\":true";
-                    }
-                    else {
-                        json += "\"sysVar_available\":false";
-                    }
-                    json += "}";
+                else {
+                    json = "{\"success\":false,\"reason\":\"System variables in config disabled.\"}";
                 }
-                for (var key in devices) {
-                    if (json.endsWith("}")) {
-                        json += ",";
-                    }
-                    device = devices[key];
-                    json += "{";
-                    json += "\"sysVar_name\":\"eufyCameraImageURL" + device.getSerialNumber() + "\",";
-                    json += "\"sysVar_info\":\"Standbild der Kamera " + device.getSerialNumber() + "\",";
-                    if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraImageURL" + device.getSerialNumber())) == true) {
-                        json += "\"sysVar_available\":true";
-                    }
-                    else {
-                        json += "\"sysVar_available\":false";
-                    }
-                    json += "}";
-                    if (json.endsWith("}")) {
-                        json += ",";
-                    }
-                    json += "{";
-                    json += "\"sysVar_name\":\"eufyCameraVideoTime" + device.getSerialNumber() + "\",";
-                    json += "\"sysVar_info\":\"Zeitpunkt des letzten Videos der Kamera " + device.getSerialNumber() + "\",";
-                    if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraVideoTime" + device.getSerialNumber())) == true) {
-                        json += "\"sysVar_available\":true";
-                    }
-                    else {
-                        json += "\"sysVar_available\":false";
-                    }
-                    json += "}";
-                    if (json.endsWith("}")) {
-                        json += ",";
-                    }
-                    json += "{";
-                    json += "\"sysVar_name\":\"eufyCameraVideoURL" + device.getSerialNumber() + "\",";
-                    json += "\"sysVar_info\":\"letztes Video der Kamera " + device.getSerialNumber() + "\",";
-                    if ((yield this.homematicApi.isSystemVariableAvailable("eufyCameraVideoURL" + device.getSerialNumber())) == true) {
-                        json += "\"sysVar_available\":true";
-                    }
-                    else {
-                        json += "\"sysVar_available\":false";
-                    }
-                    json += "}";
-                }
-                json = "{\"success\":true,\"data\":[" + json + "]}";
             }
-            else {
-                json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+            catch (e) {
+                this.logger.err("Error occured at checkSystemVariables()");
+                this.setLastConnectionInfo(false);
+                json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
             return json;
         });
