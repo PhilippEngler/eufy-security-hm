@@ -305,10 +305,10 @@ export class Base
     {
         var res = await this.setGuardModeInternal(guardMode);
 
-        //if(res == false)
-        //{
-        //    res = await this.setGuardModeExternal(guardMode);
-        //}
+        /*if(res == false)
+        {
+            res = await this.setGuardModeExternal(guardMode);
+        }*/
         
         return res;
         
