@@ -65,30 +65,33 @@ export class Config
     private updateConfigFileTemplateStage2() : boolean
     {
         var updated = false;
-
-        if(this.filecontent.indexOf("api_use_system_variables") == -1)
+        
+        if(Number(this.config['ConfigFileInfo']['config_file_version']) < 1)
         {
-            this.logger.log("Logfile needs Stage2 update. Adding 'api_use_system_variables'.");
-            this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
-            this.config = parse(this.filecontent);
-            updated = true;
-            this.hasChanged = true;
-        }
-        if(this.filecontent.indexOf("api_camera_default_image") == -1)
-        {
-            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_image'.");
-            this.filecontent = this.filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
-            this.config = parse(this.filecontent);
-            updated = true;
-            this.hasChanged = true;
-        }
-        if(this.filecontent.indexOf("api_camera_default_video") == -1)
-        {
-            this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_video'.");
-            this.filecontent = this.filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
-            this.config = parse(this.filecontent);
-            updated = true;
-            this.hasChanged = true;
+            if(this.filecontent.indexOf("api_use_system_variables") == -1)
+            {
+                this.logger.log("Logfile needs Stage2 update. Adding 'api_use_system_variables'.");
+                this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_camera_default_image") == -1)
+            {
+                this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_image'.");
+                this.filecontent = this.filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_camera_default_video") == -1)
+            {
+                this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_video'.");
+                this.filecontent = this.filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
         }
 
         if(updated)
