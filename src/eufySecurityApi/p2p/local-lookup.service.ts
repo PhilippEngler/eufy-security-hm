@@ -6,9 +6,9 @@ export class LocalLookupService {
   private readonly LOCAL_PORT = 32108;
   private readonly addressTimeoutInMs = 3 * 1000;
 
-  private async bind(socket: Socket): Promise<void> {
+  private async bind(socket: Socket, portNumber : Number): Promise<void> {
     return new Promise((resolve) => {
-      socket.bind(0, () => resolve());
+      socket.bind(portNumber.valueOf(), () => resolve());
     });
   }
 
@@ -18,12 +18,13 @@ export class LocalLookupService {
     });
   }
 
-  public async lookup(host: string): Promise<Address> {
+  public async lookup(host: string, portNumber : Number): Promise<Address> {
     return new Promise(async (resolve, reject) => {
       let timer: NodeJS.Timeout | null = null;
 
       const socket = createSocket('udp4');
-      this.bind(socket);
+      socket.on('error', (error: Error) => reject(error));
+      this.bind(socket, portNumber);
 
       socket.on('message', (msg: Buffer, rinfo: RemoteInfo) => {
         if (hasHeader(msg, ResponseMessageType.LOCAL_LOOKUP_RESP)) {
@@ -40,7 +41,7 @@ export class LocalLookupService {
 
       timer = setTimeout(() => {
         this.close(socket);
-        reject(`Timeout on address: ${host}`);
+        reject(`Timeout on local address: ${host}:${this.LOCAL_PORT}`);
       }, this.addressTimeoutInMs);
     });
   }
