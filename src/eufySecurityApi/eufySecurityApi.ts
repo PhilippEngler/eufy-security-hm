@@ -376,58 +376,65 @@ export class EufySecurityApi
             if(this.bases)
             {
                 var err = 0;
-                await this.bases.setGuardMode(guardMode);
+                var res = await this.bases.setGuardMode(guardMode);
 
-                await sleep(2500);
-
-                await this.bases.loadBases();
-                var bases = this.bases.getBases();
-                
-                var base : Base;
-                var json = "";
-
-                for (var key in bases)
+                if(res == true)
                 {
-                    if(json.endsWith("}"))
+                    await sleep(2500);
+
+                    await this.bases.loadBases();
+                    var bases = this.bases.getBases();
+                    
+                    var base : Base;
+                    var json = "";
+
+                    for (var key in bases)
                     {
-                        json += ",";
+                        if(json.endsWith("}"))
+                        {
+                            json += ",";
+                        }
+                        base = bases[key];
+                        if(guardMode.toString() == base.getGuardMode())
+                        {
+                            json += "{";
+                            json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                            json += "\"result\":\"success\",";
+                            json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                            json += "}";
+                            this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        }
+                        else
+                        {
+                            err = err + 1;
+                            json += "{";
+                            json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                            json += "\"result\":\"failure\",";
+                            json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                            json += "}";
+                            this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        }
                     }
-                    base = bases[key];
-                    if(guardMode.toString() == base.getGuardMode())
+                    if (err==0)
                     {
-                        json += "{";
-                        json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                        json += "\"result\":\"success\",";
-                        json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                        json += "}";
-                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        json = "{\"success\":true,\"data\":[" + json;
+                        this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
+                        this.setLastConnectionInfo(true);
+                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     }
                     else
                     {
-                        err = err + 1;
-                        json += "{";
-                        json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                        json += "\"result\":\"failure\",";
-                        json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                        json += "}";
-                        this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        json = "{\"success\":false,\"data\":[" + json;
+                        this.setSystemVariableString("eufyCurrentState", "unbekannt");
+                        this.setLastConnectionInfo(false);
+                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     }
-                }
-                if (err==0)
-                {
-                    json = "{\"success\":true,\"data\":[" + json;
-                    this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
-                    this.setLastConnectionInfo(true);
-                    this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    json += "]}";
                 }
                 else
                 {
-                    json = "{\"success\":false,\"data\":[" + json;
-                    this.setSystemVariableString("eufyCurrentState", "unbekannt");
-                    this.setLastConnectionInfo(false);
-                    this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    json = "{\"success\":false,\"reason\":\"Failed to communicate with HomeBase.\"}";
                 }
-                json += "]}";
             }
             else
             {

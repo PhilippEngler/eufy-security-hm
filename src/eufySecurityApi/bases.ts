@@ -2,7 +2,6 @@ import { EufySecurityApi } from './eufySecurityApi';
 import { HttpService } from './http';
 import { CloudLookupService, LocalLookupService, DeviceClientService, CommandType } from './p2p';
 import { Hub, GuardMode, DeviceType } from './http/http-response.models';
-import { sleep } from './push';
 
 /**
  * Represents all the Bases in the account.
@@ -89,13 +88,15 @@ export class Bases
      * Set the guard mode of all bases to the given mode.
      * @param guardMode The target guard mode.
      */
-    public async setGuardMode(guardMode : GuardMode) : Promise<void>
+    public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
     {
+        var res = false;
         for (var key in this.bases)
         {
             var base = this.bases[key];
-            await base.setGuardMode(guardMode);
+            res = await base.setGuardMode(guardMode);
         }
+        return res;
     }
 
     /**
@@ -103,10 +104,10 @@ export class Bases
      * @param baseSerial The serial of the base the mode to change.
      * @param guardMode The target guard mode.
      */
-    public async setGuardModeBase(baseSerial : string, guardMode : GuardMode) : Promise<void>
+    public async setGuardModeBase(baseSerial : string, guardMode : GuardMode) : Promise<boolean>
     {
         var base = this.bases[baseSerial];
-        await base.setGuardMode(guardMode);
+        return await base.setGuardMode(guardMode);
     }
 }
 
@@ -301,39 +302,66 @@ export class Base
      */
     public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
     {
+        var res = await this.setGuardModeInternal(guardMode);
+
+        //if(res == false)
+        //{
+        //    res = await this.setGuardModeExternal(guardMode);
+        //}
+        
+        return res;
+        
+    }
+
+    private async setGuardModeInternal(guardMode : GuardMode) : Promise<boolean>
+    {
         try
         {
             var address = await this.localLookupService.lookup(this.getLocalIpAddress());
             this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
+
             var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
 
             await devClientService.connect();
-
             devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
-
             await devClientService.close();
 
-            /*console.log("Try Cloud...");
+            return true;
+        }
+        catch (e)
+        {
+            this.api.addToErr("ERROR: setGuardModeInternal: " + e);
+            
+            return false;
+        }
+    }
+
+    private async setGuardModeExternal(guardMode : GuardMode) : Promise<boolean>
+    {
+        try
+        {
             var address;
             var addresses = await this.cloudLookupService.lookup(this.getP2pDid(), await this.getDskKey());
 
             for(address of addresses)
             {
-                console.log('Found address', address);
-                var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
+                if(address.host != this.getLocalIpAddress())
+                {
+                    this.api.addToLog("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
+                    
+                    var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
+                    await devClientService.connect();
+                    devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
+                    await devClientService.close();
 
-                await devClientService.connect();
-
-                await sleep(10000);
-
-                await devClientService.close();
-            }*/
-            
-            return true;
+                    return true;
+                }
+            }
+            return false;
         }
         catch (e)
         {
-            this.api.addToErr("ERROR: setGuardMode: " + e);
+            this.api.addToErr("ERROR: setGuardModeExternal: " + e);
             
             return false;
         }
