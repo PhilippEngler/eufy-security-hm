@@ -2,6 +2,7 @@ import { EufySecurityApi } from './eufySecurityApi';
 import { HttpService } from './http';
 import { CloudLookupService, LocalLookupService, DeviceClientService, CommandType } from './p2p';
 import { Hub, GuardMode, DeviceType } from './http/http-response.models';
+import { Address } from './p2p/models';
 
 /**
  * Represents all the Bases in the account.
@@ -313,11 +314,17 @@ export class Base
         
     }
 
+    /**
+     * Helper method for setting the guard mode of the base to the given mode by communicating internal with the HomeBase.
+     * @param guardMode The target guard mode.
+     */
     private async setGuardModeInternal(guardMode : GuardMode) : Promise<boolean>
     {
         try
         {
-            var address = await this.localLookupService.lookup(this.getLocalIpAddress());
+            var localPorts : Array<Number> = [0];
+            localPorts = ((this.api.getUDPInternalPorts()).split(",")).map((i) => Number(i));
+            var address = await this.localLookup(localPorts);
             this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
 
             var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
@@ -336,6 +343,47 @@ export class Base
         }
     }
 
+    /**
+     * Helper method for local lookup.
+     * @param portNumbers The UDP static port numbers.
+     */
+    private async localLookup(portNumbers : Array<Number>) : Promise<Address>
+    {
+        if(portNumbers.length == 1 && portNumbers[0] == 0)
+        {
+            return await this.localLookupService.lookup(this.getLocalIpAddress(), portNumbers[0].valueOf());
+        }
+        var cnt = 0;
+        var address !: Address;
+        var err;
+        for (var portNumber of portNumbers)
+        {
+            try
+            {
+                address = await this.localLookupService.lookup(this.getLocalIpAddress(), portNumber);
+                err = undefined;
+                break;
+            }
+            catch(e)
+            {
+                err = e;
+                cnt = cnt +1;
+            }
+        }
+        if(err == undefined)
+        {
+            return address;
+        }
+        else
+        {
+            throw new Error(err);
+        }
+    }
+
+    /**
+     * Helper method for setting the guard mode of the base to the given mode by communicating external with the HomeBase.
+     * @param guardMode The target guard mode.
+     */
     private async setGuardModeExternal(guardMode : GuardMode) : Promise<boolean>
     {
         try

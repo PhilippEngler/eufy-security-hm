@@ -705,6 +705,22 @@ export class EufySecurityApi
     }
 
     /**
+     * Returns true if static udp ports should be used otherwise false.
+     */
+    public getUseUdpInternalPorts() : boolean
+    {
+        return this.config.getUseUdpInternalPorts();
+    }
+
+    /**
+     * Returns the ports should be used for communication with HomeBases.
+     */
+    public getUDPInternalPorts() : string
+    {
+        return this.config.getUdpInternalPorts();
+    }
+
+    /**
      * Get all config data needed for the webui.
      */
     public getConfig() : string
