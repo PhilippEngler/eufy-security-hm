@@ -145,6 +145,17 @@
 											<small id="apicerthttpsHelp" class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
 										</div>
 										<hr>
+										<div class="custom-control custom-switch" id="checkBoxUseUdpStaticPorts">
+											<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input" id="useUdpStaticPorts">
+											<label class="custom-control-label" for="useUdpStaticPorts">Verbindung zur HomeBase lokal über feste Ports aufbauen</label>
+										</div>
+										<br />
+										<div class="form-label-group" class="container-fluid">
+											<label for="apiupdports">UDP Ports für lokale Verbindung mit HomeBase.</label>
+											<input type="text" name="updPorts" id="apiupdports" class="form-control" placeholder="UDP Ports">
+											<small id="apiUpdPortsHelp" class="form-text text-muted">Sie können mehrere Ports angeben, wenn Sie diese jeweils mit einem Komma trennen (bspw.: 52789,52790).</small>
+										</div>
+										<hr>
 										<div class="custom-control custom-switch" id="checkBoxUseSystemVariables">
 											<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="useSystemVariables">
 											<label class="custom-control-label" for="useSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
@@ -342,7 +353,7 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo;
+				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiupdports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo;
 				var port = ":52789";
 				if(location.protocol == "https:")
 				{
@@ -370,6 +381,8 @@
 								apiporthttps = objResp.data[objIter].api_https_port;
 								apikeyhttps = objResp.data[objIter].api_https_key_file;
 								apicerthttps = objResp.data[objIter].api_https_cert_file;
+								apiuseudplocalstaticports = objResp.data[objIter].api_udp_local_static_ports_active;
+								apiupdports = objResp.data[objIter].api_udp_local_static_ports;
 								apiusesystemvariables = objResp.data[objIter].api_use_system_variables;
 								apicameradefaultimage = objResp.data[objIter].api_camera_default_image;
 								apicameradefaultvideo = objResp.data[objIter].api_camera_default_video;
@@ -401,6 +414,13 @@
 								document.getElementById("checkBoxUseSystemVariables").innerHTML = "<input type=\"checkbox\" name=\"useSystemVariables\" class=\"custom-control-input\" id=\"useSystemVariables\" checked>";
 								document.getElementById("checkBoxUseSystemVariables").innerHTML += "<label class=\"custom-control-label\" for=\"useSystemVariables\">Systemvariablen bei API Aktionen automatisch aktualisieren</label>";
 							}
+							if(apiuseudplocalstaticports == "true")
+							{
+								document.getElementById("checkBoxUseUdpStaticPorts").innerHTML = "<input type=\"checkbox\" name=\"useUdpStaticPorts\" class=\"custom-control-input\" id=\"useUdpStaticPorts\" checked>";
+								document.getElementById("checkBoxUseUdpStaticPorts").innerHTML += "<label class=\"custom-control-label\" for=\"useUdpStaticPorts\">Verbindung zur HomeBase lokal über feste Ports aufbauen</label>";
+							}
+							text = document.getElementById('apiupdports');
+							text.value = apiupdports;
 							text = document.getElementById('apidefaultimage');
 							text.value = apicameradefaultimage;
 							text = document.getElementById('apidefaultvideo');
