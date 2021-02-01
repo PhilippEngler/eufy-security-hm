@@ -707,17 +707,17 @@ export class EufySecurityApi
     /**
      * Returns true if static udp ports should be used otherwise false.
      */
-    public getUseUdpInternalPorts() : boolean
+    public getUseUdpLocalPorts() : boolean
     {
-        return this.config.getUseUdpInternalPorts();
+        return this.config.getUseUdpLocalPorts();
     }
 
     /**
      * Returns the ports should be used for communication with HomeBases.
      */
-    public getUDPInternalPorts() : string
+    public getUDPLocalPorts() : string
     {
-        return this.config.getUdpInternalPorts();
+        return this.config.getUdpLocalPorts();
     }
 
     /**
@@ -735,6 +735,8 @@ export class EufySecurityApi
         json += "\"api_https_port\":\"" + this.config.getApiPortHttps() + "\",";
         json += "\"api_https_key_file\":\"" + this.config.getApiKeyFileHttps() + "\",";
         json += "\"api_https_cert_file\":\"" + this.config.getApiCertFileHttps() + "\",";
+        json += "\"api_udp_local_static_ports_active\":\"" + this.config.getUseUdpLocalPorts() + "\",";
+        json += "\"api_udp_local_static_ports\":\"" + this.config.getUdpLocalPorts() + "\",";
         json += "\"api_use_system_variables\":\"" + this.config.getApiUseSystemVariables() + "\",";
         json += "\"api_camera_default_image\":\"" + this.config.getApiCameraDefaultImage() + "\",";
         json += "\"api_camera_default_video\":\"" + this.config.getApiCameraDefaultVideo() + "\"";
@@ -755,7 +757,7 @@ export class EufySecurityApi
      * @param api_key_https The key for https.
      * @param api_cert_https The cert for https.
      */
-    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string) : string
+    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string, api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string) : string
     {
         var serviceRestart = false;
         if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https)
@@ -775,6 +777,8 @@ export class EufySecurityApi
         this.config.setApiPortHttps(api_port_https);
         this.config.setApiKeyFileHttps(api_key_https);
         this.config.setApiCertFileHttps(api_cert_https);
+        this.config.setUseUdpLocalPorts(api_use_udp_local_static_ports);
+        this.config.setUdpLocalPorts(api_udp_local_static_ports);
         this.config.setApiUseSystemVariables(api_use_system_variables);
         this.config.setApiCameraDefaultImage(api_camera_default_image);
         this.config.setApiCameraDefaultVideo(api_camera_default_video);

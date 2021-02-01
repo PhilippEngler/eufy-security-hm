@@ -95,18 +95,18 @@ export class Config
         }
         if(Number(this.config['ConfigFileInfo']['config_file_version']) < 2)
         {
-            if(this.filecontent.indexOf("api_udp_internal_static_ports") == -1)
+            if(this.filecontent.indexOf("api_udp_local_static_ports") == -1)
             {
-                this.logger.log("Logfile needs Stage2 update. Adding 'api_udp_internal_static_ports'.");
-                this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_udp_internal_static_ports=52789,52790");
+                this.logger.log("Logfile needs Stage2 update. Adding 'api_udp_local_static_ports'.");
+                this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_udp_local_static_ports=52789,52790");
                 this.config = parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
-            if(this.filecontent.indexOf("api_udp_internal_static_ports_active") == -1)
+            if(this.filecontent.indexOf("api_udp_local_static_ports_active") == -1)
             {
-                this.logger.log("Logfile needs Stage2 update. Adding 'api_udp_internal_static_ports_active'.");
-                this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\api_udp_internal_static_ports_active=false");
+                this.logger.log("Logfile needs Stage2 update. Adding 'api_udp_local_static_ports_active'.");
+                this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\api_udp_local_static_ports_active=false");
                 this.config = parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
@@ -168,8 +168,8 @@ export class Config
         fc += "api_https_pkey_file=/usr/local/etc/config/server.pem\r\n";
         fc += "api_https_cert_file=/usr/local/etc/config/server.pem\r\n";
         fc += "api_https_pkey_string=\r\n";
-        fc += "api_udp_internal_static_ports_active=false";
-        fc += "api_udp_internal_static_ports=52789,52790";
+        fc += "api_udp_local_static_ports_active=false";
+        fc += "api_udp_local_static_ports=52789,52790";
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
         fc += "api_camera_default_video=\r\n";
@@ -276,11 +276,11 @@ export class Config
     /**
      * Returns true if the static udp ports should be used otherwise false.
      */
-    public getUseUdpInternalPorts() : boolean
+    public getUseUdpLocalPorts() : boolean
     {
         try
         {
-            return this.config['EufyAPIServiceData']['api_udp_internal_static_ports_active'];
+            return this.config['EufyAPIServiceData']['api_udp_local_static_ports_active'];
         }
         catch
         {
@@ -292,23 +292,23 @@ export class Config
      * Sets true, if static udp ports should be used otherwise false.
      * @param useUdpLocalStaticPorts Boolean value.
      */
-    public setUseUdpInternalPorts(useUdpLocalStaticPorts : boolean) : void
+    public setUseUdpLocalPorts(useUdpLocalStaticPorts : boolean) : void
     {
-        if(this.config['EufyAPIServiceData']['api_udp_internal_static_ports_active'] != useUdpLocalStaticPorts)
+        if(this.config['EufyAPIServiceData']['api_udp_local_static_ports_active'] != useUdpLocalStaticPorts)
         {
-            this.config['EufyAPIServiceData']['api_udp_internal_static_ports_active'] = useUdpLocalStaticPorts;
+            this.config['EufyAPIServiceData']['api_udp_local_static_ports_active'] = useUdpLocalStaticPorts;
             this.hasChanged = true;
         }
     }
 
     /**
-     * Returns a string with the internal ports.
+     * Returns a string with the local ports.
      */
-    public getUdpInternalPorts() : string
+    public getUdpLocalPorts() : string
     {
         try
         {
-            return this.config['EufyAPIServiceData']['api_udp_internal_static_ports'];
+            return this.config['EufyAPIServiceData']['api_udp_local_static_ports'];
         }
         catch
         {
@@ -317,14 +317,14 @@ export class Config
     }
 
     /**
-     * Set the udp static ports for internal communication.
+     * Set the udp static ports for local communication.
      * @param ports A string with the ports splitted by a comma.
      */
-    public setUdpInternalPorts(ports : string) : void
+    public setUdpLocalPorts(ports : string) : void
     {
-        if(this.config['EufyAPIServiceData']['api_udp_internal_static_ports'] != ports)
+        if(this.config['EufyAPIServiceData']['api_udp_local_static_ports'] != ports)
         {
-            this.config['EufyAPIServiceData']['api_udp_internal_static_ports'] = ports;
+            this.config['EufyAPIServiceData']['api_udp_local_static_ports'] = ports;
             this.hasChanged = true;
         }
     }

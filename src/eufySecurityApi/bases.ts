@@ -322,8 +322,16 @@ export class Base
     {
         try
         {
-            var localPorts : Array<Number> = [0];
-            localPorts = ((this.api.getUDPInternalPorts()).split(",")).map((i) => Number(i));
+            var localPorts : Array<Number>;
+            if(this.api.getUseUdpLocalPorts() == true)
+            {
+                localPorts = ((this.api.getUDPLocalPorts()).split(",")).map((i) => Number(i));
+            }
+            else
+            {
+                localPorts = [0];
+            }
+            
             var address = await this.localLookup(localPorts);
             this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
 

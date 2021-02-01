@@ -390,6 +390,29 @@ class ApiServer
                             apicertfile = apicertfile.substr(2, apicertfile.indexOf("----") - 4);
                         }
 
+                        var useUdpStaticPorts = false;
+                        if(body.indexOf("useUdpStaticPorts") >= 0)
+                        {
+                            var useUdpStaticPortsStr = body.substring(body.indexOf("useUdpStaticPorts") + 18);
+                            useUdpStaticPortsStr = useUdpStaticPortsStr.substr(2, useUdpStaticPortsStr.indexOf("----") - 4);
+                            if(useUdpStaticPortsStr.trim() == "on")
+                            {
+                                useUdpStaticPorts = true;
+                            }
+                            else
+                            {
+                                useUdpStaticPorts = false;
+                            }
+                        }
+
+                        var apiudpports = "";
+                        if(body.indexOf("updPorts") >= 0)
+                        {
+                            apiudpports = body.substring(body.indexOf("updPorts") + 9);
+                            apiudpports = apiudpports.replace("\r\n","");
+                            apiudpports = apiudpports.substr(2, apiudpports.indexOf("----") - 4);
+                        }
+
                         var useSystemVariables = false;
                         if(body.indexOf("useSystemVariables") >= 0)
                         {
@@ -421,7 +444,7 @@ class ApiServer
                             apicameradefaultvideo = apicameradefaultvideo.substr(2, apicameradefaultvideo.indexOf("----") - 4);
                         }
 
-                        responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                        responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
 
                         var resJSON = JSON.parse(responseString);
                                                 
