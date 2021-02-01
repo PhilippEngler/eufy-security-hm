@@ -29,9 +29,7 @@ The second possibility is to use the table of system variables on the "Einstellu
 
 ## Notes
 1. To reduce the size of the backup, some folders are excluded. The configfile is included in the backup. So simply reinstall the addon after restoreing the addon.
-2. For communication with your homebase you need to open ports in the firewall settings of your CCU. If you will not use change modes by the API, you have to open at least the two ports 52789 and 52790. When using the change mode feature, you must disable the firewall (set the rule to ports open). If you run piVCCU in a container add the portforwarding to the two ports, e.g. in /etc/network/if-up.d/pivccu add
-  iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52789 -j DNAT --to-destination $CCU_IP:52789
-  iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52790 -j DNAT --to-destination $CCU_IP:52790
+2. For communication with your homebase you need to open ports in the firewall settings of your CCU. If you will not use change modes by the API, you have to open at least the two ports 52789 and 52790. When using the change mode feature, you must disable the firewall (set the rule to ports open). If you run piVCCU in a container add the portforwarding to the two ports, e.g. in /etc/network/if-up.d/pivccu add `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52789 -j DNAT --to-destination $CCU_IP:52789` and `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52790 -j DNAT --to-destination $CCU_IP:52790`
 
 ## Credits
 This addon based on the [eufy-node-client](https://github.com/JanLoebel/eufy-node-client) of @JanLoebel. Some changes were done for example to support multiple bases, close the P2P connection or an other implementation for configuration data. The following projects also influenced this project:
