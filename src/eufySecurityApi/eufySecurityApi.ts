@@ -1111,6 +1111,6 @@ export class EufySecurityApi
      */
     public getApiVersion() : string
     {
-        return "{\"success\":true,\"api_version\":\"1.0.1\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
+        return "{\"success\":true,\"api_version\":\"1.0.2\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
     }
 }
