@@ -306,48 +306,53 @@ class EufySecurityApi {
             try {
                 if (this.bases) {
                     var err = 0;
-                    yield this.bases.setGuardMode(guardMode);
-                    yield push_1.sleep(2500);
-                    yield this.bases.loadBases();
-                    var bases = this.bases.getBases();
-                    var base;
-                    var json = "";
-                    for (var key in bases) {
-                        if (json.endsWith("}")) {
-                            json += ",";
+                    var res = yield this.bases.setGuardMode(guardMode);
+                    if (res == true) {
+                        yield push_1.sleep(2500);
+                        yield this.bases.loadBases();
+                        var bases = this.bases.getBases();
+                        var base;
+                        var json = "";
+                        for (var key in bases) {
+                            if (json.endsWith("}")) {
+                                json += ",";
+                            }
+                            base = bases[key];
+                            if (guardMode.toString() == base.getGuardMode()) {
+                                json += "{";
+                                json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                                json += "\"result\":\"success\",";
+                                json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                                json += "}";
+                                this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                            }
+                            else {
+                                err = err + 1;
+                                json += "{";
+                                json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
+                                json += "\"result\":\"failure\",";
+                                json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
+                                json += "}";
+                                this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                            }
                         }
-                        base = bases[key];
-                        if (guardMode.toString() == base.getGuardMode()) {
-                            json += "{";
-                            json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                            json += "\"result\":\"success\",";
-                            json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                            json += "}";
-                            this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                        if (err == 0) {
+                            json = "{\"success\":true,\"data\":[" + json;
+                            this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
+                            this.setLastConnectionInfo(true);
+                            this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                         }
                         else {
-                            err = err + 1;
-                            json += "{";
-                            json += "\"base_id\":\"" + base.getSerialNumber() + "\",";
-                            json += "\"result\":\"failure\",";
-                            json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
-                            json += "}";
-                            this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                            json = "{\"success\":false,\"data\":[" + json;
+                            this.setSystemVariableString("eufyCurrentState", "unbekannt");
+                            this.setLastConnectionInfo(false);
+                            this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                         }
-                    }
-                    if (err == 0) {
-                        json = "{\"success\":true,\"data\":[" + json;
-                        this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
-                        this.setLastConnectionInfo(true);
-                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        json += "]}";
                     }
                     else {
-                        json = "{\"success\":false,\"data\":[" + json;
-                        this.setSystemVariableString("eufyCurrentState", "unbekannt");
-                        this.setLastConnectionInfo(false);
-                        this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        json = "{\"success\":false,\"reason\":\"Failed to communicate with HomeBase.\"}";
                     }
-                    json += "]}";
                 }
                 else {
                     json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
@@ -561,6 +566,18 @@ class EufySecurityApi {
         return this.config.getApiCertFileHttps();
     }
     /**
+     * Returns true if static udp ports should be used otherwise false.
+     */
+    getUseUdpLocalPorts() {
+        return this.config.getUseUdpLocalPorts();
+    }
+    /**
+     * Returns the ports should be used for communication with HomeBases.
+     */
+    getUDPLocalPorts() {
+        return this.config.getUdpLocalPorts();
+    }
+    /**
      * Get all config data needed for the webui.
      */
     getConfig() {
@@ -574,6 +591,8 @@ class EufySecurityApi {
         json += "\"api_https_port\":\"" + this.config.getApiPortHttps() + "\",";
         json += "\"api_https_key_file\":\"" + this.config.getApiKeyFileHttps() + "\",";
         json += "\"api_https_cert_file\":\"" + this.config.getApiCertFileHttps() + "\",";
+        json += "\"api_udp_local_static_ports_active\":\"" + this.config.getUseUdpLocalPorts() + "\",";
+        json += "\"api_udp_local_static_ports\":\"" + this.config.getUdpLocalPorts() + "\",";
         json += "\"api_use_system_variables\":\"" + this.config.getApiUseSystemVariables() + "\",";
         json += "\"api_camera_default_image\":\"" + this.config.getApiCameraDefaultImage() + "\",";
         json += "\"api_camera_default_video\":\"" + this.config.getApiCameraDefaultVideo() + "\"";
@@ -592,7 +611,7 @@ class EufySecurityApi {
      * @param api_key_https The key for https.
      * @param api_cert_https The cert for https.
      */
-    setConfig(username, password, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_use_system_variables, api_camera_default_image, api_camera_default_video) {
+    setConfig(username, password, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_use_udp_local_static_ports, api_udp_local_static_ports, api_use_system_variables, api_camera_default_image, api_camera_default_video) {
         var serviceRestart = false;
         if (this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https) {
             serviceRestart = true;
@@ -608,6 +627,8 @@ class EufySecurityApi {
         this.config.setApiPortHttps(api_port_https);
         this.config.setApiKeyFileHttps(api_key_https);
         this.config.setApiCertFileHttps(api_cert_https);
+        this.config.setUseUdpLocalPorts(api_use_udp_local_static_ports);
+        this.config.setUdpLocalPorts(api_udp_local_static_ports);
         this.config.setApiUseSystemVariables(api_use_system_variables);
         this.config.setApiCameraDefaultImage(api_camera_default_image);
         this.config.setApiCameraDefaultVideo(api_camera_default_video);
@@ -867,7 +888,7 @@ class EufySecurityApi {
      * Return the version of this API.
      */
     getApiVersion() {
-        return "{\"success\":true,\"api_version\":\"1.0.1\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
+        return "{\"success\":true,\"api_version\":\"1.0.2\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

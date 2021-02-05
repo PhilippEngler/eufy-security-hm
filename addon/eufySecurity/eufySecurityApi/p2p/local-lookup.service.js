@@ -17,10 +17,10 @@ class LocalLookupService {
         this.LOCAL_PORT = 32108;
         this.addressTimeoutInMs = 3 * 1000;
     }
-    bind(socket) {
+    bind(socket, portNumber) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve) => {
-                socket.bind(0, () => resolve());
+                socket.bind(portNumber.valueOf(), () => resolve());
             });
         });
     }
@@ -31,12 +31,13 @@ class LocalLookupService {
             });
         });
     }
-    lookup(host) {
+    lookup(host, portNumber) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 let timer = null;
                 const socket = dgram_1.createSocket('udp4');
-                this.bind(socket);
+                socket.on('error', (error) => reject(error));
+                this.bind(socket, portNumber);
                 socket.on('message', (msg, rinfo) => {
                     if (message_utils_1.hasHeader(msg, message_utils_1.ResponseMessageType.LOCAL_LOOKUP_RESP)) {
                         if (!!timer) {
@@ -50,7 +51,7 @@ class LocalLookupService {
                 yield message_utils_1.sendMessage(socket, { host: host, port: this.LOCAL_PORT }, message_utils_1.RequestMessageType.LOCAL_LOOKUP, payload);
                 timer = setTimeout(() => {
                     this.close(socket);
-                    reject(`Timeout on address: ${host}`);
+                    reject(`Timeout on local address: ${host}:${this.LOCAL_PORT}`);
                 }, this.addressTimeoutInMs);
             }));
         });

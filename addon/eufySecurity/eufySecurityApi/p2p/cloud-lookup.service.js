@@ -71,7 +71,7 @@ class CloudLookupService {
                 yield message_utils_1.sendMessage(socket, address, msgId, payload);
                 timer = setTimeout(() => {
                     this.close(socket);
-                    reject(`Timeout on address: ${JSON.stringify(address)}`);
+                    reject(`Timeout on external address: ${address.host}:${address.port}`);
                 }, this.addressTimeoutInMs);
             }));
         });

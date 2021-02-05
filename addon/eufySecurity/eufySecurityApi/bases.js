@@ -80,10 +80,12 @@ class Bases {
      */
     setGuardMode(guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
+            var res = false;
             for (var key in this.bases) {
                 var base = this.bases[key];
-                yield base.setGuardMode(guardMode);
+                res = yield base.setGuardMode(guardMode);
             }
+            return res;
         });
     }
     /**
@@ -94,7 +96,7 @@ class Bases {
     setGuardModeBase(baseSerial, guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
             var base = this.bases[baseSerial];
-            yield base.setGuardMode(guardMode);
+            return yield base.setGuardMode(guardMode);
         });
     }
 }
@@ -245,32 +247,96 @@ class Base {
      */
     setGuardMode(guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
+            var res = yield this.setGuardModeInternal(guardMode);
+            /*if(res == false)
+            {
+                res = await this.setGuardModeExternal(guardMode);
+            }*/
+            return res;
+        });
+    }
+    /**
+     * Helper method for setting the guard mode of the base to the given mode by communicating internal with the HomeBase.
+     * @param guardMode The target guard mode.
+     */
+    setGuardModeInternal(guardMode) {
+        return __awaiter(this, void 0, void 0, function* () {
             try {
-                var address = yield this.localLookupService.lookup(this.getLocalIpAddress());
+                var localPorts;
+                if (this.api.getUseUdpLocalPorts() == true) {
+                    localPorts = ((this.api.getUDPLocalPorts()).split(",")).map((i) => Number(i));
+                }
+                else {
+                    localPorts = [0];
+                }
+                var address = yield this.localLookup(localPorts);
                 this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
                 var devClientService = new p2p_1.DeviceClientService(address, this.getP2pDid(), this.getActorId());
                 yield devClientService.connect();
                 devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
                 yield devClientService.close();
-                /*console.log("Try Cloud...");
-                var address;
-                var addresses = await this.cloudLookupService.lookup(this.getP2pDid(), await this.getDskKey());
-    
-                for(address of addresses)
-                {
-                    console.log('Found address', address);
-                    var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
-    
-                    await devClientService.connect();
-    
-                    await sleep(10000);
-    
-                    await devClientService.close();
-                }*/
                 return true;
             }
             catch (e) {
-                this.api.addToErr("ERROR: setGuardMode: " + e);
+                this.api.addToErr("ERROR: setGuardModeInternal: " + e);
+                return false;
+            }
+        });
+    }
+    /**
+     * Helper method for local lookup.
+     * @param portNumbers The UDP static port numbers.
+     */
+    localLookup(portNumbers) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (portNumbers.length == 1 && portNumbers[0] == 0) {
+                return yield this.localLookupService.lookup(this.getLocalIpAddress(), portNumbers[0].valueOf());
+            }
+            var cnt = 0;
+            var address;
+            var err;
+            for (var portNumber of portNumbers) {
+                try {
+                    address = yield this.localLookupService.lookup(this.getLocalIpAddress(), portNumber);
+                    err = undefined;
+                    break;
+                }
+                catch (e) {
+                    err = e;
+                    cnt = cnt + 1;
+                }
+            }
+            if (err == undefined) {
+                return address;
+            }
+            else {
+                throw new Error(err);
+            }
+        });
+    }
+    /**
+     * Helper method for setting the guard mode of the base to the given mode by communicating external with the HomeBase.
+     * @param guardMode The target guard mode.
+     */
+    setGuardModeExternal(guardMode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                var address;
+                var addresses = yield this.cloudLookupService.lookup(this.getP2pDid(), yield this.getDskKey());
+                for (address of addresses) {
+                    if (address.host != this.getLocalIpAddress()) {
+                        this.api.addToLog("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
+                        var devClientService = new p2p_1.DeviceClientService(address, this.getP2pDid(), this.getActorId());
+                        yield devClientService.connect();
+                        devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
+                        yield devClientService.close();
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (e) {
+                this.api.addToErr("ERROR: setGuardModeExternal: " + e);
                 return false;
             }
         });

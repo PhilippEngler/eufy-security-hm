@@ -84,7 +84,7 @@ class DeviceClientService {
                 });
                 this.sendCamCheck();
                 timer = setTimeout(() => {
-                    reject(`Timeout on connect to ${JSON.stringify(this.address)}`);
+                    reject(`Timeout connecting to ${this.address.host}:${this.address.port}`);
                 }, this.addressTimeoutInMs);
             });
         });
