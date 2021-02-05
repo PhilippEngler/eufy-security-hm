@@ -12,6 +12,12 @@ if [ $? -eq 1 ]; then
   mount /usr/local
 fi
 
+# if the service is available, stop it
+# (mainly for raspberrymatic)
+if [ -e ${RCD_DIR}/eufySecurity ]; then
+  ${RCD_DIR}/eufySecurity stop
+fi
+
 # create necessary directories
 mkdir -p ${ADDON_DIR}
 chmod 755 ${ADDON_DIR}
