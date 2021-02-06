@@ -1,6 +1,6 @@
 import { createServer as createServerHttp, IncomingMessage, ServerResponse } from 'http';
 import { createServer as createServerHttps } from 'https';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
 import { GuardMode } from './eufySecurityApi/http/http-response.models';
@@ -21,6 +21,7 @@ class ApiServer
      */
     constructor()
     {
+        apiPortFile(api.getApiServerPortHttp(), api.getApiServerPortHttps());
         this.startServer(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps(), api.getApiServerKeyHttps(), api.getApiServerCertHttps(), logger);
     }
 
@@ -405,7 +406,7 @@ class ApiServer
                             }
                         }
 
-                        var apiudpports = "";
+                        var apiudpports = "52789,52790";
                         if(body.indexOf("updPorts") >= 0)
                         {
                             apiudpports = body.substring(body.indexOf("updPorts") + 9);
@@ -443,6 +444,8 @@ class ApiServer
                             apicameradefaultvideo = apicameradefaultvideo.replace("\r\n","");
                             apicameradefaultvideo = apicameradefaultvideo.substr(2, apicameradefaultvideo.indexOf("----") - 4);
                         }
+
+                        apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
                         responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
 
@@ -504,6 +507,28 @@ class ApiServer
 function main()
 {
     apiServer = new ApiServer();
+}
+
+function apiPortFile(httpPort : number, httpsPort : number)
+{
+    try
+    {
+        if(existsSync("www/apiPorts.txt"))
+        {
+            if(api.getApiServerPortHttp() != httpPort || api.getApiServerPortHttps() != httpsPort)
+            {
+                writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+            }
+        }
+        else
+        {
+            writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+        }
+    }
+    catch (ENOENT)
+    {
+        
+    }
 }
 
 /**
