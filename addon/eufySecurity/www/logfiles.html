@@ -65,6 +65,8 @@
 		<main role="main" class="container-fluid">
 			<div id="browserWarning">
 			</div>
+			<div id="loadApiSettingsError">
+			</div>
 			<h3>Logdateien</h3>
 			<p>
 			<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-2">
@@ -115,9 +117,9 @@
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script>
+			port = "";
 			checkIE();
-			loadLog(true);
-			loadErr(true);
+			getAPIPort();
 			
 			function checkIE()
 			{
@@ -134,6 +136,70 @@
 					document.getElementById("browserWarning").innerHTML = warning;
 				}
 			}
+
+			function getAPIPort()
+			{
+				var apiPorts;
+				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('text/plain');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							apiPorts = this.responseText;
+							apiPorts = apiPorts.split(",")
+							
+							if(apiPorts.length == 2)
+							{
+								port = ":" + apiPorts[0];
+								if(location.protocol == "https:")
+								{
+									port = ":" + apiPorts[1];
+								}
+							}
+							else
+							{
+								port = ":52789";
+								if(location.protocol == "https:")
+								{
+									port = ":52790";
+								}
+							}
+
+							initContent();
+						}
+						catch
+						{
+							var loadSettingsError = "";
+							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "				</div>";
+							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
+						}
+					}
+					else if (this.readyState == 4 && this.status != 200)
+					{
+						var loadSettingsError = "";
+						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "				</div>";
+						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function initContent()
+			{
+				loadLog(true);
+				loadErr(true);
+			}
 			
 			function loadLog(showLoading)
 			{
@@ -142,11 +208,6 @@
 				var type="";
 				var state="";
 				var buttons="";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/getLogFileContent";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -182,11 +243,6 @@
 				var type="";
 				var state="";
 				var buttons="";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/getErrorFileContent";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -222,11 +278,7 @@
 				var imagepath="";
 				var type="";
 				var lastVideo="keine Aufnahme";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/clearLogFile";
+				var url=location.protocol + "//" + location.hostname + port + "/clearLogFile";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -263,11 +315,7 @@
 				var imagepath="";
 				var type="";
 				var lastVideo="keine Aufnahme";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/clearErrFile";
+				var url=location.protocol + "//" + location.hostname + port + "/clearErrFile";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -300,11 +348,6 @@
 			function downloadLogfile()
 			{
 				var xmlHttp, objResp;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/downloadLogFile";
 				window.open(url);
 			}
@@ -312,11 +355,6 @@
 			function downloadErrfile()
 			{
 				var xmlHttp, objResp;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/downloadErrFile";
 				window.open(url);
 			}

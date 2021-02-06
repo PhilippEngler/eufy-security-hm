@@ -65,6 +65,8 @@
 		<main role="main" class="container-fluid">
 			<div id="browserWarning">
 			</div>
+			<div id="loadApiSettingsError">
+			</div>
 			<h3>Geräte</h3>
 			<p>Hier finden Sie alle Geräte, die dem angegebenen Account zugeordnet sind.</p>
 			<h4>Basisstationen</h4>
@@ -84,9 +86,9 @@
 		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script>
+			port = "";
 			checkIE();
-			loadCamera();
-			loadBases();
+			getAPIPort();
 			
 			function checkIE()
 			{
@@ -103,6 +105,70 @@
 					document.getElementById("browserWarning").innerHTML = warning;
 				}
 			}
+
+			function getAPIPort()
+			{
+				var apiPorts;
+				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('text/plain');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							apiPorts = this.responseText;
+							apiPorts = apiPorts.split(",")
+							
+							if(apiPorts.length == 2)
+							{
+								port = ":" + apiPorts[0];
+								if(location.protocol == "https:")
+								{
+									port = ":" + apiPorts[1];
+								}
+							}
+							else
+							{
+								port = ":52789";
+								if(location.protocol == "https:")
+								{
+									port = ":52790";
+								}
+							}
+
+							initContent();
+						}
+						catch
+						{
+							var loadSettingsError = "";
+							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "				</div>";
+							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
+						}
+					}
+					else if (this.readyState == 4 && this.status != 200)
+					{
+						var loadSettingsError = "";
+						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "				</div>";
+						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function initContent()
+			{
+				loadCamera();
+				loadBases();
+			}
 			
 			function loadCamera()
 			{
@@ -111,11 +177,7 @@
 				var imagepath="";
 				var type="";
 				var lastVideo="keine Aufnahme";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/getDevices";
+				var url=location.protocol + "//" + location.hostname + port + "/getDevices";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -237,11 +299,7 @@
 				var imagepath="";
 				var type="";
 				var state="";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/getBases";
+				var url=location.protocol + "//" + location.hostname + port + "/getBases";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()

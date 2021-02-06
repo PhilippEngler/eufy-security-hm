@@ -65,6 +65,8 @@
 		<main role="main" class="container-fluid">
 			<div id="browserWarning">
 			</div>
+			<div id="loadApiSettingsError">
+			</div>
 			<h3>Statusänderung</h3>
 			<p>Hier finden Sie den aktuellen Status Ihrer Basisstationen und können diesen entweder für eine Basisstation oder für alle Basisstationen ändern.</p>
 			<p>
@@ -104,8 +106,9 @@
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script>
+			port = "";
 			checkIE();
-			loadData(true);
+			getAPIPort();
 			
 			function checkIE()
 			{
@@ -122,6 +125,69 @@
 					document.getElementById("browserWarning").innerHTML = warning;
 				}
 			}
+
+			function getAPIPort()
+			{
+				var apiPorts;
+				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('text/plain');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							apiPorts = this.responseText;
+							apiPorts = apiPorts.split(",")
+							
+							if(apiPorts.length == 2)
+							{
+								port = ":" + apiPorts[0];
+								if(location.protocol == "https:")
+								{
+									port = ":" + apiPorts[1];
+								}
+							}
+							else
+							{
+								port = ":52789";
+								if(location.protocol == "https:")
+								{
+									port = ":52790";
+								}
+							}
+
+							initContent();
+						}
+						catch
+						{
+							var loadSettingsError = "";
+							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "				</div>";
+							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
+						}
+					}
+					else if (this.readyState == 4 && this.status != 200)
+					{
+						var loadSettingsError = "";
+						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "				</div>";
+						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function initContent()
+			{
+				loadData(true);
+			}
 			
 			function loadData(showLoading)
 			{
@@ -130,11 +196,7 @@
 				var type="";
 				var state="";
 				var buttons="";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}var url=location.protocol + "//" + location.hostname + port + "/getBases";
+				var url=location.protocol + "//" + location.hostname + port + "/getBases";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -286,11 +348,6 @@
 					document.getElementById("armAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/away";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
@@ -326,11 +383,6 @@
 					document.getElementById("arm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/away";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
@@ -371,11 +423,6 @@
 					document.getElementById("homeAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/home";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
@@ -411,11 +458,6 @@
 					document.getElementById("home" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/home";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
@@ -456,11 +498,6 @@
 					document.getElementById("scheduleAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/schedule";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
@@ -496,11 +533,6 @@
 					document.getElementById("schedule" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/schedule";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
@@ -541,11 +573,6 @@
 					document.getElementById("disarmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/disarmed";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
@@ -581,11 +608,6 @@
 					document.getElementById("disarm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
-					var port = ":52789";
-					if(location.protocol == "https:")
-					{
-						port = ":52790";
-					}
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/disarmed";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');

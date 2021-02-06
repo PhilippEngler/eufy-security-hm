@@ -64,7 +64,8 @@
 		
 		<main role="main" class="container-fluid">
 			<div id="browserWarning">
-
+			</div>
+			<div id="loadApiSettingsError">
 			</div>
 			<form class="needs-validation" novalidate action="javascript:saveConfig();" method="post" id="configform">
 				<h3>Einstellungen</h3>
@@ -92,9 +93,9 @@
 											</button>
 										</div>
 										<div class="form-label-group was-validated" class="container-fluid">
-											<label for="password">Benutzername des angelegten eufy Security Accounts.</label>
+											<label for="username">Benutzername des angelegten eufy Security Accounts.</label>
 											<input type="email" name="email" id="username" class="form-control" placeholder="eMail-Adresse" required> <!--autofocus-->
-											<small id="passwordHelp" class="form-text text-muted">Der Benutzername entspricht der eMail-Adresse, mit der der eufy Security Account angelegt wurde.</small>
+											<small id="usernameHelp" class="form-text text-muted">Der Benutzername entspricht der eMail-Adresse, mit der der eufy Security Account angelegt wurde.</small>
 											<div class="invalid-feedback">
 												Bitte geben Sie die eMail-Adresse des eufy Security Accounts ein.
 											</div>
@@ -117,12 +118,12 @@
 								<div class="col-md-12">
 									<div class="card-body" >
 										<div class="custom-control custom-switch" id="checkBoxUseHttp">
-											<input type="checkbox" name="useHttp" class="custom-control-input" id="useHttp">
+											<input type="checkbox" name="useHttp" class="custom-control-input" id="useHttp" onchange="changeValue(useHttp)">
 											<label class="custom-control-label" for="useHttp">HTTP aktiv</label>
 										</div>
 										<div class="form-label-group was-validated" class="container-fluid">
 											<label class="mt-2" for="apiporthttp">Port über den die eufy Security API über HTTP erreichbar sein soll.</label>
-											<input type="text" name="portHttp" id="apiporthttp" class="form-control" placeholder="API-Port" disabled pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$">
+											<input type="text" name="portHttp" id="apiporthttp" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$">
 											<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
 											<div class="invalid-feedback">
 												Bitte geben Sie nur einen Port zwischen 1 und 65535 ein.
@@ -130,30 +131,30 @@
 										</div>
 										<hr>
 										<div class="custom-control custom-switch" id="checkBoxUseHttps">
-											<input type="checkbox" name="useHttps" class="custom-control-input" id="useHttps">
+											<input type="checkbox" name="useHttps" class="custom-control-input" id="useHttps" onchange="changeValue(useHttps)">
 											<label class="custom-control-label" for="useHttps">HTTPS aktiv</label>
 										</div>
 										<div class="form-label-group was-validated" class="container-fluid">
 											<label class="mt-2" for="portHttpsport">Port über den die eufy Security API über HTTPS erreichbar sein soll.</label>
-											<input type="text" name="portHttps" id="apiporthttps" class="form-control" placeholder="API-Port" disabled pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$">
+											<input type="text" name="portHttps" id="apiporthttps" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$">
 											<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
 											<div class="invalid-feedback">
 												Bitte geben Sie nur einen Port zwischen 1 und 65535 ein.
 											</div>
 										</div>
-										<div class="form-label-group" class="container-fluid">
+										<div class="form-label-group was-validated" class="container-fluid">
 											<label class="mt-2" for="apikeyhttps">Speicherort der Datei mit dem privaten Schlüssel des Zertifikats.</label>
-											<input type="text" name="keyFile" id="apikeyhttps" class="form-control" placeholder="Schlüsseldatei">
+											<input type="text" name="keyFile" id="apikeyhttps" class="form-control" placeholder="Schlüsseldatei" required>
 											<small id="apikeyhttpsHelp" class="form-text text-muted">Speicherort der Schlüsseldatei auf der CCU.</small>
 										</div>
-										<div class="form-label-group" class="container-fluid">
+										<div class="form-label-group was-validated" class="container-fluid">
 											<label class="mt-2" for="apicerthttps">Speicherort des Zertifikats.</label>
-											<input type="text" name="certFile" id="apicerthttps" class="form-control" placeholder="Zertifikatsdatei">
+											<input type="text" name="certFile" id="apicerthttps" class="form-control" placeholder="Zertifikatsdatei" required>
 											<small id="apicerthttpsHelp" class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
 										</div>
 										<hr>
 										<div class="custom-control custom-switch" id="checkBoxUseUdpStaticPorts">
-											<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mb-2" id="useUdpStaticPorts">
+											<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mb-2" id="useUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
 											<label class="custom-control-label" for="useUdpStaticPorts">Verbindung zur HomeBase lokal über feste Ports aufbauen</label>
 										</div>
 										<div class="form-label-group was-validated" class="container-fluid">
@@ -166,7 +167,7 @@
 										</div>
 										<hr>
 										<div class="custom-control custom-switch" id="checkBoxUseSystemVariables">
-											<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="useSystemVariables">
+											<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="useSystemVariables" onchange="changeValue(useSystemVariables)">
 											<label class="custom-control-label" for="useSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
 										</div>
 										<hr>
@@ -352,11 +353,10 @@
 		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script>
+			port = "";
 			checkIE();
-			validateForm();
-			loadData();
-			loadSystemVariables();
-			
+			getAPIPort();
+
 			function checkIE()
 			{
 				if (window.document.documentMode)
@@ -371,6 +371,71 @@
 					warning += "				</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
 				}
+			}
+
+			function getAPIPort()
+			{
+				var apiPorts;
+				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('text/plain');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							apiPorts = this.responseText;
+							apiPorts = apiPorts.split(",")
+							
+							if(apiPorts.length == 2)
+							{
+								port = ":" + apiPorts[0];
+								if(location.protocol == "https:")
+								{
+									port = ":" + apiPorts[1];
+								}
+							}
+							else
+							{
+								port = ":52789";
+								if(location.protocol == "https:")
+								{
+									port = ":52790";
+								}
+							}
+
+							initContent();
+						}
+						catch
+						{
+							var loadSettingsError = "";
+							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "				</div>";
+							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
+						}
+					}
+					else if (this.readyState == 4 && this.status != 200)
+					{
+						var loadSettingsError = "";
+						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "				</div>";
+						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function initContent()
+			{
+				validateForm();
+				loadData();
+				loadSystemVariables();
 			}
 
 			function validateForm()
@@ -392,11 +457,6 @@
 			function loadData()
 			{
 				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiupdports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/getConfig";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -431,15 +491,23 @@
 							text.value = password;
 							if(apiusehttp == "true")
 							{
-								document.getElementById("checkBoxUseHttp").innerHTML = "<input type=\"checkbox\" name=\"useHttp\" class=\"custom-control-input\" id=\"useHttp\" checked>";
-								document.getElementById("checkBoxUseHttp").innerHTML += "<label class=\"custom-control-label\" for=\"useHttp\">HTTP aktiv</label>";
+								document.getElementById("useHttp").setAttribute("checked", true);
+							}
+							else
+							{
+								document.getElementById("apiporthttp").setAttribute("disabled", true);
 							}
 							text = document.getElementById('apiporthttp');
 							text.value = apiporthttp;
 							if(apiusehttps == "true")
 							{
-								document.getElementById("checkBoxUseHttps").innerHTML = "<input type=\"checkbox\" name=\"useHttps\" class=\"custom-control-input\" id=\"useHttps\" checked>";
-								document.getElementById("checkBoxUseHttps").innerHTML += "<label class=\"custom-control-label\" for=\"useHttps\">HTTPS aktiv</label>";
+								document.getElementById("useHttps").setAttribute("checked", true);
+							}
+							else
+							{
+								document.getElementById("apiporthttps").setAttribute("disabled", true);
+								document.getElementById("apikeyhttps").setAttribute("disabled", true);
+								document.getElementById("apicerthttps").setAttribute("disabled", true);
 							}
 							text = document.getElementById('apiporthttps');
 							text.value = apiporthttps;
@@ -449,13 +517,15 @@
 							text.value = apicerthttps;
 							if(apiusesystemvariables == "true")
 							{
-								document.getElementById("checkBoxUseSystemVariables").innerHTML = "<input type=\"checkbox\" name=\"useSystemVariables\" class=\"custom-control-input\" id=\"useSystemVariables\" checked>";
-								document.getElementById("checkBoxUseSystemVariables").innerHTML += "<label class=\"custom-control-label\" for=\"useSystemVariables\">Systemvariablen bei API Aktionen automatisch aktualisieren</label>";
+								document.getElementById("useSystemVariables").setAttribute("checked", true);
 							}
 							if(apiuseudplocalstaticports == "true")
 							{
-								document.getElementById("checkBoxUseUdpStaticPorts").innerHTML = "<input type=\"checkbox\" name=\"useUdpStaticPorts\" class=\"custom-control-input\" id=\"useUdpStaticPorts\" checked>";
-								document.getElementById("checkBoxUseUdpStaticPorts").innerHTML += "<label class=\"custom-control-label\" for=\"useUdpStaticPorts\">Verbindung zur HomeBase lokal über feste Ports aufbauen</label>";
+								document.getElementById("useUdpStaticPorts").setAttribute("checked", true);
+							}
+							else
+							{
+								document.getElementById("apiupdports").setAttribute("disabled", true);
 							}
 							text = document.getElementById('apiupdports');
 							text.value = apiupdports;
@@ -491,11 +561,6 @@
 			function loadSystemVariables()
 			{
 				var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, text="";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -573,11 +638,6 @@
 			function saveConfig()
 			{
 				var xmlHttp, obfFD, x, username, passwort, apiport;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/setConfig";
 				
 				xmlHttp = new XMLHttpRequest();
@@ -641,11 +701,6 @@
 			function createSysVar(varName, varInfo)
 			{
 				var xmlHttp, objResp, objIter, sysVarName, sysVarAvailable, text="";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/createSystemVariable/" + varName + "/" + varInfo;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -687,11 +742,6 @@
 			function removeTokenData()
 			{
 				var xmlHttp, objResp;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/removeTokenData";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -732,56 +782,6 @@
 			function restartService()
 			{
 				var xmlHttp, objResp;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
-				var url=location.protocol + "//" + location.hostname + port + "/restartService";
-				xmlHttp = new XMLHttpRequest();
-				xmlHttp.overrideMimeType('application/json');
-				xmlHttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						try
-						{
-							objResp = JSON.parse(this.responseText);
-							if(objResp.success == true)
-							{
-								$("#toastRestartOK").toast('show');
-							}
-							else
-							{
-								$("#toastRestartFailed").toast('show');
-							}
-						}
-						catch (e)
-						{
-							$("#toastRestartFailed").toast('show');
-						}
-					}
-					else if (this.status == 200 || this.readyState == 4)
-					{
-						
-					}
-					else
-					{
-						
-					}
-				};
-				xmlHttp.open("GET", url, true);
-				xmlHttp.send();
-			}
-
-			function restartService()
-			{
-				var xmlHttp, objResp;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/restartService";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -822,11 +822,6 @@
 			function downloadConfigFile()
 			{
 				var xmlHttp, objResp;
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/downloadConfig";
 				window.open(url);
 			}
@@ -844,6 +839,47 @@
 					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(true)\" type=\"button\" class=\"btn btn-outline-warning btn-block\">Fehlerbehebung aktivieren</button>";
 					document.getElementById("delTokData").innerHTML = "<label for=\"deleteTokenData\" class=\"text-muted\">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br /><button id=\"deleteTokenData\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Token löschen</button></div>";
 					document.getElementById("restSvr").innerHTML = "<label for=\"restartSvr\" class=\"text-muted\">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br /><button id=\"restartSvr\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Service neu starten</button></div>";
+				}
+			}
+
+			function changeValue(element)
+			{
+				switch (element.name)
+				{
+					case "useHttp":
+						if(element.checked == true)
+						{
+							document.getElementById("apiporthttp").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("apiporthttp").setAttribute("disabled", true);
+						}
+						break;
+					case "useHttps":
+						if(element.checked == true)
+						{
+							document.getElementById("apiporthttps").removeAttribute("disabled");
+							document.getElementById("apikeyhttps").removeAttribute("disabled");
+							document.getElementById("apicerthttps").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("apiporthttps").setAttribute("disabled", true);
+							document.getElementById("apikeyhttps").setAttribute("disabled", true);
+							document.getElementById("apicerthttps").setAttribute("disabled", true);
+						}
+						break;
+					case "useUdpStaticPorts":
+						if(element.checked == true)
+						{
+							document.getElementById("apiupdports").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("apiupdports").setAttribute("disabled", true);
+						}
+						break;
 				}
 			}
 		</script>

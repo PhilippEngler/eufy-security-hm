@@ -65,6 +65,8 @@
 		<main role="main" class="container-fluid">
 			<div id="browserWarning">
 			</div>
+			<div id="loadApiSettingsError">
+			</div>
 			<h3>Über eufy Security AddOn für HomeMatic</h3>
 			<h4>Versionsinformationen</h4>
 			<p>
@@ -129,8 +131,9 @@
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script>
+			port = "";
 			checkIE();
-			loadData(true);
+			getAPIPort();
 			
 			function checkIE()
 			{
@@ -147,6 +150,69 @@
 					document.getElementById("browserWarning").innerHTML = warning;
 				}
 			}
+
+			function getAPIPort()
+			{
+				var apiPorts;
+				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('text/plain');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							apiPorts = this.responseText;
+							apiPorts = apiPorts.split(",")
+							
+							if(apiPorts.length == 2)
+							{
+								port = ":" + apiPorts[0];
+								if(location.protocol == "https:")
+								{
+									port = ":" + apiPorts[1];
+								}
+							}
+							else
+							{
+								port = ":52789";
+								if(location.protocol == "https:")
+								{
+									port = ":52790";
+								}
+							}
+
+							initContent();
+						}
+						catch
+						{
+							var loadSettingsError = "";
+							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "				</div>";
+							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
+						}
+					}
+					else if (this.readyState == 4 && this.status != 200)
+					{
+						var loadSettingsError = "";
+						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "				</div>";
+						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
+
+			function initContent()
+			{
+				loadData(true);
+			}
 			
 			function loadData(showLoading)
 			{
@@ -155,11 +221,6 @@
 				var type="";
 				var state="";
 				var buttons="";
-				var port = ":52789";
-				if(location.protocol == "https:")
-				{
-					port = ":52790";
-				}
 				var url=location.protocol + "//" + location.hostname + port + "/getApiInfo";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -170,7 +231,7 @@
 						objResp = JSON.parse(this.responseText);
 						if(objResp.success == true)
 						{
-							info = "eufy Security AddOn: " + objResp.api_version + "<br />HomeMatic API: " + objResp.homematic_api_version + "<br />Webseite: 1.0.2";
+							info = "eufy Security AddOn: " + objResp.api_version + "<br />HomeMatic API: " + objResp.homematic_api_version + "<br />Webseite: 1.0.3";
 							
 							document.getElementById("versionInfo").innerHTML = info;
 							
