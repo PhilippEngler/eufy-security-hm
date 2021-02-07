@@ -539,8 +539,7 @@ async function restartServer()
  */
 function emptyLogFile()
 {
-    exec("rm /var/log/eufySecurity.log");
-    exec("touch /var/log/eufySecurity.log");
+    exec("truncate -s 0 /var/log/eufySecurity.log");
 }
 
 /**
@@ -548,8 +547,7 @@ function emptyLogFile()
  */
 function emptyErrFile()
 {
-    exec("rm /var/log/eufySecurity.err");
-    exec("touch /var/log/eufySecurity.err");
+    exec("truncate -s 0 /var/log/eufySecurity.err");
 }
 
 /**
