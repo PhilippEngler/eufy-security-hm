@@ -307,142 +307,88 @@ class ApiServer
             {
                 if (url[1] == "setConfig")
                 {
-                    var body = "";
+                    var postData = "";
                     request.on("data", function (chunk) {
-                        body += chunk.toString();
+                        postData += chunk.toString();
                     });
 
                     request.on("end", function(){
                         var username = "";
-                        if(body.indexOf("email") >= 0)
+                        if(postData.indexOf("username") >= 0)
                         {
-                            username = body.substring(body.indexOf("email") + 6);
-                            username = username.replace("\r\n","");
-                            username = username.substr(2, username.indexOf("----") - 4);
+                            username = getDataFromPOSTData(postData, "username", "string");
                         }
                         
                         var password = "";
-                        if(body.indexOf("password") >= 0)
+                        if(postData.indexOf("password") >= 0)
                         {
-                            password = body.substring(body.indexOf("password") + 9);
-                            password = password.replace("\r\n","");
-                            password = password.substr(2, password.indexOf("----") - 4);
+                            password = getDataFromPOSTData(postData, "password", "string");
                         }
 
                         var useHttp = false;
-                        if(body.indexOf("useHttp") >= 0)
+                        if(postData.indexOf("useHttp") >= 0)
                         {
-                            var useHttpStr = body.substring(body.indexOf("useHttp") + 8);
-                            useHttpStr = useHttpStr.substr(2, useHttpStr.indexOf("----") - 4);
-                            if(useHttpStr.trim() == "on")
-                            {
-                                useHttp = true;
-                            }
-                            else
-                            {
-                                useHttp = false;
-                            }
+                            useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
                         }
                         
                         var apiporthttp = "52789";
-                        if(body.indexOf("portHttp") >= 0)
+                        if(postData.indexOf("httpPort") >= 0)
                         {
-                            apiporthttp = body.substring(body.indexOf("portHttp") + 9);
-                            apiporthttp = apiporthttp.replace("\r\n","");
-                            apiporthttp = apiporthttp.substr(2, apiporthttp.indexOf("----") - 4);
+                            apiporthttp = getDataFromPOSTData(postData, "httpPort", "string");
                         }
                         
                         var useHttps = false;
-                        if(body.indexOf("useHttps") >= 0)
+                        if(postData.indexOf("useHttps") >= 0)
                         {
-                            var useHttpsStr = body.substring(body.indexOf("useHttps") + 8);
-                            useHttpsStr = useHttpsStr.substr(2, useHttpsStr.indexOf("----") - 4);
-                            if(useHttpsStr.trim() == "on")
-                            {
-                                useHttps = true;
-                            }
-                            else
-                            {
-                                useHttps = false;
-                            }
+                            useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
                         }
 
                         var apiporthttps = "52790";
-                        if(body.indexOf("portHttps") >= 0)
+                        if(postData.indexOf("httpsPort") >= 0)
                         {
-                            apiporthttps = body.substring(body.indexOf("portHttps") + 10);
-                            apiporthttps = apiporthttps.replace("\r\n","");
-                            apiporthttps = apiporthttps.substr(2, apiporthttps.indexOf("----") - 4);
+                            apiporthttps = getDataFromPOSTData(postData, "httpsPort", "string");
                         }
 
                         var apikeyfile = "/usr/local/etc/config/server.pem";
-                        if(body.indexOf("keyFile") >= 0)
+                        if(postData.indexOf("httpsKeyFile") >= 0)
                         {
-                            apikeyfile = body.substring(body.indexOf("keyFile") + 8);
-                            apikeyfile = apikeyfile.replace("\r\n","");
-                            apikeyfile = apikeyfile.substr(2, apikeyfile.indexOf("----") - 4);
+                            apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
                         }
 
                         var apicertfile = "/usr/local/etc/config/server.pem";
-                        if(body.indexOf("certFile") >= 0)
+                        if(postData.indexOf("httpsCertFile") >= 0)
                         {
-                            apicertfile = body.substring(body.indexOf("certFile") + 9);
-                            apicertfile = apicertfile.replace("\r\n","");
-                            apicertfile = apicertfile.substr(2, apicertfile.indexOf("----") - 4);
+                            apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                         }
 
                         var useUdpStaticPorts = false;
-                        if(body.indexOf("useUdpStaticPorts") >= 0)
+                        if(postData.indexOf("useUdpStaticPorts") >= 0)
                         {
-                            var useUdpStaticPortsStr = body.substring(body.indexOf("useUdpStaticPorts") + 18);
-                            useUdpStaticPortsStr = useUdpStaticPortsStr.substr(2, useUdpStaticPortsStr.indexOf("----") - 4);
-                            if(useUdpStaticPortsStr.trim() == "on")
-                            {
-                                useUdpStaticPorts = true;
-                            }
-                            else
-                            {
-                                useUdpStaticPorts = false;
-                            }
+                            useUdpStaticPorts = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
                         }
 
                         var apiudpports = "52789,52790";
-                        if(body.indexOf("updPorts") >= 0)
+                        if(postData.indexOf("udpPorts") >= 0)
                         {
-                            apiudpports = body.substring(body.indexOf("updPorts") + 9);
-                            apiudpports = apiudpports.replace("\r\n","");
-                            apiudpports = apiudpports.substr(2, apiudpports.indexOf("----") - 4);
+                            apiudpports = getDataFromPOSTData(postData, "udpPorts", "string");
                         }
 
                         var useSystemVariables = false;
-                        if(body.indexOf("useSystemVariables") >= 0)
+                        if(postData.indexOf("useSystemVariables") >= 0)
                         {
-                            var useSystemVariablesStr = body.substring(body.indexOf("useSystemVariables") + 19);
-                            useSystemVariablesStr = useSystemVariablesStr.substr(2, useSystemVariablesStr.indexOf("----") - 4);
-                            if(useSystemVariablesStr.trim() == "on")
-                            {
-                                useSystemVariables = true;
-                            }
-                            else
-                            {
-                                useSystemVariables = false;
-                            }
+                            useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
                         }
 
                         var apicameradefaultimage = "";
-                        if(body.indexOf("imagePath") >= 0)
+                        if(postData.indexOf("defaultImagePath") >= 0)
                         {
-                            apicameradefaultimage = body.substring(body.indexOf("imagePath") + 10);
-                            apicameradefaultimage = apicameradefaultimage.replace("\r\n","");
-                            apicameradefaultimage = apicameradefaultimage.substr(2, apicameradefaultimage.indexOf("----") - 4);
+                            apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
                         }
 
                         var apicameradefaultvideo = "";
-                        if(body.indexOf("videoPath") >= 0)
+                        if(postData.indexOf("defaultVideoPath") >= 0)
                         {
-                            apicameradefaultvideo = body.substring(body.indexOf("videoPath") + 10);
-                            apicameradefaultvideo = apicameradefaultvideo.replace("\r\n","");
-                            apicameradefaultvideo = apicameradefaultvideo.substr(2, apicameradefaultvideo.indexOf("----") - 4);
+                            apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                         }
 
                         apiPortFile(Number(apiporthttp), Number(apiporthttps));
@@ -509,6 +455,11 @@ function main()
     apiServer = new ApiServer();
 }
 
+/**
+ * Create the apiPorts.txt file needed for using the api on the website if not existing or updates it when the ports have changed. 
+ * @param httpPort The new http port.
+ * @param httpsPort The new https port.
+ */
 function apiPortFile(httpPort : number, httpsPort : number)
 {
     try
@@ -529,6 +480,37 @@ function apiPortFile(httpPort : number, httpsPort : number)
     {
         
     }
+}
+
+/**
+ * Extracting the given value from the POST data result.
+ * @param postData The POST data from the settings website.
+ * @param target The setting to be seached for.
+ * @param dataType The type of the return data (at the moment string and boolean).
+ */
+function getDataFromPOSTData(postData : string, target : string, dataType : string) : any
+{
+    if(dataType == "string")
+    {
+        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        temp = temp.replace("\r\n","");
+        temp = temp.substr(2, temp.indexOf("----") - 4);
+        return temp;
+    }
+    else if(dataType == "boolean")
+    {
+        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        temp = temp.substr(2, temp.indexOf("----") - 4);
+        if(temp.trim() == "on")
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    return null;
 }
 
 /**
