@@ -347,6 +347,23 @@
 				Bei dem Neustart des Services ist ein Fehler aufgetreten.
 			</div>
 		</div>
+
+		<div class="modal fade" id="modalAtLeastOneNeedsActivation" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="lblModalAtLeastOneNeedsActivation" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen</h5>
+					</div>
+					<div class="modal-body">
+						<p>Sie haben sowohl HTTP als auch HTTPS deaktiviert.</p>
+						<p>Es muss jedoch mindestens entweder HTTP oder HTTPS aktiviert bleiben, damit die API funktionsfähig ist.</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		
 		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
 		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
@@ -866,7 +883,15 @@
 						}
 						else
 						{
-							document.getElementById("txtPortHttp").setAttribute("disabled", true);
+							if((element.checked == false) && (document.getElementById("chkUseHttps").checked == false))
+							{
+								$('#modalAtLeastOneNeedsActivation').modal('show')
+								element.checked = true;
+							}
+							else
+							{
+								document.getElementById("txtPortHttp").setAttribute("disabled", true);
+							}
 						}
 						break;
 					case "useHttps":
@@ -878,9 +903,17 @@
 						}
 						else
 						{
-							document.getElementById("txtPortHttps").setAttribute("disabled", true);
-							document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
-							document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
+							if((element.checked == false) && (document.getElementById("chkUseHttp").checked == false))
+							{
+								$('#modalAtLeastOneNeedsActivation').modal('show')
+								element.checked = true;
+							}
+							else
+							{
+								document.getElementById("txtPortHttps").setAttribute("disabled", true);
+								document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
+								document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
+							}
 						}
 						break;
 					case "useUdpStaticPorts":
