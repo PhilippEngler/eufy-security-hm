@@ -67,12 +67,13 @@
 			</div>
 			<div id="loadApiSettingsError">
 			</div>
-			<h3>Statusänderung</h3>
-			<p>Hier finden Sie den aktuellen Status Ihrer Basisstationen und können diesen entweder für eine Basisstation oder für alle Basisstationen ändern.</p>
-			<p>
-				<div id="allbases"></div>
-				<div id="bases"></div>
-			</p>
+			<div id="content">
+				<h3>Statusänderung</h3>
+				<p>Hier finden Sie den aktuellen Status Ihrer Basisstationen und können diesen entweder für eine Basisstation oder für alle Basisstationen ändern.</p>
+				<p>
+					<div id="allbases"></div>
+					<div id="bases"></div>
+				</p>
 			</div>
 		</main>
 		
@@ -108,7 +109,6 @@
 		<script>
 			port = "";
 			checkIE();
-			getAPIPort();
 			
 			function checkIE()
 			{
@@ -116,13 +116,15 @@
 				{
 					var warning = "";
 					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
-					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
-					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
-					warning += "						<span aria-hidden=\"true\">&times;</span>";
-					warning += "					</button>";
+					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
 					warning += "				</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
+					document.getElementById("content").innerHTML = "";
+				}
+				else
+				{
+					getAPIPort();
 				}
 			}
 
@@ -160,7 +162,7 @@
 
 							initContent();
 						}
-						catch
+						catch (e)
 						{
 							var loadSettingsError = "";
 							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -170,7 +172,7 @@
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
-					else if (this.readyState == 4 && this.status != 200)
+					else if (this.readyState == 4)
 					{
 						var loadSettingsError = "";
 						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -214,10 +216,6 @@
 							allbases += "								<div class=\"col-md-12\">";
 							allbases += "									<div class=\"card-body\" >";
 							allbases += "										<h6 class=\"card-subtitle mb-2 text-muted\">Ändern des Status:</h6>";
-							allbases += "										<!--<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">abwesend</a>";
-							allbases += "										<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">zu Hause</a>";
-							allbases += "										<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">Zeitsteuerung</a>";
-							allbases += "										<a href=\"#\" class=\"btn btn-sm btn-primary mb-1\" tabindex=\"-1\" role=\"button\" aria-disabled=\"true\">deaktiviert</a>-->";
 							allbases += "										<button id=\"armAll\" onclick=\"setArm('')\" type=\"button\" class=\"btn btn-primary mb-1\">abwesend</button>";
 							allbases += "										<button id=\"homeAll\" onclick=\"setHome('')\" type=\"button\" class=\"btn btn-primary mb-1\">zu Hause</button>";
 							allbases += "										<button id=\"scheduleAll\" onclick=\"setSchedule('')\" type=\"button\" class=\"btn btn-primary mb-1\">Zeitsteuerung</button>";
@@ -319,13 +317,10 @@
 							document.getElementById("bases").innerHTML = "";
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
-						//if(showLoading == true)
-						//{
-							document.getElementById("allbases").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
-							document.getElementById("bases").innerHTML = "";
-						//}
+						document.getElementById("allbases").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+						document.getElementById("bases").innerHTML = "";
 					}
 					else
 					{
@@ -366,13 +361,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 || this.readyState == 4)
+						else if (this.readyState == 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -401,13 +396,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 || this.readyState == 4)
+						else if (this.readyState == 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -441,13 +436,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 || this.readyState == 4)
+						else if (this.readyState == 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -476,13 +471,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 || this.readyState == 4)
+						else if (this.readyState == 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -516,13 +511,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 || this.readyState == 4)
+						else if (this.readyState == 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -551,13 +546,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 || this.readyState == 4)
+						else if (this.readyState == 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -591,13 +586,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 && this.readyState != 4)
+						else if (this.readyState != 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);
@@ -626,13 +621,13 @@
 								$("#toastFailed").toast('show');
 							}
 						}
-						else if (this.status == 200 && this.readyState != 4)
+						else if (this.readyState != 4)
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 						else
 						{
-							//$("#toastFailed").toast('show');
+							
 						}
 					};
 					xmlHttp.open("GET", url, true);

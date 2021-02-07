@@ -67,57 +67,59 @@
 			</div>
 			<div id="loadApiSettingsError">
 			</div>
-			<h3>Über eufy Security AddOn für HomeMatic</h3>
-			<h4>Versionsinformationen</h4>
-			<p>
-				<div id="versionInfo"></div>
-			</p>
-			<h4>Hinweise zur Nutzung</h4>
-			<p>Die API stellt derzeit folgende Funktionen bereit:</p>
-			<ul>
-				<li><code>/getBases</code>: Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
-				<li><code>/getDevices</code>: Liefert alle Geräte des Accounts als JSON-String zurück.</li>
-				<li><code>/getMode</code>: Liefert den Status aller Basisstationen als JSON-String zurück.</li>
-				<li><code>/getMode/<i>BASE_SERIAL</i></code>: Liefert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> als JSON-String zurück.</li>
-				<li><code>/setMode/<i>MODE</i></code>: Ändert den Status aller Basisstationen auf <i>MODE</i>. <i>MODE</i> kann einer der folgenden Werte sein. Die Antwort ist ein JSON-String.</li>
+			<div id="content">
+				<h3>Über eufy Security AddOn für HomeMatic</h3>
+				<h4>Versionsinformationen</h4>
+				<p>
+					<div id="versionInfo"></div>
+				</p>
+				<h4>Hinweise zur Nutzung</h4>
+				<p>Die API stellt derzeit folgende Funktionen bereit:</p>
 				<ul>
-					<li><code>away</code>: abwesend</li>
-					<li><code>custom1</code>: Benutzerdefiniert 1</li>
-					<li><code>custom2</code>: Benutzerdefiniert 2</li>
-					<li><code>custom3</code>: Benutzerdefiniert 3</li>
-					<li><code>disarmed</code>: deaktiviert</li>
-					<li><code>geo</code>: Geofencing</li>
-					<li><code>home</code>: zu Hause</li>
-					<li><code>off</code>: ausgeschaltet</li>
-					<li><code>schedule</code>: Zeitplan</li>
+					<li><code>/getBases</code>: Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
+					<li><code>/getDevices</code>: Liefert alle Geräte des Accounts als JSON-String zurück.</li>
+					<li><code>/getMode</code>: Liefert den Status aller Basisstationen als JSON-String zurück.</li>
+					<li><code>/getMode/<i>BASE_SERIAL</i></code>: Liefert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> als JSON-String zurück.</li>
+					<li><code>/setMode/<i>MODE</i></code>: Ändert den Status aller Basisstationen auf <i>MODE</i>. <i>MODE</i> kann einer der folgenden Werte sein. Die Antwort ist ein JSON-String.</li>
+					<ul>
+						<li><code>away</code>: abwesend</li>
+						<li><code>custom1</code>: Benutzerdefiniert 1</li>
+						<li><code>custom2</code>: Benutzerdefiniert 2</li>
+						<li><code>custom3</code>: Benutzerdefiniert 3</li>
+						<li><code>disarmed</code>: deaktiviert</li>
+						<li><code>geo</code>: Geofencing</li>
+						<li><code>home</code>: zu Hause</li>
+						<li><code>off</code>: ausgeschaltet</li>
+						<li><code>schedule</code>: Zeitplan</li>
+					</ul>
+					<li><code>/setMode/<i>BASE_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
+					<li><code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.</li>
 				</ul>
-				<li><code>/setMode/<i>BASE_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
-				<li><code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.</li>
-			</ul>
-			<p>Über Skripte können Sie die API abfragen. Möchten Sie die Antwort nicht auswerten, können Sie beispielsweise mittels <code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code> im Hintergrund ausführen. Es werden die entsprechenden Systemvariablen automatisch gesetzt.</p>
-			<p>Möchten Sie die Antwort auswerten, können Sie wie folgt vorgehen: <code>string res; string err; system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code>. Die JSON-Antwort finden Sie im String <code>res</code>.</p>
-			<p>Verwenden Sie anstelle von 127.0.0.1 die IP-Adresse Ihrer CCU, wenn Sie mit einem Browser auf die API zugreifen möchten.</p>
-			<h4>Informationen zum Projekt</h4>
-			<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
-			<h5>eufy Security API:</h5>
-			<ul>
-				<li>fuzzy (FuzzyMistborn) <a href="https://github.com/FuzzyMistborn/python-eufy-security" target="_blank">python-eufy-security</a></li>
-				<li>Keshav Varma (keshavdv) <a href="https://github.com/keshavdv/python-eufy-security/tree/p2p" target="_blank">python-eufy-security</a></li>
-				<li>bropat <a href="https://github.com/bropat/ioBroker.eufy-security" target="_blank">ioBroker.eufy-security</a></li>
-				<li>Jan Löbel (JanLoebel) <a href="https://github.com/JanLoebel/eufy-node-client" target="_blank">eufy-security-client</a></li>
-			</ul>
-			<h5>Webseite:</h5>
-			<ul>
-			<li><a href="https://getbootstrap.com" target="_blank">bootstrap</a></li>
-			</ul>
-			<h5>CCU AddOn:</h5>
-			<ul>
-			<li>Jens Maus (jens-maus) <a href="https://github.com/jens-maus" target=_blank">GitHub</a></li>
-			<li>Sebastian Raff (hobbyquaker) <a href="https://github.com/hobbyquaker" target="_blank">GitHub</a></li>
-			<li>sowie die vielen Hinweise der <a href="https://www.homematic-forum.de" target="_blank">HomeMatic-Forum Community</a></li>
-			</ul>
-			</p>
-			<br />
+				<p>Über Skripte können Sie die API abfragen. Möchten Sie die Antwort nicht auswerten, können Sie beispielsweise mittels <code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code> im Hintergrund ausführen. Es werden die entsprechenden Systemvariablen automatisch gesetzt.</p>
+				<p>Möchten Sie die Antwort auswerten, können Sie wie folgt vorgehen: <code>string res; string err; system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code>. Die JSON-Antwort finden Sie im String <code>res</code>.</p>
+				<p>Verwenden Sie anstelle von 127.0.0.1 die IP-Adresse Ihrer CCU, wenn Sie mit einem Browser auf die API zugreifen möchten.</p>
+				<h4>Informationen zum Projekt</h4>
+				<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
+				<h5>eufy Security API:</h5>
+				<ul>
+					<li>fuzzy (FuzzyMistborn) <a href="https://github.com/FuzzyMistborn/python-eufy-security" target="_blank">python-eufy-security</a></li>
+					<li>Keshav Varma (keshavdv) <a href="https://github.com/keshavdv/python-eufy-security/tree/p2p" target="_blank">python-eufy-security</a></li>
+					<li>bropat <a href="https://github.com/bropat/ioBroker.eufy-security" target="_blank">ioBroker.eufy-security</a></li>
+					<li>Jan Löbel (JanLoebel) <a href="https://github.com/JanLoebel/eufy-node-client" target="_blank">eufy-security-client</a></li>
+				</ul>
+				<h5>Webseite:</h5>
+				<ul>
+					<li><a href="https://getbootstrap.com" target="_blank">bootstrap</a></li>
+				</ul>
+				<h5>CCU AddOn:</h5>
+				<ul>
+					<li>Jens Maus (jens-maus) <a href="https://github.com/jens-maus" target=_blank">GitHub</a></li>
+					<li>Sebastian Raff (hobbyquaker) <a href="https://github.com/hobbyquaker" target="_blank">GitHub</a></li>
+					<li>sowie die vielen Hinweise der <a href="https://www.homematic-forum.de" target="_blank">HomeMatic-Forum Community</a></li>
+				</ul>
+				</p>
+				<br />
+			</div>
 		</main>
 		
 		<footer class="footer">
@@ -133,7 +135,6 @@
 		<script>
 			port = "";
 			checkIE();
-			getAPIPort();
 			
 			function checkIE()
 			{
@@ -141,13 +142,15 @@
 				{
 					var warning = "";
 					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
-					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
-					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
-					warning += "						<span aria-hidden=\"true\">&times;</span>";
-					warning += "					</button>";
+					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
 					warning += "				</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
+					document.getElementById("content").innerHTML = "";
+				}
+				else
+				{
+					getAPIPort();
 				}
 			}
 
@@ -185,7 +188,7 @@
 
 							initContent();
 						}
-						catch
+						catch (e)
 						{
 							var loadSettingsError = "";
 							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -195,7 +198,7 @@
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
-					else if (this.readyState == 4 && this.status != 200)
+					else if (this.readyState == 4)
 					{
 						var loadSettingsError = "";
 						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -241,7 +244,7 @@
 							document.getElementById("versionInfo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Versionsinformationen.</div>";
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("versionInfo").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Versionsinformationen.</div>";
 					}

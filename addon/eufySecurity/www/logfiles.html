@@ -67,43 +67,45 @@
 			</div>
 			<div id="loadApiSettingsError">
 			</div>
-			<h3>Logdateien</h3>
-			<p>
-			<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-2">
-				<div class="col">
-					<div class="card mb-3">
-						<h5 class="card-header">Inhalt der Logdatei</h5>
-						<div class="row no-gutters">
-							<div class="col-md-12">
-								<div class="card-body">
-									<div id="log"></div>
+			<div id="content">
+				<h3>Logdateien</h3>
+				<p>
+				<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-2">
+					<div class="col">
+						<div class="card mb-3">
+							<h5 class="card-header">Inhalt der Logdatei</h5>
+							<div class="row no-gutters">
+								<div class="col-md-12">
+									<div class="card-body">
+										<div id="log"></div>
+									</div>
 								</div>
 							</div>
+							<div class="card-footer">
+								<button id="downlLogfile" onclick="downloadLogfile()" type="button" class="btn btn-outline-primary mr-3">Download</button>
+								<button id="deleteLogfileData" onclick="emptyLogfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
+							</div>
 						</div>
-						<div class="card-footer">
-							<button id="downlLogfile" onclick="downloadLogfile()" type="button" class="btn btn-outline-primary mr-3">Download</button>
-							<button id="deleteLogfileData" onclick="emptyLogfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
+					</div>
+					<div class="col">
+						<div class="card mb-3">
+							<h5 class="card-header">Inhalt der Logdatei für Fehler</h5>
+							<div class="row no-gutters">
+								<div class="col-md-12">
+									<div class="card-body">
+										<div id="err"></div>
+									</div>
+								</div>
+							</div>
+							<div class="card-footer">
+								<button id="downlErrfile" onclick="downloadErrfile()" type="button" class="btn btn-outline-primary mr-3">Download</button>
+								<button id="deleteErrfileData" onclick="emptyErrfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
+							</div>
 						</div>
 					</div>
 				</div>
-				<div class="col">
-					<div class="card mb-3">
-						<h5 class="card-header">Inhalt der Logdatei für Fehler</h5>
-						<div class="row no-gutters">
-							<div class="col-md-12">
-								<div class="card-body">
-									<div id="err"></div>
-								</div>
-							</div>
-						</div>
-						<div class="card-footer">
-							<button id="downlErrfile" onclick="downloadErrfile()" type="button" class="btn btn-outline-primary mr-3">Download</button>
-							<button id="deleteErrfileData" onclick="emptyErrfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
-						</div>
-					</div>
-				</div>
+				</p>
 			</div>
-			</p>
 		</main>
 		
 		<footer class="footer">
@@ -119,7 +121,6 @@
 		<script>
 			port = "";
 			checkIE();
-			getAPIPort();
 			
 			function checkIE()
 			{
@@ -127,13 +128,15 @@
 				{
 					var warning = "";
 					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
-					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
-					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
-					warning += "						<span aria-hidden=\"true\">&times;</span>";
-					warning += "					</button>";
+					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
 					warning += "				</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
+					document.getElementById("content").innerHTML = "";
+				}
+				else
+				{
+					getAPIPort();
 				}
 			}
 
@@ -171,7 +174,7 @@
 
 							initContent();
 						}
-						catch
+						catch (e)
 						{
 							var loadSettingsError = "";
 							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -181,7 +184,7 @@
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
-					else if (this.readyState == 4 && this.status != 200)
+					else if (this.readyState == 4)
 					{
 						var loadSettingsError = "";
 						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -220,7 +223,7 @@
 						log = log.replace(/\n/g, "<br >");
 						document.getElementById("log").innerHTML = "<code>" + log + "</code>";
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("log").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei.</div>";
 					}
@@ -255,7 +258,7 @@
 						err = err.replace(/\n/g, "<br >");
 						document.getElementById("err").innerHTML = "<code>" + err + "</code>";
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("err").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei für Fehler.</div>";
 					}
@@ -295,7 +298,7 @@
 							
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						
 					}
@@ -332,7 +335,7 @@
 							
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						
 					}

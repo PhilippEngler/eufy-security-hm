@@ -67,12 +67,13 @@
 			</div>
 			<div id="loadApiSettingsError">
 			</div>
-			<h3>Geräte</h3>
-			<p>Hier finden Sie alle Geräte, die dem angegebenen Account zugeordnet sind.</p>
-			<h4>Basisstationen</h4>
-			<p id="basestations"></p>
-			<h4>Kameras</h4>
-			<p id="cameras"></p>
+			<div id="content">
+				<h3>Geräte</h3>
+				<p>Hier finden Sie alle Geräte, die dem angegebenen Account zugeordnet sind.</p>
+				<h4>Basisstationen</h4>
+				<p id="basestations"></p>
+				<h4>Kameras</h4>
+				<p id="cameras"></p>
 			</div>
 		</main>
 		
@@ -88,7 +89,6 @@
 		<script>
 			port = "";
 			checkIE();
-			getAPIPort();
 			
 			function checkIE()
 			{
@@ -96,13 +96,15 @@
 				{
 					var warning = "";
 					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
-					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
-					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
-					warning += "						<span aria-hidden=\"true\">&times;</span>";
-					warning += "					</button>";
+					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
 					warning += "				</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
+					document.getElementById("content").innerHTML = "";
+				}
+				else
+				{
+					getAPIPort();
 				}
 			}
 
@@ -140,7 +142,7 @@
 
 							initContent();
 						}
-						catch
+						catch (e)
 						{
 							var loadSettingsError = "";
 							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -150,7 +152,7 @@
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
-					else if (this.readyState == 4 && this.status != 200)
+					else if (this.readyState == 4)
 					{
 						var loadSettingsError = "";
 						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -166,10 +168,110 @@
 
 			function initContent()
 			{
-				loadCamera();
 				loadBases();
+				loadCamera();
 			}
 			
+			function loadBases()
+			{
+				var xmlhttp, myObj, x, bases = "";
+				var imagepath="";
+				var type="";
+				var state="";
+				var url=location.protocol + "//" + location.hostname + port + "/getBases";
+				xmlhttp = new XMLHttpRequest();
+				xmlhttp.overrideMimeType('application/json');
+				xmlhttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						myObj = JSON.parse(this.responseText);
+						if(myObj.success == true)
+						{
+							if(myObj.data.length > 0)
+							{
+								bases += "			<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
+								for (x in myObj.data)
+								{
+									if(myObj.data[x].device_type == "basestation")
+									{
+										switch (myObj.data[x].model)
+										{
+											case "T8001":
+												imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase\">";
+												type="HomeBase";
+												break;
+											case "T8002":
+												imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase E\">";
+												type="HomeBase E";
+												break;
+											case "T8010":
+												imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase 2\">";
+												type="HomeBase 2";
+												break;
+											default:
+												imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase\">";
+												type="HomeBase";
+										}
+										switch (myObj.data[x].guard_mode)
+										{
+											case "0":
+												state = "abwesend";
+												break;
+											case "63":
+												state = "deaktiviert";
+												break;
+											default:
+												state="unbekannt";
+										}
+										bases += "				<div class=\"col\">";
+										bases += "					<div class=\"card mb-3\">";
+										bases += "						<h5 class=\"card-header\">" + myObj.data[x].name + "</h5>";
+										bases += "						<div class=\"row no-gutters\">";
+										bases += "							<div class=\"col-md-4\">";
+										bases += "								" + imagepath;
+										bases += "							</div>";
+										bases += "							<div class=\"col-md-8\">";
+										bases += "								<div class=\"card-body\" style=\"margin-left: -1rem\">";
+										bases += "									<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
+										bases += "									<p class=\"card-text\">" + myObj.data[x].base_id + "<br />SW: " + myObj.data[x].software_version + "<br />Status: " + state + "</p>";
+										bases += "								</div>";
+										bases += "							</div>";
+										bases += "						</div>";
+										bases += "						<div class=\"card-footer\">";
+										bases += "							<small class=\"text-muted\">IP-Adresse: " + myObj.data[x].local_ip_address + " (" + myObj.data[x].external_ip_address + ")</small>";
+										bases += "						</div>";
+										bases += "					</div>";
+										bases += "				</div>";
+									}
+								}
+								bases += "			</div>";
+							}
+							else
+							{
+								bases += "			<div class=\"alert alert-danger\" role=\"alert\">Es wurden keine Basisstationen gefunden.</div>";
+							}
+							document.getElementById("basestations").innerHTML = bases;
+							type="";
+						}
+						else
+						{
+							document.getElementById("basestations").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+						}
+					}
+					else if (this.readyState == 4)
+					{
+						document.getElementById("basestations").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
+					}
+					else
+					{
+						document.getElementById("basestations").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
+					}
+				};
+				xmlhttp.open("GET", url, true);
+				xmlhttp.send();
+			}
+
 			function loadCamera()
 			{
 				var xmlhttp, myObj, x;
@@ -280,113 +382,13 @@
 							document.getElementById("cameras").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Kameras.</div>";
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("cameras").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Kameras.</div>";
 					}
 					else
 					{
 						document.getElementById("cameras").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Kameras...</strong></div>";
-					}
-				};
-				xmlhttp.open("GET", url, true);
-				xmlhttp.send();
-			}
-			
-			function loadBases()
-			{
-				var xmlhttp, myObj, x, bases = "";
-				var imagepath="";
-				var type="";
-				var state="";
-				var url=location.protocol + "//" + location.hostname + port + "/getBases";
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.overrideMimeType('application/json');
-				xmlhttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						myObj = JSON.parse(this.responseText);
-						if(myObj.success == true)
-						{
-							if(myObj.data.length > 0)
-							{
-								bases += "			<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
-								for (x in myObj.data)
-								{
-									if(myObj.data[x].device_type == "basestation")
-									{
-										switch (myObj.data[x].model)
-										{
-											case "T8001":
-												imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase\">";
-												type="HomeBase";
-												break;
-											case "T8002":
-												imagepath = "<img src=\"assets/devices/eufyHomeBase.png\" class=\"card-img-top\" alt=\"HomeBase E\">";
-												type="HomeBase E";
-												break;
-											case "T8010":
-												imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase 2\">";
-												type="HomeBase 2";
-												break;
-											default:
-												imagepath = "<img src=\"assets/devices/eufyHomeBase2.png\" class=\"card-img-top\" alt=\"HomeBase\">";
-												type="HomeBase";
-										}
-										switch (myObj.data[x].guard_mode)
-										{
-											case "0":
-												state = "abwesend";
-												break;
-											case "63":
-												state = "deaktiviert";
-												break;
-											default:
-												state="unbekannt";
-										}
-										bases += "				<div class=\"col\">";
-										bases += "					<div class=\"card mb-3\">";
-										bases += "						<h5 class=\"card-header\">" + myObj.data[x].name + "</h5>";
-										bases += "						<div class=\"row no-gutters\">";
-										bases += "							<div class=\"col-md-4\">";
-										bases += "								" + imagepath;
-										bases += "							</div>";
-										bases += "							<div class=\"col-md-8\">";
-										bases += "								<div class=\"card-body\" style=\"margin-left: -1rem\">";
-										bases += "									<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
-										bases += "									<p class=\"card-text\">" + myObj.data[x].base_id + "<br />SW: " + myObj.data[x].software_version + "<br />Status: " + state + "</p>";
-										bases += "								</div>";
-										bases += "							</div>";
-										bases += "						</div>";
-										bases += "						<div class=\"card-footer\">";
-										bases += "							<small class=\"text-muted\">IP-Adresse: " + myObj.data[x].local_ip_address + " (" + myObj.data[x].external_ip_address + ")</small>";
-										bases += "						</div>";
-										bases += "					</div>";
-										bases += "				</div>";
-									}
-								}
-								bases += "			</div>";
-							}
-							else
-							{
-								bases += "			<div class=\"alert alert-danger\" role=\"alert\">Es wurden keine Basisstationen gefunden.</div>";
-							}
-							document.getElementById("basestations").innerHTML = bases;
-							type="";
-						}
-						else
-						{
-							document.getElementById("basestations").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
-						}
-					}
-					else if (this.status == 200 || this.readyState == 4)
-					{
-						document.getElementById("basestations").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
-					}
-					else
-					{
-						document.getElementById("basestations").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
 					}
 				};
 				xmlhttp.open("GET", url, true);

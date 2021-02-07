@@ -67,184 +67,183 @@
 			</div>
 			<div id="loadApiSettingsError">
 			</div>
-			<form class="needs-validation" novalidate action="javascript:saveConfig();" method="post" id="configform">
-				<h3>Einstellungen</h3>
-				<p>
-					<div id="resultLoading">
+			<div id="content">
+				<form class="needs-validation" novalidate action="javascript:saveConfig();" method="post" id="configform">
+					<h3>Einstellungen</h3>
+					<p>
+						<div id="resultLoading">
 
-					</div>
-					<div id="resultMessage">
-
-					</div>
-				</p>
-			
-				<div class="row">
-					<div class="col">
-						<div class="card mb-3">
-							<h5 class="card-header">Zugangsdaten eufy Security Account</h5>
-							<div class="row no-gutters">
-								<div class="col-md-12">
-									<div class="card-body" >
-										<div class="alert alert-warning alert-dismissible fade show" role="alert">
-											Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn und geben Sie dessen Zugangsdaten hier ein.<br />
-											<small class="text-muted">Wenn Sie keinen zusätzlichen Account anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</small>
-											<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-												<span aria-hidden="true">&times;</span>
-											</button>
-										</div>
-										<div class="form-label-group was-validated" class="container-fluid">
-											<label for="username">Benutzername des angelegten eufy Security Accounts.</label>
-											<input type="email" name="email" id="username" class="form-control" placeholder="eMail-Adresse" required> <!--autofocus-->
-											<small id="usernameHelp" class="form-text text-muted">Der Benutzername entspricht der eMail-Adresse, mit der der eufy Security Account angelegt wurde.</small>
-											<div class="invalid-feedback">
-												Bitte geben Sie die eMail-Adresse des eufy Security Accounts ein.
-											</div>
-										</div>
-										<div class="form-label-group was-validated" class="container-fluid">
-											<label class="mt-2" for="password">Passwort des angelegten eufy Security Accounts.</label>
-											<input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
-											<div class="invalid-feedback">
-												Bitte geben Sie das Passwort des eufy Security Accounts ein.
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
+						<div id="resultMessage">
 
-						<div class="card mb-3">
-							<h5 class="card-header">Konfiguration des Services</h5>
-							<div class="row no-gutters">
-								<div class="col-md-12">
-									<div class="card-body" >
-										<div class="custom-control custom-switch" id="checkBoxUseHttp">
-											<input type="checkbox" name="useHttp" class="custom-control-input" id="useHttp" onchange="changeValue(useHttp)">
-											<label class="custom-control-label" for="useHttp">HTTP aktiv</label>
-										</div>
-										<div class="form-label-group was-validated" class="container-fluid">
-											<label class="mt-2" for="apiporthttp">Port über den die eufy Security API über HTTP erreichbar sein soll.</label>
-											<input type="text" name="portHttp" id="apiporthttp" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$">
-											<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
-											<div class="invalid-feedback">
-												Bitte geben Sie nur einen Port zwischen 1 und 65535 ein.
-											</div>
-										</div>
-										<hr>
-										<div class="custom-control custom-switch" id="checkBoxUseHttps">
-											<input type="checkbox" name="useHttps" class="custom-control-input" id="useHttps" onchange="changeValue(useHttps)">
-											<label class="custom-control-label" for="useHttps">HTTPS aktiv</label>
-										</div>
-										<div class="form-label-group was-validated" class="container-fluid">
-											<label class="mt-2" for="portHttpsport">Port über den die eufy Security API über HTTPS erreichbar sein soll.</label>
-											<input type="text" name="portHttps" id="apiporthttps" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$">
-											<small id="apiporthttpHelp" class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
-											<div class="invalid-feedback">
-												Bitte geben Sie nur einen Port zwischen 1 und 65535 ein.
-											</div>
-										</div>
-										<div class="form-label-group was-validated" class="container-fluid">
-											<label class="mt-2" for="apikeyhttps">Speicherort der Datei mit dem privaten Schlüssel des Zertifikats.</label>
-											<input type="text" name="keyFile" id="apikeyhttps" class="form-control" placeholder="Schlüsseldatei" required>
-											<small id="apikeyhttpsHelp" class="form-text text-muted">Speicherort der Schlüsseldatei auf der CCU.</small>
-										</div>
-										<div class="form-label-group was-validated" class="container-fluid">
-											<label class="mt-2" for="apicerthttps">Speicherort des Zertifikats.</label>
-											<input type="text" name="certFile" id="apicerthttps" class="form-control" placeholder="Zertifikatsdatei" required>
-											<small id="apicerthttpsHelp" class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
-										</div>
-										<hr>
-										<div class="custom-control custom-switch" id="checkBoxUseUdpStaticPorts">
-											<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mb-2" id="useUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
-											<label class="custom-control-label" for="useUdpStaticPorts">Verbindung zur HomeBase lokal über feste Ports aufbauen</label>
-										</div>
-										<div class="form-label-group was-validated" class="container-fluid">
-											<label class="mt-2" for="apiupdports">UDP Ports für lokale Verbindung mit HomeBase.</label>
-											<input type="text" name="updPorts" id="apiupdports" class="form-control" placeholder="UDP Ports" pattern="^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])([,](0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))*$">
-											<small id="apiUpdPortsHelp" class="form-text text-muted">Sie können mehrere Ports angeben, wenn Sie diese jeweils mit einem Komma trennen (bspw.: 52789,52790).</small>
-											<div class="invalid-feedback">
-												Bitte geben Sie nur Ports zwischen 0 und 65535 ein. Trennen Sie mehrere Ports jeweils mit einem Komma und geben Sie keine Leerzeichen ein.
-											</div>
-										</div>
-										<hr>
-										<div class="custom-control custom-switch" id="checkBoxUseSystemVariables">
-											<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="useSystemVariables" onchange="changeValue(useSystemVariables)">
-											<label class="custom-control-label" for="useSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
-										</div>
-										<hr>
-										<div class="form-label-group" class="container-fluid">
-											<label for="apidefaultimage">Standardbild für Kameras.</label>
-											<input type="text" name="imagePath" id="apidefaultimage" class="form-control" placeholder="Link zum Standardbild.">
-											<small id="apidefaultimageHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Standbild zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
-										</div>
-										<hr>
-										<div class="form-label-group" class="container-fluid">
-											<label for="apidefaultvideo">Standardvideo für Kameras.</label>
-											<input type="text" name="videoPath" id="apidefaultvideo" class="form-control" placeholder="Link zum Standardvideo.">
-											<small id="apidefaultvideoHelp" class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
-
-						<div class="mb-3">
-							<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
-						</div>
-
-						<div class="card mb-3">
-							<h5 class="card-header">Systemvariablen</h5>
-							<div class="row no-gutters">
-								<div class="col-md-12">
-									<div class="card-body" >
-										<div class="alert alert-primary fade show" role="alert">
-											Haben Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert, aktualisiert das AddOn entsprechende Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />
-											<small class="text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind, falls Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert haben.</small>
-										</div>
-										<div id="divSystemVariables">
-
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="card mb-3">
-							<h5 class="card-header">Fehlerbehebung</h5>
-							<div class="row no-gutters">
-								<div class="col-md-12">
-									<div class="card-body" >
-										<div class="alert alert-warning fade show" role="alert">
-											<div class="row row-cols-12 row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 align-items-center">
-												<div class="col-5 col-sm-4 col-md-3 col-lg-2 col-xl-2">
-													<div id="enableTS"><button id="enableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">Fehlerbehebung aktivieren</button></div>
+					</p>
+				
+					<div class="row">
+						<div class="col">
+							<div class="card mb-3">
+								<h5 class="card-header">Zugangsdaten eufy Security Account</h5>
+								<div class="row no-gutters">
+									<div class="col-md-12">
+										<div class="card-body" >
+											<div class="alert alert-warning alert-dismissible fade show" role="alert">
+												Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn und geben Sie dessen Zugangsdaten hier ein.<br />
+												<small class="form-text text-muted">Wenn Sie keinen zusätzlichen Account anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</small>
+												<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+													<span aria-hidden="true">&times;</span>
+												</button>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label for="txtUsername">Benutzername des angelegten eufy Security Accounts.</label>
+												<input type="email" name="username" id="txtUsername" class="form-control" placeholder="eMail-Adresse" required> <!--autofocus-->
+												<small class="form-text text-muted">Der Benutzername ist die eMail-Adresse, mit der Sie den eufy Security Account angelegt haben.</small>
+												<div class="invalid-feedback">
+													Bitte geben Sie die eMail-Adresse des eufy Security Accounts ein.
 												</div>
-												<div class="col-7 col-sm-8 col-md-9 col-lg-10 col-xl-10">
-													Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen. Um ungewollte Änderungen zu vermeiden, müssen Sie die Bearbeitung für einige Aufgaben zuerst freischalten.<br />
-													<small class="text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen Daten und Einstellungen löschen oder verändern.</small>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtPassword">Passwort des angelegten eufy Security Accounts.</label>
+												<input type="password" name="password" id="txtPassword" class="form-control" placeholder="Password" required>
+												<div class="invalid-feedback">
+													Bitte geben Sie das Passwort des eufy Security Accounts ein.
 												</div>
 											</div>
 										</div>
-										<div class="form-label-group" class="container-fluid">
-											<label for="downlConfigFile">Sie haben die Möglichkeit, Ihre aktuelle Konfiguration herunterzuladen.<br /><small class="text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
-											<button id="downlConfigFile" onclick="downloadConfigFile()" type="button" class="btn btn-outline-primary">Konfiguration herunterladen</button>
+									</div>
+								</div>
+							</div>
+
+							<div class="card mb-3">
+								<h5 class="card-header">Konfiguration des Services</h5>
+								<div class="row no-gutters">
+									<div class="col-md-12">
+										<div class="card-body" >
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="useHttp" class="custom-control-input" id="chkUseHttp" onchange="changeValue(useHttp)">
+												<label class="custom-control-label" for="chkUseHttp">HTTP aktiv</label>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtPortHttp">Port über den die eufy Security API über HTTP erreichbar sein soll.</label>
+												<input type="text" name="httpPort" id="txtPortHttp" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
+												<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
+												<div class="invalid-feedback">
+													Bitte geben Sie eine Zahl zwischen 1 und 65535 ein.
+												</div>
+											</div>
+											<hr>
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="useHttps" class="custom-control-input" id="chkUseHttps" onchange="changeValue(useHttps)">
+												<label class="custom-control-label" for="chkUseHttps">HTTPS aktiv</label>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="portHttpsport">Port über den die eufy Security API über HTTPS erreichbar sein soll.</label>
+												<input type="text" name="httpsPort" id="txtPortHttps" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
+												<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
+												<div class="invalid-feedback">
+													Bitte geben Sie eine Zahl zwischen 1 und 65535 ein.
+												</div>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtHttpsKeyFile">Speicherort der Datei mit dem privaten Schlüssel des Zertifikats.</label>
+												<input type="text" name="httpsKeyFile" id="txtHttpsKeyFile" class="form-control" placeholder="Schlüsseldatei" required>
+												<small class="form-text text-muted">Speicherort der Schlüsseldatei auf der CCU.</small>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtHttpsCertFile">Speicherort des Zertifikats.</label>
+												<input type="text" name="httpsCertFile" id="txtHttpsCertFile" class="form-control" placeholder="Zertifikatsdatei" required>
+												<small class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
+											</div>
+											<hr>
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mb-2" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
+												<label class="custom-control-label" for="chkUseUdpStaticPorts">Verbindung zur HomeBase lokal über feste Ports aufbauen</label>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtUdpPorts">UDP Ports für lokale Verbindung mit HomeBase.</label>
+												<input type="text" name="udpPorts" id="txtUdpPorts" class="form-control" placeholder="UDP Ports" pattern="^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])([,](0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))*$" required>
+												<small class="form-text text-muted">Sie können mehrere Ports angeben, wenn Sie diese jeweils mit einem Komma trennen (bspw.: 52789,52790).</small>
+												<div class="invalid-feedback">
+													Bitte geben Sie nur Zahlen zwischen 0 und 65535 ein. Trennen Sie mehrere Zahlen jeweils mit einem Komma und geben Sie keine Leerzeichen ein.
+												</div>
+											</div>
+											<hr>
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="chkUseSystemVariables" onchange="changeValue(useSystemVariables)">
+												<label class="custom-control-label" for="chkUseSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
+											</div>
+											<hr>
+											<div class="form-label-group" class="container-fluid">
+												<label for="txtDefaultImagePath">Standardbild für Kameras.</label>
+												<input type="text" name="defaultImagePath" id="txtDefaultImagePath" class="form-control" placeholder="Link zum Standardbild.">
+												<small class="form-text text-muted">Wenn die für die jeweilige Kamera kein Standbild zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+											</div>
+											<hr>
+											<div class="form-label-group" class="container-fluid">
+												<label for="txtDefaultVideoPath">Standardvideo für Kameras.</label>
+												<input type="text" name="defaultVideoPath" id="txtDefaultVideoPath" class="form-control" placeholder="Link zum Standardvideo.">
+												<small class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+											</div>
 										</div>
-										<hr />
-										<div class="form-label-group" class="container-fluid" id="delTokData">
-											<label for="deleteTokenData" class="text-muted">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
-											<button id="deleteTokenData" type="button" class="btn btn-outline-primary" disabled>Token löschen</button>
+									</div>
+								</div>
+							</div>
+
+							<div class="mb-3">
+								<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
+							</div>
+
+							<div class="card mb-3">
+								<h5 class="card-header">Systemvariablen</h5>
+								<div class="row no-gutters">
+									<div class="col-md-12">
+										<div class="card-body">
+											<div id="divSystemVariablesHint">
+											</div>
+											<div id="divSystemVariables">
+											</div>
 										</div>
-										<hr />
-										<div class="form-label-group" class="container-fluid" id="restSvr">
-											<label for="restartSvr" class="text-muted">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
-											<button id="restartSvr" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button>
+									</div>
+								</div>
+							</div>
+
+							<div class="card mb-3">
+								<h5 class="card-header">Fehlerbehebung</h5>
+								<div class="row no-gutters">
+									<div class="col-md-12">
+										<div class="card-body" >
+											<div class="alert alert-warning fade show" role="alert">
+												<div class="row row-cols-12 row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 align-items-center">
+													<div class="col-5 col-sm-4 col-md-3 col-lg-2 col-xl-2">
+														<div id="enableTS"><button id="btnEnableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">Fehlerbehebung aktivieren</button></div>
+													</div>
+													<div class="col-7 col-sm-8 col-md-9 col-lg-10 col-xl-10">
+														Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen. Um ungewollte Änderungen zu vermeiden, müssen Sie die Bearbeitung für einige Aufgaben zuerst freischalten.<br />
+														<small class="form-text text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen Daten und Einstellungen löschen oder verändern.</small>
+													</div>
+												</div>
+											</div>
+											<div class="form-label-group" class="container-fluid">
+												<label for="btnDownloadConfigFile">Sie haben die Möglichkeit, Ihre aktuelle Konfiguration herunterzuladen.<br /><small class="form-text text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
+												<button id="btnDownloadConfigFile" onclick="downloadConfigFile()" type="button" class="btn btn-outline-primary">Konfiguration herunterladen</button>
+											</div>
+											<hr />
+											<div class="form-label-group" class="container-fluid">
+												<label id="lblDeleteTokenData" for="btnDeleteTokenData" class="text-muted">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
+												<button id="btnDeleteTokenData" type="button" class="btn btn-outline-primary" disabled>Token löschen</button>
+											</div>
+											<hr />
+											<div class="form-label-group" class="container-fluid">
+												<label id="lblRestartService" for="btnRestartService" class="text-muted">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
+												<button id="btnRestartService" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button>
+											</div>
 										</div>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			</form>
+				</form>
+			</div>
 		</main>
 		
 		<footer class="footer">
@@ -355,21 +354,22 @@
 		<script>
 			port = "";
 			checkIE();
-			getAPIPort();
-
+			
 			function checkIE()
 			{
 				if (window.document.documentMode)
 				{
 					var warning = "";
 					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					Diese Webseite ist nicht für den Internet Explorer optimiert.<br />";
-					warning += "					<small class=\"text-muted\">Die Funktionalität der Webseite ist trotzdem gewährleistet, es kommt allerdings zu optischen Fehlern. Nutzen Sie bitte Firefox, Microsoft Edge oder einen anderen unterstützen Browser.</small>";
-					warning += "					<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">";
-					warning += "						<span aria-hidden=\"true\">&times;</span>";
-					warning += "					</button>";
+					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
 					warning += "				</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
+					document.getElementById("content").innerHTML = "";
+				}
+				else
+				{
+					getAPIPort();
 				}
 			}
 
@@ -407,7 +407,7 @@
 
 							initContent();
 						}
-						catch
+						catch (e)
 						{
 							var loadSettingsError = "";
 							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -417,7 +417,7 @@
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
-					else if (this.readyState == 4 && this.status != 200)
+					else if (this.readyState == 4)
 					{
 						var loadSettingsError = "";
 						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -456,7 +456,7 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiupdports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo;
+				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo;
 				var url=location.protocol + "//" + location.hostname + port + "/getConfig";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -480,58 +480,58 @@
 								apikeyhttps = objResp.data[objIter].api_https_key_file;
 								apicerthttps = objResp.data[objIter].api_https_cert_file;
 								apiuseudplocalstaticports = objResp.data[objIter].api_udp_local_static_ports_active;
-								apiupdports = objResp.data[objIter].api_udp_local_static_ports;
+								apiudpports = objResp.data[objIter].api_udp_local_static_ports;
 								apiusesystemvariables = objResp.data[objIter].api_use_system_variables;
 								apicameradefaultimage = objResp.data[objIter].api_camera_default_image;
 								apicameradefaultvideo = objResp.data[objIter].api_camera_default_video;
 							}
-							var text = document.getElementById('username');
+							var text = document.getElementById('txtUsername');
 							text.value = username;
-							text = document.getElementById('password');
+							text = document.getElementById('txtPassword');
 							text.value = password;
 							if(apiusehttp == "true")
 							{
-								document.getElementById("useHttp").setAttribute("checked", true);
+								document.getElementById("chkUseHttp").setAttribute("checked", true);
 							}
 							else
 							{
-								document.getElementById("apiporthttp").setAttribute("disabled", true);
+								document.getElementById("txtPortHttp").setAttribute("disabled", true);
 							}
-							text = document.getElementById('apiporthttp');
+							text = document.getElementById('txtPortHttp');
 							text.value = apiporthttp;
 							if(apiusehttps == "true")
 							{
-								document.getElementById("useHttps").setAttribute("checked", true);
+								document.getElementById("chkUseHttps").setAttribute("checked", true);
 							}
 							else
 							{
-								document.getElementById("apiporthttps").setAttribute("disabled", true);
-								document.getElementById("apikeyhttps").setAttribute("disabled", true);
-								document.getElementById("apicerthttps").setAttribute("disabled", true);
+								document.getElementById("txtPortHttps").setAttribute("disabled", true);
+								document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
+								document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
 							}
-							text = document.getElementById('apiporthttps');
+							text = document.getElementById('txtPortHttps');
 							text.value = apiporthttps;
-							text = document.getElementById('apikeyhttps');
+							text = document.getElementById('txtHttpsKeyFile');
 							text.value = apikeyhttps;
-							text = document.getElementById('apicerthttps');
+							text = document.getElementById('txtHttpsCertFile');
 							text.value = apicerthttps;
 							if(apiusesystemvariables == "true")
 							{
-								document.getElementById("useSystemVariables").setAttribute("checked", true);
+								document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
 							}
 							if(apiuseudplocalstaticports == "true")
 							{
-								document.getElementById("useUdpStaticPorts").setAttribute("checked", true);
+								document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
 							}
 							else
 							{
-								document.getElementById("apiupdports").setAttribute("disabled", true);
+								document.getElementById("txtUdpPorts").setAttribute("disabled", true);
 							}
-							text = document.getElementById('apiupdports');
-							text.value = apiupdports;
-							text = document.getElementById('apidefaultimage');
+							text = document.getElementById('txtUdpPorts');
+							text.value = apiudpports;
+							text = document.getElementById('txtDefaultImagePath');
 							text.value = apicameradefaultimage;
-							text = document.getElementById('apidefaultvideo');
+							text = document.getElementById('txtDefaultVideoPath');
 							text.value = apicameradefaultvideo;
 							document.getElementById("resultLoading").innerHTML = "";
 						}
@@ -545,7 +545,7 @@
 							document.getElementById("resultLoading").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("resultLoading").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 					}
@@ -560,7 +560,7 @@
 			
 			function loadSystemVariables()
 			{
-				var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, text="";
+				var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, sysVarHint, sysVarTable="";
 				var url=location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -573,7 +573,11 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								text = "<table class=\"table mb-0\"><thead class=\"thead-dark\"><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
+								sysVarHint  = "<div class=\"alert alert-primary fade show\" role=\"alert\">Haben Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert, aktualisiert das AddOn entsprechende Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />";
+								sysVarHint += "<small class=\"form-text text-muted\">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind, falls Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert haben.</small>";
+								sysVarHint += "</div>";
+
+								sysVarTable = "<table class=\"table mb-0\"><thead class=\"thead-dark\"><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
 								for (objIter in objResp.data)
 								{
 									sysVarName = objResp.data[objIter].sysVar_name;
@@ -581,29 +585,30 @@
 									sysVarAvailable = objResp.data[objIter].sysVar_available;
 									if(sysVarAvailable==true)
 									{
-										text += "<tr class=\"table-success \"><th scope=\"row\" class=\"align-middle\">angelegt</th>";
+										sysVarTable += "<tr class=\"table-success \"><th scope=\"row\" class=\"align-middle\">angelegt</th>";
 									}
 									else
 									{
-										text += "<tr class=\"table-danger\"><th scope=\"row\" class=\"align-middle\">nicht angelegt</th>";
+										sysVarTable += "<tr class=\"table-danger\"><th scope=\"row\" class=\"align-middle\">nicht angelegt</th>";
 									}
-									text += "<td class=\"text-break align-middle\">" + sysVarName + "</td>";
+									sysVarTable += "<td class=\"text-break align-middle\">" + sysVarName + "</td>";
 
 									if(sysVarAvailable==true)
 									{
-										text += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" type=\"button\" class=\"btn btn-primary mb-1\" disabled>Systemvariable anlegen</button></td>";
+										sysVarTable += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" type=\"button\" class=\"btn btn-primary mb-1\" disabled>Systemvariable anlegen</button></td>";
 									}
 									else
 									{
-										text += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" onclick=\"createSysVar('" + sysVarName + "', '" + sysVarInfo + "')\" type=\"button\" class=\"btn btn-primary mb-1\">Systemvariable anlegen</button></td>";
+										sysVarTable += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" onclick=\"createSysVar('" + sysVarName + "', '" + sysVarInfo + "')\" type=\"button\" class=\"btn btn-primary mb-1\">Systemvariable anlegen</button></td>";
 									}
 
-									text += "</tr>";
+									sysVarTable += "</tr>";
 								}
 
-								text += "</tbody></table>";
+								sysVarTable += "</tbody></table>";
 
-								document.getElementById("divSystemVariables").innerHTML = text;
+								document.getElementById("divSystemVariablesInfo").innerHTML = sysVarInfo;
+								document.getElementById("divSystemVariables").innerHTML = sysVarTable;
 							}
 							else
 							{
@@ -622,7 +627,7 @@
 							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger mb-o\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 					}
@@ -684,7 +689,7 @@
 							document.getElementById("resultMessage").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("resultMessage").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 					}
@@ -726,7 +731,7 @@
 							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 					}
@@ -766,7 +771,7 @@
 							$("#toastRemoveTokenFailed").toast('show');
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						
 					}
@@ -806,7 +811,7 @@
 							$("#toastRestartFailed").toast('show');
 						}
 					}
-					else if (this.status == 200 || this.readyState == 4)
+					else if (this.readyState == 4)
 					{
 						
 					}
@@ -830,15 +835,23 @@
 			{
 				if(enable == true)
 				{
-					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(false)\" type=\"button\" class=\"btn btn-warning btn-block\">Fehlerbehebung deaktivieren</button>";
-					document.getElementById("delTokData").innerHTML = "<label for=\"deleteTokenData\">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br /><button id=\"deleteTokenData\" onclick=\"removeTokenData()\" type=\"button\" class=\"btn btn-outline-primary\">Token löschen</button></div>";
-					document.getElementById("restSvr").innerHTML = "<label for=\"restartSvr\">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br /><button id=\"restartSvr\" onclick=\"restartService()\" type=\"button\" class=\"btn btn-outline-primary\">Service neu starten</button></div>";
+					document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(false)");
+					document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-warning btn-block");
+					document.getElementById("btnEnableTroubleShooting").innerHTML = "Fehlerbehebung deaktivieren";
+					document.getElementById("lblDeleteTokenData").removeAttribute("class");
+					document.getElementById("btnDeleteTokenData").removeAttribute("disabled");
+					document.getElementById("lblRestartService").removeAttribute("class");
+					document.getElementById("btnRestartService").removeAttribute("disabled");
 				}
 				else
 				{
-					document.getElementById("enableTS").innerHTML = "<button id=\"enableTroubleShooting\" onclick=\"enableButtons(true)\" type=\"button\" class=\"btn btn-outline-warning btn-block\">Fehlerbehebung aktivieren</button>";
-					document.getElementById("delTokData").innerHTML = "<label for=\"deleteTokenData\" class=\"text-muted\">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br /><button id=\"deleteTokenData\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Token löschen</button></div>";
-					document.getElementById("restSvr").innerHTML = "<label for=\"restartSvr\" class=\"text-muted\">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br /><button id=\"restartSvr\" type=\"button\" class=\"btn btn-outline-primary\" disabled>Service neu starten</button></div>";
+					document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(true)");
+					document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-outline-warning btn-block");
+					document.getElementById("btnEnableTroubleShooting").innerHTML = "Fehlerbehebung aktivieren";
+					document.getElementById("lblDeleteTokenData").setAttribute("class", "text-muted");
+					document.getElementById("btnDeleteTokenData").setAttribute("disabled", true);
+					document.getElementById("lblRestartService").setAttribute("class", "text-muted");
+					document.getElementById("btnRestartService").setAttribute("disabled", true);
 				}
 			}
 
@@ -849,35 +862,35 @@
 					case "useHttp":
 						if(element.checked == true)
 						{
-							document.getElementById("apiporthttp").removeAttribute("disabled");
+							document.getElementById("txtPortHttp").removeAttribute("disabled");
 						}
 						else
 						{
-							document.getElementById("apiporthttp").setAttribute("disabled", true);
+							document.getElementById("txtPortHttp").setAttribute("disabled", true);
 						}
 						break;
 					case "useHttps":
 						if(element.checked == true)
 						{
-							document.getElementById("apiporthttps").removeAttribute("disabled");
-							document.getElementById("apikeyhttps").removeAttribute("disabled");
-							document.getElementById("apicerthttps").removeAttribute("disabled");
+							document.getElementById("txtPortHttps").removeAttribute("disabled");
+							document.getElementById("txtHttpsKeyFile").removeAttribute("disabled");
+							document.getElementById("txtHttpsCertFile").removeAttribute("disabled");
 						}
 						else
 						{
-							document.getElementById("apiporthttps").setAttribute("disabled", true);
-							document.getElementById("apikeyhttps").setAttribute("disabled", true);
-							document.getElementById("apicerthttps").setAttribute("disabled", true);
+							document.getElementById("txtPortHttps").setAttribute("disabled", true);
+							document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
+							document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
 						}
 						break;
 					case "useUdpStaticPorts":
 						if(element.checked == true)
 						{
-							document.getElementById("apiupdports").removeAttribute("disabled");
+							document.getElementById("txtUdpPorts").removeAttribute("disabled");
 						}
 						else
 						{
-							document.getElementById("apiupdports").setAttribute("disabled", true);
+							document.getElementById("txtUdpPorts").setAttribute("disabled", true);
 						}
 						break;
 				}
