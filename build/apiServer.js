@@ -28,6 +28,7 @@ class ApiServer {
      * Create the ApiServer-Object.
      */
     constructor() {
+        apiPortFile(api.getApiServerPortHttp(), api.getApiServerPortHttps());
         this.startServer(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps(), api.getApiServerKeyHttps(), api.getApiServerCertHttps(), logger);
     }
     /**
@@ -277,110 +278,86 @@ class ApiServer {
             else if (request.method == "POST") {
                 if (url.length > 1) {
                     if (url[1] == "setConfig") {
-                        var body = "";
+                        var postData = "";
+                        var isDataOK = true;
                         request.on("data", function (chunk) {
-                            body += chunk.toString();
+                            postData += chunk.toString();
                         });
                         request.on("end", function () {
                             var username = "";
-                            if (body.indexOf("email") >= 0) {
-                                username = body.substring(body.indexOf("email") + 6);
-                                username = username.replace("\r\n", "");
-                                username = username.substr(2, username.indexOf("----") - 4);
+                            if (postData.indexOf("username") >= 0) {
+                                username = getDataFromPOSTData(postData, "username", "string");
                             }
                             var password = "";
-                            if (body.indexOf("password") >= 0) {
-                                password = body.substring(body.indexOf("password") + 9);
-                                password = password.replace("\r\n", "");
-                                password = password.substr(2, password.indexOf("----") - 4);
+                            if (postData.indexOf("password") >= 0) {
+                                password = getDataFromPOSTData(postData, "password", "string");
                             }
                             var useHttp = false;
-                            if (body.indexOf("useHttp") >= 0) {
-                                var useHttpStr = body.substring(body.indexOf("useHttp") + 8);
-                                useHttpStr = useHttpStr.substr(2, useHttpStr.indexOf("----") - 4);
-                                if (useHttpStr.trim() == "on") {
-                                    useHttp = true;
-                                }
-                                else {
-                                    useHttp = false;
-                                }
+                            if (postData.indexOf("useHttp") >= 0) {
+                                useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
                             }
                             var apiporthttp = "52789";
-                            if (body.indexOf("portHttp") >= 0) {
-                                apiporthttp = body.substring(body.indexOf("portHttp") + 9);
-                                apiporthttp = apiporthttp.replace("\r\n", "");
-                                apiporthttp = apiporthttp.substr(2, apiporthttp.indexOf("----") - 4);
+                            if (postData.indexOf("httpPort") >= 0) {
+                                apiporthttp = getDataFromPOSTData(postData, "httpPort", "string");
                             }
                             var useHttps = false;
-                            if (body.indexOf("useHttps") >= 0) {
-                                var useHttpsStr = body.substring(body.indexOf("useHttps") + 8);
-                                useHttpsStr = useHttpsStr.substr(2, useHttpsStr.indexOf("----") - 4);
-                                if (useHttpsStr.trim() == "on") {
-                                    useHttps = true;
-                                }
-                                else {
-                                    useHttps = false;
-                                }
+                            if (postData.indexOf("useHttps") >= 0) {
+                                useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
+                            }
+                            if (useHttp == false && useHttps == false) {
+                                isDataOK = false;
                             }
                             var apiporthttps = "52790";
-                            if (body.indexOf("portHttps") >= 0) {
-                                apiporthttps = body.substring(body.indexOf("portHttps") + 10);
-                                apiporthttps = apiporthttps.replace("\r\n", "");
-                                apiporthttps = apiporthttps.substr(2, apiporthttps.indexOf("----") - 4);
+                            if (postData.indexOf("httpsPort") >= 0) {
+                                apiporthttps = getDataFromPOSTData(postData, "httpsPort", "string");
                             }
                             var apikeyfile = "/usr/local/etc/config/server.pem";
-                            if (body.indexOf("keyFile") >= 0) {
-                                apikeyfile = body.substring(body.indexOf("keyFile") + 8);
-                                apikeyfile = apikeyfile.replace("\r\n", "");
-                                apikeyfile = apikeyfile.substr(2, apikeyfile.indexOf("----") - 4);
+                            if (postData.indexOf("httpsKeyFile") >= 0) {
+                                apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
                             }
                             var apicertfile = "/usr/local/etc/config/server.pem";
-                            if (body.indexOf("certFile") >= 0) {
-                                apicertfile = body.substring(body.indexOf("certFile") + 9);
-                                apicertfile = apicertfile.replace("\r\n", "");
-                                apicertfile = apicertfile.substr(2, apicertfile.indexOf("----") - 4);
+                            if (postData.indexOf("httpsCertFile") >= 0) {
+                                apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                             }
                             var useUdpStaticPorts = false;
-                            if (body.indexOf("useUdpStaticPorts") >= 0) {
-                                var useUdpStaticPortsStr = body.substring(body.indexOf("useUdpStaticPorts") + 18);
-                                useUdpStaticPortsStr = useUdpStaticPortsStr.substr(2, useUdpStaticPortsStr.indexOf("----") - 4);
-                                if (useUdpStaticPortsStr.trim() == "on") {
-                                    useUdpStaticPorts = true;
-                                }
-                                else {
-                                    useUdpStaticPorts = false;
-                                }
+                            if (postData.indexOf("useUdpStaticPorts") >= 0) {
+                                useUdpStaticPorts = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
                             }
-                            var apiudpports = "";
-                            if (body.indexOf("updPorts") >= 0) {
-                                apiudpports = body.substring(body.indexOf("updPorts") + 9);
-                                apiudpports = apiudpports.replace("\r\n", "");
-                                apiudpports = apiudpports.substr(2, apiudpports.indexOf("----") - 4);
+                            var apiudpports = "52789,52790";
+                            if (postData.indexOf("udpPorts") >= 0) {
+                                apiudpports = getDataFromPOSTData(postData, "udpPorts", "string");
                             }
                             var useSystemVariables = false;
-                            if (body.indexOf("useSystemVariables") >= 0) {
-                                var useSystemVariablesStr = body.substring(body.indexOf("useSystemVariables") + 19);
-                                useSystemVariablesStr = useSystemVariablesStr.substr(2, useSystemVariablesStr.indexOf("----") - 4);
-                                if (useSystemVariablesStr.trim() == "on") {
-                                    useSystemVariables = true;
-                                }
-                                else {
-                                    useSystemVariables = false;
-                                }
+                            if (postData.indexOf("useSystemVariables") >= 0) {
+                                useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
                             }
                             var apicameradefaultimage = "";
-                            if (body.indexOf("imagePath") >= 0) {
-                                apicameradefaultimage = body.substring(body.indexOf("imagePath") + 10);
-                                apicameradefaultimage = apicameradefaultimage.replace("\r\n", "");
-                                apicameradefaultimage = apicameradefaultimage.substr(2, apicameradefaultimage.indexOf("----") - 4);
+                            if (postData.indexOf("defaultImagePath") >= 0) {
+                                apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
                             }
                             var apicameradefaultvideo = "";
-                            if (body.indexOf("videoPath") >= 0) {
-                                apicameradefaultvideo = body.substring(body.indexOf("videoPath") + 10);
-                                apicameradefaultvideo = apicameradefaultvideo.replace("\r\n", "");
-                                apicameradefaultvideo = apicameradefaultvideo.substr(2, apicameradefaultvideo.indexOf("----") - 4);
+                            if (postData.indexOf("defaultVideoPath") >= 0) {
+                                apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                             }
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                            if (checkNumberValue(apiporthttp, 1, 53535) == false) {
+                                isDataOK = false;
+                            }
+                            if (checkNumberValue(apiporthttps, 1, 53535) == false) {
+                                isDataOK = false;
+                            }
+                            if (checkNumbersValue(apiudpports, 0, 53535) == false) {
+                                isDataOK = false;
+                            }
+                            if (useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == "")) {
+                                isDataOK = false;
+                            }
+                            if (isDataOK == true) {
+                                apiPortFile(Number(apiporthttp), Number(apiporthttps));
+                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                            }
+                            else {
+                                responseString = "{\"success\":false,\"serviceRestart\":false,\"message\":\"Got invalid settings data. Please check the values.\"}";
+                            }
                             var resJSON = JSON.parse(responseString);
                             response.setHeader('Access-Control-Allow-Origin', '*');
                             response.setHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -429,6 +406,91 @@ function main() {
     apiServer = new ApiServer();
 }
 /**
+ * Create the apiPorts.txt file needed for using the api on the website if not existing or updates it when the ports have changed.
+ * @param httpPort The new http port.
+ * @param httpsPort The new https port.
+ */
+function apiPortFile(httpPort, httpsPort) {
+    try {
+        if (fs_1.existsSync("www/apiPorts.txt")) {
+            if (api.getApiServerPortHttp() != httpPort || api.getApiServerPortHttps() != httpsPort) {
+                fs_1.writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+            }
+        }
+        else {
+            fs_1.writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+        }
+    }
+    catch (ENOENT) {
+    }
+}
+/**
+ * Checks if a given string is a number between two values.
+ * @param value The value as string to check.
+ * @param lowestValue The lowest value allowd.
+ * @param highestValue The highest value allowed.
+ */
+function checkNumberValue(value, lowestValue, highestValue) {
+    try {
+        var val = Number.parseInt(value);
+        if (val >= lowestValue && val <= highestValue) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    catch (_a) {
+        return false;
+    }
+}
+/**
+ * Checks if a given string contains an array of number and each number is between two values.
+ * @param values The value as string to check.
+ * @param lowestValue The lowest value allowd.
+ * @param highestValue The highest value allowed.
+ */
+function checkNumbersValue(values, lowestValue, highestValue) {
+    if (values == "") {
+        return false;
+    }
+    var vals = (values.split(",")).map((i) => Number(i));
+    if (vals.length > 0) {
+        for (var val of vals) {
+            if (checkNumberValue(val.toString(), lowestValue, highestValue) == false) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+/**
+ * Extracting the given value from the POST data result.
+ * @param postData The POST data from the settings website.
+ * @param target The setting to be seached for.
+ * @param dataType The type of the return data (at the moment string and boolean).
+ */
+function getDataFromPOSTData(postData, target, dataType) {
+    if (dataType == "string") {
+        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        temp = temp.replace("\r\n", "");
+        temp = temp.substr(2, temp.indexOf("----") - 4);
+        return temp;
+    }
+    else if (dataType == "boolean") {
+        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        temp = temp.substr(2, temp.indexOf("----") - 4);
+        if (temp.trim() == "on") {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    return null;
+}
+/**
  * Will write config, stop the server and exit.
  */
 function stopServer() {
@@ -451,15 +513,13 @@ function restartServer() {
  * Clear the logfile
  */
 function emptyLogFile() {
-    child_process_1.exec("rm /var/log/eufySecurity.log");
-    child_process_1.exec("touch /var/log/eufySecurity.log");
+    child_process_1.exec("truncate -s 0 /var/log/eufySecurity.log");
 }
 /**
  * Clear the errorlogfile
  */
 function emptyErrFile() {
-    child_process_1.exec("rm /var/log/eufySecurity.err");
-    child_process_1.exec("touch /var/log/eufySecurity.err");
+    child_process_1.exec("truncate -s 0 /var/log/eufySecurity.err");
 }
 /**
  * Wait-function for waing between stop and start when restarting.
