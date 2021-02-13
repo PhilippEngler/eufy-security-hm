@@ -308,6 +308,7 @@ class ApiServer
                 if (url[1] == "setConfig")
                 {
                     var postData = "";
+                    var isDataOK = true;
                     request.on("data", function (chunk) {
                         postData += chunk.toString();
                     });
@@ -341,6 +342,10 @@ class ApiServer
                         if(postData.indexOf("useHttps") >= 0)
                         {
                             useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
+                        }
+                        if(useHttp == false && useHttps == false)
+                        {
+                            isDataOK = false;
                         }
 
                         var apiporthttps = "52790";
@@ -391,9 +396,33 @@ class ApiServer
                             apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                         }
 
-                        apiPortFile(Number(apiporthttp), Number(apiporthttps));
+                        if(checkNumberValue(apiporthttp, 1, 53535) == false)
+                        {
+                            isDataOK = false;
+                        }
+                        if(checkNumberValue(apiporthttps, 1, 53535) == false)
+                        {
+                            isDataOK = false;
+                        }
+                        if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                        {
+                            isDataOK = false;
+                        }
+                        if(useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == ""))
+                        {
+                            isDataOK = false;
+                        }
 
-                        responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                        if(isDataOK == true)
+                        {
+                            apiPortFile(Number(apiporthttp), Number(apiporthttps));
+
+                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                        }
+                        else
+                        {
+                            responseString = "{\"success\":false,\"serviceRestart\":false,\"message\":\"Got invalid settings data. Please check the values.\"}";
+                        }
 
                         var resJSON = JSON.parse(responseString);
                                                 
@@ -480,6 +509,60 @@ function apiPortFile(httpPort : number, httpsPort : number)
     {
         
     }
+}
+
+/**
+ * Checks if a given string is a number between two values.
+ * @param value The value as string to check.
+ * @param lowestValue The lowest value allowd.
+ * @param highestValue The highest value allowed.
+ */
+function checkNumberValue(value : string, lowestValue : number, highestValue : number) : boolean
+{
+    try
+    {
+        var val = Number.parseInt(value);
+        if(val >= lowestValue && val <= highestValue)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    catch
+    {
+        return false;
+    }
+}
+
+/**
+ * Checks if a given string contains an array of number and each number is between two values.
+ * @param values The value as string to check.
+ * @param lowestValue The lowest value allowd.
+ * @param highestValue The highest value allowed.
+ */
+function checkNumbersValue(values : string, lowestValue : number, highestValue : number) : boolean
+{
+    if(values == "")
+    {
+        return false;
+    }
+
+    var vals = (values.split(",")).map((i) => Number(i));
+    if(vals.length > 0)
+    {
+        for (var val of vals)
+        {
+            if(checkNumberValue(val.toString(), lowestValue, highestValue) == false)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
 }
 
 /**
