@@ -66,11 +66,12 @@ export class Config
     {
         var updated = false;
         
-        if(Number(this.config['ConfigFileInfo']['config_file_version']) < 1)
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 1)
         {
+            this.logger.log("Logfile needs Stage2 update to version 1...");
             if(this.filecontent.indexOf("api_use_system_variables") == -1)
             {
-                this.logger.log("Logfile needs Stage2 update. Adding 'api_use_system_variables'.");
+                this.logger.log("  adding 'api_use_system_variables'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
                 this.config = parse(this.filecontent);
                 updated = true;
@@ -78,7 +79,7 @@ export class Config
             }
             if(this.filecontent.indexOf("api_camera_default_image") == -1)
             {
-                this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_image'.");
+                this.logger.log("  adding 'api_camera_default_image'.");
                 this.filecontent = this.filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
                 this.config = parse(this.filecontent);
                 updated = true;
@@ -86,18 +87,20 @@ export class Config
             }
             if(this.filecontent.indexOf("api_camera_default_video") == -1)
             {
-                this.logger.log("Logfile needs Stage2 update. Adding 'api_camera_default_video'.");
+                this.logger.log("  adding 'api_camera_default_video'.");
                 this.filecontent = this.filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
                 this.config = parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            this.logger.log("...Stage2 update to version 1 finished.");
         }
-        if(Number(this.config['ConfigFileInfo']['config_file_version']) < 2)
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 2)
         {
+            this.logger.log("Logfile needs Stage2 update to version 2...");
             if(this.filecontent.indexOf("api_udp_local_static_ports") == -1)
             {
-                this.logger.log("Logfile needs Stage2 update. Adding 'api_udp_local_static_ports'.");
+                this.logger.log(" adding 'api_udp_local_static_ports'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_udp_local_static_ports=52789,52790");
                 this.config = parse(this.filecontent);
                 updated = true;
@@ -105,12 +108,13 @@ export class Config
             }
             if(this.filecontent.indexOf("api_udp_local_static_ports_active") == -1)
             {
-                this.logger.log("Logfile needs Stage2 update. Adding 'api_udp_local_static_ports_active'.");
+                this.logger.log("  adding 'api_udp_local_static_ports_active'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\api_udp_local_static_ports_active=false");
                 this.config = parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            this.logger.log("...Stage2 update to version 2 finished.");
         }
 
         if(updated)
