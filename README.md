@@ -28,9 +28,11 @@ The first is the use of the two HM-Script files provided in the HMScript folder.
 The second possibility is to use the table of system variables on the "Einstellungen" page of the addons website. Here the system variables will also be crated, but the discription contains no spaces.
 
 ## Notes
-1. To reduce the size of the backup, some folders are excluded. The configfile is included in the backup. So simply reinstall the addon after restoreing the addon.
-2. For communication with your homebase you need to open ports in the firewall settings of your CCU. If you will not use change modes by the API, you have to open at least the two ports 52789 and 52790. When using the change mode feature, you must disable the firewall (set the rule to ports open). In v1.0.2 you can specify ports to use for communication with the HomeBase. In this case, you only need to exclude these ports in the firewall settings.
-3. If you run piVCCU in a container add the portforwarding to the two api ports, e.g. in /etc/network/if-up.d/pivccu add `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52789 -j DNAT --to-destination $CCU_IP:52789` and `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52790 -j DNAT --to-destination $CCU_IP:52790` (for the two standard ports).
+1. To reduce the size of the backup, some folders are excluded. The configfile is included in the backup. So simply reinstall the addon after restoring the ccu.
+2. For communication with your API or HomeBase you need to change the firewall settings of your CCU.
+   - For communicating with the API you have to open at least these two ports (standard setting: 52789 and 52790). From v.1.0.3 on you are able to specify the ports for the API individually. In this case you need to enter these values.
+   - For communicating with the HomeBaseFrom you have to set the firewall to open all ports (set the rule to ports open) if you are using the default setting. From v1.0.2 on you can specify ports to use. In this case you need to exclude the specified ports in the firewall settings.
+4. If you run piVCCU in a container add the port forwarding to the two api ports, e.g. in /etc/network/if-up.d/pivccu add `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52789 -j DNAT --to-destination $CCU_IP:52789` and `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52790 -j DNAT --to-destination $CCU_IP:52790` (for the two standard ports).
 
 ## Credits
 This addon based on the [eufy-node-client](https://github.com/JanLoebel/eufy-node-client) of @JanLoebel. Some changes were done for example to support multiple bases, close the P2P connection or an other implementation for configuration data. The following projects also influenced this project:
