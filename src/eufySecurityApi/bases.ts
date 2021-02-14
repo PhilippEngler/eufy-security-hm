@@ -333,12 +333,12 @@ export class Base
             }
             
             var address = await this.localLookup(localPorts);
-            this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
+            this.api.addToLog("Base " + this.getSerialNumber() + " found local. address: " + address.host + ":" + address.port);
 
             var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
 
             await devClientService.connect();
-            devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
+            await devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
             await devClientService.close();
 
             return true;
@@ -407,7 +407,7 @@ export class Base
                     
                     var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
                     await devClientService.connect();
-                    devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
+                    await devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
                     await devClientService.close();
 
                     return true;

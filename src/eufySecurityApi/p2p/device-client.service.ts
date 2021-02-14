@@ -113,10 +113,10 @@ export class DeviceClientService {
     this.sendCommand(commandType, payload);
   }
 
-  public sendCommandWithInt(commandType: CommandType, value: number): void {
+  public async sendCommandWithInt(commandType: CommandType, value: number): Promise<void> {
     // SET_COMMAND_WITH_INT_TYPE = msgTypeID == 4
     const payload = buildIntCommandPayload(value, this.actor);
-    this.sendCommand(commandType, payload);
+    await this.sendCommand(commandType, payload);
   }
 
   public sendCommandWithString(commandType: CommandType, value: string): void {
@@ -125,14 +125,14 @@ export class DeviceClientService {
     this.sendCommand(commandType, payload);
   }
 
-  private sendCommand(commandType: CommandType, payload: Buffer): void {
+  private async sendCommand(commandType: CommandType, payload: Buffer): Promise<void> {
     // Command header
     const msgSeqNumber = this.seqNumber++;
     const commandHeader = buildCommandHeader(msgSeqNumber, commandType);
     const data = Buffer.concat([commandHeader, payload]);
 
     LOG(`Sending commandType: ${CommandType[commandType]} (${commandType}) with seqNum: ${msgSeqNumber}...`);
-    sendMessage(this.socket, this.address, RequestMessageType.DATA, data);
+    await sendMessage(this.socket, this.address, RequestMessageType.DATA, data);
     // -> NOTE:
     // -> We could wait for an ACK and then continue (sync)
     // -> Python impl creating an array an putting an "event" behind a seqNumber
