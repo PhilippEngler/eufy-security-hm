@@ -71,7 +71,29 @@
 				<h3>Statusänderung</h3>
 				<p>Hier finden Sie den aktuellen Status Ihrer Basisstationen und können diesen entweder für eine Basisstation oder für alle Basisstationen ändern.</p>
 				<p>
-					<div id="allbases"></div>
+					<div id="allbases">
+						<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">
+							<div class="col">
+								<div class="card mb-3">
+									<h5 class="card-header">alle Basen</h5>
+									<div class="row no-gutters">
+										<div class="col-md-12">
+											<div class="card-body">
+												<h6 class="card-subtitle mb-2 text-muted">Ändern des Status aller Basen</h6>
+												<button id="armAll" onclick="setArm('')" type="button" class="btn btn-primary my-2 mr-1" disabled>abwesend</button>
+												<button id="homeAll" onclick="setHome('')" type="button" class="btn btn-primary my-2 mr-1" disabled>zu Hause</button>
+												<button id="scheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary my-2 mr-1" disabled>Zeitsteuerung</button>
+												<button id="disarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2 mr-1" disabled>deaktiviert</button>
+											</div>
+										</div>
+									</div>
+									<!--<div class=\"card-footer\">
+										<small class=\"text-muted\">Last updated 3 mins ago</small>
+									</div>-->
+								</div>
+							</div>
+						</div>
+					</div>
 					<div id="bases"></div>
 				</p>
 			</div>
@@ -114,11 +136,10 @@
 			{
 				if (window.document.documentMode)
 				{
-					var warning = "";
-					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
-					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
-					warning += "				</div>";
+					var warning =  "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
+					warning += "</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
 					document.getElementById("content").innerHTML = "";
 				}
@@ -164,21 +185,19 @@
 						}
 						catch (e)
 						{
-							var loadSettingsError = "";
-							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-							loadSettingsError += "				</div>";
+							var loadSettingsError  = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "</div>";
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						var loadSettingsError = "";
-						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-						loadSettingsError += "				</div>";
+						var loadSettingsError  = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "</div>";
 						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
 					}
 				};
@@ -193,7 +212,7 @@
 			
 			function loadData(showLoading)
 			{
-				var xmlHttp, objResp, objIter, allbases, bases = "";
+				var xmlHttp, objResp, objIter, bases = "";
 				var imagepath="";
 				var type="";
 				var state="";
@@ -208,29 +227,7 @@
 						objResp = JSON.parse(this.responseText);
 						if(objResp.success == true)
 						{
-							allbases  = "		<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
-							allbases += "					<div class=\"col\">";
-							allbases += "						<div class=\"card mb-3\">";
-							allbases += "							<h5 class=\"card-header\">Status aller Basen</h5>";
-							allbases += "							<div class=\"row no-gutters\">";
-							allbases += "								<div class=\"col-md-12\">";
-							allbases += "									<div class=\"card-body\" >";
-							allbases += "										<h6 class=\"card-subtitle mb-2 text-muted\">Ändern des Status:</h6>";
-							allbases += "										<button id=\"armAll\" onclick=\"setArm('')\" type=\"button\" class=\"btn btn-primary mb-1\">abwesend</button>";
-							allbases += "										<button id=\"homeAll\" onclick=\"setHome('')\" type=\"button\" class=\"btn btn-primary mb-1\">zu Hause</button>";
-							allbases += "										<button id=\"scheduleAll\" onclick=\"setSchedule('')\" type=\"button\" class=\"btn btn-primary mb-1\">Zeitsteuerung</button>";
-							allbases += "										<button id=\"disarmAll\" onclick=\"setDisarm('')\" type=\"button\" class=\"btn btn-primary mb-1\">deaktiviert</button>";
-							allbases += "									</div>";
-							allbases += "								</div>";
-							allbases += "							</div>";
-							allbases += "							<!--<div class=\"card-footer\">";
-							allbases += "								<small class=\"text-muted\">Last updated 3 mins ago</small>";
-							allbases += "							</div>-->";
-							allbases += "						</div>";
-							allbases += "					</div>";
-							allbases += "				</div>";
-							allbases += "				</div>";
-							bases = "		<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
+							bases = "<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
 							for (objIter in objResp.data)
 							{
 								if(objResp.data[objIter].device_type == "basestation")
@@ -257,77 +254,85 @@
 									{
 										case "0":
 											state = "abwesend";
-											buttons =  "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>abwesend</button>";
-											buttons += "					<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">zu Hause</button>";
-											buttons += "					<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">Zeitsteuerung</button>";
-											buttons += "					<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">deaktiviert</button>";
+											buttons =  "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\" disabled>abwesend</button>";
+											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">zu Hause</button>";
+											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">Zeitsteuerung</button>";
+											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">deaktiviert</button>";
 											break;
 										case "1":
 											state = "zu Hause";
-											buttons =  "					<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">abwesend</button>";
-											buttons += "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>zu Hause</button>";
-											buttons += "					<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">Zeitsteuerung</button>";
-											buttons += "					<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">deaktiviert</button>";
+											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">abwesend</button>";
+											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\" disabled>zu Hause</button>";
+											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">Zeitsteuerung</button>";
+											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">deaktiviert</button>";
 											break;
 										case "2":
 											state = "Zeitsteuerung";
-											buttons =  "					<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">abwesend</button>";
-											buttons += "					<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">zu Hause</button>";
-											buttons += "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>Zeitsteuerung</button>";
-											buttons += "					<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">deaktiviert</button>";
+											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">abwesend</button>";
+											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">zu Hause</button>";
+											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\" disabled>Zeitsteuerung</button>";
+											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">deaktiviert</button>";
 											break;
 										case "63":
 											state = "deaktiviert";
-											buttons =  "					<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">abwesend</button>";
-											buttons += "					<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">zu Hause</button>";
-											buttons += "					<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2\">Zeitsteuerung</button>";
-											buttons += "					<button type=\"button\" class=\"btn btn-sm btn-primary mb-2\" disabled>deaktiviert</button>";
+											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">abwesend</button>";
+											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">zu Hause</button>";
+											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">Zeitsteuerung</button>";
+											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\" disabled>deaktiviert</button>";
 											break;
 										default:
 											state="unbekannt";
 									}
-									bases += "					<div class=\"col\">";
-									bases += "						<div class=\"card mb-3\">";
-									bases += "							<h5 class=\"card-header\">" + objResp.data[objIter].name + "</h5>";
-									bases += "							<div class=\"row no-gutters\">";
-									bases += "								<div class=\"col-md-4\">";
-									bases += "									" + imagepath;
-									bases += "								</div>";
-									bases += "								<div class=\"col-md-8\">";
-									bases += "									<div class=\"card-body\" style=\"margin-left: -1rem\">";
-									bases += "										<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
-									bases += "										<p class=\"card-text\">" + objResp.data[objIter].base_id + "<br />Status: <span id=\"state_" + objResp.data[objIter].base_id + "\">" + state + "</span></p>";
-									bases += "									</div>";
-									bases += "								</div>";
-									bases += "							</div>";
-									bases += "							<div class=\"card-footer\">";
-									bases += "								" + buttons;
-									bases += "							</div>";
-									bases += "						</div>";
-									bases += "					</div>";
+									bases += "<div class=\"col\">";
+									bases += "<div class=\"card mb-3\">";
+									bases += "<h5 class=\"card-header\">" + objResp.data[objIter].name + "</h5>";
+									bases += "<div class=\"row no-gutters\">";
+									bases += "<div class=\"col-md-4\">" + imagepath + "</div>";
+									bases += "<div class=\"col-md-8\">";
+									bases += "<div class=\"card-body\" style=\"margin-left: -1rem\">";
+									bases += "<h6 class=\"card-subtitle mb-2 text-muted\">" + type + "</h6>";
+									bases += "<p class=\"card-text\">" + objResp.data[objIter].base_id + "<br />Status: <span id=\"state_" + objResp.data[objIter].base_id + "\">" + state + "</span></p>";
+									bases += "</div>";
+									bases += "</div>";
+									bases += "</div>";
+									bases += "<div class=\"card-footer\">" + buttons + "</div>";
+									bases += "</div>";
+									bases += "</div>";
 								}
 							}
-							document.getElementById("allbases").innerHTML = allbases;
+							document.getElementById("armAll").removeAttribute("disabled");
+							document.getElementById("homeAll").removeAttribute("disabled");
+							document.getElementById("scheduleAll").removeAttribute("disabled");
+							document.getElementById("disarmAll").removeAttribute("disabled");
 							document.getElementById("bases").innerHTML = bases;
 							type="";
 						}
 						else
 						{
-							document.getElementById("allbases").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
-							document.getElementById("bases").innerHTML = "";
+							document.getElementById("armAll").setAttribute("disabled", true);
+							document.getElementById("homeAll").setAttribute("disabled", true);
+							document.getElementById("scheduleAll").setAttribute("disabled", true);
+							document.getElementById("disarmAll").setAttribute("disabled", true);
+							document.getElementById("bases").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("allbases").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
-						document.getElementById("bases").innerHTML = "";
+						document.getElementById("armAll").setAttribute("disabled", true);
+						document.getElementById("homeAll").setAttribute("disabled", true);
+						document.getElementById("scheduleAll").setAttribute("disabled", true);
+						document.getElementById("disarmAll").setAttribute("disabled", true);
+						document.getElementById("bases").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
 					}
 					else
 					{
 						if(showLoading==true)
 						{
-							document.getElementById("allbases").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
-							document.getElementById("bases").innerHTML = "";
+							document.getElementById("armAll").setAttribute("disabled", true);
+							document.getElementById("homeAll").setAttribute("disabled", true);
+							document.getElementById("scheduleAll").setAttribute("disabled", true);
+							document.getElementById("disarmAll").setAttribute("disabled", true);
+							document.getElementById("bases").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
 						}
 					}
 				};
@@ -359,6 +364,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
+								document.getElementById("armAll").innerHTML = "abwesend";
 								loadData(false);
 							}
 						}
@@ -436,6 +442,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
+								document.getElementById("homeAll").innerHTML = "zu Hause";
 								loadData(false);
 							}
 						}
@@ -513,6 +520,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
+								document.getElementById("scheduleAll").innerHTML = "Zeitsteuerung";
 								loadData(false);
 							}
 						}
@@ -590,6 +598,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
+								document.getElementById("disarmAll").innerHTML = "deaktiviert";
 								loadData(false);
 							}
 						}

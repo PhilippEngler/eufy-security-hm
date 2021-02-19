@@ -590,8 +590,8 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								sysVarHint  = "<div class=\"alert alert-primary fade show\" role=\"alert\">Haben Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert, aktualisiert das AddOn entsprechende Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable bereits angelegt, ansonsten ist die Zeile rot.<br />";
-								sysVarHint += "<small class=\"form-text text-muted\">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind, falls Sie die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' aktiviert haben.</small>";
+								sysVarHint  = "<div class=\"alert alert-primary fade show\" role=\"alert\">Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br />";
+								sysVarHint += "<small class=\"form-text text-muted\">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>";
 								sysVarHint += "</div>";
 								
 								document.getElementById("divSystemVariablesHint").innerHTML = sysVarHint;
