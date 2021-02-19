@@ -52,7 +52,7 @@ export class Config
     {
         if(filecontent.indexOf("config_file_version") == -1)
         {
-            this.logger.log("Logfile needs Stage1 update. Adding 'config_file_version'.");
+            this.logger.log("Configfile needs Stage1 update. Adding 'config_file_version'.");
             filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
             this.hasChanged = true;
         }
@@ -68,7 +68,7 @@ export class Config
         
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 1)
         {
-            this.logger.log("Logfile needs Stage2 update to version 1...");
+            this.logger.log("Configfile needs Stage2 update to version 1...");
             if(this.filecontent.indexOf("api_use_system_variables") == -1)
             {
                 this.logger.log("  adding 'api_use_system_variables'.");
