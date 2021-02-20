@@ -36,7 +36,7 @@ export class EufySecurityApi
     {
         if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
         {
-            this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
+            this.addToErr("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
         }
         else
         {
@@ -59,7 +59,7 @@ export class EufySecurityApi
         }
         catch
         {
-            this.logger.err("Error occured at loadData() -> loadDevices");
+            this.addToErr("Error occured at loadData() -> loadDevices");
             this.setLastConnectionInfo(false);
         }
         try
@@ -68,7 +68,7 @@ export class EufySecurityApi
         }
         catch
         {
-            this.logger.err("Error occured at loadData() -> loadBases");
+            this.addToErr("Error occured at loadData() -> loadBases");
             this.setLastConnectionInfo(false);
         }
     }
@@ -128,7 +128,7 @@ export class EufySecurityApi
         }
         catch (e)
         {
-            this.logger.err("Error occured at getDevices()");
+            this.addToErr("Error occured at getDevices()");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
@@ -200,7 +200,7 @@ export class EufySecurityApi
         }
         catch (e)
         {
-            this.logger.err("Error occured at getBases()");
+            this.addToErr("Error occured at getBases()");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
@@ -310,7 +310,7 @@ export class EufySecurityApi
         }
         catch (e)
         {
-            this.logger.err("Error occured at getGuardMode()");
+            this.addToErr("Error occured at getGuardMode()");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
@@ -357,7 +357,7 @@ export class EufySecurityApi
         }
         catch (e)
         {
-            this.logger.err("Error occured at getGuardModeBase()");
+            this.addToErr("Error occured at getGuardModeBase()");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
@@ -413,6 +413,7 @@ export class EufySecurityApi
                             json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
                             json += "}";
                             this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                            this.addToErr("Error occured at setGuardMode: Failed to switch mode for base " + base.getSerialNumber() + ".");
                         }
                     }
                     if (err==0)
@@ -428,23 +429,26 @@ export class EufySecurityApi
                         this.setSystemVariableString("eufyCurrentState", "unbekannt");
                         this.setLastConnectionInfo(false);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        this.addToErr("Error occured at setGuardMode: Failed to switch mode for bases.");
                     }
                     json += "]}";
                 }
                 else
                 {
                     json = "{\"success\":false,\"reason\":\"Failed to communicate with HomeBase.\"}";
+                    this.addToErr("Error occured at setGuardMode: Failed to communicate with HomeBase.");
                 }
             }
             else
             {
                 json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                 this.setLastConnectionInfo(false);
+                this.addToErr("Error occured at setGuardMode: No connection eo eufy.");
             }
         }
         catch (e)
         {
-            this.logger.err("Error occured at setGuardMode()");
+            this.addToErr("Error occured at setGuardMode: " + e.message + ".");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
@@ -495,17 +499,20 @@ export class EufySecurityApi
                     this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
                     this.setLastConnectionInfo(false);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    this.addToErr("Error occured at setGuardMode: Failed to switch mode for base " + base.getSerialNumber() + ".");
                 }
                 json += "]}";
             }
             else
             {
                 json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+                this.setLastConnectionInfo(false);
+                this.addToErr("Error occured at setGuardMode: No connection eo eufy.");
             }
         }
         catch (e)
         {
-            this.logger.err("Error occured at setGuardModeBase()");
+            this.addToErr("Error occured at setGuardMode: " + e.message + ".");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
@@ -609,7 +616,7 @@ export class EufySecurityApi
         }
         catch (e)
         {
-            this.logger.err("Error occured at getLibrary()");
+            this.addToErr("Error occured at getLibrary()");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
@@ -955,7 +962,7 @@ export class EufySecurityApi
         }
         catch (e)
         {
-            this.logger.err("Error occured at checkSystemVariables()");
+            this.addToErr("Error occured at checkSystemVariables()");
             this.setLastConnectionInfo(false);
             json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
         }
