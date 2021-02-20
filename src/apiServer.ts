@@ -259,7 +259,8 @@ class ApiServer
                         api.writeConfig();
                         responseString = readFileSync('config.ini', 'utf-8');
                         contentType = "text/plain";
-                        fileName = "config.ini";
+                        var dateTime = new Date();
+                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth()+1).toString ().padStart(2, '0') + dateTime.getDate().toString ().padStart(2, '0') + "-" + dateTime.getHours().toString ().padStart(2, '0') + dateTime.getMinutes().toString ().padStart(2, '0') + dateTime.getSeconds().toString ().padStart(2, '0') + ".ini";
                         break;
                     case "downloadLogFile":
                         responseString = readFileSync('/var/log/eufySecurity.log', 'utf-8');
