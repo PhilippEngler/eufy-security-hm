@@ -82,7 +82,7 @@
 											<button id="armAll" onclick="setArm('')" type="button" class="btn btn-primary my-2 mr-3" disabled>abwesend</button>
 											<button id="homeAll" onclick="setHome('')" type="button" class="btn btn-primary my-2 mr-3" disabled>zu Hause</button>
 											<button id="scheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary my-2 mr-3" disabled>Zeitsteuerung</button>
-											<button id="disarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2 mr-3" disabled>deaktiviert</button>
+											<button id="disarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2" disabled>deaktiviert</button>
 										</div>
 									</div>
 									<!--<div class=\"card-footer\">
@@ -252,31 +252,31 @@
 									{
 										case "0":
 											state = "abwesend";
-											buttons =  "<button type=\"button\" class=\"btn btn-sm btn-primary mt-2 mr-2\" disabled>abwesend</button>";
-											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2 mr-2\">zu Hause</button>";
-											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2 mr-2\">Zeitsteuerung</button>";
-											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mb-2 mr-2\">deaktiviert</button>";
+											buttons =  "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>abwesend</button>";
+											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
+											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
+											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2\">deaktiviert</button>";
 											break;
 										case "1":
 											state = "zu Hause";
-											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">abwesend</button>";
-											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-1 mr-2\" disabled>zu Hause</button>";
-											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-1 mr-2\">Zeitsteuerung</button>";
-											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 mb-2 mr-2\">deaktiviert</button>";
+											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
+											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>zu Hause</button>";
+											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
+											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 my-2\">deaktiviert</button>";
 											break;
 										case "2":
 											state = "Zeitsteuerung";
-											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-2\">abwesend</button>";
-											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-1 mr-2\">zu Hause</button>";
-											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-1 mr-2\" disabled>Zeitsteuerung</button>";
-											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 mb-2 mr-2\">deaktiviert</button>";
+											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
+											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
+											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>Zeitsteuerung</button>";
+											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 my-2\">deaktiviert</button>";
 											break;
 										case "63":
 											state = "deaktiviert";
 											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
 											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
 											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
-											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>deaktiviert</button>";
+											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2\" disabled>deaktiviert</button>";
 											break;
 										default:
 											state="unbekannt";
