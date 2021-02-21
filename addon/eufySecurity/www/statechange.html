@@ -79,10 +79,10 @@
 									<div class="row no-gutters">
 										<div class="card-body">
 											<h6 class="card-subtitle mb-2 text-muted">Ändern des Status aller Basen</h6>
-											<button id="armAll" onclick="setArm('')" type="button" class="btn btn-primary my-2 mr-3" disabled>abwesend</button>
-											<button id="homeAll" onclick="setHome('')" type="button" class="btn btn-primary my-2 mr-3" disabled>zu Hause</button>
-											<button id="scheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary my-2 mr-3" disabled>Zeitsteuerung</button>
-											<button id="disarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2" disabled>deaktiviert</button>
+											<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary my-2 mr-3" disabled>abwesend</button>
+											<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary my-2 mr-3" disabled>zu Hause</button>
+											<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary my-2 mr-3" disabled>Zeitsteuerung</button>
+											<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2" disabled>deaktiviert</button>
 										</div>
 									</div>
 									<!--<div class=\"card-footer\">
@@ -132,6 +132,7 @@
 			
 			function checkIE()
 			{
+				alert(window.location.search);
 				if (window.document.documentMode)
 				{
 					var warning =  "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
@@ -252,31 +253,31 @@
 									{
 										case "0":
 											state = "abwesend";
-											buttons =  "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>abwesend</button>";
-											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
-											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
-											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2\">deaktiviert</button>";
+											buttons =  "<button id=\"btnArm" + objResp.data[objIter].base_id + "\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>abwesend</button>";
+											buttons += "<button id=\"btnHome" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
+											buttons += "<button id=\"btnSchedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
+											buttons += "<button id=\"btnDisarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2\">deaktiviert</button>";
 											break;
 										case "1":
 											state = "zu Hause";
-											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
-											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>zu Hause</button>";
-											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
-											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 my-2\">deaktiviert</button>";
+											buttons =  "<button id=\"btnArm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
+											buttons += "<button id=\"btnHome" + objResp.data[objIter].base_id + "\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>zu Hause</button>";
+											buttons += "<button id=\"btnSchedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
+											buttons += "<button id=\"btnDisarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 my-2\">deaktiviert</button>";
 											break;
 										case "2":
 											state = "Zeitsteuerung";
-											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
-											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
-											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>Zeitsteuerung</button>";
-											buttons += "<button id=\"disarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 my-2\">deaktiviert</button>";
+											buttons =  "<button id=\"btnArm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
+											buttons += "<button id=\"btnHome" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
+											buttons += "<button id=\"btnSchedule" + objResp.data[objIter].base_id + "\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\" disabled>Zeitsteuerung</button>";
+											buttons += "<button id=\"btnDisarm" + objResp.data[objIter].base_id + "\" onclick=\"setDisarm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary mt-1 my-2\">deaktiviert</button>";
 											break;
 										case "63":
 											state = "deaktiviert";
-											buttons =  "<button id=\"arm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
-											buttons += "<button id=\"home" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
-											buttons += "<button id=\"schedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
-											buttons += "<button type=\"button\" class=\"btn btn-sm btn-primary my-2\" disabled>deaktiviert</button>";
+											buttons =  "<button id=\"btnArm" + objResp.data[objIter].base_id + "\" onclick=\"setArm('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">abwesend</button>";
+											buttons += "<button id=\"btnHome" + objResp.data[objIter].base_id + "\" onclick=\"setHome('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">zu Hause</button>";
+											buttons += "<button id=\"btnSchedule" + objResp.data[objIter].base_id + "\" onclick=\"setSchedule('" + objResp.data[objIter].base_id + "')\" type=\"button\" class=\"btn btn-sm btn-primary my-2 mr-3\">Zeitsteuerung</button>";
+											buttons += "<button id=\"btnDisarm" + objResp.data[objIter].base_id + "\" type=\"button\" class=\"btn btn-sm btn-primary my-2\" disabled>deaktiviert</button>";
 											break;
 										default:
 											state="unbekannt";
@@ -298,38 +299,38 @@
 									bases += "</div>";
 								}
 							}
-							document.getElementById("armAll").removeAttribute("disabled");
-							document.getElementById("homeAll").removeAttribute("disabled");
-							document.getElementById("scheduleAll").removeAttribute("disabled");
-							document.getElementById("disarmAll").removeAttribute("disabled");
+							document.getElementById("btnArmAll").removeAttribute("disabled");
+							document.getElementById("btnHomeAll").removeAttribute("disabled");
+							document.getElementById("btnScheduleAll").removeAttribute("disabled");
+							document.getElementById("btnDisarmAll").removeAttribute("disabled");
 							document.getElementById("bases").innerHTML = bases;
 							type="";
 						}
 						else
 						{
-							document.getElementById("armAll").setAttribute("disabled", true);
-							document.getElementById("homeAll").setAttribute("disabled", true);
-							document.getElementById("scheduleAll").setAttribute("disabled", true);
-							document.getElementById("disarmAll").setAttribute("disabled", true);
+							document.getElementById("btnArmAll").setAttribute("disabled", true);
+							document.getElementById("btnHomeAll").setAttribute("disabled", true);
+							document.getElementById("btnScheduleAll").setAttribute("disabled", true);
+							document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 							document.getElementById("bases").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("armAll").setAttribute("disabled", true);
-						document.getElementById("homeAll").setAttribute("disabled", true);
-						document.getElementById("scheduleAll").setAttribute("disabled", true);
-						document.getElementById("disarmAll").setAttribute("disabled", true);
+						document.getElementById("btnArmAll").setAttribute("disabled", true);
+						document.getElementById("btnHomeAll").setAttribute("disabled", true);
+						document.getElementById("btnScheduleAll").setAttribute("disabled", true);
+						document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 						document.getElementById("bases").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Basisstationen.</div>";
 					}
 					else
 					{
 						if(showLoading==true)
 						{
-							document.getElementById("armAll").setAttribute("disabled", true);
-							document.getElementById("homeAll").setAttribute("disabled", true);
-							document.getElementById("scheduleAll").setAttribute("disabled", true);
-							document.getElementById("disarmAll").setAttribute("disabled", true);
+							document.getElementById("btnArmAll").setAttribute("disabled", true);
+							document.getElementById("btnHomeAll").setAttribute("disabled", true);
+							document.getElementById("btnScheduleAll").setAttribute("disabled", true);
+							document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 							document.getElementById("bases").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Basisstationen...</strong></div>";
 						}
 					}
@@ -343,7 +344,7 @@
 				var baseserial;
 				if(baseserial=="")
 				{
-					document.getElementById("armAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
+					document.getElementById("btnArmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/away";
@@ -362,7 +363,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
-								document.getElementById("armAll").innerHTML = "abwesend";
+								document.getElementById("btnArmAll").innerHTML = "abwesend";
 								loadData(false);
 							}
 						}
@@ -380,7 +381,7 @@
 				}
 				else
 				{
-					document.getElementById("arm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
+					document.getElementById("btnArm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/away";
@@ -421,7 +422,7 @@
 				var baseserial
 				if(baseserial=="")
 				{
-					document.getElementById("homeAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
+					document.getElementById("btnHomeAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/home";
@@ -440,7 +441,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
-								document.getElementById("homeAll").innerHTML = "zu Hause";
+								document.getElementById("btnHomeAll").innerHTML = "zu Hause";
 								loadData(false);
 							}
 						}
@@ -458,7 +459,7 @@
 				}
 				else
 				{
-					document.getElementById("home" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
+					document.getElementById("btnHome" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/home";
@@ -499,7 +500,7 @@
 				var baseserial;
 				if(baseserial=="")
 				{
-					document.getElementById("scheduleAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
+					document.getElementById("btnScheduleAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/schedule";
@@ -518,7 +519,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
-								document.getElementById("scheduleAll").innerHTML = "Zeitsteuerung";
+								document.getElementById("btnScheduleAll").innerHTML = "Zeitsteuerung";
 								loadData(false);
 							}
 						}
@@ -536,7 +537,7 @@
 				}
 				else
 				{
-					document.getElementById("schedule" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
+					document.getElementById("btnSchedule" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/schedule";
@@ -577,7 +578,7 @@
 				var baseserial;
 				if(baseserial=="")
 				{
-					document.getElementById("disarmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
+					document.getElementById("btnDisarmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/disarmed";
@@ -596,7 +597,7 @@
 							else
 							{
 								$("#toastFailed").toast('show');
-								document.getElementById("disarmAll").innerHTML = "deaktiviert";
+								document.getElementById("btnDisarmAll").innerHTML = "deaktiviert";
 								loadData(false);
 							}
 						}
@@ -614,7 +615,7 @@
 				}
 				else
 				{
-					document.getElementById("disarm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
+					document.getElementById("btnDisarm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
 					var xmlHttp, objResp, objIter, bases = "";
 					var imagepath="";
 					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/disarmed";
