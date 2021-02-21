@@ -34,29 +34,29 @@
 	</head>
 	<body>
 		<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-			<a class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+			<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<div class="collapse navbar-collapse" id="navbarCollapse">
 				<ul class="navbar-nav mr-auto">
 					<li class="nav-item">
-						<a class="nav-link" href="/addons/eufySecurity">Home</a>
+						<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" href="devices.html">Geräte</a>
+						<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" href="statechange.html">Statusänderung</a>
+						<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
 					</li>
 					<li class="nav-item active">
-						<a class="nav-link" href="settings.html">Einstellungen<span class="sr-only">(current)</span></a>
+						<a id="lnkSettings" class="nav-link" href="settings.html">Einstellungen<span class="sr-only">(current)</span></a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" href="logfiles.html">Logdateien</a>
+						<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" href="info.html">Über</a>
+						<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
 					</li>
 				</ul>
 			</div>
@@ -386,8 +386,23 @@
 				}
 				else
 				{
+					if(!(window.location.search == ""))
+					{
+						addQueryStringToLinks(window.location.search);
+					}
 					getAPIPort();
 				}
+			}
+
+			function addQueryStringToLinks(sessionID)
+			{
+				document.getElementById("lnkMain").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
+				document.getElementById("lnkHome").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
+				document.getElementById("lnkDevices").setAttribute("href", document.getElementById("lnkDevices").getAttribute("href") + sessionID);
+				document.getElementById("lnkStatechange").setAttribute("href", document.getElementById("lnkStatechange").getAttribute("href") + sessionID);
+				document.getElementById("lnkSettings").setAttribute("href", document.getElementById("lnkSettings").getAttribute("href") + sessionID);
+				document.getElementById("lnkLogfiles").setAttribute("href", document.getElementById("lnkLogfiles").getAttribute("href") + sessionID);
+				document.getElementById("lnkInfo").setAttribute("href", document.getElementById("lnkInfo").getAttribute("href") + sessionID);
 			}
 
 			function getAPIPort()
