@@ -229,12 +229,12 @@
 											<hr />
 											<div class="form-label-group" class="container-fluid">
 												<label id="lblDeleteTokenData" for="btnDeleteTokenData" class="text-muted">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
-												<button id="btnDeleteTokenData" type="button" class="btn btn-outline-primary" disabled>Token löschen</button>
+												<button id="btnDeleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-outline-primary" disabled>Token löschen</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
 												<label id="lblRestartService" for="btnRestartService" class="text-muted">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
-												<button id="btnRestartService" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button>
+												<button id="btnRestartService" onclick="restartService()" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button>
 											</div>
 										</div>
 									</div>
