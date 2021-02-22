@@ -217,7 +217,7 @@ class ApiServer
                         }
                         else if(url.length == 4)
                         {
-                            responseString = await api.createSystemVariable(url[2], url[3]);
+                            responseString = await api.createSystemVariable(url[2], decodeURIComponent(url[3]));
                         }
                         else
                         {
