@@ -73,7 +73,7 @@
 				<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-2">
 					<div class="col">
 						<div class="card mb-3">
-							<h5 class="card-header">Inhalt der Logdatei</h5>
+							<h5 class="card-header">Inhalt der Protokolldatei</h5>
 							<div class="row no-gutters">
 								<div class="col-md-12">
 									<div class="card-body">
@@ -89,7 +89,7 @@
 					</div>
 					<div class="col">
 						<div class="card mb-3">
-							<h5 class="card-header">Inhalt der Logdatei für Fehler</h5>
+							<h5 class="card-header">Inhalt der Fehlerprotokolldatei</h5>
 							<div class="row no-gutters">
 								<div class="col-md-12">
 									<div class="card-body">
@@ -126,11 +126,10 @@
 			{
 				if (window.document.documentMode)
 				{
-					var warning = "";
-					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
-					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
-					warning += "				</div>";
+					var warning = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
+					warning += "</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
 					document.getElementById("content").innerHTML = "";
 				}
@@ -191,21 +190,19 @@
 						}
 						catch (e)
 						{
-							var loadSettingsError = "";
-							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-							loadSettingsError += "				</div>";
+							var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "</div>";
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						var loadSettingsError = "";
-						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-						loadSettingsError += "				</div>";
+						var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "</div>";
 						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
 					}
 				};
@@ -240,7 +237,7 @@
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("log").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei.</div>";
+						document.getElementById("log").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei.</div>";
 					}
 					else
 					{
@@ -275,7 +272,7 @@
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("err").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei für Fehler.</div>";
+						document.getElementById("err").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei für Fehler.</div>";
 					}
 					else
 					{
