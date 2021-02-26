@@ -192,7 +192,7 @@
 						{
 							var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
 							loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>";
 							loadSettingsError += "</div>";
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
@@ -201,7 +201,7 @@
 					{
 						var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
 						loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>";
 						loadSettingsError += "</div>";
 						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
 					}
@@ -231,19 +231,20 @@
 					if (this.readyState == 4 && this.status == 200)
 					{
 						var log = this.responseText;
+						log = log.replace(/  /g, " &nbsp;");
 						log = log.replace(/<[^>]*>/g, '');
-						log = log.replace(/\n/g, "<br >");
+						log = log.replace(/\n/g, "<br />");
 						document.getElementById("log").innerHTML = "<code>" + log + "</code>";
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("log").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei.</div>";
+						document.getElementById("log").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Protokolldatei.</div>";
 					}
 					else
 					{
 						if(showLoading==true)
 						{
-							document.getElementById("log").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Logdatei...</strong></div>";
+							document.getElementById("log").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Protokolldatei...</strong></div>";
 						}
 					}
 				};
@@ -266,19 +267,20 @@
 					if (this.readyState == 4 && this.status == 200)
 					{
 						var err = this.responseText;
+						err = err.replace(/  /g, " &nbsp;");
 						err = err.replace(/<[^>]*>/g, '');
 						err = err.replace(/\n/g, "<br >");
 						document.getElementById("err").innerHTML = "<code>" + err + "</code>";
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("err").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Logdatei für Fehler.</div>";
+						document.getElementById("err").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Fehlerprotokolldatei.</div>";
 					}
 					else
 					{
 						if(showLoading==true)
 						{
-							document.getElementById("err").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Logdatei für Fehler...</strong></div>";
+							document.getElementById("err").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Fehlerprotokolldatei...</strong></div>";
 						}
 					}
 				};
