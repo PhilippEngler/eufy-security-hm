@@ -11,7 +11,7 @@ import {
   MAGIC_WORD,
 } from './payload.utils';
 import { CommandType } from './command.model';
-import { LOG } from '../utils/logging';
+import { EufySecurityApi } from '../eufySecurityApi';
 
 export class DeviceClientService {
   private addressTimeoutInMs = 3 * 1000;
@@ -34,7 +34,7 @@ export class DeviceClientService {
     messages: {},
   };
 
-  constructor(private address: Address, private p2pDid: string, private actor: string) {
+  constructor(private api : EufySecurityApi, private address: Address, private p2pDid: string, private actor: string) {
     //this.socket = createSocket('udp4');
     //this.socket.bind(0);
     this.initialize();
@@ -77,7 +77,7 @@ export class DeviceClientService {
 
       this.socket.once('message', (msg) => {
         if (hasHeader(msg, ResponseMessageType.CAM_ID)) {
-          LOG('connected!');
+          this.api.logDebug('connected!');
           if (!!timer) {
             clearTimeout(timer);
           }
@@ -131,7 +131,7 @@ export class DeviceClientService {
     const commandHeader = buildCommandHeader(msgSeqNumber, commandType);
     const data = Buffer.concat([commandHeader, payload]);
 
-    LOG(`Sending commandType: ${CommandType[commandType]} (${commandType}) with seqNum: ${msgSeqNumber}...`);
+    this.api.logDebug(`Sending commandType: ${CommandType[commandType]} (${commandType}) with seqNum: ${msgSeqNumber}...`);
     await sendMessage(this.socket, this.address, RequestMessageType.DATA, data);
     // -> NOTE:
     // -> We could wait for an ACK and then continue (sync)
@@ -143,7 +143,7 @@ export class DeviceClientService {
   private handleMsg(msg: Buffer): void {
     if (hasHeader(msg, ResponseMessageType.PONG)) {
       // Response to a ping from our side
-      LOG('GOT PONG');
+      this.api.logDebug('GOT PONG');
       return;
     } else if (hasHeader(msg, ResponseMessageType.PING)) {
       // Response with PONG to keep alive
@@ -151,7 +151,7 @@ export class DeviceClientService {
       return;
     } else if (hasHeader(msg, ResponseMessageType.END)) {
       // Connection is closed by device
-      LOG('GOT END');
+      this.api.logDebug('GOT END');
       this.connected = false;
       this.socket.close();
       return;
@@ -168,7 +168,7 @@ export class DeviceClientService {
         const seqBuffer = msg.slice(idx, idx + 2);
         const ackedSeqNo = seqBuffer.readUIntBE(0, seqBuffer.length);
         // -> Message with seqNo was received at the station
-        LOG(`ACK for seqNo: ${ackedSeqNo}`);
+        this.api.logDebug(`ACK for seqNo: ${ackedSeqNo}`);
       }
     } else if (hasHeader(msg, ResponseMessageType.DATA)) {
       const seqNo = msg[6] * 256 + msg[7];
@@ -186,7 +186,7 @@ export class DeviceClientService {
       this.sendAck(dataTypeBuffer, seqNo);
       this.handleData(seqNo, dataType, msg);
     } else {
-      LOG('GOT unknown msg', msg.length, msg);
+      this.api.logDebug('GOT unknown msg', msg.length, msg);
     }
   }
 
@@ -199,11 +199,11 @@ export class DeviceClientService {
       // Note: data === 65420 when e.g. data mode is already set (guardMode=0, setting guardMode=0 => 65420)
       // Note: data ==== 65430 when there is an error (sending data to a channel which do not exist)
       const commandStr = CommandType[commandId];
-      LOG(`DATA package with commandId: ${commandStr} (${commandId}) - data: ${data}`);
+      this.api.logDebug(`DATA package with commandId: ${commandStr} (${commandId}) - data: ${data}`);
     } else if (dataType === 'BINARY') {
       this.parseBinaryMessage(seqNo, msg);
     } else {
-      LOG(`Data to handle: seqNo: ${seqNo} - dataType: ${dataType} - msg: ${msg.toString('hex')}`);
+      this.api.logDebug(`Data to handle: seqNo: ${seqNo} - dataType: ${dataType} - msg: ${msg.toString('hex')}`);
     }
   }
 
@@ -255,7 +255,7 @@ export class DeviceClientService {
   }
 
   private handleDataControl(commandId: number, message: string) {
-    LOG(`DATA - CONTROL message with commandId: ${CommandType[commandId]} (${commandId})`, message);
+    this.api.logDebug(`DATA - CONTROL message with commandId: ${CommandType[commandId]} (${commandId})`, message);
   }
 
   private sendAck(dataType: Buffer, seqNo: number) {
@@ -297,10 +297,10 @@ export class DeviceClientService {
         clearTimeout(this.heartbeatTimeout);
         this.heartbeatTimeout = undefined;
     }*/
-    LOG("EufyP2PClientProtocol.onClose(): ");
+    this.api.logDebug("EufyP2PClientProtocol.onClose(): ");
   }
 
   private onError(error: any): void {
-    LOG(`EufyP2PClientProtocol.onError(): Error: ${error}`);
+    this.api.logError(`EufyP2PClientProtocol.onError(): Error: ${error}`);
   }
 }

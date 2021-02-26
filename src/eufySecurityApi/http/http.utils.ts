@@ -1,7 +1,8 @@
 import got from 'got';
-import { LOG } from '../utils/logging';
+import { EufySecurityApi } from '../eufySecurityApi';
 
 export const postRequest = async <T>(
+  api : EufySecurityApi,
   url: string,
   requestBody?: Record<string, unknown> | undefined,
   token?: string,
@@ -20,7 +21,7 @@ export const postRequest = async <T>(
     throw new Error(`Request failed: ${url} -> ${anyBody.code} - ${anyBody.msg}`);
   }
 
-  LOG(`url: ${url} -> body: ${JSON.stringify(body)}`);
+  api.logDebug(`url: ${url} -> body: ${JSON.stringify(body)}`);
 
   if (!!anyBody.data) {
     return anyBody.data;

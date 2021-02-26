@@ -2,7 +2,7 @@
 import { EventEmitter } from 'events';
 import path from 'path';
 import { BufferReader, load, Root } from 'protobuf-typescript';
-import { LOG } from '../utils/logging';
+import { EufySecurityApi } from '../eufySecurityApi';
 
 import { MessageTag, ProcessingState } from './fid.model';
 
@@ -17,8 +17,9 @@ export class PushClientParser extends EventEmitter {
   private messageTag = 0;
   private handshakeComplete = false;
 
-  private constructor() {
+  private constructor(private api : EufySecurityApi) {
     super();
+    this.api = api;
   }
 
   public resetState(): void {
@@ -32,9 +33,9 @@ export class PushClientParser extends EventEmitter {
     this.removeAllListeners();
   }
 
-  public static async init(): Promise<PushClientParser> {
+  public static async init(api : EufySecurityApi): Promise<PushClientParser> {
     this.proto = await load(path.join(__dirname, 'mcs.proto'));
-    return new PushClientParser();
+    return new PushClientParser(api);
   }
 
   handleData(newData: Buffer): void {
@@ -72,7 +73,7 @@ export class PushClientParser extends EventEmitter {
         this.onGotMessageBytes();
         break;
       default:
-        LOG('handleFullMessage: Unknown state: ', this.state);
+        this.api.logDebug('handleFullMessage: Unknown state: ', this.state);
         break;
     }
   }
@@ -154,7 +155,7 @@ export class PushClientParser extends EventEmitter {
 
     if (this.messageTag === MessageTag.LoginResponse) {
       if (this.handshakeComplete) {
-        console.error('Unexpected login response');
+        this.api.logError('Unexpected login response');
       } else {
         this.handshakeComplete = true;
       }

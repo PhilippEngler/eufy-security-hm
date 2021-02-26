@@ -105,7 +105,7 @@ export class HttpService {
     try
     {
       const token = await this.getToken();
-      return await postRequest(`${this.baseUrl}${path}`, body, token, headers);
+      return await postRequest(this.api, `${this.baseUrl}${path}`, body, token, headers);
     }
     catch (e)
     {
@@ -113,20 +113,20 @@ export class HttpService {
       {
         try
         {
-          this.api.addToErr("HTTPError 401: removing token data and retry.");
+          this.api.logError("HTTPError 401: removing token data and retry.");
           this.api.setTokenData("", "0");
           const token = await this.getToken();
-          return await postRequest(`${this.baseUrl}${path}`, body, token, headers);
+          return await postRequest(this.api, `${this.baseUrl}${path}`, body, token, headers);
         }
         catch (e)
         {
-          this.api.addToErr("HTTPError 401: please check your account data.");
+          this.api.logError("HTTPError 401: please check your account data.");
           throw new Error(e);
         }
       }
       else
       {
-        this.api.addToErr(e + " | call: " + this.baseUrl + path);
+        this.api.logError(e + " | call: " + this.baseUrl + path);
         throw new Error(e);
       }
     }
@@ -134,17 +134,17 @@ export class HttpService {
 
   private async getToken(): Promise<string> {
     if (!this.api.getToken() || this.isTokenOutdated()) {
-      this.api.addToLog("No token or token outdated. Create new token.");
+      this.api.logInfo("No token or token outdated. Create new token.");
       this.currentLoginResult = await this.login(this.username, this.password);
       if (this.currentLoginResult)
       {
         this.api.setTokenData(this.currentLoginResult.auth_token, this.currentLoginResult.token_expires_at.toString());
         this.api.writeConfig();
-        this.api.addToLog("Got new token.");
+        this.api.logInfo("Got new token.");
       }
       else
       {
-        this.api.addToErr("Login failed.");
+        this.api.logError("Login failed.");
       }
     }
 
@@ -157,7 +157,7 @@ export class HttpService {
   }
 
   private async login(email: string, password: string): Promise<LoginResult> {
-    const result = await postRequest<LoginResult>(`${this.baseUrl}/passport/login`, { email, password });
+    const result = await postRequest<LoginResult>(this.api, `${this.baseUrl}/passport/login`, { email, password });
     if (!!result.domain) {
       const baseUrlFromResult = `https://${result.domain}/v1`;
 

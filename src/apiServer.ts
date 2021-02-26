@@ -39,16 +39,16 @@ class ApiServer
     {
         if(httpActive == true)
         {
-            logger.log("Starting http server...");
+            logger.logInfoBasic("Starting http server...");
             serverHttp.on("error", this.errorListener)
             serverHttp.on("request", this.requestListener);
             serverHttp.listen(portHttp);
-            logger.log("...started. http listening on port '"+ portHttp + "'");
+            logger.logInfoBasic("...started. http listening on port '"+ portHttp + "'");
         }
 
         if(httpsActive == true)
         {
-            logger.log("Starting https server...");
+            logger.logInfoBasic("Starting https server...");
             if(existsSync(keyHttps) && existsSync(certHttps))
             {
                 const options = {
@@ -59,11 +59,11 @@ class ApiServer
                 serverHttps.on("error", this.errorListener)
                 serverHttps.on("request", this.requestListener);
                 serverHttps.listen(portHttps);
-                logger.log("...started. https listening on port '"+ portHttps + "'");
+                logger.logInfoBasic("...started. https listening on port '"+ portHttps + "'");
             }
             else
             {
-                logger.err("FAILED TO START SERVER (HTTPS): key or cert file not found.");
+                logger.logErrorBasis("FAILED TO START SERVER (HTTPS): key or cert file not found.");
             }
         }
     }
@@ -76,11 +76,11 @@ class ApiServer
     {
         if(error.code == "EADDRINUSE")
         {
-            logger.err("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
+            logger.logErrorBasis("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
         }
         else
         {
-            logger.err("ERROR: " + error.code + ": " + error.message);
+            logger.logErrorBasis("ERROR: " + error.code + ": " + error.message);
         }
     }
     
@@ -397,6 +397,12 @@ class ApiServer
                             apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                         }
 
+                        var apiloglevel = "0";
+                        if(postData.indexOf("logLevel") >= 0)
+                        {
+                            apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
+                        }
+
                         if(checkNumberValue(apiporthttp, 1, 53535) == false)
                         {
                             isDataOK = false;
@@ -413,12 +419,16 @@ class ApiServer
                         {
                             isDataOK = false;
                         }
+                        if(checkNumberValue(apiloglevel, 0, 3) == false)
+                        {
+                            isDataOK = false;
+                        }
 
                         if(isDataOK == true)
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
                         }
                         else
                         {
@@ -435,12 +445,12 @@ class ApiServer
 
                         if(resJSON.serviceRestart == true)
                         {
-                            logger.log("Settings saved. Restarting apiServer.");
+                            logger.logInfoBasic("Settings saved. Restarting apiServer.");
                             restartServer();
                         }
                         else
                         {
-                            logger.log("Settings saved.");
+                            logger.logInfoBasic("Settings saved.");
                         }
                     });
                 }
@@ -602,11 +612,11 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
  */
 function stopServer()
 {
-    logger.log("Write config...");
+    logger.logInfoBasic("Write config...");
     api.writeConfig();
-    logger.log("Stopping...");
+    logger.logInfoBasic("Stopping...");
     serverHttp.close();
-    logger.log("Stopped...");
+    logger.logInfoBasic("Stopped...");
 }
 
 /**
@@ -614,7 +624,7 @@ function stopServer()
  */
 async function restartServer()
 {
-    logger.log("Going to restart with apiServerRestarter...");
+    logger.logInfoBasic("Going to restart with apiServerRestarter...");
     exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
 }
 
@@ -646,16 +656,16 @@ function wait10Seconds() {
 }
 
 process.on('SIGTERM', () => {
-    logger.log('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
     stopServer();
-    logger.log("...done. Exiting");
+    logger.logInfoBasic("...done. Exiting");
     exit(0);
 });
 
 process.on('SIGINT', () => {
-    logger.log('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
     stopServer();
-    logger.log("...done. Exiting");
+    logger.logInfoBasic("...done. Exiting");
     exit(0);
 });
 

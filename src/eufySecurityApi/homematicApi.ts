@@ -1,20 +1,20 @@
 import got from 'got-hm';
 import { existsSync, readFileSync } from 'fs';
-import { Logger } from './utils/logging';
+import { EufySecurityApi } from './eufySecurityApi';
 
 /**
  * Working with the CCU.
  */
 export class HomematicApi
 {
-    private logger : Logger;
+    private api : EufySecurityApi;
     
     /**
      * Create the api object.
      */
-    constructor(logger : Logger)
+    constructor(api : EufySecurityApi)
     {
-        this.logger = logger;
+        this.api = api;
     }
 
     /**
@@ -106,7 +106,7 @@ export class HomematicApi
         }
         else
         {
-            this.logger.err("File '/var/log/eufySecurity.log' not found.");
+            this.api.logError("File '/var/log/eufySecurity.log' not found.");
             return "Datei '/var/log/eufySecurity.log' wurde nicht gefunden.";
         }
     }
@@ -130,7 +130,7 @@ export class HomematicApi
         }
         else
         {
-            this.logger.err("File '/var/log/eufySecurity.err' not found.");
+            this.api.logError("File '/var/log/eufySecurity.err' not found.");
             return "Datei '/var/log/eufySecurity.err' wurde nicht gefunden.";
         }
     }
@@ -140,6 +140,6 @@ export class HomematicApi
      */
     public getHomematicApiInfo() : string
     {
-        return "1.0.0";
+        return "1.0.1";
     }
 }

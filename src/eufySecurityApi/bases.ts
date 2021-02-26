@@ -333,9 +333,9 @@ export class Base
             }
             
             var address = await this.localLookup(localPorts);
-            this.api.addToLog("Base " + this.getSerialNumber() + " found local. address: " + address.host + ":" + address.port);
+            this.api.logInfo("Base " + this.getSerialNumber() + " found local. address: " + address.host + ":" + address.port);
 
-            var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
+            var devClientService = new DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
 
             await devClientService.connect();
             await devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
@@ -345,7 +345,7 @@ export class Base
         }
         catch (e)
         {
-            this.api.addToErr("ERROR: setGuardModeInternal: " + e);
+            this.api.logError("setGuardModeInternal: " + e);
             
             return false;
         }
@@ -403,9 +403,9 @@ export class Base
             {
                 if(address.host != this.getLocalIpAddress())
                 {
-                    this.api.addToLog("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
+                    this.api.logInfo("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
                     
-                    var devClientService = new DeviceClientService(address, this.getP2pDid(), this.getActorId());
+                    var devClientService = new DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
                     await devClientService.connect();
                     await devClientService.sendCommandWithInt(CommandType.CMD_SET_ARMING, guardMode);
                     await devClientService.close();
@@ -417,7 +417,7 @@ export class Base
         }
         catch (e)
         {
-            this.api.addToErr("ERROR: setGuardModeExternal: " + e);
+            this.api.logError("setGuardModeExternal: " + e);
             
             return false;
         }
