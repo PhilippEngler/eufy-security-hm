@@ -44,14 +44,14 @@ class ApiServer {
     startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
         return __awaiter(this, void 0, void 0, function* () {
             if (httpActive == true) {
-                logger.log("Starting http server...");
+                logger.logInfoBasic("Starting http server...");
                 serverHttp.on("error", this.errorListener);
                 serverHttp.on("request", this.requestListener);
                 serverHttp.listen(portHttp);
-                logger.log("...started. http listening on port '" + portHttp + "'");
+                logger.logInfoBasic("...started. http listening on port '" + portHttp + "'");
             }
             if (httpsActive == true) {
-                logger.log("Starting https server...");
+                logger.logInfoBasic("Starting https server...");
                 if (fs_1.existsSync(keyHttps) && fs_1.existsSync(certHttps)) {
                     const options = {
                         key: fs_1.readFileSync(keyHttps),
@@ -61,10 +61,10 @@ class ApiServer {
                     serverHttps.on("error", this.errorListener);
                     serverHttps.on("request", this.requestListener);
                     serverHttps.listen(portHttps);
-                    logger.log("...started. https listening on port '" + portHttps + "'");
+                    logger.logInfoBasic("...started. https listening on port '" + portHttps + "'");
                 }
                 else {
-                    logger.err("FAILED TO START SERVER (HTTPS): key or cert file not found.");
+                    logger.logErrorBasis("FAILED TO START SERVER (HTTPS): key or cert file not found.");
                 }
             }
         });
@@ -76,10 +76,10 @@ class ApiServer {
     errorListener(error) {
         return __awaiter(this, void 0, void 0, function* () {
             if (error.code == "EADDRINUSE") {
-                logger.err("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
+                logger.logErrorBasis("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
             }
             else {
-                logger.err("ERROR: " + error.code + ": " + error.message);
+                logger.logErrorBasis("ERROR: " + error.code + ": " + error.message);
             }
         });
     }
@@ -201,7 +201,7 @@ class ApiServer {
                                 responseString = yield api.createSystemVariable(url[2], "");
                             }
                             else if (url.length == 4) {
-                                responseString = yield api.createSystemVariable(url[2], url[3]);
+                                responseString = yield api.createSystemVariable(url[2], decodeURIComponent(url[3]));
                             }
                             else {
                                 responseString = "{\"success\":false,\"message\":\"False amount of arguments.\"}";
@@ -240,7 +240,8 @@ class ApiServer {
                             api.writeConfig();
                             responseString = fs_1.readFileSync('config.ini', 'utf-8');
                             contentType = "text/plain";
-                            fileName = "config.ini";
+                            var dateTime = new Date();
+                            fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".ini";
                             break;
                         case "downloadLogFile":
                             responseString = fs_1.readFileSync('/var/log/eufySecurity.log', 'utf-8');
@@ -339,6 +340,10 @@ class ApiServer {
                             if (postData.indexOf("defaultVideoPath") >= 0) {
                                 apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                             }
+                            var apiloglevel = "0";
+                            if (postData.indexOf("logLevel") >= 0) {
+                                apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
+                            }
                             if (checkNumberValue(apiporthttp, 1, 53535) == false) {
                                 isDataOK = false;
                             }
@@ -351,9 +356,12 @@ class ApiServer {
                             if (useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == "")) {
                                 isDataOK = false;
                             }
+                            if (checkNumberValue(apiloglevel, 0, 3) == false) {
+                                isDataOK = false;
+                            }
                             if (isDataOK == true) {
                                 apiPortFile(Number(apiporthttp), Number(apiporthttps));
-                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo);
+                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
                             }
                             else {
                                 responseString = "{\"success\":false,\"serviceRestart\":false,\"message\":\"Got invalid settings data. Please check the values.\"}";
@@ -364,11 +372,11 @@ class ApiServer {
                             response.writeHead(200);
                             response.end(responseString);
                             if (resJSON.serviceRestart == true) {
-                                logger.log("Settings saved. Restarting apiServer.");
+                                logger.logInfoBasic("Settings saved. Restarting apiServer.");
                                 restartServer();
                             }
                             else {
-                                logger.log("Settings saved.");
+                                logger.logInfoBasic("Settings saved.");
                             }
                         });
                     }
@@ -494,18 +502,18 @@ function getDataFromPOSTData(postData, target, dataType) {
  * Will write config, stop the server and exit.
  */
 function stopServer() {
-    logger.log("Write config...");
+    logger.logInfoBasic("Write config...");
     api.writeConfig();
-    logger.log("Stopping...");
+    logger.logInfoBasic("Stopping...");
     serverHttp.close();
-    logger.log("Stopped...");
+    logger.logInfoBasic("Stopped...");
 }
 /**
  * Will write config and restart the server.
  */
 function restartServer() {
     return __awaiter(this, void 0, void 0, function* () {
-        logger.log("Going to restart with apiServerRestarter...");
+        logger.logInfoBasic("Going to restart with apiServerRestarter...");
         child_process_1.exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
     });
 }
@@ -532,15 +540,15 @@ function wait10Seconds() {
     });
 }
 process.on('SIGTERM', () => {
-    logger.log('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
     stopServer();
-    logger.log("...done. Exiting");
+    logger.logInfoBasic("...done. Exiting");
     process_1.exit(0);
 });
 process.on('SIGINT', () => {
-    logger.log('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
     stopServer();
-    logger.log("...done. Exiting");
+    logger.logInfoBasic("...done. Exiting");
     process_1.exit(0);
 });
 main();

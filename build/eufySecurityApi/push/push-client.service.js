@@ -49,12 +49,12 @@ const long_1 = __importDefault(require("long"));
 const path_1 = __importDefault(require("path"));
 const protobuf_typescript_1 = require("protobuf-typescript");
 const tls = __importStar(require("tls"));
-const logging_1 = require("../utils/logging");
 const fid_model_1 = require("./fid.model");
 const push_client_parser_service_1 = require("./push-client-parser.service");
 class PushClient extends events_1.EventEmitter {
-    constructor(pushClientParser, auth) {
+    constructor(api, pushClientParser, auth) {
         super();
+        this.api = api;
         this.pushClientParser = pushClientParser;
         this.auth = auth;
         this.HOST = 'mtalk.google.com';
@@ -67,12 +67,13 @@ class PushClient extends events_1.EventEmitter {
         this.currentDelay = 0;
         this.persistentIds = [];
         this.callback = null;
+        this.api = api;
     }
-    static init(auth) {
+    static init(api, auth) {
         return __awaiter(this, void 0, void 0, function* () {
             this.proto = yield protobuf_typescript_1.load(path_1.default.join(__dirname, 'mcs.proto'));
-            const pushClientParser = yield push_client_parser_service_1.PushClientParser.init();
-            return new PushClient(pushClientParser, auth);
+            const pushClientParser = yield push_client_parser_service_1.PushClientParser.init(api);
+            return new PushClient(api, pushClientParser, auth);
         });
     }
     initialize() {
@@ -148,7 +149,7 @@ class PushClient extends events_1.EventEmitter {
         if (stream_id) {
             heartbeatPingRequest.last_stream_id_received = stream_id;
         }
-        logging_1.LOG('buildHeartbeatPingRequest: heartbeatPingRequest: ', JSON.stringify(heartbeatPingRequest));
+        this.api.logDebug('buildHeartbeatPingRequest: heartbeatPingRequest: ', JSON.stringify(heartbeatPingRequest));
         const HeartbeatPingRequestType = PushClient.proto.lookupType('mcs_proto.HeartbeatPing');
         const errorMessage = HeartbeatPingRequestType.verify(heartbeatPingRequest);
         if (errorMessage) {
@@ -169,7 +170,7 @@ class PushClient extends events_1.EventEmitter {
             heartbeatAckRequest.last_stream_id_received = stream_id;
             heartbeatAckRequest.status = status;
         }
-        logging_1.LOG('buildHeartbeatAckRequest: heartbeatAckRequest: ', JSON.stringify(heartbeatAckRequest));
+        this.api.logDebug('buildHeartbeatAckRequest: heartbeatAckRequest: ', JSON.stringify(heartbeatAckRequest));
         const HeartbeatAckRequestType = PushClient.proto.lookupType('mcs_proto.HeartbeatAck');
         const errorMessage = HeartbeatAckRequestType.verify(heartbeatAckRequest);
         if (errorMessage) {
@@ -185,7 +186,7 @@ class PushClient extends events_1.EventEmitter {
         this.emit('connect');
     }
     onSocketClose() {
-        logging_1.LOG('onSocketClose');
+        this.api.logDebug('onSocketClose');
         this.loggedIn = false;
         if (this.heartbeatTimeout)
             clearTimeout(this.heartbeatTimeout);
@@ -193,13 +194,13 @@ class PushClient extends events_1.EventEmitter {
         this.emit('disconnect');
     }
     onSocketError(error) {
-        console.error('onSocketError: ', error);
+        this.api.logError('onSocketError: ', error);
     }
     handleParsedMessage(message) {
         this.resetCurrentDelay();
         switch (message.tag) {
             case fid_model_1.MessageTag.DataMessageStanza:
-                logging_1.LOG('handleParsedMessage: DataMessageStanza: message: ', JSON.stringify(message));
+                this.api.logDebug('handleParsedMessage: DataMessageStanza: message: ', JSON.stringify(message));
                 if (message.object && message.object.persistentId)
                     this.persistentIds.push(message.object.persistentId);
                 if (!!this.callback) {
@@ -213,10 +214,10 @@ class PushClient extends events_1.EventEmitter {
                 this.handleHeartbeatAck(message);
                 break;
             case fid_model_1.MessageTag.Close:
-                logging_1.LOG('handleParsedMessage: Close: Server requested close! message: ', JSON.stringify(message));
+                this.api.logDebug('handleParsedMessage: Close: Server requested close! message: ', JSON.stringify(message));
                 break;
             case fid_model_1.MessageTag.LoginResponse:
-                logging_1.LOG('handleParsedMessage: Login response: GCM -> logged in -> waiting for push messages!');
+                this.api.logDebug('handleParsedMessage: Login response: GCM -> logged in -> waiting for push messages!');
                 this.loggedIn = true;
                 this.persistentIds = [];
                 this.heartbeatTimeout = setTimeout(() => {
@@ -224,19 +225,19 @@ class PushClient extends events_1.EventEmitter {
                 }, this.HEARTBEAT_INTERVAL);
                 break;
             case fid_model_1.MessageTag.LoginRequest:
-                logging_1.LOG('handleParsedMessage: Login request: message: ', JSON.stringify(message));
+                this.api.logDebug('handleParsedMessage: Login request: message: ', JSON.stringify(message));
                 break;
             case fid_model_1.MessageTag.IqStanza:
-                logging_1.LOG('handleParsedMessage: IqStanza: Not implemented! - message: ', JSON.stringify(message));
+                this.api.logDebug('handleParsedMessage: IqStanza: Not implemented! - message: ', JSON.stringify(message));
                 break;
             default:
-                logging_1.LOG('handleParsedMessage: Unknown message: ', JSON.stringify(message));
+                this.api.logDebug('handleParsedMessage: Unknown message: ', JSON.stringify(message));
                 return;
         }
         this.streamId++;
     }
     handleHeartbeatPing(message) {
-        logging_1.LOG('handleHeartbeatPing: message: ', JSON.stringify(message));
+        this.api.logDebug('handleHeartbeatPing: message: ', JSON.stringify(message));
         let streamId = undefined;
         let status = undefined;
         if (this.newStreamIdAvailable()) {
@@ -250,7 +251,7 @@ class PushClient extends events_1.EventEmitter {
             this.client.write(this.buildHeartbeatAckRequest(streamId, status));
     }
     handleHeartbeatAck(message) {
-        logging_1.LOG('handleHeartbeatAck: message: ', JSON.stringify(message));
+        this.api.logDebug('handleHeartbeatAck: message: ', JSON.stringify(message));
     }
     convertPayloadMessage(message) {
         const _a = message.object, { appData } = _a, otherData = __rest(_a, ["appData"]);
@@ -280,7 +281,7 @@ class PushClient extends events_1.EventEmitter {
             }, client.HEARTBEAT_INTERVAL);
         }
         else {
-            logging_1.LOG('scheduleHeartbeat: disabled!');
+            this.api.logDebug('scheduleHeartbeat: disabled!');
         }
     }
     sendHeartbeat() {
@@ -290,12 +291,12 @@ class PushClient extends events_1.EventEmitter {
             streamId = this.getStreamId();
         }
         if (this.client && this.isConnected()) {
-            logging_1.LOG('sendHeartbeat: streamId: ', streamId);
+            this.api.logDebug('sendHeartbeat: streamId: ', streamId);
             this.client.write(this.buildHeartbeatPingRequest(streamId));
             return true;
         }
         else {
-            logging_1.LOG('sendHeartbeat: No more connected, reconnect');
+            this.api.logDebug('sendHeartbeat: No more connected, reconnect');
             this.scheduleReconnect();
         }
         return false;
@@ -316,7 +317,7 @@ class PushClient extends events_1.EventEmitter {
     }
     scheduleReconnect() {
         const delay = this.getCurrentDelay();
-        logging_1.LOG('scheduleReconnect: delay: ', delay);
+        this.api.logDebug('scheduleReconnect: delay: ', delay);
         if (!this.reconnectTimeout)
             this.reconnectTimeout = setTimeout(() => {
                 this.connect();

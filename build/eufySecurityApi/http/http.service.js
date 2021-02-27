@@ -94,23 +94,23 @@ class HttpService {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const token = yield this.getToken();
-                return yield http_utils_1.postRequest(`${this.baseUrl}${path}`, body, token, headers);
+                return yield http_utils_1.postRequest(this.api, `${this.baseUrl}${path}`, body, token, headers);
             }
             catch (e) {
                 if (e.message.indexOf("401") > 0) {
                     try {
-                        this.api.addToErr("HTTPError 401: removing token data and retry.");
+                        this.api.logError("HTTPError 401: removing token data and retry.");
                         this.api.setTokenData("", "0");
                         const token = yield this.getToken();
-                        return yield http_utils_1.postRequest(`${this.baseUrl}${path}`, body, token, headers);
+                        return yield http_utils_1.postRequest(this.api, `${this.baseUrl}${path}`, body, token, headers);
                     }
                     catch (e) {
-                        this.api.addToErr("HTTPError 401: please check your account data.");
+                        this.api.logError("HTTPError 401: please check your account data.");
                         throw new Error(e);
                     }
                 }
                 else {
-                    this.api.addToErr(e + " | call: " + this.baseUrl + path);
+                    this.api.logError(e + " | call: " + this.baseUrl + path);
                     throw new Error(e);
                 }
             }
@@ -119,15 +119,15 @@ class HttpService {
     getToken() {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.api.getToken() || this.isTokenOutdated()) {
-                this.api.addToLog("No token or token outdated. Create new token.");
+                this.api.logInfo("No token or token outdated. Create new token.");
                 this.currentLoginResult = yield this.login(this.username, this.password);
                 if (this.currentLoginResult) {
                     this.api.setTokenData(this.currentLoginResult.auth_token, this.currentLoginResult.token_expires_at.toString());
                     this.api.writeConfig();
-                    this.api.addToLog("Got new token.");
+                    this.api.logInfo("Got new token.");
                 }
                 else {
-                    this.api.addToErr("Login failed.");
+                    this.api.logError("Login failed.");
                 }
             }
             return this.api.getToken();
@@ -139,7 +139,7 @@ class HttpService {
     }
     login(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield http_utils_1.postRequest(`${this.baseUrl}/passport/login`, { email, password });
+            const result = yield http_utils_1.postRequest(this.api, `${this.baseUrl}/passport/login`, { email, password });
             if (!!result.domain) {
                 const baseUrlFromResult = `https://${result.domain}/v1`;
                 if (baseUrlFromResult !== this.baseUrl) {

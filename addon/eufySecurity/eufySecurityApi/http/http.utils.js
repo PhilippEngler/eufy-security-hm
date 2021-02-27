@@ -14,8 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.promiseAny = exports.postRequest = void 0;
 const got_1 = __importDefault(require("got"));
-const logging_1 = require("../utils/logging");
-const postRequest = (url, requestBody, token, headers = {}) => __awaiter(void 0, void 0, void 0, function* () {
+const postRequest = (api, url, requestBody, token, headers = {}) => __awaiter(void 0, void 0, void 0, function* () {
     const jsonBody = !!requestBody ? { json: Object.assign({}, requestBody) } : {};
     const resultHeaders = !!token ? { headers: Object.assign(Object.assign({}, headers), { 'x-auth-token': token }) } : Object.assign({}, headers);
     const { body } = yield got_1.default.post(url, Object.assign(Object.assign(Object.assign({}, jsonBody), resultHeaders), { responseType: 'json' }));
@@ -23,7 +22,7 @@ const postRequest = (url, requestBody, token, headers = {}) => __awaiter(void 0,
     if (anyBody.code !== 0) {
         throw new Error(`Request failed: ${url} -> ${anyBody.code} - ${anyBody.msg}`);
     }
-    logging_1.LOG(`url: ${url} -> body: ${JSON.stringify(body)}`);
+    api.logDebug(`url: ${url} -> body: ${JSON.stringify(body)}`);
     if (!!anyBody.data) {
         return anyBody.data;
     }

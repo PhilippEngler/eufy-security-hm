@@ -270,15 +270,15 @@ class Base {
                     localPorts = [0];
                 }
                 var address = yield this.localLookup(localPorts);
-                this.api.addToLog("Base " + this.getSerialNumber() + " found on local side. address: " + address.host + ":" + address.port);
-                var devClientService = new p2p_1.DeviceClientService(address, this.getP2pDid(), this.getActorId());
+                this.api.logInfo("Base " + this.getSerialNumber() + " found local. address: " + address.host + ":" + address.port);
+                var devClientService = new p2p_1.DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
                 yield devClientService.connect();
-                devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
+                yield devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
                 yield devClientService.close();
                 return true;
             }
             catch (e) {
-                this.api.addToErr("ERROR: setGuardModeInternal: " + e);
+                this.api.logError("setGuardModeInternal: " + e);
                 return false;
             }
         });
@@ -325,10 +325,10 @@ class Base {
                 var addresses = yield this.cloudLookupService.lookup(this.getP2pDid(), yield this.getDskKey());
                 for (address of addresses) {
                     if (address.host != this.getLocalIpAddress()) {
-                        this.api.addToLog("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
-                        var devClientService = new p2p_1.DeviceClientService(address, this.getP2pDid(), this.getActorId());
+                        this.api.logInfo("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
+                        var devClientService = new p2p_1.DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
                         yield devClientService.connect();
-                        devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
+                        yield devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
                         yield devClientService.close();
                         return true;
                     }
@@ -336,7 +336,7 @@ class Base {
                 return false;
             }
             catch (e) {
-                this.api.addToErr("ERROR: setGuardModeExternal: " + e);
+                this.api.logError("setGuardModeExternal: " + e);
                 return false;
             }
         });

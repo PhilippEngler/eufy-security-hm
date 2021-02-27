@@ -15,9 +15,9 @@ const fs_1 = require("fs");
 const message_utils_1 = require("./message.utils");
 const payload_utils_1 = require("./payload.utils");
 const command_model_1 = require("./command.model");
-const logging_1 = require("../utils/logging");
 class DeviceClientService {
-    constructor(address, p2pDid, actor) {
+    constructor(api, address, p2pDid, actor) {
+        this.api = api;
         this.address = address;
         this.p2pDid = p2pDid;
         this.actor = actor;
@@ -69,7 +69,7 @@ class DeviceClientService {
                 let timer = null;
                 this.socket.once('message', (msg) => {
                     if (message_utils_1.hasHeader(msg, message_utils_1.ResponseMessageType.CAM_ID)) {
-                        logging_1.LOG('connected!');
+                        this.api.logDebug('connected!');
                         if (!!timer) {
                             clearTimeout(timer);
                         }
@@ -102,9 +102,11 @@ class DeviceClientService {
         this.sendCommand(commandType, payload);
     }
     sendCommandWithInt(commandType, value) {
-        // SET_COMMAND_WITH_INT_TYPE = msgTypeID == 4
-        const payload = payload_utils_1.buildIntCommandPayload(value, this.actor);
-        this.sendCommand(commandType, payload);
+        return __awaiter(this, void 0, void 0, function* () {
+            // SET_COMMAND_WITH_INT_TYPE = msgTypeID == 4
+            const payload = payload_utils_1.buildIntCommandPayload(value, this.actor);
+            yield this.sendCommand(commandType, payload);
+        });
     }
     sendCommandWithString(commandType, value) {
         // SET_COMMAND_WITH_STRING_TYPE = msgTypeID == 6
@@ -112,22 +114,24 @@ class DeviceClientService {
         this.sendCommand(commandType, payload);
     }
     sendCommand(commandType, payload) {
-        // Command header
-        const msgSeqNumber = this.seqNumber++;
-        const commandHeader = payload_utils_1.buildCommandHeader(msgSeqNumber, commandType);
-        const data = Buffer.concat([commandHeader, payload]);
-        logging_1.LOG(`Sending commandType: ${command_model_1.CommandType[commandType]} (${commandType}) with seqNum: ${msgSeqNumber}...`);
-        message_utils_1.sendMessage(this.socket, this.address, message_utils_1.RequestMessageType.DATA, data);
-        // -> NOTE:
-        // -> We could wait for an ACK and then continue (sync)
-        // -> Python impl creating an array an putting an "event" behind a seqNumber
-        // -> ACK-Listener triggers the seq-number and therefore showing that the message
-        // -> is done, until then the promise is waiting (await)
+        return __awaiter(this, void 0, void 0, function* () {
+            // Command header
+            const msgSeqNumber = this.seqNumber++;
+            const commandHeader = payload_utils_1.buildCommandHeader(msgSeqNumber, commandType);
+            const data = Buffer.concat([commandHeader, payload]);
+            this.api.logDebug(`Sending commandType: ${command_model_1.CommandType[commandType]} (${commandType}) with seqNum: ${msgSeqNumber}...`);
+            yield message_utils_1.sendMessage(this.socket, this.address, message_utils_1.RequestMessageType.DATA, data);
+            // -> NOTE:
+            // -> We could wait for an ACK and then continue (sync)
+            // -> Python impl creating an array an putting an "event" behind a seqNumber
+            // -> ACK-Listener triggers the seq-number and therefore showing that the message
+            // -> is done, until then the promise is waiting (await)
+        });
     }
     handleMsg(msg) {
         if (message_utils_1.hasHeader(msg, message_utils_1.ResponseMessageType.PONG)) {
             // Response to a ping from our side
-            logging_1.LOG('GOT PONG');
+            this.api.logDebug('GOT PONG');
             return;
         }
         else if (message_utils_1.hasHeader(msg, message_utils_1.ResponseMessageType.PING)) {
@@ -137,7 +141,7 @@ class DeviceClientService {
         }
         else if (message_utils_1.hasHeader(msg, message_utils_1.ResponseMessageType.END)) {
             // Connection is closed by device
-            logging_1.LOG('GOT END');
+            this.api.logDebug('GOT END');
             this.connected = false;
             this.socket.close();
             return;
@@ -156,7 +160,7 @@ class DeviceClientService {
                 const seqBuffer = msg.slice(idx, idx + 2);
                 const ackedSeqNo = seqBuffer.readUIntBE(0, seqBuffer.length);
                 // -> Message with seqNo was received at the station
-                logging_1.LOG(`ACK for seqNo: ${ackedSeqNo}`);
+                this.api.logDebug(`ACK for seqNo: ${ackedSeqNo}`);
             }
         }
         else if (message_utils_1.hasHeader(msg, message_utils_1.ResponseMessageType.DATA)) {
@@ -174,7 +178,7 @@ class DeviceClientService {
             this.handleData(seqNo, dataType, msg);
         }
         else {
-            logging_1.LOG('GOT unknown msg', msg.length, msg);
+            this.api.logDebug('GOT unknown msg', msg.length, msg);
         }
     }
     handleData(seqNo, dataType, msg) {
@@ -187,13 +191,13 @@ class DeviceClientService {
             // Note: data === 65420 when e.g. data mode is already set (guardMode=0, setting guardMode=0 => 65420)
             // Note: data ==== 65430 when there is an error (sending data to a channel which do not exist)
             const commandStr = command_model_1.CommandType[commandId];
-            logging_1.LOG(`DATA package with commandId: ${commandStr} (${commandId}) - data: ${data}`);
+            this.api.logDebug(`DATA package with commandId: ${commandStr} (${commandId}) - data: ${data}`);
         }
         else if (dataType === 'BINARY') {
             this.parseBinaryMessage(seqNo, msg);
         }
         else {
-            logging_1.LOG(`Data to handle: seqNo: ${seqNo} - dataType: ${dataType} - msg: ${msg.toString('hex')}`);
+            this.api.logDebug(`Data to handle: seqNo: ${seqNo} - dataType: ${dataType} - msg: ${msg.toString('hex')}`);
         }
     }
     parseBinaryMessage(seqNo, msg) {
@@ -238,7 +242,7 @@ class DeviceClientService {
         }
     }
     handleDataControl(commandId, message) {
-        logging_1.LOG(`DATA - CONTROL message with commandId: ${command_model_1.CommandType[commandId]} (${commandId})`, message);
+        this.api.logDebug(`DATA - CONTROL message with commandId: ${command_model_1.CommandType[commandId]} (${commandId})`, message);
     }
     sendAck(dataType, seqNo) {
         const numPendingAcks = 1;
@@ -281,10 +285,10 @@ class DeviceClientService {
             clearTimeout(this.heartbeatTimeout);
             this.heartbeatTimeout = undefined;
         }*/
-        logging_1.LOG("EufyP2PClientProtocol.onClose(): ");
+        this.api.logDebug("EufyP2PClientProtocol.onClose(): ");
     }
     onError(error) {
-        logging_1.LOG(`EufyP2PClientProtocol.onError(): Error: ${error}`);
+        this.api.logError(`EufyP2PClientProtocol.onError(): Error: ${error}`);
     }
 }
 exports.DeviceClientService = DeviceClientService;

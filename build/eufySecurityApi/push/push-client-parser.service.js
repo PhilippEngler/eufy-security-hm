@@ -17,11 +17,11 @@ exports.PushClientParser = void 0;
 const events_1 = require("events");
 const path_1 = __importDefault(require("path"));
 const protobuf_typescript_1 = require("protobuf-typescript");
-const logging_1 = require("../utils/logging");
 const fid_model_1 = require("./fid.model");
 class PushClientParser extends events_1.EventEmitter {
-    constructor() {
+    constructor(api) {
         super();
+        this.api = api;
         this.state = fid_model_1.ProcessingState.MCS_VERSION_TAG_AND_SIZE;
         this.data = Buffer.alloc(0);
         this.isWaitingForData = true;
@@ -29,6 +29,7 @@ class PushClientParser extends events_1.EventEmitter {
         this.messageSize = 0;
         this.messageTag = 0;
         this.handshakeComplete = false;
+        this.api = api;
     }
     resetState() {
         this.state = fid_model_1.ProcessingState.MCS_VERSION_TAG_AND_SIZE;
@@ -40,10 +41,10 @@ class PushClientParser extends events_1.EventEmitter {
         this.handshakeComplete = false;
         this.removeAllListeners();
     }
-    static init() {
+    static init(api) {
         return __awaiter(this, void 0, void 0, function* () {
             this.proto = yield protobuf_typescript_1.load(path_1.default.join(__dirname, 'mcs.proto'));
-            return new PushClientParser();
+            return new PushClientParser(api);
         });
     }
     handleData(newData) {
@@ -79,7 +80,7 @@ class PushClientParser extends events_1.EventEmitter {
                 this.onGotMessageBytes();
                 break;
             default:
-                logging_1.LOG('handleFullMessage: Unknown state: ', this.state);
+                this.api.logDebug('handleFullMessage: Unknown state: ', this.state);
                 break;
         }
     }
@@ -150,7 +151,7 @@ class PushClientParser extends events_1.EventEmitter {
         this.emit('message', { tag: this.messageTag, object: object });
         if (this.messageTag === fid_model_1.MessageTag.LoginResponse) {
             if (this.handshakeComplete) {
-                console.error('Unexpected login response');
+                this.api.logError('Unexpected login response');
             }
             else {
                 this.handshakeComplete = true;

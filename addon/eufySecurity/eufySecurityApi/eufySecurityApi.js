@@ -25,7 +25,7 @@ class EufySecurityApi {
     constructor() {
         this.logger = new logging_1.Logger();
         this.config = new config_1.Config(this.logger);
-        this.homematicApi = new homematicApi_1.HomematicApi(this.logger);
+        this.homematicApi = new homematicApi_1.HomematicApi(this);
         this.initialize();
     }
     /**
@@ -34,7 +34,7 @@ class EufySecurityApi {
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.config.getEmailAddress() == "" || this.config.getPassword() == "") {
-                this.logger.err("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
+                this.logError("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
             }
             else {
                 this.httpService = new http_1.HttpService(this.config.getEmailAddress(), this.config.getPassword(), this);
@@ -53,14 +53,14 @@ class EufySecurityApi {
                 yield this.devices.loadDevices();
             }
             catch (_a) {
-                this.logger.err("Error occured at loadData() -> loadDevices");
+                this.logError("Error occured at loadData() -> loadDevices");
                 this.setLastConnectionInfo(false);
             }
             try {
                 yield this.bases.loadBases();
             }
             catch (_b) {
-                this.logger.err("Error occured at loadData() -> loadBases");
+                this.logError("Error occured at loadData() -> loadBases");
                 this.setLastConnectionInfo(false);
             }
         });
@@ -110,7 +110,7 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at getDevices()");
+                this.logError("Error occured at getDevices()");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -169,7 +169,7 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at getBases()");
+                this.logError("Error occured at getBases()");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -252,7 +252,7 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at getGuardMode()");
+                this.logError("Error occured at getGuardMode()");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -290,7 +290,7 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at getGuardModeBase()");
+                this.logError("Error occured at getGuardModeBase()");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -334,6 +334,7 @@ class EufySecurityApi {
                                 json += "\"guard_mode\":\"" + base.getGuardMode() + "\"";
                                 json += "}";
                                 this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
+                                this.logError("Error occured at setGuardMode: Failed to switch mode for base " + base.getSerialNumber() + ".");
                             }
                         }
                         if (err == 0) {
@@ -347,20 +348,23 @@ class EufySecurityApi {
                             this.setSystemVariableString("eufyCurrentState", "unbekannt");
                             this.setLastConnectionInfo(false);
                             this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                            this.logError("Error occured at setGuardMode: Failed to switch mode for bases.");
                         }
                         json += "]}";
                     }
                     else {
                         json = "{\"success\":false,\"reason\":\"Failed to communicate with HomeBase.\"}";
+                        this.logError("Error occured at setGuardMode: Failed to communicate with HomeBase.");
                     }
                 }
                 else {
                     json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
                     this.setLastConnectionInfo(false);
+                    this.logError("Error occured at setGuardMode: No connection eo eufy.");
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at setGuardMode()");
+                this.logError("Error occured at setGuardMode: " + e.message + ".");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -403,15 +407,18 @@ class EufySecurityApi {
                         this.setSystemVariableString("eufyCentralState" + base.getSerialNumber(), this.convertGuardModeToString(Number.parseInt(base.getGuardMode())));
                         this.setLastConnectionInfo(false);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        this.logError("Error occured at setGuardMode: Failed to switch mode for base " + base.getSerialNumber() + ".");
                     }
                     json += "]}";
                 }
                 else {
                     json = "{\"success\":false,\"reason\":\"No connection to eufy.\"}";
+                    this.setLastConnectionInfo(false);
+                    this.logError("Error occured at setGuardMode: No connection eo eufy.");
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at setGuardModeBase()");
+                this.logError("Error occured at setGuardMode: " + e.message + ".");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -491,7 +498,7 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at getLibrary()");
+                this.logError("Error occured at getLibrary()");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -595,7 +602,8 @@ class EufySecurityApi {
         json += "\"api_udp_local_static_ports\":\"" + this.config.getUdpLocalPorts() + "\",";
         json += "\"api_use_system_variables\":\"" + this.config.getApiUseSystemVariables() + "\",";
         json += "\"api_camera_default_image\":\"" + this.config.getApiCameraDefaultImage() + "\",";
-        json += "\"api_camera_default_video\":\"" + this.config.getApiCameraDefaultVideo() + "\"";
+        json += "\"api_camera_default_video\":\"" + this.config.getApiCameraDefaultVideo() + "\",";
+        json += "\"api_log_level\":\"" + this.config.getApiLogLevel() + "\"";
         json += "}";
         json += "]}";
         return json;
@@ -611,7 +619,7 @@ class EufySecurityApi {
      * @param api_key_https The key for https.
      * @param api_cert_https The cert for https.
      */
-    setConfig(username, password, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_use_udp_local_static_ports, api_udp_local_static_ports, api_use_system_variables, api_camera_default_image, api_camera_default_video) {
+    setConfig(username, password, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_use_udp_local_static_ports, api_udp_local_static_ports, api_use_system_variables, api_camera_default_image, api_camera_default_video, api_log_level) {
         var serviceRestart = false;
         if (this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https) {
             serviceRestart = true;
@@ -632,6 +640,7 @@ class EufySecurityApi {
         this.config.setApiUseSystemVariables(api_use_system_variables);
         this.config.setApiCameraDefaultImage(api_camera_default_image);
         this.config.setApiCameraDefaultVideo(api_camera_default_video);
+        this.config.setApiLogLevel(api_log_level);
         var res = this.config.writeConfig();
         if (res == "saved") {
             return "{\"success\":true,\"serviceRestart\":" + serviceRestart + ",\"message\":\"Config saved.\"}";
@@ -757,7 +766,7 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
-                this.logger.err("Error occured at checkSystemVariables()");
+                this.logError("Error occured at checkSystemVariables()");
                 this.setLastConnectionInfo(false);
                 json = "{\"success\":false,\"reason\":\"" + e.message + "\"}";
             }
@@ -873,22 +882,31 @@ class EufySecurityApi {
     /**
      * Add a given message to the logfile.
      * @param message The message to add to the logfile.
+     * @param additionalMessages Additional message(s) to be added.
      */
-    addToLog(message) {
-        this.logger.log(message);
+    logInfo(message, ...additionalMessages) {
+        this.logger.logInfo(this.config.getApiLogLevel(), message, ...additionalMessages);
+    }
+    /** Add a given message to the errorfile.
+     * @param message The message to add to the errorfile.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    logError(message, ...additionalMessages) {
+        this.logger.logError(this.config.getApiLogLevel(), message, ...additionalMessages);
     }
     /**
-     * Add a given message to the errorfile.
+     * Add a given message to the debug.
      * @param message The message to add to the errorfile.
+     * @param additionalMessages Additional message(s) to be added.
      */
-    addToErr(message) {
-        this.logger.err(message);
+    logDebug(message, ...additionalMessages) {
+        this.logger.logDebug(this.config.getApiLogLevel(), message, ...additionalMessages);
     }
     /**
      * Return the version of this API.
      */
     getApiVersion() {
-        return "{\"success\":true,\"api_version\":\"1.0.3\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
+        return "{\"success\":true,\"api_version\":\"1.0.4\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

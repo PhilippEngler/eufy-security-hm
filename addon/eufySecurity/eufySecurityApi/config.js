@@ -13,7 +13,7 @@ class Config {
         this.hasChanged = false;
     }
     getConfigFileTemplateVersion() {
-        return 2;
+        return 3;
     }
     /**
      * Load Config from file.
@@ -37,7 +37,7 @@ class Config {
      */
     updateConfigFileTemplateStage1(filecontent) {
         if (filecontent.indexOf("config_file_version") == -1) {
-            this.logger.log("Logfile needs Stage1 update. Adding 'config_file_version'.");
+            this.logger.logInfoBasic("Configfile needs Stage1 update. Adding 'config_file_version'.");
             filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
             this.hasChanged = true;
         }
@@ -49,47 +49,58 @@ class Config {
     updateConfigFileTemplateStage2() {
         var updated = false;
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 1) {
-            this.logger.log("Logfile needs Stage2 update to version 1...");
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 1...");
             if (this.filecontent.indexOf("api_use_system_variables") == -1) {
-                this.logger.log("  adding 'api_use_system_variables'.");
+                this.logger.logInfoBasic("  adding 'api_use_system_variables'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
                 this.config = ini_1.parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_camera_default_image") == -1) {
-                this.logger.log("  adding 'api_camera_default_image'.");
+                this.logger.logInfoBasic("  adding 'api_camera_default_image'.");
                 this.filecontent = this.filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
                 this.config = ini_1.parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_camera_default_video") == -1) {
-                this.logger.log("  adding 'api_camera_default_video'.");
+                this.logger.logInfoBasic("  adding 'api_camera_default_video'.");
                 this.filecontent = this.filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
                 this.config = ini_1.parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
-            this.logger.log("...Stage2 update to version 1 finished.");
+            this.logger.logInfoBasic("...Stage2 update to version 1 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 2) {
-            this.logger.log("Logfile needs Stage2 update to version 2...");
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 2...");
             if (this.filecontent.indexOf("api_udp_local_static_ports") == -1) {
-                this.logger.log(" adding 'api_udp_local_static_ports'.");
+                this.logger.logInfoBasic(" adding 'api_udp_local_static_ports'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_udp_local_static_ports=52789,52790");
                 this.config = ini_1.parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_udp_local_static_ports_active") == -1) {
-                this.logger.log("  adding 'api_udp_local_static_ports_active'.");
+                this.logger.logInfoBasic("  adding 'api_udp_local_static_ports_active'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\api_udp_local_static_ports_active=false");
                 this.config = ini_1.parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
-            this.logger.log("...Stage2 update to version 2 finished.");
+            this.logger.logInfoBasic("...Stage2 update to version 2 finished.");
+        }
+        if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 3) {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 3...");
+            if (this.filecontent.indexOf("api_log_level") == -1) {
+                this.logger.logInfoBasic(" adding 'api_log_level'.");
+                this.filecontent = this.filecontent.replace("api_camera_default_video=" + this.getApiCameraDefaultVideo(), "api_camera_default_video=" + this.getApiCameraDefaultVideo() + "\r\napi_log_level=0");
+                this.config = ini_1.parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            this.logger.logInfoBasic("...Stage2 update to version 3 finished.");
         }
         if (updated) {
             this.config = ini_1.parse(this.filecontent);
@@ -141,6 +152,7 @@ class Config {
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
         fc += "api_camera_default_video=\r\n";
+        fc += "api_log_level=0\r\n";
         fs_1.writeFileSync('./config.ini', fc);
         this.loadConfig();
         return true;
@@ -488,6 +500,27 @@ class Config {
     setApiCameraDefaultVideo(apicameradefaultvideo) {
         if (this.config['EufyAPIServiceData']['api_camera_default_video'] != apicameradefaultvideo) {
             this.config['EufyAPIServiceData']['api_camera_default_video'] = apicameradefaultvideo;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Returns the log level.
+     */
+    getApiLogLevel() {
+        try {
+            return this.config['EufyAPIServiceData']['api_log_level'];
+        }
+        catch (_a) {
+            return 0;
+        }
+    }
+    /**
+     * Set the log level.
+     * @param apiloglevel The log level as number to set
+     */
+    setApiLogLevel(apiloglevel) {
+        if (this.config['EufyAPIServiceData']['api_log_level'] != apiloglevel) {
+            this.config['EufyAPIServiceData']['api_log_level'] = apiloglevel;
             this.hasChanged = true;
         }
     }

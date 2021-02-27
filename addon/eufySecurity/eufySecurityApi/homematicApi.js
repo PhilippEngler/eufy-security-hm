@@ -22,8 +22,8 @@ class HomematicApi {
     /**
      * Create the api object.
      */
-    constructor(logger) {
-        this.logger = logger;
+    constructor(api) {
+        this.api = api;
     }
     /**
      * Checks weather the system variable is available on the CCU.
@@ -99,7 +99,7 @@ class HomematicApi {
                 }
             }
             else {
-                this.logger.err("File '/var/log/eufySecurity.log' not found.");
+                this.api.logError("File '/var/log/eufySecurity.log' not found.");
                 return "Datei '/var/log/eufySecurity.log' wurde nicht gefunden.";
             }
         });
@@ -119,7 +119,7 @@ class HomematicApi {
                 }
             }
             else {
-                this.logger.err("File '/var/log/eufySecurity.err' not found.");
+                this.api.logError("File '/var/log/eufySecurity.err' not found.");
                 return "Datei '/var/log/eufySecurity.err' wurde nicht gefunden.";
             }
         });
@@ -128,7 +128,7 @@ class HomematicApi {
      * Returns the version info of the homematic api.
      */
     getHomematicApiInfo() {
-        return "1.0.0";
+        return "1.0.1";
     }
 }
 exports.HomematicApi = HomematicApi;

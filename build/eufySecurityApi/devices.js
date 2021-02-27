@@ -94,16 +94,8 @@ class Device {
             type == http_response_models_1.DeviceType.CAMERA2 ||
             type == http_response_models_1.DeviceType.CAMERA_E ||
             type == http_response_models_1.DeviceType.CAMERA2C ||
-            type == http_response_models_1.DeviceType.INDOOR_CAMERA ||
-            type == http_response_models_1.DeviceType.INDOOR_PT_CAMERA ||
-            type == http_response_models_1.DeviceType.FLOODLIGHT ||
-            type == http_response_models_1.DeviceType.DOORBELL ||
-            type == http_response_models_1.DeviceType.BATTERY_DOORBELL ||
-            type == http_response_models_1.DeviceType.BATTERY_DOORBELL_2 ||
             type == http_response_models_1.DeviceType.CAMERA2C_PRO ||
             type == http_response_models_1.DeviceType.CAMERA2_PRO ||
-            type == http_response_models_1.DeviceType.INDOOR_CAMERA_1080 ||
-            type == http_response_models_1.DeviceType.INDOOR_PT_CAMERA_1080 ||
             type == http_response_models_1.DeviceType.SOLO_CAMERA ||
             type == http_response_models_1.DeviceType.SOLO_CAMERA_PRO)
             return true;
