@@ -906,7 +906,7 @@ class EufySecurityApi {
      * Return the version of this API.
      */
     getApiVersion() {
-        return "{\"success\":true,\"api_version\":\"1.0.4\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
+        return "{\"success\":true,\"api_version\":\"1.0.5\",\"homematic_api_version\":\"" + this.homematicApi.getHomematicApiInfo() + "\"}";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;
