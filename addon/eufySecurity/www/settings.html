@@ -185,7 +185,7 @@
 												<label for="txtLogLevel">Umfang der Protokollierung.</label>
 												<div id="alertLogLevel">
 												</div>
-												<input type="text" name="logLevel" id="txtLogLevel" class="form-control" placeholder="Loglevel." pattern="[0-3]{1}" oninput="checkLogLevel(this.value);" required>
+												<input type="text" name="logLevel" id="txtLogLevel" class="form-control" placeholder="Stufe der Protokollierung." pattern="[0-3]{1}" oninput="checkLogLevel(this.value);" required>
 												<small class="form-text text-muted">Legt den Umfang der Protokollierung fest. Fehler werden unabhängig dieser Einstellung beim Auftreten immer in der Fehlerprotokolldatei 'eufySecurity.err' protokolliert.<br />Folgende Werte können eingestellt werden: 0: nur nötigste Informationen; 1: alle Informationen; 2: wie 1, zusätzlich alle Fehler; 3: wie 2, zusätzlich Debugdaten</small>
 												<div class="invalid-feedback">
 													Bitte geben Sie nur eine Ziffer zwischen 0 und 3 ein.

@@ -184,8 +184,7 @@
 			
 			function loadBases()
 			{
-				document.getElementById("bases").innerHTML  = "<h4>Basisstationen</h4>";
-				document.getElementById("bases").innerHTML += "<p id=\"basestations\"></p>";
+				document.getElementById("bases").innerHTML = "<p id=\"basestations\"></p>";
 				
 				var xmlhttp, myObj, x, bases = "";
 				var imagepath="";
@@ -203,6 +202,7 @@
 						{
 							if(myObj.data.length > 0)
 							{
+								bases += "<h4>Basisstationen</h4>";
 								bases += "<div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5\">";
 								for (x in myObj.data)
 								{
