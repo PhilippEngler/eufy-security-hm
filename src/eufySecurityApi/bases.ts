@@ -333,7 +333,7 @@ export class Base
             }
             
             var address = await this.localLookup(localPorts);
-            this.api.logInfo("Base " + this.getSerialNumber() + " found local. address: " + address.host + ":" + address.port);
+            this.api.logDebug("Base " + this.getSerialNumber() + " found local. address: " + address.host + ":" + address.port);
 
             var devClientService = new DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
 
@@ -403,7 +403,7 @@ export class Base
             {
                 if(address.host != this.getLocalIpAddress())
                 {
-                    this.api.logInfo("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
+                    this.api.logDebug("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
                     
                     var devClientService = new DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
                     await devClientService.connect();
