@@ -299,7 +299,7 @@ export class EufySecurityApi
                 }
                 else
                 {
-                    json = "{\"success\":false,\"reason\":\"No Bases found.\"";
+                    json = "{\"success\":false,\"reason\":\"No Bases found.\"}";
                     this.setLastConnectionInfo(false);
                 }
             }
