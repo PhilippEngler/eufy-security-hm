@@ -266,7 +266,7 @@ export class Device
         }
         else
         {
-            return "unknown(" + this.device_info.device_type + ")";
+            return `unknown(${this.device_info.device_type})`;
         }
     }
 

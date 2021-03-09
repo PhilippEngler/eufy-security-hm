@@ -76,11 +76,11 @@ class ApiServer
     {
         if(error.code == "EADDRINUSE")
         {
-            logger.logErrorBasis("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
+            logger.logErrorBasis("Errorcode: " + error.code + ": port \'" + error.port + "\' already in use.");
         }
         else
         {
-            logger.logErrorBasis("ERROR: " + error.code + ": " + error.message);
+            logger.logErrorBasis("Errorcode: " + error.code + ": " + error.message);
         }
     }
     
@@ -164,7 +164,7 @@ class ApiServer
                                     responseString = await api.setGuardMode(GuardMode.SCHEDULE);
                                     break;
                                 default:
-                                    responseString = "{\"success\":false,\"message\":\"Unknown mode to set.\"";
+                                    responseString = `{"success":false,"message":"Unknown mode to set."}`;
                             }
                         }
                         else if(url.length == 4)
@@ -199,12 +199,12 @@ class ApiServer
                                     responseString = await api.setGuardModeBase(url[2], GuardMode.SCHEDULE);
                                     break;
                                 default:
-                                    responseString = "{\"success\":false,\"message\":\"Unknown mode to set.\"}";
+                                    responseString = `{"success":false,"message":"Unknown mode to set."}`;
                             }
                         }
                         else
                         {
-                            responseString = "{\"success\":false,\"message\":\"Numbers of arguments not matching.\"}";
+                            responseString = `{"success":false,"message":"Numbers of arguments not matching."}`;
                         }
                         break;
                     case "checkSystemVariables":
@@ -221,7 +221,7 @@ class ApiServer
                         }
                         else
                         {
-                            responseString = "{\"success\":false,\"message\":\"False amount of arguments.\"}";
+                            responseString = `{"success":false,"message":"False amount of arguments."}`;
                         }
                         break;
                     case "getLibrary":
@@ -231,7 +231,7 @@ class ApiServer
                         }
                         else
                         {
-                            responseString = "{\"success\":false,\"message\":\"False amount of arguments.\"}";
+                            responseString = `{"success":false,"message":"False amount of arguments."}`;
                         }
                         break;
                     case "getLogFileContent":
@@ -245,15 +245,15 @@ class ApiServer
                         break;
                     case "clearLogFile":
                         emptyLogFile();
-                        responseString = "{\"success\":true}";
+                        responseString = `{"success":true}`;
                         break;
                     case "clearErrFile":
                         emptyErrFile();
-                        responseString = "{\"success\":true}";
+                        responseString = `{"success":true}`;
                         break;
                     case "restartService":
                         restartServer();
-                        responseString = "{\"success\":true}";
+                        responseString = `{"success":true}`;
                         break;
                     case "downloadConfig":
                         api.writeConfig();
@@ -273,7 +273,7 @@ class ApiServer
                         fileName = "eufySecurity.err";
                         break;
                     default:
-                        responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                        responseString = `{"success":false,"message":"Unknown command."}`;
                 }
                 
                 response.setHeader('Access-Control-Allow-Origin', '*');
@@ -292,7 +292,7 @@ class ApiServer
             }
             else
             {
-                responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                responseString = `{"success":false,"message":"Unknown command."}`;
                 
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', '; charset=UTF-8');
@@ -432,7 +432,7 @@ class ApiServer
                         }
                         else
                         {
-                            responseString = "{\"success\":false,\"serviceRestart\":false,\"message\":\"Got invalid settings data. Please check the values.\"}";
+                            responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check the values."}`;
                         }
 
                         var resJSON = JSON.parse(responseString);
@@ -456,7 +456,7 @@ class ApiServer
                 }
                 else
                 {
-                    responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                    responseString = `{"success":false,"message":"Unknown command."}`;
                     response.setHeader('Access-Control-Allow-Origin', '*');
                     response.setHeader('Content-Type', 'application/json; charset=UTF-8');
 
@@ -466,7 +466,7 @@ class ApiServer
             }
             else
             {
-                responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                responseString = `{"success":false,"message":"Unknown command."}`;
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', 'application/json; charset=UTF-8');
 
@@ -477,7 +477,7 @@ class ApiServer
         // Be polite and give a answer even we know that there is noting to answer...
         else
         {
-            responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+            responseString = `{"success":false,"message":"Unknown command."}`;
             response.setHeader('Access-Control-Allow-Origin', '*');
             response.setHeader('Content-Type', 'application/json; charset=UTF-8');
 

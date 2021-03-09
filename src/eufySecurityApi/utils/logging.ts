@@ -7,7 +7,7 @@ export class Logger
      */
     public logInfoBasic(message : string, ...additionalMessages : any) : void
     {
-        console.info(this.makeNowDateTimeString() + " - " + message, ...additionalMessages);
+        console.info(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
     }
 
     /**
@@ -17,7 +17,7 @@ export class Logger
      */
     public logErrorBasis(message : string, ...additionalMessages : any) : void
     {
-        console.error(this.makeNowDateTimeString() + " - " + message, ...additionalMessages);
+        console.error(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
     }
 
     /**
@@ -30,7 +30,7 @@ export class Logger
     {
         if(logLevel >= 1)
         {
-            console.info(this.makeNowDateTimeString() + " - INFO: " + message, ...additionalMessages);
+            console.info(`${this.makeNowDateTimeString()} - INFO: ${message}`, ...additionalMessages);
         }
     }
 
@@ -42,10 +42,10 @@ export class Logger
      */
     public logError(logLevel : number, message : string, ...additionalMessages : any) : void
     {
-        console.error(this.makeNowDateTimeString() + " - " + message, ...additionalMessages);
+        console.error(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
         if(logLevel >= 2)
         {
-            console.log(this.makeNowDateTimeString() + " - ERROR: " + message, ...additionalMessages);
+            console.log(`${this.makeNowDateTimeString()} - ERROR: ${message}`, ...additionalMessages);
         }
     }
 
@@ -59,7 +59,7 @@ export class Logger
     {
         if(logLevel >= 3)
         {
-            console.debug(this.makeNowDateTimeString() + " - DEBUG: " + message, ...additionalMessages);
+            console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
         }
     }
 
@@ -69,6 +69,6 @@ export class Logger
     private	makeNowDateTimeString() : string
     {
         var dateTime = new Date();
-        return (dateTime.getFullYear().toString() + "-" + (dateTime.getMonth()+1).toString ().padStart(2, '0') + "-" + dateTime.getDate().toString ().padStart(2, '0') + " " + dateTime.getHours().toString ().padStart(2, '0') + ":" + dateTime.getMinutes().toString ().padStart(2, '0') + ":" + dateTime.getSeconds().toString ().padStart(2, '0'));
+        return (`${dateTime.getFullYear().toString()}-${(dateTime.getMonth()+1).toString().padStart(2,'0')}-${dateTime.getDate().toString().padStart(2,'0')} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}:${dateTime.getSeconds().toString().padStart(2,'0')}`);
     }
 }
