@@ -95,9 +95,9 @@
 					<li><code>/setMode/<i>BASE_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
 					<li><code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.</li>
 				</ul>
-				<p>Über Skripte können Sie die API abfragen. Möchten Sie die Antwort nicht auswerten, können Sie beispielsweise mittels <code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code> im Hintergrund ausführen. Es werden die entsprechenden Systemvariablen automatisch gesetzt.</p>
+				<p>Über Skripte können Sie die API abfragen. Möchten Sie die Antwort nicht auswerten, können Sie beispielsweise mittels <code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code> im Hintergrund ausführen. Ist die Änderung der Systemvariablen in den Einstellungen aktiviert, werden die entsprechenden Systemvariablen automatisch gesetzt.</p>
 				<p>Möchten Sie die Antwort auswerten, können Sie wie folgt vorgehen: <code>string res; string err; system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code>. Die JSON-Antwort finden Sie im String <code>res</code>.</p>
-				<p>Verwenden Sie anstelle von 127.0.0.1 die IP-Adresse Ihrer CCU, wenn Sie mit einem Browser auf die API zugreifen möchten.</p>
+				<p>Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.</p>
 				<h4>Informationen zum Projekt</h4>
 				<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
 				<h5>eufy Security API:</h5>
