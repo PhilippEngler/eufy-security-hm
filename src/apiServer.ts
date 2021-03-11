@@ -43,7 +43,7 @@ class ApiServer
             serverHttp.on("error", this.errorListener)
             serverHttp.on("request", this.requestListener);
             serverHttp.listen(portHttp);
-            logger.logInfoBasic("...started. http listening on port '"+ portHttp + "'");
+            logger.logInfoBasic(`...started. http listening on port '${portHttp}'`);
         }
 
         if(httpsActive == true)
@@ -59,7 +59,7 @@ class ApiServer
                 serverHttps.on("error", this.errorListener)
                 serverHttps.on("request", this.requestListener);
                 serverHttps.listen(portHttps);
-                logger.logInfoBasic("...started. https listening on port '"+ portHttps + "'");
+                logger.logInfoBasic(`...started. https listening on port '${portHttps}'`);
             }
             else
             {
@@ -76,11 +76,11 @@ class ApiServer
     {
         if(error.code == "EADDRINUSE")
         {
-            logger.logErrorBasis("Errorcode: " + error.code + ": port \'" + error.port + "\' already in use.");
+            logger.logErrorBasis(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
         }
         else
         {
-            logger.logErrorBasis("Errorcode: " + error.code + ": " + error.message);
+            logger.logErrorBasis(`Errorcode: ${error.code}: ${error.message}`);
         }
     }
     
@@ -656,14 +656,14 @@ function wait10Seconds() {
 }
 
 process.on('SIGTERM', () => {
-    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
     stopServer();
     logger.logInfoBasic("...done. Exiting");
     exit(0);
 });
 
 process.on('SIGINT', () => {
-    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
     stopServer();
     logger.logInfoBasic("...done. Exiting");
     exit(0);
