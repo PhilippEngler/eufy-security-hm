@@ -157,7 +157,7 @@
 			function getAPIPort()
 			{
 				var apiPorts;
-				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				var url = location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('text/plain');
 				xmlHttp.onreadystatechange = function()
@@ -219,11 +219,11 @@
 			function loadLog(showLoading)
 			{
 				var xmlHttp, objResp, info = "";
-				var imagepath="";
-				var type="";
-				var state="";
-				var buttons="";
-				var url=location.protocol + "//" + location.hostname + port + "/getLogFileContent";
+				var imagepath = "";
+				var type = "";
+				var state = "";
+				var buttons = "";
+				var url = location.protocol + "//" + location.hostname + port + "/getLogFileContent";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -242,7 +242,7 @@
 					}
 					else
 					{
-						if(showLoading==true)
+						if(showLoading == true)
 						{
 							document.getElementById("log").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Protokolldatei...</strong></div>";
 						}
@@ -255,11 +255,11 @@
 			function loadErr(showLoading)
 			{
 				var xmlHttp, objResp, info = "";
-				var imagepath="";
-				var type="";
-				var state="";
-				var buttons="";
-				var url=location.protocol + "//" + location.hostname + port + "/getErrorFileContent";
+				var imagepath = "";
+				var type = "";
+				var state = "";
+				var buttons = "";
+				var url = location.protocol + "//" + location.hostname + port + "/getErrorFileContent";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -278,7 +278,7 @@
 					}
 					else
 					{
-						if(showLoading==true)
+						if(showLoading == true)
 						{
 							document.getElementById("err").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Fehlerprotokolldatei...</strong></div>";
 						}
@@ -291,10 +291,6 @@
 			function emptyLogfileData()
 			{
 				var xmlhttp, myObj;
-				var cams="";
-				var imagepath="";
-				var type="";
-				var lastVideo="keine Aufnahme";
 				var url=location.protocol + "//" + location.hostname + port + "/clearLogFile";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
@@ -328,11 +324,7 @@
 			function emptyErrfileData()
 			{
 				var xmlhttp, myObj;
-				var cams="";
-				var imagepath="";
-				var type="";
-				var lastVideo="keine Aufnahme";
-				var url=location.protocol + "//" + location.hostname + port + "/clearErrFile";
+				var url = location.protocol + "//" + location.hostname + port + "/clearErrFile";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -364,14 +356,12 @@
 
 			function downloadLogfile()
 			{
-				var xmlHttp, objResp;
 				var url=location.protocol + "//" + location.hostname + port + "/downloadLogFile";
 				window.open(url);
 			}
 
 			function downloadErrfile()
 			{
-				var xmlHttp, objResp;
 				var url=location.protocol + "//" + location.hostname + port + "/downloadErrFile";
 				window.open(url);
 			}

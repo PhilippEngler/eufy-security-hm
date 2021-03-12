@@ -93,11 +93,10 @@
 			{
 				if (window.document.documentMode)
 				{
-					var warning = "";
-					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
-					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
-					warning += "				</div>";
+					var warning = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
+					warning += "</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
 					document.getElementById("content").innerHTML = "";
 				}

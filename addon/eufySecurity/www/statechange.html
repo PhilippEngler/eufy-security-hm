@@ -165,7 +165,7 @@
 			function getAPIPort()
 			{
 				var apiPorts;
-				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				var url = location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('text/plain');
 				xmlHttp.onreadystatechange = function()
@@ -226,11 +226,11 @@
 			function loadData(showLoading)
 			{
 				var xmlHttp, objResp, objIter, bases = "";
-				var imagepath="";
-				var type="";
-				var state="";
-				var buttons="";
-				var url=location.protocol + "//" + location.hostname + port + "/getBases";
+				var imagepath = "";
+				var type = "";
+				var state = "";
+				var buttons = "";
+				var url = location.protocol + "//" + location.hostname + port + "/getBases";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -318,7 +318,7 @@
 							document.getElementById("btnScheduleAll").removeAttribute("disabled");
 							document.getElementById("btnDisarmAll").removeAttribute("disabled");
 							document.getElementById("bases").innerHTML = bases;
-							type="";
+							type = "";
 						}
 						else
 						{
@@ -355,13 +355,11 @@
 			
 			function setArm(baseserial)
 			{
-				var baseserial;
-				if(baseserial=="")
+				if(baseserial == "")
 				{
 					document.getElementById("btnArmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/away";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/away";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()
@@ -396,9 +394,8 @@
 				else
 				{
 					document.getElementById("btnArm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;abwesend";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/away";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/away";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()
@@ -433,13 +430,11 @@
 			
 			function setHome(baseserial)
 			{
-				var baseserial
 				if(baseserial=="")
 				{
 					document.getElementById("btnHomeAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/home";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/home";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()
@@ -474,9 +469,8 @@
 				else
 				{
 					document.getElementById("btnHome" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;zu Hause";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/home";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/home";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()
@@ -511,13 +505,11 @@
 			
 			function setSchedule(baseserial)
 			{
-				var baseserial;
 				if(baseserial=="")
 				{
 					document.getElementById("btnScheduleAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/schedule";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/schedule";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()
@@ -552,9 +544,8 @@
 				else
 				{
 					document.getElementById("btnSchedule" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;Zeitsteuerung";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/schedule";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/schedule";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()
@@ -589,13 +580,11 @@
 			
 			function setDisarm(baseserial)
 			{
-				var baseserial;
-				if(baseserial=="")
+				 if(baseserial=="")
 				{
 					document.getElementById("btnDisarmAll").innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/disarmed";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/disarmed";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()
@@ -630,9 +619,8 @@
 				else
 				{
 					document.getElementById("btnDisarm" + baseserial).innerHTML = "<span class=\"spinner-border spinner-border-sm\" role=\"status\" aria-hidden=\"true\"></span>&nbsp;deaktiviert";
-					var xmlHttp, objResp, objIter, bases = "";
-					var imagepath="";
-					var url=location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/disarmed";
+					var xmlHttp, objResp;
+					var url = location.protocol + "//" + location.hostname + port + "/setMode/" + baseserial + "/disarmed";
 					xmlHttp = new XMLHttpRequest();
 					xmlHttp.overrideMimeType('application/json');
 					xmlHttp.onreadystatechange = function()

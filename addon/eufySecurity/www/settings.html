@@ -384,11 +384,10 @@
 			{
 				if (window.document.documentMode)
 				{
-					var warning = "";
-					warning =  "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "					<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
-					warning += "					Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
-					warning += "				</div>";
+					var warning = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+					warning += "<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
+					warning += "Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
+					warning += "</div>";
 					document.getElementById("browserWarning").innerHTML = warning;
 					document.getElementById("content").innerHTML = "";
 				}
@@ -416,7 +415,7 @@
 			function getAPIPort()
 			{
 				var apiPorts;
-				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				var url = location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('text/plain');
 				xmlHttp.onreadystatechange = function()
@@ -449,21 +448,19 @@
 						}
 						catch (e)
 						{
-							var loadSettingsError = "";
-							loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-							loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-							loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-							loadSettingsError += "				</div>";
+							var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+							loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+							loadSettingsError += "</div>";
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						var loadSettingsError = "";
-						loadSettingsError  = "				<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-						loadSettingsError += "					Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-						loadSettingsError += "					<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-						loadSettingsError += "				</div>";
+						var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
+						loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
+						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
+						loadSettingsError += "</div>";
 						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
 					}
 				};
@@ -496,8 +493,8 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, passwort, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel;
-				var url=location.protocol + "//" + location.hostname + port + "/getConfig";
+				var xmlHttp, objResp, objIter, username, password, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel;
+				var url = location.protocol + "//" + location.hostname + port + "/getConfig";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -581,17 +578,17 @@
 						}
 						else
 						{
-							document.getElementById("resultLoading").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+							document.getElementById("resultLoading").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 						}
 						}
 						catch (e)
 						{
-							document.getElementById("resultLoading").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+							document.getElementById("resultLoading").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultLoading").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+						document.getElementById("resultLoading").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 					}
 					else
 					{
@@ -604,8 +601,8 @@
 			
 			function loadSystemVariables()
 			{
-				var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, sysVarHint, sysVarTable="";
-				var url=location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
+				var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, sysVarHint, sysVarTable = "";
+				var url = location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -660,24 +657,24 @@
 								if(objResp.reason = "System variables in config disabled.")
 								{
 									document.getElementById("divSystemVariablesHint").innerHTML = "";
-									document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-info mb-0\" role=\"alert\">Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.</div>";
+									document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-info mb-0\" role=\"alert\">Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.</div>";
 								}
 								else
 								{
 									document.getElementById("divSystemVariablesHint").innerHTML = "";
-									document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+									document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 								}
 							}
 						}
 						catch (e)
 						{
 							document.getElementById("divSystemVariablesHint").innerHTML = "";
-							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+							document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger mb-o\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger mb-o\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 					}
 					else
 					{
@@ -690,12 +687,12 @@
 			
 			function saveConfig()
 			{
-				var xmlHttp, obfFD, x, username, passwort, apiport;
-				var url=location.protocol + "//" + location.hostname + port + "/setConfig";
+				var xmlHttp, obfFD;
+				var url = location.protocol + "//" + location.hostname + port + "/setConfig";
 				
 				xmlHttp = new XMLHttpRequest();
 				
-				obfFD=new FormData(document.getElementById("configform"));
+				obfFD = new FormData(document.getElementById("configform"));
 				
 				xmlHttp.addEventListener("load", function(event) {
 					//loadData();
@@ -736,12 +733,12 @@
 						}
 						catch (e)
 						{
-							document.getElementById("resultMessage").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+							document.getElementById("resultMessage").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultMessage").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+						document.getElementById("resultMessage").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
 					}
 					else
 					{
@@ -755,8 +752,8 @@
 			
 			function createSysVar(varName, varInfo)
 			{
-				var xmlHttp, objResp, objIter, sysVarName, sysVarAvailable, text="";
-				var url=location.protocol + "//" + location.hostname + port + "/createSystemVariable/" + varName + "/" + varInfo;
+				var xmlHttp, objResp, text = "";
+				var url = location.protocol + "//" + location.hostname + port + "/createSystemVariable/" + varName + "/" + varInfo;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				text = "<table class=\"table\"><thead><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
@@ -766,24 +763,24 @@
 					{
 						try
 						{
-						objResp = JSON.parse(this.responseText);
-						if(objResp.success == true)
-						{
-							loadSystemVariables();
-						}
-						else
-						{
-							document.getElementById("divSystemVariables").innerHTML = "				<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
-						}
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								loadSystemVariables();
+							}
+							else
+							{
+								document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+							}
 						}
 						catch (e)
 						{
-							document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+							document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("divSystemVariables").innerHTML = "					<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
 					}
 					else
 					{
@@ -797,7 +794,7 @@
 			function removeTokenData()
 			{
 				var xmlHttp, objResp;
-				var url=location.protocol + "//" + location.hostname + port + "/removeTokenData";
+				var url = location.protocol + "//" + location.hostname + port + "/removeTokenData";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -837,7 +834,7 @@
 			function restartService()
 			{
 				var xmlHttp, objResp;
-				var url=location.protocol + "//" + location.hostname + port + "/restartService";
+				var url = location.protocol + "//" + location.hostname + port + "/restartService";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -876,7 +873,6 @@
 
 			function downloadConfigFile()
 			{
-				var xmlHttp, objResp;
 				var url=location.protocol + "//" + location.hostname + port + "/downloadConfig";
 				window.open(url);
 			}

@@ -123,7 +123,7 @@
 			function getAPIPort()
 			{
 				var apiPorts;
-				var url=location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				var url = location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('text/plain');
 				xmlHttp.onreadystatechange = function()
@@ -187,10 +187,10 @@
 				document.getElementById("bases").innerHTML = "<p id=\"basestations\"></p>";
 				
 				var xmlhttp, myObj, x, bases = "";
-				var imagepath="";
-				var type="";
-				var state="";
-				var url=location.protocol + "//" + location.hostname + port + "/getBases";
+				var imagepath = "";
+				var type = "";
+				var state = "";
+				var url = location.protocol + "//" + location.hostname + port + "/getBases";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -284,7 +284,7 @@
 								bases += "<div class=\"alert alert-danger\" role=\"alert\">Es wurden keine Basisstationen gefunden.</div>";
 							}
 							document.getElementById("basestations").innerHTML = bases;
-							type="";
+							type = "";
 						}
 						else
 						{
@@ -307,15 +307,15 @@
 			function loadDevices()
 			{
 				var xmlhttp, myObj, x;
-				var text="";
-				var cams="";
-				var indoorcams="";
-				var doorbellcams="";
-				var floodlightcams="";
-				var imagepath="";
-				var type="";
-				var lastVideo="keine Aufnahme";
-				var url=location.protocol + "//" + location.hostname + port + "/getDevices";
+				var text = "";
+				var cams = "";
+				var indoorcams = "";
+				var doorbellcams = "";
+				var floodlightcams = "";
+				var imagepath = "";
+				var type = "";
+				var lastVideo = "keine Aufnahme";
+				var url = location.protocol + "//" + location.hostname + port + "/getDevices";
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -335,31 +335,31 @@
 										{
 											case "T8111":
 												imagepath = "<img src=\"assets/devices/eufyCamE.png\" class=\"card-img-top\" alt=\"...\">";
-												type="eufyCam";
+												type = "eufyCam";
 												break;
 											case "T8112":
 												imagepath = "<img src=\"assets/devices/eufyCamE.png\" class=\"card-img-top\" alt=\"...\">";
-												type="eufyCam E";
+												type = "eufyCam E";
 												break;
 											case "T8113":
 												imagepath = "<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
-												type="eufyCam 2C";
+												type = "eufyCam 2C";
 												break;
 											case "T8114":
 												imagepath = "<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
-												type="eufyCam 2";
+												type = "eufyCam 2";
 												break;
 											case "T8140":
 												imagepath = "<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
-												type="eufyCam 2 Pro";
+												type = "eufyCam 2 Pro";
 												break;
 											case "T8142":
 												imagepath = "<img src=\"assets/devices/eufyCam2c.png\" class=\"card-img-top\" alt=\"...\">";
-												type="eufyCam 2C Pro";
+												type = "eufyCam 2C Pro";
 												break;
 											default:
 												imagepath = "<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
-												type="Kamera";
+												type = "Kamera";
 										}
 										if(myObj.data[x].last_camera_image_time != "" && myObj.data[x].last_camera_image_time != "undefined")
 										{
@@ -380,7 +380,7 @@
 										}
 										else
 										{
-											lastVideo =  "keine Aufnahme";
+											lastVideo = "keine Aufnahme";
 										}
 										cams += "<div class=\"col mb-3\">";
 										cams += "<div class=\"card\">";
@@ -406,15 +406,15 @@
 										{
 											case "T8400":
 												imagepath = "<img src=\"assets/devices/eufyFloodLightCam.png\" class=\"card-img-top\" alt=\"...\">";
-												type="Indoor Cam 2K";
+												type = "Indoor Cam 2K";
 												break;
 											case "T8410":
 												imagepath = "<img src=\"assets/devices/eufyFloodLightCam.png\" class=\"card-img-top\" alt=\"...\">";
-												type="Indoor Cam 2K P&T";
+												type = "Indoor Cam 2K P&T";
 												break;
 											default:
 												imagepath = "<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
-												type="Innenkamera";
+												type = "Innenkamera";
 										}
 										if(myObj.data[x].last_camera_image_time != "" && myObj.data[x].last_camera_image_time != "undefined")
 										{
@@ -435,7 +435,7 @@
 										}
 										else
 										{
-											lastVideo =  "keine Aufnahme";
+											lastVideo = "keine Aufnahme";
 										}
 										indoorcams += "<div class=\"col mb-3\">";
 										indoorcams += "<div class=\"card\">";
@@ -467,11 +467,11 @@
 										{
 											case "T8420":
 												imagepath = "<img src=\"assets/devices/eufyFloodLightCam.png\" class=\"card-img-top\" alt=\"...\">";
-												type="Floodlight Camera";
+												type = "Floodlight Camera";
 												break;
 											default:
 												imagepath = "<img src=\"assets/devices/eufyCam2.png\" class=\"card-img-top\" alt=\"...\">";
-												type="Innenkamera";
+												type = "Flutlichtkamera";
 										}
 										if(myObj.data[x].last_camera_image_time != "" && myObj.data[x].last_camera_image_time != "undefined")
 										{
@@ -492,7 +492,7 @@
 										}
 										else
 										{
-											lastVideo =  "keine Aufnahme";
+											lastVideo = "keine Aufnahme";
 										}
 										floodlightcams += "<div class=\"col mb-3\">";
 										floodlightcams += "<div class=\"card\">";
@@ -535,7 +535,7 @@
 									cams = "<h4>Kameras</h4><div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5\">" + cams + "</div>"
 
 									document.getElementById("cameras").innerHTML = cams;
-									type="";
+									type = "";
 								}
 								if(indoorcams != "")
 								{
@@ -571,7 +571,7 @@
 									floodlightcams = "<h4>Flutlichtkameras</h4><div class=\"row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5\">" + floodlightcams + "</div>"
 
 									document.getElementById("floodlightcameras").innerHTML = floodlightcams;
-									type="";
+									type = "";
 								}
 							}
 							else
