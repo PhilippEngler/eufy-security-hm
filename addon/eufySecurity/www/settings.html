@@ -384,10 +384,10 @@
 			{
 				if (window.document.documentMode)
 				{
-					var warning = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
-					warning += "Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
-					warning += "</div>";
+					var warning = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+					warning += `<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>`;
+					warning += `Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.`;
+					warning += `</div>`;
 					document.getElementById("browserWarning").innerHTML = warning;
 					document.getElementById("content").innerHTML = "";
 				}
@@ -415,7 +415,7 @@
 			function getAPIPort()
 			{
 				var apiPorts;
-				var url = location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.txt`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('text/plain');
 				xmlHttp.onreadystatechange = function()
@@ -429,18 +429,18 @@
 							
 							if(apiPorts.length == 2)
 							{
-								port = ":" + apiPorts[0];
+								port = apiPorts[0];
 								if(location.protocol == "https:")
 								{
-									port = ":" + apiPorts[1];
+									port = apiPorts[1];
 								}
 							}
 							else
 							{
-								port = ":52789";
+								port = "52789";
 								if(location.protocol == "https:")
 								{
-									port = ":52790";
+									port = "52790";
 								}
 							}
 
@@ -448,19 +448,19 @@
 						}
 						catch (e)
 						{
-							var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-							loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-							loadSettingsError += "</div>";
+							var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+							loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
+							loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
+							loadSettingsError += `</div>`;
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-						loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-						loadSettingsError += "</div>";
+						var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+						loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
+						loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
+						loadSettingsError += `</div>`;
 						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
 					}
 				};
@@ -494,7 +494,7 @@
 			function loadData()
 			{
 				var xmlHttp, objResp, objIter, username, password, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel;
-				var url = location.protocol + "//" + location.hostname + port + "/getConfig";
+				var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -578,21 +578,21 @@
 						}
 						else
 						{
-							document.getElementById("resultLoading").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+							document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
 						}
 						}
 						catch (e)
 						{
-							document.getElementById("resultLoading").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+							document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultLoading").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+						document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
 					}
 					else
 					{
-						document.getElementById("resultLoading").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Laden der Einstellungen...</strong></div>";
+						document.getElementById("resultLoading").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Einstellungen...</strong></div>`;
 					}
 				};
 				xmlHttp.open("GET", url, true);
@@ -602,7 +602,7 @@
 			function loadSystemVariables()
 			{
 				var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, sysVarHint, sysVarTable = "";
-				var url = location.protocol + "//" + location.hostname + port + "/checkSystemVariables";
+				var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -614,13 +614,13 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								sysVarHint  = "<div class=\"alert alert-primary fade show\" role=\"alert\">Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br />";
-								sysVarHint += "<small class=\"form-text text-muted\">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>";
-								sysVarHint += "</div>";
+								sysVarHint  = `<div class="alert alert-primary fade show" role="alert">Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br />`;
+								sysVarHint += `<small class="form-text text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>`;
+								sysVarHint += `</div>`;
 								
 								document.getElementById("divSystemVariablesHint").innerHTML = sysVarHint;
 								
-								sysVarTable = "<table class=\"table mb-0\"><thead class=\"thead-dark\"><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
+								sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
 								for (objIter in objResp.data)
 								{
 									sysVarName = objResp.data[objIter].sysVar_name;
@@ -628,27 +628,27 @@
 									sysVarAvailable = objResp.data[objIter].sysVar_available;
 									if(sysVarAvailable==true)
 									{
-										sysVarTable += "<tr class=\"table-success \"><th scope=\"row\" class=\"align-middle\">angelegt</th>";
+										sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle">angelegt</th>`;
 									}
 									else
 									{
-										sysVarTable += "<tr class=\"table-danger\"><th scope=\"row\" class=\"align-middle\">nicht angelegt</th>";
+										sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle">nicht angelegt</th>`;
 									}
-									sysVarTable += "<td class=\"text-break align-middle\">" + sysVarName + "</td>";
+									sysVarTable += `<td class="text-break align-middle">${sysVarName}</td>`;
 
 									if(sysVarAvailable==true)
 									{
-										sysVarTable += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" type=\"button\" class=\"btn btn-primary mb-1\" disabled>Systemvariable anlegen</button></td>";
+										sysVarTable += `<td class="align-middle"><button id="btn${sysVarName}" type="button" class="btn btn-primary mb-1" disabled>Systemvariable anlegen</button></td>`;
 									}
 									else
 									{
-										sysVarTable += "<td class=\"align-middle\"><button id=\"btn" + sysVarName + "\" onclick=\"createSysVar('" + sysVarName + "', '" + sysVarInfo + "')\" type=\"button\" class=\"btn btn-primary mb-1\">Systemvariable anlegen</button></td>";
+										sysVarTable += `<td class="align-middle"><button id="btn${sysVarName}" onclick="createSysVar('${sysVarName}', '${sysVarInfo}')" type="button" class="btn btn-primary mb-1">Systemvariable anlegen</button></td>`;
 									}
 
-									sysVarTable += "</tr>";
+									sysVarTable += `</tr>`;
 								}
 
-								sysVarTable += "</tbody></table>";
+								sysVarTable += `</tbody></table>`;
 
 								document.getElementById("divSystemVariables").innerHTML = sysVarTable;
 							}
@@ -657,28 +657,28 @@
 								if(objResp.reason = "System variables in config disabled.")
 								{
 									document.getElementById("divSystemVariablesHint").innerHTML = "";
-									document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-info mb-0\" role=\"alert\">Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.</div>";
+									document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-info mb-0" role="alert">Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.</div>`;
 								}
 								else
 								{
 									document.getElementById("divSystemVariablesHint").innerHTML = "";
-									document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+									document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
 								}
 							}
 						}
 						catch (e)
 						{
 							document.getElementById("divSystemVariablesHint").innerHTML = "";
-							document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger mb-0\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+							document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger mb-o\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
 					}
 					else
 					{
-						document.getElementById("divSystemVariables").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Laden der Systemvariablen...</strong></div>";
+						document.getElementById("divSystemVariables").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Systemvariablen...</strong></div>`;
 					}
 				};
 				xmlHttp.open("GET", url, true);
@@ -688,7 +688,7 @@
 			function saveConfig()
 			{
 				var xmlHttp, obfFD;
-				var url = location.protocol + "//" + location.hostname + port + "/setConfig";
+				var url = `${location.protocol}//${location.hostname}:${port}/setConfig`;
 				
 				xmlHttp = new XMLHttpRequest();
 				
@@ -733,16 +733,16 @@
 						}
 						catch (e)
 						{
-							document.getElementById("resultMessage").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+							document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultMessage").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Einstellungen.</div>";
+						document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
 					}
 					else
 					{
-						document.getElementById("resultMessage").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Einstellungen werden gespeichert...</strong></div>";
+						document.getElementById("resultMessage").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Einstellungen werden gespeichert...</strong></div>`;
 					}
 				};
 				
@@ -753,10 +753,10 @@
 			function createSysVar(varName, varInfo)
 			{
 				var xmlHttp, objResp, text = "";
-				var url = location.protocol + "//" + location.hostname + port + "/createSystemVariable/" + varName + "/" + varInfo;
+				var url = `${location.protocol}//${location.hostname}:${port}/createSystemVariable/${varName}/${varInfo}`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
-				text = "<table class=\"table\"><thead><tr><th scope=\"col\">Status</th><th scope=\"col\">Name der Systemvariable</th><th scope=\"col\"></th></tr></thead><tbody>";
+				text = `<table class="table"><thead><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
 				xmlHttp.onreadystatechange = function()
 				{
 					if (this.readyState == 4 && this.status == 200)
@@ -770,21 +770,21 @@
 							}
 							else
 							{
-								document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+								document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
 							}
 						}
 						catch (e)
 						{
-							document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+							document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("divSystemVariables").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler bei der Ermittlung der Systemvariablen.</div>";
+						document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
 					}
 					else
 					{
-						document.getElementById("divSystemVariables").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Laden der Systemvariablen...</strong></div>";
+						document.getElementById("divSystemVariables").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Systemvariablen...</strong></div>`;
 					}
 				};
 				xmlHttp.open("GET", url, true);
@@ -794,7 +794,7 @@
 			function removeTokenData()
 			{
 				var xmlHttp, objResp;
-				var url = location.protocol + "//" + location.hostname + port + "/removeTokenData";
+				var url = `${location.protocol}//${location.hostname}:${port}/removeTokenData`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -834,7 +834,7 @@
 			function restartService()
 			{
 				var xmlHttp, objResp;
-				var url = location.protocol + "//" + location.hostname + port + "/restartService";
+				var url = `${location.protocol}//${location.hostname}:${port}/restartService`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -873,7 +873,7 @@
 
 			function downloadConfigFile()
 			{
-				var url=location.protocol + "//" + location.hostname + port + "/downloadConfig";
+				var url = `${location.protocol}//${location.hostname}:${port}/downloadConfig`;
 				window.open(url);
 			}
 
@@ -965,7 +965,7 @@
 					document.getElementById("alertLogLevel").setAttribute("class", "alert alert-warning alert-dismissible fade show");
 					document.getElementById("alertLogLevel").setAttribute("role", "alert");
 					document.getElementById("alertLogLevel").innerHTML += "Sie haben den Umfang der Protokollierung so gewählt, dass zusätzlich auch DEBUG Informationen protokolliert werden. Dies kann zu einer sehr großen Protokolldatei führen. Wählen Sie für den normalen Betrieb einen Wert kleiner als 3 aus.<br />";
-					document.getElementById("alertLogLevel").innerHTML += "<small class=\"form-text text-muted\">Diese Einstellung bleibt dauerhaft auch nach einem Neustart der CCU aktiv.</small>";
+					document.getElementById("alertLogLevel").innerHTML += `<small class="form-text text-muted">Diese Einstellung bleibt dauerhaft auch nach einem Neustart der CCU aktiv.</small>`;
 				}
 				else
 				{

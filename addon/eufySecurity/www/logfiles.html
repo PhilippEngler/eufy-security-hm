@@ -126,10 +126,10 @@
 			{
 				if (window.document.documentMode)
 				{
-					var warning = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
-					warning += "Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
-					warning += "</div>";
+					var warning = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+					warning += `<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>`;
+					warning += `Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.`;
+					warning += `</div>`;
 					document.getElementById("browserWarning").innerHTML = warning;
 					document.getElementById("content").innerHTML = "";
 				}
@@ -157,7 +157,7 @@
 			function getAPIPort()
 			{
 				var apiPorts;
-				var url = location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.txt`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('text/plain');
 				xmlHttp.onreadystatechange = function()
@@ -171,18 +171,18 @@
 							
 							if(apiPorts.length == 2)
 							{
-								port = ":" + apiPorts[0];
+								port = apiPorts[0];
 								if(location.protocol == "https:")
 								{
-									port = ":" + apiPorts[1];
+									port = apiPorts[1];
 								}
 							}
 							else
 							{
-								port = ":52789";
+								port = "52789";
 								if(location.protocol == "https:")
 								{
-									port = ":52790";
+									port = "52790";
 								}
 							}
 
@@ -190,19 +190,19 @@
 						}
 						catch (e)
 						{
-							var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-							loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>";
-							loadSettingsError += "</div>";
+							var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+							loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
+							loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>`;
+							loadSettingsError += `</div>`;
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-						loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>";
-						loadSettingsError += "</div>";
+						var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+						loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
+						loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>`;
+						loadSettingsError += `</div>`;
 						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
 					}
 				};
@@ -218,12 +218,8 @@
 			
 			function loadLog(showLoading)
 			{
-				var xmlHttp, objResp, info = "";
-				var imagepath = "";
-				var type = "";
-				var state = "";
-				var buttons = "";
-				var url = location.protocol + "//" + location.hostname + port + "/getLogFileContent";
+				var xmlHttp;
+				var url = `${location.protocol}//${location.hostname}:${port}/getLogFileContent`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -234,17 +230,17 @@
 						log = log.replace(/  /g, " &nbsp;");
 						log = log.replace(/<[^>]*>/g, '');
 						log = log.replace(/\n/g, "<br />");
-						document.getElementById("log").innerHTML = "<code>" + log + "</code>";
+						document.getElementById("log").innerHTML = `<code>${log}</code>`;
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("log").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Protokolldatei.</div>";
+						document.getElementById("log").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Protokolldatei.</div>`;
 					}
 					else
 					{
 						if(showLoading == true)
 						{
-							document.getElementById("log").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Protokolldatei...</strong></div>";
+							document.getElementById("log").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Protokolldatei...</strong></div>`;
 						}
 					}
 				};
@@ -254,12 +250,8 @@
 			
 			function loadErr(showLoading)
 			{
-				var xmlHttp, objResp, info = "";
-				var imagepath = "";
-				var type = "";
-				var state = "";
-				var buttons = "";
-				var url = location.protocol + "//" + location.hostname + port + "/getErrorFileContent";
+				var xmlHttp;
+				var url = `${location.protocol}//${location.hostname}:${port}/getErrorFileContent`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -270,17 +262,17 @@
 						err = err.replace(/  /g, " &nbsp;");
 						err = err.replace(/<[^>]*>/g, '');
 						err = err.replace(/\n/g, "<br >");
-						document.getElementById("err").innerHTML = "<code>" + err + "</code>";
+						document.getElementById("err").innerHTML = `<code>${err}</code>`;
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("err").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Fehlerprotokolldatei.</div>";
+						document.getElementById("err").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Fehlerprotokolldatei.</div>`;
 					}
 					else
 					{
 						if(showLoading == true)
 						{
-							document.getElementById("err").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade Fehlerprotokolldatei...</strong></div>";
+							document.getElementById("err").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Fehlerprotokolldatei...</strong></div>`;
 						}
 					}
 				};
@@ -291,7 +283,7 @@
 			function emptyLogfileData()
 			{
 				var xmlhttp, myObj;
-				var url=location.protocol + "//" + location.hostname + port + "/clearLogFile";
+				var url=`${location.protocol}//${location.hostname}:${port}/clearLogFile`;
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -324,7 +316,7 @@
 			function emptyErrfileData()
 			{
 				var xmlhttp, myObj;
-				var url = location.protocol + "//" + location.hostname + port + "/clearErrFile";
+				var url = `${location.protocol}//${location.hostname}:${port}/clearErrFile`;
 				xmlhttp = new XMLHttpRequest();
 				xmlhttp.overrideMimeType('application/json');
 				xmlhttp.onreadystatechange = function()
@@ -356,13 +348,13 @@
 
 			function downloadLogfile()
 			{
-				var url=location.protocol + "//" + location.hostname + port + "/downloadLogFile";
+				var url = `${location.protocol}//${location.hostname}:${port}/downloadLogFile`;
 				window.open(url);
 			}
 
 			function downloadErrfile()
 			{
-				var url=location.protocol + "//" + location.hostname + port + "/downloadErrFile";
+				var url=`${location.protocol}//${location.hostname}:${port}/downloadErrFile`;
 				window.open(url);
 			}
 		</script>

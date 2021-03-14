@@ -144,10 +144,10 @@
 			{
 				if (window.document.documentMode)
 				{
-					var warning = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-					warning += "<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>";
-					warning += "Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.";
-					warning += "</div>";
+					var warning = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+					warning += `<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>`;
+					warning += `Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.`;
+					warning += `</div>`;
 					document.getElementById("browserWarning").innerHTML = warning;
 					document.getElementById("content").innerHTML = "";
 				}
@@ -175,7 +175,7 @@
 			function getAPIPort()
 			{
 				var apiPorts;
-				var url = location.protocol + "//" + location.hostname + "/addons/eufySecurity/apiPorts.txt";
+				var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.txt`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('text/plain');
 				xmlHttp.onreadystatechange = function()
@@ -189,18 +189,18 @@
 							
 							if(apiPorts.length == 2)
 							{
-								port = ":" + apiPorts[0];
+								port = apiPorts[0];
 								if(location.protocol == "https:")
 								{
-									port = ":" + apiPorts[1];
+									port = apiPorts[1];
 								}
 							}
 							else
 							{
-								port = ":52789";
+								port = "52789";
 								if(location.protocol == "https:")
 								{
-									port = ":52790";
+									port = "52790";
 								}
 							}
 
@@ -208,19 +208,19 @@
 						}
 						catch (e)
 						{
-							var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-							loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-							loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-							loadSettingsError += "</div>";
+							var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+							loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
+							loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
+							loadSettingsError += `</div>`;
 							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						var loadSettingsError = "<div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\">";
-						loadSettingsError += "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />";
-						loadSettingsError += "<small class=\"text-muted\">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>";
-						loadSettingsError += "</div>";
+						var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
+						loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
+						loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
+						loadSettingsError += `</div>`;
 						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
 					}
 				};
@@ -240,7 +240,7 @@
 				var type = "";
 				var state = "";
 				var buttons = "";
-				var url = location.protocol + "//" + location.hostname + port + "/getApiInfo";
+				var url = `${location.protocol}//${location.hostname}:${port}/getApiInfo`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
 				xmlHttp.onreadystatechange = function()
@@ -250,25 +250,25 @@
 						objResp = JSON.parse(this.responseText);
 						if(objResp.success == true)
 						{
-							info = "eufy Security AddOn: " + objResp.api_version + "<br />HomeMatic API: " + objResp.homematic_api_version + "<br />Webseite: 1.0.5";
+							info = `eufy Security AddOn: ${objResp.api_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.0.5`;
 							
 							document.getElementById("versionInfo").innerHTML = info;
 							
 						}
 						else
 						{
-							document.getElementById("versionInfo").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Versionsinformationen.</div>";
+							document.getElementById("versionInfo").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Versionsinformationen.</div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("versionInfo").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\">Fehler beim Laden der Versionsinformationen.</div>";
+						document.getElementById("versionInfo").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Versionsinformationen.</div>`;
 					}
 					else
 					{
 						if(showLoading == true)
 						{
-							document.getElementById("versionInfo").innerHTML = "<div class=\" d-flex align-items-center\"><div class=\"spinner-border m-4 float-left\" role=\"status\" aria-hidden=\"true\"></div><strong>Lade verfügbare Versionsinformationen...</strong></div>";
+							document.getElementById("versionInfo").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Versionsinformationen...</strong></div>`;
 						}
 					}
 				};
