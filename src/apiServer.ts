@@ -26,7 +26,7 @@ class ApiServer
     }
 
     /**
-     * Start the server.
+     * Start the apiServer.
      * @param httpActive The http should be used.
      * @param portHttp The HTTP port the server will serve.
      * @param httpsActive The https server should be used.
@@ -69,7 +69,7 @@ class ApiServer
     }
 
     /**
-     * The error listener for the webserver.
+     * The error listener for the api.
      * @param error The error object.
      */
     private async errorListener (error : any) : Promise<void>
@@ -85,7 +85,7 @@ class ApiServer
     }
     
     /**
-     * The request listener for the webserver.
+     * The request listener for the api.
      * @param request The request object.
      * @param response The response object.
      */
@@ -102,7 +102,7 @@ class ApiServer
             url = [];
         }
 
-        // We use 'GET' for nearly all function of the api, exept the change of config
+        // We use 'GET' for nearly all function of the api, exept updateing the config
         if(request.method == "GET")
         {
             if(url.length > 1)
@@ -496,7 +496,7 @@ function main()
 }
 
 /**
- * Create the apiPorts.txt file needed for using the api on the website if not existing or updates it when the ports have changed. 
+ * Create the apiPorts.txt file needed for using the api on the website if file does not exist or update it when the ports have changed. 
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */
@@ -645,7 +645,7 @@ function emptyErrFile()
 }
 
 /**
- * Wait-function for waing between stop and start when restarting. 
+ * Wait-function for waiting between stop and start when restarting. 
  */
 function wait10Seconds() {
     return new Promise(resolve => {
@@ -663,7 +663,7 @@ process.on('SIGTERM', () => {
 });
 
 process.on('SIGINT', () => {
-    logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
+    logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
     stopServer();
     logger.logInfoBasic("...done. Exiting");
     exit(0);
