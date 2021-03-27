@@ -221,7 +221,7 @@ class Device {
             return "lock";
         }
         else {
-            return "unknown(" + this.device_info.device_type + ")";
+            return `unknown(${this.device_info.device_type})`;
         }
     }
     /**

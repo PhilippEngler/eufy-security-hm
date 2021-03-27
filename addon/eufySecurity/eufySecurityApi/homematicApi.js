@@ -127,8 +127,8 @@ class HomematicApi {
     /**
      * Returns the version info of the homematic api.
      */
-    getHomematicApiInfo() {
-        return "1.0.1";
+    getHomematicApiVersion() {
+        return "1.0.2";
     }
 }
 exports.HomematicApi = HomematicApi;

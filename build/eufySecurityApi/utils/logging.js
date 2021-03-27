@@ -8,7 +8,7 @@ class Logger {
      * @param additionalMessages Additional message(s) to be added.
      */
     logInfoBasic(message, ...additionalMessages) {
-        console.info(this.makeNowDateTimeString() + " - " + message, ...additionalMessages);
+        console.info(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
     }
     /**
      * Write the given message(s) to the errorlogfile regardless the actual loglevel.
@@ -16,7 +16,7 @@ class Logger {
      * @param additionalMessages Additional message(s) to be added.
      */
     logErrorBasis(message, ...additionalMessages) {
-        console.error(this.makeNowDateTimeString() + " - " + message, ...additionalMessages);
+        console.error(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
     }
     /**
      * Write the given message(s) to the logfile if the loglevel is set to log info.
@@ -26,7 +26,7 @@ class Logger {
      */
     logInfo(logLevel, message, ...additionalMessages) {
         if (logLevel >= 1) {
-            console.info(this.makeNowDateTimeString() + " - INFO: " + message, ...additionalMessages);
+            console.info(`${this.makeNowDateTimeString()} - INFO: ${message}`, ...additionalMessages);
         }
     }
     /**
@@ -36,9 +36,9 @@ class Logger {
      * @param additionalMessages Additional message(s) to be added.
      */
     logError(logLevel, message, ...additionalMessages) {
-        console.error(this.makeNowDateTimeString() + " - " + message, ...additionalMessages);
+        console.error(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
         if (logLevel >= 2) {
-            console.log(this.makeNowDateTimeString() + " - ERROR: " + message, ...additionalMessages);
+            console.log(`${this.makeNowDateTimeString()} - ERROR: ${message}`, ...additionalMessages);
         }
     }
     /**
@@ -49,7 +49,7 @@ class Logger {
      */
     logDebug(logLevel, message, ...additionalMessages) {
         if (logLevel >= 3) {
-            console.debug(this.makeNowDateTimeString() + " - DEBUG: " + message, ...additionalMessages);
+            console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
         }
     }
     /**
@@ -57,7 +57,7 @@ class Logger {
      */
     makeNowDateTimeString() {
         var dateTime = new Date();
-        return (dateTime.getFullYear().toString() + "-" + (dateTime.getMonth() + 1).toString().padStart(2, '0') + "-" + dateTime.getDate().toString().padStart(2, '0') + " " + dateTime.getHours().toString().padStart(2, '0') + ":" + dateTime.getMinutes().toString().padStart(2, '0') + ":" + dateTime.getSeconds().toString().padStart(2, '0'));
+        return (`${dateTime.getFullYear().toString()}-${(dateTime.getMonth() + 1).toString().padStart(2, '0')}-${dateTime.getDate().toString().padStart(2, '0')} ${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}:${dateTime.getSeconds().toString().padStart(2, '0')}`);
     }
 }
 exports.Logger = Logger;

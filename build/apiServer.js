@@ -32,7 +32,7 @@ class ApiServer {
         this.startServer(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps(), api.getApiServerKeyHttps(), api.getApiServerCertHttps(), logger);
     }
     /**
-     * Start the server.
+     * Start the apiServer.
      * @param httpActive The http should be used.
      * @param portHttp The HTTP port the server will serve.
      * @param httpsActive The https server should be used.
@@ -48,7 +48,7 @@ class ApiServer {
                 serverHttp.on("error", this.errorListener);
                 serverHttp.on("request", this.requestListener);
                 serverHttp.listen(portHttp);
-                logger.logInfoBasic("...started. http listening on port '" + portHttp + "'");
+                logger.logInfoBasic(`...started. http listening on port '${portHttp}'`);
             }
             if (httpsActive == true) {
                 logger.logInfoBasic("Starting https server...");
@@ -61,7 +61,7 @@ class ApiServer {
                     serverHttps.on("error", this.errorListener);
                     serverHttps.on("request", this.requestListener);
                     serverHttps.listen(portHttps);
-                    logger.logInfoBasic("...started. https listening on port '" + portHttps + "'");
+                    logger.logInfoBasic(`...started. https listening on port '${portHttps}'`);
                 }
                 else {
                     logger.logErrorBasis("FAILED TO START SERVER (HTTPS): key or cert file not found.");
@@ -70,21 +70,21 @@ class ApiServer {
         });
     }
     /**
-     * The error listener for the webserver.
+     * The error listener for the api.
      * @param error The error object.
      */
     errorListener(error) {
         return __awaiter(this, void 0, void 0, function* () {
             if (error.code == "EADDRINUSE") {
-                logger.logErrorBasis("ERROR: " + error.code + ": port \'" + error.port + "\' already in use.");
+                logger.logErrorBasis(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
             }
             else {
-                logger.logErrorBasis("ERROR: " + error.code + ": " + error.message);
+                logger.logErrorBasis(`Errorcode: ${error.code}: ${error.message}`);
             }
         });
     }
     /**
-     * The request listener for the webserver.
+     * The request listener for the api.
      * @param request The request object.
      * @param response The response object.
      */
@@ -98,7 +98,7 @@ class ApiServer {
             if (url == undefined) {
                 url = [];
             }
-            // We use 'GET' for nearly all function of the api, exept the change of config
+            // We use 'GET' for nearly all function of the api, exept updateing the config
             if (request.method == "GET") {
                 if (url.length > 1) {
                     switch (url[1]) {
@@ -153,7 +153,7 @@ class ApiServer {
                                         responseString = yield api.setGuardMode(http_response_models_1.GuardMode.SCHEDULE);
                                         break;
                                     default:
-                                        responseString = "{\"success\":false,\"message\":\"Unknown mode to set.\"";
+                                        responseString = `{"success":false,"message":"Unknown mode to set."}`;
                                 }
                             }
                             else if (url.length == 4) {
@@ -186,11 +186,11 @@ class ApiServer {
                                         responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.SCHEDULE);
                                         break;
                                     default:
-                                        responseString = "{\"success\":false,\"message\":\"Unknown mode to set.\"}";
+                                        responseString = `{"success":false,"message":"Unknown mode to set."}`;
                                 }
                             }
                             else {
-                                responseString = "{\"success\":false,\"message\":\"Numbers of arguments not matching.\"}";
+                                responseString = `{"success":false,"message":"Numbers of arguments not matching."}`;
                             }
                             break;
                         case "checkSystemVariables":
@@ -204,7 +204,7 @@ class ApiServer {
                                 responseString = yield api.createSystemVariable(url[2], decodeURIComponent(url[3]));
                             }
                             else {
-                                responseString = "{\"success\":false,\"message\":\"False amount of arguments.\"}";
+                                responseString = `{"success":false,"message":"False amount of arguments."}`;
                             }
                             break;
                         case "getLibrary":
@@ -212,7 +212,7 @@ class ApiServer {
                                 responseString = yield api.getLibrary();
                             }
                             else {
-                                responseString = "{\"success\":false,\"message\":\"False amount of arguments.\"}";
+                                responseString = `{"success":false,"message":"False amount of arguments."}`;
                             }
                             break;
                         case "getLogFileContent":
@@ -226,15 +226,15 @@ class ApiServer {
                             break;
                         case "clearLogFile":
                             emptyLogFile();
-                            responseString = "{\"success\":true}";
+                            responseString = `{"success":true}`;
                             break;
                         case "clearErrFile":
                             emptyErrFile();
-                            responseString = "{\"success\":true}";
+                            responseString = `{"success":true}`;
                             break;
                         case "restartService":
                             restartServer();
-                            responseString = "{\"success\":true}";
+                            responseString = `{"success":true}`;
                             break;
                         case "downloadConfig":
                             api.writeConfig();
@@ -254,7 +254,7 @@ class ApiServer {
                             fileName = "eufySecurity.err";
                             break;
                         default:
-                            responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                            responseString = `{"success":false,"message":"Unknown command."}`;
                     }
                     response.setHeader('Access-Control-Allow-Origin', '*');
                     response.setHeader('Content-Type', contentType + '; charset=UTF-8');
@@ -268,7 +268,7 @@ class ApiServer {
                     }
                 }
                 else {
-                    responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                    responseString = `{"success":false,"message":"Unknown command."}`;
                     response.setHeader('Access-Control-Allow-Origin', '*');
                     response.setHeader('Content-Type', '; charset=UTF-8');
                     response.writeHead(200);
@@ -364,7 +364,7 @@ class ApiServer {
                                 responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
                             }
                             else {
-                                responseString = "{\"success\":false,\"serviceRestart\":false,\"message\":\"Got invalid settings data. Please check the values.\"}";
+                                responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check the values."}`;
                             }
                             var resJSON = JSON.parse(responseString);
                             response.setHeader('Access-Control-Allow-Origin', '*');
@@ -381,7 +381,7 @@ class ApiServer {
                         });
                     }
                     else {
-                        responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                        responseString = `{"success":false,"message":"Unknown command."}`;
                         response.setHeader('Access-Control-Allow-Origin', '*');
                         response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                         response.writeHead(200);
@@ -389,7 +389,7 @@ class ApiServer {
                     }
                 }
                 else {
-                    responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                    responseString = `{"success":false,"message":"Unknown command."}`;
                     response.setHeader('Access-Control-Allow-Origin', '*');
                     response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                     response.writeHead(200);
@@ -398,7 +398,7 @@ class ApiServer {
             }
             // Be polite and give a answer even we know that there is noting to answer...
             else {
-                responseString = "{\"success\":false,\"message\":\"Unknown command.\"}";
+                responseString = `{"success":false,"message":"Unknown command."}`;
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                 response.writeHead(200);
@@ -414,7 +414,7 @@ function main() {
     apiServer = new ApiServer();
 }
 /**
- * Create the apiPorts.txt file needed for using the api on the website if not existing or updates it when the ports have changed.
+ * Create the apiPorts.txt file needed for using the api on the website if file does not exist or update it when the ports have changed.
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */
@@ -530,7 +530,7 @@ function emptyErrFile() {
     child_process_1.exec("truncate -s 0 /var/log/eufySecurity.err");
 }
 /**
- * Wait-function for waing between stop and start when restarting.
+ * Wait-function for waiting between stop and start when restarting.
  */
 function wait10Seconds() {
     return new Promise(resolve => {
@@ -540,13 +540,13 @@ function wait10Seconds() {
     });
 }
 process.on('SIGTERM', () => {
-    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
     stopServer();
     logger.logInfoBasic("...done. Exiting");
     process_1.exit(0);
 });
 process.on('SIGINT', () => {
-    logger.logInfoBasic('SIGTERM signal received. Save config and shutdown server...');
+    logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
     stopServer();
     logger.logInfoBasic("...done. Exiting");
     process_1.exit(0);

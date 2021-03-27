@@ -168,7 +168,7 @@ class Base {
             return "basestation";
         }
         else {
-            return "unknown(" + this.device_info.device_type + ")";
+            return `unknown(${this.device_info.device_type})`;
         }
     }
     /**
@@ -248,10 +248,6 @@ class Base {
     setGuardMode(guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
             var res = yield this.setGuardModeInternal(guardMode);
-            /*if(res == false)
-            {
-                res = await this.setGuardModeExternal(guardMode);
-            }*/
             return res;
         });
     }
@@ -270,7 +266,7 @@ class Base {
                     localPorts = [0];
                 }
                 var address = yield this.localLookup(localPorts);
-                this.api.logInfo("Base " + this.getSerialNumber() + " found local. address: " + address.host + ":" + address.port);
+                this.api.logDebug(`Base ${this.getSerialNumber()} found local. address: ${address.host}:${address.port}`);
                 var devClientService = new p2p_1.DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
                 yield devClientService.connect();
                 yield devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
@@ -278,7 +274,7 @@ class Base {
                 return true;
             }
             catch (e) {
-                this.api.logError("setGuardModeInternal: " + e);
+                this.api.logError(`setGuardModeInternal: ${e}`);
                 return false;
             }
         });
@@ -289,22 +285,22 @@ class Base {
      */
     localLookup(portNumbers) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (portNumbers.length == 1 && portNumbers[0] == 0) {
-                return yield this.localLookupService.lookup(this.getLocalIpAddress(), portNumbers[0].valueOf());
-            }
-            var cnt = 0;
             var address;
-            var err;
-            for (var portNumber of portNumbers) {
-                try {
-                    address = yield this.localLookupService.lookup(this.getLocalIpAddress(), portNumber);
-                    err = undefined;
-                    break;
+            var err = undefined;
+            try {
+                if (portNumbers.length == 1 && portNumbers[0] == 0) {
+                    address = yield this.localLookupService.lookup(this.getLocalIpAddress(), portNumbers[0].valueOf());
                 }
-                catch (e) {
-                    err = e;
-                    cnt = cnt + 1;
+                else {
+                    for (var portNumber of portNumbers) {
+                        address = yield this.localLookupService.lookup(this.getLocalIpAddress(), portNumber);
+                        err = undefined;
+                        break;
+                    }
                 }
+            }
+            catch (e) {
+                err = e;
             }
             if (err == undefined) {
                 return address;
@@ -325,7 +321,7 @@ class Base {
                 var addresses = yield this.cloudLookupService.lookup(this.getP2pDid(), yield this.getDskKey());
                 for (address of addresses) {
                     if (address.host != this.getLocalIpAddress()) {
-                        this.api.logInfo("Base " + this.getSerialNumber() + " found on external side. address: " + address.host + ":" + address.port);
+                        this.api.logDebug(`Base ${this.getSerialNumber()} found external. address: ${address.host}:${address.port}`);
                         var devClientService = new p2p_1.DeviceClientService(this.api, address, this.getP2pDid(), this.getActorId());
                         yield devClientService.connect();
                         yield devClientService.sendCommandWithInt(p2p_1.CommandType.CMD_SET_ARMING, guardMode);
@@ -336,7 +332,7 @@ class Base {
                 return false;
             }
             catch (e) {
-                this.api.logError("setGuardModeExternal: " + e);
+                this.api.logError(`setGuardModeExternal: ${e}`);
                 return false;
             }
         });
