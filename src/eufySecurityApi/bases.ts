@@ -352,26 +352,28 @@ export class Base
      */
     private async localLookup(portNumbers : Array<Number>) : Promise<Address>
     {
-        if(portNumbers.length == 1 && portNumbers[0] == 0)
-        {
-            return await this.localLookupService.lookup(this.getLocalIpAddress(), portNumbers[0].valueOf());
-        }
-        var cnt = 0;
         var address !: Address;
-        var err;
-        for (var portNumber of portNumbers)
+        var err = undefined;
+        
+        try
         {
-            try
+            if(portNumbers.length == 1 && portNumbers[0] == 0)
             {
-                address = await this.localLookupService.lookup(this.getLocalIpAddress(), portNumber);
-                err = undefined;
-                break;
+                address = await this.localLookupService.lookup(this.getLocalIpAddress(), portNumbers[0].valueOf());
             }
-            catch(e)
+            else
             {
-                err = e;
-                cnt = cnt +1;
+                for (var portNumber of portNumbers)
+                {
+                    address = await this.localLookupService.lookup(this.getLocalIpAddress(), portNumber);
+                    err = undefined;
+                    break;
+                }
             }
+        }
+        catch(e)
+        {
+            err = e;
         }
         if(err == undefined)
         {

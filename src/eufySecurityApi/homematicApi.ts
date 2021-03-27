@@ -138,8 +138,8 @@ export class HomematicApi
     /**
      * Returns the version info of the homematic api.
      */
-    public getHomematicApiInfo() : string
+    public getHomematicApiVersion() : string
     {
-        return "1.0.1";
+        return "1.0.2";
     }
 }
