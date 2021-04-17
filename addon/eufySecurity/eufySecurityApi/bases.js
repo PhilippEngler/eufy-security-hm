@@ -80,12 +80,19 @@ class Bases {
      */
     setGuardMode(guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
-            var res = false;
+            var cnt = 0;
             for (var key in this.bases) {
                 var base = this.bases[key];
-                res = yield base.setGuardMode(guardMode);
+                if ((yield base.setGuardMode(guardMode)) == false) {
+                    cnt = cnt + 1;
+                }
             }
-            return res;
+            if (cnt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
         });
     }
     /**

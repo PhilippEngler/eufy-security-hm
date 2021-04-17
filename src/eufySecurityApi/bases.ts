@@ -91,13 +91,23 @@ export class Bases
      */
     public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
     {
-        var res = false;
+        var cnt = 0;
         for (var key in this.bases)
         {
             var base = this.bases[key];
-            res = await base.setGuardMode(guardMode);
+            if(await base.setGuardMode(guardMode) == false)
+            {
+                cnt = cnt + 1;
+            }
         }
-        return res;
+        if(cnt == 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /**
