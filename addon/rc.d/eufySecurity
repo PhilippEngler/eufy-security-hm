@@ -64,6 +64,22 @@ case "$1" in
         echo
 
         if is_running; then
+            echo -n "Killing $name.."
+            kill -9 `get_pid`
+            for i in 1 2 3 4 5 6 7 8 9 10
+            # for i in `seq 10`
+            do
+                if ! is_running; then
+                    break
+                fi
+
+                echo -n "."
+                sleep 1
+            done
+            echo
+        fi
+
+        if is_running; then
             echo "Not stopped; may still be shutting down or shutdown may have failed"
             exit 1
         else

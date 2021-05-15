@@ -110,6 +110,7 @@
 					<li>Keshav Varma (keshavdv) <a href="https://github.com/keshavdv/python-eufy-security/tree/p2p" target="_blank">python-eufy-security</a></li>
 					<li>bropat <a href="https://github.com/bropat/ioBroker.eufy-security" target="_blank">ioBroker.eufy-security</a></li>
 					<li>Jan Löbel (JanLoebel) <a href="https://github.com/JanLoebel/eufy-node-client" target="_blank">eufy-security-client</a></li>
+					<li>bropat <a href="https://github.com/bropat/eufy-security-client" target="_blank">eufy-security-client</a></li>
 				</ul>
 				<h5>Webseite:</h5>
 				<ul>
@@ -250,7 +251,7 @@
 						objResp = JSON.parse(this.responseText);
 						if(objResp.success == true)
 						{
-							info = `eufy Security AddOn: ${objResp.api_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.0.6`;
+							info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.4.9c`;
 							
 							document.getElementById("versionInfo").innerHTML = info;
 							

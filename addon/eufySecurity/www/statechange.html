@@ -72,7 +72,8 @@
 				<p>Hier finden Sie den aktuellen Status Ihrer Basisstationen und können diesen entweder für eine Basisstation oder für alle Basisstationen ändern.</p>
 				<p>
 					<div id="allbases">
-						<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">
+						<!--<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">-->
+						<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-1">
 							<div class="col">
 								<div class="card mb-3">
 									<h5 class="card-header">alle Basen</h5>
@@ -85,9 +86,9 @@
 											<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2" disabled>deaktiviert</button>
 										</div>
 									</div>
-									<!--<div class=\"card-footer\">
-										<small class=\"text-muted\">Last updated 3 mins ago</small>
-									</div>-->
+									<div class="card-footer" id="lastEventTimeAll">
+										
+									</div>
 								</div>
 							</div>
 						</div>
@@ -225,7 +226,8 @@
 			
 			function loadData(showLoading)
 			{
-				var xmlHttp, objResp, objIter, bases = "";
+				var xmlHttp, objResp, objIter, bases = "", lastChangeTime;
+				var lastChangeTimeAll = -1;
 				var imagepath = "";
 				var type = "";
 				var state = "";
@@ -267,31 +269,31 @@
 									{
 										case "0":
 											state = "abwesend";
-											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary my-2 mr-3" disabled>abwesend</button>`;
-											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" onclick="setHome('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">zu Hause</button>`;
-											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" onclick="setSchedule('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">Zeitsteuerung</button>`;
+											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary mb-2 mr-3" disabled>abwesend</button>`;
+											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" onclick="setHome('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">zu Hause</button>`;
+											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" onclick="setSchedule('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">Zeitsteuerung</button>`;
 											buttons += `<button id="btnDisarm${objResp.data[objIter].base_id}" onclick="setDisarm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
 											break;
 										case "1":
 											state = "zu Hause";
-											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" onclick="setArm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">abwesend</button>`;
-											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary my-2 mr-3" disabled>zu Hause</button>`;
-											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" onclick="setSchedule('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">Zeitsteuerung</button>`;
-											buttons += `<button id="btnDisarm${objResp.data[objIter].base_id}" onclick="setDisarm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mt-1 my-2">deaktiviert</button>`;
+											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" onclick="setArm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">abwesend</button>`;
+											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary mb-2 mr-3" disabled>zu Hause</button>`;
+											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" onclick="setSchedule('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">Zeitsteuerung</button>`;
+											buttons += `<button id="btnDisarm${objResp.data[objIter].base_id}" onclick="setDisarm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
 											break;
 										case "2":
 											state = "Zeitsteuerung";
-											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" onclick="setArm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">abwesend</button>`;
-											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" onclick="setHome('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">zu Hause</button>`;
-											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary my-2 mr-3" disabled>Zeitsteuerung</button>`;
-											buttons += `<button id="btnDisarm${objResp.data[objIter].base_id}" onclick="setDisarm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mt-1 my-2">deaktiviert</button>`;
+											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" onclick="setArm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">abwesend</button>`;
+											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" onclick="setHome('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">zu Hause</button>`;
+											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary mb-2 mr-3" disabled>Zeitsteuerung</button>`;
+											buttons += `<button id="btnDisarm${objResp.data[objIter].base_id}" onclick="setDisarm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
 											break;
 										case "63":
 											state = "deaktiviert";
-											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" onclick="setArm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">abwesend</button>`;
-											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" onclick="setHome('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">zu Hause</button>`;
-											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" onclick="setSchedule('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary my-2 mr-3">Zeitsteuerung</button>`;
-											buttons += `<button id="btnDisarm${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary my-2" disabled>deaktiviert</button>`;
+											buttons =  `<button id="btnArm${objResp.data[objIter].base_id}" onclick="setArm('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">abwesend</button>`;
+											buttons += `<button id="btnHome${objResp.data[objIter].base_id}" onclick="setHome('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">zu Hause</button>`;
+											buttons += `<button id="btnSchedule${objResp.data[objIter].base_id}" onclick="setSchedule('${objResp.data[objIter].base_id}')" type="button" class="btn btn-sm btn-primary mb-2 mr-3">Zeitsteuerung</button>`;
+											buttons += `<button id="btnDisarm${objResp.data[objIter].base_id}" type="button" class="btn btn-sm btn-primary mb-2" disabled>deaktiviert</button>`;
 											break;
 										default:
 											state="unbekannt";
@@ -308,7 +310,22 @@
 									bases += `</div>`;
 									bases += `</div>`;
 									bases += `</div>`;
-									bases += `<div class="card-footer">${buttons}</div>`;
+									//bases += `<div class="row no-gutters">`;
+									bases += `<div class="card-body">${buttons}</div>`;
+									//bases += `</div>`;
+									if(objResp.data[objIter].guard_mode_last_change_time != "" && objResp.data[objIter].guard_mode_last_change_time != "undefined")
+									{
+										lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guard_mode_last_change_time)*1000));
+										if(parseInt(objResp.data[objIter].guard_mode_last_change_time)*1000 > lastChangeTimeAll)
+										{
+											lastChangeTimeAll = parseInt(objResp.data[objIter].guard_mode_last_change_time*1000);
+										}
+									}
+									else
+									{
+										lastChangeTime = "unbekannt";
+									}
+									bases += `<div class="card-footer"><small class="text-muted">Letzer Statuswechsel: ${lastChangeTime}</small></div>`;
 									bases += `</div>`;
 									bases += `</div>`;
 								}
@@ -318,6 +335,7 @@
 							document.getElementById("btnScheduleAll").removeAttribute("disabled");
 							document.getElementById("btnDisarmAll").removeAttribute("disabled");
 							document.getElementById("bases").innerHTML = bases;
+							document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: ${makeDateTimeString(new Date(lastChangeTimeAll))}</small>`;
 							type = "";
 						}
 						else
@@ -326,6 +344,7 @@
 							document.getElementById("btnHomeAll").setAttribute("disabled", true);
 							document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 							document.getElementById("btnDisarmAll").setAttribute("disabled", true);
+							document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: unbekannt</small>`;
 							document.getElementById("bases").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 						}
 					}
@@ -335,7 +354,8 @@
 						document.getElementById("btnHomeAll").setAttribute("disabled", true);
 						document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 						document.getElementById("btnDisarmAll").setAttribute("disabled", true);
-						document.getElementById("bases").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+						document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: unbekannt</small>`;
+							document.getElementById("bases").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 					}
 					else
 					{
@@ -345,6 +365,7 @@
 							document.getElementById("btnHomeAll").setAttribute("disabled", true);
 							document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 							document.getElementById("btnDisarmAll").setAttribute("disabled", true);
+							document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: wird geladen...</small>`;
 							document.getElementById("bases").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Basisstationen...</strong></div>`;
 						}
 					}
@@ -651,6 +672,11 @@
 					xmlHttp.open("GET", url, true);
 					xmlHttp.send();
 				}
+			}
+
+			function makeDateTimeString(dateTime)
+			{
+				return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}:${dateTime.getSeconds().toString().padStart(2,'0')}`);
 			}
 		</script>
 	</body>

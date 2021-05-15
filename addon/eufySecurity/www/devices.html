@@ -361,7 +361,7 @@
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Kamera">`;
 												type = "Kamera";
 										}
-										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "undefined")
+										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "undefined" && myObj.data[object].last_camera_image_time != "0")
 										{
 											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000));
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
@@ -485,17 +485,20 @@
 								}
 								if(cams != "")
 								{
-									text += `<p id="cameras"><h4>Kameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">${cams}</div></p>`;
+									//text += `<p id="cameras"><h4>Kameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">${cams}</div></p>`;
+									text += `<p id="cameras"><h4>Kameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${cams}</div></p>`;
 									type = "";
 								}
 								if(indoorcams != "")
 								{
-									text += `<p id="indoorcameras"><h4>Innenkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">${indoorcams}</div></p>`;
+									//text += `<p id="indoorcameras"><h4>Innenkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">${indoorcams}</div></p>`;
+									text += `<p id="indoorcameras"><h4>Innenkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${indoorcams}</div></p>`;
 									type="";
 								}
 								if(floodlightcams != "")
 								{
-									text += `<p id="floodlightcameras"><h4>Flutlichtkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">${floodlightcams}</div></p>`;
+									//text += `<p id="floodlightcameras"><h4>Flutlichtkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">${floodlightcams}</div></p>`;
+									text += `<p id="floodlightcameras"><h4>Flutlichtkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${floodlightcams}</div></p>`;
 									type = "";
 								}
 								

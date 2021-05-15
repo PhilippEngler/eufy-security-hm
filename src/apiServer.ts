@@ -3,7 +3,7 @@ import { createServer as createServerHttps } from 'https';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
-import { GuardMode } from './eufySecurityApi/http/http-response.models';
+import { GuardMode } from './eufySecurityApi/http';
 import { Logger } from './eufySecurityApi/utils/logging';
 import { exec } from 'child_process';
 
@@ -12,7 +12,7 @@ var apiServer !: ApiServer;
 var serverHttp = createServerHttp();
 var serverHttps = createServerHttps();
 var api = new EufySecurityApi();
-var logger = new Logger();
+var logger = new Logger(api);
 
 class ApiServer
 {
@@ -367,16 +367,22 @@ class ApiServer
                             apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                         }
 
-                        var useUdpStaticPorts = false;
-                        if(postData.indexOf("useUdpStaticPorts") >= 0)
+                        var apiconnectiontype = "1";
+                        if(postData.indexOf("connectionType") >= 0)
                         {
-                            useUdpStaticPorts = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                            apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "string");
                         }
 
-                        var apiudpports = "52789,52790";
-                        if(postData.indexOf("udpPorts") >= 0)
+                        var apiuseudpstaticports = false;
+                        if(postData.indexOf("useUdpStaticPorts") >= 0)
                         {
-                            apiudpports = getDataFromPOSTData(postData, "udpPorts", "string");
+                            apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                        }
+
+                        var apiudpports : string[][] = [[],[]];
+                        if(postData.indexOf("udpPortsBase") >= 0)
+                        {
+                            apiudpports = getAllUdpPortsForBases(postData);
                         }
 
                         var useSystemVariables = false;
@@ -411,9 +417,12 @@ class ApiServer
                         {
                             isDataOK = false;
                         }
-                        if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                        if(apiuseudpstaticports == true)
                         {
-                            isDataOK = false;
+                            /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                            {
+                                isDataOK = false;
+                            }*/
                         }
                         if(useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == ""))
                         {
@@ -423,12 +432,12 @@ class ApiServer
                         {
                             isDataOK = false;
                         }
-
+                        
                         if(isDataOK == true)
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
+                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
                         }
                         else
                         {
@@ -608,10 +617,37 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
 }
 
 /**
+ * Helperfunction for extracting the UDP ports for each base from the post event.
+ * @param postData The data from the post event.
+ * @returns The array with the baseserials and the port number.
+ */
+function getAllUdpPortsForBases(postData : string) : string[][]
+{
+    var pos = postData.indexOf("udpPortsBase");
+    var res : string[][] = [[],[]];
+    var i = 0;
+    while (pos > 0)
+    {
+        var temp = postData.substring(pos + 29);
+        var basesn = postData.substring(pos + 12, pos + 28);
+        temp = temp.replace("\r\n","");
+        temp = temp.substr(2, temp.indexOf("----") - 4);
+        res[i][0] = basesn;
+        res[i][1] = temp;
+
+        pos = postData.indexOf("udpPortsBase", pos + 16);
+        i++;
+    }
+    return res;
+}
+
+/**
  * Will write config, stop the server and exit.
  */
-function stopServer()
+async function stopServer()
 {
+    logger.logInfoBasic("Stopping P2P-Connections...");
+    await api.closeP2PConnections();
     logger.logInfoBasic("Write config...");
     api.writeConfig();
     logger.logInfoBasic("Stopping...");
@@ -655,16 +691,16 @@ function wait10Seconds() {
     });
 }
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
     logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
-    stopServer();
+    await stopServer();
     logger.logInfoBasic("...done. Exiting");
     exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
     logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
-    stopServer();
+    await stopServer();
     logger.logInfoBasic("...done. Exiting");
     exit(0);
 });

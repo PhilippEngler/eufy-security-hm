@@ -1,5 +1,14 @@
+import { EufySecurityApi } from "../eufySecurityApi";
+
 export class Logger
 {
+    private api : EufySecurityApi;
+    
+    constructor (api : EufySecurityApi)
+    {
+        this.api = api;
+    }
+    
     /**
      * Write the given message(s) to the logfile regardless the actual loglevel.
      * @param message The message to be added.
@@ -35,6 +44,19 @@ export class Logger
     }
 
     /**
+     * Write the given message(s) to the logfile if the loglevel is set to log info.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    public info(message : string, ...additionalMessages : any) : void
+    {
+        if(this.api.getApiLogLevel() >= 1)
+        {
+            console.info(`${this.makeNowDateTimeString()} - INFO: ${message}`, ...additionalMessages);
+        }
+    }
+
+    /**
      * Write the given message(s) to the errorlogfile. Additional the errors are written to the logile if the loglevel is set to log errors.
      * @param logLevel The current loglevel.
      * @param message The message to be added.
@@ -50,6 +72,20 @@ export class Logger
     }
 
     /**
+     * Write the given message(s) to the errorlogfile. Additional the errors are written to the logile if the loglevel is set to log errors.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    public error(message : string, ...additionalMessages : any) : void
+    {
+        console.error(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
+        if(this.api.getApiLogLevel() >= 2)
+        {
+            console.log(`${this.makeNowDateTimeString()} - ERROR: ${message}`, ...additionalMessages);
+        }
+    }
+
+    /**
      * Write the given message(s) to the logfile if the loglevel is set to log debug messages.
      * @param logLevel The current loglevel.
      * @param message The message to be added.
@@ -58,6 +94,35 @@ export class Logger
     public logDebug(logLevel : number, message : string, ...additionalMessages : any) : void
     {
         if(logLevel >= 3)
+        {
+            console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
+        }
+    }
+
+    /**
+     * Write the given message(s) to the logfile if the loglevel is set to log debug messages.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    public debug(message : string, ...additionalMessages : any) : void
+    {
+        if(this.api.getApiLogLevel() >= 3)
+        {
+            console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
+        }
+    }
+
+    public trace(message : string, ...additionalMessages : any) : void
+    {
+        if(this.api.getApiLogLevel() >= 3)
+        {
+            console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
+        }
+    }
+
+    public warn(message : string, ...additionalMessages : any) : void
+    {
+        if(this.api.getApiLogLevel() >= 3)
         {
             console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
         }

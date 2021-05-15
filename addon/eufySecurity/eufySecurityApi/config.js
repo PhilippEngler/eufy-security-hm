@@ -13,7 +13,7 @@ class Config {
         this.hasChanged = false;
     }
     getConfigFileTemplateVersion() {
-        return 3;
+        return 4;
     }
     /**
      * Load Config from file.
@@ -75,13 +75,14 @@ class Config {
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 2) {
             this.logger.logInfoBasic("Configfile needs Stage2 update to version 2...");
-            if (this.filecontent.indexOf("api_udp_local_static_ports") == -1) {
+            /*if(this.filecontent.indexOf("api_udp_local_static_ports") == -1)
+            {
                 this.logger.logInfoBasic(" adding 'api_udp_local_static_ports'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_udp_local_static_ports=52789,52790");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
-            }
+            }*/
             if (this.filecontent.indexOf("api_udp_local_static_ports_active") == -1) {
                 this.logger.logInfoBasic("  adding 'api_udp_local_static_ports_active'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\api_udp_local_static_ports_active=false");
@@ -101,6 +102,24 @@ class Config {
                 this.hasChanged = true;
             }
             this.logger.logInfoBasic("...Stage2 update to version 3 finished.");
+        }
+        if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 4) {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 4...");
+            if (this.filecontent.indexOf("api_connection_type") == -1) {
+                this.logger.logInfoBasic(" adding 'api_connection_type'.");
+                this.filecontent = this.filecontent.replace("api_udp_local_static_ports_active=", "api_connection_type=1\r\napi_udp_local_static_ports_active=");
+                this.config = ini_1.parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if (this.filecontent.indexOf("api_udp_local_static_ports=") > 0) {
+                this.logger.logInfoBasic(" removing 'api_udp_local_static_ports'.");
+                this.filecontent = this.filecontent.replace(/^.*api_udp_local_static_ports=.*$/mg, "");
+                this.config = ini_1.parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            this.logger.logInfoBasic("...Stage2 update to version 4 finished.");
         }
         if (updated) {
             this.config = ini_1.parse(this.filecontent);
@@ -147,8 +166,9 @@ class Config {
         fc += "api_https_pkey_file=/usr/local/etc/config/server.pem\r\n";
         fc += "api_https_cert_file=/usr/local/etc/config/server.pem\r\n";
         fc += "api_https_pkey_string=\r\n";
+        fc += "api_connection_type=1\r\n";
         fc += "api_udp_local_static_ports_active=false";
-        fc += "api_udp_local_static_ports=52789,52790";
+        //fc += "api_udp_local_static_ports=52789,52790";
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
         fc += "api_camera_default_video=\r\n";
@@ -171,6 +191,7 @@ class Config {
         fc += "actor_id=\r\n";
         fc += "base_ip_address=\r\n";
         fc += "base_port=\r\n";
+        fc += "udp_ports=\r\n";
         fs_1.writeFileSync('./config.ini', fc);
         this.loadConfig();
         return true;
@@ -231,6 +252,27 @@ class Config {
         }
     }
     /**
+     * Returns true if the connection type for connecting with HomeBases.
+     */
+    getConnectionType() {
+        try {
+            return this.config['EufyAPIServiceData']['api_connection_type'];
+        }
+        catch (_a) {
+            return "-1";
+        }
+    }
+    /**
+     * Sets true, if static udp ports should be used otherwise false.
+     * @param useUdpLocalStaticPorts Boolean value.
+     */
+    setConnectionType(connectionType) {
+        if (this.config['EufyAPIServiceData']['api_connection_type'] != connectionType) {
+            this.config['EufyAPIServiceData']['api_connection_type'] = connectionType;
+            this.hasChanged = true;
+        }
+    }
+    /**
      * Returns true if the static udp ports should be used otherwise false.
      */
     getUseUdpLocalPorts() {
@@ -252,25 +294,19 @@ class Config {
         }
     }
     /**
-     * Returns a string with the local ports.
-     */
-    getUdpLocalPorts() {
-        try {
-            return this.config['EufyAPIServiceData']['api_udp_local_static_ports'];
-        }
-        catch (_a) {
-            return "";
-        }
-    }
-    /**
      * Set the udp static ports for local communication.
      * @param ports A string with the ports splitted by a comma.
      */
     setUdpLocalPorts(ports) {
-        if (this.config['EufyAPIServiceData']['api_udp_local_static_ports'] != ports) {
-            this.config['EufyAPIServiceData']['api_udp_local_static_ports'] = ports;
-            this.hasChanged = true;
+        if (ports) {
+            var array;
+            for (array of ports) {
+                if (this.setUdpLocalPortPerBase(array[0], array[1]) == true) {
+                    return true;
+                }
+            }
         }
+        return false;
     }
     /**
      * Get a boolean value if the api shoud set system variables on the CCU.
@@ -703,6 +739,24 @@ class Config {
             this.config['EufyP2PData_' + baseSerial]['base_port'] = base_port;
             this.hasChanged = true;
         }
+    }
+    getUdpLocalPortsPerBase(baseSerial) {
+        try {
+            return this.config['EufyP2PData_' + baseSerial]['udp_ports'];
+        }
+        catch (_a) {
+            return "";
+        }
+    }
+    setUdpLocalPortPerBase(baseSerial, udp_ports) {
+        if (baseSerial != undefined && udp_ports != undefined) {
+            if (this.config['EufyP2PData_' + baseSerial]['udp_ports'] != udp_ports) {
+                this.config['EufyP2PData_' + baseSerial]['udp_ports'] = udp_ports;
+                this.hasChanged = true;
+                return true;
+            }
+        }
+        return false;
     }
     /**
      * Saves the P2P releated data for a given base. If the base is currently not in config, it will be created before the config data is populated.

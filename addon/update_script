@@ -18,6 +18,66 @@ if [ -e ${RCD_DIR}/eufySecurity ]; then
   ${RCD_DIR}/eufySecurity stop
 fi
 
+# remove unused api files from versions lower than 1.1
+if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
+  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http.service.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/http/http.service.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http.utils.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/http/http.utils.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http-request.models.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/http/http-request.models.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http-response.models.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/http/http-response.models.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/cloud-lookup.service.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/cloud-lookup.service.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/command.model.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/command.model.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/device-client.service.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/device-client.service.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/ip.utils.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/ip.utils.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/local-lookup.service.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/local-lookup.service.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/message.utils.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/message.utils.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/payload.utils.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/payload.utils.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/push/fid.model.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/push/fid.model.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push.model.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/push/push.model.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push.utils.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/push/push.utils.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-client.service.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/push/push-client.service.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-client-parser.service.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/push/push-client-parser.service.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-register.service.js ]; then
+    rm -f ${ADDON_DIR}/eufySecurityApi/push/push-register.service.js
+  fi
+fi
+
+# remove unused node_modules files from versions lower than 1.1
+if [ -e ${ADDON_DIR}/eufySecurityApi/node_modules/.bin ]; then
+  rm -r ${ADDON_DIR}/eufySecurityApi/node_modules
+fi
+
 # create necessary directories
 mkdir -p ${ADDON_DIR}
 chmod 755 ${ADDON_DIR}

@@ -111,10 +111,11 @@
 							</div>
 
 							<div class="card mb-3">
-								<h5 class="card-header">Konfiguration des Services</h5>
+								<h5 class="card-header">Konfiguration des AddOns</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
+											<h5>Einstellungen für HTTP</h5>
 											<div class="custom-control custom-switch">
 												<input type="checkbox" name="useHttp" class="custom-control-input" id="chkUseHttp" onchange="changeValue(useHttp)">
 												<label class="custom-control-label" for="chkUseHttp">HTTP aktiv</label>
@@ -128,6 +129,7 @@
 												</div>
 											</div>
 											<hr>
+											<h5>Einstellungen für HTTPS</h5>
 											<div class="custom-control custom-switch">
 												<input type="checkbox" name="useHttps" class="custom-control-input" id="chkUseHttps" onchange="changeValue(useHttps)">
 												<label class="custom-control-label" for="chkUseHttps">HTTPS aktiv</label>
@@ -151,36 +153,45 @@
 												<small class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
 											</div>
 											<hr>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mb-2" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
-												<label class="custom-control-label" for="chkUseUdpStaticPorts">Verbindung zur HomeBase lokal über feste Ports aufbauen</label>
-											</div>
+											<h5>Einstellungen für die Verbindung zu den Basisstationen</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mt-2" for="txtUdpPorts">UDP Ports für lokale Verbindung mit HomeBase.</label>
-												<input type="text" name="udpPorts" id="txtUdpPorts" class="form-control" placeholder="UDP Ports" pattern="^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])([,](0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))*$" required>
-												<small class="form-text text-muted">Sie können mehrere Ports angeben, wenn Sie diese jeweils mit einem Komma trennen (bspw.: 52789,52790).</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie nur Zahlen zwischen 0 und 65535 ein. Trennen Sie mehrere Zahlen jeweils mit einem Komma und geben Sie keine Leerzeichen ein.
-												</div>
+												<label class="mb-2" for="cbConnectionType">Herstellen der Verbindung zu den Basisstationen.</label>
+												<select name="connectionType" id="cbConnectionType" class="custom-select mb-2" required>
+													<option disabled selected value style="display: none;">Bitte auswählen...</option>
+													<option disabled value="0">bevorzuge lokale Verbindung</option>
+													<option value="1">nur lokale Verbindung</option>
+													<option disabled value="2">schnellste Verbindung</option>
+												</select>
+											</div>
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mt-2 mb-2" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
+												<label class="custom-control-label mt-2" for="chkUseUdpStaticPorts">Verbindung zu den Basisstation über feste Ports aufbauen</label>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid" id="useUDPStaticPortsBases">
+												
 											</div>
 											<hr>
+											<h5>Einstellungen für die Aktualisierung der Systemvariablen</h5>
 											<div class="custom-control custom-switch">
 												<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="chkUseSystemVariables" onchange="changeValue(useSystemVariables)">
 												<label class="custom-control-label" for="chkUseSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
 											</div>
 											<hr>
+											<h5>Einstellungen für Standardbild der Kameras</h5>
 											<div class="form-label-group" class="container-fluid">
 												<label for="txtDefaultImagePath">Standardbild für Kameras.</label>
 												<input type="text" name="defaultImagePath" id="txtDefaultImagePath" class="form-control" placeholder="Link zum Standardbild.">
 												<small class="form-text text-muted">Wenn die für die jeweilige Kamera kein Standbild zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
 											</div>
 											<hr>
+											<h5>Einstellungen für Standardvideo der Kameras</h5>
 											<div class="form-label-group" class="container-fluid">
 												<label for="txtDefaultVideoPath">Standardvideo für Kameras.</label>
 												<input type="text" name="defaultVideoPath" id="txtDefaultVideoPath" class="form-control" placeholder="Link zum Standardvideo.">
 												<small class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
 											</div>
 											<hr>
+											<h5>Einstellungen für Protokollierung</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label for="txtLogLevel">Umfang der Protokollierung.</label>
 												<div id="alertLogLevel">
@@ -225,7 +236,7 @@
 														<div id="enableTS"><button id="btnEnableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">Fehlerbehebung aktivieren</button></div>
 													</div>
 													<div class="col-7 col-sm-8 col-md-9 col-lg-10 col-xl-10">
-														Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des Addons wiederherzustellen. Um ungewollte Änderungen zu vermeiden, müssen Sie die Bearbeitung für einige Aufgaben zuerst freischalten.<br />
+														Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des AddOns wiederherzustellen. Um ungewollte Änderungen zu vermeiden, müssen Sie die Bearbeitung für einige Aufgaben zuerst freischalten.<br />
 														<small class="form-text text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen unter Umständen Daten und Einstellungen löschen oder verändern.</small>
 													</div>
 												</div>
@@ -471,7 +482,7 @@
 			function initContent()
 			{
 				validateForm();
-				loadData();
+				loadBases();
 				loadSystemVariables();
 			}
 
@@ -490,10 +501,69 @@
 					//form.classList.add('was-validated');
 				}, false);
 			}
+
+			function loadBases()
+			{
+				var xmlHttp, objResp, objIter, bases = "";
+				var url = `${location.protocol}//${location.hostname}:${port}/getBases`;
+				xmlHttp = new XMLHttpRequest();
+				xmlHttp.overrideMimeType('application/json');
+				xmlHttp.onreadystatechange = function()
+				{
+					if (this.readyState == 4 && this.status == 200)
+					{
+						try
+						{
+							objResp = JSON.parse(this.responseText);
+							if(objResp.success == true)
+							{
+								for (objIter in objResp.data)
+								{
+									bases += `<label class="mt-2" for="txtUdpPortsBase${objResp.data[objIter].base_id}">UDP Ports für Verbindung mit HomeBase ${objResp.data[objIter].base_id} (${objResp.data[objIter].name}).</label>`;
+									//bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Ports ${objResp.data[objIter].base_id}" pattern="^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])([,](0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))*$" required>`;
+									//bases += `<small class="form-text text-muted">Sie können mehrere Ports angeben, wenn Sie diese jeweils mit einem Komma trennen (bspw.: 52789,52790).</small>`;
+									//bases += `<div class="invalid-feedback">Bitte geben Sie nur Zahlen zwischen 0 und 65535 ein. Trennen Sie mehrere Zahlen jeweils mit einem Komma und geben Sie keine Leerzeichen ein.</div>`;
+									bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Ports ${objResp.data[objIter].base_id}" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>`;
+									bases += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>`;
+									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 0 und 65535 ein.</div>`;
+								}
+								document.getElementById("useUDPStaticPortsBases").innerHTML = bases;
+								loadData();
+							}
+							else
+							{
+								document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basistationen.</div>`;
+								document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+								loadData();
+							}
+						}
+						catch (e)
+						{
+							document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+							document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+							loadData();
+						}
+					}
+					else if (this.readyState == 4)
+					{
+						document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+						document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+						loadData();
+					}
+					else
+					{
+						document.getElementById("resultLoading").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Einstellungen...</strong></div>`;
+						document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Basisstationen...</strong></div>`;
+						document.getElementById('useUdpStaticPorts').setAttribute("disabled", true);
+					}
+				};
+				xmlHttp.open("GET", url, true);
+				xmlHttp.send();
+			}
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, password, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel;
+				var xmlHttp, objResp, objIter, username, password, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel;
 				var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -516,6 +586,7 @@
 								apiporthttps = objResp.data[objIter].api_https_port;
 								apikeyhttps = objResp.data[objIter].api_https_key_file;
 								apicerthttps = objResp.data[objIter].api_https_cert_file;
+								apiconnectiontype = objResp.data[objIter].api_connection_type
 								apiuseudplocalstaticports = objResp.data[objIter].api_udp_local_static_ports_active;
 								apiudpports = objResp.data[objIter].api_udp_local_static_ports;
 								apiusesystemvariables = objResp.data[objIter].api_use_system_variables;
@@ -553,6 +624,15 @@
 							text.value = apikeyhttps;
 							text = document.getElementById('txtHttpsCertFile');
 							text.value = apicerthttps;
+							if(apiconnectiontype == undefined || (apiconnectiontype != "0" && apiconnectiontype != "1" && apiconnectiontype != "2"))
+							{
+								document.getElementById("cbConnectionType").selectedIndex = "";
+							}
+							else
+							{
+								document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(apiconnectiontype)) + 1;
+							}
+							//document.getElementById("cbConnectionType").setAttribute("disabled", true);
 							if(apiusesystemvariables == "true")
 							{
 								document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
@@ -561,12 +641,37 @@
 							{
 								document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
 							}
-							else
+							/*else
 							{
 								document.getElementById("txtUdpPorts").setAttribute("disabled", true);
 							}
 							text = document.getElementById('txtUdpPorts');
-							text.value = apiudpports;
+							text.value = apiudpports;*/
+
+							var element = document.getElementsByTagName("INPUT");
+							for (var i=0, m=element.length; i<m; i++)
+							{
+								if(element[i].name.startsWith("udpPortsBase"))
+								{
+									var tempSerial = element[i].name.replace("udpPortsBase", "");
+									var tempPorts = objResp.data[objIter]["api_udp_local_static_ports_" + tempSerial];
+									text = document.getElementById('txtUdpPortsBase' + tempSerial);
+									if(tempPorts == undefined || tempPorts == "undefined")
+									{
+										text.value = "";
+									}
+									else
+									{
+										text.value = tempPorts;
+									}
+									
+									if(apiuseudplocalstaticports == "false")
+									{
+										document.getElementById('txtUdpPortsBase' + tempSerial).setAttribute("disabled", true);
+									}
+								}
+							}
+
 							text = document.getElementById('txtDefaultImagePath');
 							text.value = apicameradefaultimage;
 							text = document.getElementById('txtDefaultVideoPath');
@@ -948,11 +1053,29 @@
 					case "useUdpStaticPorts":
 						if(element.checked == true)
 						{
-							document.getElementById("txtUdpPorts").removeAttribute("disabled");
+							var element = document.getElementsByTagName("INPUT");
+							for (var i=0, m=element.length; i<m; i++)
+							{
+								if(element[i].name.startsWith("udpPortsBase"))
+								{
+									var tempSerial = element[i].name.replace("udpPortsBase", "");
+									document.getElementById('txtUdpPortsBase' + tempSerial).removeAttribute("disabled");
+								}
+							}
+							//document.getElementById("txtUdpPorts").removeAttribute("disabled");
 						}
 						else
 						{
-							document.getElementById("txtUdpPorts").setAttribute("disabled", true);
+							var element = document.getElementsByTagName("INPUT");
+							for (var i=0, m=element.length; i<m; i++)
+							{
+								if(element[i].name.startsWith("udpPortsBase"))
+								{
+									var tempSerial = element[i].name.replace("udpPortsBase", "");
+									document.getElementById('txtUdpPortsBase' + tempSerial).setAttribute("disabled", true);
+								}
+							}
+							//document.getElementById("txtUdpPorts").setAttribute("disabled", true);
 						}
 						break;
 				}

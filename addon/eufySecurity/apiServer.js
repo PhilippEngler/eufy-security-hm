@@ -14,7 +14,7 @@ const https_1 = require("https");
 const fs_1 = require("fs");
 const process_1 = require("process");
 const eufySecurityApi_1 = require("./eufySecurityApi/eufySecurityApi");
-const http_response_models_1 = require("./eufySecurityApi/http/http-response.models");
+const http_2 = require("./eufySecurityApi/http");
 const logging_1 = require("./eufySecurityApi/utils/logging");
 const child_process_1 = require("child_process");
 process.chdir(__dirname);
@@ -22,7 +22,7 @@ var apiServer;
 var serverHttp = http_1.createServer();
 var serverHttps = https_1.createServer();
 var api = new eufySecurityApi_1.EufySecurityApi();
-var logger = new logging_1.Logger();
+var logger = new logging_1.Logger(api);
 class ApiServer {
     /**
      * Create the ApiServer-Object.
@@ -126,31 +126,31 @@ class ApiServer {
                             if (url.length == 3) {
                                 switch (url[2]) {
                                     case "away":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.AWAY);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.AWAY);
                                         break;
                                     case "custom1":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.CUSTOM1);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.CUSTOM1);
                                         break;
                                     case "custom2":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.CUSTOM2);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.CUSTOM2);
                                         break;
                                     case "custom3":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.CUSTOM3);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.CUSTOM3);
                                         break;
                                     case "disarmed":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.DISARMED);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.DISARMED);
                                         break;
                                     case "geo":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.GEO);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.GEO);
                                         break;
                                     case "home":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.HOME);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.HOME);
                                         break;
                                     case "off":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.OFF);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.OFF);
                                         break;
                                     case "schedule":
-                                        responseString = yield api.setGuardMode(http_response_models_1.GuardMode.SCHEDULE);
+                                        responseString = yield api.setGuardMode(http_2.GuardMode.SCHEDULE);
                                         break;
                                     default:
                                         responseString = `{"success":false,"message":"Unknown mode to set."}`;
@@ -159,31 +159,31 @@ class ApiServer {
                             else if (url.length == 4) {
                                 switch (url[3]) {
                                     case "away":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.AWAY);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.AWAY);
                                         break;
                                     case "custom1":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.CUSTOM1);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.CUSTOM1);
                                         break;
                                     case "custom2":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.CUSTOM2);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.CUSTOM2);
                                         break;
                                     case "custom3":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.CUSTOM3);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.CUSTOM3);
                                         break;
                                     case "disarmed":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.DISARMED);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.DISARMED);
                                         break;
                                     case "geo":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.GEO);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.GEO);
                                         break;
                                     case "home":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.HOME);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.HOME);
                                         break;
                                     case "off":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.OFF);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.OFF);
                                         break;
                                     case "schedule":
-                                        responseString = yield api.setGuardModeBase(url[2], http_response_models_1.GuardMode.SCHEDULE);
+                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.SCHEDULE);
                                         break;
                                     default:
                                         responseString = `{"success":false,"message":"Unknown mode to set."}`;
@@ -320,13 +320,17 @@ class ApiServer {
                             if (postData.indexOf("httpsCertFile") >= 0) {
                                 apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                             }
-                            var useUdpStaticPorts = false;
-                            if (postData.indexOf("useUdpStaticPorts") >= 0) {
-                                useUdpStaticPorts = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                            var apiconnectiontype = "1";
+                            if (postData.indexOf("connectionType") >= 0) {
+                                apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "string");
                             }
-                            var apiudpports = "52789,52790";
-                            if (postData.indexOf("udpPorts") >= 0) {
-                                apiudpports = getDataFromPOSTData(postData, "udpPorts", "string");
+                            var apiuseudpstaticports = false;
+                            if (postData.indexOf("useUdpStaticPorts") >= 0) {
+                                apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                            }
+                            var apiudpports = [[], []];
+                            if (postData.indexOf("udpPortsBase") >= 0) {
+                                apiudpports = getAllUdpPortsForBases(postData);
                             }
                             var useSystemVariables = false;
                             if (postData.indexOf("useSystemVariables") >= 0) {
@@ -350,8 +354,11 @@ class ApiServer {
                             if (checkNumberValue(apiporthttps, 1, 53535) == false) {
                                 isDataOK = false;
                             }
-                            if (checkNumbersValue(apiudpports, 0, 53535) == false) {
-                                isDataOK = false;
+                            if (apiuseudpstaticports == true) {
+                                /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                                {
+                                    isDataOK = false;
+                                }*/
                             }
                             if (useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == "")) {
                                 isDataOK = false;
@@ -361,7 +368,7 @@ class ApiServer {
                             }
                             if (isDataOK == true) {
                                 apiPortFile(Number(apiporthttp), Number(apiporthttps));
-                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, useUdpStaticPorts, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
+                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
                             }
                             else {
                                 responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check the values."}`;
@@ -498,15 +505,35 @@ function getDataFromPOSTData(postData, target, dataType) {
     }
     return null;
 }
+function getAllUdpPortsForBases(postData) {
+    var pos = postData.indexOf("udpPortsBase");
+    var res = [[], []];
+    var i = 0;
+    while (pos > 0) {
+        var temp = postData.substring(pos + 29);
+        var basesn = postData.substring(pos + 12, pos + 28);
+        temp = temp.replace("\r\n", "");
+        temp = temp.substr(2, temp.indexOf("----") - 4);
+        res[i][0] = basesn;
+        res[i][1] = temp;
+        pos = postData.indexOf("udpPortsBase", pos + 16);
+        i++;
+    }
+    return res;
+}
 /**
  * Will write config, stop the server and exit.
  */
 function stopServer() {
-    logger.logInfoBasic("Write config...");
-    api.writeConfig();
-    logger.logInfoBasic("Stopping...");
-    serverHttp.close();
-    logger.logInfoBasic("Stopped...");
+    return __awaiter(this, void 0, void 0, function* () {
+        logger.logInfoBasic("Stopping P2P-Connections...");
+        yield api.closeP2PConnections();
+        logger.logInfoBasic("Write config...");
+        api.writeConfig();
+        logger.logInfoBasic("Stopping...");
+        serverHttp.close();
+        logger.logInfoBasic("Stopped...");
+    });
 }
 /**
  * Will write config and restart the server.
@@ -539,16 +566,16 @@ function wait10Seconds() {
         }, 10000);
     });
 }
-process.on('SIGTERM', () => {
+process.on('SIGTERM', () => __awaiter(void 0, void 0, void 0, function* () {
     logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
-    stopServer();
+    yield stopServer();
     logger.logInfoBasic("...done. Exiting");
     process_1.exit(0);
-});
-process.on('SIGINT', () => {
+}));
+process.on('SIGINT', () => __awaiter(void 0, void 0, void 0, function* () {
     logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
-    stopServer();
+    yield stopServer();
     logger.logInfoBasic("...done. Exiting");
     process_1.exit(0);
-});
+}));
 main();
