@@ -505,6 +505,11 @@ function getDataFromPOSTData(postData, target, dataType) {
     }
     return null;
 }
+/**
+ * Helperfunction for extracting the UDP ports for each base from the post event.
+ * @param postData The data from the post event.
+ * @returns The array with the baseserials and the port number.
+ */
 function getAllUdpPortsForBases(postData) {
     var pos = postData.indexOf("udpPortsBase");
     var res = [[], []];

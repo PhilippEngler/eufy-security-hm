@@ -384,7 +384,7 @@ class Config {
     }
     /**
      * Set weather https sould be used for api.
-     * @param apiport Use https for the api..
+     * @param apiport Use https for the api.
      */
     setApiUseHttps(apiusehttps) {
         if (this.config['EufyAPIServiceData']['api_https_active'] != apiusehttps) {
@@ -740,6 +740,11 @@ class Config {
             this.hasChanged = true;
         }
     }
+    /**
+     * Returns the UDP port for the HomeBase.
+     * @param baseSerial The serial of the HomeBase.
+     * @returns Zhe UDP port for the HomeBase.
+     */
     getUdpLocalPortsPerBase(baseSerial) {
         try {
             return this.config['EufyP2PData_' + baseSerial]['udp_ports'];
@@ -748,6 +753,12 @@ class Config {
             return "";
         }
     }
+    /**
+     * Set the UDP port for a HomeBase.
+     * @param baseSerial The serial for the HomeBase.
+     * @param udp_ports The UDP port.
+     * @returns True on success otherwise false.
+     */
     setUdpLocalPortPerBase(baseSerial, udp_ports) {
         if (baseSerial != undefined && udp_ports != undefined) {
             if (this.config['EufyP2PData_' + baseSerial]['udp_ports'] != udp_ports) {

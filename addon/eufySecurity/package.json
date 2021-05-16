@@ -1,6 +1,6 @@
 {
   "name": "eufy-security-hm",
-  "version": "1.4.9c",
+  "version": "1.4.9d",
   "description": "eufy Security AddOn for HomeMatic",
   "main": "apiServer.js",
   "scripts": {

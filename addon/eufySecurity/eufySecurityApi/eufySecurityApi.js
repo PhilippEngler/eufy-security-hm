@@ -179,6 +179,7 @@ class EufySecurityApi {
                         }
                         json = `{"success":true,"data":[${json}]}`;
                         this.setLastConnectionInfo(true);
+                        this.handleLastModeChangeData(bases);
                     }
                     else {
                         json = `{"success":false,"reason":"No bases found."}`;
@@ -264,6 +265,7 @@ class EufySecurityApi {
                             this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                         }
                         this.setLastConnectionInfo(true);
+                        this.handleLastModeChangeData(bases);
                     }
                     else {
                         json = `{"success":false,"reason":"No Bases found."}`;
@@ -299,6 +301,7 @@ class EufySecurityApi {
                         this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
                         this.setLastConnectionInfo(true);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
                     }
                     else {
                         json = `{"success":false,"reason":"No such base found."}`;
@@ -359,6 +362,7 @@ class EufySecurityApi {
                             this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
                             this.setLastConnectionInfo(true);
                             this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                            this.handleLastModeChangeData(bases);
                         }
                         else {
                             json = `{"success":false,"data":[${json}`;
@@ -409,6 +413,7 @@ class EufySecurityApi {
                         json += `"guard_mode":"${base.getGuardMode().value}"}`;
                         this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
                         this.setLastConnectionInfo(true);
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
                     }
                     else {
                         json = `{"success":false,"data":[`;
@@ -516,6 +521,24 @@ class EufySecurityApi {
         });
     }
     /**
+     * Set the systemvariables for last mode change time.
+     * @param bases The array with all bases.
+     */
+    handleLastModeChangeData(bases) {
+        var base;
+        var tempModeChange;
+        var lastModeChange = new Date(1970, 1, 1);
+        for (var key in bases) {
+            base = bases[key];
+            tempModeChange = new Date(base.getGuardMode().timestamp);
+            if (lastModeChange < tempModeChange) {
+                lastModeChange = tempModeChange;
+            }
+            this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), tempModeChange);
+        }
+        this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
+    }
+    /**
      * Get the Token from config.
      */
     getToken() {
@@ -605,6 +628,11 @@ class EufySecurityApi {
         }
         return json;
     }
+    /**
+     * Returns the specified UDP port for communication with the HomeBase.
+     * @param baseSerial The serial for the HomeBase.
+     * @returns The UDP port for the connection to the HomeBase.
+     */
     getUDPLocalPortForBase(baseSerial) {
         if (this.config.getUseUdpLocalPorts() == true) {
             try {
@@ -730,8 +758,8 @@ class EufySecurityApi {
                         var device;
                         var bases = this.bases.getBases();
                         var devices = this.devices.getDevices();
-                        var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime"];
-                        var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "letzte Aktualisierung der eufy Links", "letzte Aktualisierung des eufy Systemstatus"];
+                        var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime", "eufyLastModeChangeTime"];
+                        var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus", "Zeitpunkt des letzten Moduswechsels"];
                         var json = "";
                         var i = 0;
                         for (var sv of commonSystemVariablesName) {
@@ -754,6 +782,14 @@ class EufySecurityApi {
                             json += `{"sysVar_name":"eufyCentralState${base.getSerial()}",`;
                             json += `"sysVar_info":"aktueller Status der Basis ${base.getSerial()}",`;
                             if ((yield this.homematicApi.isSystemVariableAvailable("eufyCentralState" + base.getSerial())) == true) {
+                                json += `"sysVar_available":true`;
+                            }
+                            else {
+                                json += `"sysVar_available":false`;
+                            }
+                            json += `,"sysVar_name":"eufyLastModeChangeTime${base.getSerial()}",`;
+                            json += `"sysVar_info":"Zeitpunkt des letzten Moduswechsels der Basis ${base.getSerial()}",`;
+                            if ((yield this.homematicApi.isSystemVariableAvailable("eufyLastModeChangeTime" + base.getSerial())) == true) {
                                 json += `"sysVar_available":true`;
                             }
                             else {
@@ -924,6 +960,10 @@ class EufySecurityApi {
         }
         return res;
     }
+    /**
+     * Returns the P2P connection type determine how to connect to the HomeBases.
+     * @returns The P2PConnection type.
+     */
     getP2PConnectionType() {
         try {
             var res = Number.parseInt(this.config.getConnectionType());
@@ -978,9 +1018,17 @@ class EufySecurityApi {
     getApiVersion() {
         return `{"success":true,"api_version":"${this.getEufySecurityApiVersion()}","homematic_api_version":"${this.homematicApi.getHomematicApiVersion()}","eufy_security_client_version":"${this.getEufySecurityClientVersion()}"}`;
     }
+    /**
+     * Returns the version of this API.
+     * @returns The version of this API.
+     */
     getEufySecurityApiVersion() {
-        return "1.4.9c";
+        return "1.4.9d";
     }
+    /**
+     * Return the version of the library used for communicating with eufy.
+     * @returns The version of the used eufy-security-client.
+     */
     getEufySecurityClientVersion() {
         return "0.7.2";
     }
