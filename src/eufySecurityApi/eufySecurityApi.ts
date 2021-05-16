@@ -219,6 +219,7 @@ export class EufySecurityApi
                     }
                     json = `{"success":true,"data":[${json}]}`;
                     this.setLastConnectionInfo(true);
+                    this.handleLastModeChangeData(bases);
                 }
                 else
                 {
@@ -332,6 +333,7 @@ export class EufySecurityApi
                     }
 
                     this.setLastConnectionInfo(true);
+                    this.handleLastModeChangeData(bases);
                 }
                 else
                 {
@@ -376,6 +378,7 @@ export class EufySecurityApi
                     this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                    this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
                 }
                 else
                 {
@@ -452,6 +455,7 @@ export class EufySecurityApi
                         this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
                         this.setLastConnectionInfo(true);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
+                        this.handleLastModeChangeData(bases);
                     }
                     else
                     {
@@ -512,6 +516,7 @@ export class EufySecurityApi
                     json += `"guard_mode":"${base.getGuardMode().value}"}`;
                     this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
                     this.setLastConnectionInfo(true);
+                    this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
                 }
                 else
                 {
@@ -644,6 +649,30 @@ export class EufySecurityApi
         }
 
         return json;
+    }
+
+    /**
+     * Set the systemvariables for last mode change time.
+     * @param bases The array with all bases.
+     */
+    public handleLastModeChangeData(bases : { [key: string]: Station })
+    {
+        var base : Station;
+        
+        var tempModeChange;
+        var lastModeChange = new Date(1970, 1, 1);
+        
+        for (var key in bases)
+        {
+            base = bases[key];
+            tempModeChange = new Date(base.getGuardMode().timestamp);
+            if(lastModeChange < tempModeChange)
+            {
+                lastModeChange = tempModeChange;
+            }
+            this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), tempModeChange);
+        }
+        this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
     }
 
     /**
@@ -929,8 +958,8 @@ export class EufySecurityApi
                     var bases = this.bases.getBases();
                     var devices = this.devices.getDevices();
 
-                    var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime"];
-                    var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "letzte Aktualisierung der eufy Links", "letzte Aktualisierung des eufy Systemstatus"];
+                    var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime","eufyLastModeChangeTime"];
+                    var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus","Zeitpunkt des letzten Moduswechsels"];
 
                     var json = "";
                     var i = 0;
@@ -963,6 +992,18 @@ export class EufySecurityApi
                         json += `"sysVar_info":"aktueller Status der Basis ${base.getSerial()}",`;
                         
                         if(await this.homematicApi.isSystemVariableAvailable("eufyCentralState" + base.getSerial()) == true)
+                        {
+                            json += `"sysVar_available":true`;
+                        }
+                        else
+                        {
+                            json += `"sysVar_available":false`;
+                        }
+                        
+                        json += `,"sysVar_name":"eufyLastModeChangeTime${base.getSerial()}",`;
+                        json += `"sysVar_info":"Zeitpunkt des letzten Moduswechsels der Basis ${base.getSerial()}",`;
+                        
+                        if(await this.homematicApi.isSystemVariableAvailable("eufyLastModeChangeTime" + base.getSerial()) == true)
                         {
                             json += `"sysVar_available":true`;
                         }
@@ -1255,7 +1296,7 @@ export class EufySecurityApi
      */
     private getEufySecurityApiVersion() : string
     {
-        return "1.4.9c";
+        return "1.4.9d";
     }
 
     /**
