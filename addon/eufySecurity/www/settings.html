@@ -524,8 +524,8 @@
 									//bases += `<small class="form-text text-muted">Sie können mehrere Ports angeben, wenn Sie diese jeweils mit einem Komma trennen (bspw.: 52789,52790).</small>`;
 									//bases += `<div class="invalid-feedback">Bitte geben Sie nur Zahlen zwischen 0 und 65535 ein. Trennen Sie mehrere Zahlen jeweils mit einem Komma und geben Sie keine Leerzeichen ein.</div>`;
 									bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Ports ${objResp.data[objIter].base_id}" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>`;
-									bases += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>`;
-									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 0 und 65535 ein.</div>`;
+									bases += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basis zugeordnet sein.</small>`;
+									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 0 und 65535 ein. Diese Zahl darf keiner anderen Basis zugeordnet sein.</div>`;
 								}
 								document.getElementById("useUDPStaticPortsBases").innerHTML = bases;
 								loadData();
@@ -739,7 +739,7 @@
 									{
 										sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle">nicht angelegt</th>`;
 									}
-									sysVarTable += `<td class="text-break align-middle">${sysVarName}</td>`;
+									sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
 
 									if(sysVarAvailable==true)
 									{
