@@ -131,7 +131,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                         this.log.debug(`${this.constructor.name}.authenticate(): token: ${this.token}`);
                         this.log.debug(`${this.constructor.name}.authenticate(): token_expiration: ${this.token_expiration}`);
 
-                        this.api.setTokenData(this.token, this.token_expiration.getMilliseconds.toString());
+                        this.api.setTokenData(this.token, this.token_expiration.getTime().toString());
 
                         this.emit("connect");
                         return AuthResult.OK;
@@ -146,7 +146,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                         this.log.debug(`${this.constructor.name}.authenticate(): token: ${this.token}`);
                         this.log.debug(`${this.constructor.name}.authenticate(): token_expiration: ${this.token_expiration}`);
 
-                        this.api.setTokenData(this.token, this.token_expiration.getMilliseconds.toString());
+                        this.api.setTokenData(this.token, this.token_expiration.getTime().toString());
 
                         await this.sendVerifyCode(VerfyCodeTypes.TYPE_EMAIL);
 
