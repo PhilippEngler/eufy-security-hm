@@ -403,6 +403,30 @@ class ApiServer
                             apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                         }
 
+                        var useupdatestate = false;
+                        if(postData.indexOf("usePeriodicallyUpdateState") >= 0)
+                        {
+                            useupdatestate = getDataFromPOSTData(postData, "usePeriodicallyUpdateState", "boolean");
+                        }
+
+                        var updatestatetimespan ="15";
+                        if(postData.indexOf("periodicallyUpdateStateTimespan") >= 0)
+                        {
+                            updatestatetimespan = getDataFromPOSTData(postData, "periodicallyUpdateStateTimespan", "string");
+                        }
+
+                        var useupdatelinks = false;
+                        if(postData.indexOf("usePeriodicallyUpdateState") >= 0)
+                        {
+                            useupdatelinks = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinks", "boolean");
+                        }
+
+                        var updatelinkstimespan ="15";
+                        if(postData.indexOf("periodicallyUpdateLinksTimespan") >= 0)
+                        {
+                            updatelinkstimespan = getDataFromPOSTData(postData, "periodicallyUpdateLinksTimespan", "string");
+                        }
+
                         var apiloglevel = "0";
                         if(postData.indexOf("logLevel") >= 0)
                         {
@@ -432,12 +456,20 @@ class ApiServer
                         {
                             isDataOK = false;
                         }
+                        if(checkNumberValue(updatestatetimespan, 15, 240) == false)
+                        {
+                            isDataOK = false;
+                        }
+                        if(checkNumberValue(updatelinkstimespan, 15, 240) == false)
+                        {
+                            isDataOK = false;
+                        }
                         
                         if(isDataOK == true)
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
+                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestate, updatestatetimespan, useupdatelinks, updatelinkstimespan, apiloglevel);
                         }
                         else
                         {

@@ -21,7 +21,7 @@ export class Config
 
     private getConfigFileTemplateVersion() : number
     {
-        return 4;
+        return 5;
     }
 
     /**
@@ -150,6 +150,51 @@ export class Config
             }
             this.logger.logInfoBasic("...Stage2 update to version 4 finished.");
         }
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 5)
+        {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 5...");
+            if(this.filecontent.indexOf("api_update_state_active") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_update_state_active'.");
+                this.filecontent = this.filecontent.replace("api_log_level=", "api_update_state_active=false\r\napi_log_level=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_update_state_timespan") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_update_state_timespan'.");
+                this.filecontent = this.filecontent.replace("api_log_level=", "api_update_state_timespan=15\r\napi_log_level=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_update_links24_active") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_update_links24_active'.");
+                this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links24_active=false\r\napi_log_level=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_update_links_active") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_update_links_active'.");
+                this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links_active=false\r\napi_log_level=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_update_links_timespan") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_update_links_timespan'.");
+                this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links_timespan=15\r\napi_log_level=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            this.logger.logInfoBasic("...Stage2 update to version 5 finished.");
+        }
 
         if(updated)
         {
@@ -212,6 +257,11 @@ export class Config
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
         fc += "api_camera_default_video=\r\n";
+        fc += "api_update_state_active=false\r\n";
+        fc += "api_update_state_timespan=15\r\n";
+        fc += "api_update_links24_active=false\r\n";
+        fc += "api_update_links_active=true\r\n";
+        fc += "api_update_links_timespan=15\r\n";
         fc += "api_log_level=0\r\n";
 
         writeFileSync('./config.ini', fc);
@@ -694,6 +744,118 @@ export class Config
         if(this.config['EufyAPIServiceData']['api_camera_default_video'] != apicameradefaultvideo)
         {
             this.config['EufyAPIServiceData']['api_camera_default_video'] = apicameradefaultvideo;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Determines if the updated state runs scheduled.
+     */
+    public getApiUseUpdateState() : boolean
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_update_state_active'];
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set the value for update state scheduled.
+     * @param apiuseupdatestate The value if the state should updated scheduled.
+     */
+    public setApiUseUpdateState(apiuseupdatestate : boolean) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_update_state_active'] != apiuseupdatestate)
+        {
+            this.config['EufyAPIServiceData']['api_update_state_active'] = apiuseupdatestate;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * 
+     */
+    public getApiUpdateStateTimespan() : string
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_update_state_timespan'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * 
+     * @param apiupdatestatetimespan 
+     */
+    public setApiUpdateStateTimespan(apiupdatestatetimespan : string) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_update_state_timespan'] != apiupdatestatetimespan)
+        {
+            this.config['EufyAPIServiceData']['api_update_state_timespan'] = apiupdatestatetimespan;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Determines if the updated links runs scheduled.
+     */
+    public getApiUseUpdateLinks() : boolean
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_update_links_active'];
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set the value for update links scheduled.
+     * @param apiuseupdatestate The value if the links should updated scheduled.
+     */
+    public setApiUseUpdateLinks(apiuseupdatelinks : boolean) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_update_links_active'] != apiuseupdatelinks)
+        {
+            this.config['EufyAPIServiceData']['api_update_links_active'] = apiuseupdatelinks;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * 
+     */
+    public getApiUpdateLinksTimespan() : string
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_update_links_timespan'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * 
+     * @param apiupdatestatetimespan 
+     */
+    public setApiUpdateLinksTimespan(apiupdatelinkstimespan : string) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_update_links_timespan'] != apiupdatelinkstimespan)
+        {
+            this.config['EufyAPIServiceData']['api_update_links_timespan'] = apiupdatelinkstimespan;
             this.hasChanged = true;
         }
     }

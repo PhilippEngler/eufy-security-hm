@@ -191,6 +191,34 @@
 												<small class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
 											</div>
 											<hr>
+											<h5>Einstellungen für regelmäßige Aktualisierung des Modus</h5>
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="usePeriodicallyUpdateState" class="custom-control-input" id="chkPeriodicallyUpdateState" onchange="changeValue(usePeriodicallyUpdateState)">
+												<label class="custom-control-label" for="chkPeriodicallyUpdateState">Modus regelmäßig automatisch aktualisieren</label>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtPeriodicallyUpdateStateTimespan">Zeitspanne in Minuten zwischen den Aktualisierungen.</label>
+												<input type="text" name="periodicallyUpdateStateTimespan" id="txtPeriodicallyUpdateStateTimespan" class="form-control" placeholder="Zeitspanne zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
+												<small class="form-text text-muted">Zeitspanne in Minuten.</small>
+												<div class="invalid-feedback">
+													Bitte geben Sie einen Zeitraum zwischen 15 und 240 Minuten ein.
+												</div>
+											</div>
+											<hr>
+											<h5>Einstellungen für regelmäßige Aktualisierung der Links</h5>
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="usePeriodicallyUpdateLinks" class="custom-control-input" id="chkPeriodicallyUpdateLinks" onchange="changeValue(usePeriodicallyUpdateLinks)">
+												<label class="custom-control-label" for="chkPeriodicallyUpdateLinks">Links regelmäßig automatisch aktualisieren</label>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtPeriodicallyUpdateLinksTimespan">Zeitspanne in Minuten zwischen den Aktualisierungen.</label>
+												<input type="text" name="periodicallyUpdateLinksTimespan" id="txtPeriodicallyUpdateLinksTimespan" class="form-control" placeholder="Zeitspanne zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
+												<small class="form-text text-muted">Zeitspanne in Minuten.</small>
+												<div class="invalid-feedback">
+													Bitte geben Sie einen Zeitraum zwischen 15 und 240 Minuten ein.
+												</div>
+											</div>
+											<hr>
 											<h5>Einstellungen für Protokollierung</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label for="txtLogLevel">Umfang der Protokollierung.</label>
@@ -563,7 +591,7 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, password, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel;
+				var xmlHttp, objResp, objIter, username, password, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestate, apiupdatestatetimespan, apiuseupdatelinks, apiupdatelinkstimespan, apiloglevel;
 				var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -592,6 +620,10 @@
 								apiusesystemvariables = objResp.data[objIter].api_use_system_variables;
 								apicameradefaultimage = objResp.data[objIter].api_camera_default_image;
 								apicameradefaultvideo = objResp.data[objIter].api_camera_default_video;
+								apiuseupdatestate = objResp.data[objIter].api_use_update_state;
+								apiupdatestatetimespan = objResp.data[objIter].api_update_state_timespan;
+								apiuseupdatelinks = objResp.data[objIter].api_use_update_links;
+								apiupdatelinkstimespan = objResp.data[objIter].api_update_links_timespan;
 								apiloglevel = objResp.data[objIter].api_log_level;
 							}
 							var text = document.getElementById('txtUsername');
@@ -676,6 +708,26 @@
 							text.value = apicameradefaultimage;
 							text = document.getElementById('txtDefaultVideoPath');
 							text.value = apicameradefaultvideo;
+							if(apiuseupdatestate == "true")
+							{
+								document.getElementById("chkPeriodicallyUpdateState").setAttribute("checked", true);
+							}
+							else
+							{
+								document.getElementById("txtPeriodicallyUpdateStateTimespan").setAttribute("disabled", true);
+							}
+							text = document.getElementById('txtPeriodicallyUpdateStateTimespan');
+							text.value=apiupdatestatetimespan;
+							if(apiuseupdatelinks == "true")
+							{
+								document.getElementById("chkPeriodicallyUpdateLinks").setAttribute("checked", true);
+							}
+							else
+							{
+								document.getElementById("txtPeriodicallyUpdateLinksTimespan").setAttribute("disabled", true);
+							}
+							text = document.getElementById('txtPeriodicallyUpdateLinksTimespan');
+							text.value=apiupdatelinkstimespan;
 							text = document.getElementById('txtLogLevel');
 							text.value = apiloglevel;
 							checkLogLevel(apiloglevel);
@@ -1076,6 +1128,26 @@
 								}
 							}
 							//document.getElementById("txtUdpPorts").setAttribute("disabled", true);
+						}
+						break;
+					case "usePeriodicallyUpdateState":
+						if(element.checked == true)
+						{
+							document.getElementById("txtPeriodicallyUpdateStateTimespan").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("txtPeriodicallyUpdateStateTimespan").setAttribute("disabled", true);
+						}
+						break;
+					case "usePeriodicallyUpdateLinks":
+						if(element.checked == true)
+						{
+							document.getElementById("txtPeriodicallyUpdateLinksTimespan").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("txtPeriodicallyUpdateLinksTimespan").setAttribute("disabled", true);
 						}
 						break;
 				}
