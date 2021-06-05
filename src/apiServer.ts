@@ -680,6 +680,8 @@ async function stopServer()
 {
     logger.logInfoBasic("Stopping P2P-Connections...");
     await api.closeP2PConnections();
+    logger.logInfoBasic("Stopping scheduled tasks...");
+    api.clearScheduledTasks();
     logger.logInfoBasic("Write config...");
     api.writeConfig();
     logger.logInfoBasic("Stopping...");

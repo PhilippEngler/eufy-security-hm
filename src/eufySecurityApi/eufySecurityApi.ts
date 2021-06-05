@@ -16,6 +16,9 @@ export class EufySecurityApi
     private homematicApi !: HomematicApi;
     private devices !: Devices;
     private bases !: Bases;
+    private taskUpdateState !: NodeJS.Timeout;
+    private taskUpdateLinks !: NodeJS.Timeout;
+    private taskUpdateLinks24 !: NodeJS.Timeout;
     
     /**
      * Create the api object.
@@ -55,6 +58,8 @@ export class EufySecurityApi
                 this.devices = new Devices(this.httpService);
     
                 await this.loadData();
+
+                this.setupScheduledTasks();
             }
             else
             {
@@ -779,7 +784,6 @@ export class EufySecurityApi
         if(this.bases)
         {
             var bases = this.bases.getBases();
-            var base : Station;
 
             if(bases)
             {
@@ -838,6 +842,10 @@ export class EufySecurityApi
         json += `"api_use_system_variables":"${this.config.getApiUseSystemVariables()}",`;
         json += `"api_camera_default_image":"${this.config.getApiCameraDefaultImage()}",`;
         json += `"api_camera_default_video":"${this.config.getApiCameraDefaultVideo()}",`;
+        json += `"api_use_update_state":"${this.config.getApiUseUpdateState()}",`;
+        json += `"api_update_state_timespan":"${this.config.getApiUpdateStateTimespan()}",`;
+        json += `"api_use_update_links":"${this.config.getApiUseUpdateLinks()}",`;
+        json += `"api_update_links_timespan":"${this.config.getApiUpdateLinksTimespan()}",`;
         json += `"api_log_level":"${this.config.getApiLogLevel()}"}]}`;
     
         return json;
@@ -853,10 +861,24 @@ export class EufySecurityApi
      * @param api_port_https The https port for the api.
      * @param api_key_https The key for https.
      * @param api_cert_https The cert for https.
+     * @param api_connection_type The connection type for connecting with HomeBases.
+     * @param api_use_udp_local_static_ports Should the api use static ports to connect with HomeBase.
+     * @param api_udp_local_static_ports The local ports for connection with HomeBase.
+     * @param api_use_system_variables Should the api update related systemvariables.
+     * @param api_camera_default_image The path to the default image.
+     * @param api_camera_default_video The path to the default video.
+     * @param api_use_update_state Should the api schedule a task for updateing the state.
+     * @param api_update_state_timespan The time between two scheduled runs of update state.
+     * @param api_use_update_links Should the api schedule a task for updateing the links.
+     * @param api_update_links_timespan The time between two scheduled runs of update links.
+     * @param api_log_level The log level.
+     * @returns 
      */
-    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_log_level : string) : string
+    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_update_links_timespan : string, api_log_level : string) : string
     {
         var serviceRestart = false;
+        var taskSetupStateNeeded = false;
+        var taskSetupLinksNeeded = false;
         if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports)
         {
             serviceRestart = true;
@@ -903,6 +925,42 @@ export class EufySecurityApi
         this.config.setApiUseSystemVariables(api_use_system_variables);
         this.config.setApiCameraDefaultImage(api_camera_default_image);
         this.config.setApiCameraDefaultVideo(api_camera_default_video);
+        if(this.config.getApiUseUpdateState() == true && api_use_update_state == false)
+        {
+            this.clearScheduledTask(this.taskUpdateState, "getState");
+        }
+        else if(this.config.getApiUseUpdateState() != api_use_update_state)
+        {
+            taskSetupStateNeeded = true;
+        }
+        this.config.setApiUseUpdateState(api_use_update_state);
+        if(this.config.getApiUpdateStateTimespan() != api_update_state_timespan)
+        {
+            taskSetupStateNeeded = true;
+        }
+        this.config.setApiUpdateStateTimespan(api_update_state_timespan);
+        if(this.config.getApiUseUpdateLinks() == true && api_use_update_links == false)
+        {
+            this.clearScheduledTask(this.taskUpdateLinks, "getLibrary");
+        }
+        else if(this.config.getApiUseUpdateLinks() != api_use_update_links)
+        {
+            taskSetupLinksNeeded = true;
+        }
+        this.config.setApiUseUpdateLinks(api_use_update_links);
+        if(this.config.getApiUpdateLinksTimespan() != api_update_links_timespan)
+        {
+            taskSetupLinksNeeded = true;
+        }
+        this.config.setApiUpdateLinksTimespan(api_update_links_timespan);
+        if(taskSetupStateNeeded == true)
+        {
+            this.setupScheduledTask(this.taskUpdateState, "getState");
+        }
+        if(taskSetupLinksNeeded == true)
+        {
+            this.setupScheduledTask(this.taskUpdateLinks, "getLibrary");
+        }
         this.config.setApiLogLevel(api_log_level);
 
         var res = this.config.writeConfig();
@@ -999,8 +1057,10 @@ export class EufySecurityApi
                         {
                             json += `"sysVar_available":false`;
                         }
+
+                        json += "}";
                         
-                        json += `,"sysVar_name":"eufyLastModeChangeTime${base.getSerial()}",`;
+                        json += `,{"sysVar_name":"eufyLastModeChangeTime${base.getSerial()}",`;
                         json += `"sysVar_info":"Zeitpunkt des letzten Moduswechsels der Basis ${base.getSerial()}",`;
                         
                         if(await this.homematicApi.isSystemVariableAvailable("eufyLastModeChangeTime" + base.getSerial()) == true)
@@ -1280,6 +1340,99 @@ export class EufySecurityApi
     public getApiLogLevel() : number
     {
         return this.config.getApiLogLevel();
+    }
+
+    /**
+     * Setup all scheduled task, when allowed by settings.
+     */
+    private setupScheduledTasks() : void
+    {
+        this.logger.logInfoBasic("Setting up scheduled tasks...");
+        if(this.config.getApiUseUpdateState())
+        {
+            if(this.taskUpdateState)
+            {
+                this.logger.logInfoBasic("  getState already scheduled, remove scheduling...");
+                clearInterval(this.taskUpdateState);
+            }
+            this.taskUpdateState = setInterval(async() => { await this.getGuardMode(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`  getState scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+        }
+        else
+        {
+            this.logger.logInfoBasic("  scheduling getState disabled in settings.")
+        }
+
+        if(this.config.getApiUseUpdateLinks())
+        {
+            if(this.taskUpdateLinks)
+            {
+                this.logger.logInfoBasic("  getLibrary already scheduled, remove scheduling...");
+                clearInterval(this.taskUpdateLinks);
+            }
+            this.taskUpdateLinks = setInterval(async() => { await this.getLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
+        }
+        else
+        {
+            this.logger.logInfoBasic("  scheduling getLinks disabled in settings.");
+        }
+        this.logger.logInfoBasic("...done setting up scheduled tasks.");
+    }
+
+    /**
+     * Clear all scheduled tasks.
+     */
+    public clearScheduledTasks() : void
+    {
+        if(this.taskUpdateState)
+        {
+            this.logger.logInfoBasic("Remove scheduling for getState.");
+            clearInterval(this.taskUpdateState);
+        }
+        if(this.taskUpdateLinks)
+        {
+            this.logger.logInfoBasic("Remove scheduling for getLibrary.");
+            clearInterval(this.taskUpdateLinks);
+        }
+    }
+
+    /**
+     * Setup the given scheduled task.
+     * @param task The object of the task.
+     * @param name The name of the task.
+     */
+    private setupScheduledTask(task : NodeJS.Timeout, name : string)
+    {
+        if(task)
+        {
+            this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
+            clearInterval(this.taskUpdateLinks);
+        }
+        if(name == "getLibrary")
+        {
+            task = setInterval(async() => { await this.getLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
+        }
+        else if(name == "getState")
+        {
+            task = setInterval(async() => { await this.getGuardMode(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+        }
+    }
+
+    /**
+     * Clear the given scheduled task.
+     * @param task The object of the task.
+     * @param name The name of the task.
+     */
+    private clearScheduledTask(task : NodeJS.Timeout, name : string) : void
+    {
+        if(task)
+        {
+            this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
+            clearInterval(task);
+        }
     }
 
     /**
