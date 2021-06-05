@@ -221,11 +221,17 @@
 											<hr>
 											<h5>Einstellungen für Protokollierung</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label for="txtLogLevel">Umfang der Protokollierung.</label>
+												<label for="cbLogLevel">Umfang der Protokollierung.</label>
 												<div id="alertLogLevel">
 												</div>
-												<input type="text" name="logLevel" id="txtLogLevel" class="form-control" placeholder="Stufe der Protokollierung." pattern="[0-3]{1}" oninput="checkLogLevel(this.value);" required>
-												<small class="form-text text-muted">Legt den Umfang der Protokollierung fest. Fehler werden unabhängig dieser Einstellung beim Auftreten immer in der Fehlerprotokolldatei 'eufySecurity.err' protokolliert.<br />Folgende Werte können eingestellt werden: 0: nur nötigste Informationen; 1: alle Informationen; 2: wie 1, zusätzlich alle Fehler; 3: wie 2, zusätzlich Debugdaten</small>
+												<select name="logLevel" id="cbLogLevel" class="custom-select mb-2" oninput="checkLogLevel(this.value);" required>
+													<option disabled selected value style="display: none;">Bitte auswählen...</option>
+													<option value="0">grundlegende Informationen</option>
+													<option value="1">alle Informationen</option>
+													<option value="2">alle Informationen, alle Fehler</option>
+													<option value="3">alle Informationen, alle Fehler, alle Debuginformationen</option>
+												</select>
+												<small class="form-text text-muted">Legt den Umfang der Protokollierung fest. Fehler werden unabhängig dieser Einstellung beim Auftreten immer in der Fehlerprotokolldatei 'eufySecurity.err' protokolliert.</small>
 												<div class="invalid-feedback">
 													Bitte geben Sie nur eine Ziffer zwischen 0 und 3 ein.
 												</div>
@@ -728,8 +734,14 @@
 							}
 							text = document.getElementById('txtPeriodicallyUpdateLinksTimespan');
 							text.value=apiupdatelinkstimespan;
-							text = document.getElementById('txtLogLevel');
-							text.value = apiloglevel;
+							if(apiloglevel == undefined || (apiloglevel != "0" && apiloglevel != "1" && apiloglevel != "2" && apiloglevel != "3"))
+							{
+								document.getElementById("cbLogLevel").selectedIndex = "";
+							}
+							else
+							{
+								document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(apiconnectiontype)) + 1;
+							}
 							checkLogLevel(apiloglevel);
 							document.getElementById("resultLoading").innerHTML = "";
 						}
@@ -1160,7 +1172,7 @@
 					document.getElementById("alertLogLevel").setAttribute("class", "alert alert-warning alert-dismissible fade show");
 					document.getElementById("alertLogLevel").setAttribute("role", "alert");
 					document.getElementById("alertLogLevel").innerHTML += "Sie haben den Umfang der Protokollierung so gewählt, dass zusätzlich auch DEBUG Informationen protokolliert werden. Dies kann zu einer sehr großen Protokolldatei führen. Wählen Sie für den normalen Betrieb einen Wert kleiner als 3 aus.<br />";
-					document.getElementById("alertLogLevel").innerHTML += `<small class="form-text text-muted">Diese Einstellung bleibt dauerhaft auch nach einem Neustart der CCU aktiv.</small>`;
+					document.getElementById("alertLogLevel").innerHTML += `<small class="form-text text-muted">Diese Einstellung bleibt dauerhaft auch nach einem Neustart des Addons oder der CCU aktiv.</small>`;
 				}
 				else
 				{
