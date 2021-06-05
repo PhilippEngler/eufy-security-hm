@@ -777,7 +777,7 @@ export class Config
     }
 
     /**
-     * 
+     * Returns the time between runs of two scheduled tasks for update state.
      */
     public getApiUpdateStateTimespan() : string
     {
@@ -792,8 +792,8 @@ export class Config
     }
 
     /**
-     * 
-     * @param apiupdatestatetimespan 
+     * Set the value for the time between runs of two scheduled tasks for update state. 
+     * @param apiupdatestatetimespan The time in minutes.
      */
     public setApiUpdateStateTimespan(apiupdatestatetimespan : string) : void
     {
@@ -833,7 +833,7 @@ export class Config
     }
 
     /**
-     * 
+     * Returns the time between runs of two scheduled tasks for update state.
      */
     public getApiUpdateLinksTimespan() : string
     {
@@ -848,8 +848,8 @@ export class Config
     }
 
     /**
-     * 
-     * @param apiupdatestatetimespan 
+     * Set the value for the time between runs of two scheduled tasks for update links.
+     * @param apiupdatestatetimespan The time in minutes.
      */
     public setApiUpdateLinksTimespan(apiupdatelinkstimespan : string) : void
     {
