@@ -421,6 +421,12 @@ class ApiServer
                             useupdatelinks = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinks", "boolean");
                         }
 
+                        var useupdatelinksonlywhenactive = false;
+                        if(postData.indexOf("usePeriodicallyUpdateLinksOnlyWhenActive") >= 0)
+                        {
+                            useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinksOnlyWhenActive", "boolean");
+                        }
+
                         var updatelinkstimespan ="15";
                         if(postData.indexOf("periodicallyUpdateLinksTimespan") >= 0)
                         {
@@ -469,7 +475,7 @@ class ApiServer
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestate, updatestatetimespan, useupdatelinks, updatelinkstimespan, apiloglevel);
+                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestate, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
                         }
                         else
                         {

@@ -21,7 +21,7 @@ export class Config
 
     private getConfigFileTemplateVersion() : number
     {
-        return 5;
+        return 6;
     }
 
     /**
@@ -152,6 +152,7 @@ export class Config
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 5)
         {
+            this.setTokenExpire("0");
             this.logger.logInfoBasic("Configfile needs Stage2 update to version 5...");
             if(this.filecontent.indexOf("api_update_state_active") == -1)
             {
@@ -194,6 +195,27 @@ export class Config
                 this.hasChanged = true;
             }
             this.logger.logInfoBasic("...Stage2 update to version 5 finished.");
+        }
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 6)
+        {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 6...");
+            if(this.filecontent.indexOf("api_udp_local_static_ports=") > 0)
+            {
+                this.logger.logInfoBasic(" removing 'api_udp_local_static_ports'.");
+                this.filecontent = this.filecontent.replace(/^.*api_udp_local_static_ports=.*$/mg, "");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_update_links_only_when_active") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_update_links_only_when_active'.");
+                this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links_only_when_active=false\r\napi_log_level=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            this.logger.logInfoBasic("...Stage2 update to version 6 finished.");
         }
 
         if(updated)
@@ -856,6 +878,34 @@ export class Config
         if(this.config['EufyAPIServiceData']['api_update_links_timespan'] != apiupdatelinkstimespan)
         {
             this.config['EufyAPIServiceData']['api_update_links_timespan'] = apiupdatelinkstimespan;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Return weather the api should only refresh links when eufy state is other than off or deactivated.
+     */
+    public getApiUpdateLinksOnlyWhenActive() : boolean
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_update_links_only_when_active'];
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set the value the api should only refresh links when eufy state is other than off or deactivated
+     * @param apiupdatelinksonlywhenactive true for not refreshing links during off or deactivated, otherwise false.
+     */
+    public setApiUpdateLinksOnlyWhenActive(apiupdatelinksonlywhenactive : boolean)
+    {
+        if(this.config['EufyAPIServiceData']['api_update_links_only_when_active'] != apiupdatelinksonlywhenactive)
+        {
+            this.config['EufyAPIServiceData']['api_update_links_only_when_active'] = apiupdatelinksonlywhenactive;
             this.hasChanged = true;
         }
     }

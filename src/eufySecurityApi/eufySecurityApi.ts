@@ -287,7 +287,7 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the guard mode of all bases.
+     * Returns the guard mode of all bases as json string.
      */
     public async getGuardMode() : Promise<string>
     {
@@ -359,6 +359,51 @@ export class EufySecurityApi
         }
     
         return json;
+    }
+
+    /**
+     * Returns the guard mode of all bases.
+     */
+    public async getGuardModeAsGuardMode() : Promise<GuardMode>
+    {
+        var mode = -1;
+        try
+        {
+            if(this.bases)
+            {
+                await this.bases.loadBases();
+
+                var bases = this.bases.getBases();
+                var base : Station;
+
+                if(bases)
+                {
+                    for (var key in bases)
+                    {
+                        base = bases[key];
+                        if(mode == -1)
+                        {
+                            mode = base.getGuardMode().value;
+                        }
+                        else if (mode != base.getGuardMode().value)
+                        {
+                            mode = -2;
+                        }
+                    }
+                }
+            }
+        }
+        catch (e)
+        {
+            mode = -1
+        }
+
+        if(mode < -1)
+        {
+            mode = -1;
+        }
+
+        return mode;
     }
 
     /**
@@ -845,6 +890,7 @@ export class EufySecurityApi
         json += `"api_use_update_state":"${this.config.getApiUseUpdateState()}",`;
         json += `"api_update_state_timespan":"${this.config.getApiUpdateStateTimespan()}",`;
         json += `"api_use_update_links":"${this.config.getApiUseUpdateLinks()}",`;
+        json += `"api_use_update_links_only_when_active":"${this.config.getApiUpdateLinksOnlyWhenActive()}",`;
         json += `"api_update_links_timespan":"${this.config.getApiUpdateLinksTimespan()}",`;
         json += `"api_log_level":"${this.config.getApiLogLevel()}"}]}`;
     
@@ -870,11 +916,12 @@ export class EufySecurityApi
      * @param api_use_update_state Should the api schedule a task for updateing the state.
      * @param api_update_state_timespan The time between two scheduled runs of update state.
      * @param api_use_update_links Should the api schedule a task for updateing the links.
+     * @param api_use_update_links_only_when_active Should the api only refreah links when state is active
      * @param api_update_links_timespan The time between two scheduled runs of update links.
      * @param api_log_level The log level.
      * @returns 
      */
-    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_update_links_timespan : string, api_log_level : string) : string
+    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : string, api_log_level : string) : string
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
@@ -948,6 +995,7 @@ export class EufySecurityApi
             taskSetupLinksNeeded = true;
         }
         this.config.setApiUseUpdateLinks(api_use_update_links);
+        this.config.setApiUpdateLinksOnlyWhenActive(api_use_update_links_only_when_active);
         if(this.config.getApiUpdateLinksTimespan() != api_update_links_timespan)
         {
             taskSetupLinksNeeded = true;
@@ -1355,7 +1403,7 @@ export class EufySecurityApi
                 this.logger.logInfoBasic("  getState already scheduled, remove scheduling...");
                 clearInterval(this.taskUpdateState);
             }
-            this.taskUpdateState = setInterval(async() => { await this.getGuardMode(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            this.taskUpdateState = setInterval(async() => { await this.setScheduleState(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
             this.logger.logInfoBasic(`  getState scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
         }
         else
@@ -1370,7 +1418,7 @@ export class EufySecurityApi
                 this.logger.logInfoBasic("  getLibrary already scheduled, remove scheduling...");
                 clearInterval(this.taskUpdateLinks);
             }
-            this.taskUpdateLinks = setInterval(async() => { await this.getLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
+            this.taskUpdateLinks = setInterval(async() => { await this.setScheuduleLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
             this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
         }
         else
@@ -1409,15 +1457,15 @@ export class EufySecurityApi
             this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
             clearInterval(this.taskUpdateLinks);
         }
-        if(name == "getLibrary")
+        if(name == "getState")
         {
-            task = setInterval(async() => { await this.getLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
-        }
-        else if(name == "getState")
-        {
-            task = setInterval(async() => { await this.getGuardMode(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            task = setInterval(async() => { await this.setScheduleState(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
             this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+        }
+        else if(name == "getLibrary")
+        {
+            task = setInterval(async() => { await this.setScheuduleLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
         }
     }
 
@@ -1432,6 +1480,26 @@ export class EufySecurityApi
         {
             this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
             clearInterval(task);
+        }
+    }
+
+    /**
+     * The method called when scheduleing state is called.
+     */
+    private async setScheduleState() : Promise<void>
+    {
+        await this.getGuardMode();
+    }
+
+    /**
+     * The method called when scheduleing library is called.
+     */
+    private async setScheuduleLibrary() : Promise<void>
+    {
+        var mode = await this.getGuardModeAsGuardMode();
+        if(this.config.getApiUpdateLinksOnlyWhenActive() == false || ((this.config.getApiUpdateLinksOnlyWhenActive() == true && mode != GuardMode.DISARMED) && (this.config.getApiUpdateLinksOnlyWhenActive() == true && mode != GuardMode.OFF)))
+        {
+            await this.getLibrary();
         }
     }
 
