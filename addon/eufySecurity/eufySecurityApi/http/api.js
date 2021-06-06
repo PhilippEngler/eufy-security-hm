@@ -117,7 +117,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             }
                             this.log.debug(`${this.constructor.name}.authenticate(): token: ${this.token}`);
                             this.log.debug(`${this.constructor.name}.authenticate(): token_expiration: ${this.token_expiration}`);
-                            this.api.setTokenData(this.token, this.token_expiration.getMilliseconds.toString());
+                            this.api.setTokenData(this.token, this.token_expiration.getTime().toString());
                             this.emit("connect");
                             return types_1.AuthResult.OK;
                         }
@@ -129,7 +129,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             axios_1.default.defaults.headers.common["X-Auth-Token"] = this.token;
                             this.log.debug(`${this.constructor.name}.authenticate(): token: ${this.token}`);
                             this.log.debug(`${this.constructor.name}.authenticate(): token_expiration: ${this.token_expiration}`);
-                            this.api.setTokenData(this.token, this.token_expiration.getMilliseconds.toString());
+                            this.api.setTokenData(this.token, this.token_expiration.getTime().toString());
                             yield this.sendVerifyCode(types_1.VerfyCodeTypes.TYPE_EMAIL);
                             return types_1.AuthResult.SEND_VERIFY_CODE;
                         }

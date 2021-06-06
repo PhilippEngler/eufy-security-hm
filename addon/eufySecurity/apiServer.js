@@ -344,6 +344,26 @@ class ApiServer {
                             if (postData.indexOf("defaultVideoPath") >= 0) {
                                 apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                             }
+                            var useupdatestate = false;
+                            if (postData.indexOf("usePeriodicallyUpdateState") >= 0) {
+                                useupdatestate = getDataFromPOSTData(postData, "usePeriodicallyUpdateState", "boolean");
+                            }
+                            var updatestatetimespan = "15";
+                            if (postData.indexOf("periodicallyUpdateStateTimespan") >= 0) {
+                                updatestatetimespan = getDataFromPOSTData(postData, "periodicallyUpdateStateTimespan", "string");
+                            }
+                            var useupdatelinks = false;
+                            if (postData.indexOf("usePeriodicallyUpdateState") >= 0) {
+                                useupdatelinks = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinks", "boolean");
+                            }
+                            var useupdatelinksonlywhenactive = false;
+                            if (postData.indexOf("usePeriodicallyUpdateLinksOnlyWhenActive") >= 0) {
+                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinksOnlyWhenActive", "boolean");
+                            }
+                            var updatelinkstimespan = "15";
+                            if (postData.indexOf("periodicallyUpdateLinksTimespan") >= 0) {
+                                updatelinkstimespan = getDataFromPOSTData(postData, "periodicallyUpdateLinksTimespan", "string");
+                            }
                             var apiloglevel = "0";
                             if (postData.indexOf("logLevel") >= 0) {
                                 apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
@@ -366,9 +386,15 @@ class ApiServer {
                             if (checkNumberValue(apiloglevel, 0, 3) == false) {
                                 isDataOK = false;
                             }
+                            if (checkNumberValue(updatestatetimespan, 15, 240) == false) {
+                                isDataOK = false;
+                            }
+                            if (checkNumberValue(updatelinkstimespan, 15, 240) == false) {
+                                isDataOK = false;
+                            }
                             if (isDataOK == true) {
                                 apiPortFile(Number(apiporthttp), Number(apiporthttps));
-                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, apiloglevel);
+                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestate, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
                             }
                             else {
                                 responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check the values."}`;
@@ -533,6 +559,8 @@ function stopServer() {
     return __awaiter(this, void 0, void 0, function* () {
         logger.logInfoBasic("Stopping P2P-Connections...");
         yield api.closeP2PConnections();
+        logger.logInfoBasic("Stopping scheduled tasks...");
+        api.clearScheduledTasks();
         logger.logInfoBasic("Write config...");
         api.writeConfig();
         logger.logInfoBasic("Stopping...");

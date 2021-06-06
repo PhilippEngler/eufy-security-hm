@@ -1517,7 +1517,7 @@ export class EufySecurityApi
      */
     private getEufySecurityApiVersion() : string
     {
-        return "1.4.9d";
+        return "1.5.0";
     }
 
     /**

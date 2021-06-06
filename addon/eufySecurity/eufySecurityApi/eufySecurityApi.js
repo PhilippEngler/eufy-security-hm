@@ -46,6 +46,7 @@ class EufySecurityApi {
                     this.bases = new bases_1.Bases(this, this.httpService);
                     this.devices = new devices_1.Devices(this.httpService);
                     yield this.loadData();
+                    this.setupScheduledTasks();
                 }
                 else {
                     this.logError(`Login to eufy failed.`);
@@ -229,7 +230,7 @@ class EufySecurityApi {
         });
     }
     /**
-     * Returns the guard mode of all bases.
+     * Returns the guard mode of all bases as json string.
      */
     getGuardMode() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -282,6 +283,39 @@ class EufySecurityApi {
                 json = `{"success":false,"reason":"${e.message}"}`;
             }
             return json;
+        });
+    }
+    /**
+     * Returns the guard mode of all bases.
+     */
+    getGuardModeAsGuardMode() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var mode = -1;
+            try {
+                if (this.bases) {
+                    yield this.bases.loadBases();
+                    var bases = this.bases.getBases();
+                    var base;
+                    if (bases) {
+                        for (var key in bases) {
+                            base = bases[key];
+                            if (mode == -1) {
+                                mode = base.getGuardMode().value;
+                            }
+                            else if (mode != base.getGuardMode().value) {
+                                mode = -2;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (e) {
+                mode = -1;
+            }
+            if (mode < -1) {
+                mode = -1;
+            }
+            return mode;
         });
     }
     /**
@@ -618,7 +652,6 @@ class EufySecurityApi {
         var json = "";
         if (this.bases) {
             var bases = this.bases.getBases();
-            var base;
             if (bases) {
                 for (var key in bases) {
                     var temp = this.config.getUdpLocalPortsPerBase(key);
@@ -666,6 +699,11 @@ class EufySecurityApi {
         json += `"api_use_system_variables":"${this.config.getApiUseSystemVariables()}",`;
         json += `"api_camera_default_image":"${this.config.getApiCameraDefaultImage()}",`;
         json += `"api_camera_default_video":"${this.config.getApiCameraDefaultVideo()}",`;
+        json += `"api_use_update_state":"${this.config.getApiUseUpdateState()}",`;
+        json += `"api_update_state_timespan":"${this.config.getApiUpdateStateTimespan()}",`;
+        json += `"api_use_update_links":"${this.config.getApiUseUpdateLinks()}",`;
+        json += `"api_use_update_links_only_when_active":"${this.config.getApiUpdateLinksOnlyWhenActive()}",`;
+        json += `"api_update_links_timespan":"${this.config.getApiUpdateLinksTimespan()}",`;
         json += `"api_log_level":"${this.config.getApiLogLevel()}"}]}`;
         return json;
     }
@@ -679,9 +717,24 @@ class EufySecurityApi {
      * @param api_port_https The https port for the api.
      * @param api_key_https The key for https.
      * @param api_cert_https The cert for https.
+     * @param api_connection_type The connection type for connecting with HomeBases.
+     * @param api_use_udp_local_static_ports Should the api use static ports to connect with HomeBase.
+     * @param api_udp_local_static_ports The local ports for connection with HomeBase.
+     * @param api_use_system_variables Should the api update related systemvariables.
+     * @param api_camera_default_image The path to the default image.
+     * @param api_camera_default_video The path to the default video.
+     * @param api_use_update_state Should the api schedule a task for updateing the state.
+     * @param api_update_state_timespan The time between two scheduled runs of update state.
+     * @param api_use_update_links Should the api schedule a task for updateing the links.
+     * @param api_use_update_links_only_when_active Should the api only refreah links when state is active
+     * @param api_update_links_timespan The time between two scheduled runs of update links.
+     * @param api_log_level The log level.
+     * @returns
      */
-    setConfig(username, password, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_connection_type, api_use_udp_local_static_ports, api_udp_local_static_ports, api_use_system_variables, api_camera_default_image, api_camera_default_video, api_log_level) {
+    setConfig(username, password, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_connection_type, api_use_udp_local_static_ports, api_udp_local_static_ports, api_use_system_variables, api_camera_default_image, api_camera_default_video, api_use_update_state, api_update_state_timespan, api_use_update_links, api_use_update_links_only_when_active, api_update_links_timespan, api_log_level) {
         var serviceRestart = false;
+        var taskSetupStateNeeded = false;
+        var taskSetupLinksNeeded = false;
         if (this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports) {
             serviceRestart = true;
         }
@@ -718,6 +771,35 @@ class EufySecurityApi {
         this.config.setApiUseSystemVariables(api_use_system_variables);
         this.config.setApiCameraDefaultImage(api_camera_default_image);
         this.config.setApiCameraDefaultVideo(api_camera_default_video);
+        if (this.config.getApiUseUpdateState() == true && api_use_update_state == false) {
+            this.clearScheduledTask(this.taskUpdateState, "getState");
+        }
+        else if (this.config.getApiUseUpdateState() != api_use_update_state) {
+            taskSetupStateNeeded = true;
+        }
+        this.config.setApiUseUpdateState(api_use_update_state);
+        if (this.config.getApiUpdateStateTimespan() != api_update_state_timespan) {
+            taskSetupStateNeeded = true;
+        }
+        this.config.setApiUpdateStateTimespan(api_update_state_timespan);
+        if (this.config.getApiUseUpdateLinks() == true && api_use_update_links == false) {
+            this.clearScheduledTask(this.taskUpdateLinks, "getLibrary");
+        }
+        else if (this.config.getApiUseUpdateLinks() != api_use_update_links) {
+            taskSetupLinksNeeded = true;
+        }
+        this.config.setApiUseUpdateLinks(api_use_update_links);
+        this.config.setApiUpdateLinksOnlyWhenActive(api_use_update_links_only_when_active);
+        if (this.config.getApiUpdateLinksTimespan() != api_update_links_timespan) {
+            taskSetupLinksNeeded = true;
+        }
+        this.config.setApiUpdateLinksTimespan(api_update_links_timespan);
+        if (taskSetupStateNeeded == true) {
+            this.setupScheduledTask(this.taskUpdateState, "getState");
+        }
+        if (taskSetupLinksNeeded == true) {
+            this.setupScheduledTask(this.taskUpdateLinks, "getLibrary");
+        }
         this.config.setApiLogLevel(api_log_level);
         var res = this.config.writeConfig();
         if (res == "saved") {
@@ -787,7 +869,8 @@ class EufySecurityApi {
                             else {
                                 json += `"sysVar_available":false`;
                             }
-                            json += `,"sysVar_name":"eufyLastModeChangeTime${base.getSerial()}",`;
+                            json += "}";
+                            json += `,{"sysVar_name":"eufyLastModeChangeTime${base.getSerial()}",`;
                             json += `"sysVar_info":"Zeitpunkt des letzten Moduswechsels der Basis ${base.getSerial()}",`;
                             if ((yield this.homematicApi.isSystemVariableAvailable("eufyLastModeChangeTime" + base.getSerial())) == true) {
                                 json += `"sysVar_available":true`;
@@ -1013,6 +1096,97 @@ class EufySecurityApi {
         return this.config.getApiLogLevel();
     }
     /**
+     * Setup all scheduled task, when allowed by settings.
+     */
+    setupScheduledTasks() {
+        this.logger.logInfoBasic("Setting up scheduled tasks...");
+        if (this.config.getApiUseUpdateState()) {
+            if (this.taskUpdateState) {
+                this.logger.logInfoBasic("  getState already scheduled, remove scheduling...");
+                clearInterval(this.taskUpdateState);
+            }
+            this.taskUpdateState = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.setScheduleState(); }), (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`  getState scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+        }
+        else {
+            this.logger.logInfoBasic("  scheduling getState disabled in settings.");
+        }
+        if (this.config.getApiUseUpdateLinks()) {
+            if (this.taskUpdateLinks) {
+                this.logger.logInfoBasic("  getLibrary already scheduled, remove scheduling...");
+                clearInterval(this.taskUpdateLinks);
+            }
+            this.taskUpdateLinks = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.setScheuduleLibrary(); }), (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
+        }
+        else {
+            this.logger.logInfoBasic("  scheduling getLinks disabled in settings.");
+        }
+        this.logger.logInfoBasic("...done setting up scheduled tasks.");
+    }
+    /**
+     * Clear all scheduled tasks.
+     */
+    clearScheduledTasks() {
+        if (this.taskUpdateState) {
+            this.logger.logInfoBasic("Remove scheduling for getState.");
+            clearInterval(this.taskUpdateState);
+        }
+        if (this.taskUpdateLinks) {
+            this.logger.logInfoBasic("Remove scheduling for getLibrary.");
+            clearInterval(this.taskUpdateLinks);
+        }
+    }
+    /**
+     * Setup the given scheduled task.
+     * @param task The object of the task.
+     * @param name The name of the task.
+     */
+    setupScheduledTask(task, name) {
+        if (task) {
+            this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
+            clearInterval(this.taskUpdateLinks);
+        }
+        if (name == "getState") {
+            task = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.setScheduleState(); }), (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+        }
+        else if (name == "getLibrary") {
+            task = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.setScheuduleLibrary(); }), (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
+        }
+    }
+    /**
+     * Clear the given scheduled task.
+     * @param task The object of the task.
+     * @param name The name of the task.
+     */
+    clearScheduledTask(task, name) {
+        if (task) {
+            this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
+            clearInterval(task);
+        }
+    }
+    /**
+     * The method called when scheduleing state is called.
+     */
+    setScheduleState() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getGuardMode();
+        });
+    }
+    /**
+     * The method called when scheduleing library is called.
+     */
+    setScheuduleLibrary() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var mode = yield this.getGuardModeAsGuardMode();
+            if (this.config.getApiUpdateLinksOnlyWhenActive() == false || ((this.config.getApiUpdateLinksOnlyWhenActive() == true && mode != http_1.GuardMode.DISARMED) && (this.config.getApiUpdateLinksOnlyWhenActive() == true && mode != http_1.GuardMode.OFF))) {
+                yield this.getLibrary();
+            }
+        });
+    }
+    /**
      * Return the version of this API.
      */
     getApiVersion() {
@@ -1023,7 +1197,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "1.4.9d";
+        return "1.5.0";
     }
     /**
      * Return the version of the library used for communicating with eufy.
