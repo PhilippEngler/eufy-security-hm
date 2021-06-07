@@ -34,13 +34,14 @@ or
    - For communicating with the API you have to open at least these two ports (standard setting: 52789 and 52790). From v.1.0.3 on you are able to specify the ports for the API individually. In this case you need to enter these values.
    - For communicating with the HomeBaseFrom you have to set the firewall to open all ports (set the rule to ports open) if you are using the default setting. From v1.0.2 on you can specify ports to use. In this case you need to exclude the specified ports in the firewall settings.
 4. If you run piVCCU in a container add the port forwarding to the two api ports, e.g. in /etc/network/if-up.d/pivccu add `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52789 -j DNAT --to-destination $CCU_IP:52789` and `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52790 -j DNAT --to-destination $CCU_IP:52790` (for the two standard ports).
-5. If your HomeBase firmware is equal or higher than 2.1.6.9(h), you have to use an addon-version greater than 1.0.7.
+5. If your HomeBase firmware is equal or higher than 2.1.6.9(h), you have to use an addon-version equal or greater than 1.5.0.
 
 ## Credits
-This addon based on the [eufy-node-client](https://github.com/JanLoebel/eufy-node-client) of @JanLoebel. Some changes were done for example to support multiple bases, close the P2P connection or an other implementation for configuration data. The following projects also influenced this project:
+This addon based on the [eufy-security-client](https://github.com/bropat/eufy-security-client) of @bropat. Some changes were done for adapting the client to the api. The following projects also influenced this project:
 - [https://github.com/FuzzyMistborn/python-eufy-security](https://github.com/FuzzyMistborn/python-eufy-security)
 - [https://github.com/keshavdv/python-eufy-security/tree/p2p](https://github.com/keshavdv/python-eufy-security/tree/p2p)
 - [https://github.com/bropat/ioBroker.eufy-security](https://github.com/bropat/ioBroker.eufy-security)
+- [https://github.com/JanLoebel/eufy-node-client](https://github.com/JanLoebel/eufy-node-client)
 
 For integrateing into the CCU the knowledge of
 - Jens Maus [https://github.com/jens-maus](https://github.com/jens-maus)
