@@ -197,11 +197,11 @@
 												<label class="custom-control-label" for="chkPeriodicallyUpdateState">Modus regelmäßig automatisch aktualisieren</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mt-2" for="txtPeriodicallyUpdateStateTimespan">Zeitspanne in Minuten zwischen den Aktualisierungen.</label>
-												<input type="text" name="periodicallyUpdateStateTimespan" id="txtPeriodicallyUpdateStateTimespan" class="form-control" placeholder="Zeitspanne zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
-												<small class="form-text text-muted">Zeitspanne in Minuten.</small>
+												<label class="mt-2" for="txtPeriodicallyUpdateStateTimespan">Intervall in Minuten zwischen den Aktualisierungen.</label>
+												<input type="text" name="periodicallyUpdateStateTimespan" id="txtPeriodicallyUpdateStateTimespan" class="form-control" placeholder="Intervall zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
+												<small class="form-text text-muted">Intervall in Minuten.</small>
 												<div class="invalid-feedback">
-													Bitte geben Sie einen Zeitraum zwischen 15 und 240 Minuten ein.
+													Bitte geben Sie ein Intervall zwischen 15 und 240 Minuten ein.
 												</div>
 											</div>
 											<hr>
@@ -212,14 +212,14 @@
 											</div>
 											<div class="custom-control custom-switch mt-2">
 												<input type="checkbox" name="usePeriodicallyUpdateLinksOnlyWhenActive" class="custom-control-input" id="chkPeriodicallyUpdateLinksOnlyWhenActive">
-												<label class="custom-control-label" for="chkPeriodicallyUpdateLinksOnlyWhenActive">Links nur regelmäßig aktualisieren, wenn Modus ist "deaktiviert" oder "ausgeschaltet"</label>
+												<label class="custom-control-label" for="chkPeriodicallyUpdateLinksOnlyWhenActive">Links nur regelmäßig aktualisieren, wenn System aktiv ist</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mt-2" for="txtPeriodicallyUpdateLinksTimespan">Zeitspanne in Minuten zwischen den Aktualisierungen.</label>
-												<input type="text" name="periodicallyUpdateLinksTimespan" id="txtPeriodicallyUpdateLinksTimespan" class="form-control" placeholder="Zeitspanne zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
-												<small class="form-text text-muted">Zeitspanne in Minuten.</small>
+												<label class="mt-2" for="txtPeriodicallyUpdateLinksTimespan">Intervall in Minuten zwischen den Aktualisierungen.</label>
+												<input type="text" name="periodicallyUpdateLinksTimespan" id="txtPeriodicallyUpdateLinksTimespan" class="form-control" placeholder="Intervall zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
+												<small class="form-text text-muted">Intervall in Minuten.</small>
 												<div class="invalid-feedback">
-													Bitte geben Sie einen Zeitraum zwischen 15 und 240 Minuten ein.
+													Bitte geben Sie ein Intervall zwischen 15 und 240 Minuten ein.
 												</div>
 											</div>
 											<hr>
@@ -446,6 +446,7 @@
 					{
 						addQueryStringToLinks(window.location.search);
 					}
+					disableUIElements();
 					getAPIPort();
 				}
 			}
@@ -524,6 +525,34 @@
 				loadSystemVariables();
 			}
 
+			function disableUIElements()
+			{
+				document.getElementById("txtUsername").setAttribute("disabled", true);
+				document.getElementById("txtPassword").setAttribute("disabled", true);
+				document.getElementById("txtPortHttp").setAttribute("disabled", true);
+				document.getElementById("txtPortHttps").setAttribute("disabled", true);
+				document.getElementById("txtPortHttps").setAttribute("disabled", true);
+				document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
+				document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
+				document.getElementById("cbConnectionType").setAttribute("disabled", true);
+				document.getElementById('txtDefaultImagePath').setAttribute("disabled", true);
+				document.getElementById('txtDefaultVideoPath').setAttribute("disabled", true);
+				document.getElementById("txtPeriodicallyUpdateStateTimespan").setAttribute("disabled", true);
+				document.getElementById("chkPeriodicallyUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
+				document.getElementById("txtPeriodicallyUpdateLinksTimespan").setAttribute("disabled", true);
+				document.getElementById("cbLogLevel").setAttribute("disabled", true);
+			}
+
+			function enableUIElements()
+			{
+				document.getElementById("txtUsername").removeAttribute("disabled");
+				document.getElementById("txtPassword").removeAttribute("disabled");
+				document.getElementById("cbConnectionType").removeAttribute("disabled");
+				document.getElementById('txtDefaultImagePath').removeAttribute("disabled");
+				document.getElementById('txtDefaultVideoPath').removeAttribute("disabled");
+				document.getElementById("cbLogLevel").removeAttribute("disabled");
+			}
+
 			function validateForm()
 			{
 				var form = document.getElementById("configform");
@@ -558,9 +587,6 @@
 								for (objIter in objResp.data)
 								{
 									bases += `<label class="mt-2" for="txtUdpPortsBase${objResp.data[objIter].base_id}">UDP Ports für Verbindung mit HomeBase ${objResp.data[objIter].base_id} (${objResp.data[objIter].name}).</label>`;
-									//bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Ports ${objResp.data[objIter].base_id}" pattern="^(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])([,](0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))*$" required>`;
-									//bases += `<small class="form-text text-muted">Sie können mehrere Ports angeben, wenn Sie diese jeweils mit einem Komma trennen (bspw.: 52789,52790).</small>`;
-									//bases += `<div class="invalid-feedback">Bitte geben Sie nur Zahlen zwischen 0 und 65535 ein. Trennen Sie mehrere Zahlen jeweils mit einem Komma und geben Sie keine Leerzeichen ein.</div>`;
 									bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Ports ${objResp.data[objIter].base_id}" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>`;
 									bases += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basis zugeordnet sein.</small>`;
 									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 0 und 65535 ein. Diese Zahl darf keiner anderen Basis zugeordnet sein.</div>`;
@@ -570,7 +596,7 @@
 							}
 							else
 							{
-								document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basistationen.</div>`;
+								document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
 								document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 								loadData();
 							}
@@ -644,6 +670,7 @@
 							if(apiusehttp == "true")
 							{
 								document.getElementById("chkUseHttp").setAttribute("checked", true);
+								document.getElementById("txtPortHttp").removeAttribute("disabled");
 							}
 							else
 							{
@@ -654,6 +681,9 @@
 							if(apiusehttps == "true")
 							{
 								document.getElementById("chkUseHttps").setAttribute("checked", true);
+								document.getElementById("txtPortHttps").removeAttribute("disabled");
+								document.getElementById("txtHttpsKeyFile").removeAttribute("disabled");
+								document.getElementById("txtHttpsCertFile").removeAttribute("disabled");
 							}
 							else
 							{
@@ -675,7 +705,6 @@
 							{
 								document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(apiconnectiontype)) + 1;
 							}
-							//document.getElementById("cbConnectionType").setAttribute("disabled", true);
 							if(apiusesystemvariables == "true")
 							{
 								document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
@@ -684,12 +713,6 @@
 							{
 								document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
 							}
-							/*else
-							{
-								document.getElementById("txtUdpPorts").setAttribute("disabled", true);
-							}
-							text = document.getElementById('txtUdpPorts');
-							text.value = apiudpports;*/
 
 							var element = document.getElementsByTagName("INPUT");
 							for (var i=0, m=element.length; i<m; i++)
@@ -722,6 +745,7 @@
 							if(apiuseupdatestate == "true")
 							{
 								document.getElementById("chkPeriodicallyUpdateState").setAttribute("checked", true);
+								document.getElementById("txtPeriodicallyUpdateStateTimespan").removeAttribute("disabled");
 							}
 							else
 							{
@@ -732,6 +756,8 @@
 							if(apiuseupdatelinks == "true")
 							{
 								document.getElementById("chkPeriodicallyUpdateLinks").setAttribute("checked", true);
+								document.getElementById("chkPeriodicallyUpdateLinksOnlyWhenActive").removeAttribute("disabled");
+								document.getElementById("txtPeriodicallyUpdateLinksTimespan").removeAttribute("disabled");
 							}
 							else
 							{
@@ -754,6 +780,7 @@
 							}
 							checkLogLevel(apiloglevel);
 							document.getElementById("resultLoading").innerHTML = "";
+							enableUIElements();
 						}
 						else
 						{
