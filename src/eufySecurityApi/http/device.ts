@@ -66,7 +66,6 @@ export abstract class Device extends TypedEmitter<DeviceEvents> {
                         }
                         break;
                 }
-                this.log.logInfoBasic(this.rawDevice.device_sn + " :: " + property.name);
                 this.updateProperty(property.name, { value: this.rawDevice[property.key], timestamp: timestamp });
             }
         }
