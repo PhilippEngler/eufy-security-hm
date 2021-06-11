@@ -6,18 +6,18 @@ import { Address, CmdCameraInfoResponse, CommandResult } from "./models";
 import { AudioCodec, CommandType, P2PDataType, VideoCodec } from "./types";
 
 export interface P2PClientProtocolEvents {
-    "alarm_mode": (mode: AlarmMode) => void;
-    "camera_info": (camera_info: CmdCameraInfoResponse) => void;
+    "alarm mode": (mode: AlarmMode) => void;
+    "camera info": (cameraInfo: CmdCameraInfoResponse) => void;
     "connect": (address: Address) => void;
     "close": () => void;
     "command": (result: CommandResult) => void;
-    "start_download": (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => void;
-    "finish_download": (channel: number) => void;
-    "start_livestream": (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => void;
-    "stop_livestream": (channel: number) => void;
-    "wifi_rssi": (channel: number, rssi: number) => void;
-    "rtsp_url": (channel: number, rtsp_url: string) => void;
-    "esl_parameter": (channel: number, param: number, value: string) => void;
+    "download started": (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => void;
+    "download finished": (channel: number) => void;
+    "livestream started": (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => void;
+    "livestream stopped": (channel: number) => void;
+    "wifi rssi": (channel: number, rssi: number) => void;
+    "rtsp url": (channel: number, rtspUrl: string) => void;
+    "esl parameter": (channel: number, param: number, value: string) => void;
 }
 
 export interface P2PMessageState {
@@ -53,7 +53,7 @@ export interface P2PDataHeader {
 
 export interface P2PDataMessage extends P2PDataHeader {
     seqNo: number;
-    data_type: P2PDataType;
+    dataType: P2PDataType;
     data: Buffer;
 }
 
@@ -97,10 +97,6 @@ export interface P2PDataMessageAudio {
     audioSeqNo: number;
     audioTimestamp: number;
     audioDataLength: number;
-}
-
-export interface P2PBinaryMessageBuilder extends P2PDataMessageBuilder {
-    metadata: P2PDataMessageVideo | P2PDataMessageAudio | null
 }
 
 export interface StreamMetadata {
