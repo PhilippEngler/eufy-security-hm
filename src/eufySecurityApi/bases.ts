@@ -44,7 +44,7 @@ export class Bases
                 {
                     if(this.bases[key])
                     {
-                        this.bases[key].update(this.resBases[key], true);
+                        this.bases[key].update(this.resBases[key]);
                     }
                     else
                     {
@@ -123,7 +123,7 @@ export class Bases
             await base.setGuardMode(guardMode)
             await sleep(1500);
             await this.loadBases();
-            if(base.getGuardMode().value != guardMode)
+            if(base.getGuardMode().value as number != guardMode)
             {
                 cnt = cnt + 1;
             }
@@ -148,7 +148,7 @@ export class Bases
         await this.bases[baseSerial].setGuardMode(guardMode);
         await sleep(1500);
         await this.loadBases();
-        if(this.bases[baseSerial].getGuardMode().value == guardMode)
+        if(this.bases[baseSerial].getGuardMode().value as number == guardMode)
         {
             return true;
         }

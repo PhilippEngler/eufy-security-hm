@@ -146,8 +146,9 @@ export class EufySecurityApi
                             json += `"base_serial":"${dev.getStationSerial()}",`;
                             json += `"battery_charge":"${dev.getBatteryValue().value}",`;
                             json += `"battery_temperature":"${dev.getBatteryTemperature().value}",`;
-                            json += `"last_camera_image_time":"${dev.getLastCameraImageURL().timestamp/1000}",`;
-                            json += `"last_camera_image_url":"${dev.getLastCameraImageURL().value}"}`;
+                            json += `"last_camera_image_url":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().value : ""}",`;
+                            json += `"last_camera_image_time":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().timestamp/1000 : 0}"`;
+                            json += `}`;
                         }
                             
                         
@@ -280,7 +281,7 @@ export class EufySecurityApi
 
                 if(updateNeed == true)
                 {
-                    this.config.setP2PData(key, base.getP2pDid(), await base.getDSKKey(), base.getDSKKeyExpiration().toString(), base.getActorId(), base.getLANIPAddress().value, "");
+                    this.config.setP2PData(key, base.getP2pDid(), await base.getDSKKey(), base.getDSKKeyExpiration().toString(), base.getActorId(), String(base.getLANIPAddress().value), "");
                 }
             }
         }
@@ -315,14 +316,14 @@ export class EufySecurityApi
 
                         if(mode == -1)
                         {
-                            mode = base.getGuardMode().value;
+                            mode = base.getGuardMode().value as number;
                         }
                         else if (mode != base.getGuardMode().value)
                         {
                             mode = -2;
                         }
                     
-                        this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
+                        this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value as GuardMode));
                     }
                     json = `{"success":true,"data":[${json}]}`;
 
@@ -383,7 +384,7 @@ export class EufySecurityApi
                         base = bases[key];
                         if(mode == -1)
                         {
-                            mode = base.getGuardMode().value;
+                            mode = base.getGuardMode().value as number;
                         }
                         else if (mode != base.getGuardMode().value)
                         {
@@ -425,7 +426,7 @@ export class EufySecurityApi
                 if(base)
                 {
                     json = `{"success":true,"data":["${this.makeJSONforBase(base)}"]}`;
-                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
+                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value as GuardMode));
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
@@ -477,17 +478,19 @@ export class EufySecurityApi
 
                     for (var key in bases)
                     {
+                        base = bases[key];
+                        
                         if(json.endsWith("}"))
                         {
                             json += ",";
                         }
-                        base = bases[key];
+                        
                         if(guardMode == base.getGuardMode().value)
                         {
                             json += `{"base_id":"${base.getSerial()}",`;
                             json += `"result":"success",`;
                             json += `"guard_mode":"${base.getGuardMode()}"}`;
-                            this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
+                            this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value as GuardMode));
                         }
                         else
                         {
@@ -495,7 +498,7 @@ export class EufySecurityApi
                             json += `{"base_id":"${base.getSerial()}",`;
                             json += `"result":"failure",`;
                             json += `"guard_mode":"${base.getGuardMode()}"}`;
-                            this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
+                            this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value as GuardMode));
                             this.logError(`Error occured at setGuardMode: Failed to switch mode for base ${base.getSerial()}.`);
                         }
                     }
@@ -556,6 +559,7 @@ export class EufySecurityApi
                 
                 var base : Station;
                 base = bases[baseSerial];
+
                 var json = "";
 
                 if(guardMode == base.getGuardMode().value)
@@ -564,7 +568,7 @@ export class EufySecurityApi
                     json += `{"base_id":"${base.getSerial()}",`;
                     json += `"result":"success",`;
                     json += `"guard_mode":"${base.getGuardMode().value}"}`;
-                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
+                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value as GuardMode));
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
                 }
@@ -574,7 +578,7 @@ export class EufySecurityApi
                     json += `{"base_id":"${base.getSerial()}",`;
                     json += `"result":"failure",`;
                     json += `"guard_mode":"${base.getGuardMode().value}"}`;
-                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
+                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value as GuardMode));
                     this.setLastConnectionInfo(false);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     this.logError(`Error occured at setGuardMode: Failed to switch mode for base ${base.getSerial()}.`);
@@ -625,22 +629,8 @@ export class EufySecurityApi
                                 json += ",";
                             }
                             json += `{"device_id":"${dev.getSerial()}",`;
-                            if(dev.getLastCameraImageURL() == undefined)
-                            {
-                                json += `"last_camera_image_time":"",`
-                            }
-                            else
-                            {
-                                json += `"last_camera_image_time":"${dev.getLastCameraImageURL().timestamp/1000}",`;
-                            }
-                            if(dev.getLastCameraImageURL().value == undefined)
-                            {
-                                json += `"last_camera_image_url":"${this.config.getApiCameraDefaultImage()}",`;
-                            }
-                            else
-                            {
-                                json += `"last_camera_image_url":"${dev.getLastCameraImageURL().value}",`;
-                            }
+                            json += `"last_camera_image_time":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().timestamp/1000 : 0}",`;
+                            json += `"last_camera_image_url":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().value : ""}",`;
                             if(dev.getLastCameraVideoURL() == "")
                             {
                                 json += `"last_camera_video_url":"${this.config.getApiCameraDefaultVideo()}"`;
@@ -650,7 +640,7 @@ export class EufySecurityApi
                                 json += `"last_camera_video_url":"${dev.getLastCameraVideoURL()}"`;
                             }
                             json += "}";
-                            if(dev.getLastCameraImageURL().timestamp == undefined || dev.getLastCameraImageURL().timestamp == 0)
+                            if(dev.getLastCameraImageURL() == undefined || dev.getLastCameraImageURL().timestamp == 0)
                             {
                                 this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerial(), "");
                             }
@@ -664,7 +654,7 @@ export class EufySecurityApi
                             }
                             else
                             {
-                                this.setSystemVariableString("eufyCameraImageURL" + dev.getSerial(), dev.getLastCameraImageURL().value);
+                                this.setSystemVariableString("eufyCameraImageURL" + dev.getSerial(), dev.getLastCameraImageURL().value as string);
                             }
                             if(dev.getLastCameraVideoURL() == "")
                             {
@@ -672,7 +662,7 @@ export class EufySecurityApi
                             }
                             else
                             {
-                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerial(), dev.getLastCameraImageURL().value);
+                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerial(), dev.getLastCameraVideoURL());
                             }
                         }
                     }
@@ -1526,6 +1516,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "0.7.2";
+        return "0.8.3";
     }
 }

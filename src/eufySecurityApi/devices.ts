@@ -1,4 +1,4 @@
-import { HTTPApi, FullDevices, Device, Camera, CommonDevice } from './http';
+import { HTTPApi, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera } from './http';
 
 /**
  * Represents all the Devices in the account.
@@ -36,7 +36,8 @@ export class Devices
                 {
                     if(this.devices[key])
                     {
-                        this.devices[key].update(this.resDevices[key], true);
+                        device = this.devices[key];
+                        device.update(this.resDevices[key]);
                     }
                     else
                     {
@@ -46,8 +47,24 @@ export class Devices
                             if(!device.isIndoorCamera() && !device.isFloodLight() && !device.isDoorbell() && !device.isSoloCameras())
                             {
                                 device = new Camera(this.httpService, this.resDevices[key]);
-                                this.devices[device.getSerial()] = device;
                             }
+                            else if(device.isIndoorCamera() && !device.isFloodLight() && !device.isDoorbell() && !device.isSoloCameras())
+                            {
+                                device = new IndoorCamera(this.httpService, this.resDevices[key]);
+                            }
+                            else if(!device.isIndoorCamera() && device.isFloodLight() && !device.isDoorbell() && !device.isSoloCameras())
+                            {
+                                device = new FloodlightCamera(this.httpService, this.resDevices[key]);
+                            }
+                            else if(!device.isIndoorCamera() && !device.isFloodLight() && device.isDoorbell() && !device.isSoloCameras())
+                            {
+                                device = new DoorbellCamera(this.httpService, this.resDevices[key]);
+                            }
+                            else if(!device.isIndoorCamera() && !device.isFloodLight() && !device.isDoorbell() && device.isSoloCameras())
+                            {
+                                device = new SoloCamera(this.httpService, this.resDevices[key]);
+                            }
+                            this.devices[device.getSerial()] = device;
                         }
                     }
                 }
