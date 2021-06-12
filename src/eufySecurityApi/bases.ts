@@ -51,7 +51,7 @@ export class Bases
                         base = new Station(this.api, this.httpService, this.resBases[key]);
                         this.bases[base.getSerial()] = base;
                         this.serialNumbers.push(base.getSerial());
-                        await this.bases[key].connect(P2PConnectionType.ONLY_LOCAL);
+                        await this.bases[key].connect(this.api.getP2PConnectionType());
                     }
                 }
                 
