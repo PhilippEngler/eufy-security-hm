@@ -1,4 +1,4 @@
-import got from 'got-hm';
+import axios from "axios";
 import { existsSync, readFileSync } from 'fs';
 import { EufySecurityApi } from './eufySecurityApi';
 
@@ -42,9 +42,9 @@ export class HomematicApi
     {
         var data = "";
         
-        var response = await got("http://localhost:8181/esapi.exe?result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()");
+        var response = await axios.get("http://localhost:8181/esapi.exe?result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()");
 
-        data = response.body;
+        data = response.data;
         data = data.substring(data.indexOf("<result>"));
         data = data.substring(8, data.indexOf("</result>"));
 
@@ -60,9 +60,9 @@ export class HomematicApi
     {
         var data = "";
         
-        var response = await got.post("http://localhost:8181/esapi.exe", { headers : {'Content-Type': 'text/plain' }, body : "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')" });
+        var response = await axios.post("http://localhost:8181/esapi.exe", "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')", { headers : {'Content-Type': 'text/plain' } });
         
-        data = response.body;
+        data = response.data;
         data = data.substring(data.indexOf("<result>"));
         data = data.substring(8, data.indexOf("</result>"));
 
@@ -78,9 +78,9 @@ export class HomematicApi
     {
         var data = "";
         
-        var response = await got.post("http://localhost:8181/esapi.exe", { headers : {'Content-Type': 'text/plain' }, body : "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);" });
+        var response = await axios.post("http://localhost:8181/esapi.exe", "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);", { headers : {'Content-Type': 'text/plain' } });
 
-        data = response.body;
+        data = response.data;
         data = data.substring(data.indexOf("<svObj>"));
         data = data.substring(7, data.indexOf("</svObj>"));
 
@@ -140,6 +140,6 @@ export class HomematicApi
      */
     public getHomematicApiVersion() : string
     {
-        return "1.0.2";
+        return "1.5.1";
     }
 }

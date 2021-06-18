@@ -403,10 +403,16 @@ class ApiServer
                             apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                         }
 
-                        var useupdatestate = false;
-                        if(postData.indexOf("usePeriodicallyUpdateState") >= 0)
+                        var useupdatestateevent = false;
+                        if(postData.indexOf("useUpdateStateEvent") >= 0)
                         {
-                            useupdatestate = getDataFromPOSTData(postData, "usePeriodicallyUpdateState", "boolean");
+                            useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
+                        }
+
+                        var useupdatestateintervall = false;
+                        if(postData.indexOf("useUpdateStateIntervall") >= 0)
+                        {
+                            useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
                         }
 
                         var updatestatetimespan ="15";
@@ -475,7 +481,7 @@ class ApiServer
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestate, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
+                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
                         }
                         else
                         {

@@ -21,7 +21,7 @@ export class Config
 
     private getConfigFileTemplateVersion() : number
     {
-        return 6;
+        return 7;
     }
 
     /**
@@ -217,6 +217,27 @@ export class Config
             }
             this.logger.logInfoBasic("...Stage2 update to version 6 finished.");
         }
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 7)
+        {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 7...");
+            if(this.filecontent.indexOf("api_update_state_active") > 0)
+            {
+                this.logger.logInfoBasic(" rename 'api_update_state_active' to 'api_update_state_intervall_active'.");
+                this.filecontent = this.filecontent.replace("api_update_state_active=", "api_update_state_intervall_active=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("api_update_state_event_active") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_update_state_event_active'.");
+                this.filecontent = this.filecontent.replace("api_update_state_intervall_active=", "api_update_state_event_active=false\r\napi_update_state_intervall_active=");
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            this.logger.logInfoBasic("...Stage2 update to version 7 finished.");
+        }
 
         if(updated)
         {
@@ -279,7 +300,8 @@ export class Config
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
         fc += "api_camera_default_video=\r\n";
-        fc += "api_update_state_active=false\r\n";
+        fc += "api_update_state_event_active=false\r\n";
+        fc += "api_update_state_intervall_active=false\r\n";
         fc += "api_update_state_timespan=15\r\n";
         fc += "api_update_links24_active=false\r\n";
         fc += "api_update_links_active=true\r\n";
@@ -771,13 +793,41 @@ export class Config
     }
 
     /**
-     * Determines if the updated state runs scheduled.
+     * Determines if the updated state runs by event.
      */
-    public getApiUseUpdateState() : boolean
+    public getApiUseUpdateStateEvent() : boolean
     {
         try
         {
-            return this.config['EufyAPIServiceData']['api_update_state_active'];
+            return this.config['EufyAPIServiceData']['api_update_state_event_active'];
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set the value for update state eventbased.
+     * @param apiuseupdatestateevent The value if the state should updated eventbased.
+     */
+    public setApiUseUpdateStateEvent(apiuseupdatestateevent : boolean) : void
+    {
+        if(this.config['EufyAPIServiceData']['api_update_state_event_active'] != apiuseupdatestateevent)
+        {
+            this.config['EufyAPIServiceData']['api_update_state_event_active'] = apiuseupdatestateevent;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Determines if the updated state runs scheduled.
+     */
+    public getApiUseUpdateStateIntervall() : boolean
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_update_state_intervall_active'];
         }
         catch
         {
@@ -789,11 +839,11 @@ export class Config
      * Set the value for update state scheduled.
      * @param apiuseupdatestate The value if the state should updated scheduled.
      */
-    public setApiUseUpdateState(apiuseupdatestate : boolean) : void
+    public setApiUseUpdateStateIntervall(apiuseupdatestateintervall : boolean) : void
     {
-        if(this.config['EufyAPIServiceData']['api_update_state_active'] != apiuseupdatestate)
+        if(this.config['EufyAPIServiceData']['api_update_state_intervall_active'] != apiuseupdatestateintervall)
         {
-            this.config['EufyAPIServiceData']['api_update_state_active'] = apiuseupdatestate;
+            this.config['EufyAPIServiceData']['api_update_state_intervall_active'] = apiuseupdatestateintervall;
             this.hasChanged = true;
         }
     }

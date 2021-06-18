@@ -19,6 +19,7 @@ export class EufySecurityApi
     private taskUpdateState !: NodeJS.Timeout;
     private taskUpdateLinks !: NodeJS.Timeout;
     private taskUpdateLinks24 !: NodeJS.Timeout;
+    private waitUpdateState !: NodeJS.Timeout;
     
     /**
      * Create the api object.
@@ -55,7 +56,7 @@ export class EufySecurityApi
                 await this.httpService.updateDeviceInfo();
 
                 this.bases = new Bases(this, this.httpService);
-                this.devices = new Devices(this.httpService);
+                this.devices = new Devices(this, this.httpService);
     
                 await this.loadData();
 
@@ -451,6 +452,32 @@ export class EufySecurityApi
         }
     
         return json;
+    }
+
+    public async updateGuardModeBase(key : string) : Promise<void>
+    {
+        this.logInfo("update GuardMode");
+        await this.getGuardModeBase(key);
+        if(this.waitUpdateState)
+        {
+            this.logInfo("clear timer");
+            clearTimeout(this.waitUpdateState);
+        }
+        this.logInfo("set timer");
+        this.waitUpdateState = setTimeout(async() => { await this.updateGuardModeBases(); }, 10000);
+        this.logInfo("update finished");
+    }
+
+    private async updateGuardModeBases() : Promise<void>
+    {
+        if(this.waitUpdateState)
+        {
+            this.logInfo("clear timer2");
+            clearTimeout(this.waitUpdateState);
+        }
+        this.logInfo("update GuardModeBases");
+        await this.getGuardMode();
+        this.logInfo("finished");
     }
 
     /**
@@ -857,6 +884,14 @@ export class EufySecurityApi
     }
 
     /**
+     * Determines if the updated state runs by event.
+     */
+    public getApiUseUpdateStateEvent() : boolean
+    {
+        return this.config.getApiUseUpdateStateEvent();
+    }
+
+    /**
      * Get all config data needed for the webui.
      */
     public getConfig() : string
@@ -877,7 +912,8 @@ export class EufySecurityApi
         json += `"api_use_system_variables":"${this.config.getApiUseSystemVariables()}",`;
         json += `"api_camera_default_image":"${this.config.getApiCameraDefaultImage()}",`;
         json += `"api_camera_default_video":"${this.config.getApiCameraDefaultVideo()}",`;
-        json += `"api_use_update_state":"${this.config.getApiUseUpdateState()}",`;
+        json += `"api_use_update_state_event":"${this.config.getApiUseUpdateStateEvent()}",`;
+        json += `"api_use_update_state_intervall":"${this.config.getApiUseUpdateStateIntervall()}",`;
         json += `"api_update_state_timespan":"${this.config.getApiUpdateStateTimespan()}",`;
         json += `"api_use_update_links":"${this.config.getApiUseUpdateLinks()}",`;
         json += `"api_use_update_links_only_when_active":"${this.config.getApiUpdateLinksOnlyWhenActive()}",`;
@@ -903,7 +939,8 @@ export class EufySecurityApi
      * @param api_use_system_variables Should the api update related systemvariables.
      * @param api_camera_default_image The path to the default image.
      * @param api_camera_default_video The path to the default video.
-     * @param api_use_update_state Should the api schedule a task for updateing the state.
+     * @param api_use_update_state_event Should the api use HomeBase events for updateing the state.
+     * @param api_use_update_state_intervall Should the api schedule a task for updateing the state.
      * @param api_update_state_timespan The time between two scheduled runs of update state.
      * @param api_use_update_links Should the api schedule a task for updateing the links.
      * @param api_use_update_links_only_when_active Should the api only refreah links when state is active
@@ -911,12 +948,12 @@ export class EufySecurityApi
      * @param api_log_level The log level.
      * @returns 
      */
-    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : string, api_log_level : string) : string
+    public setConfig(username : string, password : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state_event : boolean, api_use_update_state_intervall : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : string, api_log_level : string) : string
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
         var taskSetupLinksNeeded = false;
-        if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports)
+        if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports || this.config.getApiUseUpdateStateEvent() != api_use_update_state_event)
         {
             serviceRestart = true;
         }
@@ -962,15 +999,16 @@ export class EufySecurityApi
         this.config.setApiUseSystemVariables(api_use_system_variables);
         this.config.setApiCameraDefaultImage(api_camera_default_image);
         this.config.setApiCameraDefaultVideo(api_camera_default_video);
-        if(this.config.getApiUseUpdateState() == true && api_use_update_state == false)
+        this.config.setApiUseUpdateStateEvent(api_use_update_state_event);
+        if(this.config.getApiUseUpdateStateIntervall() == true && api_use_update_state_intervall == false)
         {
             this.clearScheduledTask(this.taskUpdateState, "getState");
         }
-        else if(this.config.getApiUseUpdateState() != api_use_update_state)
+        else if(this.config.getApiUseUpdateStateIntervall() != api_use_update_state_intervall)
         {
             taskSetupStateNeeded = true;
         }
-        this.config.setApiUseUpdateState(api_use_update_state);
+        this.config.setApiUseUpdateStateIntervall(api_use_update_state_intervall);
         if(this.config.getApiUpdateStateTimespan() != api_update_state_timespan)
         {
             taskSetupStateNeeded = true;
@@ -1386,7 +1424,7 @@ export class EufySecurityApi
     private setupScheduledTasks() : void
     {
         this.logger.logInfoBasic("Setting up scheduled tasks...");
-        if(this.config.getApiUseUpdateState())
+        if(this.config.getApiUseUpdateStateIntervall())
         {
             if(this.taskUpdateState)
             {
@@ -1507,7 +1545,7 @@ export class EufySecurityApi
      */
     private getEufySecurityApiVersion() : string
     {
-        return "1.5.0";
+        return "1.5.1";
     }
 
     /**

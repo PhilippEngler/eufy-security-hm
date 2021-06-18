@@ -1,12 +1,13 @@
+import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, Hubs, Station, GuardMode } from './http';
-import { P2PConnectionType } from './p2p';
+import { EufySecurityEvents } from './interfaces';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue } from './http';
 import { sleep } from './push/utils';
 
 /**
  * Represents all the Bases in the account.
  */
-export class Bases
+export class Bases extends TypedEmitter<EufySecurityEvents>
 {
     private api : EufySecurityApi;
     private httpService : HTTPApi;
@@ -21,6 +22,7 @@ export class Bases
      */
     constructor(api : EufySecurityApi, httpService : HTTPApi)
     {
+        super();
         this.api = api;
         this.httpService = httpService;
         this.serialNumbers = [];
@@ -52,6 +54,13 @@ export class Bases
                         this.bases[base.getSerial()] = base;
                         this.serialNumbers.push(base.getSerial());
                         await this.bases[key].connect(this.api.getP2PConnectionType());
+
+                        if(this.api.getApiUseUpdateStateEvent())
+                        {
+                            this.addEventListener(base, "GuardModeChanged");
+                            this.addEventListener(base, "PropertyChanged");
+                            this.addEventListener(base, "RawPropertyChanged");
+                        }
                     }
                 }
                 
@@ -81,6 +90,10 @@ export class Bases
                 if(this.bases[key])
                 {
                     await this.bases[key].close();
+                    
+                    this.removeEventListener(this.bases[key], "GuardModeChanged");
+                    this.removeEventListener(this.bases[key], "PropertyChanged");
+                    this.removeEventListener(this.bases[key], "RawPropertyChanged");
                 }
             }
         }
@@ -145,9 +158,11 @@ export class Bases
      */
     public async setGuardModeBase(baseSerial : string, guardMode : GuardMode) : Promise<boolean>
     {
+        this.removeEventListener(this.bases[baseSerial], "GuardModeChanged");
         await this.bases[baseSerial].setGuardMode(guardMode);
         await sleep(1500);
         await this.loadBases();
+        this.addEventListener(this.bases[baseSerial], "GuardModeChanged");
         if(this.bases[baseSerial].getGuardMode().value as number == guardMode)
         {
             return true;
@@ -156,5 +171,93 @@ export class Bases
         {
             return false;
         }
+    }
+
+    /**
+     * Add a given event listener for a given base.
+     * @param base The base as Station object.
+     * @param eventListenerName The event listener name as string.
+     */
+    public addEventListener(base : Station, eventListenerName : string) : void
+    {
+        switch (eventListenerName)
+        {
+            case "GuardModeChanged":
+                base.on("guard mode", (station : Station, guardMode : number, currentMode : number) => this.onStationGuardModeChanged(station, guardMode, currentMode));
+                this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("guard mode")} Listener.`);
+                break;
+            case "PropertyChanged":
+                base.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onPropertyChanged(station, name, value));
+                this.api.logDebug(`Listener 'PropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+            case "RawPropertyChanged":
+                base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onRawPropertyChanged(station, type, value, modified));
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+        }
+    }
+
+    /**
+     * Remove all event listeners for a given event type for a given base.
+     * @param base The base as Station object.
+     * @param eventListenerName The event listener name as string.
+     */
+    public removeEventListener(base : Station, eventListenerName : string) : void
+    {
+        switch (eventListenerName)
+        {
+            case "GuardModeChanged":
+                base.removeAllListeners("guard mode");
+                this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("guard mode")} Listener.`);
+                break;
+            case "PropertyChanged":
+                base.removeAllListeners("property changed");
+                this.api.logDebug(`Listener 'PropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+            case "RawPropertyChanged":
+                base.removeAllListeners("raw property changed");
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+        }
+    }
+
+    /**
+     * The action to be one when event GuardModeChanged is fired.
+     * @param station The base as Station object.
+     * @param guardMode The new guard mode as GuardMode.
+     * @param currentMode The new current mode as GuardMode.
+     */
+    private async onStationGuardModeChanged(station : Station, guardMode : number, currentMode : number): Promise<void>
+    {
+        //this.emit("station guard mode", station, guardMode, currentMode);
+        this.api.logInfo("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode + " ::: Current Mode: " + currentMode);
+        await this.api.updateGuardModeBase(station.getSerial());
+    }
+
+    /**
+     * The action to be one when event PropertyChanged is fired.
+     * @param station The base as Station object.
+     * @param name The name of the changed value.
+     * @param value The value and timestamp of the new value as PropertyValue.
+     */
+    private async onPropertyChanged(station : Station, name : string, value : PropertyValue): Promise<void>
+    {
+        //this.emit("station guard mode", station, guardMode, currentMode);
+        this.api.logInfo("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
+        //await this.api.getGuardModeBase(station.getSerial());
+    }
+
+    /**
+     * The action to be one when event RawPropertyChanged is fired.
+     * @param station The base as Station object.
+     * @param type The number of the raw-value in the eufy ecosystem.
+     * @param value The new value as string.
+     * @param modified The timestamp of the last change.
+     */
+    private async onRawPropertyChanged(station : Station, type : number, value : string, modified : number): Promise<void>
+    {
+        //this.emit("station guard mode", station, guardMode, currentMode);
+        this.api.logInfo("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
+        //await this.api.getGuardModeBase(station.getSerial());
     }
 }
