@@ -454,30 +454,30 @@ export class EufySecurityApi
         return json;
     }
 
+    /**
+     * Update the guard mode for a given base.
+     * @param key The serialnumber of the base.
+     */
     public async updateGuardModeBase(key : string) : Promise<void>
     {
-        this.logInfo("update GuardMode");
         await this.getGuardModeBase(key);
         if(this.waitUpdateState)
         {
-            this.logInfo("clear timer");
             clearTimeout(this.waitUpdateState);
         }
-        this.logInfo("set timer");
         this.waitUpdateState = setTimeout(async() => { await this.updateGuardModeBases(); }, 10000);
-        this.logInfo("update finished");
     }
 
+    /**
+     * Update guard mode when changed by event.
+     */
     private async updateGuardModeBases() : Promise<void>
     {
         if(this.waitUpdateState)
         {
-            this.logInfo("clear timer2");
             clearTimeout(this.waitUpdateState);
         }
-        this.logInfo("update GuardModeBases");
         await this.getGuardMode();
-        this.logInfo("finished");
     }
 
     /**

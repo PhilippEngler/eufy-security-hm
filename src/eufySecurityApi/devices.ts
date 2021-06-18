@@ -191,18 +191,25 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onRawPropertyChanged(device : Device, type : number, value : string, modified : number): Promise<void>
     {
-        //this.emit("station guard mode", station, guardMode, currentMode);
         this.api.logInfo("Device serial: " + device.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
-        //await this.api.getGuardModeBase(station.getSerial());
     }
 
+    /**
+     * The action to be one when event MotionDetected is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
     private async onMotionDetected(device : Device, state : boolean): Promise<void>
     {
-        //this.emit("station guard mode", station, guardMode, currentMode);
         this.api.logInfo("Device serial: " + device.getSerial() + " ::: State: " + state);
-        //await this.api.getGuardModeBase(station.getSerial());
     }
 
+    /**
+     * The action to be one when event PersonDetected is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     * @param person The person detected.
+     */
     private async onPersonDetected(device : Device, state : boolean, person : string): Promise<void>
     {
         //this.emit("station guard mode", station, guardMode, currentMode);
