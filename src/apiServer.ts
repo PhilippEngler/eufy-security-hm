@@ -416,27 +416,27 @@ class ApiServer
                         }
 
                         var updatestatetimespan ="15";
-                        if(postData.indexOf("periodicallyUpdateStateTimespan") >= 0)
+                        if(postData.indexOf("updateStateIntervallTimespan") >= 0)
                         {
-                            updatestatetimespan = getDataFromPOSTData(postData, "periodicallyUpdateStateTimespan", "string");
+                            updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "string");
                         }
 
                         var useupdatelinks = false;
-                        if(postData.indexOf("usePeriodicallyUpdateState") >= 0)
+                        if(postData.indexOf("useUpdateLinksIntervall") >= 0)
                         {
-                            useupdatelinks = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinks", "boolean");
+                            useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
                         }
 
                         var useupdatelinksonlywhenactive = false;
-                        if(postData.indexOf("usePeriodicallyUpdateLinksOnlyWhenActive") >= 0)
+                        if(postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0)
                         {
-                            useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinksOnlyWhenActive", "boolean");
+                            useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
                         }
 
                         var updatelinkstimespan ="15";
-                        if(postData.indexOf("periodicallyUpdateLinksTimespan") >= 0)
+                        if(postData.indexOf("updateLinksIntervallTimespan") >= 0)
                         {
-                            updatelinkstimespan = getDataFromPOSTData(postData, "periodicallyUpdateLinksTimespan", "string");
+                            updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "string");
                         }
 
                         var apiloglevel = "0";
