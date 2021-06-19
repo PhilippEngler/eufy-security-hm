@@ -229,7 +229,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationGuardModeChanged(station : Station, guardMode : number, currentMode : number): Promise<void>
     {
-        //this.emit("station guard mode", station, guardMode, currentMode);
         this.api.logInfo("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode + " ::: Current Mode: " + currentMode);
         await this.api.updateGuardModeBase(station.getSerial());
     }
@@ -242,9 +241,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onPropertyChanged(station : Station, name : string, value : PropertyValue): Promise<void>
     {
-        //this.emit("station guard mode", station, guardMode, currentMode);
-        this.api.logInfo("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
-        //await this.api.getGuardModeBase(station.getSerial());
+        if(name != "guardMode")
+        {
+            this.api.logInfo("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
+        }
     }
 
     /**
@@ -256,8 +256,9 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onRawPropertyChanged(station : Station, type : number, value : string, modified : number): Promise<void>
     {
-        //this.emit("station guard mode", station, guardMode, currentMode);
-        this.api.logInfo("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
-        //await this.api.getGuardModeBase(station.getSerial());
+        if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
+        {
+            this.api.logInfo("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
+        }
     }
 }
