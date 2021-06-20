@@ -132,11 +132,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         var cnt = 0;
         for (var key in this.bases)
         {
-            var base = this.bases[key];
-            await base.setGuardMode(guardMode)
+            this.removeEventListener(this.bases[key], "GuardModeChanged");
+            await this.bases[key].setGuardMode(guardMode)
             await sleep(1500);
             await this.loadBases();
-            if(base.getGuardMode().value as number != guardMode)
+            this.addEventListener(this.bases[key], "GuardModeChanged");
+            if(this.bases[key].getGuardMode().value as number != guardMode)
             {
                 cnt = cnt + 1;
             }
@@ -241,7 +242,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onPropertyChanged(station : Station, name : string, value : PropertyValue): Promise<void>
     {
-        if(name != "guardMode")
+        if(name != "guardMode" && name != "currentMode")
         {
             this.api.logInfo("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
         }
@@ -256,7 +257,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onRawPropertyChanged(station : Station, type : number, value : string, modified : number): Promise<void>
     {
-        if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
+        if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
             this.api.logInfo("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
         }
