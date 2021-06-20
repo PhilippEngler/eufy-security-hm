@@ -13,7 +13,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private httpService : HTTPApi;
     private serialNumbers : string[];
     private resBases !: Hubs;
-    private bases : {[key:string] : Station} = {};
+    private bases : {[stationSerial:string] : Station} = {};
 
     /**
      * Create the Bases objects holding all bases in the account.
@@ -37,29 +37,26 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         {
             await this.httpService.updateDeviceInfo();
             this.resBases = this.httpService.getHubs();
-            var key : string;
-            var base : Station;
             
             if(this.resBases != null)
             {
-                for (key in this.resBases)
+                for (var stationSerial in this.resBases)
                 {
-                    if(this.bases[key])
+                    if(this.bases[stationSerial])
                     {
-                        this.bases[key].update(this.resBases[key]);
+                        this.bases[stationSerial].update(this.resBases[stationSerial]);
                     }
                     else
                     {
-                        base = new Station(this.api, this.httpService, this.resBases[key]);
-                        this.bases[base.getSerial()] = base;
-                        this.serialNumbers.push(base.getSerial());
-                        await this.bases[key].connect(this.api.getP2PConnectionType());
+                        this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
+                        this.serialNumbers.push(stationSerial);
+                        await this.bases[stationSerial].connect(this.api.getP2PConnectionType());
 
                         if(this.api.getApiUseUpdateStateEvent())
                         {
-                            this.addEventListener(base, "GuardModeChanged");
-                            this.addEventListener(base, "PropertyChanged");
-                            this.addEventListener(base, "RawPropertyChanged");
+                            this.addEventListener(this.bases[stationSerial], "GuardModeChanged");
+                            this.addEventListener(this.bases[stationSerial], "PropertyChanged");
+                            this.addEventListener(this.bases[stationSerial], "RawPropertyChanged");
                         }
                     }
                 }
@@ -85,15 +82,15 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(this.resBases != null)
         {
-            for (var key in this.resBases)
+            for (var stationSerial in this.resBases)
             {
-                if(this.bases[key])
+                if(this.bases[stationSerial])
                 {
-                    await this.bases[key].close();
+                    await this.bases[stationSerial].close();
                     
-                    this.removeEventListener(this.bases[key], "GuardModeChanged");
-                    this.removeEventListener(this.bases[key], "PropertyChanged");
-                    this.removeEventListener(this.bases[key], "RawPropertyChanged");
+                    this.removeEventListener(this.bases[stationSerial], "GuardModeChanged");
+                    this.removeEventListener(this.bases[stationSerial], "PropertyChanged");
+                    this.removeEventListener(this.bases[stationSerial], "RawPropertyChanged");
                 }
             }
         }
@@ -110,7 +107,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     /**
      * Returns a JSON-Representation of all Bases including the guard mode.
      */
-    public getBases() : {[key: string] : Station}
+    public getBases() : {[stationSerial: string] : Station}
     {
         return this.bases;
     }
@@ -118,7 +115,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     /**
      * Get the guard mode for all bases.
      */
-    public getGuardMode() : {[key: string] : Station}
+    public getGuardMode() : {[stationSerial: string] : Station}
     {
         return this.getBases();
     }
@@ -130,14 +127,14 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
     {
         var cnt = 0;
-        for (var key in this.bases)
+        for (var stationSerial in this.bases)
         {
-            this.removeEventListener(this.bases[key], "GuardModeChanged");
-            await this.bases[key].setGuardMode(guardMode)
+            this.removeEventListener(this.bases[stationSerial], "GuardModeChanged");
+            await this.bases[stationSerial].setGuardMode(guardMode)
             await sleep(1500);
             await this.loadBases();
-            this.addEventListener(this.bases[key], "GuardModeChanged");
-            if(this.bases[key].getGuardMode().value as number != guardMode)
+            this.addEventListener(this.bases[stationSerial], "GuardModeChanged");
+            if(this.bases[stationSerial].getGuardMode().value as number != guardMode)
             {
                 cnt = cnt + 1;
             }
