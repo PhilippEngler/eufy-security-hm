@@ -37,6 +37,9 @@ class ApiServer
      */
     public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string, logger : Logger)
     {
+        logger.logInfoBasic(`eufy_security_hm v${api.getEufySecurityApiVersion()}(v${api.getEufySecurityClientVersion()})`);
+        logger.logInfoBasic(`  Plattform: ${process.platform}_${process.arch}`);
+        logger.logInfoBasic(`  Node: ${process.version}`);
         if(httpActive == true)
         {
             logger.logInfoBasic("Starting http server...");

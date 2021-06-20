@@ -1536,14 +1536,14 @@ export class EufySecurityApi
      */
     public getApiVersion() : string
     {
-        return `{"success":true,"api_version":"${this.getEufySecurityApiVersion()}","homematic_api_version":"${this.homematicApi.getHomematicApiVersion()}","eufy_security_client_version":"${this.getEufySecurityClientVersion()}"}`;
+        return `{"success":true,"plattform":"${process.platform}","node_version":"${process.version}","node_arch":"${process.arch}","api_version":"${this.getEufySecurityApiVersion()}","homematic_api_version":"${this.homematicApi.getHomematicApiVersion()}","eufy_security_client_version":"${this.getEufySecurityClientVersion()}"}`;
     }
 
     /**
      * Returns the version of this API.
      * @returns The version of this API.
      */
-    private getEufySecurityApiVersion() : string
+    public getEufySecurityApiVersion() : string
     {
         return "1.5.1";
     }
