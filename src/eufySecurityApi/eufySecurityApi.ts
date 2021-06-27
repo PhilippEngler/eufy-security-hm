@@ -1493,7 +1493,7 @@ export class EufySecurityApi
         else if(name == "getLibrary")
         {
             task = setInterval(async() => { await this.setScheuduleLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes).`);
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${(this.config.getApiUpdateLinksOnlyWhenActive() == true) ? " when system is active" : ""}).`);
         }
     }
 
