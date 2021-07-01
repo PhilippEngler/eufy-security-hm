@@ -11,6 +11,9 @@
 		<!-- Bootstrap core CSS -->
 		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
 		
+		<!-- Bootstrap icon font CSS -->
+		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
+		
 		<style>
 			.bd-placeholder-img {
 				font-size: 1.125rem;
@@ -73,7 +76,7 @@
 				<p>
 					<div id="allbases">
 						<!--<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">-->
-						<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-1">
+						<div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-3">
 							<div class="col">
 								<div class="card mb-3">
 									<h5 class="card-header">alle Basen</h5>
@@ -306,7 +309,7 @@
 									bases += `<div class="col-md-8">`;
 									bases += `<div class="card-body" style="margin-left: -1rem">`;
 									bases += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-									bases += `<p class="card-text">${objResp.data[objIter].base_id}<br />Status: <span id="state_${objResp.data[objIter].base_id}">${state}</span></p>`;
+									bases += `<p class="card-text">${objResp.data[objIter].base_id}<br /><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;<span id="state_${objResp.data[objIter].base_id}">${state}</span></span></p>`;
 									bases += `</div>`;
 									bases += `</div>`;
 									bases += `</div>`;

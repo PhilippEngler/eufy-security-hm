@@ -11,6 +11,9 @@
 		<!-- Bootstrap core CSS -->
 		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
 		
+		<!-- Bootstrap icon font CSS -->
+		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
+		
 		<style>
 			.bd-placeholder-img {
 				font-size: 1.125rem;
@@ -266,7 +269,7 @@
 										bases += `<div class="col-md-8">`;
 										bases += `<div class="card-body" style="margin-left: -1rem">`;
 										bases += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-										bases += `<p class="card-text">${myObj.data[base].base_id}<br />SW: ${myObj.data[base].software_version}<br />Status: ${state}</p>`;
+										bases += `<p class="card-text">${myObj.data[base].base_id}<br /><span class="text-nowrap"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;${myObj.data[base].software_version}</span>&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
 										bases += `</div>`;
 										bases += `</div>`;
 										bases += `</div>`;
@@ -378,7 +381,7 @@
 										cams += `<div class="col-md-8">`;
 										cams += `<div class="card-body" style="margin-left: -1rem">`;
 										cams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-										cams += `<p class="card-text">${myObj.data[object].device_id}<br />SW: ${myObj.data[object].software_version}<br />Akku: ${myObj.data[object].battery_charge}% / ${myObj.data[object].battery_temperature}&deg;C</p>`;
+										cams += `<p class="card-text">${myObj.data[object].device_id}<br /><span class="text-nowrap"><i class="bi-gear" title="Firmwareversion"></i> ${myObj.data[object].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_charge < 10 ? "bi-battery" : myObj.data[object].battery_charge < 50 ? "bi-battery-half" : "bi-battery-full"}" title="Ladezustand des Akkus"></i>&nbsp;${myObj.data[object].battery_charge}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_temperature < 0 ? "bi-thermometer-low" : myObj.data[object].battery_temperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp${myObj.data[object].battery_temperature}&deg;C</span></p>`;
 										cams += `</div>`;
 										cams += `</div>`;
 										cams += `</div>`;

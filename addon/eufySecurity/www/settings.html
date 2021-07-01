@@ -11,6 +11,9 @@
 		<!-- Bootstrap core CSS -->
 		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
 		
+		<!-- Bootstrap icon font CSS -->
+		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
+		
 		<style>
 			.bd-placeholder-img {
 				font-size: 1.125rem;
@@ -82,7 +85,7 @@
 					<div class="row">
 						<div class="col">
 							<div class="card mb-3">
-								<h5 class="card-header">Zugangsdaten eufy Security Account</h5>
+								<h5 class="card-header"><i class="bi-person-circle"></i>&nbsp;&nbsp;Zugangsdaten eufy Security Account</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
@@ -111,7 +114,7 @@
 							</div>
 
 							<div class="card mb-3">
-								<h5 class="card-header">Konfiguration des AddOns</h5>
+								<h5 class="card-header"><i class="bi-sliders"></i>&nbsp;&nbsp;Konfiguration des AddOns</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
@@ -256,7 +259,7 @@
 							</div>
 
 							<div class="card mb-3">
-								<h5 class="card-header">Systemvariablen</h5>
+								<h5 class="card-header"><i class="bi-table"></i>&nbsp;&nbsp;Systemvariablen</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body">
@@ -270,7 +273,7 @@
 							</div>
 
 							<div class="card mb-3">
-								<h5 class="card-header">Fehlerbehebung</h5>
+								<h5 class="card-header"><i class="bi-tools"></i>&nbsp;&nbsp;Fehlerbehebung</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
@@ -1308,10 +1311,15 @@
 					}
 				}
 
+				if(elementName.value == "")
+				{
+					return;
+				}
+
 				if(!regex.test(elementName.value))
 				{
 					error = true;
-					errorMessage = "Sie haben keine Zahl oder eine ungültige Zahl eingegeben. Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Die Eingabe wird nun gelöscht."
+					errorMessage = "Sie haben keine Zahl oder eine ungültige Zahl eingegeben. Bitte geben Sie eine Zahl zwischen 1 und 65535 ein.<br /><br />Die Eingabe wird nun gelöscht."
 				}
 
 				if(error == false && cnt > 1)
@@ -1326,7 +1334,7 @@
 								if(document.getElementById('txtUdpPortsBase' + element[i].name.replace("udpPortsBase", "")).value == elementName.value)
 								{
 									error = true;
-									errorMessage = "Sie haben einen Port eingegeben, der bereits für eine andere Basis eingegeben wurde. Die Eingabe wird nun gelöscht."
+									errorMessage = "Sie haben einen Port eingegeben, der bereits für eine andere HomeBase oder ein anderes Gerät eingegeben wurde.<br /><br />Die Eingabe wird nun gelöscht."
 									break;
 								}
 							}
@@ -1337,7 +1345,7 @@
 				if(error == true)
 				{
 					var modal = $('#modalUDPPortsEqualWrong');
-					modal.find(".modal-body").text(errorMessage);
+					modal.find(".modal-body").html(errorMessage);
 					$('#modalUDPPortsEqualWrong').modal('show');
 					$('#modalUDPPortsEqualWrong').one('click', '.btn-primary', function() { clearInputField(elementName.id); });
 				}
