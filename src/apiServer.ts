@@ -37,7 +37,7 @@ class ApiServer
      */
     public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string, logger : Logger)
     {
-        logger.logInfoBasic(`eufy_security_hm v${api.getEufySecurityApiVersion()}(v${api.getEufySecurityClientVersion()})`);
+        logger.logInfoBasic(`eufy_security_hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
         logger.logInfoBasic(`  Node: ${process.version}`);
         if(httpActive == true)
@@ -207,7 +207,7 @@ class ApiServer
                         }
                         else
                         {
-                            responseString = `{"success":false,"message":"Numbers of arguments not matching."}`;
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "checkSystemVariables":
@@ -224,7 +224,7 @@ class ApiServer
                         }
                         else
                         {
-                            responseString = `{"success":false,"message":"False amount of arguments."}`;
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getLibrary":
@@ -234,7 +234,7 @@ class ApiServer
                         }
                         else
                         {
-                            responseString = `{"success":false,"message":"False amount of arguments."}`;
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getLogFileContent":
@@ -488,7 +488,7 @@ class ApiServer
                         }
                         else
                         {
-                            responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check the values."}`;
+                            responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
                         }
 
                         var resJSON = JSON.parse(responseString);
