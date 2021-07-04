@@ -13,7 +13,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private httpService : HTTPApi;
     private serialNumbers : string[];
     private resBases !: Hubs;
-    private bases : {[stationSerial:string] : Station} = {};
+    private bases : { [stationSerial : string ] : Station} = {};
+    private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
 
     /**
      * Create the Bases objects holding all bases in the account.
@@ -49,14 +50,15 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     else
                     {
                         this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
+                        this.skipNextModeChangeEvent[stationSerial] = false;
                         this.serialNumbers.push(stationSerial);
                         await this.bases[stationSerial].connect(this.api.getP2PConnectionType());
 
                         if(this.api.getApiUseUpdateStateEvent())
                         {
-                            this.addEventListener(this.bases[stationSerial], "GuardModeChanged");
-                            this.addEventListener(this.bases[stationSerial], "PropertyChanged");
-                            this.addEventListener(this.bases[stationSerial], "RawPropertyChanged");
+                            this.addEventListenerInstantly(this.bases[stationSerial], "GuardModeChanged");
+                            this.addEventListenerInstantly(this.bases[stationSerial], "PropertyChanged");
+                            this.addEventListenerInstantly(this.bases[stationSerial], "RawPropertyChanged");
                         }
                     }
                 }
@@ -129,11 +131,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         var cnt = 0;
         for (var stationSerial in this.bases)
         {
-            this.removeEventListener(this.bases[stationSerial], "GuardModeChanged");
+            this.skipNextModeChangeEvent[stationSerial] = true;
             await this.bases[stationSerial].setGuardMode(guardMode)
             await sleep(1500);
             await this.loadBases();
-            this.addEventListener(this.bases[stationSerial], "GuardModeChanged");
             if(this.bases[stationSerial].getGuardMode().value as number != guardMode)
             {
                 cnt = cnt + 1;
@@ -156,11 +157,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     public async setGuardModeBase(baseSerial : string, guardMode : GuardMode) : Promise<boolean>
     {
-        this.removeEventListener(this.bases[baseSerial], "GuardModeChanged");
+        this.skipNextModeChangeEvent[baseSerial] = true;
         await this.bases[baseSerial].setGuardMode(guardMode);
         await sleep(1500);
         await this.loadBases();
-        this.addEventListener(this.bases[baseSerial], "GuardModeChanged");
         if(this.bases[baseSerial].getGuardMode().value as number == guardMode)
         {
             return true;
@@ -172,11 +172,11 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Add a given event listener for a given base.
+     * Add instantly a given event listener for a given base.
      * @param base The base as Station object.
      * @param eventListenerName The event listener name as string.
      */
-    public addEventListener(base : Station, eventListenerName : string) : void
+    public addEventListenerInstantly(base : Station, eventListenerName : string) : void
     {
         switch (eventListenerName)
         {
@@ -191,6 +191,31 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             case "RawPropertyChanged":
                 base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onRawPropertyChanged(station, type, value, modified));
                 this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+        }
+    }
+
+    /**
+     * Add 5 seconds delayed a given event listener for a given base.
+     * @param base The base as Station object.
+     * @param eventListenerName The event listener name as string.
+     */
+    public async addEventListenerDelayed(base : Station, eventListenerName : string) : Promise<void>
+    {
+        await sleep(5000);
+        switch (eventListenerName)
+        {
+            case "GuardModeChanged":
+                base.on("guard mode", (station : Station, guardMode : number, currentMode : number) => this.onStationGuardModeChanged(station, guardMode, currentMode));
+                this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("guard mode")} Listener.`);
+                break;
+            case "PropertyChanged":
+                base.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onPropertyChanged(station, name, value));
+                this.api.logDebug(`Listener 'PropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+            case "RawPropertyChanged":
+                base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onRawPropertyChanged(station, type, value, modified));
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("property changed")} Listener.`);
                 break;
         }
     }
@@ -220,6 +245,25 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * Returns the number of attached listeners for a given base and a given event.
+     * @param base The base the number of attached listners to count.
+     * @param eventListenerName The name of the event the attached listeners to count.
+     */
+    public countEventListener(base : Station, eventListenerName : string) : number
+    {
+        switch (eventListenerName)
+        {
+            case "GuardModeChanged":
+                return base.listenerCount("guard mode");
+            case "PropertyChanged":
+                return base.listenerCount("property changed");
+            case "RawPropertyChanged":
+                return base.listenerCount("raw property changed");
+        }
+        return -1;
+    }
+
+    /**
      * The action to be one when event GuardModeChanged is fired.
      * @param station The base as Station object.
      * @param guardMode The new guard mode as GuardMode.
@@ -227,8 +271,16 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationGuardModeChanged(station : Station, guardMode : number, currentMode : number): Promise<void>
     {
-        this.api.logInfo("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode + " ::: Current Mode: " + currentMode);
-        await this.api.updateGuardModeBase(station.getSerial());
+        if(this.skipNextModeChangeEvent[station.getSerial()] == true)
+        {
+            this.api.logDebug("Event skipped due to locally forced changeGuardMode.");
+            this.skipNextModeChangeEvent[station.getSerial()] = false;
+        }
+        else
+        {
+            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode + " ::: Current Mode: " + currentMode);
+            await this.api.updateGuardModeBase(station.getSerial());
+        }
     }
 
     /**
@@ -241,7 +293,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(name != "guardMode" && name != "currentMode")
         {
-            this.api.logInfo("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
+            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
         }
     }
 
@@ -256,7 +308,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
-            this.api.logInfo("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
+            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
         }
     }
 }
