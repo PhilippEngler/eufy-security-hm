@@ -20,16 +20,18 @@ const i18n_iso_languages_1 = require("@cospired/i18n-iso-languages");
 const types_1 = require("./types");
 const parameter_1 = require("./parameter");
 const utils_1 = require("./utils");
+const error_1 = require("./../error");
 class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     constructor(api, username, password, log) {
         super();
-        //private api_base = "https://mysecurity.eufylife.com/api/v1";
-        this.api_base = "https://security-app-eu.eufylife.com/v1";
+        //private apiBase = "https://mysecurity.eufylife.com/api/v1";
+        this.apiBase = "https://security-app-eu.eufylife.com/v1";
         this.username = null;
         this.password = null;
         this.token = null;
-        this.token_expiration = null;
-        this.trusted_token_expiration = new Date(2100, 12, 31, 23, 59, 59, 0);
+        this.tokenExpiration = null;
+        this.trustedTokenExpiration = new Date(2100, 12, 31, 23, 59, 59, 0);
+        this.connected = false;
         this.devices = {};
         this.hubs = {};
         this.headers = {
@@ -56,7 +58,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     }
     invalidateToken() {
         this.token = null;
-        this.token_expiration = null;
+        this.tokenExpiration = null;
         axios_1.default.defaults.headers.common["X-Auth-Token"] = null;
     }
     setPhoneModel(model) {
@@ -69,7 +71,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         if (i18n_iso_countries_1.isValid(country) && country.length === 2)
             this.headers.country = country;
         else
-            throw new Error("Invalid ISO 3166-1 Alpha-2 country code");
+            throw new error_1.InvalidCountryCodeError("Invalid ISO 3166-1 Alpha-2 country code");
     }
     getCountry() {
         return this.headers.country;
@@ -78,7 +80,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         if (i18n_iso_languages_1.isValid(language) && language.length === 2)
             this.headers.language = language;
         else
-            throw new Error("Invalid ISO 639 language code");
+            throw new error_1.InvalidLanguageCodeError("Invalid ISO 639 language code");
     }
     getLanguage() {
         return this.headers.language;
@@ -86,67 +88,67 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     authenticate() {
         return __awaiter(this, void 0, void 0, function* () {
             //Authenticate and get an access token
-            this.log.debug(`${this.constructor.name}.authenticate(): token: ${this.token} token_expiration: ${this.token_expiration}`);
-            if (!this.token || this.token_expiration && (new Date()).getTime() >= this.token_expiration.getTime()) {
+            this.log.debug("Authenticate and get an access token", { token: this.token, tokenExpiration: this.tokenExpiration });
+            if (!this.token || this.tokenExpiration && (new Date()).getTime() >= this.tokenExpiration.getTime()) {
                 try {
                     const response = yield this.request("post", "passport/login", {
                         email: this.username,
                         password: this.password
                     }, this.headers).catch(error => {
-                        this.log.error(`${this.constructor.name}.authenticate(): error: ${JSON.stringify(error)}`);
+                        this.log.error("Error:", error);
                         return error;
                     });
-                    this.log.debug(`${this.constructor.name}.authenticate(): Response:  ${JSON.stringify(response.data)}`);
+                    this.log.debug("Response:", response.data);
                     if (response.status == 200) {
                         const result = response.data;
                         if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                             const dataresult = result.data;
                             this.token = dataresult.auth_token;
-                            this.token_expiration = new Date(dataresult.token_expires_at * 1000);
+                            this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
                             axios_1.default.defaults.headers.common["X-Auth-Token"] = this.token;
                             if (dataresult.domain) {
-                                if ("https://" + dataresult.domain + "/v1" != this.api_base) {
-                                    this.api_base = "https://" + dataresult.domain + "/v1";
-                                    axios_1.default.defaults.baseURL = this.api_base;
-                                    this.log.info(`Switching to another API_BASE (${this.api_base}) and get new token.`);
+                                if ("https://" + dataresult.domain + "/v1" != this.apiBase) {
+                                    this.apiBase = "https://" + dataresult.domain + "/v1";
+                                    axios_1.default.defaults.baseURL = this.apiBase;
+                                    this.log.info(`Switching to another API_BASE (${this.apiBase}) and get new token.`);
                                     this.token = null;
-                                    this.token_expiration = null;
+                                    this.tokenExpiration = null;
                                     axios_1.default.defaults.headers.common["X-Auth-Token"] = null;
                                     return types_1.AuthResult.RENEW;
                                 }
                             }
-                            this.log.debug(`${this.constructor.name}.authenticate(): token: ${this.token}`);
-                            this.log.debug(`${this.constructor.name}.authenticate(): token_expiration: ${this.token_expiration}`);
-                            this.api.setTokenData(this.token, this.token_expiration.getTime().toString());
+                            this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
+                            this.api.setTokenData(this.token, this.tokenExpiration.getTime().toString());
                             this.emit("connect");
+                            this.connected = true;
                             return types_1.AuthResult.OK;
                         }
                         else if (result.code == types_1.ResponseErrorCode.CODE_NEED_VERIFY_CODE) {
                             this.log.debug(`${this.constructor.name}.authenticate(): Send verification code...`);
                             const dataresult = result.data;
                             this.token = dataresult.auth_token;
-                            this.token_expiration = new Date(dataresult.token_expires_at * 1000);
+                            this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
                             axios_1.default.defaults.headers.common["X-Auth-Token"] = this.token;
-                            this.log.debug(`${this.constructor.name}.authenticate(): token: ${this.token}`);
-                            this.log.debug(`${this.constructor.name}.authenticate(): token_expiration: ${this.token_expiration}`);
-                            this.api.setTokenData(this.token, this.token_expiration.getTime().toString());
+                            this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
+                            this.api.setTokenData(this.token, this.tokenExpiration.getTime().toString());
                             yield this.sendVerifyCode(types_1.VerfyCodeTypes.TYPE_EMAIL);
                             return types_1.AuthResult.SEND_VERIFY_CODE;
                         }
                         else {
-                            this.log.error(`${this.constructor.name}.authenticate(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                            this.log.error("Response code not ok", { code: result.code, msg: result.msg });
                         }
                     }
                     else {
-                        this.log.error(`${this.constructor.name}.authenticate(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                        this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                     }
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}.authenticate(): error: ${error}`);
+                    this.log.error("Generic Error:", error);
                 }
                 return types_1.AuthResult.ERROR;
             }
             this.emit("connect");
+            this.connected = true;
             return types_1.AuthResult.OK;
         });
     }
@@ -158,9 +160,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 const response = yield this.request("post", "sms/send/verify_code", {
                     message_type: type
                 }, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.sendVerifyCode(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
+                this.log.debug("Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
@@ -168,15 +171,15 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         return true;
                     }
                     else {
-                        this.log.error(`${this.constructor.name}.sendVerifyCode(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
                     }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.sendVerifyCode(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.sendVerifyCode(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return false;
         });
@@ -185,10 +188,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const response = yield this.request("get", "app/trust_device/list", undefined, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.listTrustDevice(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.listTrustDevice(): Response:  ${JSON.stringify(response.data)}`);
+                this.log.debug("Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
@@ -197,38 +200,41 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error(`${this.constructor.name}.listTrustDevice(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
                     }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.listTrustDevice(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.listTrustDevice(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return [];
         });
     }
-    addTrustDevice(verify_code) {
+    addTrustDevice(verifyCode) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const response = yield this.request("post", "passport/login", {
-                    verify_code: `${verify_code}`,
+                    verify_code: `${verifyCode}`,
                     transaction: `${new Date().getTime()}`
                 }, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.listTrustDevice(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.addTrustDevice(): Response:  ${JSON.stringify(response.data)}`);
+                this.log.debug("Response login:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                         const response2 = yield this.request("post", "app/trust_device/add", {
-                            verify_code: `${verify_code}`,
+                            verify_code: `${verifyCode}`,
                             transaction: `${new Date().getTime()}`
-                        }, this.headers);
-                        this.log.debug(`${this.constructor.name}.addTrustDevice(): Response2:  ${JSON.stringify(response.data)}`);
+                        }, this.headers).catch(error => {
+                            this.log.error("Error:", error);
+                            return error;
+                        });
+                        this.log.debug("Response trust device:", response.data);
                         if (response2.status == 200) {
                             const result = response2.data;
                             if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
@@ -236,34 +242,36 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                                 const trusted_devices = yield this.listTrustDevice();
                                 trusted_devices.forEach((trusted_device) => {
                                     if (trusted_device.is_current_device === 1) {
-                                        this.token_expiration = this.trusted_token_expiration;
-                                        this.log.debug(`${this.constructor.name}.addTrustDevice(): This device is trusted. Token expiration extended to: ${this.token_expiration})`);
+                                        this.tokenExpiration = this.trustedTokenExpiration;
+                                        this.log.debug("This device is trusted. Token expiration extended:", { tokenExpiration: this.tokenExpiration });
                                     }
                                 });
+                                this.emit("connect");
+                                this.connected = true;
                                 return true;
                             }
                             else {
-                                this.log.error(`${this.constructor.name}.addTrustDevice(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                                this.log.error("Response code not ok", { code: result.code, msg: result.msg });
                             }
                         }
                         else if (response2.status == 401) {
                             this.invalidateToken();
-                            this.log.error(`${this.constructor.name}.addTrustDevice(): Status return code 401, invalidate token (status: ${response.status} text: ${response.statusText}`);
+                            this.log.error("Status return code 401, invalidate token", { status: response.status, statusText: response.statusText });
                         }
                         else {
-                            this.log.error(`${this.constructor.name}.addTrustDevice(): Status return code not 200 (status: ${response2.status} text: ${response2.statusText}`);
+                            this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                         }
                     }
                     else {
-                        this.log.error(`${this.constructor.name}.addTrustDevice(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
                     }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.addTrustDevice(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.addTrustDevice(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return false;
         });
@@ -274,18 +282,18 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             //Get Stations
             try {
                 const response = yield this.request("post", "app/get_hub_list").catch(error => {
-                    this.log.error(`${this.constructor.name}.updateDeviceInfo(): stations - error: ${JSON.stringify(error)}`);
+                    this.log.error("Stations - Error:", error);
                     return error;
                 });
-                //this.log.debug(`${this.constructor.name}.updateDeviceInfo(): stations - Response: ${JSON.stringify(response.data)}`);
+                this.log.debug("Stations - Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
                         const dataresult = result.data;
                         if (dataresult) {
                             dataresult.forEach(element => {
-                                //this.log.debug(`${this.constructor.name}.updateDeviceInfo(): stations - element: ${JSON.stringify(element)}`);
-                                //this.log.debug(`${this.constructor.name}.updateDeviceInfo(): stations - device_type: ${element.device_type}`);
+                                this.log.debug(`${this.constructor.name}.updateDeviceInfo(): stations - element: ${JSON.stringify(element)}`);
+                                this.log.debug(`${this.constructor.name}.updateDeviceInfo(): stations - device_type: ${element.device_type}`);
                                 this.hubs[element.station_sn] = element;
                             });
                         }
@@ -295,23 +303,24 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         if (Object.keys(this.hubs).length > 0)
                             this.emit("hubs", this.hubs);
                     }
-                    else
-                        this.log.error(`${this.constructor.name}.updateDeviceInfo(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.updateDeviceInfo(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.updateDeviceInfo(): error: ${error}`);
+                this.log.error("Stations - Generic Error:", error);
             }
             //Get Devices
             try {
                 const response = yield this.request("post", "app/get_devs_list").catch(error => {
-                    this.log.error(`${this.constructor.name}.updateDeviceInfo(): devices - error: ${JSON.stringify(error)}`);
+                    this.log.error("Devices - Error:", error);
                     return error;
                 });
-                //this.log.debug(`${this.constructor.name}.updateDeviceInfo(): devices - Response: ${JSON.stringify(response.data)}`);
+                this.log.debug("Devices - Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
@@ -327,15 +336,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         if (Object.keys(this.devices).length > 0)
                             this.emit("devices", this.devices);
                     }
-                    else
-                        this.log.error(`${this.constructor.name}.updateDeviceInfo(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.updateDeviceInfo(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.updateDeviceInfo(): error: ${error}`);
+                this.log.error("Devices - Generic Error:", error);
             }
         });
     }
@@ -346,37 +356,38 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 //No token get one
                 switch (yield this.authenticate()) {
                     case types_1.AuthResult.RENEW:
-                        this.log.debug(`${this.constructor.name}.request(): renew token - method: ${method} endpoint: ${endpoint}`);
+                        this.log.debug("Renew token", { method: method, endpoint: endpoint });
                         yield this.authenticate();
                         break;
                     case types_1.AuthResult.ERROR:
-                        this.log.debug(`${this.constructor.name}.request(): token error - method: ${method} endpoint: ${endpoint}`);
+                        this.log.error("Token error", { method: method, endpoint: endpoint });
                         break;
                     default: break;
                 }
             }
-            if (this.token_expiration && (new Date()).getTime() >= this.token_expiration.getTime()) {
+            if (this.tokenExpiration && (new Date()).getTime() >= this.tokenExpiration.getTime()) {
                 this.log.info("Access token expired; fetching a new one");
                 this.invalidateToken();
                 if (endpoint != "passport/login")
                     //get new token
                     yield this.authenticate();
             }
-            this.log.debug(`${this.constructor.name}.request(): method: ${method} endpoint: ${endpoint} baseUrl: ${this.api_base} token: ${this.token} data: ${JSON.stringify(data)} headers: ${JSON.stringify(this.headers)}`);
+            this.log.debug("Request:", { method: method, endpoint: endpoint, baseUrl: this.apiBase, token: this.token, data: data, headers: this.headers });
             const response = yield axios_1.default({
                 method: method,
                 url: endpoint,
                 data: data,
                 headers: headers,
-                baseURL: this.api_base,
+                baseURL: this.apiBase,
                 validateStatus: function (status) {
                     return status < 500; // Resolve only if the status code is less than 500
                 }
             });
             if (response.status == 401) {
                 this.invalidateToken();
-                this.log.error(`${this.constructor.name}.request(): Status return code 401, invalidate token (status: ${response.status} text: ${response.statusText}`);
+                this.log.error("Status return code 401, invalidate token", { status: response.status, statusText: response.statusText });
                 this.emit("close");
+                this.connected = false;
             }
             return response;
         });
@@ -389,29 +400,30 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     app_type: "eufySecurity",
                     transaction: `${new Date().getTime()}`
                 }, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.checkPushToken(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.checkPushToken(): Response: ${JSON.stringify(response.data)}`);
+                this.log.debug("Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        this.log.debug(`${this.constructor.name}.checkPushToken(): OK`);
+                        this.log.debug(`Push token OK`);
                         return true;
                     }
-                    else
-                        this.log.error(`${this.constructor.name}.checkPushToken(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
                 }
                 else if (response.status == 401) {
                     this.invalidateToken();
-                    this.log.error(`${this.constructor.name}.checkPushToken(): Status return code 401, invalidate token (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code 401, invalidate token", { status: response.status, statusText: response.statusText });
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.checkPushToken(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.checkPushToken(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return false;
         });
@@ -425,81 +437,83 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     token: token,
                     transaction: `${new Date().getTime().toString()}`
                 }, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.registerPushToken(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.registerPushToken(): Response: ${JSON.stringify(response.data)}`);
+                this.log.debug("Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        this.log.debug(`${this.constructor.name}.registerPushToken(): OK`);
+                        this.log.debug(`Push token registered successfully`);
                         return true;
                     }
-                    else
-                        this.log.error(`${this.constructor.name}.registerPushToken(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
                 }
                 else if (response.status == 401) {
                     this.invalidateToken();
-                    this.log.error(`${this.constructor.name}.registerPushToken(): Status return code 401, invalidate token (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code 401, invalidate token", { status: response.status, statusText: response.statusText });
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.registerPushToken(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.registerPushToken(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return false;
         });
     }
-    setParameters(station_sn, device_sn, params) {
+    setParameters(stationSN, deviceSN, params) {
         return __awaiter(this, void 0, void 0, function* () {
             const tmp_params = [];
             params.forEach(param => {
-                tmp_params.push({ param_type: param.param_type, param_value: parameter_1.ParameterHelper.writeValue(param.param_type, param.param_value) });
+                tmp_params.push({ param_type: param.paramType, param_value: parameter_1.ParameterHelper.writeValue(param.paramType, param.paramValue) });
             });
             try {
                 const response = yield this.request("post", "app/upload_devs_params", {
-                    device_sn: device_sn,
-                    station_sn: station_sn,
+                    device_sn: deviceSN,
+                    station_sn: stationSN,
                     params: tmp_params
                 }).catch(error => {
-                    this.log.error(`${this.constructor.name}.setParameters(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.setParameters(): station_sn: ${station_sn} device_sn: ${device_sn} params: ${JSON.stringify(tmp_params)} Response: ${JSON.stringify(response.data)}`);
+                this.log.debug("Response:", { stationSN: stationSN, deviceSN: deviceSN, params: tmp_params, response: response.data });
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
                         const dataresult = result.data;
-                        this.log.debug(`${this.constructor.name}.setParameters(): New Parameters set. response: ${JSON.stringify(dataresult)}`);
+                        this.log.debug("New parameters set", { params: tmp_params, response: dataresult });
                         return true;
                     }
-                    else
-                        this.log.error(`${this.constructor.name}.setParameters(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.setParameters(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.setParameters(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return false;
         });
     }
-    getCiphers(cipher_ids, user_id) {
+    getCiphers(cipherIDs, userID) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const response = yield this.request("post", "app/cipher/get_ciphers", {
-                    cipher_ids: cipher_ids,
-                    user_id: user_id,
+                    cipher_ids: cipherIDs,
+                    user_id: userID,
                     transaction: `${new Date().getTime().toString()}`
                 }, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.getCiphers(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.getCiphers(): Response:  ${JSON.stringify(response.data)}`);
+                this.log.debug("Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
@@ -512,27 +526,27 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error(`${this.constructor.name}.getCiphers(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
                     }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.getCiphers(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.getCiphers(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return {};
         });
     }
-    getVoices(device_sn) {
+    getVoices(deviceSN) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("get", `voice/response/lists/${device_sn}`, null, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.getVoices(): error: ${JSON.stringify(error)}`);
+                const response = yield this.request("get", `voice/response/lists/${deviceSN}`, null, this.headers).catch(error => {
+                    this.log.error("Error:", error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.getVoices(): Response:  ${JSON.stringify(response.data)}`);
+                this.log.debug("Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
@@ -545,22 +559,22 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error(`${this.constructor.name}.getVoices(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
                     }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.getVoices(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.getVoices(): error: ${error}`);
+                this.log.error("Generic Error:", error);
             }
             return {};
         });
     }
-    getCipher(cipher_id, user_id) {
+    getCipher(cipherID, userID) {
         return __awaiter(this, void 0, void 0, function* () {
-            return (yield this.getCiphers([cipher_id], user_id))[cipher_id];
+            return (yield this.getCiphers([cipherID], userID))[cipherID];
         });
     }
     getLog() {
@@ -576,23 +590,23 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return this.token;
     }
     getTokenExpiration() {
-        return this.token_expiration;
+        return this.tokenExpiration;
     }
     getTrustedTokenExpiration() {
-        return this.trusted_token_expiration;
+        return this.trustedTokenExpiration;
     }
     setToken(token) {
         this.token = token;
         axios_1.default.defaults.headers.common["X-Auth-Token"] = token;
     }
-    setTokenExpiration(token_expiration) {
-        this.token_expiration = token_expiration;
+    setTokenExpiration(tokenExpiration) {
+        this.tokenExpiration = tokenExpiration;
     }
     getAPIBase() {
-        return this.api_base;
+        return this.apiBase;
     }
-    setAPIBase(api_base) {
-        this.api_base = api_base;
+    setAPIBase(apiBase) {
+        this.apiBase = apiBase;
     }
     setOpenUDID(openudid) {
         this.headers.openudid = openudid;
@@ -622,30 +636,31 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     storage: filter.storageType !== undefined ? filter.storageType : types_1.StorageType.NONE,
                     transaction: `${new Date().getTime().toString()}`
                 }, this.headers).catch(error => {
-                    this.log.error(`${this.constructor.name}.${functionName}(): Error: ${JSON.stringify(error)}`);
+                    this.log.error(`${functionName} - Error:`, error);
                     return error;
                 });
-                this.log.debug(`${this.constructor.name}.${functionName}(): Response: ${JSON.stringify(response.data)}`);
+                this.log.debug(`${functionName} - Response:`, response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
                         const dataresult = result.data;
                         if (dataresult) {
                             dataresult.forEach(record => {
-                                this.log.debug(`${this.constructor.name}.${functionName}(): record: ${JSON.stringify(record)}`);
+                                this.log.debug(`${functionName} - Record:`, record);
                                 records.push(record);
                             });
                         }
                     }
-                    else
-                        this.log.error(`${this.constructor.name}.${functionName}(): Response code not ok (code: ${result.code} msg: ${result.msg})`);
+                    else {
+                        this.log.error(`${functionName} - Response code not ok`, { code: result.code, msg: result.msg });
+                    }
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.${functionName}(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error(`${functionName} - Status return code not 200`, { status: response.status, statusText: response.statusText });
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.${functionName}(): error: ${error}`);
+                this.log.error(`${functionName} - Generic Error:`, error);
             }
             return records;
         });
@@ -682,6 +697,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             const fifthyYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
             return this.getHistoryEvents(new Date(new Date().getTime() - fifthyYearsInMilliseconds), new Date(), filter, maxResults);
         });
+    }
+    isConnected() {
+        return this.connected;
     }
 }
 exports.HTTPApi = HTTPApi;

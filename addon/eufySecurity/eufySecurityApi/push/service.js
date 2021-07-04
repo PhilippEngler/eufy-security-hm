@@ -32,6 +32,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         this.AUTH_VERSION = "FIS_v2";
         this.retryDelay = 0;
         this.persistentIds = [];
+        this.connected = false;
         this.log = log;
     }
     buildExpiresAt(expiresIn) {
@@ -66,7 +67,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         return true;
                     }
                 }).catch(error => {
-                    this.log.error(`${this.constructor.name}.registerFid(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
                 if (response.status == 200) {
@@ -74,12 +75,12 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     return Object.assign(Object.assign({}, result), { authToken: Object.assign(Object.assign({}, result.authToken), { expiresAt: this.buildExpiresAt(result.authToken.expiresIn) }) });
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.registerFid(): Status return code not 200 (status: ${response.status} text: ${response.statusText} data: ${response.data}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                     throw new Error(`FID registration failed with error: ${response.statusText}`);
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.registerFid(): error: ${error}`);
+                this.log.error("Generic Error:", error);
                 throw new Error(`FID registration failed with error: ${error}`);
             }
         });
@@ -108,7 +109,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         return true;
                     }
                 }).catch(error => {
-                    this.log.error(`${this.constructor.name}.renewFidToken(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
                 if (response.status == 200) {
@@ -116,12 +117,12 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     return Object.assign(Object.assign({}, result), { expiresAt: this.buildExpiresAt(result.expiresIn) });
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.renewFidToken(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                     throw new Error(`FID Token renewal failed with error: ${response.statusText}`);
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.renewFidToken(): error: ${error}`);
+                this.log.error("Generic Error:", error);
                 throw new Error(`FID Token renewal failed with error: ${error}`);
             }
         });
@@ -182,19 +183,19 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         return true;
                     }
                 }).catch(error => {
-                    this.log.error(`${this.constructor.name}.executeCheckin(): error: ${JSON.stringify(error)}`);
+                    this.log.error("Error:", error);
                     return error;
                 });
                 if (response.status == 200) {
                     return yield utils_1.parseCheckinResponse(response.data);
                 }
                 else {
-                    this.log.error(`${this.constructor.name}.executeCheckin(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                     throw new Error(`Google checkin failed with error: ${response.statusText}`);
                 }
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.executeCheckin(): error: ${error}`);
+                this.log.error("Generic Error:", error);
                 throw new Error(`Google checkin failed with error: ${error}`);
             }
         });
@@ -246,13 +247,13 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                             return true;
                         }
                     }).catch(error => {
-                        this.log.error(`${this.constructor.name}.registerGcm(): error: ${JSON.stringify(error)}`);
+                        this.log.error("Error:", error);
                         return error;
                     });
                     if (response.status == 200) {
                         const result = response.data.split("=");
                         if (result[0] == "Error") {
-                            this.log.debug(`${this.constructor.name}.registerGcm(): retry: ${retry} retry_count: ${retry_count}`);
+                            this.log.debug("GCM register error, retry...", { retry: retry, retryCount: retry_count });
                             if (retry_count == retry)
                                 throw new Error(`GCM-Register Error: ${result[1]}`);
                         }
@@ -263,7 +264,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error(`${this.constructor.name}.registerGcm(): Status return code not 200 (status: ${response.status} text: ${response.statusText}`);
+                        this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                         throw new Error(`Google register to GCM failed with error: ${response.statusText}`);
                     }
                     yield utils_1.sleep(10000 * retry_count);
@@ -271,7 +272,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 throw new Error(`GCM-Register Error: Undefined!`);
             }
             catch (error) {
-                this.log.error(`${this.constructor.name}.registerGcm(): error: ${error}`);
+                this.log.error("Generic Error:", error);
                 throw new Error(`Google register to GCM failed with error: ${error}`);
             }
         });
@@ -294,7 +295,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     normalized_message.event_time = message.payload.event_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} BatteryDoorbellPushData - event_time - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} BatteryDoorbellPushData - event_time - Error:`, error);
                 }
                 normalized_message.station_sn = message.payload.station_sn;
                 normalized_message.device_sn = message.payload.device_sn;
@@ -304,12 +305,12 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     normalized_message.push_time = message.payload.push_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} BatteryDoorbellPushData - push_time - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} BatteryDoorbellPushData - push_time - Error:`, error);
                 }
                 normalized_message.channel = push_data.channel !== undefined ? push_data.channel : 0;
                 normalized_message.cipher = push_data.cipher !== undefined ? push_data.cipher : 0;
                 normalized_message.event_session = push_data.session_id !== undefined ? push_data.session_id : "";
-                normalized_message.event_type = push_data.event_type !== undefined ? push_data.event_type : -1;
+                normalized_message.event_type = push_data.event_type;
                 normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? utils_2.getAbsoluteFilePath(normalized_message.type, push_data.channel, push_data.file_path) : "";
                 normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
                 normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
@@ -322,17 +323,17 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     normalized_message.event_time = message.payload.event_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} IndoorPushData - event_time - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} IndoorPushData - event_time - Error:`, error);
                 }
                 normalized_message.station_sn = message.payload.station_sn;
-                normalized_message.device_sn = message.payload.device_sn;
+                normalized_message.device_sn = push_data.device_sn;
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
                     normalized_message.push_time = message.payload.push_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} IndoorPushData - push_time - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} IndoorPushData - push_time - Error:`, error);
                 }
                 normalized_message.channel = push_data.channel;
                 normalized_message.cipher = push_data.cipher;
@@ -344,7 +345,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.notification_style = push_data.notification_style;
                 normalized_message.msg_type = push_data.msg_type;
                 normalized_message.timeout = push_data.timeout;
-                normalized_message.tfcard_status = push_data.tfcard_status !== undefined ? push_data.tfcard_status : -1;
+                normalized_message.tfcard_status = push_data.tfcard_status;
                 normalized_message.storage_type = push_data.storage_type !== undefined ? push_data.storage_type : 1;
                 normalized_message.unique_id = push_data.unique_id;
             }
@@ -355,17 +356,20 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     normalized_message.event_time = message.payload.event_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} CusPushData - event_time - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} CusPushData - event_time - Error:`, error);
                 }
                 normalized_message.station_sn = message.payload.station_sn;
-                normalized_message.device_sn = message.payload.device_sn;
+                if (normalized_message.type === http_1.DeviceType.FLOODLIGHT)
+                    normalized_message.device_sn = message.payload.station_sn;
+                else
+                    normalized_message.device_sn = message.payload.device_sn;
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
                     normalized_message.push_time = message.payload.push_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} CusPushData - push_time - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} CusPushData - push_time - Error:`, error);
                 }
                 normalized_message.channel = push_data.c;
                 normalized_message.cipher = push_data.k;
@@ -375,7 +379,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
                 normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
                 normalized_message.notification_style = push_data.notification_style;
-                normalized_message.tfcard_status = push_data.tfcard !== undefined ? push_data.tfcard : -1;
+                normalized_message.tfcard_status = push_data.tfcard;
                 normalized_message.alarm_delay_type = push_data.alarm_type;
                 normalized_message.alarm_delay = push_data.alarm_delay;
                 normalized_message.alarm_type = push_data.type;
@@ -390,10 +394,10 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.sensor_open = push_data.e !== undefined ? push_data.e === "1" ? true : false : undefined;
                 normalized_message.device_online = push_data.m !== undefined ? push_data.m === 1 ? true : false : undefined;
                 try {
-                    normalized_message.fetch_id = push_data.i !== undefined ? Number.parseInt(push_data.i) : -1;
+                    normalized_message.fetch_id = push_data.i !== undefined ? Number.parseInt(push_data.i) : undefined;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} CusPushData - fetch_id - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} CusPushData - fetch_id - Error:`, error);
                 }
                 normalized_message.sense_id = push_data.j;
                 normalized_message.battery_powered = push_data.batt_powered !== undefined ? push_data.batt_powered === 1 ? true : false : undefined;
@@ -401,7 +405,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     normalized_message.battery_low = push_data.bat_low !== undefined ? Number.parseInt(push_data.bat_low) : undefined;
                 }
                 catch (error) {
-                    this.log.error(`${this.constructor.name}._normalizePushMessage(): type: ${http_1.DeviceType[normalized_message.type]} CusPushData - battery_low - Error: ${error}`);
+                    this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} CusPushData - battery_low - Error:`, error);
                 }
                 normalized_message.storage_type = push_data.storage_type !== undefined ? push_data.storage_type : 1;
                 normalized_message.unique_id = push_data.unique_id;
@@ -434,10 +438,10 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         return normalized_message;
     }
     onMessage(message) {
-        this.log.trace(`${this.constructor.name}.onMessage(): raw_message:`, message);
-        this.emit("raw_message", message);
+        this.log.debug("Raw push message received", message);
+        this.emit("raw message", message);
         const normalized_message = this._normalizePushMessage(message);
-        this.log.trace(`${this.constructor.name}.onMessage(): message:`, normalized_message);
+        this.log.debug("Normalized push message received", normalized_message);
         this.emit("message", normalized_message);
     }
     getCurrentPushRetryDelay() {
@@ -463,23 +467,23 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     _open(renew = false) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.credentials || Object.keys(this.credentials).length === 0 || (this.credentials && this.credentials.fidResponse && new Date().getTime() >= this.credentials.fidResponse.authToken.expiresAt)) {
-                this.log.debug(`${this.constructor.name}._open(): Create new push credentials...`);
+                this.log.debug(`Create new push credentials...`);
                 this.credentials = yield this.createPushCredentials().catch(error => {
-                    this.log.error(`${this.constructor.name}._open(): createPushCredentials() - error: ${JSON.stringify(error)}`);
+                    this.log.error("Create push credentials Error:", error);
                     return undefined;
                 });
             }
             else if (this.credentials && renew) {
-                this.log.debug(`${this.constructor.name}._open(): Renew push credentials...`);
+                this.log.debug(`Renew push credentials...`);
                 this.credentials = yield this.renewPushCredentials(this.credentials).catch(error => {
-                    this.log.error(`${this.constructor.name}._open(): renewPushCredentials() - error: ${JSON.stringify(error)}`);
+                    this.log.error("Push credentials renew Error:", error);
                     return undefined;
                 });
             }
             else {
-                this.log.debug(`${this.constructor.name}.open(): Login with previous push credentials...`, this.credentials);
+                this.log.debug(`Login with previous push credentials...`, this.credentials);
                 this.credentials = yield this.loginPushCredentials(this.credentials).catch(error => {
-                    this.log.error(`${this.constructor.name}._open(): loginPushCredentials() - Error:`, error);
+                    this.log.error("Push credentials login Error:", error);
                     return undefined;
                 });
             }
@@ -502,15 +506,18 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 const token = this.credentials.gcmResponse.token;
                 this.pushClient.on("connect", () => {
                     this.emit("connect", token);
+                    this.connected = true;
                 });
                 this.pushClient.on("close", () => {
                     this.emit("close");
+                    this.connected = false;
                 });
                 this.pushClient.on("message", (msg) => this.onMessage(msg));
                 this.pushClient.connect();
             }
             else {
                 this.emit("close");
+                this.connected = false;
                 this.log.error("Push notifications are disabled, because the registration failed!");
             }
         });
@@ -555,6 +562,9 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     resetRetryTimeout() {
         this.clearRetryTimeout();
         this.retryDelay = 0;
+    }
+    isConnected() {
+        return this.connected;
     }
 }
 exports.PushNotificationService = PushNotificationService;

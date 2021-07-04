@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IndoorPushMessageType = exports.IndoorPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
+exports.NotificationStyle = exports.IndoorPushMessageType = exports.IndoorPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
 var CusPushEvent;
 (function (CusPushEvent) {
     CusPushEvent[CusPushEvent["SECURITY"] = 1] = "SECURITY";
@@ -61,7 +61,7 @@ var IndoorPushEvent;
 (function (IndoorPushEvent) {
     IndoorPushEvent[IndoorPushEvent["MOTION_DETECTION"] = 3101] = "MOTION_DETECTION";
     IndoorPushEvent[IndoorPushEvent["FACE_DETECTION"] = 3102] = "FACE_DETECTION";
-    IndoorPushEvent[IndoorPushEvent["CRYIG_DETECTION"] = 3104] = "CRYIG_DETECTION";
+    IndoorPushEvent[IndoorPushEvent["CRYING_DETECTION"] = 3104] = "CRYING_DETECTION";
     IndoorPushEvent[IndoorPushEvent["SOUND_DETECTION"] = 3105] = "SOUND_DETECTION";
     IndoorPushEvent[IndoorPushEvent["PET_DETECTION"] = 3106] = "PET_DETECTION";
 })(IndoorPushEvent = exports.IndoorPushEvent || (exports.IndoorPushEvent = {}));
@@ -70,3 +70,9 @@ var IndoorPushMessageType;
     IndoorPushMessageType[IndoorPushMessageType["INDOOR"] = 18] = "INDOOR";
     IndoorPushMessageType[IndoorPushMessageType["TFCARD"] = 2] = "TFCARD";
 })(IndoorPushMessageType = exports.IndoorPushMessageType || (exports.IndoorPushMessageType = {}));
+var NotificationStyle;
+(function (NotificationStyle) {
+    NotificationStyle[NotificationStyle["TEXT"] = 1] = "TEXT";
+    NotificationStyle[NotificationStyle["THUMB"] = 2] = "THUMB";
+    NotificationStyle[NotificationStyle["ALL"] = 3] = "ALL";
+})(NotificationStyle = exports.NotificationStyle || (exports.NotificationStyle = {}));

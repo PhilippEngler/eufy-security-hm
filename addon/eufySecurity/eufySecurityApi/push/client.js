@@ -141,7 +141,7 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
         if (stream_id) {
             heartbeatPingRequest.last_stream_id_received = stream_id;
         }
-        this.log.debug(`${this.constructor.name}.buildHeartbeatPingRequest(): heartbeatPingRequest: ${JSON.stringify(heartbeatPingRequest)}`);
+        this.log.debug(`heartbeatPingRequest`, heartbeatPingRequest);
         const HeartbeatPingRequestType = PushClient.proto.lookupType("mcs_proto.HeartbeatPing");
         const errorMessage = HeartbeatPingRequestType.verify(heartbeatPingRequest);
         if (errorMessage) {
@@ -162,7 +162,7 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
             heartbeatAckRequest.last_stream_id_received = stream_id;
             heartbeatAckRequest.status = status;
         }
-        this.log.debug(`${this.constructor.name}.buildHeartbeatAckRequest(): heartbeatAckRequest: ${JSON.stringify(heartbeatAckRequest)}`);
+        this.log.debug(`heartbeatAckRequest`, heartbeatAckRequest);
         const HeartbeatAckRequestType = PushClient.proto.lookupType("mcs_proto.HeartbeatAck");
         const errorMessage = HeartbeatAckRequestType.verify(heartbeatAckRequest);
         if (errorMessage) {
@@ -185,13 +185,13 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("close");
     }
     onSocketError(error) {
-        this.log.error(`${this.constructor.name}.onSocketError(): ${error}`);
+        this.log.error(`Error:`, error);
     }
     handleParsedMessage(message) {
         this.resetCurrentDelay();
         switch (message.tag) {
             case models_1.MessageTag.DataMessageStanza:
-                this.log.debug(`${this.constructor.name}.handleParsedMessage(): DataMessageStanza: message: ${JSON.stringify(message)}`);
+                this.log.debug(`DataMessageStanza`, message);
                 if (message.object && message.object.persistentId)
                     this.persistentIds.push(message.object.persistentId);
                 this.emit("message", this.convertPayloadMessage(message));
@@ -203,10 +203,10 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
                 this.handleHeartbeatAck(message);
                 break;
             case models_1.MessageTag.Close:
-                this.log.debug(`${this.constructor.name}.handleParsedMessage(): Close: Server requested close! message: ${JSON.stringify(message)}`);
+                this.log.debug(`Close: Server requested close`, message);
                 break;
             case models_1.MessageTag.LoginResponse:
-                this.log.debug(`${this.constructor.name}.handleParsedMessage(): Login response: GCM -> logged in -> waiting for push messages!`);
+                this.log.debug("Login response: GCM -> logged in -> waiting for push messages...");
                 this.loggedIn = true;
                 this.persistentIds = [];
                 this.emit("connect");
@@ -215,19 +215,19 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
                 }, this.getHeartbeatInterval());
                 break;
             case models_1.MessageTag.LoginRequest:
-                this.log.debug(`${this.constructor.name}.handleParsedMessage(): Login request: message: ${JSON.stringify(message)}`);
+                this.log.debug(`Login request`, message);
                 break;
             case models_1.MessageTag.IqStanza:
-                this.log.debug(`${this.constructor.name}.handleParsedMessage(): IqStanza: Not implemented! - message: ${JSON.stringify(message)}`);
+                this.log.debug(`IqStanza: Not implemented`, message);
                 break;
             default:
-                this.log.debug(`${this.constructor.name}.handleParsedMessage(): Unknown message: ${JSON.stringify(message)}`);
+                this.log.debug(`Unknown message`, message);
                 return;
         }
         this.streamId++;
     }
     handleHeartbeatPing(message) {
-        this.log.debug(`${this.constructor.name}.handleHeartbeatPing(): message: ${JSON.stringify(message)}`);
+        this.log.debug(`Heartbeat ping`, message);
         let streamId = undefined;
         let status = undefined;
         if (this.newStreamIdAvailable()) {
@@ -240,7 +240,7 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
             this.client.write(this.buildHeartbeatAckRequest(streamId, status));
     }
     handleHeartbeatAck(message) {
-        this.log.debug(`${this.constructor.name}.handleHeartbeatAck(): message: ${JSON.stringify(message)}`);
+        this.log.debug(`Heartbeat acknowledge`, message);
     }
     convertPayloadMessage(message) {
         const _a = message.object, { appData } = _a, otherData = __rest(_a, ["appData"]);
@@ -270,7 +270,7 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
             }, client.getHeartbeatInterval());
         }
         else {
-            this.log.debug(`${this.constructor.name}.scheduleHeartbeat(): disabled!`);
+            this.log.debug("Heartbeat disabled!");
         }
     }
     sendHeartbeat() {
@@ -279,12 +279,12 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
             streamId = this.getStreamId();
         }
         if (this.client && this.isConnected()) {
-            this.log.debug(`${this.constructor.name}.sendHeartbeat(): streamId: ${streamId}`);
+            this.log.debug(`Sending heartbeat...`, streamId);
             this.client.write(this.buildHeartbeatPingRequest(streamId));
             return true;
         }
         else {
-            this.log.debug(`${this.constructor.name}.sendHeartbeat(): No more connected, reconnect`);
+            this.log.debug("No more connected, reconnect...");
             this.scheduleReconnect();
         }
         return false;
@@ -308,14 +308,17 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
     }
     scheduleReconnect() {
         const delay = this.getCurrentDelay();
-        this.log.debug(`${this.constructor.name}.scheduleReconnect(): delay: ${delay}`);
+        this.log.debug("Schedule reconnect...", { delay: delay });
         if (!this.reconnectTimeout)
             this.reconnectTimeout = setTimeout(() => {
                 this.connect();
             }, delay);
     }
     close() {
+        const wasConnected = this.isConnected();
         this.initialize();
+        if (wasConnected)
+            this.emit("close");
     }
 }
 exports.PushClient = PushClient;

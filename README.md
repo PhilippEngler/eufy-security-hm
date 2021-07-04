@@ -5,10 +5,18 @@ With this addon for the ELV/eq-3 CCU3 or a central based on the CCU3 (like Raspb
 This addon suports multiple bases and multiple cams. The login token is stored in the config, so there is no need to login every time a connection to eufy is established. After retrieving the bases at startup, the local network address of each base is stored in the config and will be used for switching the mode.
 
 ## Devices
-* CCU3 or RaspberryMatic (only RaspberryPi modells are tested; CCU1 and CCU2 are not supported)
+* CCU3 or RaspberryMatic on arm processors:
+
+  use the ccu3 package (CCU1 and CCU2 are not supported)
+* RaspberryMatic running on RaspberryPi 3 or 4 based hardware:
+
+  you can use the arm64 instead of the ccu3 package
+* RaspberryMatric on OVA platforms:
+
+  use the amd64 package
 * The following eufy security devices are known as compatible at the moment (please report other devices if they are compatible):
   * HomeBase: HomeBase E (T8002) and HomeBase 2 (T8010)
-  * eufyCam: eufyCam E (T8112), eufyCam 2C (T8113), eufyCam 2 (T8114) and eufyCam 2C Pro (T8142)
+  * eufyCam: eufyCam E (T8112), eufyCam 2C (T8113), eufyCam 2 (T8114), eufyCam 2C Pro (T8142) and eufyCam 2 Pro (T8140)
 
 ## Installation
 To install this addon on your CCU follow these steps:

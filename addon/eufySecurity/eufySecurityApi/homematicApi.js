@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HomematicApi = void 0;
-const got_hm_1 = __importDefault(require("got-hm"));
+const axios_1 = __importDefault(require("axios"));
 const fs_1 = require("fs");
 /**
  * Working with the CCU.
@@ -47,8 +47,8 @@ class HomematicApi {
     getSystemVariable(variableName) {
         return __awaiter(this, void 0, void 0, function* () {
             var data = "";
-            var response = yield got_hm_1.default("http://localhost:8181/esapi.exe?result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()");
-            data = response.body;
+            var response = yield axios_1.default.get("http://localhost:8181/esapi.exe?result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()");
+            data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
             return data;
@@ -62,8 +62,8 @@ class HomematicApi {
     setSystemVariable(variableName, value) {
         return __awaiter(this, void 0, void 0, function* () {
             var data = "";
-            var response = yield got_hm_1.default.post("http://localhost:8181/esapi.exe", { headers: { 'Content-Type': 'text/plain' }, body: "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')" });
-            data = response.body;
+            var response = yield axios_1.default.post("http://localhost:8181/esapi.exe", "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')", { headers: { 'Content-Type': 'text/plain' } });
+            data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
             //return data;
@@ -77,8 +77,8 @@ class HomematicApi {
     createSystemVariable(variableName, variableInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             var data = "";
-            var response = yield got_hm_1.default.post("http://localhost:8181/esapi.exe", { headers: { 'Content-Type': 'text/plain' }, body: "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);" });
-            data = response.body;
+            var response = yield axios_1.default.post("http://localhost:8181/esapi.exe", "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);", { headers: { 'Content-Type': 'text/plain' } });
+            data = response.data;
             data = data.substring(data.indexOf("<svObj>"));
             data = data.substring(7, data.indexOf("</svObj>"));
             return data;
@@ -128,7 +128,7 @@ class HomematicApi {
      * Returns the version info of the homematic api.
      */
     getHomematicApiVersion() {
-        return "1.0.2";
+        return "1.5.1";
     }
 }
 exports.HomematicApi = HomematicApi;

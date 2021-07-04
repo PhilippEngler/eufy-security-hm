@@ -43,6 +43,9 @@ class ApiServer {
      */
     startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
         return __awaiter(this, void 0, void 0, function* () {
+            logger.logInfoBasic(`eufy_security_hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
+            logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
+            logger.logInfoBasic(`  Node: ${process.version}`);
             if (httpActive == true) {
                 logger.logInfoBasic("Starting http server...");
                 serverHttp.on("error", this.errorListener);
@@ -190,7 +193,7 @@ class ApiServer {
                                 }
                             }
                             else {
-                                responseString = `{"success":false,"message":"Numbers of arguments not matching."}`;
+                                responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                             }
                             break;
                         case "checkSystemVariables":
@@ -204,7 +207,7 @@ class ApiServer {
                                 responseString = yield api.createSystemVariable(url[2], decodeURIComponent(url[3]));
                             }
                             else {
-                                responseString = `{"success":false,"message":"False amount of arguments."}`;
+                                responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                             }
                             break;
                         case "getLibrary":
@@ -212,7 +215,7 @@ class ApiServer {
                                 responseString = yield api.getLibrary();
                             }
                             else {
-                                responseString = `{"success":false,"message":"False amount of arguments."}`;
+                                responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                             }
                             break;
                         case "getLogFileContent":
@@ -344,25 +347,29 @@ class ApiServer {
                             if (postData.indexOf("defaultVideoPath") >= 0) {
                                 apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                             }
-                            var useupdatestate = false;
-                            if (postData.indexOf("usePeriodicallyUpdateState") >= 0) {
-                                useupdatestate = getDataFromPOSTData(postData, "usePeriodicallyUpdateState", "boolean");
+                            var useupdatestateevent = false;
+                            if (postData.indexOf("useUpdateStateEvent") >= 0) {
+                                useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
+                            }
+                            var useupdatestateintervall = false;
+                            if (postData.indexOf("useUpdateStateIntervall") >= 0) {
+                                useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
                             }
                             var updatestatetimespan = "15";
-                            if (postData.indexOf("periodicallyUpdateStateTimespan") >= 0) {
-                                updatestatetimespan = getDataFromPOSTData(postData, "periodicallyUpdateStateTimespan", "string");
+                            if (postData.indexOf("updateStateIntervallTimespan") >= 0) {
+                                updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "string");
                             }
                             var useupdatelinks = false;
-                            if (postData.indexOf("usePeriodicallyUpdateState") >= 0) {
-                                useupdatelinks = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinks", "boolean");
+                            if (postData.indexOf("useUpdateLinksIntervall") >= 0) {
+                                useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
                             }
                             var useupdatelinksonlywhenactive = false;
-                            if (postData.indexOf("usePeriodicallyUpdateLinksOnlyWhenActive") >= 0) {
-                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "usePeriodicallyUpdateLinksOnlyWhenActive", "boolean");
+                            if (postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0) {
+                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
                             }
                             var updatelinkstimespan = "15";
-                            if (postData.indexOf("periodicallyUpdateLinksTimespan") >= 0) {
-                                updatelinkstimespan = getDataFromPOSTData(postData, "periodicallyUpdateLinksTimespan", "string");
+                            if (postData.indexOf("updateLinksIntervallTimespan") >= 0) {
+                                updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "string");
                             }
                             var apiloglevel = "0";
                             if (postData.indexOf("logLevel") >= 0) {
@@ -394,10 +401,10 @@ class ApiServer {
                             }
                             if (isDataOK == true) {
                                 apiPortFile(Number(apiporthttp), Number(apiporthttps));
-                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestate, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
+                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
                             }
                             else {
-                                responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check the values."}`;
+                                responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
                             }
                             var resJSON = JSON.parse(responseString);
                             response.setHeader('Access-Control-Allow-Origin', '*');
