@@ -1050,6 +1050,7 @@ export const DeviceProperties: Properties = {
         ...GenericDeviceProperties,
         [PropertyName.DeviceBattery]: DeviceBatteryProperty,
         [PropertyName.DeviceBatteryTemp]: DeviceBatteryTempProperty,
+        [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
         [PropertyName.DeviceEnabled]: DeviceEnabledProperty,
         [PropertyName.DeviceAutoNightvision]: DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionProperty,
@@ -1059,6 +1060,9 @@ export const DeviceProperties: Properties = {
     },
     [DeviceType.CAMERA_E]: {
         ...GenericDeviceProperties,
+        [PropertyName.DeviceBattery]: DeviceBatteryProperty,
+        [PropertyName.DeviceBatteryTemp]: DeviceBatteryTempProperty,
+        [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
         [PropertyName.DeviceEnabled]: DeviceEnabledProperty,
         [PropertyName.DeviceAutoNightvision]: DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionProperty,
