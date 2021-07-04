@@ -375,7 +375,10 @@
 										}
 										cams += `<div class="col mb-3">`;
 										cams += `<div class="card">`;
-										cams += `<h5 class="card-header">${myObj.data[object].name}</h5>`;
+										cams += `<div class="card-header">`;
+										cams += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[object].name}</h5></div>`;
+										cams += `<div style="text-align:right;"><h5 class="mb-0"><i class="${myObj.data[object].wifi_rssi < -65 ? "bi-wifi-1" : myObj.data[object].wifi_rssi < -32 ? "bi-wifi-2" : myObj.data[object].wifi_rssi < 0 ? "bi-wifi" : "bi-wifi-off"}" title="WiFi Empfangsstärke: ${myObj.data[object].wifi_rssi}dB"></i></h5></div>`;
+										cams += `</div>`
 										cams += `<div class="row no-gutters">`;
 										cams += `<div class="col-md-4">${imagepath}</div>`;
 										cams += `<div class="col-md-8">`;
