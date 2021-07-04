@@ -147,6 +147,8 @@ export class EufySecurityApi
                             json += `"base_serial":"${dev.getStationSerial()}",`;
                             json += `"battery_charge":"${dev.getBatteryValue().value}",`;
                             json += `"battery_temperature":"${dev.getBatteryTemperature().value}",`;
+                            json += `"wifi_rssi":"${(dev.getWifiRssi() != undefined) ? dev.getWifiRssi().value : "0"}",`;
+                            json += `"watermark":"${(dev.getWatermark() != undefined) ? dev.getWatermark().value : "0"}",`;
                             json += `"last_camera_image_url":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().value : ""}",`;
                             json += `"last_camera_image_time":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().timestamp/1000 : 0}"`;
                             json += `}`;
