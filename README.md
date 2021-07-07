@@ -6,15 +6,10 @@ This addon suports multiple bases and multiple cams. The login token is stored i
 
 ## Devices
 The addon will only run with the original CCU3 Firmware or with the community project RaspberryMatic (piVCCU and debmatic are under testing).
-* CCU3 or RaspberryMatic on arm processors:
+* CCU3 or RaspberryMatic on arm processors: use the *ccu3* package (CCU1 and CCU2 are not supported)
+* RaspberryMatic running on RaspberryPi 3 or 4 based hardware: you can use the *arm64* instead of the ccu3 package
+* RaspberryMatic on OVA platforms: use the *amd64* package
 
-  use the ccu3 package (CCU1 and CCU2 are not supported)
-* RaspberryMatic running on RaspberryPi 3 or 4 based hardware:
-
-  you can use the arm64 instead of the ccu3 package
-* RaspberryMatric on OVA platforms:
-
-  use the amd64 package
 The following eufy security devices are known as compatible at the moment (please report other devices if they are compatible):
 * HomeBase: HomeBase E (T8002) and HomeBase 2 (T8010)
 * eufyCam: eufyCam E (T8112), eufyCam 2C (T8113), eufyCam 2 (T8114), eufyCam 2C Pro (T8142) and eufyCam 2 Pro (T8140)
