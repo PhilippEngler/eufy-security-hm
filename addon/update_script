@@ -12,6 +12,11 @@ if [ $? -eq 1 ]; then
   mount /usr/local
 fi
 
+# detection of unsupported operating systems
+if [ "$(grep -c busmatic /www/api/methods/ccu/downloadFirmware.tcl)" != 0 ]; then
+  exit 1
+fi
+
 # if the service is available, stop it
 # (mainly for raspberrymatic)
 if [ -e ${RCD_DIR}/eufySecurity ]; then
@@ -179,7 +184,7 @@ cp -af VERSION ${ADDON_DIR}/
 chmod 755 ${ADDON_DIR}/bin/node
 
 # exclude some directories from backup
-# (user will NEED to reinstall plugin after restore)
+# (user will NEED to reinstall addon after restore)
 touch ${ADDON_DIR}/bin/.nobackup
 touch ${ADDON_DIR}/node_modules/.nobackup
 
@@ -196,8 +201,8 @@ sync
 
 # exit with 0 to signal install succeeded
 # if device is raspberrymatic then no reboot is requiered
-# and so we must start the service
-# the original ccu will restart by default
+# and so we have to start the service
+# the original ccu will reboot by default
 if [ "$1" = "HM-RASPBERRYMATIC" ]; then
   ${RCD_DIR}/eufySecurity start
 fi

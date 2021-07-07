@@ -5,6 +5,7 @@ With this addon for the ELV/eq-3 CCU3 or a central based on the CCU3 (like Raspb
 This addon suports multiple bases and multiple cams. The login token is stored in the config, so there is no need to login every time a connection to eufy is established. After retrieving the bases at startup, the local network address of each base is stored in the config and will be used for switching the mode.
 
 ## Devices
+* The addon will only run with the original CCU3 Firmware or with the community project RaspberryMatic (piVCCU and debmatic are under testing).
 * CCU3 or RaspberryMatic on arm processors:
 
   use the ccu3 package (CCU1 and CCU2 are not supported)
