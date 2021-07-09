@@ -41,7 +41,7 @@ export class EufySecurityApi
     {
         if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
         {
-            this.logError("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
+            this.logError("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this addon.");
         }
         else
         {
@@ -1425,12 +1425,12 @@ export class EufySecurityApi
      */
     private setupScheduledTasks() : void
     {
-        this.logger.logInfoBasic("Setting up scheduled tasks...");
+        this.logger.logInfoBasic(`Setting up scheduled tasks...`);
         if(this.config.getApiUseUpdateStateIntervall())
         {
             if(this.taskUpdateState)
             {
-                this.logger.logInfoBasic("  getState already scheduled, remove scheduling...");
+                this.logger.logInfoBasic(`  getState already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateState);
             }
             this.taskUpdateState = setInterval(async() => { await this.setScheduleState(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
@@ -1438,14 +1438,14 @@ export class EufySecurityApi
         }
         else
         {
-            this.logger.logInfoBasic("  scheduling getState disabled in settings.")
+            this.logger.logInfoBasic(`  scheduling getState disabled in settings${this.config.getApiUseUpdateStateEvent() == true ? " (state changes will be received by event)" : ""}.`)
         }
 
         if(this.config.getApiUseUpdateLinks())
         {
             if(this.taskUpdateLinks)
             {
-                this.logger.logInfoBasic("  getLibrary already scheduled, remove scheduling...");
+                this.logger.logInfoBasic(`  getLibrary already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateLinks);
             }
             this.taskUpdateLinks = setInterval(async() => { await this.setScheuduleLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
@@ -1453,9 +1453,9 @@ export class EufySecurityApi
         }
         else
         {
-            this.logger.logInfoBasic("  scheduling getLinks disabled in settings.");
+            this.logger.logInfoBasic(`  scheduling getLinks disabled in settings.`);
         }
-        this.logger.logInfoBasic("...done setting up scheduled tasks.");
+        this.logger.logInfoBasic(`...done setting up scheduled tasks.`);
     }
 
     /**
@@ -1465,12 +1465,12 @@ export class EufySecurityApi
     {
         if(this.taskUpdateState)
         {
-            this.logger.logInfoBasic("Remove scheduling for getState.");
+            this.logger.logInfoBasic(`Remove scheduling for getState.`);
             clearInterval(this.taskUpdateState);
         }
         if(this.taskUpdateLinks)
         {
-            this.logger.logInfoBasic("Remove scheduling for getLibrary.");
+            this.logger.logInfoBasic(`Remove scheduling for getLibrary.`);
             clearInterval(this.taskUpdateLinks);
         }
     }
@@ -1547,7 +1547,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.5.1";
+        return "1.5.2";
     }
 
     /**
