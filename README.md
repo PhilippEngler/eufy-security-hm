@@ -20,7 +20,7 @@ To install this addon on your CCU follow these steps:
 2. Open the WebUI of your CCU and navigate to "Einstellungen" -> "Systemsteuerung" -> "Zusatzsoftware" and select the tar.gz-file downloaded in step 1.
 3. Click on "Installieren" and wait about one minute.
 4. In the new popup, select "Installation starten".
-5. - If you use a orginal CCU: Wait at least 10 minutes to install. During this time, the WebUI is not accessable and you will receive several error messages. Please ignore these error messages. When the installiation is done, the CCU will reboot automatically.
+5. - If you use a orginal CCU: Wait at least 10 minutes to install. During this time, the WebUI is not accessable and you will receive several error messages. Please ignore these messages. When the installation is done, the CCU will reboot automatically.
    - If you use a RaspberryMatic, the installation is mutch faster and the CCU will not reboot.
 6. When the installation is done, navigate to http://<IP_OF_CCU>/addons/eufySecurity and start configuration of the addon.
 
