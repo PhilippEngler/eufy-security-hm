@@ -10,6 +10,11 @@
 # Description:       Enable service provided by daemon.
 ### END INIT INFO
 
+# check for unsupported platforms (author: jens-maus)
+if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
+  exit 13
+fi
+
 dir="/usr/local/addons/eufySecurity"
 cmd="/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServer.js"
 user="root"
