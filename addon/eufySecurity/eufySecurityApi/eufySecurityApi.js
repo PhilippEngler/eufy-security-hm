@@ -34,7 +34,7 @@ class EufySecurityApi {
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.config.getEmailAddress() == "" || this.config.getPassword() == "") {
-                this.logError("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this programm.");
+                this.logError("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this addon.");
             }
             else {
                 this.httpService = new http_1.HTTPApi(this, this.config.getEmailAddress(), this.config.getPassword(), this.logger);
@@ -1125,41 +1125,41 @@ class EufySecurityApi {
      * Setup all scheduled task, when allowed by settings.
      */
     setupScheduledTasks() {
-        this.logger.logInfoBasic("Setting up scheduled tasks...");
+        this.logger.logInfoBasic(`Setting up scheduled tasks...`);
         if (this.config.getApiUseUpdateStateIntervall()) {
             if (this.taskUpdateState) {
-                this.logger.logInfoBasic("  getState already scheduled, remove scheduling...");
+                this.logger.logInfoBasic(`  getState already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateState);
             }
             this.taskUpdateState = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.setScheduleState(); }), (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
             this.logger.logInfoBasic(`  getState scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
         }
         else {
-            this.logger.logInfoBasic("  scheduling getState disabled in settings.");
+            this.logger.logInfoBasic(`  scheduling getState disabled in settings${this.config.getApiUseUpdateStateEvent() == true ? " (state changes will be received by event)" : ""}.`);
         }
         if (this.config.getApiUseUpdateLinks()) {
             if (this.taskUpdateLinks) {
-                this.logger.logInfoBasic("  getLibrary already scheduled, remove scheduling...");
+                this.logger.logInfoBasic(`  getLibrary already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateLinks);
             }
             this.taskUpdateLinks = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.setScheuduleLibrary(); }), (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
             this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${this.config.getApiUpdateLinksOnlyWhenActive() == true ? " when system is active" : ""}).`);
         }
         else {
-            this.logger.logInfoBasic("  scheduling getLinks disabled in settings.");
+            this.logger.logInfoBasic(`  scheduling getLinks disabled in settings.`);
         }
-        this.logger.logInfoBasic("...done setting up scheduled tasks.");
+        this.logger.logInfoBasic(`...done setting up scheduled tasks.`);
     }
     /**
      * Clear all scheduled tasks.
      */
     clearScheduledTasks() {
         if (this.taskUpdateState) {
-            this.logger.logInfoBasic("Remove scheduling for getState.");
+            this.logger.logInfoBasic(`Remove scheduling for getState.`);
             clearInterval(this.taskUpdateState);
         }
         if (this.taskUpdateLinks) {
-            this.logger.logInfoBasic("Remove scheduling for getLibrary.");
+            this.logger.logInfoBasic(`Remove scheduling for getLibrary.`);
             clearInterval(this.taskUpdateLinks);
         }
     }
@@ -1223,7 +1223,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "1.5.1";
+        return "1.5.2";
     }
     /**
      * Return the version of the library used for communicating with eufy.
