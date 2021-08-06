@@ -145,8 +145,8 @@ export class EufySecurityApi
                             json += `"hardware_Version":"${dev.getHardwareVersion()}",`;
                             json += `"software_version":"${dev.getSoftwareVersion()}",`;
                             json += `"base_serial":"${dev.getStationSerial()}",`;
-                            json += `"battery_charge":"${dev.getBatteryValue().value}",`;
-                            json += `"battery_temperature":"${dev.getBatteryTemperature().value}",`;
+                            json += `"battery_charge":"${(dev.getBatteryValue().value != undefined) ? dev.getBatteryValue().value : "0"}",`;
+                            json += `"battery_temperature":"${(dev.getBatteryTemperature().value != undefined) ? dev.getBatteryTemperature().value : "0"}",`;
                             json += `"wifi_rssi":"${(dev.getWifiRssi() != undefined) ? dev.getWifiRssi().value : "0"}",`;
                             json += `"watermark":"${(dev.getWatermark() != undefined) ? dev.getWatermark().value : "0"}",`;
                             json += `"last_camera_image_url":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().value : ""}",`;
@@ -1556,6 +1556,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "0.8.3";
+        return "0.9.4";
     }
 }

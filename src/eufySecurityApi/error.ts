@@ -47,19 +47,11 @@ export class DuplicateDeviceError extends Error {
     }
 }
 
-export class NotSupportedFeatureError extends Error {
+export class NotSupportedError extends Error {
     constructor(message?: string) {
         super(message);
         Object.setPrototypeOf(this, new.target.prototype);
-        this.name = NotSupportedFeatureError.name;
-    }
-}
-
-export class NotSupportedGuardModeError extends Error {
-    constructor(message?: string) {
-        super(message);
-        Object.setPrototypeOf(this, new.target.prototype);
-        this.name = NotSupportedGuardModeError.name;
+        this.name = NotSupportedError.name;
     }
 }
 
@@ -84,6 +76,14 @@ export class InvalidPropertyValueError extends Error {
         super(message);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = InvalidPropertyValueError.name;
+    }
+}
+
+export class InvalidCommandValueError extends Error {
+    constructor(message?: string) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = InvalidCommandValueError.name;
     }
 }
 

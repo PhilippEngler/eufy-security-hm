@@ -397,6 +397,7 @@ export enum CommandType {
     CMD_INDOOR_SET_RECORD_AUDIO_ENABLE = 6012,
     CMD_INDOOR_SHOW_SDCARD = 6054,
     CMD_INDOOR_TFCARD_NAS_STATUS = 6051,
+    CMD_INDOOR_ROTATE = 6030,
     CMD_IN_TEST_MODE = 6072,
     CMD_PLAY_BACK_EVENT_STOP = 1055,
     CMD_SET_DETECT_TYPE = 6071,
@@ -528,27 +529,31 @@ export enum ErrorCode {
     ERROR_XM_WIFI_DISCONNECT = -203,
     ERROR_XM_WIFI_TIMEOUT = -205,
     ERROR_XM_WIFI_WAKEUP_FAIL = -204,
+    ERROR_LIMIT_REACHED = -500,
     ERROR_FAILED_TO_REQUEST = 503
 }
 
-export enum ControlResponse {
+export enum AlarmEvent {
     //com.oceanwing.battery.cam.zmedia.model.ZControlResponse
-    ALARM_HUB_STOP = 0,
-    ALARM_DEV_STOP = 1,
-    ALARM_GSENSOR = 2,
-    ALARM_PIR = 3,
-    ALARM_APP = 4,
-    ALARM_HOT = 5,
-    ALARM_DOOR = 6,
-    ALARM_CAMERA_PIR = 7,
-    ALARM_MOTION_SENSOR = 8,
-    ALARM_CAMERA_GSENSOR = 9,
-    ALARM_CAMERA_APP = 10,
-    ALARM_CAMERA_LINKAGE = 11,
-    ALARM_HUB_KEYPAD = 13,
-    ALARM_HUB_STOP_BY_KEYPAD = 15,
-    ALARM_HUB_STOP_BY_APP = 16,
-    ALARM_HUB_STOP_BY_HAND = 17
+    HUB_STOP = 0,
+    DEV_STOP = 1,
+    GSENSOR = 2,
+    PIR = 3,
+    APP = 4,
+    HOT = 5,
+    DOOR = 6,
+    CAMERA_PIR = 7,
+    MOTION_SENSOR = 8,
+    CAMERA_GSENSOR = 9,
+    CAMERA_APP = 10,
+    CAMERA_LINKAGE = 11,
+    HUB_KEYPAD = 13,
+    HUB_STOP_BY_KEYPAD = 15,
+    HUB_STOP_BY_APP = 16,
+    HUB_STOP_BY_HAND = 17,
+    APP_LIGHT = 22,
+    APP_LIGHT_SOUND = 23,
+    MOTION_APP_LIGHT = 24,
 }
 
 // Doorbell, Solo cameras
@@ -576,6 +581,14 @@ export enum WatermarkSetting4 {
     TIMESTAMP = 0,
     TIMESTAMP_AND_LOGO = 1,
     OFF = 2
+}
+
+export enum PanTiltDirection {
+    ROTATE360 = 0,
+    LEFT = 1,
+    RIGHT = 2,
+    UP = 3,
+    DOWN = 4,
 }
 
 export enum VideoCodec {

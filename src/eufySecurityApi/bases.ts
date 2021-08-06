@@ -52,7 +52,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                         this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
                         this.skipNextModeChangeEvent[stationSerial] = false;
                         this.serialNumbers.push(stationSerial);
-                        await this.bases[stationSerial].connect(this.api.getP2PConnectionType());
+                        await this.bases[stationSerial].connect();
 
                         if(this.api.getApiUseUpdateStateEvent())
                         {
@@ -181,7 +181,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         switch (eventListenerName)
         {
             case "GuardModeChanged":
-                base.on("guard mode", (station : Station, guardMode : number, currentMode : number) => this.onStationGuardModeChanged(station, guardMode, currentMode));
+                base.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardModeChanged(station, guardMode));
                 this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("guard mode")} Listener.`);
                 break;
             case "PropertyChanged":
@@ -206,7 +206,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         switch (eventListenerName)
         {
             case "GuardModeChanged":
-                base.on("guard mode", (station : Station, guardMode : number, currentMode : number) => this.onStationGuardModeChanged(station, guardMode, currentMode));
+                base.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardModeChanged(station, guardMode));
                 this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("guard mode")} Listener.`);
                 break;
             case "PropertyChanged":
@@ -269,7 +269,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param guardMode The new guard mode as GuardMode.
      * @param currentMode The new current mode as GuardMode.
      */
-    private async onStationGuardModeChanged(station : Station, guardMode : number, currentMode : number): Promise<void>
+    private async onStationGuardModeChanged(station : Station, guardMode : number): Promise<void>
     {
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
@@ -278,7 +278,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode + " ::: Current Mode: " + currentMode);
+            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode);
             await this.api.updateGuardModeBase(station.getSerial());
         }
     }
