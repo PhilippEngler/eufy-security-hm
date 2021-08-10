@@ -410,4 +410,11 @@ export interface Invite {
 export interface ConfirmInvite {
     device_sns: Array<string>;
     invite_id: number;
-    station_sn: string;}
+    station_sn: string;
+}
+
+export interface SensorHistoryEntry {
+    trigger_time: number;
+    create_time: number;
+    status: string;
+}
