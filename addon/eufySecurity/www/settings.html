@@ -246,7 +246,7 @@
 												</select>
 												<small class="form-text text-muted">Legt den Umfang der Protokollierung fest. Fehler werden unabhängig dieser Einstellung beim Auftreten immer in der Fehlerprotokolldatei 'eufySecurity.err' protokolliert.</small>
 												<div class="invalid-feedback">
-													Bitte geben Sie nur eine Ziffer zwischen 0 und 3 ein.
+													Bitte wählen Sie eine Protokollierungsstufe aus.
 												</div>
 											</div>
 										</div>
@@ -631,7 +631,7 @@
 									bases += `<label class="mt-2" for="txtUdpPortsBase${objResp.data[objIter].base_id}">UDP Ports für Verbindung mit HomeBase ${objResp.data[objIter].base_id} (${objResp.data[objIter].name}).</label>`;
 									bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Ports ${objResp.data[objIter].base_id}" onfocusout="checkUDPPorts(udpPortsBase${objResp.data[objIter].base_id})" required>`;
 									bases += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basis zugeordnet sein.</small>`;
-									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basis zugeordnet sein.</div>`;
+									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basis zugeordnet.</div>`;
 								}
 								document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
 								document.getElementById("useUDPStaticPortsBases").innerHTML = bases;
@@ -824,13 +824,13 @@
 								}
 								text = document.getElementById('txtUpdateLinksIntervallTimespan');
 								text.value=apiupdatelinkstimespan;
-								if(apiloglevel == undefined || (apiloglevel != "0" && apiloglevel != "1" && apiloglevel != "2" && apiloglevel != "3"))
+								if(apiloglevel == undefined || !(apiloglevel == "0" || apiloglevel == "1" || apiloglevel == "2" || apiloglevel == "3"))
 								{
 									document.getElementById("cbLogLevel").selectedIndex = "";
 								}
 								else
 								{
-									document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(apiconnectiontype)) + 1;
+									document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(apiloglevel)) + 1;
 								}
 								checkLogLevel(apiloglevel);
 								document.getElementById("resultLoading").innerHTML = "";
