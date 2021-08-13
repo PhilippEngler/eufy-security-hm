@@ -9,7 +9,7 @@ import { CommandType, ESLAnkerBleConstant } from "../p2p/types";
 import { calculateWifiSignalLevel, getAbsoluteFilePath } from "./utils";
 import { convertTimestampMs } from "../push/utils";
 import { eslTimestamp } from "../p2p/utils";
-import { CusPushEvent, DoorbellPushEvent, IndoorPushEvent, PushMessage } from "../push";
+import { CusPushEvent, DoorbellPushEvent, LockPushEvent, IndoorPushEvent, PushMessage } from "../push";
 import { isEmpty } from "../utils";
 import { InvalidPropertyError, PropertyNotSupportedError } from "./error";
 
@@ -505,6 +505,18 @@ export abstract class Device extends TypedEmitter<DeviceEvents> {
             Device.isSoloCameraSpotlightSolar(type);
     }
 
+    static isIndoorOutdoorCamera1080p(type: number): boolean {
+        return DeviceType.INDOOR_OUTDOOR_CAMERA_1080P == type;
+    }
+
+    static isIndoorOutdoorCamera1080pNoLight(type: number): boolean {
+        return DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT == type;
+    }
+
+    static isIndoorOutdoorCamera2k(type: number): boolean {
+        return DeviceType.INDOOR_OUTDOOR_CAMERA_2K == type;
+    }
+
     static isCamera2(type: number): boolean {
         //T8114
         return DeviceType.CAMERA2 == type;
@@ -625,6 +637,18 @@ export abstract class Device extends TypedEmitter<DeviceEvents> {
 
     public isSoloCameraSpotlightSolar(): boolean {
         return Device.isSoloCameraSpotlightSolar(this.rawDevice.device_type);
+    }
+
+    public isIndoorOutdoorCamera1080p(): boolean {
+        return Device.isIndoorOutdoorCamera1080p(this.rawDevice.device_type);
+    }
+
+    public isIndoorOutdoorCamera1080pNoLight(): boolean {
+        return Device.isIndoorOutdoorCamera1080pNoLight(this.rawDevice.device_type);
+    }
+
+    public isIndoorOutdoorCamera2k(): boolean {
+        return Device.isIndoorOutdoorCamera2k(this.rawDevice.device_type);
     }
 
     public isSoloCameras(): boolean {
@@ -1362,11 +1386,11 @@ export class MotionSensor extends Sensor {
         if (message.type !== undefined && message.event_type !== undefined) {
             if (message.event_type === CusPushEvent.MOTION_SENSOR_PIR && message.device_sn === this.getSerial()) {
                 try {
-                    this.updateProperty(PropertyName.DeviceMotionDetection, { value: true, timestamp: message.event_time });
+                    this.updateProperty(PropertyName.DeviceMotionDetected, { value: true, timestamp: message.event_time });
                     this.emit("motion detected", this, this.getPropertyValue(PropertyName.DeviceMotionDetected).value as boolean);
                     this.clearEventTimeout(DeviceEvent.MotionDetected);
                     this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
-                        this.updateProperty(PropertyName.DeviceMotionDetection, { value: false, timestamp: new Date().getTime() });
+                        this.updateProperty(PropertyName.DeviceMotionDetected, { value: false, timestamp: new Date().getTime() });
                         this.emit("motion detected", this, this.getPropertyValue(PropertyName.DeviceMotionDetected).value as boolean);
                         this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                     }, eventDurationSeconds * 1000));
@@ -1388,8 +1412,8 @@ export class Lock extends Device {
     protected processCustomParameterChanged(metadata: PropertyMetadataAny, oldValue: PropertyValue, newValue: PropertyValue): void {
         super.processCustomParameterChanged(metadata, oldValue, newValue);
         if (metadata.key === CommandType.CMD_DOORLOCK_GET_STATE && oldValue !== undefined && ((oldValue.value === 4 && newValue.value !== 4) || (oldValue.value !== 4 && newValue.value === 4))) {
-            this.updateProperty(PropertyName.DeviceLocked, { value: newValue.value === 4 ? true : false, timestamp: newValue.timestamp});
-            this.emit("locked", this as unknown as Lock, "4" ? true : false);
+            if (this.updateProperty(PropertyName.DeviceLocked, { value: newValue.value === 4 ? true : false, timestamp: newValue.timestamp}))
+                this.emit("locked", this as unknown as Lock, newValue.value === 4 ? true : false);
         }
     }
 
@@ -1425,12 +1449,78 @@ export class Lock extends Device {
         return Buffer.concat([buf1, buf2, buf3, buf4, buf5, buf6]);
     }
 
+    // public isBatteryLow(): PropertyValue {
+    //     return this.getPropertyValue(PropertyName.DeviceBatteryLow);
+    // }
+
     public static encodeESLCmdQueryStatus(admin_user_id: string): Buffer {
         const buf1 = Buffer.from([ESLAnkerBleConstant.a, admin_user_id.length]);
         const buf2 = Buffer.from(admin_user_id);
         const buf3 = Buffer.from([ESLAnkerBleConstant.b, 4]);
         const buf4 = Buffer.from(eslTimestamp());
         return Buffer.concat([buf1, buf2, buf3, buf4]);
+    }
+
+    protected convertRawPropertyValue(property: PropertyMetadataAny, value: RawValue): PropertyValue {
+        try {
+            if (property.key === CommandType.CMD_DOORLOCK_GET_STATE) {
+                switch (value.value) {
+                    case "3":
+                        return { value: false, timestamp: value.timestamp };
+                    case "4":
+                        return { value: true, timestamp: value.timestamp };
+                }
+            }
+        } catch (error) {
+            this.log.error("Convert Error:", { property: property, value: value, error: error });
+        }
+        return super.convertRawPropertyValue(property, value);
+    }
+
+    public processPushNotification(message: PushMessage, eventDurationSeconds: number): void {
+        super.processPushNotification(message, eventDurationSeconds);
+        if (message.type !== undefined && message.event_type !== undefined) {
+            if (message.device_sn === this.getSerial()) {
+                try {
+                    switch (message.event_type) {
+                        case LockPushEvent.APP_LOCK:
+                        case LockPushEvent.AUTO_LOCK:
+                        case LockPushEvent.FINGER_LOCK:
+                        case LockPushEvent.KEYPAD_LOCK:
+                        case LockPushEvent.MANUAL_LOCK:
+                        case LockPushEvent.PW_LOCK:
+                            this.updateRawProperty(CommandType.CMD_DOORLOCK_GET_STATE, { value: "4", timestamp: convertTimestampMs(message.event_time) });
+                            this.emit("locked", this, this.getPropertyValue(PropertyName.DeviceLocked).value as boolean);
+                            break;
+                        case LockPushEvent.APP_UNLOCK:
+                        case LockPushEvent.AUTO_UNLOCK:
+                        case LockPushEvent.FINGER_UNLOCK:
+                        case LockPushEvent.MANUAL_UNLOCK:
+                        case LockPushEvent.PW_UNLOCK:
+                            this.updateRawProperty(CommandType.CMD_DOORLOCK_GET_STATE, { value: "3", timestamp: convertTimestampMs(message.event_time) });
+                            this.emit("locked", this, this.getPropertyValue(PropertyName.DeviceLocked).value as boolean);
+                            break;
+                        case LockPushEvent.LOCK_MECHANICAL_ANOMALY:
+                        case LockPushEvent.MECHANICAL_ANOMALY:
+                        case LockPushEvent.VIOLENT_DESTRUCTION:
+                        case LockPushEvent.MULTIPLE_ERRORS:
+                            this.updateRawProperty(CommandType.CMD_DOORLOCK_GET_STATE, { value: "5", timestamp: convertTimestampMs(message.event_time) });
+                            break;
+                        // case LockPushEvent.LOW_POWE:
+                        //     this.updateRawProperty(CommandType.CMD_SMARTLOCK_QUERY_BATTERY_LEVEL, { value: "10", timestamp: convertTimestampMs(message.event_time) });
+                        //     break;
+                        // case LockPushEvent.VERY_LOW_POWE:
+                        //     this.updateRawProperty(CommandType.CMD_SMARTLOCK_QUERY_BATTERY_LEVEL, { value: "5", timestamp: convertTimestampMs(message.event_time) });
+                        //     break;
+                        default:
+                            this.log.debug("Unhandled lock push event", message);
+                            break;
+                    }
+                } catch (error) {
+                    this.log.debug(`LockPushEvent - Device: ${message.device_sn} Error:`, error);
+                }
+            }
+        }
     }
 
     /*public static decodeCommand(command: number): void {
@@ -1460,7 +1550,6 @@ export class Keypad extends Device {
     //TODO: CMD_KEYPAD_GET_PASSWORD = 1657
     //TODO: CMD_KEYPAD_GET_PASSWORD_LIST = 1662
     //TODO: CMD_KEYPAD_IS_PSW_SET = 1670
-    //TODO: CMD_KEYPAD_PSW_OPEN = 1664
     //TODO: CMD_KEYPAD_SET_CUSTOM_MAP = 1660
     //TODO: CMD_KEYPAD_SET_PASSWORD = 1650
 
@@ -1474,6 +1563,22 @@ export class Keypad extends Device {
 
     public isBatteryLow(): PropertyValue {
         return this.getPropertyValue(PropertyName.DeviceBatteryLow);
+    }
+
+    public isBatteryCharging(): PropertyValue {
+        return this.getPropertyValue(PropertyName.DeviceBatteryIsCharging);
+    }
+
+    protected convertRawPropertyValue(property: PropertyMetadataAny, value: RawValue): PropertyValue {
+        try {
+            switch(property.key) {
+                case CommandType.CMD_KEYPAD_BATTERY_CHARGER_STATE:
+                    return { value: value !== undefined ? (value.value === "0" || value.value === "2"? false : true) : false, timestamp: value ? value.timestamp : 0 };
+            }
+        } catch (error) {
+            this.log.error("Convert Error:", { property: property, value: value, error: error });
+        }
+        return super.convertRawPropertyValue(property, value);
     }
 
 }
