@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
 
 import { HTTPApi } from "./api";
-import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty } from "./types";
+import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty } from "./types";
 import { DskKeyResponse, HubResponse, ResultResponse } from "./models"
 import { ParameterHelper } from "./parameter";
 import { IndexedProperty, PropertyMetadataAny, PropertyValue, PropertyValues, RawValue, RawValues, StationEvents, PropertyMetadataNumeric, PropertyMetadataBoolean } from "./interfaces";
@@ -19,7 +19,6 @@ import { PushMessage } from "../push/models";
 import { CusPushEvent } from "../push/types";
 import { InvalidPropertyError, LivestreamAlreadyRunningError, LivestreamNotRunningError, PropertyNotSupportedError } from "./error";
 import { validValue } from "../utils";
-import { StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty } from "./types";
 
 import { EufySecurityApi } from "../eufySecurityApi";
 import { Logger } from "../utils/logging";
@@ -43,7 +42,6 @@ export class Station extends TypedEmitter<StationEvents> {
     private reconnectTimeout?: NodeJS.Timeout;
 
     private p2pConnectionType = P2PConnectionType.ONLY_LOCAL;
-    private quickStreamStart = false;
 
     public static readonly CHANNEL:number = 255;
     public static readonly CHANNEL_INDOOR:number = 1000;
@@ -518,7 +516,7 @@ export class Station extends TypedEmitter<StationEvents> {
             await this.getDSKKeys();
         }
 
-        this.log.debug(`Connecting to station ${this.getSerial()}...`, { p2p_did: this.rawStation.p2p_did, dskKey: this.dskKey, p2pConnectionType: P2PConnectionType[this.p2pConnectionType], quickStreamStart: this.quickStreamStart });
+        this.log.debug(`Connecting to station ${this.getSerial()}...`, { p2p_did: this.rawStation.p2p_did, dskKey: this.dskKey, p2pConnectionType: P2PConnectionType[this.p2pConnectionType] });
 
         if (this.p2pSession) {
             this.p2pSession.removeAllListeners();
@@ -537,7 +535,6 @@ export class Station extends TypedEmitter<StationEvents> {
 
         this.p2pSession = new P2PClientProtocol(this.getLANIPAddress().value as string, this.eufySecurityApi.getUDPLocalPortForBase(this.getSerial()), this.eufySecurityApi.getP2PConnectionType(), this.rawStation.p2p_did, this.dskKey, this.getSerial(), deviceSNs, this.log);
         this.p2pSession.setConnectionType(this.p2pConnectionType);
-        this.p2pSession.setQuickStreamStart(this.quickStreamStart);
         this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
         this.p2pSession.on("timeout", () => this.onTimeout());
@@ -2879,14 +2876,6 @@ export class Station extends TypedEmitter<StationEvents> {
                 }
             }), Station.CHANNEL);
         }
-    }
-
-    public setQuickStreamStart(value: boolean): void {
-        this.quickStreamStart = value;
-    }
-
-    public getQuickStreamStart(): boolean {
-        return this.quickStreamStart;
     }
 
     public setConnectionType(type: P2PConnectionType): void {

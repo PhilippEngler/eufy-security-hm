@@ -194,7 +194,6 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
             this.stations[serial] = station;
             this.emit("station added", station);
             station.setConnectionType(this.config.p2pConnectionSetup);
-            station.setQuickStreamStart(true);
             station.connect();
         } else {
             throw new DuplicateStationError(`Station with this serial ${station.getSerial()} exists already and couldn't be added again!`);
@@ -219,7 +218,6 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
             this.stations[hub.station_sn].update(hub);
             if (!this.stations[hub.station_sn].isConnected()) {
                 this.stations[hub.station_sn].setConnectionType(this.config.p2pConnectionSetup);
-                this.stations[hub.station_sn].setQuickStreamStart(true);
                 this.stations[hub.station_sn].connect();
             }
         } else {
@@ -299,7 +297,6 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
     public async connectToStation(stationSN: string, p2pConnectionType: P2PConnectionType = P2PConnectionType.PREFER_LOCAL): Promise<void> {
         if (Object.keys(this.stations).includes(stationSN)) {
             this.stations[stationSN].setConnectionType(p2pConnectionType);
-            this.stations[stationSN].setQuickStreamStart(true);
             this.stations[stationSN].connect();
         } else
             throw new StationNotFoundError(`No station with this serial number: ${stationSN}!`);
