@@ -112,8 +112,17 @@ class ApiServer
             {
                 switch (url[1])
                 {
+                    case "getServiceState":
+                        responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
+                        break;
                     case "getDevices":
                         responseString = await api.getDevices();
+                        break;
+                    case "getDevice":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.getDevice(url[2]);
+                        }
                         break;
                     case "getBases":
                         responseString = await api.getBases();
