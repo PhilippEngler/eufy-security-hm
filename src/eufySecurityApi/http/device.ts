@@ -759,6 +759,10 @@ export abstract class Device extends TypedEmitter<DeviceEvents> {
         return this.getPropertyValue(PropertyName.DeviceWifiRSSI);
     }
 
+    public getWifiRssiSignalLevel() : PropertyValue {
+        return this.getPropertyValue(PropertyName.DeviceWifiSignalLevel);
+    }
+
     public getStoragePath(filename: string): string {
         return getAbsoluteFilePath(this.rawDevice.device_type, this.rawDevice.device_channel, filename);
     }
