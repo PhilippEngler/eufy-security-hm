@@ -1,8 +1,9 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues } from './http';
 import { sleep } from './push/utils';
+import { Devices } from "./devices";
 
 /**
  * Represents all the Bases in the account.
@@ -14,6 +15,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private serialNumbers : string[];
     private resBases !: Hubs;
     private bases : { [stationSerial : string ] : Station} = {};
+    private devices !: Devices;
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
 
     /**
@@ -27,6 +29,11 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         this.api = api;
         this.httpService = httpService;
         this.serialNumbers = [];
+    }
+
+    public setDevices(devices : Devices) : void
+    {
+        this.devices = devices;
     }
 
     /**
@@ -60,6 +67,11 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                             this.addEventListenerInstantly(this.bases[stationSerial], "PropertyChanged");
                             this.addEventListenerInstantly(this.bases[stationSerial], "RawPropertyChanged");
                         }
+
+                        this.addEventListenerInstantly(this.bases[stationSerial], "RawDevicePropertyChanged");
+                        this.addEventListenerInstantly(this.bases[stationSerial], "ChargingState");
+                        this.addEventListenerInstantly(this.bases[stationSerial], "WifiRssi");
+                        this.addEventListenerInstantly(this.bases[stationSerial], "RuntimeState");
                     }
                 }
                 
@@ -93,6 +105,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.bases[stationSerial], "GuardModeChanged");
                     this.removeEventListener(this.bases[stationSerial], "PropertyChanged");
                     this.removeEventListener(this.bases[stationSerial], "RawPropertyChanged");
+                    this.removeEventListener(this.bases[stationSerial], "RawDevicePropertyChanged");
+                    this.removeEventListener(this.bases[stationSerial], "ChargingState");
+                    this.removeEventListener(this.bases[stationSerial], "WifiRssi");
+                    this.removeEventListener(this.bases[stationSerial], "RuntimeState");
                 }
             }
         }
@@ -107,7 +123,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Returns a JSON-Representation of all Bases including the guard mode.
+     * Returns a Array of all Bases.
      */
     public getBases() : {[stationSerial: string] : Station}
     {
@@ -190,7 +206,23 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 break;
             case "RawPropertyChanged":
                 base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onRawPropertyChanged(station, type, value, modified));
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RuntimeState":
+                base.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number, modified: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature, modified));
+                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} added. Total ${base.listenerCount("runtime state")} Listener.`);
+                break;
+            case "ChargingState":
+                base.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel, modified));
+                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} added. Total ${base.listenerCount("charging state")} Listener.`);
+                break;
+            case "WifiRssi":
+                base.on("wifi rssi", (station: Station, channel: number, rssi: number, modified: number) => this.onStationWifiRssi(station, channel, rssi, modified));
+                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} added. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                break;
+            case "RawDevicePropertyChanged":
+                base.on("raw device property changed", (deviceSN: string, params: RawValues) => this.onRawDevicePropertyChanged(deviceSN, params));
+                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("raw device property changed")} Listener.`);
                 break;
         }
     }
@@ -215,7 +247,23 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 break;
             case "RawPropertyChanged":
                 base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onRawPropertyChanged(station, type, value, modified));
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("property changed")} Listener.`);
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RuntimeState":
+                base.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number, modified: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature, modified));
+                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("runtime state")} Listener.`);
+                break;
+            case "ChargingState":
+                base.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel, modified));
+                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("charging state")} Listener.`);
+                break;
+            case "WifiRssi":
+                base.on("wifi rssi", (station: Station, channel: number, rssi: number, modified: number) => this.onStationWifiRssi(station, channel, rssi, modified));
+                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                break;
+            case "RawDevicePropertyChanged":
+                base.on("raw device property changed", (deviceSN: string, params: RawValues) => this.onRawDevicePropertyChanged(deviceSN, params));
+                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("raw device property changed")} Listener.`);
                 break;
         }
     }
@@ -239,7 +287,23 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 break;
             case "RawPropertyChanged":
                 base.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RuntimeState":
+                base.removeAllListeners("runtime state");
+                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} removed. Total ${base.listenerCount("runtime state")} Listener.`);
+                break;
+            case "ChargingState":
+                base.removeAllListeners("charging state");
+                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} removed. Total ${base.listenerCount("charging state")} Listener.`);
+                break;
+            case "WifiRssi":
+                base.removeAllListeners("wifi rssi");
+                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} removed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                break;
+            case "RawDevicePropertyChanged":
+                base.removeAllListeners("raw device property changed");
+                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw device property changed")} Listener.`);
                 break;
         }
     }
@@ -259,6 +323,14 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 return base.listenerCount("property changed");
             case "RawPropertyChanged":
                 return base.listenerCount("raw property changed");
+            case "RuntimeState":
+                return base.listenerCount("runtime state");
+            case "ChargingState":
+                return base.listenerCount("charging state");
+            case "WifiRssi":
+                return base.listenerCount("wifi rssi");
+            case "RawDevicePropertyChanged":
+                return base.listenerCount("raw device property changed");
         }
         return -1;
     }
@@ -278,7 +350,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode);
+            this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeBase(station.getSerial());
         }
     }
@@ -293,7 +365,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(name != "guardMode" && name != "currentMode")
         {
-            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
+            this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | name: ${name} | value: ${value.value}`);
         }
     }
 
@@ -308,7 +380,27 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
-            this.api.logDebug("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
+            this.api.logDebug(`Event "RawPropertyChanged": base: ${station.getSerial()} | type: ${type} | value: ${value}`);
         }
+    }
+
+    private onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number, modified: number): void {
+        this.api.logDebug(`Event "RuntimeState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
+        this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature, modified);
+    }
+
+    private onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number): void {
+        this.api.logDebug(`Event "ChargingState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
+        this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel, modified);
+    }
+
+    private onStationWifiRssi(station: Station, channel: number, rssi: number, modified: number): void {
+        this.api.logDebug(`Event "WifiRssi": base: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
+        this.devices.updateWifiRssi(station.getSerial(), channel, rssi, modified);
+    }
+
+    private onRawDevicePropertyChanged(deviceSerial: string, values: RawValues): void {
+        this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
+        this.devices.updateDeviceProperties(deviceSerial, values);
     }
 }
