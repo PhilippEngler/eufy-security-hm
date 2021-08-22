@@ -20,6 +20,7 @@ export class EufySecurityApi
     private taskUpdateLinks !: NodeJS.Timeout;
     private taskUpdateLinks24 !: NodeJS.Timeout;
     private waitUpdateState !: NodeJS.Timeout;
+    private serviceState : string = "init";
     
     /**
      * Create the api object.
@@ -57,16 +58,24 @@ export class EufySecurityApi
 
                 this.bases = new Bases(this, this.httpService);
                 this.devices = new Devices(this, this.httpService);
+                this.bases.setDevices(this.devices);
     
                 await this.loadData();
 
                 this.setupScheduledTasks();
+
+                this.serviceState = "ok";
             }
             else
             {
                 this.logError(`Login to eufy failed.`);
             }
         }
+    }
+
+    public getServiceState() : string
+    {
+        return this.serviceState;
     }
 
     /**
@@ -108,6 +117,40 @@ export class EufySecurityApi
             this.setLastConnectionInfo(false);
         }
     }
+    
+    /**
+     * Create a JSON string for a given device.
+     * @param device The device the JSON string created for.
+     */
+    private makeJsonForDevice(device : Device) : string
+    {
+        var json = `{"device_id":"${device.getSerial()}",`;
+        json += `"eufy_device_id":"${device.getId()}",`;
+        json += `"device_type":"${device.getDeviceTypeString()}",`;
+        json += `"model":"${device.getModel()}",`;
+        json += `"name":"${device.getName()}",`;
+        json += `"hardware_Version":"${device.getHardwareVersion()}",`;
+        json += `"software_version":"${device.getSoftwareVersion()}",`;
+        json += `"base_serial":"${device.getStationSerial()}",`;
+        json += `"enabled":"${(device.isEnabled != undefined) ? device.isEnabled().value : "unsupported"}",`;
+        json += `"wifi_rssi":"${(device.getWifiRssi() != undefined) ? device.getWifiRssi().value : "0"}",`;
+        json += `"wifi_rssi_signal_level":"${(device.getWifiRssiSignalLevel() != undefined) ? device.getWifiRssiSignalLevel().value : "0"}",`;
+        if(device instanceof Camera)
+        {
+            json += `"battery_charge":"${(device.getBatteryValue().value != undefined) ? device.getBatteryValue().value : "0"}",`;
+            json += `"battery_temperature":"${(device.getBatteryTemperature().value != undefined) ? device.getBatteryTemperature().value : "0"}",`;
+            json += `"watermark":"${(device.getWatermark() != undefined) ? device.getWatermark().value : "0"}",`;
+            json += `"last_camera_image_url":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL().value : ""}",`;
+            json += `"last_camera_image_time":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL().timestamp/1000 : 0}",`;
+            json += `"state":"${(device.getState() != undefined) ? device.getState().value : "unsupported"}",`;
+            json += `"motion_detection":"${(device.isMotionDetectionEnabled() != undefined) ? device.isMotionDetectionEnabled().value : "unsupported"}",`;
+            json += `"led_enabled":"${(device.isLedEnabled() != undefined) ? device.isLedEnabled().value : "unsupported"}",`;
+            json += `"auto_night_vision_enabled":"${(device.isAutoNightVisionEnabled() != undefined) ? device.isAutoNightVisionEnabled().value : "unsupported"}",`;
+            json += `"anti_theft_detection_enabled":"${(device.isAntiTheftDetectionEnabled() != undefined) ? device.isAntiTheftDetectionEnabled().value : "unsupported"}"}`;
+        }
+
+        return json;
+    }
 
     /**
      * Returns a JSON-Representation of all Devices.
@@ -131,28 +174,7 @@ export class EufySecurityApi
                         {
                             json += ",";
                         }
-                        
-                        if(devices[deviceSerial].isCamera() && !devices[deviceSerial].isSoloCameras() && !devices[deviceSerial].isIndoorCamera() && !devices[deviceSerial].isDoorbell() && !devices[deviceSerial].isWiredDoorbell() && !devices[deviceSerial].isFloodLight())
-                        {
-                            var dev : Camera;
-                            dev = devices[deviceSerial];
-                            
-                            json += `{"device_id":"${dev.getSerial()}",`;
-                            json += `"eufy_device_id":"${dev.getId()}",`;
-                            json += `"device_type":"${dev.getDeviceTypeString()}",`;
-                            json += `"model":"${dev.getModel()}",`;
-                            json += `"name":"${dev.getName()}",`;
-                            json += `"hardware_Version":"${dev.getHardwareVersion()}",`;
-                            json += `"software_version":"${dev.getSoftwareVersion()}",`;
-                            json += `"base_serial":"${dev.getStationSerial()}",`;
-                            json += `"battery_charge":"${(dev.getBatteryValue().value != undefined) ? dev.getBatteryValue().value : "0"}",`;
-                            json += `"battery_temperature":"${(dev.getBatteryTemperature().value != undefined) ? dev.getBatteryTemperature().value : "0"}",`;
-                            json += `"wifi_rssi":"${(dev.getWifiRssi() != undefined) ? dev.getWifiRssi().value : "0"}",`;
-                            json += `"watermark":"${(dev.getWatermark() != undefined) ? dev.getWatermark().value : "0"}",`;
-                            json += `"last_camera_image_url":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().value : ""}",`;
-                            json += `"last_camera_image_time":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().timestamp/1000 : 0}"`;
-                            json += `}`;
-                        }
+                        json += this.makeJsonForDevice(devices[deviceSerial]);
                             
                         
                     }
@@ -180,11 +202,32 @@ export class EufySecurityApi
         return json;
     }
 
+    public async getDevice(deviceSerial : string) : Promise<string>
+    {
+        await this.devices.loadDevices();
+
+        var devices = this.devices.getDevices();
+        var json : string = "";
+        var device : Device;
+        try
+        {
+            device = devices[deviceSerial];
+            json = `{"success":true,"data":[${this.makeJsonForDevice(devices[deviceSerial])}]}`;
+            this.setLastConnectionInfo(true);
+        }
+        catch
+        {
+            json = `{"success":false,"reason":"No devices found."}`;
+            this.setLastConnectionInfo(false);
+        }
+        return json;
+    }
+
     /**
-     * Create a JSON STring for a given base.
+     * Create a JSON string for a given base.
      * @param base The base the JSON string created for.
      */
-    private makeJSONforBase(base : Station) : string
+    private makeJsonForBase(base : Station) : string
     {
         var json = `{"base_id":"${base.getSerial()}",`;
         json += `"eufy_device_id":"${base.getId()}",`;
@@ -224,7 +267,7 @@ export class EufySecurityApi
                         {
                             json += ",";
                         }
-                        json += this.makeJSONforBase(base);
+                        json += this.makeJsonForBase(base);
                     }
                     json = `{"success":true,"data":[${json}]}`;
                     this.setLastConnectionInfo(true);
@@ -315,7 +358,7 @@ export class EufySecurityApi
                         {
                             json += ",";
                         }
-                        json += this.makeJSONforBase(base);
+                        json += this.makeJsonForBase(base);
 
                         if(mode == -1)
                         {
@@ -428,7 +471,7 @@ export class EufySecurityApi
                 base = bases[stationSerial];
                 if(base)
                 {
-                    json = `{"success":true,"data":["${this.makeJSONforBase(base)}"]}`;
+                    json = `{"success":true,"data":["${this.makeJsonForBase(base)}"]}`;
                     this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value as GuardMode));
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
