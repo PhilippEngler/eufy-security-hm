@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { Camera, HTTPApi, GuardMode, Station, Device, AuthResult } from './http';
+import { HTTPApi, GuardMode, Station, Device, AuthResult, PropertyName, Camera, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -132,21 +132,39 @@ export class EufySecurityApi
         json += `"hardware_Version":"${device.getHardwareVersion()}",`;
         json += `"software_version":"${device.getSoftwareVersion()}",`;
         json += `"base_serial":"${device.getStationSerial()}",`;
-        json += `"enabled":"${(device.isEnabled != undefined) ? device.isEnabled().value : "unsupported"}",`;
-        json += `"wifi_rssi":"${(device.getWifiRssi() != undefined) ? device.getWifiRssi().value : "0"}",`;
-        json += `"wifi_rssi_signal_level":"${(device.getWifiRssiSignalLevel() != undefined) ? device.getWifiRssiSignalLevel().value : "0"}",`;
+        json += `"enabled":"${device.getPropertyValue(PropertyName.DeviceEnabled) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceEnabled).value}",`;
+        json += `"wifi_rssi":"${device.getPropertyValue(PropertyName.DeviceWifiRSSI) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWifiRSSI).value}",`;
+        json += `"wifi_rssi_signal_level":"${device.getPropertyValue(PropertyName.DeviceWifiSignalLevel) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWifiSignalLevel).value}",`;
         if(device instanceof Camera)
         {
-            json += `"battery_charge":"${(device.getBatteryValue().value != undefined) ? device.getBatteryValue().value : "0"}",`;
-            json += `"battery_temperature":"${(device.getBatteryTemperature().value != undefined) ? device.getBatteryTemperature().value : "0"}",`;
-            json += `"watermark":"${(device.getWatermark() != undefined) ? device.getWatermark().value : "0"}",`;
-            json += `"last_camera_image_url":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL().value : ""}",`;
-            json += `"last_camera_image_time":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL().timestamp/1000 : 0}",`;
-            json += `"state":"${(device.getState() != undefined) ? device.getState().value : "unsupported"}",`;
-            json += `"motion_detection":"${(device.isMotionDetectionEnabled() != undefined) ? device.isMotionDetectionEnabled().value : "unsupported"}",`;
-            json += `"led_enabled":"${(device.isLedEnabled() != undefined) ? device.isLedEnabled().value : "unsupported"}",`;
-            json += `"auto_night_vision_enabled":"${(device.isAutoNightVisionEnabled() != undefined) ? device.isAutoNightVisionEnabled().value : "unsupported"}",`;
-            json += `"anti_theft_detection_enabled":"${(device.isAntiTheftDetectionEnabled() != undefined) ? device.isAntiTheftDetectionEnabled().value : "unsupported"}"}`;
+            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery).value}",`;
+            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp).value}",`;
+            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow).value}",`;
+            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus).value}",`;
+            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark).value}",`;
+            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl).value}",`;
+            json += `"last_camera_image_time":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl).timestamp/1000}",`;
+            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState).value}",`;
+            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection).value}",`;
+            json += `"led_enabled":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed).value}",`;
+            json += `"auto_night_vision_enabled":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision).value}",`;
+            json += `"anti_theft_detection_enabled":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection).value}"}`;
+        }
+        else if (device instanceof IndoorCamera)
+        {
+
+        }
+        else if (device instanceof FloodlightCamera)
+        {
+
+        }
+        else if (device instanceof DoorbellCamera)
+        {
+
+        }
+        else if (device instanceof SoloCamera)
+        {
+
         }
 
         return json;
@@ -192,7 +210,7 @@ export class EufySecurityApi
                 json = `{"success":false,"reason":"No connection to eufy."}`;
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError("Error occured at getDevices().");
             this.setLastConnectionInfo(false);
@@ -284,7 +302,7 @@ export class EufySecurityApi
                 json = `{"success":false,"reason":"No connection to eufy."}`;
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError("Error occured at getBases()." + e.message);
             this.setLastConnectionInfo(false);
@@ -398,7 +416,7 @@ export class EufySecurityApi
                 json = `{"success":false,"reason":"No connection to eufy."}`;
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError("Error occured at getGuardMode().");
             this.setLastConnectionInfo(false);
@@ -489,7 +507,7 @@ export class EufySecurityApi
                 this.setLastConnectionInfo(false);
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError("Error occured at getGuardModeBase().");
             this.setLastConnectionInfo(false);
@@ -605,7 +623,7 @@ export class EufySecurityApi
                 this.logError("Error occured at setGuardMode: No connection to eufy.");
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError(`Error occured at setGuardMode: ${e.message}.`);
             this.setLastConnectionInfo(false);
@@ -664,7 +682,7 @@ export class EufySecurityApi
                 this.logError("Error occured at setGuardMode: No connection eo eufy.");
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError(`Error occured at setGuardMode: ${e.message}.`);
             this.setLastConnectionInfo(false);
@@ -753,7 +771,7 @@ export class EufySecurityApi
                 json = `{"success":false,"reason":"No connection to eufy."}`;
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError("Error occured at getLibrary().");
             this.setLastConnectionInfo(false);
@@ -942,6 +960,7 @@ export class EufySecurityApi
     public getConfig() : string
     {
         var json = `{"success":true,"data":[{`;
+        json += `"configfile_version":"${this.config.getConfigFileVersion()}",`;
         json += `"username":"${this.config.getEmailAddress()}",`;
         json += `"password":"${this.config.getPassword()}",`;
         json += `"api_http_active":"${this.config.getApiUseHttp()}",`;
@@ -1263,7 +1282,7 @@ export class EufySecurityApi
                 json = `{"success":false,"reason":"System variables in config disabled."}`;
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.logError("Error occured at checkSystemVariables().");
             this.setLastConnectionInfo(false);
