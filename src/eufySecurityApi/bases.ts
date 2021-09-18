@@ -82,7 +82,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.bases = {};
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.bases = {};
             throw new Error(e);
