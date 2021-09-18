@@ -86,7 +86,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.devices = {};
             }
         }
-        catch (e)
+        catch (e : any)
         {
             this.devices = {};
             throw new Error(e);
