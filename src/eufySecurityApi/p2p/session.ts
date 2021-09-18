@@ -227,17 +227,24 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         }
         else
         {
-        this.fallbackAddresses = [];
-        this.cloudAddresses.map((address) => this.lookupByAddress(address, this.p2pDid, this.dskKey));
-        this.cloudAddresses.map((address) => this.lookupByAddress2(address, this.p2pDid, this.dskKey));
-    }
+            this.fallbackAddresses = [];
+            this.cloudAddresses.map((address) => this.lookupByAddress(address, this.p2pDid, this.dskKey));
+            this.cloudAddresses.map((address) => this.lookupByAddress2(address, this.p2pDid, this.dskKey));
+        }
 
         this._clearLookupTimeout();
         this._clearLookupRetryTimeout();
 
         this.lookupTimeout = setTimeout(() => {
             this.lookupTimeout = undefined;
-            this.log.error(`${this.constructor.name}.lookup(): station: ${this.stationSerial} - All address lookup tentatives failed.`);
+            if(this.connectionType == P2PConnectionType.ONLY_LOCAL)
+            {
+                this.log.error(`${this.constructor.name}.lookup(): station: ${this.stationSerial} - Address lookup failed.`);
+            }
+            else
+            {
+                this.log.error(`${this.constructor.name}.lookup(): station: ${this.stationSerial} - All address lookup tentatives failed.`);
+            }
             this._disconnected();
         }, this.MAX_LOOKUP_TIMEOUT);
     }
