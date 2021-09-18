@@ -295,7 +295,7 @@ export class Config
         fc += "api_https_cert_file=/usr/local/etc/config/server.pem\r\n";
         fc += "api_https_pkey_string=\r\n";
         fc += "api_connection_type=1\r\n";
-        fc += "api_udp_local_static_ports_active=false";
+        fc += "api_udp_local_static_ports_active=false\r\n";
         //fc += "api_udp_local_static_ports=52789,52790";
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
@@ -348,6 +348,22 @@ export class Config
         else
         {
             return true;
+        }
+    }
+
+    /**
+     * Get the version of the configfile.
+     * @returns The configfile version as string.
+     */
+    public getConfigFileVersion() : string
+    {
+        try
+        {
+            return this.config['ConfigFileInfo']['config_file_version'];
+        }
+        catch
+        {
+            return "";
         }
     }
 
