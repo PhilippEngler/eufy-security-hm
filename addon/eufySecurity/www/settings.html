@@ -838,17 +838,17 @@
 							}
 							else
 							{
-								document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
+								document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'success' ist 'false'.</small></div>`;
 							}
 						}
 						catch (e)
 						{
-							document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen. ${e}</div>`;
+							document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">${e}</small></div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
+						document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'ReadyState' ist '4'.</small></div>`;
 					}
 					else
 					{
@@ -993,12 +993,12 @@
 						}
 						catch (e)
 						{
-							document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
+							document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">${e}</small></div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.</div>`;
+						document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'ReadyState' ist '4'.</small></div>`;
 					}
 					else
 					{
