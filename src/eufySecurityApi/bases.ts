@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, DeviceType } from './http';
 import { sleep } from './push/utils';
 import { Devices } from "./devices";
 
@@ -112,6 +112,24 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 }
             }
         }
+    }
+
+    /**
+     * Update the infos of all connected devices over P2P.
+     */
+    public async updateDeviceData() : Promise<void>
+    {
+        await this.httpService.updateDeviceInfo().catch(error => {
+            this.api.logError("Error during API data refreshing", error);
+        });
+        Object.values(this.bases).forEach(async (station: Station) => {
+            if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
+            {
+                await station.getCameraInfo().catch(error => {
+                    this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                });
+            }
+        });
     }
 
     /**

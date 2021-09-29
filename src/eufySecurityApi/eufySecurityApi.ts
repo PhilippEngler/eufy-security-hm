@@ -16,6 +16,7 @@ export class EufySecurityApi
     private homematicApi !: HomematicApi;
     private devices !: Devices;
     private bases !: Bases;
+    private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
     private taskUpdateLinks !: NodeJS.Timeout;
     private taskUpdateLinks24 !: NodeJS.Timeout;
@@ -1488,6 +1489,14 @@ export class EufySecurityApi
     private setupScheduledTasks() : void
     {
         this.logger.logInfoBasic(`Setting up scheduled tasks...`);
+        if(this.taskUpdateDeviceInfo)
+        {
+            this.logger.logInfoBasic(`  updateDeviceData already scheduled, remove scheduling...`);
+            clearInterval(this.taskUpdateDeviceInfo);
+        }
+        this.taskUpdateDeviceInfo = setInterval(async() => { await this.updateDeviceData(); }, (5 * 60 * 1000));
+        this.logger.logInfoBasic(`  updateDeviceData scheduled (runs every 5 minutes).`);
+
         if(this.config.getApiUseUpdateStateIntervall())
         {
             if(this.taskUpdateState)
@@ -1525,6 +1534,11 @@ export class EufySecurityApi
      */
     public clearScheduledTasks() : void
     {
+        if(this.taskUpdateDeviceInfo)
+        {
+            this.logger.logInfoBasic(`Remove scheduling for updateDeviceDataData.`);
+            clearInterval(this.taskUpdateDeviceInfo);
+        }
         if(this.taskUpdateState)
         {
             this.logger.logInfoBasic(`Remove scheduling for getState.`);
@@ -1549,7 +1563,12 @@ export class EufySecurityApi
             this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
             clearInterval(this.taskUpdateLinks);
         }
-        if(name == "getState")
+        if(name == "updateDeviceData")
+        {
+            task = setInterval(async() => { await this.updateDeviceData(); }, (5 * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+        }
+        else if(name == "getState")
         {
             task = setInterval(async() => { await this.setScheduleState(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
             this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
@@ -1593,6 +1612,14 @@ export class EufySecurityApi
         {
             await this.getLibrary();
         }
+    }
+
+    /**
+     * The method called when update device data is called.
+     */
+    public async updateDeviceData(): Promise<void>
+    {
+        await this.bases.updateDeviceData();
     }
 
     /**
