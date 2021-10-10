@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReadOnlyPropertyError = exports.InvalidPropertyValueError = exports.NotConnectedError = exports.WrongStationError = exports.NotSupportedGuardModeError = exports.NotSupportedFeatureError = exports.DuplicateDeviceError = exports.DeviceNotFoundError = exports.DuplicateStationError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
+exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.NotConnectedError = exports.WrongStationError = exports.NotSupportedError = exports.DuplicateDeviceError = exports.DeviceNotFoundError = exports.DuplicateStationError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
 class InvalidCountryCodeError extends Error {
     constructor(message) {
         super(message);
@@ -49,22 +49,14 @@ class DuplicateDeviceError extends Error {
     }
 }
 exports.DuplicateDeviceError = DuplicateDeviceError;
-class NotSupportedFeatureError extends Error {
+class NotSupportedError extends Error {
     constructor(message) {
         super(message);
         Object.setPrototypeOf(this, new.target.prototype);
-        this.name = NotSupportedFeatureError.name;
+        this.name = NotSupportedError.name;
     }
 }
-exports.NotSupportedFeatureError = NotSupportedFeatureError;
-class NotSupportedGuardModeError extends Error {
-    constructor(message) {
-        super(message);
-        Object.setPrototypeOf(this, new.target.prototype);
-        this.name = NotSupportedGuardModeError.name;
-    }
-}
-exports.NotSupportedGuardModeError = NotSupportedGuardModeError;
+exports.NotSupportedError = NotSupportedError;
 class WrongStationError extends Error {
     constructor(message) {
         super(message);
@@ -89,6 +81,14 @@ class InvalidPropertyValueError extends Error {
     }
 }
 exports.InvalidPropertyValueError = InvalidPropertyValueError;
+class InvalidCommandValueError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = InvalidCommandValueError.name;
+    }
+}
+exports.InvalidCommandValueError = InvalidCommandValueError;
 class ReadOnlyPropertyError extends Error {
     constructor(message) {
         super(message);

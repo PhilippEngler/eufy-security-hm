@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterMinVersion = void 0;
+exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
 const types_1 = require("./types");
-const isGreaterMinVersion = function (minimal_version, current_version) {
+const isGreaterEqualMinVersion = function (minimal_version, current_version) {
     if (minimal_version === undefined)
         minimal_version = "";
     if (current_version === undefined)
@@ -30,7 +30,7 @@ const isGreaterMinVersion = function (minimal_version, current_version) {
     }
     return true;
 };
-exports.isGreaterMinVersion = isGreaterMinVersion;
+exports.isGreaterEqualMinVersion = isGreaterEqualMinVersion;
 const pad = function (num) {
     const norm = Math.floor(Math.abs(num));
     return (norm < 10 ? "0" : "") + norm;
@@ -49,3 +49,83 @@ const getAbsoluteFilePath = function (device_type, channel, filename) {
     return `/media/mmcblk0p1/Camera${String(channel).padStart(2, "0")}/${filename}.dat`;
 };
 exports.getAbsoluteFilePath = getAbsoluteFilePath;
+const isNotificationSwitchMode = function (value, mode) {
+    if (value === 1)
+        value = 240;
+    return (value & mode) !== 0;
+};
+exports.isNotificationSwitchMode = isNotificationSwitchMode;
+const switchNotificationMode = function (currentValue, mode, enable) {
+    let result = 0;
+    if (!enable && currentValue === 1 /* ALL */) {
+        currentValue = 240;
+    }
+    if (enable) {
+        result = mode | currentValue;
+    }
+    else {
+        result = ~mode & currentValue;
+    }
+    if (exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.SCHEDULE) && exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.APP) && exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.GEOFENCE) && exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.KEYPAD)) {
+        result = 1; /* ALL */
+    }
+    return result;
+};
+exports.switchNotificationMode = switchNotificationMode;
+const calculateWifiSignalLevel = function (device, rssi) {
+    if (device.isWiredDoorbell()) {
+        if (rssi >= -65) {
+            return types_1.WifiSignalLevel.FULL;
+        }
+        if (rssi >= -75) {
+            return types_1.WifiSignalLevel.STRONG;
+        }
+        return rssi >= -80 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+    }
+    else if (device.isCamera2Product()) {
+        if (rssi >= 0) {
+            return types_1.WifiSignalLevel.NO_SIGNAL;
+        }
+        if (rssi >= -65) {
+            return types_1.WifiSignalLevel.FULL;
+        }
+        if (rssi >= -75) {
+            return types_1.WifiSignalLevel.STRONG;
+        }
+        return rssi >= -85 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+    }
+    else if (device.isFloodLight()) {
+        if (rssi >= 0) {
+            return types_1.WifiSignalLevel.NO_SIGNAL;
+        }
+        if (rssi >= -60) {
+            return types_1.WifiSignalLevel.FULL;
+        }
+        if (rssi >= -70) {
+            return types_1.WifiSignalLevel.STRONG;
+        }
+        return rssi >= -80 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+    }
+    else if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
+        if (rssi >= -65) {
+            return types_1.WifiSignalLevel.FULL;
+        }
+        if (rssi >= -75) {
+            return types_1.WifiSignalLevel.STRONG;
+        }
+        return rssi >= -85 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+    }
+    else {
+        if (rssi >= 0) {
+            return types_1.WifiSignalLevel.NO_SIGNAL;
+        }
+        if (rssi >= -65) {
+            return types_1.WifiSignalLevel.FULL;
+        }
+        if (rssi >= -75) {
+            return types_1.WifiSignalLevel.STRONG;
+        }
+        return rssi >= -85 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+    }
+};
+exports.calculateWifiSignalLevel = calculateWifiSignalLevel;

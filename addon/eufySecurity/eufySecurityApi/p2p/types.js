@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLInnerCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.ControlResponse = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
+exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLInnerCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
 exports.RequestMessageType = {
     STUN: Buffer.from([0xF1, 0x00]),
     LOOKUP: Buffer.from([0xF1, 0x20]),
@@ -179,7 +179,7 @@ var CommandType;
     CommandType[CommandType["CMD_GET_HUB_LOG"] = 1132] = "CMD_GET_HUB_LOG";
     CommandType[CommandType["CMD_GET_HUB_LOGIG"] = 1140] = "CMD_GET_HUB_LOGIG";
     CommandType[CommandType["CMD_GET_HUB_NAME"] = 1128] = "CMD_GET_HUB_NAME";
-    CommandType[CommandType["CMD_GET_HUB_POWWER_SUPPLY"] = 1137] = "CMD_GET_HUB_POWWER_SUPPLY";
+    CommandType[CommandType["CMD_GET_HUB_POWER_SUPPLY"] = 1137] = "CMD_GET_HUB_POWER_SUPPLY";
     CommandType[CommandType["CMD_GET_HUB_TONE_INFO"] = 1126] = "CMD_GET_HUB_TONE_INFO";
     CommandType[CommandType["CMD_GET_HUB_UPGRADE"] = 1133] = "CMD_GET_HUB_UPGRADE";
     CommandType[CommandType["CMD_GET_IRCUTSENSITIVITY"] = 1114] = "CMD_GET_IRCUTSENSITIVITY";
@@ -398,6 +398,7 @@ var CommandType;
     CommandType[CommandType["CMD_INDOOR_SET_RECORD_AUDIO_ENABLE"] = 6012] = "CMD_INDOOR_SET_RECORD_AUDIO_ENABLE";
     CommandType[CommandType["CMD_INDOOR_SHOW_SDCARD"] = 6054] = "CMD_INDOOR_SHOW_SDCARD";
     CommandType[CommandType["CMD_INDOOR_TFCARD_NAS_STATUS"] = 6051] = "CMD_INDOOR_TFCARD_NAS_STATUS";
+    CommandType[CommandType["CMD_INDOOR_ROTATE"] = 6030] = "CMD_INDOOR_ROTATE";
     CommandType[CommandType["CMD_IN_TEST_MODE"] = 6072] = "CMD_IN_TEST_MODE";
     CommandType[CommandType["CMD_PLAY_BACK_EVENT_STOP"] = 1055] = "CMD_PLAY_BACK_EVENT_STOP";
     CommandType[CommandType["CMD_SET_DETECT_TYPE"] = 6071] = "CMD_SET_DETECT_TYPE";
@@ -529,28 +530,32 @@ var ErrorCode;
     ErrorCode[ErrorCode["ERROR_XM_WIFI_DISCONNECT"] = -203] = "ERROR_XM_WIFI_DISCONNECT";
     ErrorCode[ErrorCode["ERROR_XM_WIFI_TIMEOUT"] = -205] = "ERROR_XM_WIFI_TIMEOUT";
     ErrorCode[ErrorCode["ERROR_XM_WIFI_WAKEUP_FAIL"] = -204] = "ERROR_XM_WIFI_WAKEUP_FAIL";
+    ErrorCode[ErrorCode["ERROR_LIMIT_REACHED"] = -500] = "ERROR_LIMIT_REACHED";
     ErrorCode[ErrorCode["ERROR_FAILED_TO_REQUEST"] = 503] = "ERROR_FAILED_TO_REQUEST";
 })(ErrorCode = exports.ErrorCode || (exports.ErrorCode = {}));
-var ControlResponse;
-(function (ControlResponse) {
+var AlarmEvent;
+(function (AlarmEvent) {
     //com.oceanwing.battery.cam.zmedia.model.ZControlResponse
-    ControlResponse[ControlResponse["ALARM_HUB_STOP"] = 0] = "ALARM_HUB_STOP";
-    ControlResponse[ControlResponse["ALARM_DEV_STOP"] = 1] = "ALARM_DEV_STOP";
-    ControlResponse[ControlResponse["ALARM_GSENSOR"] = 2] = "ALARM_GSENSOR";
-    ControlResponse[ControlResponse["ALARM_PIR"] = 3] = "ALARM_PIR";
-    ControlResponse[ControlResponse["ALARM_APP"] = 4] = "ALARM_APP";
-    ControlResponse[ControlResponse["ALARM_HOT"] = 5] = "ALARM_HOT";
-    ControlResponse[ControlResponse["ALARM_DOOR"] = 6] = "ALARM_DOOR";
-    ControlResponse[ControlResponse["ALARM_CAMERA_PIR"] = 7] = "ALARM_CAMERA_PIR";
-    ControlResponse[ControlResponse["ALARM_MOTION_SENSOR"] = 8] = "ALARM_MOTION_SENSOR";
-    ControlResponse[ControlResponse["ALARM_CAMERA_GSENSOR"] = 9] = "ALARM_CAMERA_GSENSOR";
-    ControlResponse[ControlResponse["ALARM_CAMERA_APP"] = 10] = "ALARM_CAMERA_APP";
-    ControlResponse[ControlResponse["ALARM_CAMERA_LINKAGE"] = 11] = "ALARM_CAMERA_LINKAGE";
-    ControlResponse[ControlResponse["ALARM_HUB_KEYPAD"] = 13] = "ALARM_HUB_KEYPAD";
-    ControlResponse[ControlResponse["ALARM_HUB_STOP_BY_KEYPAD"] = 15] = "ALARM_HUB_STOP_BY_KEYPAD";
-    ControlResponse[ControlResponse["ALARM_HUB_STOP_BY_APP"] = 16] = "ALARM_HUB_STOP_BY_APP";
-    ControlResponse[ControlResponse["ALARM_HUB_STOP_BY_HAND"] = 17] = "ALARM_HUB_STOP_BY_HAND";
-})(ControlResponse = exports.ControlResponse || (exports.ControlResponse = {}));
+    AlarmEvent[AlarmEvent["HUB_STOP"] = 0] = "HUB_STOP";
+    AlarmEvent[AlarmEvent["DEV_STOP"] = 1] = "DEV_STOP";
+    AlarmEvent[AlarmEvent["GSENSOR"] = 2] = "GSENSOR";
+    AlarmEvent[AlarmEvent["PIR"] = 3] = "PIR";
+    AlarmEvent[AlarmEvent["APP"] = 4] = "APP";
+    AlarmEvent[AlarmEvent["HOT"] = 5] = "HOT";
+    AlarmEvent[AlarmEvent["DOOR"] = 6] = "DOOR";
+    AlarmEvent[AlarmEvent["CAMERA_PIR"] = 7] = "CAMERA_PIR";
+    AlarmEvent[AlarmEvent["MOTION_SENSOR"] = 8] = "MOTION_SENSOR";
+    AlarmEvent[AlarmEvent["CAMERA_GSENSOR"] = 9] = "CAMERA_GSENSOR";
+    AlarmEvent[AlarmEvent["CAMERA_APP"] = 10] = "CAMERA_APP";
+    AlarmEvent[AlarmEvent["CAMERA_LINKAGE"] = 11] = "CAMERA_LINKAGE";
+    AlarmEvent[AlarmEvent["HUB_KEYPAD"] = 13] = "HUB_KEYPAD";
+    AlarmEvent[AlarmEvent["HUB_STOP_BY_KEYPAD"] = 15] = "HUB_STOP_BY_KEYPAD";
+    AlarmEvent[AlarmEvent["HUB_STOP_BY_APP"] = 16] = "HUB_STOP_BY_APP";
+    AlarmEvent[AlarmEvent["HUB_STOP_BY_HAND"] = 17] = "HUB_STOP_BY_HAND";
+    AlarmEvent[AlarmEvent["APP_LIGHT"] = 22] = "APP_LIGHT";
+    AlarmEvent[AlarmEvent["APP_LIGHT_SOUND"] = 23] = "APP_LIGHT_SOUND";
+    AlarmEvent[AlarmEvent["MOTION_APP_LIGHT"] = 24] = "MOTION_APP_LIGHT";
+})(AlarmEvent = exports.AlarmEvent || (exports.AlarmEvent = {}));
 // Doorbell, Solo cameras
 var WatermarkSetting1;
 (function (WatermarkSetting1) {
@@ -577,16 +582,27 @@ var WatermarkSetting4;
     WatermarkSetting4[WatermarkSetting4["TIMESTAMP_AND_LOGO"] = 1] = "TIMESTAMP_AND_LOGO";
     WatermarkSetting4[WatermarkSetting4["OFF"] = 2] = "OFF";
 })(WatermarkSetting4 = exports.WatermarkSetting4 || (exports.WatermarkSetting4 = {}));
+var PanTiltDirection;
+(function (PanTiltDirection) {
+    PanTiltDirection[PanTiltDirection["ROTATE360"] = 0] = "ROTATE360";
+    PanTiltDirection[PanTiltDirection["LEFT"] = 1] = "LEFT";
+    PanTiltDirection[PanTiltDirection["RIGHT"] = 2] = "RIGHT";
+    PanTiltDirection[PanTiltDirection["UP"] = 3] = "UP";
+    PanTiltDirection[PanTiltDirection["DOWN"] = 4] = "DOWN";
+})(PanTiltDirection = exports.PanTiltDirection || (exports.PanTiltDirection = {}));
 var VideoCodec;
 (function (VideoCodec) {
-    VideoCodec[VideoCodec["UNKNOWN"] = 0] = "UNKNOWN";
-    VideoCodec[VideoCodec["H264"] = 1] = "H264";
-    VideoCodec[VideoCodec["H265"] = 2] = "H265";
+    VideoCodec[VideoCodec["UNKNOWN"] = -1] = "UNKNOWN";
+    VideoCodec[VideoCodec["H264"] = 0] = "H264";
+    VideoCodec[VideoCodec["H265"] = 1] = "H265";
 })(VideoCodec = exports.VideoCodec || (exports.VideoCodec = {}));
 var AudioCodec;
 (function (AudioCodec) {
     AudioCodec[AudioCodec["UNKNOWN"] = -1] = "UNKNOWN";
-    AudioCodec[AudioCodec["AAC"] = 0] = "AAC";
+    AudioCodec[AudioCodec["NONE"] = 0] = "NONE";
+    AudioCodec[AudioCodec["AAC"] = 1] = "AAC";
+    AudioCodec[AudioCodec["AAC_LC"] = 2] = "AAC_LC";
+    AudioCodec[AudioCodec["AAC_ELD"] = 3] = "AAC_ELD";
 })(AudioCodec = exports.AudioCodec || (exports.AudioCodec = {}));
 var ESLCommand;
 (function (ESLCommand) {

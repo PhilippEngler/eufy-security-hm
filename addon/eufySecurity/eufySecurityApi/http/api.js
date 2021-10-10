@@ -701,5 +701,141 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     isConnected() {
         return this.connected;
     }
+    getInvites() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield this.request("post", "family/get_invites", {
+                    num: 100,
+                    orderby: "",
+                    own: false,
+                    page: 0,
+                    transaction: `${new Date().getTime().toString()}`
+                }, this.headers).catch(error => {
+                    this.log.error("Error:", error);
+                    return error;
+                });
+                this.log.debug("Response:", response.data);
+                if (response.status == 200) {
+                    const result = response.data;
+                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        if (result.data) {
+                            const invites = {};
+                            result.data.forEach((invite) => {
+                                invites[invite.invite_id] = invite;
+                                invites[invite.invite_id].devices = JSON.parse(invites[invite.invite_id].devices);
+                            });
+                            return invites;
+                        }
+                    }
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
+                }
+                else {
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+            return {};
+        });
+    }
+    confirmInvites(confirmInvites) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield this.request("post", "family/confirm_invite", {
+                    invites: confirmInvites,
+                    transaction: `${new Date().getTime().toString()}`
+                }, this.headers).catch(error => {
+                    this.log.error("Error:", error);
+                    return error;
+                });
+                this.log.debug("Response:", response.data);
+                if (response.status == 200) {
+                    const result = response.data;
+                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        return true;
+                    }
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
+                }
+                else {
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+            return false;
+        });
+    }
+    getPublicKey(deviceSN, type) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield this.request("get", `public_key/query?device_sn=${deviceSN}&type=${type}`, null, this.headers).catch(error => {
+                    this.log.error("Error:", error);
+                    return error;
+                });
+                this.log.debug("Response:", response.data);
+                if (response.status == 200) {
+                    const result = response.data;
+                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        if (result.data) {
+                            return result.data.public_key;
+                        }
+                    }
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
+                }
+                else {
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+            return "";
+        });
+    }
+    getSensorHistory(stationSN, deviceSN) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const response = yield this.request("post", "app/get_sensor_history", {
+                    devicse_sn: deviceSN,
+                    max_time: 0,
+                    num: 500,
+                    page: 0,
+                    station_sn: stationSN,
+                    transaction: `${new Date().getTime().toString()}`
+                }, this.headers).catch(error => {
+                    this.log.error("Error:", error);
+                    return error;
+                });
+                this.log.debug("Response:", response.data);
+                if (response.status == 200) {
+                    const result = response.data;
+                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        if (result.data) {
+                            const entries = result.data;
+                            return entries;
+                        }
+                    }
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
+                }
+                else {
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+            return [];
+        });
+    }
 }
 exports.HTTPApi = HTTPApi;

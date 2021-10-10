@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NotificationStyle = exports.IndoorPushMessageType = exports.IndoorPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
+exports.NotificationStyle = exports.IndoorPushMessageType = exports.IndoorPushEvent = exports.LockPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
 var CusPushEvent;
 (function (CusPushEvent) {
     CusPushEvent[CusPushEvent["SECURITY"] = 1] = "SECURITY";
@@ -31,8 +31,17 @@ var CusPushAlarmType;
     CusPushAlarmType[CusPushAlarmType["HOT"] = 5] = "HOT";
     CusPushAlarmType[CusPushAlarmType["DOOR"] = 6] = "DOOR";
     CusPushAlarmType[CusPushAlarmType["CAMERA"] = 7] = "CAMERA";
-    CusPushAlarmType[CusPushAlarmType["EVT"] = 10] = "EVT";
-    CusPushAlarmType[CusPushAlarmType["DELAY_EVT"] = 16] = "DELAY_EVT";
+    CusPushAlarmType[CusPushAlarmType["MOTION_SENSOR"] = 8] = "MOTION_SENSOR";
+    CusPushAlarmType[CusPushAlarmType["CAMERA_GSENSOR"] = 9] = "CAMERA_GSENSOR";
+    CusPushAlarmType[CusPushAlarmType["CAMERA_APP"] = 10] = "CAMERA_APP";
+    CusPushAlarmType[CusPushAlarmType["CAMERA_LINKAGE"] = 11] = "CAMERA_LINKAGE";
+    CusPushAlarmType[CusPushAlarmType["HUB_LINKAGE"] = 12] = "HUB_LINKAGE";
+    CusPushAlarmType[CusPushAlarmType["HUB_KEYPAD_PANIC_BUTTON"] = 13] = "HUB_KEYPAD_PANIC_BUTTON";
+    CusPushAlarmType[CusPushAlarmType["HUB_KEYPAD_EMERGENCY_CODE"] = 14] = "HUB_KEYPAD_EMERGENCY_CODE";
+    CusPushAlarmType[CusPushAlarmType["HUB_STOP_BY_KEYPAD"] = 15] = "HUB_STOP_BY_KEYPAD";
+    CusPushAlarmType[CusPushAlarmType["HUB_STOP_BY_APP"] = 16] = "HUB_STOP_BY_APP";
+    CusPushAlarmType[CusPushAlarmType["HUB_STOP_BY_HUB"] = 17] = "HUB_STOP_BY_HUB";
+    CusPushAlarmType[CusPushAlarmType["HUB_KEYPAD_CUSTOM_NOT_MAP"] = 18] = "HUB_KEYPAD_CUSTOM_NOT_MAP";
 })(CusPushAlarmType = exports.CusPushAlarmType || (exports.CusPushAlarmType = {}));
 var CusPushMode;
 (function (CusPushMode) {
@@ -47,6 +56,8 @@ var ServerPushEvent;
     ServerPushEvent[ServerPushEvent["REMOVE_HOMEBASE"] = 10100] = "REMOVE_HOMEBASE";
     ServerPushEvent[ServerPushEvent["VERIFICATION"] = 10500] = "VERIFICATION";
     ServerPushEvent[ServerPushEvent["WEB_ACTION"] = 10800] = "WEB_ACTION";
+    ServerPushEvent[ServerPushEvent["ALARM_NOTIFY"] = 10900] = "ALARM_NOTIFY";
+    ServerPushEvent[ServerPushEvent["ALARM_GUEST_NOTIFY"] = 11000] = "ALARM_GUEST_NOTIFY";
 })(ServerPushEvent = exports.ServerPushEvent || (exports.ServerPushEvent = {}));
 var DoorbellPushEvent;
 (function (DoorbellPushEvent) {
@@ -57,6 +68,27 @@ var DoorbellPushEvent;
     DoorbellPushEvent[DoorbellPushEvent["OFFLINE"] = 3106] = "OFFLINE";
     DoorbellPushEvent[DoorbellPushEvent["ONLINE"] = 3107] = "ONLINE";
 })(DoorbellPushEvent = exports.DoorbellPushEvent || (exports.DoorbellPushEvent = {}));
+var LockPushEvent;
+(function (LockPushEvent) {
+    LockPushEvent[LockPushEvent["APP_LOCK"] = 264] = "APP_LOCK";
+    LockPushEvent[LockPushEvent["APP_UNLOCK"] = 261] = "APP_UNLOCK";
+    LockPushEvent[LockPushEvent["AUTO_LOCK"] = 265] = "AUTO_LOCK";
+    LockPushEvent[LockPushEvent["AUTO_UNLOCK"] = 258] = "AUTO_UNLOCK";
+    LockPushEvent[LockPushEvent["FINGER_UNLOCK"] = 260] = "FINGER_UNLOCK";
+    LockPushEvent[LockPushEvent["FINGER_LOCK"] = 267] = "FINGER_LOCK";
+    LockPushEvent[LockPushEvent["KEYPAD_LOCK"] = 263] = "KEYPAD_LOCK";
+    LockPushEvent[LockPushEvent["LOCK_MECHANICAL_ANOMALY"] = 519] = "LOCK_MECHANICAL_ANOMALY";
+    LockPushEvent[LockPushEvent["LOCK_OFFLINE"] = 516] = "LOCK_OFFLINE";
+    LockPushEvent[LockPushEvent["LOW_POWE"] = 513] = "LOW_POWE";
+    LockPushEvent[LockPushEvent["MANUAL_LOCK"] = 262] = "MANUAL_LOCK";
+    LockPushEvent[LockPushEvent["MANUAL_UNLOCK"] = 257] = "MANUAL_UNLOCK";
+    LockPushEvent[LockPushEvent["MECHANICAL_ANOMALY"] = 517] = "MECHANICAL_ANOMALY";
+    LockPushEvent[LockPushEvent["MULTIPLE_ERRORS"] = 515] = "MULTIPLE_ERRORS";
+    LockPushEvent[LockPushEvent["PW_LOCK"] = 266] = "PW_LOCK";
+    LockPushEvent[LockPushEvent["PW_UNLOCK"] = 259] = "PW_UNLOCK";
+    LockPushEvent[LockPushEvent["VERY_LOW_POWE"] = 514] = "VERY_LOW_POWE";
+    LockPushEvent[LockPushEvent["VIOLENT_DESTRUCTION"] = 518] = "VIOLENT_DESTRUCTION";
+})(LockPushEvent = exports.LockPushEvent || (exports.LockPushEvent = {}));
 var IndoorPushEvent;
 (function (IndoorPushEvent) {
     IndoorPushEvent[IndoorPushEvent["MOTION_DETECTION"] = 3101] = "MOTION_DETECTION";

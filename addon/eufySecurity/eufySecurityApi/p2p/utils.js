@@ -12,9 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.generateLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.checkT8420 = exports.getVideoCodec = exports.generateLockBasicPublicKeyAESKey = exports.generateLockBasicSequence = exports.encryptLockBasicPublicKey = exports.generateLockBasicAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.generateLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const crypto_js_1 = __importDefault(require("crypto-js"));
+const crypto_1 = require("crypto");
 const types_1 = require("./types");
 exports.MAGIC_WORD = "XZYH";
 const isPrivateIp = (ip) => /^(::f{4}:)?10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
@@ -357,3 +358,68 @@ const eslTimestamp = function (timestamp_in_sec = new Date().getTime() / 1000) {
     return array;
 };
 exports.eslTimestamp = eslTimestamp;
+const generateLockBasicAESKey = () => {
+    const randomBytesArray = [...crypto_1.randomBytes(16)];
+    let result = "";
+    for (let pos = 0; pos < randomBytesArray.length; pos++) {
+        result += "0123456789ABCDEF".charAt((randomBytesArray[pos] >> 4) & 15);
+        result += "0123456789ABCDEF".charAt(randomBytesArray[pos] & 15);
+    }
+    return result;
+};
+exports.generateLockBasicAESKey = generateLockBasicAESKey;
+const encryptLockBasicPublicKey = (key, data) => {
+    const ekey = crypto_js_1.default.enc.Hex.parse(key);
+    const encrypted = crypto_js_1.default.AES.encrypt(crypto_js_1.default.enc.Hex.parse(data.toString("hex")), ekey, {
+        mode: crypto_js_1.default.mode.ECB,
+        padding: crypto_js_1.default.pad.NoPadding
+    });
+    return Buffer.from(crypto_js_1.default.enc.Hex.stringify(encrypted.ciphertext), "hex");
+};
+exports.encryptLockBasicPublicKey = encryptLockBasicPublicKey;
+const generateLockBasicSequence = () => {
+    return Math.trunc(Math.random() * 1000);
+};
+exports.generateLockBasicSequence = generateLockBasicSequence;
+const generateLockBasicPublicKeyAESKey = (userID) => {
+    if (userID === undefined || userID === "") {
+        return "00000000000000000000000000000000";
+    }
+    if (userID.length > 32) {
+        return userID.substring(0, 32);
+    }
+    if (userID.length === 32) {
+        return userID;
+    }
+    for (let length = userID.length; length < 32; length++) {
+        userID += "0";
+    }
+    return userID;
+};
+exports.generateLockBasicPublicKeyAESKey = generateLockBasicPublicKeyAESKey;
+const getVideoCodec = (data) => {
+    if (data !== undefined && data.length > 0) {
+        if (data.length >= 5) {
+            const h265Values = [38, 64, 66, 68, 78];
+            const startcode = [...data.slice(0, 5)];
+            if (h265Values.includes(startcode[3]) || h265Values.includes(startcode[4])) {
+                return types_1.VideoCodec.H265;
+            }
+            else if (startcode[3] === 103 || startcode[4] === 103) {
+                return types_1.VideoCodec.H264;
+            }
+        }
+        else {
+            return types_1.VideoCodec.H264;
+        }
+    }
+    return types_1.VideoCodec.UNKNOWN; // Maybe return h264 as Eufy does?
+};
+exports.getVideoCodec = getVideoCodec;
+const checkT8420 = (serialNumber) => {
+    if (!(serialNumber !== undefined && serialNumber !== null && serialNumber.length > 0 && serialNumber.startsWith("T8420")) || serialNumber.length <= 7 || serialNumber[6] != "6") {
+        return false;
+    }
+    return true;
+};
+exports.checkT8420 = checkT8420;

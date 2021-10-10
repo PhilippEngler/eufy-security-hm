@@ -30,13 +30,15 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
         this.httpService = httpService;
         this.serialNumbers = [];
     }
+    setDevices(devices) {
+        this.devices = devices;
+    }
     /**
      * (Re)Loads all Bases and the settings of them.
      */
     loadBases() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.httpService.updateDeviceInfo();
                 this.resBases = this.httpService.getHubs();
                 if (this.resBases != null) {
                     for (var stationSerial in this.resBases) {
@@ -47,12 +49,16 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
                             this.bases[stationSerial] = new http_1.Station(this.api, this.httpService, this.resBases[stationSerial]);
                             this.skipNextModeChangeEvent[stationSerial] = false;
                             this.serialNumbers.push(stationSerial);
-                            yield this.bases[stationSerial].connect(this.api.getP2PConnectionType());
+                            yield this.bases[stationSerial].connect();
                             if (this.api.getApiUseUpdateStateEvent()) {
                                 this.addEventListenerInstantly(this.bases[stationSerial], "GuardModeChanged");
                                 this.addEventListenerInstantly(this.bases[stationSerial], "PropertyChanged");
                                 this.addEventListenerInstantly(this.bases[stationSerial], "RawPropertyChanged");
                             }
+                            this.addEventListenerInstantly(this.bases[stationSerial], "RawDevicePropertyChanged");
+                            this.addEventListenerInstantly(this.bases[stationSerial], "ChargingState");
+                            this.addEventListenerInstantly(this.bases[stationSerial], "WifiRssi");
+                            this.addEventListenerInstantly(this.bases[stationSerial], "RuntimeState");
                         }
                     }
                     yield this.saveBasesSettings();
@@ -79,9 +85,30 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
                         this.removeEventListener(this.bases[stationSerial], "GuardModeChanged");
                         this.removeEventListener(this.bases[stationSerial], "PropertyChanged");
                         this.removeEventListener(this.bases[stationSerial], "RawPropertyChanged");
+                        this.removeEventListener(this.bases[stationSerial], "RawDevicePropertyChanged");
+                        this.removeEventListener(this.bases[stationSerial], "ChargingState");
+                        this.removeEventListener(this.bases[stationSerial], "WifiRssi");
+                        this.removeEventListener(this.bases[stationSerial], "RuntimeState");
                     }
                 }
             }
+        });
+    }
+    /**
+     * Update the infos of all connected devices over P2P.
+     */
+    updateDeviceData() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.httpService.updateDeviceInfo().catch(error => {
+                this.api.logError("Error occured at updateDeviceData while API data refreshing.", error);
+            });
+            Object.values(this.bases).forEach((station) => __awaiter(this, void 0, void 0, function* () {
+                if (station.isConnected() && station.getDeviceType() !== http_1.DeviceType.DOORBELL) {
+                    yield station.getCameraInfo().catch(error => {
+                        this.api.logError(`Error occured at updateDeviceData while station ${station.getSerial()} p2p data refreshing.`, error);
+                    });
+                }
+            }));
         });
     }
     /**
@@ -93,7 +120,7 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
         });
     }
     /**
-     * Returns a JSON-Representation of all Bases including the guard mode.
+     * Returns a Array of all Bases.
      */
     getBases() {
         return this.bases;
@@ -155,7 +182,7 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
     addEventListenerInstantly(base, eventListenerName) {
         switch (eventListenerName) {
             case "GuardModeChanged":
-                base.on("guard mode", (station, guardMode, currentMode) => this.onStationGuardModeChanged(station, guardMode, currentMode));
+                base.on("guard mode", (station, guardMode) => this.onStationGuardModeChanged(station, guardMode));
                 this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("guard mode")} Listener.`);
                 break;
             case "PropertyChanged":
@@ -164,7 +191,23 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             case "RawPropertyChanged":
                 base.on("raw property changed", (station, type, value, modified) => this.onRawPropertyChanged(station, type, value, modified));
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RuntimeState":
+                base.on("runtime state", (station, channel, batteryLevel, temperature, modified) => this.onStationRuntimeState(station, channel, batteryLevel, temperature, modified));
+                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} added. Total ${base.listenerCount("runtime state")} Listener.`);
+                break;
+            case "ChargingState":
+                base.on("charging state", (station, channel, chargeType, batteryLevel, modified) => this.onStationChargingState(station, channel, chargeType, batteryLevel, modified));
+                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} added. Total ${base.listenerCount("charging state")} Listener.`);
+                break;
+            case "WifiRssi":
+                base.on("wifi rssi", (station, channel, rssi, modified) => this.onStationWifiRssi(station, channel, rssi, modified));
+                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} added. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                break;
+            case "RawDevicePropertyChanged":
+                base.on("raw device property changed", (deviceSN, params) => this.onRawDevicePropertyChanged(deviceSN, params));
+                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("raw device property changed")} Listener.`);
                 break;
         }
     }
@@ -178,7 +221,7 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
             yield utils_1.sleep(5000);
             switch (eventListenerName) {
                 case "GuardModeChanged":
-                    base.on("guard mode", (station, guardMode, currentMode) => this.onStationGuardModeChanged(station, guardMode, currentMode));
+                    base.on("guard mode", (station, guardMode) => this.onStationGuardModeChanged(station, guardMode));
                     this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("guard mode")} Listener.`);
                     break;
                 case "PropertyChanged":
@@ -187,7 +230,23 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
                     break;
                 case "RawPropertyChanged":
                     base.on("raw property changed", (station, type, value, modified) => this.onRawPropertyChanged(station, type, value, modified));
-                    this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("property changed")} Listener.`);
+                    this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("raw property changed")} Listener.`);
+                    break;
+                case "RuntimeState":
+                    base.on("runtime state", (station, channel, batteryLevel, temperature, modified) => this.onStationRuntimeState(station, channel, batteryLevel, temperature, modified));
+                    this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("runtime state")} Listener.`);
+                    break;
+                case "ChargingState":
+                    base.on("charging state", (station, channel, chargeType, batteryLevel, modified) => this.onStationChargingState(station, channel, chargeType, batteryLevel, modified));
+                    this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("charging state")} Listener.`);
+                    break;
+                case "WifiRssi":
+                    base.on("wifi rssi", (station, channel, rssi, modified) => this.onStationWifiRssi(station, channel, rssi, modified));
+                    this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                    break;
+                case "RawDevicePropertyChanged":
+                    base.on("raw device property changed", (deviceSN, params) => this.onRawDevicePropertyChanged(deviceSN, params));
+                    this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("raw device property changed")} Listener.`);
                     break;
             }
         });
@@ -209,7 +268,23 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             case "RawPropertyChanged":
                 base.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
+                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RuntimeState":
+                base.removeAllListeners("runtime state");
+                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} removed. Total ${base.listenerCount("runtime state")} Listener.`);
+                break;
+            case "ChargingState":
+                base.removeAllListeners("charging state");
+                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} removed. Total ${base.listenerCount("charging state")} Listener.`);
+                break;
+            case "WifiRssi":
+                base.removeAllListeners("wifi rssi");
+                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} removed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                break;
+            case "RawDevicePropertyChanged":
+                base.removeAllListeners("raw device property changed");
+                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw device property changed")} Listener.`);
                 break;
         }
     }
@@ -226,6 +301,14 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
                 return base.listenerCount("property changed");
             case "RawPropertyChanged":
                 return base.listenerCount("raw property changed");
+            case "RuntimeState":
+                return base.listenerCount("runtime state");
+            case "ChargingState":
+                return base.listenerCount("charging state");
+            case "WifiRssi":
+                return base.listenerCount("wifi rssi");
+            case "RawDevicePropertyChanged":
+                return base.listenerCount("raw device property changed");
         }
         return -1;
     }
@@ -235,14 +318,14 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
      * @param guardMode The new guard mode as GuardMode.
      * @param currentMode The new current mode as GuardMode.
      */
-    onStationGuardModeChanged(station, guardMode, currentMode) {
+    onStationGuardModeChanged(station, guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.skipNextModeChangeEvent[station.getSerial()] == true) {
                 this.api.logDebug("Event skipped due to locally forced changeGuardMode.");
                 this.skipNextModeChangeEvent[station.getSerial()] = false;
             }
             else {
-                this.api.logDebug("Station serial: " + station.getSerial() + " ::: Guard Mode: " + guardMode + " ::: Current Mode: " + currentMode);
+                this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | guard mode: ${guardMode}`);
                 yield this.api.updateGuardModeBase(station.getSerial());
             }
         });
@@ -256,7 +339,7 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
     onPropertyChanged(station, name, value) {
         return __awaiter(this, void 0, void 0, function* () {
             if (name != "guardMode" && name != "currentMode") {
-                this.api.logDebug("Station serial: " + station.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
+                this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | name: ${name} | value: ${value.value}`);
             }
         });
     }
@@ -270,9 +353,25 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
     onRawPropertyChanged(station, type, value, modified) {
         return __awaiter(this, void 0, void 0, function* () {
             if (type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665) {
-                this.api.logDebug("Station serial: " + station.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
+                this.api.logDebug(`Event "RawPropertyChanged": base: ${station.getSerial()} | type: ${type} | value: ${value}`);
             }
         });
+    }
+    onStationRuntimeState(station, channel, batteryLevel, temperature, modified) {
+        this.api.logDebug(`Event "RuntimeState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
+        this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature, modified);
+    }
+    onStationChargingState(station, channel, chargeType, batteryLevel, modified) {
+        this.api.logDebug(`Event "ChargingState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
+        this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel, modified);
+    }
+    onStationWifiRssi(station, channel, rssi, modified) {
+        this.api.logDebug(`Event "WifiRssi": base: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
+        this.devices.updateWifiRssi(station.getSerial(), channel, rssi, modified);
+    }
+    onRawDevicePropertyChanged(deviceSerial, values) {
+        this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
+        this.devices.updateDeviceProperties(deviceSerial, values);
     }
 }
 exports.Bases = Bases;

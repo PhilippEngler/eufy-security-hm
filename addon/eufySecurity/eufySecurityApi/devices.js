@@ -32,7 +32,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     loadDevices() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.httpService.updateDeviceInfo();
                 this.resDevices = this.httpService.getDevices();
                 var deviceSerial;
                 var device;
@@ -60,10 +59,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                                 else if (!device.isIndoorCamera() && !device.isFloodLight() && !device.isDoorbell() && device.isSoloCameras()) {
                                     device = new http_1.SoloCamera(this.httpService, this.resDevices[deviceSerial]);
                                 }
-                                /*this.addEventListener(device, "PropertyChanged");
+                                this.addEventListener(device, "PropertyChanged");
                                 this.addEventListener(device, "RawPropertyChanged");
                                 this.addEventListener(device, "MotionDetected");
-                                this.addEventListener(device, "PersonDetected");*/
+                                this.addEventListener(device, "PersonDetected");
                                 this.devices[device.getSerial()] = device;
                             }
                         }
@@ -83,7 +82,14 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * Close all P2P connection for all devices.
      */
     closeP2PConnections() {
-        return;
+        if (this.resDevices != null) {
+            for (var deviceSerial in this.resDevices) {
+                this.addEventListener(this.devices[deviceSerial], "PropertyChanged");
+                this.addEventListener(this.devices[deviceSerial], "RawPropertyChanged");
+                this.addEventListener(this.devices[deviceSerial], "MotionDetected");
+                this.addEventListener(this.devices[deviceSerial], "PersonDetected");
+            }
+        }
     }
     /**
      * Returns all Devices.
@@ -108,11 +114,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             case "MotionDetected":
                 device.on("motion detected", (device, state) => this.onMotionDetected(device, state));
-                this.api.logDebug(`Listener 'MotionDetected' for device ${device.getSerial()} removed. Total ${device.listenerCount("motion detected")} Listener.`);
+                this.api.logDebug(`Listener 'MotionDetected' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
                 device.on("person detected", (device, state, person) => this.onPersonDetected(device, state, person));
-                this.api.logDebug(`Listener 'PersonDetected' for device ${device.getSerial()} removed. Total ${device.listenerCount("person detected")} Listener.`);
+                this.api.logDebug(`Listener 'PersonDetected' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
                 break;
         }
     }
@@ -149,13 +155,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onPropertyChanged(device, name, value) {
         return __awaiter(this, void 0, void 0, function* () {
-            //this.emit("station guard mode", station, guardMode, currentMode);
-            this.api.logDebug("Device serial: " + device.getSerial() + " ::: Name: " + name + " ::: Value: " + value.value);
-            /*if(name == "pictureUrl")
-            {
-                await this.api.getLibrary();
-            }*/
-            //await this.api.getGuardModeBase(station.getSerial());
+            //this.emit("device property changed", device, name, value);
+            this.api.logDebug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value.value}`);
         });
     }
     /**
@@ -167,7 +168,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onRawPropertyChanged(device, type, value, modified) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.api.logInfo("Device serial: " + device.getSerial() + " ::: Type: " + type + " ::: Value: " + value + " ::: Modified: " + modified);
+            //this.emit("device raw property changed", device, type, value, modified);
+            this.api.logDebug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value} | modified: ${modified}`);
         });
     }
     /**
@@ -177,7 +179,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onMotionDetected(device, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.api.logInfo("Device serial: " + device.getSerial() + " ::: State: " + state);
+            this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
         });
     }
     /**
@@ -188,10 +190,64 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onPersonDetected(device, state, person) {
         return __awaiter(this, void 0, void 0, function* () {
-            //this.emit("station guard mode", station, guardMode, currentMode);
-            this.api.logInfo("Device serial: " + device.getSerial() + " ::: State: " + state + " ::: Person: " + person);
-            //await this.api.getGuardModeBase(station.getSerial());
+            this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
         });
+    }
+    getDeviceByStationAndChannel(baseSerial, channel) {
+        for (const device of Object.values(this.devices)) {
+            if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial)) {
+                return device;
+            }
+        }
+        this.api.logError(`No device with channel ${channel} found on station with serial number: ${baseSerial}.`);
+        throw new Error("Error");
+    }
+    updateBatteryValues(baseSerial, channel, batteryLevel, temperature, modified) {
+        try {
+            const device = this.getDeviceByStationAndChannel(baseSerial, channel);
+            const metadataBattery = device.getPropertyMetadata(http_1.PropertyName.DeviceBattery);
+            if (metadataBattery !== undefined) {
+                device.updateRawProperty(metadataBattery.key, { value: batteryLevel.toString(), timestamp: modified });
+            }
+            const metadataBatteryTemperature = device.getPropertyMetadata(http_1.PropertyName.DeviceBatteryTemp);
+            if (metadataBatteryTemperature !== undefined) {
+                device.updateRawProperty(metadataBatteryTemperature.key, { value: temperature.toString(), timestamp: modified });
+            }
+        }
+        catch (error) {
+            this.api.logError(`Station runtime state error (station: ${baseSerial} channel: ${channel})`, error);
+        }
+    }
+    updateChargingState(baseSerial, channel, chargeType, batteryLevel, modified) {
+        try {
+            const device = this.getDeviceByStationAndChannel(baseSerial, channel);
+            const metadataBattery = device.getPropertyMetadata(http_1.PropertyName.DeviceBattery);
+            if (metadataBattery !== undefined) {
+                device.updateRawProperty(metadataBattery.key, { value: batteryLevel.toString(), timestamp: modified });
+            }
+            const metadataChargingStatus = device.getPropertyMetadata(http_1.PropertyName.DeviceChargingStatus);
+            if (metadataChargingStatus !== undefined) {
+                device.updateRawProperty(metadataChargingStatus.key, { value: chargeType.toString(), timestamp: modified });
+            }
+        }
+        catch (error) {
+            this.api.logError(`Station charging state error (station: ${baseSerial} channel: ${channel})`, error);
+        }
+    }
+    updateWifiRssi(baseSerial, channel, rssi, modified) {
+        try {
+            const device = this.getDeviceByStationAndChannel(baseSerial, channel);
+            const metadataWifiRssi = device.getPropertyMetadata(http_1.PropertyName.DeviceWifiRSSI);
+            if (metadataWifiRssi !== undefined) {
+                device.updateRawProperty(metadataWifiRssi.key, { value: rssi.toString(), timestamp: modified });
+            }
+        }
+        catch (error) {
+            this.api.logError(`Station wifi rssi error (station: ${baseSerial} channel: ${channel})`, error);
+        }
+    }
+    updateDeviceProperties(deviceSerial, values) {
+        this.devices[deviceSerial].updateRawProperties(values);
     }
 }
 exports.Devices = Devices;

@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
+exports.validValue = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const removeLastChar = function (text, char) {
@@ -128,3 +128,13 @@ const parseValue = function (metadata, value) {
     return value;
 };
 exports.parseValue = parseValue;
+const validValue = function (metadata, value) {
+    if (metadata.type === "number") {
+        const numberMetadata = metadata;
+        const numericValue = value;
+        if ((numberMetadata.min !== undefined && numberMetadata.min > numericValue) || (numberMetadata.max !== undefined && numberMetadata.max < numericValue) || (numberMetadata.states !== undefined && numberMetadata.states[numericValue] === undefined)) {
+            throw new error_1.InvalidPropertyValueError(`Value "${numericValue}" isn't a valid value for property "${numberMetadata.name}"`);
+        }
+    }
+};
+exports.validValue = validValue;

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isPrivateIp = exports.ESLInnerCommand = exports.ESLCommand = exports.P2PConnectionType = exports.ControlResponse = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.VideoCodec = exports.ErrorCode = exports.AudioCodec = exports.CommandType = exports.P2PClientProtocol = void 0;
+exports.isPrivateIp = exports.AlarmEvent = exports.PanTiltDirection = exports.ESLInnerCommand = exports.ESLCommand = exports.P2PConnectionType = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.VideoCodec = exports.ErrorCode = exports.AudioCodec = exports.CommandType = exports.P2PClientProtocol = void 0;
 var session_1 = require("./session");
 Object.defineProperty(exports, "P2PClientProtocol", { enumerable: true, get: function () { return session_1.P2PClientProtocol; } });
 var types_1 = require("./types");
@@ -11,9 +11,11 @@ Object.defineProperty(exports, "VideoCodec", { enumerable: true, get: function (
 Object.defineProperty(exports, "WatermarkSetting1", { enumerable: true, get: function () { return types_1.WatermarkSetting1; } });
 Object.defineProperty(exports, "WatermarkSetting2", { enumerable: true, get: function () { return types_1.WatermarkSetting2; } });
 Object.defineProperty(exports, "WatermarkSetting3", { enumerable: true, get: function () { return types_1.WatermarkSetting3; } });
-Object.defineProperty(exports, "ControlResponse", { enumerable: true, get: function () { return types_1.ControlResponse; } });
+Object.defineProperty(exports, "WatermarkSetting4", { enumerable: true, get: function () { return types_1.WatermarkSetting4; } });
 Object.defineProperty(exports, "P2PConnectionType", { enumerable: true, get: function () { return types_1.P2PConnectionType; } });
 Object.defineProperty(exports, "ESLCommand", { enumerable: true, get: function () { return types_1.ESLCommand; } });
 Object.defineProperty(exports, "ESLInnerCommand", { enumerable: true, get: function () { return types_1.ESLInnerCommand; } });
+Object.defineProperty(exports, "PanTiltDirection", { enumerable: true, get: function () { return types_1.PanTiltDirection; } });
+Object.defineProperty(exports, "AlarmEvent", { enumerable: true, get: function () { return types_1.AlarmEvent; } });
 var utils_1 = require("./utils");
 Object.defineProperty(exports, "isPrivateIp", { enumerable: true, get: function () { return utils_1.isPrivateIp; } });

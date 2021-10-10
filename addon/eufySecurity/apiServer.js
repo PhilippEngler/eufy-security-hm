@@ -105,8 +105,16 @@ class ApiServer {
             if (request.method == "GET") {
                 if (url.length > 1) {
                     switch (url[1]) {
+                        case "getServiceState":
+                            responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
+                            break;
                         case "getDevices":
                             responseString = yield api.getDevices();
+                            break;
+                        case "getDevice":
+                            if (url.length == 3) {
+                                responseString = yield api.getDevice(url[2]);
+                            }
                             break;
                         case "getBases":
                             responseString = yield api.getBases();

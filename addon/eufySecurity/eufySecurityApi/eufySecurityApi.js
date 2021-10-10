@@ -22,6 +22,7 @@ class EufySecurityApi {
      * Create the api object.
      */
     constructor() {
+        this.serviceState = "init";
         this.logger = new logging_1.Logger(this);
         this.config = new config_1.Config(this.logger);
         this.httpApiAuth = http_1.AuthResult.ERROR;
@@ -45,14 +46,19 @@ class EufySecurityApi {
                     yield this.httpService.updateDeviceInfo();
                     this.bases = new bases_1.Bases(this, this.httpService);
                     this.devices = new devices_1.Devices(this, this.httpService);
+                    this.bases.setDevices(this.devices);
                     yield this.loadData();
                     this.setupScheduledTasks();
+                    this.serviceState = "ok";
                 }
                 else {
                     this.logError(`Login to eufy failed.`);
                 }
             }
         });
+    }
+    getServiceState() {
+        return this.serviceState;
     }
     /**
      * Close all P2P connections from all bases and all devices
@@ -80,6 +86,7 @@ class EufySecurityApi {
                 this.setLastConnectionInfo(false);
             }
             try {
+                yield this.updateDeviceData();
                 yield this.devices.loadDevices();
             }
             catch (_b) {
@@ -89,12 +96,53 @@ class EufySecurityApi {
         });
     }
     /**
+     * Create a JSON string for a given device.
+     * @param device The device the JSON string created for.
+     */
+    makeJsonForDevice(device) {
+        var json = `{"device_id":"${device.getSerial()}",`;
+        json += `"eufy_device_id":"${device.getId()}",`;
+        json += `"device_type":"${device.getDeviceTypeString()}",`;
+        json += `"model":"${device.getModel()}",`;
+        json += `"name":"${device.getName()}",`;
+        json += `"hardware_Version":"${device.getHardwareVersion()}",`;
+        json += `"software_version":"${device.getSoftwareVersion()}",`;
+        json += `"base_serial":"${device.getStationSerial()}",`;
+        json += `"enabled":"${device.getPropertyValue(http_1.PropertyName.DeviceEnabled) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceEnabled).value}",`;
+        json += `"wifi_rssi":"${device.getPropertyValue(http_1.PropertyName.DeviceWifiRSSI) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceWifiRSSI).value}",`;
+        json += `"wifi_rssi_signal_level":"${device.getPropertyValue(http_1.PropertyName.DeviceWifiSignalLevel) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceWifiSignalLevel).value}",`;
+        if (device instanceof http_1.Camera) {
+            json += `"battery_charge":"${device.getPropertyValue(http_1.PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceBattery).value}",`;
+            json += `"battery_temperature":"${device.getPropertyValue(http_1.PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceBatteryTemp).value}",`;
+            json += `"battery_low":"${device.getPropertyValue(http_1.PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceBatteryLow).value}",`;
+            json += `"battery_charging":"${device.getPropertyValue(http_1.PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceChargingStatus).value}",`;
+            json += `"watermark":"${device.getPropertyValue(http_1.PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceWatermark).value}",`;
+            json += `"last_camera_image_url":"${device.getPropertyValue(http_1.PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DevicePictureUrl).value}",`;
+            json += `"last_camera_image_time":"${device.getPropertyValue(http_1.PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DevicePictureUrl).timestamp / 1000}",`;
+            json += `"state":"${device.getPropertyValue(http_1.PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceState).value}",`;
+            json += `"motion_detection":"${device.getPropertyValue(http_1.PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceMotionDetection).value}",`;
+            json += `"led_enabled":"${device.getPropertyValue(http_1.PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceStatusLed).value}",`;
+            json += `"auto_night_vision_enabled":"${device.getPropertyValue(http_1.PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceAutoNightvision).value}",`;
+            json += `"anti_theft_detection_enabled":"${device.getPropertyValue(http_1.PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(http_1.PropertyName.DeviceAntitheftDetection).value}"}`;
+        }
+        else if (device instanceof http_1.IndoorCamera) {
+        }
+        else if (device instanceof http_1.FloodlightCamera) {
+        }
+        else if (device instanceof http_1.DoorbellCamera) {
+        }
+        else if (device instanceof http_1.SoloCamera) {
+        }
+        return json;
+    }
+    /**
      * Returns a JSON-Representation of all Devices.
      */
     getDevices() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (this.devices) {
+                    yield this.updateDeviceData();
                     yield this.devices.loadDevices();
                     var devices = this.devices.getDevices();
                     var json = "";
@@ -103,25 +151,7 @@ class EufySecurityApi {
                             if (json.endsWith("}")) {
                                 json += ",";
                             }
-                            if (devices[deviceSerial].isCamera() && !devices[deviceSerial].isSoloCameras() && !devices[deviceSerial].isIndoorCamera() && !devices[deviceSerial].isDoorbell() && !devices[deviceSerial].isWiredDoorbell() && !devices[deviceSerial].isFloodLight()) {
-                                var dev;
-                                dev = devices[deviceSerial];
-                                json += `{"device_id":"${dev.getSerial()}",`;
-                                json += `"eufy_device_id":"${dev.getId()}",`;
-                                json += `"device_type":"${dev.getDeviceTypeString()}",`;
-                                json += `"model":"${dev.getModel()}",`;
-                                json += `"name":"${dev.getName()}",`;
-                                json += `"hardware_Version":"${dev.getHardwareVersion()}",`;
-                                json += `"software_version":"${dev.getSoftwareVersion()}",`;
-                                json += `"base_serial":"${dev.getStationSerial()}",`;
-                                json += `"battery_charge":"${dev.getBatteryValue().value}",`;
-                                json += `"battery_temperature":"${dev.getBatteryTemperature().value}",`;
-                                json += `"wifi_rssi":"${(dev.getWifiRssi() != undefined) ? dev.getWifiRssi().value : "0"}",`;
-                                json += `"watermark":"${(dev.getWatermark() != undefined) ? dev.getWatermark().value : "0"}",`;
-                                json += `"last_camera_image_url":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().value : ""}",`;
-                                json += `"last_camera_image_time":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().timestamp / 1000 : 0}"`;
-                                json += `}`;
-                            }
+                            json += this.makeJsonForDevice(devices[deviceSerial]);
                         }
                         json = `{"success":true,"data":[${json}]}`;
                         this.setLastConnectionInfo(true);
@@ -143,11 +173,30 @@ class EufySecurityApi {
             return json;
         });
     }
+    getDevice(deviceSerial) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.updateDeviceData();
+            yield this.devices.loadDevices();
+            var devices = this.devices.getDevices();
+            var json = "";
+            var device;
+            try {
+                device = devices[deviceSerial];
+                json = `{"success":true,"data":[${this.makeJsonForDevice(devices[deviceSerial])}]}`;
+                this.setLastConnectionInfo(true);
+            }
+            catch (_a) {
+                json = `{"success":false,"reason":"No devices found."}`;
+                this.setLastConnectionInfo(false);
+            }
+            return json;
+        });
+    }
     /**
-     * Create a JSON STring for a given base.
+     * Create a JSON string for a given base.
      * @param base The base the JSON string created for.
      */
-    makeJSONforBase(base) {
+    makeJsonForBase(base) {
         var json = `{"base_id":"${base.getSerial()}",`;
         json += `"eufy_device_id":"${base.getId()}",`;
         json += `"device_type":"${base.getDeviceTypeString()}",`;
@@ -179,7 +228,7 @@ class EufySecurityApi {
                             if (json.endsWith("}")) {
                                 json += ",";
                             }
-                            json += this.makeJSONforBase(base);
+                            json += this.makeJsonForBase(base);
                         }
                         json = `{"success":true,"data":[${json}]}`;
                         this.setLastConnectionInfo(true);
@@ -250,7 +299,7 @@ class EufySecurityApi {
                             if (json.endsWith("}")) {
                                 json += ",";
                             }
-                            json += this.makeJSONforBase(base);
+                            json += this.makeJsonForBase(base);
                             if (mode == -1) {
                                 mode = base.getGuardMode().value;
                             }
@@ -334,7 +383,7 @@ class EufySecurityApi {
                     var base;
                     base = bases[stationSerial];
                     if (base) {
-                        json = `{"success":true,"data":["${this.makeJSONforBase(base)}"]}`;
+                        json = `{"success":true,"data":["${this.makeJsonForBase(base)}"]}`;
                         this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode().value));
                         this.setLastConnectionInfo(true);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
@@ -510,6 +559,7 @@ class EufySecurityApi {
             var json = "";
             try {
                 if (this.devices) {
+                    yield this.updateDeviceData();
                     yield this.devices.loadDevices();
                     var devices = this.devices.getDevices();
                     var dev;
@@ -707,6 +757,7 @@ class EufySecurityApi {
      */
     getConfig() {
         var json = `{"success":true,"data":[{`;
+        json += `"configfile_version":"${this.config.getConfigFileVersion()}",`;
         json += `"username":"${this.config.getEmailAddress()}",`;
         json += `"password":"${this.config.getPassword()}",`;
         json += `"api_http_active":"${this.config.getApiUseHttp()}",`;
@@ -1126,6 +1177,12 @@ class EufySecurityApi {
      */
     setupScheduledTasks() {
         this.logger.logInfoBasic(`Setting up scheduled tasks...`);
+        if (this.taskUpdateDeviceInfo) {
+            this.logger.logInfoBasic(`  updateDeviceData already scheduled, remove scheduling...`);
+            clearInterval(this.taskUpdateDeviceInfo);
+        }
+        this.taskUpdateDeviceInfo = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.updateDeviceData(); }), (5 * 60 * 1000));
+        this.logger.logInfoBasic(`  updateDeviceData scheduled (runs every 5 minutes).`);
         if (this.config.getApiUseUpdateStateIntervall()) {
             if (this.taskUpdateState) {
                 this.logger.logInfoBasic(`  getState already scheduled, remove scheduling...`);
@@ -1154,6 +1211,10 @@ class EufySecurityApi {
      * Clear all scheduled tasks.
      */
     clearScheduledTasks() {
+        if (this.taskUpdateDeviceInfo) {
+            this.logger.logInfoBasic(`Remove scheduling for updateDeviceDataData.`);
+            clearInterval(this.taskUpdateDeviceInfo);
+        }
         if (this.taskUpdateState) {
             this.logger.logInfoBasic(`Remove scheduling for getState.`);
             clearInterval(this.taskUpdateState);
@@ -1173,7 +1234,11 @@ class EufySecurityApi {
             this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
             clearInterval(this.taskUpdateLinks);
         }
-        if (name == "getState") {
+        if (name == "updateDeviceData") {
+            task = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.updateDeviceData(); }), (5 * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+        }
+        else if (name == "getState") {
             task = setInterval(() => __awaiter(this, void 0, void 0, function* () { yield this.setScheduleState(); }), (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
             this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
         }
@@ -1213,6 +1278,14 @@ class EufySecurityApi {
         });
     }
     /**
+     * The method called when update device data is called.
+     */
+    updateDeviceData() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.bases.updateDeviceData();
+        });
+    }
+    /**
      * Return the version of this API.
      */
     getApiVersion() {
@@ -1223,14 +1296,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "1.5.2";
+        return "1.5.3";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "0.8.3";
+        return "1.1.1";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;
