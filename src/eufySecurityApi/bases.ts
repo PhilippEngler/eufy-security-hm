@@ -43,7 +43,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         try
         {
-            await this.httpService.updateDeviceInfo();
             this.resBases = this.httpService.getHubs();
             
             if(this.resBases != null)
@@ -120,13 +119,13 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     public async updateDeviceData() : Promise<void>
     {
         await this.httpService.updateDeviceInfo().catch(error => {
-            this.api.logError("Error during API data refreshing", error);
+            this.api.logError("Error occured at updateDeviceData while API data refreshing.", error);
         });
         Object.values(this.bases).forEach(async (station: Station) => {
             if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
             {
                 await station.getCameraInfo().catch(error => {
-                    this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                    this.api.logError(`Error occured at updateDeviceData while station ${station.getSerial()} p2p data refreshing.`, error);
                 });
             }
         });

@@ -31,7 +31,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         try
         {
-            await this.httpService.updateDeviceInfo();
             this.resDevices = this.httpService.getDevices();
             var deviceSerial : string;
             var device : Device;

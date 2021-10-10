@@ -110,6 +110,7 @@ export class EufySecurityApi
         }
         try
         {
+            await this.updateDeviceData();
             await this.devices.loadDevices();
         }
         catch
@@ -180,6 +181,7 @@ export class EufySecurityApi
         {
             if(this.devices)
             {
+                await this.updateDeviceData();
                 await this.devices.loadDevices();
             
                 var devices = this.devices.getDevices();
@@ -223,6 +225,7 @@ export class EufySecurityApi
 
     public async getDevice(deviceSerial : string) : Promise<string>
     {
+        await this.updateDeviceData();
         await this.devices.loadDevices();
 
         var devices = this.devices.getDevices();
@@ -703,6 +706,7 @@ export class EufySecurityApi
         {
             if(this.devices)
             {
+                await this.updateDeviceData();
                 await this.devices.loadDevices();
 
                 var devices = this.devices.getDevices();
