@@ -51,4 +51,6 @@ and the community of the HomeMatic-Forum [https://www.homematic-forum.de](https:
 
 The addons website is build on bootstrap [https://getbootstrap.com/](https://getbootstrap.com/).
 
+Also I would like to say thank the people sponsoring this project. I appreciate that. Thank you very much.
+
 eufy, eufy security, ELV, eq-3, CCU, HomeMatic, homematic ip and RaspberryMatic are trademarks of there respective owners.
