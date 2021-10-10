@@ -1,4 +1,21 @@
 {
+  "name": "eufy-security-hm",
+  "version": "1.5.3",
+  "description": "eufy Security AddOn for HomeMatic",
+  "main": "apiServer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "eufy",
+    "security",
+    "addon",
+    "homematic",
+    "ccu",
+    "raspberrymatic"
+  ],
+  "author": "PhilippEngler",
+  "license": "MIT",
   "dependencies": {
     "@cospired/i18n-iso-languages": "^3.1.0",
     "axios": "^0.21.4",
