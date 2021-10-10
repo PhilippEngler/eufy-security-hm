@@ -83,6 +83,22 @@
 				<span class="text-muted">&copy; 2020-2021 Philipp Engler</span>
 			</div>
 		</footer>
+
+		<div class="modal fade" id="modalNotImplemented" role="alert" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="lblModalNotImplemented" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header alert-primary">
+						<h5 class="modal-title" id="lblModalTitle">Funktion noch nicht implementiert.</h5>
+					</div>
+					<div class="modal-body">
+						Diese Funktionalität ist derzeit noch nicht implementiert und wird in einer der nächsten Versionen verfügbar sein.
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		
 		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
 		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
@@ -263,13 +279,16 @@
 										}
 										bases += `<div class="col">`;
 										bases += `<div class="card mb-3">`;
-										bases += `<h5 class="card-header">${myObj.data[base].name}</h5>`;
+										bases += `<div class="card-header">`;
+										bases += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[base].name}</h5></div>`;
+										bases += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showBaseSettings('${myObj.data[base].base_id}')"></i></h5></span></div>`;
+										bases += `</div>`
 										bases += `<div class="row no-gutters">`;
 										bases += `<div class="col-md-4">${imagepath}</div>`;
 										bases += `<div class="col-md-8">`;
 										bases += `<div class="card-body" style="margin-left: -1rem">`;
 										bases += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-										bases += `<p class="card-text">${myObj.data[base].base_id}<br /><span class="text-nowrap"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;${myObj.data[base].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
+										bases += `<p class="card-text">${myObj.data[base].base_id}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${myObj.data[base].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
 										bases += `</div>`;
 										bases += `</div>`;
 										bases += `</div>`;
@@ -364,9 +383,9 @@
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Kamera">`;
 												type = "Kamera";
 										}
-										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "undefined" && myObj.data[object].last_camera_image_time != "0")
+										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "0")
 										{
-											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000));
+											lastVideo = `Letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000))}`;
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
 										}
 										else
@@ -377,19 +396,23 @@
 										cams += `<div class="card">`;
 										cams += `<div class="card-header">`;
 										cams += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[object].name}</h5></div>`;
-										cams += `<div style="text-align:right;"><h5 class="mb-0"><i class="${myObj.data[object].wifi_rssi < -65 ? "bi-wifi-1" : myObj.data[object].wifi_rssi < -32 ? "bi-wifi-2" : myObj.data[object].wifi_rssi < 0 ? "bi-wifi" : "bi-wifi-off"}" title="WiFi Empfangsstärke: ${myObj.data[object].wifi_rssi}dB"></i></h5></div>`;
+										cams += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">`;
+										cams += `<i class="${myObj.data[object].wifi_rssi_signal_level == 0 ? "bi-reception-0" : myObj.data[object].wifi_rssi_signal_level == 1 ? "bi-reception-1" : myObj.data[object].wifi_rssi_signal_level == 2 ? "bi-reception-2" : myObj.data[object].wifi_rssi_signal_level == 3 ? "bi-reception-3" : myObj.data[object].wifi_rssi_signal_level == 4 ? "bi-reception-4" : "bi-wifi-off"}" title="WiFi Empfangsstärke: ${myObj.data[object].wifi_rssi}dB"></i>`;
+										cams += `&nbsp;&nbsp;`;
+										cams += `<i class="text-muted bi-gear" title="Einstellungen" onclick="showDeviceSettings('${myObj.data[object].device_id}')"></i>`;
+										cams += `</h5></span></div>`;
 										cams += `</div>`
 										cams += `<div class="row no-gutters">`;
 										cams += `<div class="col-md-4">${imagepath}</div>`;
 										cams += `<div class="col-md-8">`;
 										cams += `<div class="card-body" style="margin-left: -1rem">`;
 										cams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-										cams += `<p class="card-text">${myObj.data[object].device_id}<br /><span class="text-nowrap"><i class="bi-gear" title="Firmwareversion"></i> ${myObj.data[object].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_charge < 10 ? "bi-battery" : myObj.data[object].battery_charge < 50 ? "bi-battery-half" : "bi-battery-full"}" title="Ladezustand des Akkus"></i>&nbsp;${myObj.data[object].battery_charge}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_temperature < 0 ? "bi-thermometer-low" : myObj.data[object].battery_temperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp${myObj.data[object].battery_temperature}&deg;C</span></p>`;
+										cams += `<p class="card-text">${myObj.data[object].device_id}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i> ${myObj.data[object].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_charging == 1 ? "bi-battery-charging" : myObj.data[object].battery_charge < 5 ? "bi-battery" : myObj.data[object].battery_charge < 50 ? "bi-battery-half" : "bi-battery-full"} ${myObj.data[object].battery_charge < 5 ? "text-danger" : myObj.data[object].battery_charge < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${myObj.data[object].battery_charge}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_temperature < 0 ? "bi-thermometer-low" : myObj.data[object].battery_temperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp${myObj.data[object].battery_temperature}&deg;C</span></p>`;
 										cams += `</div>`;
 										cams += `</div>`;
 										cams += `</div>`;
 										cams += `<div class="card-footer">`;
-										cams += `<small class="text-muted">Letzte Aufnahme: ${lastVideo}</small>`;
+										cams += `<small class="text-muted">${lastVideo}</small>`;
 										cams += `</div>`;
 										cams += `</div>`;
 										cams += `</div>`;
@@ -410,7 +433,7 @@
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Innenkamera">`;
 												type = "Innenkamera";
 										}
-										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "undefined")
+										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a")
 										{
 											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000));
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
@@ -455,7 +478,7 @@
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Flutlichtkamera">`;
 												type = "Flutlichtkamera";
 										}
-										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "undefined")
+										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a")
 										{
 											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000));
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
@@ -537,6 +560,16 @@
 			function makeDateTimeString(dateTime)
 			{
 				return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}:${dateTime.getSeconds().toString().padStart(2,'0')}`);
+			}
+
+			function showDeviceSettings(deviceId)
+			{
+				$('#modalNotImplemented').modal('show');
+			}
+
+			function showBaseSettings(baseId)
+			{
+				$('#modalNotImplemented').modal('show');
 			}
 		</script>
 	</body>
