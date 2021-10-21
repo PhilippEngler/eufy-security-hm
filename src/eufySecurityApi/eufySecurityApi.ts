@@ -103,9 +103,9 @@ export class EufySecurityApi
         {
             await this.bases.loadBases();
         }
-        catch
+        catch (e : any)
         {
-            this.logError("Error occured at loadData() -> loadBases.");
+            this.logError("Error occured at loadData() -> loadBases. Error: " + e.message);
             this.setLastConnectionInfo(false);
         }
         try
@@ -113,9 +113,9 @@ export class EufySecurityApi
             await this.updateDeviceData();
             await this.devices.loadDevices();
         }
-        catch
+        catch (e : any)
         {
-            this.logError("Error occured at loadData() -> loadDevices.");
+            this.logError("Error occured at loadData() -> loadDevices. Error: " + e.message);
             this.setLastConnectionInfo(false);
         }
     }
@@ -337,7 +337,8 @@ export class EufySecurityApi
 
                 var updateNeed = false;
 
-                if(p2p_did != base.getP2pDid() || dsk_key != await base.getDSKKey() || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress().value)
+                //if(p2p_did != base.getP2pDid() || dsk_key != await base.getDSKKey() || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress().value)
+                if(p2p_did != base.getP2pDid() || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress().value)
                 {
                     updateNeed = true;
                 }
@@ -349,7 +350,8 @@ export class EufySecurityApi
 
                 if(updateNeed == true)
                 {
-                    this.config.setP2PData(stationSerial, base.getP2pDid(), await base.getDSKKey(), base.getDSKKeyExpiration().toString(), base.getActorId(), String(base.getLANIPAddress().value), "");
+                    //this.config.setP2PData(stationSerial, base.getP2pDid(), await base.getDSKKey(), base.getDSKKeyExpiration().toString(), base.getActorId(), String(base.getLANIPAddress().value), "");
+                    this.config.setP2PData(stationSerial, base.getP2pDid(), "", "", base.getActorId(), String(base.getLANIPAddress().value), "");
                 }
             }
         }
@@ -948,6 +950,18 @@ export class EufySecurityApi
         else
         {
             return 0;
+        }
+    }
+
+    public getLocalIpAddressForBase(baseSerial : string) : string
+    {
+        try
+        {
+            return this.config.getP2PData_base_ip_address(baseSerial);
+        }
+        catch
+        {
+            return "";
         }
     }
 
@@ -1640,7 +1654,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.5.3";
+        return "1.5.4";
     }
 
     /**
@@ -1649,6 +1663,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "1.1.1";
+        return "1.2.0";
     }
 }
