@@ -3,18 +3,18 @@ import { Readable } from "stream";
 
 import { HTTPApi } from "./api";
 import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty } from "./types";
-import { DskKeyResponse, HubResponse, ResultResponse } from "./models"
+import { HubResponse } from "./models"
 import { ParameterHelper } from "./parameter";
 import { IndexedProperty, PropertyMetadataAny, PropertyValue, PropertyValues, RawValue, RawValues, StationEvents, PropertyMetadataNumeric, PropertyMetadataBoolean } from "./interfaces";
 import { isGreaterEqualMinVersion, isNotificationSwitchMode, switchNotificationMode } from "./utils";
-import { DeviceSerial, StreamMetadata } from "./../p2p/interfaces";
+import { StreamMetadata } from "./../p2p/interfaces";
 import { P2PClientProtocol } from "../p2p/session";
 import { CommandType, ErrorCode, ESLInnerCommand, P2PConnectionType, PanTiltDirection, VideoCodec, WatermarkSetting1, WatermarkSetting2, WatermarkSetting3, WatermarkSetting4 } from "../p2p/types";
 import { Address, CmdCameraInfoResponse, CommandResult, ESLStationP2PThroughData } from "../p2p/models";
 import { Device, Lock } from "./device";
 import { convertTimestampMs } from "../push/utils";
 import { encodeLockPayload, encryptLockAESData, generateLockAESKey, getLockVectorBytes, isPrivateIp } from "../p2p/utils";
-import { InvalidCommandValueError, InvalidPropertyValueError, NotConnectedError, NotSupportedError, WrongStationError } from "../error";
+import { InvalidCommandValueError, InvalidPropertyValueError, NotSupportedError, RTSPPropertyNotEnabled, WrongStationError } from "../error";
 import { PushMessage } from "../push/models";
 import { CusPushEvent } from "../push/types";
 import { InvalidPropertyError, LivestreamAlreadyRunningError, LivestreamNotRunningError, PropertyNotSupportedError } from "./error";
@@ -30,21 +30,19 @@ export class Station extends TypedEmitter<StationEvents> {
     private rawStation: HubResponse;
     private log: Logger;
 
-    private dskKey = "";
-    private dskExpiration: Date | null = null;
-
-    private p2pSession: P2PClientProtocol | null = null;
+    private p2pSession!: P2PClientProtocol;
     private properties: PropertyValues = {};
     private rawProperties: RawValues = {};
     private ready = false;
 
     private currentDelay = 0;
     private reconnectTimeout?: NodeJS.Timeout;
+    private terminating = false;
 
     private p2pConnectionType = P2PConnectionType.ONLY_LOCAL;
 
-    public static readonly CHANNEL:number = 255;
-    public static readonly CHANNEL_INDOOR:number = 1000;
+    public static readonly CHANNEL: number = 255;
+    public static readonly CHANNEL_INDOOR: number = 1000;
 
     constructor(eufySecurityApi: EufySecurityApi, api: HTTPApi, station: HubResponse) {
         super();
@@ -53,8 +51,32 @@ export class Station extends TypedEmitter<StationEvents> {
         this.rawStation = station;
         this.log = api.getLog();
         this.update(this.rawStation);
+        this.connectToP2P();
+    }
+
+    connectToP2P()
+    {
+        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress().value as string, this.eufySecurityApi.getUDPLocalPortForBase(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api);
+        this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
+        this.p2pSession.on("close", () => this.onDisconnect());
+        this.p2pSession.on("timeout", () => this.onTimeout());
+        this.p2pSession.on("command", (result: CommandResult) => this.onCommandResponse(result));
+        this.p2pSession.on("alarm mode", (mode: AlarmMode) => this.onAlarmMode(mode));
+        this.p2pSession.on("camera info", (cameraInfo: CmdCameraInfoResponse) => this.onCameraInfo(cameraInfo));
+        this.p2pSession.on("download started", (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => this.onStartDownload(channel, metadata, videoStream, audioStream));
+        this.p2pSession.on("download finished", (channel: number) => this.onFinishDownload(channel));
+        this.p2pSession.on("livestream started", (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => this.onStartLivestream(channel, metadata, videoStream, audioStream));
+        this.p2pSession.on("livestream stopped", (channel: number) => this.onStopLivestream(channel));
+        this.p2pSession.on("wifi rssi", (channel: number, rssi: number) => this.onWifiRssiChanged(channel, rssi));
+        this.p2pSession.on("rtsp livestream started", (channel: number) => this.onStartRTSPLivestream(channel));
+        this.p2pSession.on("rtsp livestream stopped", (channel: number) => this.onStopRTSPLivestream(channel));
+        this.p2pSession.on("rtsp url", (channel: number, rtspUrl: string) => this.onRTSPUrl(channel, rtspUrl));
+        this.p2pSession.on("esl parameter", (channel: number, param: number, value: string) => this.onESLParameter(channel, param, value));
+        this.p2pSession.on("runtime state", (channel: number, batteryLevel: number, temperature: number) => this.onRuntimeState(channel, batteryLevel, temperature));
+        this.p2pSession.on("charging state", (channel: number, chargeType: number, batteryLevel: number) => this.onChargingState(channel, chargeType, batteryLevel));
+        this.update(this.rawStation);
         this.ready = true;
-        this.p2pConnectionType = eufySecurityApi.getP2PConnectionType();
+        this.p2pConnectionType = this.eufySecurityApi.getP2PConnectionType();
         setImmediate(() => {
             this.emit("ready", this);
         });
@@ -83,6 +105,11 @@ export class Station extends TypedEmitter<StationEvents> {
 
     public update(station: HubResponse): void {
         this.rawStation = station;
+        if(this.p2pSession != null)
+        {
+            this.p2pSession.updateRawStation(station);
+        }
+
         const metadata = this.getPropertiesMetadata();
         for(const property of Object.values(metadata)) {
             if (this.rawStation[property.key] !== undefined && typeof property.key === "string") {
@@ -442,115 +469,29 @@ export class Station extends TypedEmitter<StationEvents> {
         return this.rawStation.p2p_did;
     }
 
-    private async getDSKKeys(): Promise<void> {
-        try {
-            const response = await this.api.request("post", "app/equipment/get_dsk_keys", {
-                station_sns: [this.getSerial()]
-            }).catch(error => {
-                this.log.error("Error:", error);
-                return error;
-            });
-            this.log.debug(`Station ${this.getSerial()} - Response:`, response.data);
-
-            if (response.status == 200) {
-                const result: ResultResponse = response.data;
-                if (result.code == 0) {
-                    const dataresult: DskKeyResponse = result.data;
-                    dataresult.dsk_keys.forEach(key => {
-                        if (key.station_sn == this.getSerial()) {
-                            this.dskKey = key.dsk_key;
-                            this.dskExpiration = new Date(key.expiration * 1000);
-                            this.log.debug(`${this.constructor.name}.getDSKKeys(): dskKey: ${this.dskKey} dskExpiration: ${this.dskExpiration}`);
-                        }
-                    });
-                } else {
-                    this.log.error(`Station ${this.getSerial()} - Response code not ok`, { code: result.code, msg: result.msg });
-                }
-            } else {
-                this.log.error(`Station ${this.getSerial()} - Status return code not 200`, { status: response.status, statusText: response.statusText });
-            }
-        } catch (error) {
-            this.log.error(`Station ${this.getSerial()} - Generic Error:`, error);
-        }
-    }
-
-    public async getDSKKey() : Promise<string>
-    {
-        await this.getDSKKeys();
-        return this.dskKey;
-    }
-
-    public getDSKKeyExpiration() : number
-    {
-        if(this.dskExpiration != null)
-        {
-            return this.dskExpiration.valueOf();
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
     public isConnected(): boolean {
-        if (this.p2pSession)
-            return this.p2pSession.isConnected();
-        return false;
+        return this.p2pSession.isConnected();
     }
 
     public async close(): Promise<void> {
+        this.terminating = true;
         this.log.info(`Disconnect from station ${this.getSerial()}`);
         if (this.reconnectTimeout) {
             clearTimeout(this.reconnectTimeout);
             this.reconnectTimeout = undefined;
         }
-        if (this.p2pSession) {
+        if (this.p2pSession.isConnected()) {
             await this.p2pSession.close();
-            this.p2pSession = null;
         }
     }
 
+    public isEnergySavingDevice(): boolean {
+        return this.p2pSession.isEnergySavingDevice();
+    }
+
     public async connect(): Promise<void> {
-        if (this.dskKey == "" || (this.dskExpiration && (new Date()).getTime() >= this.dskExpiration.getTime())) {
-            this.log.debug(`Station ${this.getSerial()} DSK keys not present or expired, get/renew it`, { dskExpiration: this.dskExpiration });
-            await this.getDSKKeys();
-        }
-
-        this.log.debug(`Connecting to station ${this.getSerial()}...`, { p2p_did: this.rawStation.p2p_did, dskKey: this.dskKey, p2pConnectionType: P2PConnectionType[this.p2pConnectionType] });
-
-        if (this.p2pSession) {
-            this.p2pSession.removeAllListeners();
-            this.p2pSession.close();
-            this.p2pSession = null;
-        }
-
-        const deviceSNs: DeviceSerial = {};
-        if (this.rawStation.devices)
-            for (const device of this.rawStation.devices) {
-                deviceSNs[device.device_channel] = {
-                    sn: device.device_sn,
-                    admin_user_id: this.rawStation.member.admin_user_id
-                };
-            }
-
-        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress().value as string, this.eufySecurityApi.getUDPLocalPortForBase(this.getSerial()), this.eufySecurityApi.getP2PConnectionType(), this.rawStation.p2p_did, this.dskKey, this.getSerial(), deviceSNs, this.log);
+        this.log.debug(`Connecting to station ${this.getSerial()}...`, { p2pConnectionType: P2PConnectionType[this.p2pConnectionType] });
         this.p2pSession.setConnectionType(this.p2pConnectionType);
-        this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
-        this.p2pSession.on("close", () => this.onDisconnect());
-        this.p2pSession.on("timeout", () => this.onTimeout());
-        this.p2pSession.on("command", (result: CommandResult) => this.onCommandResponse(result));
-        this.p2pSession.on("alarm mode", (mode: AlarmMode) => this.onAlarmMode(mode));
-        this.p2pSession.on("camera info", (cameraInfo: CmdCameraInfoResponse) => this.onCameraInfo(cameraInfo));
-        this.p2pSession.on("download started", (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => this.onStartDownload(channel, metadata, videoStream, audioStream));
-        this.p2pSession.on("download finished", (channel: number) => this.onFinishDownload(channel));
-        this.p2pSession.on("livestream started", (channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable) => this.onStartLivestream(channel, metadata, videoStream, audioStream));
-        this.p2pSession.on("livestream stopped", (channel: number) => this.onStopLivestream(channel));
-        this.p2pSession.on("wifi rssi", (channel: number, rssi: number) => this.onWifiRssiChanged(channel, rssi));
-        this.p2pSession.on("rtsp url", (channel: number, rtspUrl: string) => this.onRTSPUrl(channel, rtspUrl));
-        this.p2pSession.on("esl parameter", (channel: number, param: number, value: string) => this.onESLParameter(channel, param, value));
-        this.p2pSession.on("runtime state", (channel: number, batteryLevel: number, temperature: number) => this.onRuntimeState(channel, batteryLevel, temperature));
-        this.p2pSession.on("charging state", (channel: number, chargeType: number, batteryLevel: number) => this.onChargingState(channel, chargeType, batteryLevel));
-
         this.p2pSession.connect();
     }
 
@@ -568,6 +509,14 @@ export class Station extends TypedEmitter<StationEvents> {
 
     private onStartLivestream(channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable): void {
         this.emit("livestream start", this, channel, metadata, videoStream, audioStream);
+    }
+
+    private onStopRTSPLivestream(channel: number): void {
+        this.emit("rtsp livestream stop", this, channel);
+    }
+
+    private onStartRTSPLivestream(channel: number): void {
+        this.emit("rtsp livestream start", this, channel);
     }
 
     private onWifiRssiChanged(channel: number, rssi: number): void {
@@ -601,57 +550,33 @@ export class Station extends TypedEmitter<StationEvents> {
             this.log.debug(`P2P connection to station ${this.getSerial()} not present, establish it`);
             await this.connect();
         }
-        if (this.p2pSession) {
-            if (this.p2pSession.isConnected()) {
-                this.log.debug(`P2P connection to station ${this.getSerial()} present, send command mode: ${mode}`);
-
-                /*if (mode === GuardMode.OFF && (!Device.isKeyPad(this.getDeviceType()) || (!isGreaterEqualMinVersion("2.0.8.4", this.getSoftwareVersion()) && Device.isKeyPad(this.getDeviceType()))))
-                    throw new InvalidPropertyValueError(`Value "${mode}" isn't a valid value for property "${PropertyName.StationGuardMode}"`);*/
-
-                if ((isGreaterEqualMinVersion("2.0.7.9", this.getSoftwareVersion()) && !Device.isIntegratedDeviceBySn(this.getSerial())) || Device.isSoloCameraBySn(this.getSerial())) {
-                    this.log.debug(`Using CMD_SET_PAYLOAD for station ${this.getSerial()}`, { main_sw_version: this.getSoftwareVersion() });
-                    await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
-                        "account_id": this.rawStation.member.admin_user_id,
-                        "cmd": CommandType.CMD_SET_ARMING,
-                        "mValue3": 0,
-                        "payload": {
-                            "mode_type": mode,
-                            "user_name": this.rawStation.member.nick_name
-                        }
-                    }), Station.CHANNEL);
-                } else {
-                    this.log.debug(`Using CMD_SET_ARMING for station ${this.getSerial()}`);
-                    await this.p2pSession.sendCommandWithInt(CommandType.CMD_SET_ARMING, mode, this.rawStation.member.admin_user_id, Station.CHANNEL);
+        this.log.debug(`Sending guard mode command to station ${this.getSerial()} with value: ${GuardMode[mode]}`);
+        if ((isGreaterEqualMinVersion("2.0.7.9", this.getSoftwareVersion()) && !Device.isIntegratedDeviceBySn(this.getSerial())) || Device.isSoloCameraBySn(this.getSerial())) {
+            this.log.debug(`Using CMD_SET_PAYLOAD for station ${this.getSerial()}`, { main_sw_version: this.getSoftwareVersion() });
+            await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
+                "account_id": this.rawStation.member.admin_user_id,
+                "cmd": CommandType.CMD_SET_ARMING,
+                "mValue3": 0,
+                "payload": {
+                    "mode_type": mode,
+                    "user_name": this.rawStation.member.nick_name
                 }
-            }
+            }), Station.CHANNEL);
+        } else {
+            this.log.debug(`Using CMD_SET_ARMING for station ${this.getSerial()}`);
+            await this.p2pSession.sendCommandWithInt(CommandType.CMD_SET_ARMING, mode, this.rawStation.member.admin_user_id, Station.CHANNEL);
         }
     }
 
     public async getCameraInfo(): Promise<void> {
-        if (!this.p2pSession) {
-            this.log.debug(`P2P connection to station ${this.getSerial()} not present, establish it`);
-            await this.connect();
-        }
-        if (this.p2pSession) {
-            if (this.p2pSession.isConnected()) {
-                this.log.debug(`P2P connection to station ${this.getSerial()} present, get device infos`);
-                await this.p2pSession.sendCommandWithInt(CommandType.CMD_CAMERA_INFO, 255, "", Station.CHANNEL);
-            }
-        }
+        this.log.debug(`Sending get camera infos command to station ${this.getSerial()}`);
+        await this.p2pSession.sendCommandWithInt(CommandType.CMD_CAMERA_INFO, 255, "", Station.CHANNEL);
     }
 
     public async getStorageInfo(): Promise<void> {
-        if (!this.p2pSession) {
-            this.log.debug(`P2P connection to station ${this.getSerial()} not present, establish it`);
-            await this.connect();
-        }
-        if (this.p2pSession) {
-            if (this.p2pSession.isConnected()) {
-                this.log.debug(`P2P connection to station ${this.getSerial()} present, get storage info`);
-                //TODO: Verify channel! Should be 255...
-                await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SDINFO_EX, 0, 0, this.rawStation.member.admin_user_id);
-            }
-        }
+        this.log.debug(`Sending get storage info command to station ${this.getSerial()}`);
+        //TODO: Verify channel! Should be 255...
+        await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SDINFO_EX, 0, 0, this.rawStation.member.admin_user_id);
     }
 
     private async onAlarmMode(mode: AlarmMode): Promise<void> {
@@ -712,6 +637,7 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     private onConnect(address: Address): void {
+        this.terminating = false;
         this.resetCurrentDelay();
         this.log.info(`Connected to station ${this.getSerial()} on host ${address.host} and port ${address.port}`);
         this.emit("connect", this);
@@ -720,14 +646,13 @@ export class Station extends TypedEmitter<StationEvents> {
     private onDisconnect(): void {
         this.log.info(`Disconnected from station ${this.getSerial()}`);
         this.emit("close", this);
-        if (this.p2pSession)
-            this.scheduleReconnect();
-    }
+        if (!this.isEnergySavingDevice() && !this.terminating)
+        this.scheduleReconnect();
+}
 
     private onTimeout(): void {
         this.log.info(`Timeout connecting to station ${this.getSerial()}`);
-        if (this.p2pSession)
-            this.scheduleReconnect();
+        this.scheduleReconnect();
     }
 
     private getCurrentDelay(): number {
@@ -747,23 +672,21 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     private scheduleReconnect(): void {
-        const delay = this.getCurrentDelay();
-        this.log.debug(`Schedule reconnect to station ${this.getSerial()}...`, { delay: delay });
-        if (!this.reconnectTimeout)
+        if (!this.reconnectTimeout) {
+            const delay = this.getCurrentDelay();
+            this.log.debug(`Schedule reconnect to station ${this.getSerial()}...`, { delay: delay });
             this.reconnectTimeout = setTimeout(async () => {
                 this.reconnectTimeout = undefined;
                 this.connect();
             }, delay);
+        }
     }
 
     public async rebootHUB(): Promise<void> {
         if (!this.hasCommand(CommandName.StationReboot)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, reboot requested`);
+        this.log.debug(`Sending reboot command to station ${this.getSerial()}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_HUB_REBOOT, 0, this.rawStation.member.admin_user_id, Station.CHANNEL);
     }
 
@@ -774,11 +697,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceStatusLed)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending status led command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isCamera2Product() || device.getDeviceType() === DeviceType.CAMERA || device.getDeviceType() === DeviceType.CAMERA_E) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_DEV_LED_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_LIVEVIEW_LED_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
@@ -861,11 +780,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceAutoNightvision)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`${this.constructor.name}.setAutoNightVision(): P2P connection to station ${this.getSerial()} present, set value: ${value}.`);
+        this.log.debug(`Sending autonightvision command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_IRCUT_SWITCH, value === true ? 1 : 0, device.getChannel(), "", "", device.getChannel());
     }
 
@@ -876,11 +791,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNightvision)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`${this.constructor.name}.setNightVision(): P2P connection to station ${this.getSerial()} present, set value: ${value}.`);
+        this.log.debug(`Sending nightvision command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
             "account_id": this.rawStation.member.admin_user_id,
             "cmd": CommandType.CMD_SET_NIGHT_VISION_TYPE,
@@ -899,11 +810,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceMotionDetection)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending motion detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera() || device.isFloodLight()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_DET_SET_MOTION_DETECT_ENABLE,
@@ -950,11 +857,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceSoundDetection)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending sound detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
             "commandType": CommandType.CMD_INDOOR_DET_SET_SOUND_DETECT_ENABLE,
             "data":{
@@ -982,11 +885,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending sound detection type command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
             "commandType": CommandType.CMD_INDOOR_DET_SET_SOUND_DETECT_TYPE,
             "data":{
@@ -1014,11 +913,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending sound detection sensitivity command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
             "commandType": CommandType.CMD_INDOOR_DET_SET_SOUND_SENSITIVITY_IDX,
             "data":{
@@ -1040,11 +935,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DevicePetDetection)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending pet detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
             "commandType": CommandType.CMD_INDOOR_DET_SET_PET_ENABLE,
             "data":{
@@ -1070,11 +961,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!(direction in PanTiltDirection)) {
             throw new InvalidCommandValueError(`Value "${direction}" isn't a valid value for command "panAndTilt"`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set command: ${command} direction: ${PanTiltDirection[direction]}`);
+        this.log.debug(`Sending pan and tilt command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${PanTiltDirection[direction]}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
             "commandType": CommandType.CMD_INDOOR_ROTATE,
             "data":{
@@ -1092,11 +979,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceLight)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending switch light command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight() || device.isSoloCameraSpotlight1080() || device.isSoloCameraSpotlight2k() ||
             device.isSoloCameraSpotlightSolar() || device.isCamera2C() || device.isCamera2CPro() ||
             device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k()) {
@@ -1118,12 +1001,8 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set sensitivity: ${sensitivity}`);
-        if (device.isFloodLight() || device.isIndoorCamera() || device.isSoloCameras()) {
+        this.log.debug(`Sending motion detection sensitivity command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${sensitivity}`);
+        if (device.isFloodLight() || device.isIndoorCamera() ) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_DET_SET_MOTION_SENSITIVITY_IDX,
                 "data":{
@@ -1134,6 +1013,13 @@ export class Station extends TypedEmitter<StationEvents> {
                     "value":0,
                     "voiceID":0,
                     "zonecount":0
+                }
+            }), device.getChannel());
+        } else if (device.isSoloCameras()) {
+            await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
+                "commandType": CommandType.CMD_SET_PIR_SENSITIVITY,
+                "data":{
+                    "value": sensitivity,
                 }
             }), device.getChannel());
         } else if (device.isBatteryDoorbell2() || device.isBatteryDoorbell()) {
@@ -1230,12 +1116,8 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set type: ${type}`);
-        if (device.isFloodLight() || device.isIndoorCamera() || device.isSoloCameras()) {
+        this.log.debug(`Sending motion detection type command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${type}`);
+        if (device.isFloodLight() || device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_DET_SET_MOTION_DETECT_TYPE,
                 "data":{
@@ -1249,6 +1131,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 }
             }), device.getChannel());
         } else if (device.isCamera2Product() || device.isBatteryDoorbell() || device.isBatteryDoorbell2() || device.getDeviceType() === DeviceType.CAMERA || device.getDeviceType() === DeviceType.CAMERA_E) {
+        } else if (device.isCamera2Product() || device.isBatteryDoorbell() || device.isBatteryDoorbell2() || device.getDeviceType() === DeviceType.CAMERA || device.getDeviceType() === DeviceType.CAMERA_E || device.isSoloCameras()) {
             await this.p2pSession.sendCommandWithInt(CommandType.CMD_DEV_PUSHMSG_MODE, type, this.rawStation.member.admin_user_id, device.getChannel());
         }
     }
@@ -1260,11 +1143,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceMotionTracking)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending motion tracking command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
             "commandType": CommandType.CMD_INDOOR_PAN_MOTION_TRACK,
             "data":{
@@ -1294,10 +1173,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending pan and tilt rotation speed command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
             "commandType": CommandType.CMD_INDOOR_PAN_SPEED,
             "data":{
@@ -1320,10 +1196,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceMicrophone)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending mic mute command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEV_MIC_MUTE, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -1335,11 +1208,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceAudioRecording)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending audio recording command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight() || device.isIndoorCamera() || device.isSoloCameras()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_SET_RECORD_AUDIO_ENABLE,
@@ -1381,11 +1250,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceSpeaker)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending enable speaker command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEV_SPEAKER_MUTE, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -1402,11 +1267,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending speaker volume command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEV_SPEAKER_VOLUME, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -1424,11 +1285,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending ringtone volume command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_BAT_DOORBELL_SET_RINGTONE_VOLUME, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         } else if (device.isWiredDoorbell()) {
@@ -1448,11 +1305,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceChimeIndoor)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending enable indoor chime command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_BAT_DOORBELL_MECHANICAL_CHIME_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         } else if (device.isWiredDoorbell()) {
@@ -1472,11 +1325,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceChimeHomebase)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending enable homebase chime command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_BAT_DOORBELL_CHIME_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -1495,11 +1344,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending homebase chime ringtone volume command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -1525,11 +1370,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending homebase chime ringtone type command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -1556,11 +1397,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification type command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight() || device.isIndoorCamera() || device.isSoloCameras()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_PUSH_NOTIFY_TYPE,
@@ -1612,11 +1449,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNotificationPerson)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification person command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_AI_PERSON_ENABLE,
@@ -1641,11 +1474,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNotificationPet)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification pet command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_AI_PET_ENABLE,
@@ -1670,11 +1499,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNotificationAllOtherMotion)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification all other motion command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_AI_MOTION_ENABLE,
@@ -1699,11 +1524,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNotificationAllSound)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification all sound command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_AI_SOUND_ENABLE,
@@ -1728,11 +1549,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNotificationCrying)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification crying command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": CommandType.CMD_INDOOR_AI_CRYING_ENABLE,
@@ -1757,11 +1574,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNotificationRing)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification ring command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -1790,11 +1603,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceNotificationMotion)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending notification motion command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -1829,11 +1638,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending power source command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
             "account_id": this.rawStation.member.admin_user_id,
             "cmd": CommandType.CMD_SET_POWER_CHARGE,
@@ -1857,11 +1662,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending power working mode command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_PIR_POWERMODE, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -1878,11 +1679,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending recording clip length command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_DEV_RECORD_TIMEOUT, value, this.rawStation.member.admin_user_id, device.getChannel());
     }
 
@@ -1899,11 +1696,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending recording retrigger interval command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_DEV_RECORD_INTERVAL, value, this.rawStation.member.admin_user_id, device.getChannel());
     }
 
@@ -1914,11 +1707,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceRecordingEndClipMotionStops)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending recording end clip motion stops command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_DEV_RECORD_AUTOSTOP, value === true ? 0 : 1, this.rawStation.member.admin_user_id, device.getChannel());
     }
 
@@ -1937,11 +1726,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending video streaming quality command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera() || device.isSoloCameras() || device.isFloodLight() || device.isWiredDoorbell()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": ParamType.COMMAND_VIDEO_QUALITY,
@@ -1969,12 +1754,8 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
-        if (device.isIndoorCamera() || device.isWiredDoorbell()) {
+        this.log.debug(`Sending video recording quality command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
+        if (device.isIndoorCamera() || device.isWiredDoorbell() || device.isFloodLight() || device.isSoloCameras()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": ParamType.COMMAND_VIDEO_RECORDING_QUALITY,
                 "data": {
@@ -2000,11 +1781,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceVideoWDR)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending wdr command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_BAT_DOORBELL_WDR_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -2015,11 +1792,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceLightSettingsEnable)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending floodlight light settings enable command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_FLOODLIGHT_TOTAL_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -2038,11 +1811,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending floodlight light settings brightness manual command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight() || device.isSoloCameraSpotlight1080() || device.isSoloCameraSpotlight2k() ||
             device.isSoloCameraSpotlightSolar() || device.isCamera2C() || device.isCamera2CPro() ||
             device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k()) {
@@ -2063,11 +1832,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending floodlight light settings brightness motion command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_LIGHT_CTRL_BRIGHT_PIR, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -2086,11 +1851,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending floodlight light settings brightness schedule command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_LIGHT_CTRL_BRIGHT_SCH, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -2103,11 +1864,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceLightSettingsMotionTriggered)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending floodlight light settings motion triggered command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_LIGHT_CTRL_PIR_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -2126,14 +1883,11 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
         if (!Object.values(FloodlightMotionTriggeredDistance).includes(value)) {
             throw new InvalidPropertyValueError(`Value "${value}" isn't a valid value`);
         }
 
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending floodlight light settings motion triggered distance command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_PIRSENSITIVITY, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -2152,11 +1906,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set seconds: ${seconds}`);
+        this.log.debug(`Sending floodlight light settings motion triggered timer command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${seconds}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_LIGHT_CTRL_PIR_TIME, seconds, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -2166,11 +1916,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasCommand(CommandName.StationTriggerAlarmSound)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, trigger alarm sound for ${seconds} seconds`);
+        this.log.debug(`Sending trigger station alarm sound command to station ${this.getSerial()} with value: ${seconds}`);
         if (!isGreaterEqualMinVersion("2.0.7.9", this.getSoftwareVersion()) || Device.isIntegratedDeviceBySn(this.getSerial())) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_TONE_FILE, 2, seconds, this.rawStation.member.admin_user_id, "", Station.CHANNEL);
         } else {
@@ -2197,10 +1943,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasCommand(CommandName.DeviceTriggerAlarmSound)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, trigger alarm sound for ${seconds} seconds`);
+        this.log.debug(`Sending trigger device alarm sound command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${seconds}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEVS_TONE_FILE, seconds, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -2218,11 +1961,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending station alarm ringtone volume command to station ${this.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_SET_HUB_SPK_VOLUME, value, this.rawStation.member.admin_user_id, Station.CHANNEL);
     }
 
@@ -2236,11 +1975,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${tone}`);
+        this.log.debug(`Sending station alarm tone command to station ${this.getSerial()} with value: ${AlarmTone[tone]}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
             "account_id": this.rawStation.member.admin_user_id,
             "cmd": CommandType.CMD_HUB_ALARM_TONE,
@@ -2261,11 +1996,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending station prompt volume command to station ${this.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
             "account_id": this.rawStation.member.admin_user_id,
             "cmd": CommandType.CMD_SET_PROMPT_VOLUME,
@@ -2283,11 +2014,7 @@ export class Station extends TypedEmitter<StationEvents> {
             (!this.hasProperty(PropertyName.StationNotificationSwitchModeSchedule) && mode === NotificationSwitchMode.SCHEDULE)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending station notification switch mode command to station ${this.getSerial()} with value: ${value}`);
         if (isGreaterEqualMinVersion("2.1.1.6", this.getSoftwareVersion())) {
             let oldvalue = 0;
             const rawproperty = this.getRawProperty(CommandType.CMD_HUB_NOTIFY_MODE);
@@ -2326,10 +2053,6 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasProperty(PropertyName.StationNotificationStartAlarmDelay)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
         let pushmode = 0;
         const rawproperty = this.getRawProperty(CommandType.CMD_HUB_NOTIFY_MODE);
         if (rawproperty !== undefined) {
@@ -2338,8 +2061,7 @@ export class Station extends TypedEmitter<StationEvents> {
             } catch(error) {
             }
         }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending station notification start alarm delay command to station ${this.getSerial()} with value: ${value}`);
         if (isGreaterEqualMinVersion("2.1.1.6", this.getSoftwareVersion())) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -2375,11 +2097,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending station time format command to station ${this.getSerial()} with value: ${TimeFormat[value]}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_SET_HUB_OSD, value, this.rawStation.member.admin_user_id, Station.CHANNEL);
     }
 
@@ -2390,11 +2108,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceRTSPStream)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending rtsp stream command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_NAS_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -2405,11 +2119,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceAntitheftDetection)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending antitheft detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_EAS_SWITCH, value === true ? 1 : 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -2426,37 +2136,33 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
         if (device.isCamera2Product()) {
             if (!Object.values(WatermarkSetting3).includes(value as WatermarkSetting3)) {
                 this.log.error(`The device ${device.getSerial()} accepts only this type of values:`, WatermarkSetting3);
                 return;
             }
-            this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${WatermarkSetting3[value]}.`);
+            this.log.debug(`Sending watermark command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${WatermarkSetting3[value]}`);
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEVS_OSD, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         } else if (device.isIndoorCamera() || device.isFloodLight()) {
             if (!Object.values(WatermarkSetting4).includes(value as WatermarkSetting4)) {
                 this.log.error(`The device ${device.getSerial()} accepts only this type of values:`, WatermarkSetting4);
                 return;
             }
-            this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${WatermarkSetting4[value]}.`);
+            this.log.debug(`Sending watermark command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${WatermarkSetting4[value]}`);
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEVS_OSD, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         } else if (device.isSoloCameras() || device.isWiredDoorbell()) {
             if (!Object.values(WatermarkSetting1).includes(value as WatermarkSetting1)) {
                 this.log.error(`The device ${device.getSerial()} accepts only this type of values:`, WatermarkSetting1);
                 return;
             }
-            this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${WatermarkSetting1[value]}.`);
+            this.log.debug(`Sending watermark command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${WatermarkSetting1[value]}`);
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEVS_OSD, value, 0, this.rawStation.member.admin_user_id, "", 0);
         } else if (device.isBatteryDoorbell() || device.isBatteryDoorbell2() || device.getDeviceType() === DeviceType.CAMERA || device.getDeviceType() === DeviceType.CAMERA_E) {
             if (!Object.values(WatermarkSetting2).includes(value as WatermarkSetting2)) {
                 this.log.error(`The device ${device.getSerial()} accepts only this type of values: `, WatermarkSetting2);
                 return;
             }
-            this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${WatermarkSetting2[value]}.`);
+            this.log.debug(`Sending matermark command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${WatermarkSetting2[value]}`);
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEVS_OSD, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         } else {
             this.log.warn("This functionality is not implemented or supported by this device");
@@ -2470,15 +2176,11 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceEnabled)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
         let param_value = value === true ? 0 : 1;
-        if (device.isIndoorCamera() || device.isSoloCameras() || device.isWiredDoorbell() || device.isFloodLight())
+        if (device.isIndoorCamera() || device.isWiredDoorbell() || device.isFloodLight())
             param_value = value === true ? 1 : 0;
 
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending enable device command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString(CommandType.CMD_DEVS_SWITCH, param_value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
     }
 
@@ -2489,13 +2191,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasCommand(CommandName.DeviceStartDownload)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
         const cipher = await this.api.getCipher(cipher_id, this.rawStation.member.admin_user_id);
         if (Object.keys(cipher).length > 0) {
-            this.log.debug(`P2P connection to station ${this.getSerial()} present, download video path: ${path}`);
+            this.log.debug(`Sending start download command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${path}`);
             this.p2pSession.setDownloadRSAPrivateKeyPem(cipher.private_key);
             await this.p2pSession.sendCommandWithString(CommandType.CMD_DOWNLOAD_VIDEO, path, this.rawStation.member.admin_user_id, device.getChannel());
         } else {
@@ -2510,11 +2208,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasCommand(CommandName.DeviceCancelDownload)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, cancel download for channel: ${device.getChannel()}.`);
+        this.log.debug(`Sending cancel download command to station ${this.getSerial()} for device ${device.getSerial()}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_DOWNLOAD_CANCEL, device.getChannel(), this.rawStation.member.admin_user_id, device.getChannel());
     }
 
@@ -2525,22 +2219,30 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasCommand(CommandName.DeviceStartLivestream)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
         if (this.isLiveStreaming(device)) {
             throw new LivestreamAlreadyRunningError(`Livestream for device ${device.getSerial()} is already running`);
         }
 
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, start livestream for channel: ${device.getChannel()}`);
+        this.log.debug(`Sending start livestream command to station ${this.getSerial()} for device ${device.getSerial()}`);
         const rsa_key = this.p2pSession.getRSAPrivateKey();
 
-        if (device.isWiredDoorbell() || device.isFloodLight() || device.isSoloCameras() || device.isIndoorCamera()) {
+        if (device.isWiredDoorbell() || device.isFloodLight() || device.isIndoorCamera()) {
             this.log.debug(`Using CMD_DOORBELL_SET_PAYLOAD for station ${this.getSerial()} (main_sw_version: ${this.getSoftwareVersion()})`);
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": ParamType.COMMAND_START_LIVESTREAM,
                 "data": {
                     "account_id": this.rawStation.member.admin_user_id,
+                    "encryptkey": rsa_key?.exportKey("components-public").n.slice(1).toString("hex"),
+                    "streamtype": videoCodec
+                }
+            }), device.getChannel());
+        
+        } else if (device.isSoloCameras()) {
+            this.log.debug(`Using CMD_DOORBELL_SET_PAYLOAD (solo cams) for station ${this.getSerial()} (main_sw_version: ${this.getSoftwareVersion()})`);
+            await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
+                "commandType": ParamType.COMMAND_START_LIVESTREAM,
+                "data": {
+                    "accountId": this.rawStation.member.admin_user_id,
                     "encryptkey": rsa_key?.exportKey("components-public").n.slice(1).toString("hex"),
                     "streamtype": videoCodec
                 }
@@ -2572,35 +2274,28 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasCommand(CommandName.DeviceStopLivestream)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
         if (!this.isLiveStreaming(device)) {
             throw new LivestreamNotRunningError(`Livestream for device ${device.getSerial()} is not running`);
         }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, stop livestream for channel: ${device.getChannel()}`);
+        this.log.debug(`Sending stop livestream command to station ${this.getSerial()} for device ${device.getSerial()}`);
         await this.p2pSession.sendCommandWithInt(CommandType.CMD_STOP_REALTIME_MEDIA, device.getChannel(), undefined, device.getChannel());
     }
 
     public isLiveStreaming(device: Device): boolean {
-        if (!this.p2pSession || !this.p2pSession.isConnected()) {
+        /*if (!this.p2pSession || !this.p2pSession.isConnected()) {
             return false
         }
         if (device.getStationSerial() !== this.getSerial())
-            return false;
-
+            return false;*/
         return this.p2pSession.isLiveStreaming(device.getChannel());
     }
 
     public isDownloading(device: Device): boolean {
-        if (!this.p2pSession || !this.p2pSession.isConnected()) {
+        /*if (!this.p2pSession || !this.p2pSession.isConnected()) {
             return false
         }
         if (device.getStationSerial() !== this.getSerial())
-            return false;
-
+            return false;*/
         return this.p2pSession.isDownloading(device.getChannel());
     }
 
@@ -2611,11 +2306,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasCommand(CommandName.DeviceQuickResponse)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set voice_id: ${voice_id}`);
+        this.log.debug(`Sending quick response command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${voice_id}`);
         if (device.isBatteryDoorbell() || device.isBatteryDoorbell2()) {
             this.log.debug(`Using CMD_BAT_DOORBELL_QUICK_RESPONSE for station ${this.getSerial()}`);
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_BAT_DOORBELL_QUICK_RESPONSE, voice_id, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
@@ -2643,11 +2334,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending chirp volume command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isEntrySensor()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -2674,11 +2361,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending chirp tone command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isEntrySensor()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SENSOR_SET_CHIRP_TONE, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
         }
@@ -2691,11 +2374,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceVideoHDR)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending hdr command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isWiredDoorbell()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": ParamType.COMMAND_HDR,
@@ -2713,11 +2392,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceVideoDistortionCorrection)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending distortion correction command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isWiredDoorbell()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": ParamType.COMMAND_DISTORTION_CORRECTION,
@@ -2741,11 +2416,7 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending ring record command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isWiredDoorbell()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
                 "commandType": ParamType.COMMAND_VIDEO_RING_RECORD,
@@ -2763,11 +2434,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(PropertyName.DeviceLocked)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`P2P connection to station ${this.getSerial()} present, set value: ${value}`);
+        this.log.debug(`Sending lock device command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isLockBasicNoFinger() || device.isLockBasic()) {
             const key = generateLockAESKey(this.rawStation.member.admin_user_id, this.getSerial());
             const iv = getLockVectorBytes(this.getSerial());
@@ -2794,6 +2461,7 @@ export class Station extends TypedEmitter<StationEvents> {
             const publicKey = await this.api.getPublicKey(device.getSerial(), PublicKeyType.LOCK);
             const encPublicKey = encryptLockBasicPublicKey(generateLockBasicPublicKeyAESKey(this.rawStation.member.admin_user_id), Buffer.from(publicKey, "hex"));
             //TODO: Generate key from encPublicKey using ECC - ECIES (aes-cbc 128, HMAC_SHA_256_256) - KDF!
+            // KDF: HKDF SHA256 - RFC 5869
             const key = generateLockBasicAESKey();
             const iv = getLockVectorBytes(this.getSerial());
             const payload: LockBasicOnOffRequestPayload = {
@@ -2819,11 +2487,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasProperty(PropertyName.StationNotificationSwitchModeGeofence)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`${this.constructor.name}.setSwitchModeWithAccessCode(): P2P connection to station ${this.getSerial()} present, set value: ${value}.`);
+        this.log.debug(`Sending station switch mode with access code command to station ${this.getSerial()} with value: ${value}`);
         if (this.isStation()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -2840,11 +2504,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasProperty(PropertyName.StationAutoEndAlarm)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`${this.constructor.name}.setSwitchModeWithAccessCode(): P2P connection to station ${this.getSerial()} present, set value: ${value}.`);
+        this.log.debug(`Sending station auto end alarm command to station ${this.getSerial()} with value: ${value}`);
         if (this.isStation()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -2861,11 +2521,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasProperty(PropertyName.StationTurnOffAlarmWithButton)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            throw new NotConnectedError(`No p2p connection to station ${this.getSerial()}`);
-        }
-
-        this.log.debug(`${this.constructor.name}.setSwitchModeWithAccessCode(): P2P connection to station ${this.getSerial()} present, set value: ${value}.`);
+        this.log.debug(`Sending station turn off alarm with button command to station ${this.getSerial()} with value: ${value}`);
         if (this.isStation()) {
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "account_id": this.rawStation.member.admin_user_id,
@@ -2876,6 +2532,42 @@ export class Station extends TypedEmitter<StationEvents> {
                 }
             }), Station.CHANNEL);
         }
+    }
+
+    public async startRTSPStream(device: Device): Promise<void> {
+        if (device.getStationSerial() !== this.getSerial()) {
+            throw new WrongStationError(`Device ${device.getSerial()} is not managed by this station ${this.getSerial()}`);
+        }
+        if (!device.hasProperty(PropertyName.DeviceRTSPStream)) {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+        const rtspStreamProperty = device.getPropertyValue(PropertyName.DeviceRTSPStream);
+        if (rtspStreamProperty !== undefined && rtspStreamProperty.value !== true) {
+            throw new RTSPPropertyNotEnabled(`RTSP setting for device ${device.getSerial()} must be enabled first, to enable this functionality!`);
+        }
+
+        this.log.debug(`Start RTSP stream command to station ${this.getSerial()} for device ${device.getSerial()}`);
+        await this.p2pSession.sendCommandWithIntString(CommandType.CMD_NAS_TEST, 1, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
+    }
+
+    public async stopRTSPStream(device: Device): Promise<void> {
+        if (device.getStationSerial() !== this.getSerial()) {
+            throw new WrongStationError(`Device ${device.getSerial()} is not managed by this station ${this.getSerial()}`);
+        }
+        if (!device.hasProperty(PropertyName.DeviceRTSPStream)) {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+        const rtspStreamProperty = device.getPropertyValue(PropertyName.DeviceRTSPStream);
+        if (rtspStreamProperty !== undefined && rtspStreamProperty.value !== true) {
+            throw new RTSPPropertyNotEnabled(`RTSP setting for device ${device.getSerial()} must be enabled first, to enable this functionality!`);
+        }
+
+        this.log.debug(`Stop RTSP stream command to station ${this.getSerial()} for device ${device.getSerial()}`);
+        await this.p2pSession.sendCommandWithIntString(CommandType.CMD_NAS_TEST, 0, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
+    }
+
+    public isRTSPLiveStreaming(device: Device): boolean {
+        return this.p2pSession.isRTSPLiveStreaming(device.getChannel());
     }
 
     public setConnectionType(type: P2PConnectionType): void {

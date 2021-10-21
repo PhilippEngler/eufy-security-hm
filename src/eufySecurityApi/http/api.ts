@@ -62,7 +62,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     private invalidateToken(): void {
         this.token = null;
         this.tokenExpiration = null;
-        axios.defaults.headers.common["X-Auth-Token"] = null;
+        //axios.defaults.headers.common["X-Auth-Token"] = null;
     }
 
     public setPhoneModel(model: string): void {
@@ -116,16 +116,14 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
                         this.token = dataresult.auth_token
                         this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
-                        axios.defaults.headers.common["X-Auth-Token"] = this.token;
+                        //axios.defaults.headers.common["X-Auth-Token"] = this.token;
 
                         if (dataresult.domain) {
                             if ("https://" + dataresult.domain + "/v1" != this.apiBase) {
                                 this.apiBase = "https://" + dataresult.domain + "/v1";
                                 axios.defaults.baseURL = this.apiBase;
                                 this.log.info(`Switching to another API_BASE (${this.apiBase}) and get new token.`);
-                                this.token = null;
-                                this.tokenExpiration = null;
-                                axios.defaults.headers.common["X-Auth-Token"] = null;
+                                this.invalidateToken();
                                 return AuthResult.RENEW;
                             }
                         }
@@ -142,7 +140,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
                         this.token = dataresult.auth_token
                         this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
-                        axios.defaults.headers.common["X-Auth-Token"] = this.token;
+                        //axios.defaults.headers.common["X-Auth-Token"] = this.token;
 
                         this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
                         
@@ -351,7 +349,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    public async request(method: Method, endpoint: string, data?: any, headers?: any): Promise<AxiosResponse<any>> {
+    public async request(method: Method, endpoint: string, data?: any, headers?: Record<string, string>): Promise<AxiosResponse<any>> {
 
         if (!this.token && endpoint != "passport/login") {
             //No token get one
@@ -375,6 +373,18 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         }
 
         this.log.debug("Request:", { method: method, endpoint: endpoint, baseUrl: this.apiBase, token: this.token, data: data, headers: this.headers });
+        if (this.token) {
+            if (headers) {
+                headers = {
+                    ...headers,
+                    "X-Auth-Token": this.token,
+                };
+            } else {
+                headers = {
+                    "X-Auth-Token": this.token,
+                };
+            }
+        }
         const response = await axios({
             method: method,
             url: endpoint,
@@ -590,7 +600,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     public setToken(token: string): void {
         this.token = token;
-        axios.defaults.headers.common["X-Auth-Token"] = token;
+        //axios.defaults.headers.common["X-Auth-Token"] = token;
     }
 
     public setTokenExpiration(tokenExpiration: Date): void {

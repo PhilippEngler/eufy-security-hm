@@ -6,8 +6,9 @@ import { buildCheckinRequest, convertTimestampMs, generateFid, parseCheckinRespo
 import { CheckinResponse, Credentials, CusPushData, DoorbellPushData, FidInstallationResponse, FidTokenResponse, GcmRegisterResponse, IndoorPushData, RawPushMessage, PushMessage, BatteryDoorbellPushData } from "./models";
 import { PushClient } from "./client";
 import { PushNotificationServiceEvents } from "./interfaces";
-import { DeviceType } from "../http";
+import { Device, DeviceType } from "../http";
 import { getAbsoluteFilePath } from "../http/utils";
+
 import { Logger } from "../utils/logging";
 
 export class PushNotificationService extends TypedEmitter<PushNotificationServiceEvents> {
@@ -221,7 +222,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
 
         try {
 
-            for(let retry_count = 1; retry_count <= retry; retry_count++) {
+            for (let retry_count = 1; retry_count <= retry; retry_count++) {
                 const response = await await axios({
                     method: "post",
                     url: url,
@@ -300,21 +301,21 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             // CusPush
             normalized_message.type = Number.parseInt(message.payload.type);
 
-            if (normalized_message.type === DeviceType.BATTERY_DOORBELL || normalized_message.type === DeviceType.BATTERY_DOORBELL_2) {
+            if (Device.isBatteryDoorbell(normalized_message.type) || Device.isBatteryDoorbell2(normalized_message.type)) {
                 const push_data = message.payload.payload as BatteryDoorbellPushData;
 
                 normalized_message.name = push_data.name ? push_data.name : "";
                 try {
-                    normalized_message.event_time = message.payload.event_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
+                    normalized_message.event_time = message.payload.event_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.event_time)) : Number.parseInt(message.payload.event_time);
                 } catch (error) {
                     this.log.error(`Type ${DeviceType[normalized_message.type]} BatteryDoorbellPushData - event_time - Error:`, error);
                 }
                 normalized_message.station_sn = message.payload.station_sn;
-                normalized_message.device_sn =  message.payload.device_sn;
+                normalized_message.device_sn = message.payload.device_sn;
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
-                    normalized_message.push_time = message.payload.push_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
+                    normalized_message.push_time = message.payload.push_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.push_time)) : Number.parseInt(message.payload.push_time);
                 } catch (error) {
                     this.log.error(`Type ${DeviceType[normalized_message.type]} BatteryDoorbellPushData - push_time - Error:`, error);
                 }
@@ -326,21 +327,21 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
                 normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
                 normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
                 normalized_message.notification_style = push_data.notification_style;
-            } else if (normalized_message.type === DeviceType.INDOOR_CAMERA || normalized_message.type === DeviceType.INDOOR_CAMERA_1080 || normalized_message.type === DeviceType.INDOOR_PT_CAMERA || normalized_message.type === DeviceType.INDOOR_PT_CAMERA_1080) {
+            } else if (Device.isIndoorCamera(normalized_message.type) || Device.isSoloCameras(normalized_message.type)) {
                 const push_data = message.payload.payload as IndoorPushData;
 
                 normalized_message.name = push_data.name ? push_data.name : "";
                 try {
-                    normalized_message.event_time = message.payload.event_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
+                    normalized_message.event_time = message.payload.event_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.event_time)) : Number.parseInt(message.payload.event_time);
                 } catch (error) {
                     this.log.error(`Type ${DeviceType[normalized_message.type]} IndoorPushData - event_time - Error:`, error);
                 }
                 normalized_message.station_sn = message.payload.station_sn;
-                normalized_message.device_sn =  push_data.device_sn;
+                normalized_message.device_sn = push_data.device_sn;
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
-                    normalized_message.push_time = message.payload.push_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
+                    normalized_message.push_time = message.payload.push_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.push_time)) : Number.parseInt(message.payload.push_time);
                 } catch (error) {
                     this.log.error(`Type ${DeviceType[normalized_message.type]} IndoorPushData - push_time - Error:`, error);
                 }
@@ -348,7 +349,8 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
                 normalized_message.cipher = push_data.cipher;
                 normalized_message.event_session = push_data.session_id;
                 normalized_message.event_type = push_data.event_type;
-                normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? getAbsoluteFilePath(normalized_message.type, push_data.channel, push_data.file_path) : "";
+                //normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? getAbsoluteFilePath(normalized_message.type, push_data.channel, push_data.file_path) : "";
+                normalized_message.file_path = push_data.file_path;
                 normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
                 normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
                 normalized_message.notification_style = push_data.notification_style;
@@ -362,7 +364,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
 
                 normalized_message.name = push_data.device_name && push_data.device_name !== null && push_data.device_name !== "" ? push_data.device_name : push_data.n ? push_data.n : "";
                 try {
-                    normalized_message.event_time = message.payload.event_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
+                    normalized_message.event_time = message.payload.event_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.event_time)) : Number.parseInt(message.payload.event_time);
                 } catch (error) {
                     this.log.error(`Type ${DeviceType[normalized_message.type]} CusPushData - event_time - Error:`, error);
                 }
@@ -374,7 +376,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
-                    normalized_message.push_time = message.payload.push_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
+                    normalized_message.push_time = message.payload.push_time !== undefined ? convertTimestampMs(Number.parseInt(message.payload.push_time)) : Number.parseInt(message.payload.push_time);
                 } catch (error) {
                     this.log.error(`Type ${DeviceType[normalized_message.type]} CusPushData - push_time - Error:`, error);
                 }
@@ -398,8 +400,8 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
                 normalized_message.station_guard_mode = push_data.arming;
                 normalized_message.station_current_mode = push_data.mode;
                 normalized_message.person_name = push_data.f;
-                normalized_message.sensor_open = push_data.e !== undefined ? push_data.e === "1" ?  true : false : undefined;
-                normalized_message.device_online = push_data.m !== undefined ? push_data.m === 1 ?  true : false : undefined;
+                normalized_message.sensor_open = push_data.e !== undefined ? push_data.e === "1" ? true : false : undefined;
+                normalized_message.device_online = push_data.m !== undefined ? push_data.m === 1 ? true : false : undefined;
                 try {
                     normalized_message.fetch_id = push_data.i !== undefined ? Number.parseInt(push_data.i) : undefined;
                 } catch (error) {
@@ -409,7 +411,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
                 normalized_message.battery_powered = push_data.batt_powered !== undefined ? push_data.batt_powered === 1 ? true : false : undefined;
                 try {
                     normalized_message.battery_low = push_data.bat_low !== undefined ? Number.parseInt(push_data.bat_low) : undefined;
-                } catch(error) {
+                } catch (error) {
                     this.log.error(`Type ${DeviceType[normalized_message.type]} CusPushData - battery_low - Error:`, error);
                 }
                 normalized_message.storage_type = push_data.storage_type !== undefined ? push_data.storage_type : 1;
@@ -424,7 +426,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             normalized_message.type = 5;
             normalized_message.event_time = push_data.create_time !== undefined ? convertTimestampMs(push_data.create_time) : push_data.create_time;
             normalized_message.station_sn = push_data.device_sn;
-            normalized_message.device_sn =  push_data.device_sn;
+            normalized_message.device_sn = push_data.device_sn;
             normalized_message.title = push_data.title;
             normalized_message.content = push_data.content;
             normalized_message.push_time = push_data.event_time !== undefined ? convertTimestampMs(push_data.event_time) : push_data.event_time;
@@ -432,7 +434,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             normalized_message.cipher = push_data.cipher;
             normalized_message.event_session = push_data.event_session;
             normalized_message.event_type = push_data.event_type;
-            normalized_message.file_path = push_data.file_path,
+            normalized_message.file_path = push_data.file_path;
             normalized_message.pic_url = push_data.pic_url;
             normalized_message.push_count = push_data.push_count;
             normalized_message.doorbell_url = push_data.url;

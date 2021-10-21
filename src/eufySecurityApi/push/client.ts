@@ -7,6 +7,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import { Message, MessageTag, RawPushMessage } from "./models";
 import { PushClientParser } from "./parser";
 import { PushClientEvents } from "./interfaces";
+
 import { Logger } from "../utils/logging";
 
 export class PushClient extends TypedEmitter<PushClientEvents> {
@@ -114,7 +115,7 @@ export class PushClient extends TypedEmitter<PushClientEvents> {
             user: androidId,
             useRmq2: true,
             setting: [{ name: "new_vc", value: "1" }],
-            clientEvent: [],
+            clientEvent: [] as any[],
             receivedPersistentId: this.persistentIds,
         };
 
