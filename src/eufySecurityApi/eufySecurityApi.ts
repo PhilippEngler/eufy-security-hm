@@ -1675,6 +1675,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "1.2.0";
+        return "1.2.1";
     }
 }
