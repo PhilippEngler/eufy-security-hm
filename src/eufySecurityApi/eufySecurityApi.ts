@@ -74,6 +74,10 @@ export class EufySecurityApi
         }
     }
 
+    /**
+     * Returns the state of the service.
+     * @returns The state of the service.
+     */
     public getServiceState() : string
     {
         return this.serviceState;
@@ -173,7 +177,7 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns a JSON-Representation of all Devices.
+     * Returns a JSON-Representation of all devices.
      */
     public async getDevices() : Promise<string> 
     {
@@ -223,7 +227,10 @@ export class EufySecurityApi
         return json;
     }
 
-    public async getDevice(deviceSerial : string) : Promise<string>
+    /**
+     * Returns a JSON-Representation of a given devices.
+     */
+     public async getDevice(deviceSerial : string) : Promise<string>
     {
         await this.updateDeviceData();
         await this.devices.loadDevices();
@@ -267,7 +274,7 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns a JSON-Representation of all Bases including the guard mode.
+     * Returns a JSON-Representation of all bases including the guard mode.
      */
     public async getBases() : Promise<string>
     {
@@ -953,6 +960,11 @@ export class EufySecurityApi
         }
     }
 
+    /**
+     * Returns the internal ip address for the given the HomeBase.
+     * @param baseSerial The serial for the HomeBase.
+     * @returns The internal ip address.
+     */
     public getLocalIpAddressForBase(baseSerial : string) : string
     {
         try

@@ -19,6 +19,10 @@ export class Config
         this.hasChanged = false;
     }
 
+    /**
+     * Specifies the version for the config file expected by the addon.
+     * @returns The expected version of the config file.
+     */
     private getConfigFileTemplateVersion() : number
     {
         return 7;

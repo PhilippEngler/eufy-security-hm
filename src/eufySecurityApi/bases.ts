@@ -31,6 +31,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         this.serialNumbers = [];
     }
 
+    /**
+     * Set the devices connected with the account.
+     * @param devices The devices to set.
+     */
     public setDevices(devices : Devices) : void
     {
         this.devices = devices;
@@ -401,21 +405,49 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * The action to be one when event StationRuntimeState is fired.
+     * @param station The base as Station object.
+     * @param channel The cannel to define the device.
+     * @param batteryLevel The battery level as percentage value.
+     * @param temperature The temperature as degree value.
+     * @param modified The datetime stamp the values have changed.
+     */
     private onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number, modified: number): void {
         this.api.logDebug(`Event "RuntimeState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
         this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature, modified);
     }
 
+    /**
+     * The action to be one when event StationChargingState is fired.
+     * @param station The base as Station object.
+     * @param channel The cannel to define the device.
+     * @param chargeType The current carge state.
+     * @param batteryLevel The battery level as percentage value.
+     * @param modified The datetime stamp the values have changed.
+     */
     private onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number): void {
         this.api.logDebug(`Event "ChargingState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
         this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel, modified);
     }
 
+    /**
+     * The action to be one when event StationWifiRssi is fired.
+     * @param station The base as Station object.
+     * @param channel The cannel to define the device.
+     * @param rssi The current rssi value.
+     * @param modified The datetime stamp the values have changed.
+     */
     private onStationWifiRssi(station: Station, channel: number, rssi: number, modified: number): void {
         this.api.logDebug(`Event "WifiRssi": base: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
         this.devices.updateWifiRssi(station.getSerial(), channel, rssi, modified);
     }
 
+    /**
+     * The action to be one when event RawDevicePropertyChanged is fired.
+     * @param deviceSerial The serial of the device the raw values changed for.
+     * @param values The raw values for the device.
+     */
     private onRawDevicePropertyChanged(deviceSerial: string, values: RawValues): void {
         this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
         this.devices.updateDeviceProperties(deviceSerial, values);

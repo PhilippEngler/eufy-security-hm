@@ -219,6 +219,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
     }
 
+    /**
+     * Returns a device specified by station and channel.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @returns The device specified by base and channel.
+     */
     public getDeviceByStationAndChannel(baseSerial : string, channel : number) : Device
     {
         for (const device of Object.values(this.devices))
@@ -232,6 +238,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         throw new Error("Error");
     }
 
+    /**
+     * Update the battery and temperature information for a given device.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @param batteryLevel The battery level value.
+     * @param temperature The temperature value.
+     * @param modified The datetime stamp the values have changed.
+     */
     public updateBatteryValues(baseSerial: string, channel: number, batteryLevel: number, temperature: number, modified: number) : void
     {
         try
@@ -254,6 +268,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Update the charge state and battery value information for a given device.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @param chargeType The charge state.
+     * @param batteryLevel The battery level value.
+     * @param modified The datetime stamp the values have changed.
+     */
     public updateChargingState(baseSerial: string, channel: number, chargeType: number, batteryLevel: number, modified: number) : void
     {
         try
@@ -276,6 +298,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Update the wifi rssi value information for a given device.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @param rssi The rssi value.
+     * @param modified The datetime stamp the values have changed.
+     */
     public updateWifiRssi(baseSerial : string, channel: number, rssi: number, modified: number) : void
     {
         try
@@ -293,6 +322,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Update the raw values for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param values The raw values.
+     */
     public updateDeviceProperties(deviceSerial: string, values: RawValues): void
     {
         this.devices[deviceSerial].updateRawProperties(values);
