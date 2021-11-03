@@ -20,6 +20,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     private api : EufySecurityApi;
     private username: string|null = null;
     private password: string|null = null;
+    private location: number|null = null;
 
     private token: string|null = null;
     private tokenExpiration: Date|null = null;
@@ -48,12 +49,29 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         timezone: "GMT+01:00"
     };
 
-    constructor(api : EufySecurityApi, username: string, password: string, log: Logger) {
+    constructor(api : EufySecurityApi, username: string, password: string, location: number, log: Logger) {
         super();
 
         this.api = api;
         this.username = username;
         this.password = password;
+        this.location = location;
+        switch (location)
+        {
+            case 0:
+                log.debug("Using 'https://security-app-eu.eufylife.com/v1' api server.");
+                this.apiBase = "https://security-app-eu.eufylife.com/v1";
+                break;
+            case 1:
+                log.debug("Using 'https://security-app-eu.eufylife.com/v1' api server.");
+                this.apiBase = "https://security-app-eu.eufylife.com/v1";
+                break;
+            default:
+                log.debug("Using 'https://mysecurity.eufylife.com/api/v1' api server.");
+                this.apiBase = "https://mysecurity.eufylife.com/api/v1";
+                break;
+        }
+
         this.log = log;
 
         this.headers.timezone = getTimezoneGMTString();

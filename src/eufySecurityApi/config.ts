@@ -25,7 +25,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 7;
+        return 8;
     }
 
     /**
@@ -97,6 +97,8 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 1 finished.");
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 2)
@@ -118,6 +120,8 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 2 finished.");
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 3)
@@ -131,6 +135,8 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 3 finished.");
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 4)
@@ -152,6 +158,8 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 4 finished.");
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 5)
@@ -198,6 +206,8 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 5 finished.");
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 6)
@@ -219,6 +229,8 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 6 finished.");
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 7)
@@ -240,7 +252,24 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 7 finished.");
+        }
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 8)
+        {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 8...");
+            if(this.filecontent.indexOf("location") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'location'.");
+                this.filecontent = this.filecontent.replace(`password=${this.getPassword()}`, `password=${this.getPassword()}\r\nlocation="1"`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...Stage2 update to version 8 finished.");
         }
 
         if(updated)
@@ -285,7 +314,8 @@ export class Config
         fc += "[ConfigFileInfo]\r\nconfig_file_version=" + this.getConfigFileTemplateVersion() + "\r\n\r\n";
         fc += "[EufyAPILoginData]\r\n";
         fc += "email=\r\n";
-        fc += "password=\r\n\r\n";
+        fc += "password=\r\n";
+        fc += "location=1\r\n\r\n";
         fc += "[EufyTokenData]\r\n";
         fc += "token=\r\n";
         fc += "tokenexpires=0\r\n\r\n";
@@ -425,6 +455,34 @@ export class Config
         {
             this.config['EufyAPILoginData']['password'] = password;
             this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Set the location for the eufy security account.
+     * @param location The location to set.
+     */
+    public setLocation(location : number) : void
+    {
+        if(this.config['EufyAPILoginData']['location'] != location)
+        {
+            this.config['EufyAPILoginData']['location'] = location;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the location for the eufy security account.
+     */
+    public getLocation() : string
+    {
+        try
+        {
+            return this.config['EufyAPILoginData']['location'];
+        }
+        catch
+        {
+            return "";
         }
     }
 

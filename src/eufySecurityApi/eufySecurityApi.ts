@@ -47,7 +47,7 @@ export class EufySecurityApi
         }
         else
         {
-            this.httpService = new HTTPApi(this, this.config.getEmailAddress(), this.config.getPassword(), this.logger);
+            this.httpService = new HTTPApi(this, this.config.getEmailAddress(), this.config.getPassword(), Number.parseInt(this.config.getLocation()), this.logger);
 
             this.httpService.setToken(this.getToken());
             this.httpService.setTokenExpiration(new Date(Number.parseInt(this.getTokenExpire())*1000));
@@ -994,6 +994,7 @@ export class EufySecurityApi
         json += `"configfile_version":"${this.config.getConfigFileVersion()}",`;
         json += `"username":"${this.config.getEmailAddress()}",`;
         json += `"password":"${this.config.getPassword()}",`;
+        json += `"location":"${this.config.getLocation()}",`;
         json += `"api_http_active":"${this.config.getApiUseHttp()}",`;
         json += `"api_http_port":"${this.config.getApiPortHttp()}",`;
         json += `"api_https_active":"${this.config.getApiUseHttps()}",`;

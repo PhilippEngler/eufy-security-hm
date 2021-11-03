@@ -85,10 +85,11 @@
 					<div class="row">
 						<div class="col">
 							<div class="card mb-3">
-								<h5 class="card-header"><i class="bi-person-circle"></i>&nbsp;&nbsp;Zugangsdaten eufy Security Account</h5>
+								<h5 class="card-header"><i class="bi-person-circle"></i>&nbsp;&nbsp;eufy Security Account</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
+											<h5>Zugangsdaten</h5>
 											<div class="alert alert-warning alert-dismissible fade show" role="alert">
 												Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn und geben Sie dessen Zugangsdaten hier ein.<br />
 												<small class="form-text text-muted">Wenn Sie keinen zusätzlichen Account anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</small>
@@ -104,9 +105,22 @@
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mt-2" for="txtPassword">Passwort des angelegten eufy Security Accounts.</label>
 												<input type="password" name="password" id="txtPassword" class="form-control" placeholder="Password" required>
+												<small class="form-text text-muted">Das Passwort, dass Sie für den eufy Security Account angelegt haben.</small>
 												<div class="invalid-feedback">
 													Bitte geben Sie das Passwort des eufy Security Accounts ein.
 												</div>
+											</div>
+											<hr>
+											<h5>Weitere Einstellungen</h5>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label for="txtUsername">Standort des eufy Security Accounts.</label>
+												<select name="location" id="cbLocation" class="custom-select mb-2" required>
+													<option disabled selected value style="display: none;">Bitte auswählen...</option>
+													<option disabled value="0">automatische Auswahl</option>
+													<option value="1">Europa</option>
+													<option disabled value="2">restliche Welt</option>
+												</select>
+												<small class="form-text text-muted">Der Standort, für den Sie den eufy Security Account erstellt haben.</small>
 											</div>
 										</div>
 									</div>
@@ -233,7 +247,7 @@
 											</div>
 											<hr>
 											<h5>Einstellungen für Protokollierung</h5>
-											<div class="form-label-group was-validated" class="container-fluid">
+											<div class="form-label-group" class="container-fluid">
 												<label for="cbLogLevel">Umfang der Protokollierung.</label>
 												<div id="alertLogLevel">
 												</div>
@@ -571,6 +585,7 @@
 			{
 				document.getElementById("txtUsername").setAttribute("disabled", true);
 				document.getElementById("txtPassword").setAttribute("disabled", true);
+				document.getElementById("cbLocation").setAttribute("disabled", true);
 				document.getElementById("txtPortHttp").setAttribute("disabled", true);
 				document.getElementById("txtPortHttps").setAttribute("disabled", true);
 				document.getElementById("txtPortHttps").setAttribute("disabled", true);
@@ -589,6 +604,7 @@
 			{
 				document.getElementById("txtUsername").removeAttribute("disabled");
 				document.getElementById("txtPassword").removeAttribute("disabled");
+				document.getElementById("cbLocation").removeAttribute("disabled");
 				document.getElementById("cbConnectionType").removeAttribute("disabled");
 				document.getElementById('txtDefaultImagePath').removeAttribute("disabled");
 				document.getElementById('txtDefaultVideoPath').removeAttribute("disabled");
@@ -670,7 +686,7 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, password, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, apiloglevel;
+				var xmlHttp, objResp, objIter, username, password, accountlocation, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, apiloglevel;
 				var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -687,6 +703,7 @@
 								{
 									username = objResp.data[objIter].username;
 									password = objResp.data[objIter].password;
+									accountlocation = objResp.data[objIter].location;
 									apiusehttp = objResp.data[objIter].api_http_active;
 									apiporthttp = objResp.data[objIter].api_http_port;
 									apiusehttps = objResp.data[objIter].api_https_active;
@@ -711,6 +728,14 @@
 								text.value = username;
 								text = document.getElementById('txtPassword');
 								text.value = password;
+								if(accountlocation == undefined || accountlocation < "0" || accountlocation > "1" )
+								{
+									document.getElementById("cbLocation").selectedIndex = "";
+								}
+								else
+								{
+									document.getElementById("cbLocation").selectedIndex = (Number.parseInt(accountlocation)) + 1;
+								}
 								if(apiusehttp == "true")
 								{
 									document.getElementById("chkUseHttp").setAttribute("checked", true);
