@@ -11,7 +11,6 @@ export class ParameterHelper {
                 } catch(error) {
                 }
                 return "";
-            
             } else if (type === CommandType.CMD_BAT_DOORBELL_SET_NOTIFICATION_MODE) {
                 try {
                     return JSON.parse(value);

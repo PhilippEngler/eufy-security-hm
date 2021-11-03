@@ -81,6 +81,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private lastPong: number | null = null;
     private connectionType: P2PConnectionType = P2PConnectionType.ONLY_LOCAL;
     private fallbackAddresses: Array<Address> = [];
+
     private energySavingDevice = false;
     
     private localAddress : string;
@@ -124,7 +125,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
         this._clearMessageStateTimeouts();
         this.messageStates.clear();
-        
+
         for(let datatype = 0; datatype < 4; datatype++) {
 
             this.expectedSeqNo[datatype] = 0;
@@ -276,7 +277,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         {
             this.fallbackAddresses = [];
             this.cloudAddresses.map((address) => this.lookupByAddress(address));
-        this.cloudAddresses.map((address) => this.lookupByAddress2(address));
+            this.cloudAddresses.map((address) => this.lookupByAddress2(address));
         }
 
         this._clearLookupTimeout();
@@ -547,6 +548,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 return;
             }
         }
+
         message = message as P2PMessageState;
         message.returnCode = ErrorCode.ERROR_COMMAND_TIMEOUT;
         message.timeout = setTimeout(() => {
@@ -591,7 +593,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 }
             }
         }
-    }    
+    }
 
     private handleMsg(msg: Buffer, rinfo: RemoteInfo): void {
         if (hasHeader(msg, ResponseMessageType.LOOKUP_ADDR)) {
@@ -707,9 +709,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                 channel: msg_state.channel,
                                 return_code: ErrorCode.ERROR_COMMAND_TIMEOUT
                             } as CommandResult);
-                            if (this.messageStates.size > 0) {
-                                this._sendCommand(this.messageStates.values().next().value);
-                            }
+                            this.sendQueuedMessage();
                             this.closeEnergySavingDevice();
                         }, this.MAX_COMMAND_RESULT_WAIT);
                         this.messageStates.set(ackedSeqNo, msg_state);
@@ -839,6 +839,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         } else if (hasHeader(msg, ResponseMessageType.LOOKUP_RESP)) {
             if (!this.connected) {
                 const responseCode = msg.slice(4, 6).readUInt16LE();
+
                 this.log.debug(`Station ${this.rawStation.station_sn} - LOOKUP_RESP - Got response`, { remoteAddress: rinfo.address, remotePort: rinfo.port, response: { responseCode: responseCode }});
 
                 if (responseCode !== 0 && this.lookupTimeout !== undefined && this.lookupRetryTimeout === undefined) {
@@ -931,6 +932,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     const completeMessage = sortP2PMessageParts(this.currentMessageBuilder[message.type].messages);
                     const data_message: P2PDataMessage = {
                         ...this.currentMessageBuilder[message.type].header,
+                        //TODO: Check if this is the correct approach
                         seqNo: message.seqNo,
                         dataType: message.type,
                         data: completeMessage
@@ -1005,10 +1007,10 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private isIFrame(data: Buffer, isKeyFrame: boolean): boolean {
         if (this.rawStation.station_sn.startsWith("T8410") || this.rawStation.station_sn.startsWith("T8400") || this.rawStation.station_sn.startsWith("T8401") || this.rawStation.station_sn.startsWith("T8411") ||
-        this.rawStation.station_sn.startsWith("T8202") || this.rawStation.station_sn.startsWith("T8422") || this.rawStation.station_sn.startsWith("T8424") || this.rawStation.station_sn.startsWith("T8423") ||
-        this.rawStation.station_sn.startsWith("T8130") || this.rawStation.station_sn.startsWith("T8131") || this.rawStation.station_sn.startsWith("T8420") || this.rawStation.station_sn.startsWith("T8440") ||
-        this.rawStation.station_sn.startsWith("T8441") || this.rawStation.station_sn.startsWith("T8442") || checkT8420(this.rawStation.station_sn)) {
-        //TODO: Need to add battery doorbells as seen in source => T8210,T8220,T8221,T8222
+            this.rawStation.station_sn.startsWith("T8202") || this.rawStation.station_sn.startsWith("T8422") || this.rawStation.station_sn.startsWith("T8424") || this.rawStation.station_sn.startsWith("T8423") ||
+            this.rawStation.station_sn.startsWith("T8130") || this.rawStation.station_sn.startsWith("T8131") || this.rawStation.station_sn.startsWith("T8420") || this.rawStation.station_sn.startsWith("T8440") ||
+            this.rawStation.station_sn.startsWith("T8441") || this.rawStation.station_sn.startsWith("T8442") || checkT8420(this.rawStation.station_sn)) {
+            //TODO: Need to add battery doorbells as seen in source => T8210,T8220,T8221,T8222
             return isKeyFrame;
         }
         const iframe = isIFrame(data);
@@ -1138,27 +1140,27 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                             if (!this.currentMessageState[message.dataType].receivedFirstIFrame)
                                 this.currentMessageState[message.dataType].receivedFirstIFrame = this.isIFrame(video_data, isKeyFrame);
 
-                                if (this.currentMessageState[message.dataType].receivedFirstIFrame) {
-                                    if (this.currentMessageState[message.dataType].preFrameVideoData.length > this.MAX_VIDEO_PACKET_BYTES)
-                                        this.currentMessageState[message.dataType].preFrameVideoData = Buffer.from([]);
+                            if (this.currentMessageState[message.dataType].receivedFirstIFrame) {
+                                if (this.currentMessageState[message.dataType].preFrameVideoData.length > this.MAX_VIDEO_PACKET_BYTES)
+                                    this.currentMessageState[message.dataType].preFrameVideoData = Buffer.from([]);
 
-                                        if (this.currentMessageState[message.dataType].preFrameVideoData.length > 0) {
-                                            this.currentMessageState[message.dataType].videoStream?.push(this.currentMessageState[message.dataType].preFrameVideoData);
-                                        }
-                                        this.currentMessageState[message.dataType].preFrameVideoData = Buffer.from(video_data);
-                                    } else {
-                                        this.log.debug(`Station ${this.rawStation.station_sn} - CMD_VIDEO_FRAME: Skipping because first frame is not an I frame.`);
-                                    }
-                                } else {
-                                    this.log.debug(`Station ${this.rawStation.station_sn} - CMD_VIDEO_FRAME: No startcode found`, {isKeyFrame: isKeyFrame, preFrameVideoDataLength: this.currentMessageState[message.dataType].preFrameVideoData.length });
-                            if (this.currentMessageState[message.dataType].preFrameVideoData.length > 0) {
-                                        this.currentMessageState[message.dataType].preFrameVideoData = Buffer.concat([this.currentMessageState[message.dataType].preFrameVideoData, video_data]);
-                                    }
+                                if (this.currentMessageState[message.dataType].preFrameVideoData.length > 0) {
+                                    this.currentMessageState[message.dataType].videoStream?.push(this.currentMessageState[message.dataType].preFrameVideoData);
                                 }
-                            } else if (message.dataType === P2PDataType.BINARY) {
-                                this.currentMessageState[message.dataType].videoStream?.push(video_data);
+                                this.currentMessageState[message.dataType].preFrameVideoData = Buffer.from(video_data);
+                            } else {
+                                this.log.debug(`Station ${this.rawStation.station_sn} - CMD_VIDEO_FRAME: Skipping because first frame is not an I frame.`);
                             }
-                            break;
+                        } else {
+                            this.log.debug(`Station ${this.rawStation.station_sn} - CMD_VIDEO_FRAME: No startcode found`, {isKeyFrame: isKeyFrame, preFrameVideoDataLength: this.currentMessageState[message.dataType].preFrameVideoData.length });
+                            if (this.currentMessageState[message.dataType].preFrameVideoData.length > 0) {
+                                this.currentMessageState[message.dataType].preFrameVideoData = Buffer.concat([this.currentMessageState[message.dataType].preFrameVideoData, video_data]);
+                            }
+                        }
+                    } else if (message.dataType === P2PDataType.BINARY) {
+                        this.currentMessageState[message.dataType].videoStream?.push(video_data);
+                    }
+                    break;
                 case CommandType.CMD_AUDIO_FRAME:
                     this.waitForStreamData(message.dataType);
 
@@ -1246,7 +1248,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     this.log.debug(`Station ${this.rawStation.station_sn} - CMD_NAS_SWITCH`, { payload: message.data.toString() });
                     this.emit("rtsp url", message.channel, message.data.toString("utf8", 0, message.data.indexOf("\0", 0, "utf8")));
                 } catch (error) {
-                    this.log.error(`Station ${this.rawStation.station_sn} - SUB1G_REP_UNPLUG_POWER_LINE - Error:`, error);
+                    this.log.error(`Station ${this.rawStation.station_sn} - CMD_NAS_SWITCH - Error:`, error);
                 }
                 break;
             case CommandType.SUB1G_REP_UNPLUG_POWER_LINE:
@@ -1512,7 +1514,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     public isStreaming(channel: number, datatype: P2PDataType): boolean {
         if (this.currentMessageState[datatype].p2pStreamChannel === channel)
-        return this.currentMessageState[datatype].p2pStreaming;
+            return this.currentMessageState[datatype].p2pStreaming;
         return false;
     }
 

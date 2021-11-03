@@ -451,4 +451,4 @@ export const buildPingCommandPayload = (channel = 255): Buffer => {
 
 export function isP2PQueueMessage(type: P2PQueueMessage | P2PMessageState): type is P2PQueueMessage {
     return (type as P2PQueueMessage).payload !== undefined;
-} 
+}

@@ -186,6 +186,7 @@ export class Station extends TypedEmitter<StationEvents> {
             };
             if (this.ready) {
                 this.emit("raw property changed", this, type, this.rawProperties[type].value, this.rawProperties[type].timestamp);
+
                 try {
                     if (type === ParamType.GUARD_MODE) {
                         this.emit("guard mode", this, Number.parseInt(parsedValue));
@@ -452,7 +453,7 @@ export class Station extends TypedEmitter<StationEvents> {
                     if (message.station_guard_mode !== undefined)
                         this.updateRawProperty(ParamType.GUARD_MODE, { value: message.station_guard_mode.toString(), timestamp: convertTimestampMs(message.event_time) });
                     if (message.station_current_mode !== undefined)
-                    this.updateRawProperty(CommandType.CMD_GET_ALARM_MODE, { value: message.station_current_mode.toString(), timestamp: convertTimestampMs(message.event_time) });
+                        this.updateRawProperty(CommandType.CMD_GET_ALARM_MODE, { value: message.station_current_mode.toString(), timestamp: convertTimestampMs(message.event_time) });
                 } catch (error) {
                     this.log.debug(`Station ${message.station_sn} MODE_SWITCH event (${message.event_type}) - Error:`, error);
                 }
@@ -546,10 +547,6 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
-        if (!this.p2pSession) {
-            this.log.debug(`P2P connection to station ${this.getSerial()} not present, establish it`);
-            await this.connect();
-        }
         this.log.debug(`Sending guard mode command to station ${this.getSerial()} with value: ${GuardMode[mode]}`);
         if ((isGreaterEqualMinVersion("2.0.7.9", this.getSoftwareVersion()) && !Device.isIntegratedDeviceBySn(this.getSerial())) || Device.isSoloCameraBySn(this.getSerial())) {
             this.log.debug(`Using CMD_SET_PAYLOAD for station ${this.getSerial()}`, { main_sw_version: this.getSoftwareVersion() });
@@ -585,7 +582,7 @@ export class Station extends TypedEmitter<StationEvents> {
             value: mode.toString(),
             timestamp: +new Date
         });
-        
+
         // Trigger refresh Guard Mode
         await this.getCameraInfo();
     }
@@ -647,8 +644,8 @@ export class Station extends TypedEmitter<StationEvents> {
         this.log.info(`Disconnected from station ${this.getSerial()}`);
         this.emit("close", this);
         if (!this.isEnergySavingDevice() && !this.terminating)
-        this.scheduleReconnect();
-}
+            this.scheduleReconnect();
+    }
 
     private onTimeout(): void {
         this.log.info(`Timeout connecting to station ${this.getSerial()}`);
@@ -992,7 +989,7 @@ export class Station extends TypedEmitter<StationEvents> {
         if (device.getStationSerial() !== this.getSerial()) {
             throw new WrongStationError(`Device ${device.getSerial()} is not managed by this station ${this.getSerial()}`);
         }
-                if (!device.hasProperty(PropertyName.DeviceMotionDetectionSensitivity)) {
+        if (!device.hasProperty(PropertyName.DeviceMotionDetectionSensitivity)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
         const property = device.getPropertyMetadata(PropertyName.DeviceMotionDetectionSensitivity);
@@ -1130,7 +1127,6 @@ export class Station extends TypedEmitter<StationEvents> {
                     "zonecount":0
                 }
             }), device.getChannel());
-        } else if (device.isCamera2Product() || device.isBatteryDoorbell() || device.isBatteryDoorbell2() || device.getDeviceType() === DeviceType.CAMERA || device.getDeviceType() === DeviceType.CAMERA_E) {
         } else if (device.isCamera2Product() || device.isBatteryDoorbell() || device.isBatteryDoorbell2() || device.getDeviceType() === DeviceType.CAMERA || device.getDeviceType() === DeviceType.CAMERA_E || device.isSoloCameras()) {
             await this.p2pSession.sendCommandWithInt(CommandType.CMD_DEV_PUSHMSG_MODE, type, this.rawStation.member.admin_user_id, device.getChannel());
         }
@@ -1713,7 +1709,6 @@ export class Station extends TypedEmitter<StationEvents> {
 
     public async setVideoStreamingQuality(device: Device, value: number): Promise<void> {
         //TODO: Check if other devices support this functionality
-        //TODO: Add Wired Doorbell support!
         if (device.getStationSerial() !== this.getSerial()) {
             throw new WrongStationError(`Device ${device.getSerial()} is not managed by this station ${this.getSerial()}`);
         }
@@ -1886,7 +1881,6 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!Object.values(FloodlightMotionTriggeredDistance).includes(value)) {
             throw new InvalidPropertyValueError(`Value "${value}" isn't a valid value`);
         }
-
         this.log.debug(`Sending floodlight light settings motion triggered distance command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_PIRSENSITIVITY, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
@@ -2164,8 +2158,6 @@ export class Station extends TypedEmitter<StationEvents> {
             }
             this.log.debug(`Sending matermark command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${WatermarkSetting2[value]}`);
             await this.p2pSession.sendCommandWithIntString(CommandType.CMD_SET_DEVS_OSD, value, device.getChannel(), this.rawStation.member.admin_user_id, "", device.getChannel());
-        } else {
-            this.log.warn("This functionality is not implemented or supported by this device");
         }
     }
 
@@ -2222,7 +2214,6 @@ export class Station extends TypedEmitter<StationEvents> {
         if (this.isLiveStreaming(device)) {
             throw new LivestreamAlreadyRunningError(`Livestream for device ${device.getSerial()} is already running`);
         }
-
         this.log.debug(`Sending start livestream command to station ${this.getSerial()} for device ${device.getSerial()}`);
         const rsa_key = this.p2pSession.getRSAPrivateKey();
 
@@ -2236,7 +2227,6 @@ export class Station extends TypedEmitter<StationEvents> {
                     "streamtype": videoCodec
                 }
             }), device.getChannel());
-        
         } else if (device.isSoloCameras()) {
             this.log.debug(`Using CMD_DOORBELL_SET_PAYLOAD (solo cams) for station ${this.getSerial()} (main_sw_version: ${this.getSoftwareVersion()})`);
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_DOORBELL_SET_PAYLOAD, JSON.stringify({
@@ -2260,7 +2250,7 @@ export class Station extends TypedEmitter<StationEvents> {
                     "payload": {
                         "ClientOS": "Android",
                         "key": rsa_key?.exportKey("components-public").n.slice(1).toString("hex"),
-                        "streamtype": VideoCodec.H264
+                        "streamtype": videoCodec === VideoCodec.H264 ? 1 : 2,
                     }
                 }), device.getChannel());
             }
@@ -2282,7 +2272,7 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     public isLiveStreaming(device: Device): boolean {
-        /*if (!this.p2pSession || !this.p2pSession.isConnected()) {
+        /*if (!this.p2pSession.isConnected()) {
             return false
         }
         if (device.getStationSerial() !== this.getSerial())
@@ -2291,7 +2281,7 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     public isDownloading(device: Device): boolean {
-        /*if (!this.p2pSession || !this.p2pSession.isConnected()) {
+        /*if (!this.p2pSession.isConnected()) {
             return false
         }
         if (device.getStationSerial() !== this.getSerial())
@@ -2460,8 +2450,10 @@ export class Station extends TypedEmitter<StationEvents> {
         } /*else if (device.isLockAdvanced()) {
             const publicKey = await this.api.getPublicKey(device.getSerial(), PublicKeyType.LOCK);
             const encPublicKey = encryptLockBasicPublicKey(generateLockBasicPublicKeyAESKey(this.rawStation.member.admin_user_id), Buffer.from(publicKey, "hex"));
+
             //TODO: Generate key from encPublicKey using ECC - ECIES (aes-cbc 128, HMAC_SHA_256_256) - KDF!
             // KDF: HKDF SHA256 - RFC 5869
+
             const key = generateLockBasicAESKey();
             const iv = getLockVectorBytes(this.getSerial());
             const payload: LockBasicOnOffRequestPayload = {
@@ -2470,7 +2462,9 @@ export class Station extends TypedEmitter<StationEvents> {
                 userId: this.rawStation.member.admin_user_id,
                 userName: this.rawStation.member.nick_name,
             };
+
             const encPayload = encryptLockAESData(key, iv, encodeLockPayload(JSON.stringify(payload)));
+
             await this.p2pSession.sendCommandWithStringPayload(CommandType.CMD_SET_PAYLOAD, JSON.stringify({
                 "key": "",  //TODO: Missing key generation!
                 "account_id": this.rawStation.member.admin_user_id,
@@ -2603,4 +2597,5 @@ export class Station extends TypedEmitter<StationEvents> {
             }
         return false;
     }
+
 }
