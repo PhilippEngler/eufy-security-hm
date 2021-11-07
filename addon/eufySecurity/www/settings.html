@@ -116,11 +116,11 @@
 												<label for="txtUsername">Standort des eufy Security Accounts.</label>
 												<select name="location" id="cbLocation" class="custom-select mb-2" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
-													<option disabled value="0">automatische Auswahl</option>
+													<option disabled value="-1">automatische Auswahl</option>
+													<option disabled value="0">alle Regionen außer Europa</option>
 													<option value="1">Europa</option>
-													<option disabled value="2">restliche Welt</option>
 												</select>
-												<small class="form-text text-muted">Der Standort, für den Sie den eufy Security Account erstellt haben.</small>
+												<small class="form-text text-muted">Der Standort, für den Sie den eufy Security Account erstellt haben. Auch wenn Sie hier einen anderen Wert angeben, verbindet sich der Client trotzdem mit der richtigen Region. Diese wird ihm von eufy mitgeteilt, wenn er sich bei einem fremden Standort anmeldet.</small>
 											</div>
 										</div>
 									</div>
@@ -728,13 +728,13 @@
 								text.value = username;
 								text = document.getElementById('txtPassword');
 								text.value = password;
-								if(accountlocation == undefined || accountlocation < "0" || accountlocation > "1" )
+								if(accountlocation == undefined || accountlocation < "-1" || accountlocation > "1" )
 								{
 									document.getElementById("cbLocation").selectedIndex = "";
 								}
 								else
 								{
-									document.getElementById("cbLocation").selectedIndex = (Number.parseInt(accountlocation)) + 1;
+									document.getElementById("cbLocation").value = (Number.parseInt(accountlocation));
 								}
 								if(apiusehttp == "true")
 								{

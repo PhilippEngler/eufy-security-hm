@@ -15,7 +15,8 @@ import { EufySecurityApi } from "../eufySecurityApi";
 export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     //private apiBase = "https://mysecurity.eufylife.com/api/v1";
-    private apiBase = "https://security-app-eu.eufylife.com/v1";
+    //private apiBase = "https://security-app-eu.eufylife.com/v1";
+    private apiBase: string;
 
     private api : EufySecurityApi;
     private username: string|null = null;
@@ -56,23 +57,32 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         this.username = username;
         this.password = password;
         this.location = location;
-        switch (location)
+
+        this.log = log;
+
+        switch (this.location)
         {
+            case -1:
+                //Autoselect
+                this.log.debug(`Region: Autoselect (${this.location}. Using 'https://mysecurity.eufylife.com/api/v1' api server.`);
+                this.apiBase = "https://mysecurity.eufylife.com/api/v1";
+                break;
             case 0:
-                log.debug("Using 'https://security-app-eu.eufylife.com/v1' api server.");
-                this.apiBase = "https://security-app-eu.eufylife.com/v1";
+                //Rest of world
+                this.log.debug(`Region: Rest of world (${this.location}. Using 'https://security-app.eufylife.com/v1' api server.`);
+                this.apiBase = "https://security-app.eufylife.com/v1";
                 break;
             case 1:
-                log.debug("Using 'https://security-app-eu.eufylife.com/v1' api server.");
+                //Europe    
+                this.log.debug(`Region: Europe (${this.location}. Using 'https://security-app-eu.eufylife.com/v1' api server.`);
                 this.apiBase = "https://security-app-eu.eufylife.com/v1";
                 break;
             default:
-                log.debug("Using 'https://mysecurity.eufylife.com/api/v1' api server.");
+                //all other values: do the same like autoselect
+                this.log.debug(`Region: Unknown (${this.location}. Using 'https://mysecurity.eufylife.com/api/v1' api server.`);
                 this.apiBase = "https://mysecurity.eufylife.com/api/v1";
                 break;
         }
-
-        this.log = log;
 
         this.headers.timezone = getTimezoneGMTString();
     }

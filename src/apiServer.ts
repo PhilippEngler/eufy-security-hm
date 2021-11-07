@@ -339,6 +339,12 @@ class ApiServer
                             password = getDataFromPOSTData(postData, "password", "string");
                         }
 
+                        var location = "";
+                        if(postData.indexOf("location") >= 0)
+                        {
+                            location = getDataFromPOSTData(postData, "location", "string");
+                        }
+
                         var useHttp = false;
                         if(postData.indexOf("useHttp") >= 0)
                         {
@@ -457,6 +463,10 @@ class ApiServer
                             apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
                         }
 
+                        if(checkNumberValue(location, -1, 1))
+                        {
+                            isDataOK = false;
+                        }
                         if(checkNumberValue(apiporthttp, 1, 53535) == false)
                         {
                             isDataOK = false;
@@ -493,7 +503,7 @@ class ApiServer
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
+                            responseString = api.setConfig(username, password, location, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
                         }
                         else
                         {
