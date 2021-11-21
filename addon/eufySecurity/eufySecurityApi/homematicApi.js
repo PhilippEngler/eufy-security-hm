@@ -89,8 +89,8 @@ class HomematicApi {
      */
     getLogFileContent() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (fs_1.existsSync('/var/log/eufySecurity.log') == true) {
-                var fileContent = fs_1.readFileSync('/var/log/eufySecurity.log', 'utf-8');
+            if ((0, fs_1.existsSync)('/var/log/eufySecurity.log') == true) {
+                var fileContent = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
                 if (fileContent == "") {
                     return "Die Datei '/var/log/eufySecurity.log' ist leer.";
                 }
@@ -109,8 +109,8 @@ class HomematicApi {
      */
     getErrorFileContent() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (fs_1.existsSync('/var/log/eufySecurity.err') == true) {
-                var fileContent = fs_1.readFileSync('/var/log/eufySecurity.err', 'utf-8');
+            if ((0, fs_1.existsSync)('/var/log/eufySecurity.err') == true) {
+                var fileContent = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
                 if (fileContent == "") {
                     return "Die Datei '/var/log/eufySecurity.err' ist leer.";
                 }

@@ -193,6 +193,12 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
         });
     }
+    /**
+     * Returns a device specified by station and channel.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @returns The device specified by base and channel.
+     */
     getDeviceByStationAndChannel(baseSerial, channel) {
         for (const device of Object.values(this.devices)) {
             if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial)) {
@@ -202,6 +208,14 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logError(`No device with channel ${channel} found on station with serial number: ${baseSerial}.`);
         throw new Error("Error");
     }
+    /**
+     * Update the battery and temperature information for a given device.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @param batteryLevel The battery level value.
+     * @param temperature The temperature value.
+     * @param modified The datetime stamp the values have changed.
+     */
     updateBatteryValues(baseSerial, channel, batteryLevel, temperature, modified) {
         try {
             const device = this.getDeviceByStationAndChannel(baseSerial, channel);
@@ -218,6 +232,14 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             this.api.logError(`Station runtime state error (station: ${baseSerial} channel: ${channel})`, error);
         }
     }
+    /**
+     * Update the charge state and battery value information for a given device.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @param chargeType The charge state.
+     * @param batteryLevel The battery level value.
+     * @param modified The datetime stamp the values have changed.
+     */
     updateChargingState(baseSerial, channel, chargeType, batteryLevel, modified) {
         try {
             const device = this.getDeviceByStationAndChannel(baseSerial, channel);
@@ -234,6 +256,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             this.api.logError(`Station charging state error (station: ${baseSerial} channel: ${channel})`, error);
         }
     }
+    /**
+     * Update the wifi rssi value information for a given device.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @param rssi The rssi value.
+     * @param modified The datetime stamp the values have changed.
+     */
     updateWifiRssi(baseSerial, channel, rssi, modified) {
         try {
             const device = this.getDeviceByStationAndChannel(baseSerial, channel);
@@ -246,6 +275,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             this.api.logError(`Station wifi rssi error (station: ${baseSerial} channel: ${channel})`, error);
         }
     }
+    /**
+     * Update the raw values for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param values The raw values.
+     */
     updateDeviceProperties(deviceSerial, values) {
         this.devices[deviceSerial].updateRawProperties(values);
     }

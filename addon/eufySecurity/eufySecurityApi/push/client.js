@@ -68,7 +68,7 @@ class PushClient extends tiny_typed_emitter_1.TypedEmitter {
     }
     static init(auth, log) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.proto = yield protobuf_typescript_1.load(path_1.default.join(__dirname, "./proto/mcs.proto"));
+            this.proto = yield (0, protobuf_typescript_1.load)(path_1.default.join(__dirname, "./proto/mcs.proto"));
             const pushClientParser = yield parser_1.PushClientParser.init(log);
             return new PushClient(pushClientParser, auth, log);
         });

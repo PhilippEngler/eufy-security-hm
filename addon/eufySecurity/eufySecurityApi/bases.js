@@ -30,6 +30,10 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
         this.httpService = httpService;
         this.serialNumbers = [];
     }
+    /**
+     * Set the devices connected with the account.
+     * @param devices The devices to set.
+     */
     setDevices(devices) {
         this.devices = devices;
     }
@@ -141,7 +145,7 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
             for (var stationSerial in this.bases) {
                 this.skipNextModeChangeEvent[stationSerial] = true;
                 yield this.bases[stationSerial].setGuardMode(guardMode);
-                yield utils_1.sleep(1500);
+                yield (0, utils_1.sleep)(1500);
                 yield this.loadBases();
                 if (this.bases[stationSerial].getGuardMode().value != guardMode) {
                     cnt = cnt + 1;
@@ -164,7 +168,7 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             this.skipNextModeChangeEvent[baseSerial] = true;
             yield this.bases[baseSerial].setGuardMode(guardMode);
-            yield utils_1.sleep(1500);
+            yield (0, utils_1.sleep)(1500);
             yield this.loadBases();
             if (this.bases[baseSerial].getGuardMode().value == guardMode) {
                 return true;
@@ -218,7 +222,7 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
      */
     addEventListenerDelayed(base, eventListenerName) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield utils_1.sleep(5000);
+            yield (0, utils_1.sleep)(5000);
             switch (eventListenerName) {
                 case "GuardModeChanged":
                     base.on("guard mode", (station, guardMode) => this.onStationGuardModeChanged(station, guardMode));
@@ -357,18 +361,46 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
             }
         });
     }
+    /**
+     * The action to be one when event StationRuntimeState is fired.
+     * @param station The base as Station object.
+     * @param channel The cannel to define the device.
+     * @param batteryLevel The battery level as percentage value.
+     * @param temperature The temperature as degree value.
+     * @param modified The datetime stamp the values have changed.
+     */
     onStationRuntimeState(station, channel, batteryLevel, temperature, modified) {
         this.api.logDebug(`Event "RuntimeState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
         this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature, modified);
     }
+    /**
+     * The action to be one when event StationChargingState is fired.
+     * @param station The base as Station object.
+     * @param channel The cannel to define the device.
+     * @param chargeType The current carge state.
+     * @param batteryLevel The battery level as percentage value.
+     * @param modified The datetime stamp the values have changed.
+     */
     onStationChargingState(station, channel, chargeType, batteryLevel, modified) {
         this.api.logDebug(`Event "ChargingState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
         this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel, modified);
     }
+    /**
+     * The action to be one when event StationWifiRssi is fired.
+     * @param station The base as Station object.
+     * @param channel The cannel to define the device.
+     * @param rssi The current rssi value.
+     * @param modified The datetime stamp the values have changed.
+     */
     onStationWifiRssi(station, channel, rssi, modified) {
         this.api.logDebug(`Event "WifiRssi": base: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
         this.devices.updateWifiRssi(station.getSerial(), channel, rssi, modified);
     }
+    /**
+     * The action to be one when event RawDevicePropertyChanged is fired.
+     * @param deviceSerial The serial of the device the raw values changed for.
+     * @param values The raw values for the device.
+     */
     onRawDevicePropertyChanged(deviceSerial, values) {
         this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
         this.devices.updateDeviceProperties(deviceSerial, values);

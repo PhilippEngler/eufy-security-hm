@@ -18,6 +18,16 @@
 			],
 			"group": "build",
 			"label": "tsc: Erstellen AddOn – tsconfig.json"
+		},
+		{
+			"type": "typescript",
+			"tsconfig": "tsconfigAddOn.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+			"label": "tsc: Überwachen – tsconfigAddOn.json"
 		}
 	]
 }

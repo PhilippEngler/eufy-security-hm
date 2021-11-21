@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.NotConnectedError = exports.WrongStationError = exports.NotSupportedError = exports.DuplicateDeviceError = exports.DeviceNotFoundError = exports.DuplicateStationError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
+exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.RTSPPropertyNotEnabled = exports.WrongStationError = exports.NotSupportedError = exports.DuplicateDeviceError = exports.DeviceNotFoundError = exports.DuplicateStationError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
 class InvalidCountryCodeError extends Error {
     constructor(message) {
         super(message);
@@ -65,14 +65,14 @@ class WrongStationError extends Error {
     }
 }
 exports.WrongStationError = WrongStationError;
-class NotConnectedError extends Error {
+class RTSPPropertyNotEnabled extends Error {
     constructor(message) {
         super(message);
         Object.setPrototypeOf(this, new.target.prototype);
-        this.name = NotConnectedError.name;
+        this.name = RTSPPropertyNotEnabled.name;
     }
 }
-exports.NotConnectedError = NotConnectedError;
+exports.RTSPPropertyNotEnabled = RTSPPropertyNotEnabled;
 class InvalidPropertyValueError extends Error {
     constructor(message) {
         super(message);

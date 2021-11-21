@@ -19,8 +19,8 @@ const logging_1 = require("./eufySecurityApi/utils/logging");
 const child_process_1 = require("child_process");
 process.chdir(__dirname);
 var apiServer;
-var serverHttp = http_1.createServer();
-var serverHttps = https_1.createServer();
+var serverHttp = (0, http_1.createServer)();
+var serverHttps = (0, https_1.createServer)();
 var api = new eufySecurityApi_1.EufySecurityApi();
 var logger = new logging_1.Logger(api);
 class ApiServer {
@@ -55,10 +55,10 @@ class ApiServer {
             }
             if (httpsActive == true) {
                 logger.logInfoBasic("Starting https server...");
-                if (fs_1.existsSync(keyHttps) && fs_1.existsSync(certHttps)) {
+                if ((0, fs_1.existsSync)(keyHttps) && (0, fs_1.existsSync)(certHttps)) {
                     const options = {
-                        key: fs_1.readFileSync(keyHttps),
-                        cert: fs_1.readFileSync(certHttps)
+                        key: (0, fs_1.readFileSync)(keyHttps),
+                        cert: (0, fs_1.readFileSync)(certHttps)
                     };
                     serverHttps.setSecureContext(options);
                     serverHttps.on("error", this.errorListener);
@@ -249,18 +249,18 @@ class ApiServer {
                             break;
                         case "downloadConfig":
                             api.writeConfig();
-                            responseString = fs_1.readFileSync('config.ini', 'utf-8');
+                            responseString = (0, fs_1.readFileSync)('config.ini', 'utf-8');
                             contentType = "text/plain";
                             var dateTime = new Date();
                             fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".ini";
                             break;
                         case "downloadLogFile":
-                            responseString = fs_1.readFileSync('/var/log/eufySecurity.log', 'utf-8');
+                            responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
                             contentType = "text/plain";
                             fileName = "eufySecurity.log";
                             break;
                         case "downloadErrFile":
-                            responseString = fs_1.readFileSync('/var/log/eufySecurity.err', 'utf-8');
+                            responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
                             contentType = "text/plain";
                             fileName = "eufySecurity.err";
                             break;
@@ -303,6 +303,10 @@ class ApiServer {
                             var password = "";
                             if (postData.indexOf("password") >= 0) {
                                 password = getDataFromPOSTData(postData, "password", "string");
+                            }
+                            var location = "";
+                            if (postData.indexOf("location") >= 0) {
+                                location = getDataFromPOSTData(postData, "location", "string");
                             }
                             var useHttp = false;
                             if (postData.indexOf("useHttp") >= 0) {
@@ -383,6 +387,9 @@ class ApiServer {
                             if (postData.indexOf("logLevel") >= 0) {
                                 apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
                             }
+                            if (checkNumberValue(location, -1, 1)) {
+                                isDataOK = false;
+                            }
                             if (checkNumberValue(apiporthttp, 1, 53535) == false) {
                                 isDataOK = false;
                             }
@@ -409,7 +416,7 @@ class ApiServer {
                             }
                             if (isDataOK == true) {
                                 apiPortFile(Number(apiporthttp), Number(apiporthttps));
-                                responseString = api.setConfig(username, password, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
+                                responseString = api.setConfig(username, password, location, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
                             }
                             else {
                                 responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
@@ -468,13 +475,13 @@ function main() {
  */
 function apiPortFile(httpPort, httpsPort) {
     try {
-        if (fs_1.existsSync("www/apiPorts.txt")) {
+        if ((0, fs_1.existsSync)("www/apiPorts.txt")) {
             if (api.getApiServerPortHttp() != httpPort || api.getApiServerPortHttps() != httpsPort) {
-                fs_1.writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+                (0, fs_1.writeFileSync)('www/apiPorts.txt', httpPort + "," + httpsPort);
             }
         }
         else {
-            fs_1.writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+            (0, fs_1.writeFileSync)('www/apiPorts.txt', httpPort + "," + httpsPort);
         }
     }
     catch (ENOENT) {
@@ -589,20 +596,20 @@ function stopServer() {
 function restartServer() {
     return __awaiter(this, void 0, void 0, function* () {
         logger.logInfoBasic("Going to restart with apiServerRestarter...");
-        child_process_1.exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
+        (0, child_process_1.exec)("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
     });
 }
 /**
  * Clear the logfile
  */
 function emptyLogFile() {
-    child_process_1.exec("truncate -s 0 /var/log/eufySecurity.log");
+    (0, child_process_1.exec)("truncate -s 0 /var/log/eufySecurity.log");
 }
 /**
  * Clear the errorlogfile
  */
 function emptyErrFile() {
-    child_process_1.exec("truncate -s 0 /var/log/eufySecurity.err");
+    (0, child_process_1.exec)("truncate -s 0 /var/log/eufySecurity.err");
 }
 /**
  * Wait-function for waiting between stop and start when restarting.
@@ -618,12 +625,12 @@ process.on('SIGTERM', () => __awaiter(void 0, void 0, void 0, function* () {
     logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
     yield stopServer();
     logger.logInfoBasic("...done. Exiting");
-    process_1.exit(0);
+    (0, process_1.exit)(0);
 }));
 process.on('SIGINT', () => __awaiter(void 0, void 0, void 0, function* () {
     logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
     yield stopServer();
     logger.logInfoBasic("...done. Exiting");
-    process_1.exit(0);
+    (0, process_1.exit)(0);
 }));
 main();

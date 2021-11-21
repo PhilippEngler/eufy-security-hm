@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkT8420 = exports.getVideoCodec = exports.generateLockBasicPublicKeyAESKey = exports.generateLockBasicSequence = exports.encryptLockBasicPublicKey = exports.generateLockBasicAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.generateLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.isP2PQueueMessage = exports.buildPingCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateLockBasicPublicKeyAESKey = exports.generateLockBasicSequence = exports.encryptLockBasicPublicKey = exports.generateLockBasicAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.generateLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const crypto_js_1 = __importDefault(require("crypto-js"));
 const crypto_1 = require("crypto");
@@ -359,7 +359,7 @@ const eslTimestamp = function (timestamp_in_sec = new Date().getTime() / 1000) {
 };
 exports.eslTimestamp = eslTimestamp;
 const generateLockBasicAESKey = () => {
-    const randomBytesArray = [...crypto_1.randomBytes(16)];
+    const randomBytesArray = [...(0, crypto_1.randomBytes)(16)];
     let result = "";
     for (let pos = 0; pos < randomBytesArray.length; pos++) {
         result += "0123456789ABCDEF".charAt((randomBytesArray[pos] >> 4) & 15);
@@ -423,3 +423,21 @@ const checkT8420 = (serialNumber) => {
     return true;
 };
 exports.checkT8420 = checkT8420;
+const buildPingCommandPayload = (channel = 255) => {
+    const headerBuffer = Buffer.from([0x00, 0x00]);
+    const emptyBuffer = Buffer.from([0x00, 0x00]);
+    const magicBuffer = Buffer.from([0x01, 0x00]);
+    const channelBuffer = Buffer.from([channel, 0x00]);
+    return Buffer.concat([
+        headerBuffer,
+        emptyBuffer,
+        magicBuffer,
+        channelBuffer,
+        emptyBuffer
+    ]);
+};
+exports.buildPingCommandPayload = buildPingCommandPayload;
+function isP2PQueueMessage(type) {
+    return type.payload !== undefined;
+}
+exports.isP2PQueueMessage = isP2PQueueMessage;

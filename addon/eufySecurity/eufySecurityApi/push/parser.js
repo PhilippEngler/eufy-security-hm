@@ -42,7 +42,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
     }
     static init(log) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.proto = yield protobuf_typescript_1.load(path_1.default.join(__dirname, "./proto/mcs.proto"));
+            this.proto = yield (0, protobuf_typescript_1.load)(path_1.default.join(__dirname, "./proto/mcs.proto"));
             return new PushClientParser(log);
         });
     }
@@ -104,7 +104,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
             this.messageSize = reader.int32();
         }
         catch (error) {
-            if (error.message.startsWith("index out of range:")) {
+            if (error instanceof Error && error.message.startsWith("index out of range:")) {
                 incompleteSizePacket = true;
             }
             else {

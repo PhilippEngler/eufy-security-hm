@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PushNotificationService = void 0;
-const axios_1 = __importDefault(require("axios"));
+const got_1 = __importDefault(require("got"));
 const qs_1 = __importDefault(require("qs"));
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const utils_1 = require("./utils");
@@ -48,10 +48,9 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             const url = `https://firebaseinstallations.googleapis.com/v1/projects/${this.FCM_PROJECT_ID}/installations`;
             try {
-                const response = yield yield axios_1.default({
+                const response = yield (0, got_1.default)(url, {
                     method: "post",
-                    url: url,
-                    data: {
+                    json: {
                         fid: fid,
                         appId: `${this.APP_ID}`,
                         authVersion: `${this.AUTH_VERSION}`,
@@ -63,20 +62,23 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         "x-goog-api-key": `${this.GOOGLE_API_KEY}`,
                     },
                     responseType: "json",
-                    validateStatus: function (_status) {
-                        return true;
+                    http2: true,
+                    throwHttpErrors: false,
+                    retry: {
+                        limit: 3,
+                        methods: ["POST"]
                     }
                 }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
-                if (response.status == 200) {
-                    const result = response.data;
+                if (response.statusCode == 200) {
+                    const result = response.body;
                     return Object.assign(Object.assign({}, result), { authToken: Object.assign(Object.assign({}, result.authToken), { expiresAt: this.buildExpiresAt(result.authToken.expiresIn) }) });
                 }
                 else {
-                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
-                    throw new Error(`FID registration failed with error: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                    throw new Error(`FID registration failed with error: ${response.statusMessage}`);
                 }
             }
             catch (error) {
@@ -89,10 +91,9 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             const url = `https://firebaseinstallations.googleapis.com/v1/projects/${this.FCM_PROJECT_ID}/installations/${fid}/authTokens:generate`;
             try {
-                const response = yield yield axios_1.default({
+                const response = yield (0, got_1.default)(url, {
                     method: "post",
-                    url: url,
-                    data: {
+                    json: {
                         fid: fid,
                         appId: `${this.APP_ID}`,
                         authVersion: `${this.AUTH_VERSION}`,
@@ -105,20 +106,23 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         Authorization: `${this.AUTH_VERSION} ${refreshToken}`
                     },
                     responseType: "json",
-                    validateStatus: function (_status) {
-                        return true;
+                    http2: true,
+                    throwHttpErrors: false,
+                    retry: {
+                        limit: 3,
+                        methods: ["POST"]
                     }
                 }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
-                if (response.status == 200) {
-                    const result = response.data;
+                if (response.statusCode == 200) {
+                    const result = response.body;
                     return Object.assign(Object.assign({}, result), { expiresAt: this.buildExpiresAt(result.expiresIn) });
                 }
                 else {
-                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
-                    throw new Error(`FID Token renewal failed with error: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                    throw new Error(`FID Token renewal failed with error: ${response.statusMessage}`);
                 }
             }
             catch (error) {
@@ -129,69 +133,87 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     }
     createPushCredentials() {
         return __awaiter(this, void 0, void 0, function* () {
-            const generatedFid = utils_1.generateFid();
-            const registerFidResponse = yield this.registerFid(generatedFid);
-            const checkinResponse = yield this.executeCheckin();
-            //TODO: On exception handle it and maybe retry later
-            const registerGcmResponse = yield this.registerGcm(registerFidResponse, checkinResponse);
-            return {
-                fidResponse: registerFidResponse,
-                checkinResponse: checkinResponse,
-                gcmResponse: registerGcmResponse,
-            };
+            const generatedFid = (0, utils_1.generateFid)();
+            return yield this.registerFid(generatedFid)
+                .then((registerFidResponse) => __awaiter(this, void 0, void 0, function* () {
+                const checkinResponse = yield this.executeCheckin();
+                return {
+                    fidResponse: registerFidResponse,
+                    checkinResponse: checkinResponse
+                };
+            }))
+                .then((result) => __awaiter(this, void 0, void 0, function* () {
+                const registerGcmResponse = yield this.registerGcm(result.fidResponse, result.checkinResponse);
+                return Object.assign(Object.assign({}, result), { gcmResponse: registerGcmResponse });
+            })).catch((error) => {
+                throw error;
+            });
         });
     }
     renewPushCredentials(credentials) {
         return __awaiter(this, void 0, void 0, function* () {
-            credentials.fidResponse.authToken = yield this.renewFidToken(credentials.fidResponse.fid, credentials.fidResponse.refreshToken);
-            const checkinResponse = yield this.executeCheckin();
-            //TODO: On exception handle it and maybe retry later
-            const registerGcmResponse = yield this.registerGcm(credentials.fidResponse, checkinResponse);
-            return {
-                fidResponse: credentials.fidResponse,
-                checkinResponse: checkinResponse,
-                gcmResponse: registerGcmResponse,
-            };
+            return yield this.renewFidToken(credentials.fidResponse.fid, credentials.fidResponse.refreshToken)
+                .then((response) => __awaiter(this, void 0, void 0, function* () {
+                credentials.fidResponse.authToken = response;
+                return yield this.executeCheckin();
+            }))
+                .then((response) => __awaiter(this, void 0, void 0, function* () {
+                const registerGcmResponse = yield this.registerGcm(credentials.fidResponse, response);
+                return {
+                    fidResponse: credentials.fidResponse,
+                    checkinResponse: response,
+                    gcmResponse: registerGcmResponse,
+                };
+            }))
+                .catch(() => {
+                return this.createPushCredentials();
+            });
         });
     }
     loginPushCredentials(credentials) {
         return __awaiter(this, void 0, void 0, function* () {
-            const checkinResponse = yield this.executeCheckin();
-            //TODO: On exception handle it and maybe retry later
-            const registerGcmResponse = yield this.registerGcm(credentials.fidResponse, checkinResponse);
-            return {
-                fidResponse: credentials.fidResponse,
-                checkinResponse: checkinResponse,
-                gcmResponse: registerGcmResponse,
-            };
+            return yield this.executeCheckin()
+                .then((response) => __awaiter(this, void 0, void 0, function* () {
+                const registerGcmResponse = yield this.registerGcm(credentials.fidResponse, response);
+                return {
+                    fidResponse: credentials.fidResponse,
+                    checkinResponse: response,
+                    gcmResponse: registerGcmResponse,
+                };
+            }))
+                .catch(() => {
+                return this.createPushCredentials();
+            });
         });
     }
     executeCheckin() {
         return __awaiter(this, void 0, void 0, function* () {
             const url = "https://android.clients.google.com/checkin";
             try {
-                const buffer = yield utils_1.buildCheckinRequest();
-                const response = yield axios_1.default({
+                const buffer = yield (0, utils_1.buildCheckinRequest)();
+                const response = yield (0, got_1.default)(url, {
                     method: "post",
-                    url: url,
-                    data: Buffer.from(buffer),
+                    body: Buffer.from(buffer),
                     headers: {
                         "Content-Type": "application/x-protobuf",
                     },
-                    responseType: "arraybuffer",
-                    validateStatus: function (_status) {
-                        return true;
+                    responseType: "buffer",
+                    http2: true,
+                    throwHttpErrors: false,
+                    retry: {
+                        limit: 3,
+                        methods: ["POST"]
                     }
                 }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
-                if (response.status == 200) {
-                    return yield utils_1.parseCheckinResponse(response.data);
+                if (response.statusCode == 200) {
+                    return yield (0, utils_1.parseCheckinResponse)(response.body);
                 }
                 else {
-                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
-                    throw new Error(`Google checkin failed with error: ${response.statusText}`);
+                    this.log.error("Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                    throw new Error(`Google checkin failed with error: ${response.statusMessage}`);
                 }
             }
             catch (error) {
@@ -209,10 +231,9 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             const retry = 5;
             try {
                 for (let retry_count = 1; retry_count <= retry; retry_count++) {
-                    const response = yield yield axios_1.default({
+                    const response = yield (0, got_1.default)(url, {
                         method: "post",
-                        url: url,
-                        data: qs_1.default.stringify({
+                        body: qs_1.default.stringify({
                             "X-subtype": `${this.APP_SENDER_ID}`,
                             sender: `${this.APP_SENDER_ID}`,
                             "X-app_ver": "741",
@@ -243,15 +264,18 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                             "User-Agent": "Android-GCM/1.5 (OnePlus5 NMF26X)",
                             "content-type": "application/x-www-form-urlencoded",
                         },
-                        validateStatus: function (_status) {
-                            return true;
+                        http2: true,
+                        throwHttpErrors: false,
+                        retry: {
+                            limit: 3,
+                            methods: ["POST"]
                         }
                     }).catch(error => {
                         this.log.error("Error:", error);
                         return error;
                     });
-                    if (response.status == 200) {
-                        const result = response.data.split("=");
+                    if (response.statusCode == 200) {
+                        const result = response.body.split("=");
                         if (result[0] == "Error") {
                             this.log.debug("GCM register error, retry...", { retry: retry, retryCount: retry_count });
                             if (retry_count == retry)
@@ -264,10 +288,10 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
-                        throw new Error(`Google register to GCM failed with error: ${response.statusText}`);
+                        this.log.error("Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                        throw new Error(`Google register to GCM failed with error: ${response.statusMessage}`);
                     }
-                    yield utils_1.sleep(10000 * retry_count);
+                    yield (0, utils_1.sleep)(10000 * retry_count);
                 }
                 throw new Error(`GCM-Register Error: Undefined!`);
             }
@@ -288,11 +312,11 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         if (message.payload.payload) {
             // CusPush
             normalized_message.type = Number.parseInt(message.payload.type);
-            if (normalized_message.type === http_1.DeviceType.BATTERY_DOORBELL || normalized_message.type === http_1.DeviceType.BATTERY_DOORBELL_2) {
+            if (http_1.Device.isBatteryDoorbell(normalized_message.type) || http_1.Device.isBatteryDoorbell2(normalized_message.type)) {
                 const push_data = message.payload.payload;
                 normalized_message.name = push_data.name ? push_data.name : "";
                 try {
-                    normalized_message.event_time = message.payload.event_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
+                    normalized_message.event_time = message.payload.event_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.event_time)) : Number.parseInt(message.payload.event_time);
                 }
                 catch (error) {
                     this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} BatteryDoorbellPushData - event_time - Error:`, error);
@@ -302,7 +326,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
-                    normalized_message.push_time = message.payload.push_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
+                    normalized_message.push_time = message.payload.push_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.push_time)) : Number.parseInt(message.payload.push_time);
                 }
                 catch (error) {
                     this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} BatteryDoorbellPushData - push_time - Error:`, error);
@@ -311,16 +335,16 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.cipher = push_data.cipher !== undefined ? push_data.cipher : 0;
                 normalized_message.event_session = push_data.session_id !== undefined ? push_data.session_id : "";
                 normalized_message.event_type = push_data.event_type;
-                normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? utils_2.getAbsoluteFilePath(normalized_message.type, push_data.channel, push_data.file_path) : "";
+                normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? (0, utils_2.getAbsoluteFilePath)(normalized_message.type, push_data.channel, push_data.file_path) : "";
                 normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
                 normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
                 normalized_message.notification_style = push_data.notification_style;
             }
-            else if (normalized_message.type === http_1.DeviceType.INDOOR_CAMERA || normalized_message.type === http_1.DeviceType.INDOOR_CAMERA_1080 || normalized_message.type === http_1.DeviceType.INDOOR_PT_CAMERA || normalized_message.type === http_1.DeviceType.INDOOR_PT_CAMERA_1080) {
+            else if (http_1.Device.isIndoorCamera(normalized_message.type) || http_1.Device.isSoloCameras(normalized_message.type)) {
                 const push_data = message.payload.payload;
                 normalized_message.name = push_data.name ? push_data.name : "";
                 try {
-                    normalized_message.event_time = message.payload.event_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
+                    normalized_message.event_time = message.payload.event_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.event_time)) : Number.parseInt(message.payload.event_time);
                 }
                 catch (error) {
                     this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} IndoorPushData - event_time - Error:`, error);
@@ -330,7 +354,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
-                    normalized_message.push_time = message.payload.push_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
+                    normalized_message.push_time = message.payload.push_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.push_time)) : Number.parseInt(message.payload.push_time);
                 }
                 catch (error) {
                     this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} IndoorPushData - push_time - Error:`, error);
@@ -339,7 +363,8 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.cipher = push_data.cipher;
                 normalized_message.event_session = push_data.session_id;
                 normalized_message.event_type = push_data.event_type;
-                normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? utils_2.getAbsoluteFilePath(normalized_message.type, push_data.channel, push_data.file_path) : "";
+                //normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? getAbsoluteFilePath(normalized_message.type, push_data.channel, push_data.file_path) : "";
+                normalized_message.file_path = push_data.file_path;
                 normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
                 normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
                 normalized_message.notification_style = push_data.notification_style;
@@ -353,7 +378,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 const push_data = message.payload.payload;
                 normalized_message.name = push_data.device_name && push_data.device_name !== null && push_data.device_name !== "" ? push_data.device_name : push_data.n ? push_data.n : "";
                 try {
-                    normalized_message.event_time = message.payload.event_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.event_time)) : message.payload.event_time;
+                    normalized_message.event_time = message.payload.event_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.event_time)) : Number.parseInt(message.payload.event_time);
                 }
                 catch (error) {
                     this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} CusPushData - event_time - Error:`, error);
@@ -366,7 +391,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.title = message.payload.title;
                 normalized_message.content = message.payload.content;
                 try {
-                    normalized_message.push_time = message.payload.push_time !== undefined ? utils_1.convertTimestampMs(Number.parseInt(message.payload.push_time)) : message.payload.push_time;
+                    normalized_message.push_time = message.payload.push_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.push_time)) : Number.parseInt(message.payload.push_time);
                 }
                 catch (error) {
                     this.log.error(`Type ${http_1.DeviceType[normalized_message.type]} CusPushData - push_time - Error:`, error);
@@ -375,7 +400,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 normalized_message.cipher = push_data.k;
                 normalized_message.event_session = push_data.session_id;
                 normalized_message.event_type = push_data.a;
-                normalized_message.file_path = push_data.c !== undefined && push_data.p !== undefined && push_data.p !== "" ? utils_2.getAbsoluteFilePath(normalized_message.type, push_data.c, push_data.p) : "";
+                normalized_message.file_path = push_data.c !== undefined && push_data.p !== undefined && push_data.p !== "" ? (0, utils_2.getAbsoluteFilePath)(normalized_message.type, push_data.c, push_data.p) : "";
                 normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
                 normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
                 normalized_message.notification_style = push_data.notification_style;
@@ -418,18 +443,18 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             const push_data = JSON.parse(message.payload.doorbell);
             normalized_message.name = "Doorbell";
             normalized_message.type = 5;
-            normalized_message.event_time = push_data.create_time !== undefined ? utils_1.convertTimestampMs(push_data.create_time) : push_data.create_time;
+            normalized_message.event_time = push_data.create_time !== undefined ? (0, utils_1.convertTimestampMs)(push_data.create_time) : push_data.create_time;
             normalized_message.station_sn = push_data.device_sn;
             normalized_message.device_sn = push_data.device_sn;
             normalized_message.title = push_data.title;
             normalized_message.content = push_data.content;
-            normalized_message.push_time = push_data.event_time !== undefined ? utils_1.convertTimestampMs(push_data.event_time) : push_data.event_time;
+            normalized_message.push_time = push_data.event_time !== undefined ? (0, utils_1.convertTimestampMs)(push_data.event_time) : push_data.event_time;
             normalized_message.channel = push_data.channel;
             normalized_message.cipher = push_data.cipher;
             normalized_message.event_session = push_data.event_session;
             normalized_message.event_type = push_data.event_type;
-            normalized_message.file_path = push_data.file_path,
-                normalized_message.pic_url = push_data.pic_url;
+            normalized_message.file_path = push_data.file_path;
+            normalized_message.pic_url = push_data.pic_url;
             normalized_message.push_count = push_data.push_count;
             normalized_message.doorbell_url = push_data.url;
             normalized_message.doorbell_url_ex = push_data.url_ex;
@@ -524,7 +549,9 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     }
     open() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this._open();
+            yield this._open().catch((error) => {
+                this.log.error(`Got exception trying to initialize push notifications`, error);
+            });
             if (!this.credentials) {
                 this.clearRetryTimeout();
                 const delay = this.getCurrentPushRetryDelay();

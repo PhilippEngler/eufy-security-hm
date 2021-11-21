@@ -39,8 +39,13 @@ exports.generateSerialnumber = generateSerialnumber;
 const md5 = (contents) => crypto.createHash("md5").update(contents).digest("hex");
 exports.md5 = md5;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const handleUpdate = function (oldVersion) {
-    // for future updates
+const handleUpdate = function (config, log, oldVersion) {
+    if (oldVersion <= 1.24) {
+        //config.api_base = "";
+        config.setToken("");
+        config.setTokenExpire("0");
+    }
+    return;
 };
 exports.handleUpdate = handleUpdate;
 const isEmpty = function (str) {

@@ -35,6 +35,8 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
     private stations: Stations = {};
     private devices: Devices = {};
 
+    private readonly P2P_REFRESH_INTERVAL_MIN = 720;
+
     private cameraMaxLivestreamSeconds = 30;
     private cameraStationLivestreamTimeout: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
     private cameraCloudLivestreamTimeout: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
@@ -56,7 +58,10 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
     };
     private connected = false;
 
-    private refreshEufySecurityTimeout?: NodeJS.Timeout;
+    private refreshEufySecurityCloudTimeout?: NodeJS.Timeout;
+    private refreshEufySecurityP2PTimeout: {
+        [dataType: string]: NodeJS.Timeout;
+    } = {};
 
     constructor(config: EufySecurityConfig, log: Logger = dummyLogger) {
         super();
@@ -110,7 +115,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
                 this.log.debug("Handling of adapter update", { currentVersion: currentVersion, previousVersion: previousVersion });
 
                 if (previousVersion < currentVersion) {
-                    handleUpdate(previousVersion);
+                    this.persistentData = handleUpdate(this.persistentData, this.log, previousVersion);
                     this.persistentData.version = libVersion;
                     this.writePersistentData();
                 }
@@ -217,7 +222,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
     private updateStation(hub: HubResponse): void {
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
-            if (!this.stations[hub.station_sn].isConnected()) {
+            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice()) {
                 this.stations[hub.station_sn].setConnectionType(this.config.p2pConnectionSetup);
                 this.stations[hub.station_sn].connect();
             }
@@ -309,6 +314,12 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
         throw new StationNotFoundError(`No station with this serial number: ${stationSN}!`);
     }
 
+    public isStationEnergySavingDevice(stationSN: string): boolean {
+        if (Object.keys(this.stations).includes(stationSN))
+            return this.stations[stationSN].isEnergySavingDevice();
+        throw new StationNotFoundError(`No station with this serial number: ${stationSN}!`);
+    }
+
     private handleHubs(hubs: Hubs): void {
         this.log.debug("Got hubs:", hubs);
         const stationsSNs: string[] = Object.keys(this.stations);
@@ -328,6 +339,8 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
                 station.on("command result", (station: Station, result: CommandResult) => this.onStationCommandResult(station, result));
                 station.on("guard mode", (station: Station, guardMode: number) => this.onStationGuardMode(station, guardMode));
                 station.on("current mode", (station: Station, currentMode: number) => this.onStationCurrentMode(station, currentMode));
+                station.on("rtsp livestream start", (station: Station, channel:number) => this.onStartStationRTSPLivestream(station, channel));
+                station.on("rtsp livestream stop", (station: Station, channel:number) => this.onStopStationRTSPLivestream(station, channel));
                 station.on("rtsp url", (station: Station, channel:number, value: string, modified: number) => this.onStationRtspUrl(station, channel, value, modified));
                 station.on("property changed", (station: Station, name: string, value: PropertyValue) => this.onStationPropertyChanged(station, name, value));
                 station.on("raw property changed", (station: Station, type: number, value: string, modified: number) => this.onStationRawPropertyChanged(station, type, value, modified));
@@ -348,10 +361,18 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
 
     private onStationConnect(station: Station): void {
         this.emit("station connect", station);
-        if (station.getDeviceType() !== DeviceType.DOORBELL)
+        if (station.getDeviceType() !== DeviceType.DOORBELL) {
             station.getCameraInfo().catch(error => {
                 this.log.error(`Error during station ${station.getSerial()} p2p data refreshing`, error);
             });
+            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined)
+                clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
+            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+                station.getCameraInfo().catch(error => {
+                    this.log.error(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                });
+            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+        }
     }
 
     private onStationClose(station: Station): void {
@@ -382,7 +403,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
 
                 if (Device.isIndoorCamera(device.device_type)) {
                     new_device = new IndoorCamera(this.api, device);
-                } else if (Device.isSoloCamera(device.device_type)) {
+                } else if (Device.isSoloCameras(device.device_type)) {
                     new_device = new SoloCamera(this.api, device);
                 } else if (Device.isBatteryDoorbell(device.device_type) || Device.isBatteryDoorbell2(device.device_type)) {
                     new_device = new BatteryDoorbellCamera(this.api, device);
@@ -425,7 +446,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
         }
     }
 
-    public async refreshData(): Promise<void> {
+    public async refreshCloudData(): Promise<void> {
         if (this.config.acceptInvitations) {
             await this.processInvitations().catch(error => {
                 this.log.error("Error in processing invitations", error);
@@ -434,15 +455,9 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
         await this.api.updateDeviceInfo().catch(error => {
             this.log.error("Error during API data refreshing", error);
         });
-        Object.values(this.stations).forEach(async (station: Station) => {
-            if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
-                await station.getCameraInfo().catch(error => {
-                    this.log.error(`Error during station ${station.getSerial()} p2p data refreshing`, error);
-                });
-        });
-        if (this.refreshEufySecurityTimeout !== undefined)
-            clearTimeout(this.refreshEufySecurityTimeout);
-        this.refreshEufySecurityTimeout = setTimeout(() => { this.refreshData() }, this.config.pollingIntervalMinutes * 60 * 1000);
+        if (this.refreshEufySecurityCloudTimeout !== undefined)
+            clearTimeout(this.refreshEufySecurityCloudTimeout);
+        this.refreshEufySecurityCloudTimeout = setTimeout(() => { this.refreshCloudData() }, this.config.pollingIntervalMinutes * 60 * 1000);
     }
 
     public close(): void {
@@ -453,8 +468,12 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
             this.stopCloudLivestream(device_sn);
         }
 
-        if (this.refreshEufySecurityTimeout !== undefined)
-            clearTimeout(this.refreshEufySecurityTimeout);
+        if (this.refreshEufySecurityCloudTimeout !== undefined)
+            clearTimeout(this.refreshEufySecurityCloudTimeout);
+
+        Object.keys(this.refreshEufySecurityP2PTimeout).forEach(station_sn => {
+            clearTimeout(this.refreshEufySecurityP2PTimeout[station_sn]);
+        });
 
         this.savePushPersistentIds();
 
@@ -560,9 +579,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
 
         this.registerPushNotifications(this.persistentData.push_credentials, this.persistentData.push_persistentIds);
 
-        await this.api.updateDeviceInfo();
-
-        this.refreshData();
+        this.refreshCloudData();
     }
 
     public async startStationLivestream(deviceSN: string): Promise<void> {
@@ -573,16 +590,15 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
 
         const camera = device as Camera;
-        if (station.isConnected()) {
-            if (!station.isLiveStreaming(camera)) {
-                station.startLivestream(camera);
+        if (!station.isLiveStreaming(camera)) {
+            station.startLivestream(camera);
 
-                this.cameraStationLivestreamTimeout.set(deviceSN, setTimeout(() => {
-                    this.stopStationLivestream(deviceSN);
-                }, this.cameraMaxLivestreamSeconds * 1000));
-            } else {
-                this.log.warn(`The station stream for the device ${deviceSN} cannot be started, because it is already streaming!`);
-            }
+            this.cameraStationLivestreamTimeout.set(deviceSN, setTimeout(() => {
+                this.log.info(`Stopping the station stream for the device ${deviceSN}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                this.stopStationLivestream(deviceSN);
+            }, this.cameraMaxLivestreamSeconds * 1000));
+        } else {
+            this.log.warn(`The station stream for the device ${deviceSN} cannot be started, because it is already streaming!`);
         }
     }
 
@@ -598,6 +614,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
             const url = await camera.startStream();
             if (url !== "") {
                 this.cameraCloudLivestreamTimeout.set(deviceSN, setTimeout(() => {
+                    this.log.info(`Stopping the station stream for the device ${deviceSN}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
                     this.stopCloudLivestream(deviceSN);
                 }, this.cameraMaxLivestreamSeconds * 1000));
                 this.emit("cloud livestream start", station, camera, url);
@@ -722,7 +739,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
                 const result = await this.api.confirmInvites(confirmInvites);
                 if (result) {
                     this.log.info(`Accepted received invitations`, confirmInvites);
-                    this.refreshData();
+                    this.refreshCloudData();
                 }
             }
         }
@@ -766,12 +783,10 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
         if (!device.isCamera())
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
 
-        if (station.isConnected()) {
-            if (!station.isDownloading(device)) {
-                await station.startDownload(device, path, cipherID);
-            } else {
-                this.log.warn(`The station is already downloading a video for the device ${deviceSN}!`);
-            }
+        if (!station.isDownloading(device)) {
+            await station.startDownload(device, path, cipherID);
+        } else {
+            this.log.warn(`The station is already downloading a video for the device ${deviceSN}!`);
         }
     }
 
@@ -1054,6 +1069,24 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
         }
     }
 
+    private onStartStationRTSPLivestream(station: Station, channel:number): void {
+        try {
+            const device = this.getStationDevice(station.getSerial(), channel);
+            this.emit("station rtsp livestream start", station, device);
+        } catch (error) {
+            this.log.error(`Station start rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+        }
+    }
+
+    private onStopStationRTSPLivestream(station: Station, channel:number): void {
+        try {
+            const device = this.getStationDevice(station.getSerial(), channel);
+            this.emit("station rtsp livestream stop", station, device);
+        } catch (error) {
+            this.log.error(`Station stop rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+        }
+    }
+
     private onStationStartDownload(station: Station, channel: number, metadata: StreamMetadata, videoStream: Readable, audioStream: Readable): void {
         try {
             const device = this.getStationDevice(station.getSerial(), channel);
@@ -1075,7 +1108,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
     private async onStationCommandResult(station: Station, result: CommandResult): Promise<void> {
         try {
             this.emit("station command result", station, result);
-            if (result.return_code === 0 && result.command_type !== CommandType.CMD_CAMERA_INFO) {
+            if (result.return_code === 0 && result.command_type !== CommandType.CMD_CAMERA_INFO && result.command_type !== CommandType.CMD_PING) {
                 await this.api.updateDeviceInfo();
                 if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
                     await station.getCameraInfo();
@@ -1209,8 +1242,8 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
     private onStationWifiRssi(station: Station, channel: number, rssi: number, modified: number): void {
         try {
             const device = this.getStationDevice(station.getSerial(), channel);
-            const metadataWifiRssi = device.getPropertyMetadata(PropertyName.DeviceWifiRSSI);
-            if (metadataWifiRssi !== undefined) {
+            if (device.hasProperty(PropertyName.DeviceWifiRSSI)) {
+                const metadataWifiRssi = device.getPropertyMetadata(PropertyName.DeviceWifiRSSI);
                 device.updateRawProperty(metadataWifiRssi.key as number, { value: rssi.toString(), timestamp: modified});
             }
         } catch (error) {

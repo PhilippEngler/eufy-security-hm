@@ -13,21 +13,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HTTPApi = void 0;
-const axios_1 = __importDefault(require("axios"));
+const got_1 = __importDefault(require("got"));
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const i18n_iso_countries_1 = require("i18n-iso-countries");
 const i18n_iso_languages_1 = require("@cospired/i18n-iso-languages");
+const crypto_1 = require("crypto");
 const types_1 = require("./types");
 const parameter_1 = require("./parameter");
 const utils_1 = require("./utils");
 const error_1 = require("./../error");
+const utils_2 = require("./../utils");
 class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
-    constructor(api, username, password, log) {
+    constructor(api, username, password, location, log) {
         super();
-        //private apiBase = "https://mysecurity.eufylife.com/api/v1";
-        this.apiBase = "https://security-app-eu.eufylife.com/v1";
-        this.username = null;
-        this.password = null;
+        this.userId = null;
+        this.ecdh = (0, crypto_1.createECDH)("prime256v1");
+        this.serverPublicKey = "04c5c00c4f8d1197cc7c3167c52bf7acb054d722f0ef08dcd7e0883236e0d72a3868d9750cb47fa4619248f3d83f0f662671dadc6e2d31c2f41db0161651c7c076";
+        this.location = null;
         this.token = null;
         this.tokenExpiration = null;
         this.trustedTokenExpiration = new Date(2100, 12, 31, 23, 59, 59, 0);
@@ -35,7 +37,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         this.devices = {};
         this.hubs = {};
         this.headers = {
-            app_version: "v2.8.0_887",
+            app_version: "v3.3.1_1058",
             os_type: "android",
             os_version: "30",
             phone_model: "ONEPLUS A3003",
@@ -48,18 +50,42 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             mcc: "262",
             sn: "75814221ee75",
             Model_type: "PHONE",
-            timezone: "GMT+01:00"
+            timezone: "GMT+01:00",
+            "Cache-Control": "no-cache",
+            "User-Agent": "okhttp/3.12.1",
         };
         this.api = api;
         this.username = username;
         this.password = password;
+        this.location = location;
         this.log = log;
-        this.headers.timezone = utils_1.getTimezoneGMTString();
+        switch (this.location) {
+            case -1:
+                //Autoselect
+                this.log.debug(`Region: Autoselect (${this.location}. Using 'https://security-app.eufylife.com' api server.`);
+                this.apiBase = "https://https://security-app.eufylife.com";
+                break;
+            case 0:
+                //Rest of world
+                this.log.debug(`Region: Rest of world (${this.location}. Using 'https://security-app.eufylife.com' api server.`);
+                this.apiBase = "https://security-app.eufylife.com";
+                break;
+            case 1:
+                //Europe    
+                this.log.debug(`Region: Europe (${this.location}. Using 'https://security-app-eu.eufylife.com' api server.`);
+                this.apiBase = "https://security-app-eu.eufylife.com";
+                break;
+            default:
+                //all other values: do the same like autoselect
+                this.log.debug(`Region: Unknown (${this.location}. Using 'https://security-app.eufylife.com' api server.`);
+                this.apiBase = "https://security-app.eufylife.com";
+                break;
+        }
+        this.headers.timezone = (0, utils_1.getTimezoneGMTString)();
     }
     invalidateToken() {
         this.token = null;
         this.tokenExpiration = null;
-        axios_1.default.defaults.headers.common["X-Auth-Token"] = null;
     }
     setPhoneModel(model) {
         this.headers.phone_model = model.toUpperCase();
@@ -68,7 +94,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return this.headers.phone_model;
     }
     setCountry(country) {
-        if (i18n_iso_countries_1.isValid(country) && country.length === 2)
+        if ((0, i18n_iso_countries_1.isValid)(country) && country.length === 2)
             this.headers.country = country;
         else
             throw new error_1.InvalidCountryCodeError("Invalid ISO 3166-1 Alpha-2 country code");
@@ -77,7 +103,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return this.headers.country;
     }
     setLanguage(language) {
-        if (i18n_iso_languages_1.isValid(language) && language.length === 2)
+        if ((0, i18n_iso_languages_1.isValid)(language) && language.length === 2)
             this.headers.language = language;
         else
             throw new error_1.InvalidLanguageCodeError("Invalid ISO 639 language code");
@@ -91,10 +117,20 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             this.log.debug("Authenticate and get an access token", { token: this.token, tokenExpiration: this.tokenExpiration });
             if (!this.token || this.tokenExpiration && (new Date()).getTime() >= this.tokenExpiration.getTime()) {
                 try {
-                    const response = yield this.request("post", "passport/login", {
-                        email: this.username,
-                        password: this.password
-                    }, this.headers).catch(error => {
+                    this.ecdh.generateKeys();
+                    const response = yield this.request("post", "v2/passport/login", {
+                        /* TODO: Implement authentification with captcha. Example below:
+                        answer: "xEoS",
+                        captcha_id: "X1GOffz3mBa6xkVU4S3K",
+                        */
+                        client_secret_info: {
+                            public_key: this.ecdh.getPublicKey("hex")
+                        },
+                        enc: 0, email: this.username,
+                        password: (0, utils_1.encryptPassword)(this.password, this.ecdh.computeSecret(Buffer.from(this.serverPublicKey, "hex"))),
+                        time_zone: -new Date().getTimezoneOffset() * 60 * 1000,
+                        transaction: `${new Date().getTime()}`
+                    }).catch(error => {
                         this.log.error("Error:", error);
                         return error;
                     });
@@ -105,15 +141,15 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             const dataresult = result.data;
                             this.token = dataresult.auth_token;
                             this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
-                            axios_1.default.defaults.headers.common["X-Auth-Token"] = this.token;
+                            this.headers = Object.assign(Object.assign({}, this.headers), { gtoken: (0, utils_2.md5)(dataresult.user_id) });
+                            /*if (dataresult.server_secret_info?.public_key)
+                                this.serverPublicKey = dataresult.server_secret_info.public_key;*/
                             if (dataresult.domain) {
-                                if ("https://" + dataresult.domain + "/v1" != this.apiBase) {
-                                    this.apiBase = "https://" + dataresult.domain + "/v1";
-                                    axios_1.default.defaults.baseURL = this.apiBase;
+                                if (`https://${dataresult.domain}` != this.apiBase) {
+                                    this.apiBase = `https://${dataresult.domain}`;
+                                    //axios.defaults.baseURL = this.apiBase;
                                     this.log.info(`Switching to another API_BASE (${this.apiBase}) and get new token.`);
-                                    this.token = null;
-                                    this.tokenExpiration = null;
-                                    axios_1.default.defaults.headers.common["X-Auth-Token"] = null;
+                                    this.invalidateToken();
                                     return types_1.AuthResult.RENEW;
                                 }
                             }
@@ -128,7 +164,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             const dataresult = result.data;
                             this.token = dataresult.auth_token;
                             this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
-                            axios_1.default.defaults.headers.common["X-Auth-Token"] = this.token;
                             this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
                             this.api.setTokenData(this.token, this.tokenExpiration.getTime().toString());
                             yield this.sendVerifyCode(types_1.VerfyCodeTypes.TYPE_EMAIL);
@@ -157,9 +192,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 if (!type)
                     type = types_1.VerfyCodeTypes.TYPE_EMAIL;
-                const response = yield this.request("post", "sms/send/verify_code", {
-                    message_type: type
-                }, this.headers).catch(error => {
+                const response = yield this.request("post", "v1/sms/send/verify_code", {
+                    message_type: type,
+                    transaction: `${new Date().getTime()}`
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -187,7 +223,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     listTrustDevice() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("get", "app/trust_device/list", undefined, this.headers).catch(error => {
+                const response = yield this.request("get", "v1/app/trust_device/list").catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -216,10 +252,17 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     addTrustDevice(verifyCode) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("post", "passport/login", {
+                const response = yield this.request("post", "v2/passport/login", {
+                    client_secret_info: {
+                        public_key: this.ecdh.getPublicKey("hex")
+                    },
+                    enc: 0,
+                    email: this.username,
+                    password: (0, utils_1.encryptPassword)(this.password, this.ecdh.computeSecret(Buffer.from(this.serverPublicKey, "hex"))),
+                    time_zone: -new Date().getTimezoneOffset() * 60 * 1000,
                     verify_code: `${verifyCode}`,
                     transaction: `${new Date().getTime()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -227,10 +270,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                        const response2 = yield this.request("post", "app/trust_device/add", {
+                        const response2 = yield this.request("post", "v1/app/trust_device/add", {
                             verify_code: `${verifyCode}`,
                             transaction: `${new Date().getTime()}`
-                        }, this.headers).catch(error => {
+                        }).catch(error => {
                             this.log.error("Error:", error);
                             return error;
                         });
@@ -281,7 +324,15 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             //Get the latest device info
             //Get Stations
             try {
-                const response = yield this.request("post", "app/get_hub_list").catch(error => {
+                const response = yield this.request("post", "v1/app/get_hub_list", {
+                    device_sn: "",
+                    num: 1000,
+                    orderby: "",
+                    page: 0,
+                    station_sn: "",
+                    time_zone: -new Date().getTimezoneOffset() * 60 * 1000,
+                    transaction: `${new Date().getTime()}`
+                }).catch(error => {
                     this.log.error("Stations - Error:", error);
                     return error;
                 });
@@ -316,7 +367,15 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             }
             //Get Devices
             try {
-                const response = yield this.request("post", "app/get_devs_list").catch(error => {
+                const response = yield this.request("post", "v1/app/get_devs_list", {
+                    device_sn: "",
+                    num: 1000,
+                    orderby: "",
+                    page: 0,
+                    station_sn: "",
+                    time_zone: -new Date().getTimezoneOffset() * 60 * 1000,
+                    transaction: `${new Date().getTime()}`
+                }).catch(error => {
                     this.log.error("Devices - Error:", error);
                     return error;
                 });
@@ -352,7 +411,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     request(method, endpoint, data, headers) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.token && endpoint != "passport/login") {
+            if (!this.token && endpoint != "v2/passport/login") {
                 //No token get one
                 switch (yield this.authenticate()) {
                     case types_1.AuthResult.RENEW:
@@ -368,21 +427,38 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             if (this.tokenExpiration && (new Date()).getTime() >= this.tokenExpiration.getTime()) {
                 this.log.info("Access token expired; fetching a new one");
                 this.invalidateToken();
-                if (endpoint != "passport/login")
+                if (endpoint != "v2/passport/login")
                     //get new token
                     yield this.authenticate();
             }
-            this.log.debug("Request:", { method: method, endpoint: endpoint, baseUrl: this.apiBase, token: this.token, data: data, headers: this.headers });
-            const response = yield axios_1.default({
+            if (headers) {
+                headers = Object.assign(Object.assign({}, this.headers), headers);
+            }
+            else {
+                headers = Object.assign({}, this.headers);
+            }
+            if (this.token) {
+                headers["X-Auth-Token"] = this.token;
+            }
+            this.log.debug("Request:", { method: method, endpoint: endpoint, baseUrl: this.apiBase, token: this.token, data: data, headers: headers });
+            const internalResponse = yield (0, got_1.default)(`${this.apiBase}/${endpoint}`, {
                 method: method,
-                url: endpoint,
-                data: data,
                 headers: headers,
-                baseURL: this.apiBase,
-                validateStatus: function (status) {
-                    return status < 500; // Resolve only if the status code is less than 500
+                json: data,
+                responseType: "json",
+                http2: true,
+                throwHttpErrors: false,
+                retry: {
+                    limit: 3,
+                    methods: ["GET", "POST"]
                 }
             });
+            const response = {
+                status: internalResponse.statusCode,
+                statusText: internalResponse.statusMessage ? internalResponse.statusMessage : "",
+                headers: internalResponse.headers,
+                data: internalResponse.body,
+            };
             if (response.status == 401) {
                 this.invalidateToken();
                 this.log.error("Status return code 401, invalidate token", { status: response.status, statusText: response.statusText });
@@ -396,10 +472,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             //Check push notification token
             try {
-                const response = yield this.request("post", "/app/review/app_push_check", {
+                const response = yield this.request("post", "v1/app/review/app_push_check", {
                     app_type: "eufySecurity",
                     transaction: `${new Date().getTime()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -432,11 +508,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             //Register push notification token
             try {
-                const response = yield this.request("post", "/apppush/register_push_token", {
+                const response = yield this.request("post", "v1/apppush/register_push_token", {
                     is_notification_enable: true,
                     token: token,
                     transaction: `${new Date().getTime().toString()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -472,7 +548,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 tmp_params.push({ param_type: param.paramType, param_value: parameter_1.ParameterHelper.writeValue(param.paramType, param.paramValue) });
             });
             try {
-                const response = yield this.request("post", "app/upload_devs_params", {
+                const response = yield this.request("post", "v1/app/upload_devs_params", {
                     device_sn: deviceSN,
                     station_sn: stationSN,
                     params: tmp_params
@@ -505,11 +581,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     getCiphers(cipherIDs, userID) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("post", "app/cipher/get_ciphers", {
+                const response = yield this.request("post", "v1/app/cipher/get_ciphers", {
                     cipher_ids: cipherIDs,
                     user_id: userID,
                     transaction: `${new Date().getTime().toString()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -542,7 +618,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     getVoices(deviceSN) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("get", `voice/response/lists/${deviceSN}`, null, this.headers).catch(error => {
+                const response = yield this.request("get", `v1/voice/response/lists/${deviceSN}`).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -597,7 +673,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     }
     setToken(token) {
         this.token = token;
-        axios_1.default.defaults.headers.common["X-Auth-Token"] = token;
     }
     setTokenExpiration(tokenExpiration) {
         this.tokenExpiration = tokenExpiration;
@@ -635,7 +710,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     station_sn: filter.stationSN !== undefined ? filter.stationSN : "",
                     storage: filter.storageType !== undefined ? filter.storageType : types_1.StorageType.NONE,
                     transaction: `${new Date().getTime().toString()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error(`${functionName} - Error:`, error);
                     return error;
                 });
@@ -704,13 +779,13 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     getInvites() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("post", "family/get_invites", {
+                const response = yield this.request("post", "v1/family/get_invites", {
                     num: 100,
                     orderby: "",
                     own: false,
                     page: 0,
                     transaction: `${new Date().getTime().toString()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -744,10 +819,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     confirmInvites(confirmInvites) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("post", "family/confirm_invite", {
+                const response = yield this.request("post", "v1/family/confirm_invite", {
                     invites: confirmInvites,
                     transaction: `${new Date().getTime().toString()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -774,7 +849,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     getPublicKey(deviceSN, type) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("get", `public_key/query?device_sn=${deviceSN}&type=${type}`, null, this.headers).catch(error => {
+                const response = yield this.request("get", `v1/public_key/query?device_sn=${deviceSN}&type=${type}`).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });
@@ -803,14 +878,14 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     getSensorHistory(stationSN, deviceSN) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const response = yield this.request("post", "app/get_sensor_history", {
+                const response = yield this.request("post", "v1/app/get_sensor_history", {
                     devicse_sn: deviceSN,
                     max_time: 0,
                     num: 500,
                     page: 0,
                     station_sn: stationSN,
                     transaction: `${new Date().getTime().toString()}`
-                }, this.headers).catch(error => {
+                }).catch(error => {
                     this.log.error("Error:", error);
                     return error;
                 });

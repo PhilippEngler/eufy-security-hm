@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
+exports.encryptPassword = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
+const crypto_1 = require("crypto");
 const types_1 = require("./types");
 const isGreaterEqualMinVersion = function (minimal_version, current_version) {
     if (minimal_version === undefined)
@@ -39,7 +40,7 @@ exports.pad = pad;
 const getTimezoneGMTString = function () {
     const tzo = -new Date().getTimezoneOffset();
     const dif = tzo >= 0 ? "+" : "-";
-    return `GMT${dif}${exports.pad(tzo / 60)}:${exports.pad(tzo % 60)}`;
+    return `GMT${dif}${(0, exports.pad)(tzo / 60)}:${(0, exports.pad)(tzo % 60)}`;
 };
 exports.getTimezoneGMTString = getTimezoneGMTString;
 const getAbsoluteFilePath = function (device_type, channel, filename) {
@@ -66,7 +67,7 @@ const switchNotificationMode = function (currentValue, mode, enable) {
     else {
         result = ~mode & currentValue;
     }
-    if (exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.SCHEDULE) && exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.APP) && exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.GEOFENCE) && exports.isNotificationSwitchMode(result, types_1.NotificationSwitchMode.KEYPAD)) {
+    if ((0, exports.isNotificationSwitchMode)(result, types_1.NotificationSwitchMode.SCHEDULE) && (0, exports.isNotificationSwitchMode)(result, types_1.NotificationSwitchMode.APP) && (0, exports.isNotificationSwitchMode)(result, types_1.NotificationSwitchMode.GEOFENCE) && (0, exports.isNotificationSwitchMode)(result, types_1.NotificationSwitchMode.KEYPAD)) {
         result = 1; /* ALL */
     }
     return result;
@@ -129,3 +130,9 @@ const calculateWifiSignalLevel = function (device, rssi) {
     }
 };
 exports.calculateWifiSignalLevel = calculateWifiSignalLevel;
+const encryptPassword = (password, key) => {
+    const cipher = (0, crypto_1.createCipheriv)("aes-256-cbc", key, key.slice(0, 16));
+    return (cipher.update(password, "utf8", "base64") +
+        cipher.final("base64"));
+};
+exports.encryptPassword = encryptPassword;

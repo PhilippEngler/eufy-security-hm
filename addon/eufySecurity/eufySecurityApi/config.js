@@ -12,8 +12,12 @@ class Config {
         this.loadConfig();
         this.hasChanged = false;
     }
+    /**
+     * Specifies the version for the config file expected by the addon.
+     * @returns The expected version of the config file.
+     */
     getConfigFileTemplateVersion() {
-        return 7;
+        return 8;
     }
     /**
      * Load Config from file.
@@ -21,9 +25,9 @@ class Config {
     loadConfig() {
         try {
             this.hasChanged = false;
-            this.filecontent = fs_1.readFileSync('./config.ini', 'utf-8');
+            this.filecontent = (0, fs_1.readFileSync)('./config.ini', 'utf-8');
             this.filecontent = this.updateConfigFileTemplateStage1(this.filecontent);
-            this.config = ini_1.parse(this.filecontent);
+            this.config = (0, ini_1.parse)(this.filecontent);
             this.updateConfigFileTemplateStage2();
             this.writeConfig();
         }
@@ -53,24 +57,26 @@ class Config {
             if (this.filecontent.indexOf("api_use_system_variables") == -1) {
                 this.logger.logInfoBasic("  adding 'api_use_system_variables'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_camera_default_image") == -1) {
                 this.logger.logInfoBasic("  adding 'api_camera_default_image'.");
                 this.filecontent = this.filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_camera_default_video") == -1) {
                 this.logger.logInfoBasic("  adding 'api_camera_default_video'.");
                 this.filecontent = this.filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 1 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 2) {
@@ -86,10 +92,12 @@ class Config {
             if (this.filecontent.indexOf("api_udp_local_static_ports_active") == -1) {
                 this.logger.logInfoBasic("  adding 'api_udp_local_static_ports_active'.");
                 this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\api_udp_local_static_ports_active=false");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 2 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 3) {
@@ -97,10 +105,12 @@ class Config {
             if (this.filecontent.indexOf("api_log_level") == -1) {
                 this.logger.logInfoBasic(" adding 'api_log_level'.");
                 this.filecontent = this.filecontent.replace("api_camera_default_video=" + this.getApiCameraDefaultVideo(), "api_camera_default_video=" + this.getApiCameraDefaultVideo() + "\r\napi_log_level=0");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 3 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 4) {
@@ -108,17 +118,19 @@ class Config {
             if (this.filecontent.indexOf("api_connection_type") == -1) {
                 this.logger.logInfoBasic(" adding 'api_connection_type'.");
                 this.filecontent = this.filecontent.replace("api_udp_local_static_ports_active=", "api_connection_type=1\r\napi_udp_local_static_ports_active=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_udp_local_static_ports=") > 0) {
                 this.logger.logInfoBasic(" removing 'api_udp_local_static_ports'.");
                 this.filecontent = this.filecontent.replace(/^.*api_udp_local_static_ports=.*$/mg, "");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 4 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 5) {
@@ -127,38 +139,40 @@ class Config {
             if (this.filecontent.indexOf("api_update_state_active") == -1) {
                 this.logger.logInfoBasic(" adding 'api_update_state_active'.");
                 this.filecontent = this.filecontent.replace("api_log_level=", "api_update_state_active=false\r\napi_log_level=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_update_state_timespan") == -1) {
                 this.logger.logInfoBasic(" adding 'api_update_state_timespan'.");
                 this.filecontent = this.filecontent.replace("api_log_level=", "api_update_state_timespan=15\r\napi_log_level=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_update_links24_active") == -1) {
                 this.logger.logInfoBasic(" adding 'api_update_links24_active'.");
                 this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links24_active=false\r\napi_log_level=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_update_links_active") == -1) {
                 this.logger.logInfoBasic(" adding 'api_update_links_active'.");
                 this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links_active=false\r\napi_log_level=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_update_links_timespan") == -1) {
                 this.logger.logInfoBasic(" adding 'api_update_links_timespan'.");
                 this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links_timespan=15\r\napi_log_level=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 5 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 6) {
@@ -166,17 +180,19 @@ class Config {
             if (this.filecontent.indexOf("api_udp_local_static_ports=") > 0) {
                 this.logger.logInfoBasic(" removing 'api_udp_local_static_ports'.");
                 this.filecontent = this.filecontent.replace(/^.*api_udp_local_static_ports=.*$/mg, "");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_update_links_only_when_active") == -1) {
                 this.logger.logInfoBasic(" adding 'api_update_links_only_when_active'.");
                 this.filecontent = this.filecontent.replace("api_log_level=", "api_update_links_only_when_active=false\r\napi_log_level=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 6 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 7) {
@@ -184,21 +200,36 @@ class Config {
             if (this.filecontent.indexOf("api_update_state_active") > 0) {
                 this.logger.logInfoBasic(" rename 'api_update_state_active' to 'api_update_state_intervall_active'.");
                 this.filecontent = this.filecontent.replace("api_update_state_active=", "api_update_state_intervall_active=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             if (this.filecontent.indexOf("api_update_state_event_active") == -1) {
                 this.logger.logInfoBasic(" adding 'api_update_state_event_active'.");
                 this.filecontent = this.filecontent.replace("api_update_state_intervall_active=", "api_update_state_event_active=false\r\napi_update_state_intervall_active=");
-                this.config = ini_1.parse(this.filecontent);
+                this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
+            updated = true;
+            this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 7 finished.");
         }
+        if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 8) {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 8...");
+            if (this.filecontent.indexOf("location") == -1) {
+                this.logger.logInfoBasic(" adding 'location'.");
+                this.filecontent = this.filecontent.replace(`password=${this.getPassword()}`, `password=${this.getPassword()}\r\nlocation="1"`);
+                this.config = (0, ini_1.parse)(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...Stage2 update to version 8 finished.");
+        }
         if (updated) {
-            this.config = ini_1.parse(this.filecontent);
+            this.config = (0, ini_1.parse)(this.filecontent);
             this.config['ConfigFileInfo']['config_file_version'] = this.getConfigFileTemplateVersion();
         }
         return updated;
@@ -209,7 +240,7 @@ class Config {
     writeConfig() {
         if (this.hasChanged == true) {
             try {
-                fs_1.writeFileSync('./config.ini', ini_1.stringify(this.config));
+                (0, fs_1.writeFileSync)('./config.ini', (0, ini_1.stringify)(this.config));
                 this.hasChanged = false;
                 return "saved";
             }
@@ -229,7 +260,8 @@ class Config {
         fc += "[ConfigFileInfo]\r\nconfig_file_version=" + this.getConfigFileTemplateVersion() + "\r\n\r\n";
         fc += "[EufyAPILoginData]\r\n";
         fc += "email=\r\n";
-        fc += "password=\r\n\r\n";
+        fc += "password=\r\n";
+        fc += "location=1\r\n\r\n";
         fc += "[EufyTokenData]\r\n";
         fc += "token=\r\n";
         fc += "tokenexpires=0\r\n\r\n";
@@ -255,7 +287,7 @@ class Config {
         fc += "api_update_links_active=true\r\n";
         fc += "api_update_links_timespan=15\r\n";
         fc += "api_log_level=0\r\n";
-        fs_1.writeFileSync('./config.ini', fc);
+        (0, fs_1.writeFileSync)('./config.ini', fc);
         this.loadConfig();
         return true;
     }
@@ -265,7 +297,7 @@ class Config {
      */
     updateWithNewBase(baseSerial) {
         this.writeConfig();
-        var fc = fs_1.readFileSync('./config.ini', 'utf-8');
+        var fc = (0, fs_1.readFileSync)('./config.ini', 'utf-8');
         fc += "\r\n[EufyP2PData_" + baseSerial + "]\r\n";
         fc += "p2p_did=\r\n";
         fc += "dsk_key=\r\n";
@@ -274,7 +306,7 @@ class Config {
         fc += "base_ip_address=\r\n";
         fc += "base_port=\r\n";
         fc += "udp_ports=\r\n";
-        fs_1.writeFileSync('./config.ini', fc);
+        (0, fs_1.writeFileSync)('./config.ini', fc);
         this.loadConfig();
         return true;
     }
@@ -343,6 +375,27 @@ class Config {
         if (this.config['EufyAPILoginData']['password'] != password) {
             this.config['EufyAPILoginData']['password'] = password;
             this.hasChanged = true;
+        }
+    }
+    /**
+     * Set the location for the eufy security account.
+     * @param location The location to set.
+     */
+    setLocation(location) {
+        if (this.config['EufyAPILoginData']['location'] != location) {
+            this.config['EufyAPILoginData']['location'] = location;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the location for the eufy security account.
+     */
+    getLocation() {
+        try {
+            return this.config['EufyAPILoginData']['location'];
+        }
+        catch (_a) {
+            return "";
         }
     }
     /**

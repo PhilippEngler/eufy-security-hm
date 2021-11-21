@@ -38,7 +38,7 @@ class EufySecurityApi {
                 this.logError("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this addon.");
             }
             else {
-                this.httpService = new http_1.HTTPApi(this, this.config.getEmailAddress(), this.config.getPassword(), this.logger);
+                this.httpService = new http_1.HTTPApi(this, this.config.getEmailAddress(), this.config.getPassword(), Number.parseInt(this.config.getLocation()), this.logger);
                 this.httpService.setToken(this.getToken());
                 this.httpService.setTokenExpiration(new Date(Number.parseInt(this.getTokenExpire()) * 1000));
                 this.httpApiAuth = yield this.httpService.authenticate();
@@ -57,6 +57,10 @@ class EufySecurityApi {
             }
         });
     }
+    /**
+     * Returns the state of the service.
+     * @returns The state of the service.
+     */
     getServiceState() {
         return this.serviceState;
     }
@@ -81,16 +85,16 @@ class EufySecurityApi {
             try {
                 yield this.bases.loadBases();
             }
-            catch (_a) {
-                this.logError("Error occured at loadData() -> loadBases.");
+            catch (e) {
+                this.logError("Error occured at loadData() -> loadBases. Error: " + e.message);
                 this.setLastConnectionInfo(false);
             }
             try {
                 yield this.updateDeviceData();
                 yield this.devices.loadDevices();
             }
-            catch (_b) {
-                this.logError("Error occured at loadData() -> loadDevices.");
+            catch (e) {
+                this.logError("Error occured at loadData() -> loadDevices. Error: " + e.message);
                 this.setLastConnectionInfo(false);
             }
         });
@@ -136,7 +140,7 @@ class EufySecurityApi {
         return json;
     }
     /**
-     * Returns a JSON-Representation of all Devices.
+     * Returns a JSON-Representation of all devices.
      */
     getDevices() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -173,6 +177,9 @@ class EufySecurityApi {
             return json;
         });
     }
+    /**
+     * Returns a JSON-Representation of a given devices.
+     */
     getDevice(deviceSerial) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.updateDeviceData();
@@ -212,7 +219,7 @@ class EufySecurityApi {
         return json;
     }
     /**
-     * Returns a JSON-Representation of all Bases including the guard mode.
+     * Returns a JSON-Representation of all bases including the guard mode.
      */
     getBases() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -267,7 +274,8 @@ class EufySecurityApi {
                     var actor_id = this.config.getP2PData_actor_id(stationSerial);
                     var base_ip_address = this.config.getP2PData_base_ip_address(stationSerial);
                     var updateNeed = false;
-                    if (p2p_did != base.getP2pDid() || dsk_key != (yield base.getDSKKey()) || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress().value) {
+                    //if(p2p_did != base.getP2pDid() || dsk_key != await base.getDSKKey() || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress().value)
+                    if (p2p_did != base.getP2pDid() || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress().value) {
                         updateNeed = true;
                     }
                     /*if(dsk_key_creation != base.getDskKeyExpiration().toString())
@@ -275,7 +283,8 @@ class EufySecurityApi {
                         updateNeed = true;
                     }*/
                     if (updateNeed == true) {
-                        this.config.setP2PData(stationSerial, base.getP2pDid(), yield base.getDSKKey(), base.getDSKKeyExpiration().toString(), base.getActorId(), String(base.getLANIPAddress().value), "");
+                        //this.config.setP2PData(stationSerial, base.getP2pDid(), await base.getDSKKey(), base.getDSKKeyExpiration().toString(), base.getActorId(), String(base.getLANIPAddress().value), "");
+                        this.config.setP2PData(stationSerial, base.getP2pDid(), "", "", base.getActorId(), String(base.getLANIPAddress().value), "");
                     }
                 }
             }
@@ -747,6 +756,19 @@ class EufySecurityApi {
         }
     }
     /**
+     * Returns the internal ip address for the given the HomeBase.
+     * @param baseSerial The serial for the HomeBase.
+     * @returns The internal ip address.
+     */
+    getLocalIpAddressForBase(baseSerial) {
+        try {
+            return this.config.getP2PData_base_ip_address(baseSerial);
+        }
+        catch (_a) {
+            return "";
+        }
+    }
+    /**
      * Determines if the updated state runs by event.
      */
     getApiUseUpdateStateEvent() {
@@ -760,6 +782,7 @@ class EufySecurityApi {
         json += `"configfile_version":"${this.config.getConfigFileVersion()}",`;
         json += `"username":"${this.config.getEmailAddress()}",`;
         json += `"password":"${this.config.getPassword()}",`;
+        json += `"location":"${this.config.getLocation()}",`;
         json += `"api_http_active":"${this.config.getApiUseHttp()}",`;
         json += `"api_http_port":"${this.config.getApiPortHttp()}",`;
         json += `"api_https_active":"${this.config.getApiUseHttps()}",`;
@@ -807,11 +830,11 @@ class EufySecurityApi {
      * @param api_log_level The log level.
      * @returns
      */
-    setConfig(username, password, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_connection_type, api_use_udp_local_static_ports, api_udp_local_static_ports, api_use_system_variables, api_camera_default_image, api_camera_default_video, api_use_update_state_event, api_use_update_state_intervall, api_update_state_timespan, api_use_update_links, api_use_update_links_only_when_active, api_update_links_timespan, api_log_level) {
+    setConfig(username, password, location, api_use_http, api_port_http, api_use_https, api_port_https, api_key_https, api_cert_https, api_connection_type, api_use_udp_local_static_ports, api_udp_local_static_ports, api_use_system_variables, api_camera_default_image, api_camera_default_video, api_use_update_state_event, api_use_update_state_intervall, api_update_state_timespan, api_use_update_links, api_use_update_links_only_when_active, api_update_links_timespan, api_log_level) {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
         var taskSetupLinksNeeded = false;
-        if (this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports || this.config.getApiUseUpdateStateEvent() != api_use_update_state_event) {
+        if (this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getLocation() != location || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports || this.config.getApiUseUpdateStateEvent() != api_use_update_state_event) {
             serviceRestart = true;
         }
         if (this.config.getEmailAddress() != username) {
@@ -819,6 +842,7 @@ class EufySecurityApi {
         }
         this.config.setEmailAddress(username);
         this.config.setPassword(password);
+        this.config.setLocation(Number.parseInt(location));
         this.config.setApiUseHttp(api_use_http);
         this.config.setApiPortHttp(api_port_http);
         this.config.setApiUseHttps(api_use_https);
@@ -1296,14 +1320,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "1.5.3";
+        return "1.5.4";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "1.1.1";
+        return "1.3.0";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

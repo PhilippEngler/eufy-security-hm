@@ -19,7 +19,7 @@ const protobuf_typescript_1 = require("protobuf-typescript");
 exports.VALID_FID_PATTERN = /^[cdef][\w-]{21}$/;
 function generateFid() {
     const fidByteArray = new Uint8Array(17);
-    fidByteArray.set(crypto_1.randomBytes(fidByteArray.length));
+    fidByteArray.set((0, crypto_1.randomBytes)(fidByteArray.length));
     // Replace the first 4 random bits with the constant FID header of 0b0111.
     fidByteArray[0] = 0b01110000 + (fidByteArray[0] % 0b00010000);
     const b64 = Buffer.from(fidByteArray).toString("base64");
@@ -32,7 +32,7 @@ function generateFid() {
 }
 exports.generateFid = generateFid;
 const buildCheckinRequest = () => __awaiter(void 0, void 0, void 0, function* () {
-    const root = yield protobuf_typescript_1.load(path_1.default.join(__dirname, "./proto/checkin.proto"));
+    const root = yield (0, protobuf_typescript_1.load)(path_1.default.join(__dirname, "./proto/checkin.proto"));
     const CheckinRequestModel = root.lookupType("CheckinRequest");
     const payload = {
         imei: "109269993813709",
@@ -65,7 +65,7 @@ const buildCheckinRequest = () => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.buildCheckinRequest = buildCheckinRequest;
 const parseCheckinResponse = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    const root = yield protobuf_typescript_1.load(path_1.default.join(__dirname, "./proto/checkin.proto"));
+    const root = yield (0, protobuf_typescript_1.load)(path_1.default.join(__dirname, "./proto/checkin.proto"));
     const CheckinResponseModel = root.lookupType("CheckinResponse");
     const message = CheckinResponseModel.decode(data);
     const object = CheckinResponseModel.toObject(message, {
