@@ -80,93 +80,93 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/node_modules/.bin ]; then
     rm -r ${ADDON_DIR}/node_modules/.bin
   fi
-  if [ -e ${ADDON_DIR}/node_modules/@sindresorhus ]; then
-    rm -r ${ADDON_DIR}/node_modules/@sindresorhus
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/@szmarczak ]; then
-    rm -r ${ADDON_DIR}/node_modules/@szmarczak
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/cacheable-lookup ]; then
-    rm -r ${ADDON_DIR}/node_modules/cacheable-lookup
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/cacheable-request ]; then
-    rm -r ${ADDON_DIR}/node_modules/cacheable-request
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/clone-response ]; then
-    rm -r ${ADDON_DIR}/node_modules/clone-response
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/decompress-response ]; then
-    rm -r ${ADDON_DIR}/node_modules/decompress-response
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/defer-to-connect ]; then
-    rm -r ${ADDON_DIR}/node_modules/defer-to-connect
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/end-of-stream ]; then
-    rm -r ${ADDON_DIR}/node_modules/end-of-stream
-  fi
+  #if [ -e ${ADDON_DIR}/node_modules/@sindresorhus ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/@sindresorhus
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/@szmarczak ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/@szmarczak
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/cacheable-lookup ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/cacheable-lookup
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/cacheable-request ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/cacheable-request
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/clone-response ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/clone-response
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/decompress-response ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/decompress-response
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/defer-to-connect ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/defer-to-connect
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/end-of-stream ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/end-of-stream
+  #fi
   if [ -e ${ADDON_DIR}/node_modules/fs-extra ]; then
     rm -r ${ADDON_DIR}/node_modules/fs-extra
   fi
-  if [ -e ${ADDON_DIR}/node_modules/get-stream ]; then
-    rm -r ${ADDON_DIR}/node_modules/get-stream
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/got ]; then
-    rm -r ${ADDON_DIR}/node_modules/got
-  fi
+  #if [ -e ${ADDON_DIR}/node_modules/get-stream ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/get-stream
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/got ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/got
+  #fi
   if [ -e ${ADDON_DIR}/node_modules/got-hm ]; then
     rm -r ${ADDON_DIR}/node_modules/got-hm
   fi
   if [ -e ${ADDON_DIR}/node_modules/graceful-fs ]; then
     rm -r ${ADDON_DIR}/node_modules/graceful-fs
   fi
-  if [ -e ${ADDON_DIR}/node_modules/http2-wrapper ]; then
-    rm -r ${ADDON_DIR}/node_modules/http2-wrapper
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/http-cache-semantics ]; then
-    rm -r ${ADDON_DIR}/node_modules/http-cache-semantics
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/json-buffer ]; then
-    rm -r ${ADDON_DIR}/node_modules/json-buffer
-  fi
+  #if [ -e ${ADDON_DIR}/node_modules/http2-wrapper ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/http2-wrapper
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/http-cache-semantics ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/http-cache-semantics
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/json-buffer ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/json-buffer
+  #fi
   if [ -e ${ADDON_DIR}/node_modules/jsonfile ]; then
     rm -r ${ADDON_DIR}/node_modules/jsonfile
   fi
-  if [ -e ${ADDON_DIR}/node_modules/keyv ]; then
-    rm -r ${ADDON_DIR}/node_modules/keyv
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/lowercase-keys ]; then
-    rm -r ${ADDON_DIR}/node_modules/lowercase-keys
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/mimic-response ]; then
-    rm -r ${ADDON_DIR}/node_modules/mimic-response
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/normalize-url ]; then
-    rm -r ${ADDON_DIR}/node_modules/normalize-url
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/once ]; then
-    rm -r ${ADDON_DIR}/node_modules/once
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/p-cancelable ]; then
-    rm -r ${ADDON_DIR}/node_modules/p-cancelable
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/pump ]; then
-    rm -r ${ADDON_DIR}/node_modules/pump
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/quick-lru ]; then
-    rm -r ${ADDON_DIR}/node_modules/quick-lru
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/resolve-alpn ]; then
-    rm -r ${ADDON_DIR}/node_modules/resolve-alpn
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/responselike ]; then
-    rm -r ${ADDON_DIR}/node_modules/responselike
-  fi
+  #if [ -e ${ADDON_DIR}/node_modules/keyv ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/keyv
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/lowercase-keys ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/lowercase-keys
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/mimic-response ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/mimic-response
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/normalize-url ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/normalize-url
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/once ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/once
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/p-cancelable ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/p-cancelable
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/pump ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/pump
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/quick-lru ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/quick-lru
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/resolve-alpn ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/resolve-alpn
+  #fi
+  #if [ -e ${ADDON_DIR}/node_modules/responselike ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/responselike
+  #fi
   if [ -e ${ADDON_DIR}/node_modules/universalify ]; then
     rm -r ${ADDON_DIR}/node_modules/universalify
   fi
-  if [ -e ${ADDON_DIR}/node_modules/wrappy ]; then
-    rm -r ${ADDON_DIR}/node_modules/wrappy
-  fi
+  #if [ -e ${ADDON_DIR}/node_modules/wrappy ]; then
+  #  rm -r ${ADDON_DIR}/node_modules/wrappy
+  #fi
 fi
 
 # create necessary directories
