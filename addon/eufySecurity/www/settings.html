@@ -644,8 +644,8 @@
 							{
 								for (objIter in objResp.data)
 								{
-									bases += `<label class="mt-2" for="txtUdpPortsBase${objResp.data[objIter].base_id}">UDP Ports für Verbindung mit HomeBase ${objResp.data[objIter].base_id} (${objResp.data[objIter].name}).</label>`;
-									bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Ports ${objResp.data[objIter].base_id}" onfocusout="checkUDPPorts(udpPortsBase${objResp.data[objIter].base_id})" required>`;
+									bases += `<label class="mt-2" for="txtUdpPortsBase${objResp.data[objIter].base_id}">UDP Port für Verbindung mit HomeBase ${objResp.data[objIter].base_id} (${objResp.data[objIter].name}).</label>`;
+									bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Port ${objResp.data[objIter].base_id}" onfocusout="checkUDPPorts(udpPortsBase${objResp.data[objIter].base_id})" required>`;
 									bases += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basis zugeordnet sein.</small>`;
 									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basis zugeordnet.</div>`;
 								}
