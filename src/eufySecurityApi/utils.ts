@@ -1,6 +1,8 @@
 import * as crypto from "crypto";
+import { Config } from "./config";
 import { InvalidPropertyValueError } from "./error";
 import { PropertyMetadataAny, PropertyMetadataNumeric } from "./http";
+import { Logger } from "./utils/logging";
 
 export const removeLastChar = function(text: string, char: string): string {
     const strArr = [...text];
@@ -19,8 +21,13 @@ export const generateSerialnumber = function(length: number): string {
 export const md5 = (contents: string): string => crypto.createHash("md5").update(contents).digest("hex");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const handleUpdate = function(oldVersion: number): void {
-    // for future updates
+export const handleUpdate = function(config: Config, log: Logger, oldVersion: number): void {
+    if (oldVersion <= 1.24) {
+        //config.api_base = "";
+        config.setToken("");
+        config.setTokenExpire("0");
+    }
+    return;
 };
 
 export const isEmpty = function(str: string | null | undefined): boolean {

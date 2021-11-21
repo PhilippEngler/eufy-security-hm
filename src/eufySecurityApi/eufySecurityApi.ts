@@ -1668,7 +1668,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.5.4";
+        return "1.5.5";
     }
 
     /**
@@ -1677,6 +1677,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "1.2.2";
+        return "1.3.0";
     }
 }
