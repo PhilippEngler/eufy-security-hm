@@ -377,7 +377,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             this.terminating = false;
             await this.renewDSKKey();
             if (!this.binded)
-                this.socket.bind(0, () => {
+                this.socket.bind(this.localPort, () => {
                     this.binded = true;
                     try {
                         this.socket.setRecvBufferSize(this.UDP_RECVBUFFERSIZE_BYTES);
