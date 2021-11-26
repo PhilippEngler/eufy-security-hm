@@ -170,21 +170,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         {
             this.skipNextModeChangeEvent[stationSerial] = true;
             await this.bases[stationSerial].setGuardMode(guardMode)
-            await sleep(1500);
-            await this.loadBases();
-            if(this.bases[stationSerial].getGuardMode().value as number != guardMode)
-            {
-                cnt = cnt + 1;
-            }
         }
-        if(cnt == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return await this.checkChangedGuardMode(guardMode, true, "");
     }
 
     /**
@@ -196,9 +183,62 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         this.skipNextModeChangeEvent[baseSerial] = true;
         await this.bases[baseSerial].setGuardMode(guardMode);
-        await sleep(1500);
-        await this.loadBases();
-        if(this.bases[baseSerial].getGuardMode().value as number == guardMode)
+        return await this.checkChangedGuardMode(guardMode, false, this.bases[baseSerial].getSerial());
+    }
+
+    /**
+     * Check the guardMode after changing if the guardMode has changed.
+     * @param guardMode The guradMode the base should be set to.
+     * @param checkAllBases true, if all bases should be checked, otherwise false
+     * @param baseSerial The serial of the base the mode to change.
+     */
+    private async checkChangedGuardMode(guardMode : GuardMode, checkAllBases : boolean, baseSerial : string) : Promise<boolean>
+    {
+        var res : boolean = false;
+        if(checkAllBases == true)
+        {
+            var cnt = 0;
+            for (var stationSerial in this.bases)
+            {
+                for(var i=0; i<20; i++)
+                {
+                    await sleep(1000);
+                    await this.loadBases();
+                    if(this.bases[stationSerial].getGuardMode().value as number == guardMode)
+                    {
+                        res = true;
+                        break;
+                    }
+                }
+                if(res == false)
+                {
+                    cnt = cnt + 1;
+                }
+            }
+            if(cnt == 0)
+            {
+                res = true;
+            }
+            else
+            {
+                res = false;
+            }
+        }
+        else
+        {
+            for(var i=0; i<20; i++)
+            {
+                await sleep(1000);
+                await this.loadBases();
+                if(this.bases[baseSerial].getGuardMode().value as number == guardMode)
+                {
+                    res = true;
+                    break;
+                }
+            }
+        }
+
+        if(res == true)
         {
             return true;
         }
