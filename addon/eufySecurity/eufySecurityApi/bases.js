@@ -141,22 +141,12 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
      */
     setGuardMode(guardMode) {
         return __awaiter(this, void 0, void 0, function* () {
-            var cnt = 0;
             for (var stationSerial in this.bases) {
                 this.skipNextModeChangeEvent[stationSerial] = true;
                 yield this.bases[stationSerial].setGuardMode(guardMode);
-                yield (0, utils_1.sleep)(1500);
-                yield this.loadBases();
-                if (this.bases[stationSerial].getGuardMode().value != guardMode) {
-                    cnt = cnt + 1;
-                }
+                yield (0, utils_1.sleep)(500);
             }
-            if (cnt == 0) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return yield this.checkChangedGuardMode(guardMode, true, "");
         });
     }
     /**
@@ -168,9 +158,57 @@ class Bases extends tiny_typed_emitter_1.TypedEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             this.skipNextModeChangeEvent[baseSerial] = true;
             yield this.bases[baseSerial].setGuardMode(guardMode);
-            yield (0, utils_1.sleep)(1500);
-            yield this.loadBases();
-            if (this.bases[baseSerial].getGuardMode().value == guardMode) {
+            return yield this.checkChangedGuardMode(guardMode, false, this.bases[baseSerial].getSerial());
+        });
+    }
+    /**
+     * Check the guardMode after changing if the guardMode has changed.
+     * @param guardMode The guradMode the base should be set to.
+     * @param checkAllBases true, if all bases should be checked, otherwise false
+     * @param baseSerial The serial of the base the mode to change.
+     */
+    checkChangedGuardMode(guardMode, checkAllBases, baseSerial) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var res = false;
+            if (checkAllBases == true) {
+                var cnt = 0;
+                for (var stationSerial in this.bases) {
+                    for (var i = 0; i < 20; i++) {
+                        yield (0, utils_1.sleep)(1000);
+                        yield this.loadBases();
+                        if (this.bases[stationSerial].getGuardMode().value == guardMode) {
+                            this.api.logInfo(`Detected changed alarm mode for station ${stationSerial} after ${(i + 1)} iterations.`);
+                            res = true;
+                            break;
+                        }
+                    }
+                    if (res == false) {
+                        this.api.logInfo(`Changed alarm mode for station ${stationSerial} could not be detected after 20 iterations.`);
+                        cnt = cnt + 1;
+                    }
+                }
+                if (cnt == 0) {
+                    res = true;
+                }
+                else {
+                    res = false;
+                }
+            }
+            else {
+                for (var i = 0; i < 20; i++) {
+                    yield (0, utils_1.sleep)(1000);
+                    yield this.loadBases();
+                    if (this.bases[baseSerial].getGuardMode().value == guardMode) {
+                        this.api.logInfo(`Detected changed alarm mode for station ${baseSerial} after ${(i + 1)} iterations.`);
+                        res = true;
+                        break;
+                    }
+                }
+                if (res == false) {
+                    this.api.logInfo(`Changed alarm mode for station ${baseSerial} could not be detected after 20 iterations.`);
+                }
+            }
+            if (res == true) {
                 return true;
             }
             else {
