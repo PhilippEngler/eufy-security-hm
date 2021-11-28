@@ -165,11 +165,11 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
     {
-        var cnt = 0;
         for (var stationSerial in this.bases)
         {
             this.skipNextModeChangeEvent[stationSerial] = true;
             await this.bases[stationSerial].setGuardMode(guardMode)
+            await sleep(500);
         }
         return await this.checkChangedGuardMode(guardMode, true, "");
     }
@@ -194,7 +194,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async checkChangedGuardMode(guardMode : GuardMode, checkAllBases : boolean, baseSerial : string) : Promise<boolean>
     {
-        var res : boolean = false;
+        var res = false;
         if(checkAllBases == true)
         {
             var cnt = 0;
@@ -206,12 +206,14 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     await this.loadBases();
                     if(this.bases[stationSerial].getGuardMode().value as number == guardMode)
                     {
+                        this.api.logInfo(`Detected changed alarm mode for station ${stationSerial} after ${(i+1)} iterations.`);
                         res = true;
                         break;
                     }
                 }
                 if(res == false)
                 {
+                    this.api.logInfo(`Changed alarm mode for station ${stationSerial} could not be detected after 20 iterations.`);
                     cnt = cnt + 1;
                 }
             }
@@ -232,9 +234,14 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 await this.loadBases();
                 if(this.bases[baseSerial].getGuardMode().value as number == guardMode)
                 {
+                    this.api.logInfo(`Detected changed alarm mode for station ${baseSerial} after ${(i+1)} iterations.`);
                     res = true;
                     break;
                 }
+            }
+            if(res == false)
+            {
+                this.api.logInfo(`Changed alarm mode for station ${baseSerial} could not be detected after 20 iterations.`);
             }
         }
 
