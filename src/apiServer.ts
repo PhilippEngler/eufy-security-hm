@@ -6,6 +6,7 @@ import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
 import { GuardMode } from './eufySecurityApi/http';
 import { Logger } from './eufySecurityApi/utils/logging';
 import { exec } from 'child_process';
+import { log } from 'console';
 
 process.chdir(__dirname);
 var apiServer !: ApiServer;
@@ -463,7 +464,7 @@ class ApiServer
                             apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
                         }
 
-                        if(checkNumberValue(location, -1, 1))
+                        if(checkNumberValue(location, -1, 1) == false)
                         {
                             isDataOK = false;
                         }
@@ -697,7 +698,7 @@ function getAllUdpPortsForBases(postData : string) : string[][]
         var temp = postData.substring(pos + 29);
         var basesn = postData.substring(pos + 12, pos + 28);
         temp = temp.replace("\r\n","");
-        temp = temp.substr(2, temp.indexOf("----") - 4);
+        temp = temp.substring(2, temp.indexOf("----") - 2);
         res[i][0] = basesn;
         res[i][1] = temp;
 

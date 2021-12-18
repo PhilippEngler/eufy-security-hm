@@ -548,18 +548,26 @@ export class Config
      */
     public setUdpLocalPorts(ports : string[][]) : boolean
     {
+        var err : boolean = false;
         if(ports)
         {
             var array : string[];
             for (array of ports)
             {
-                if(this.setUdpLocalPortPerBase(array[0], array[1]) == true)
+                if(this.setUdpLocalPortPerBase(array[0], array[1]) == false)
                 {
-                    return true;
+                    err = true;
                 }
             }
         }
-        return false;
+        if(err == false)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /**
