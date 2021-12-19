@@ -445,21 +445,15 @@ class Config {
      * @param ports A string with the ports splitted by a comma.
      */
     setUdpLocalPorts(ports) {
-        var err = false;
         if (ports) {
             var array;
             for (array of ports) {
-                if (this.setUdpLocalPortPerBase(array[0], array[1]) == false) {
-                    err = true;
+                if (this.setUdpLocalPortPerBase(array[0], array[1]) == true) {
+                    return true;
                 }
             }
         }
-        if (err == false) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return false;
     }
     /**
      * Get a boolean value if the api shoud set system variables on the CCU.

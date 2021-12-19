@@ -566,7 +566,7 @@ function getAllUdpPortsForBases(postData) {
         var temp = postData.substring(pos + 29);
         var basesn = postData.substring(pos + 12, pos + 28);
         temp = temp.replace("\r\n", "");
-        temp = temp.substring(2, temp.indexOf("----") - 2);
+        temp = temp.substr(2, temp.indexOf("----") - 4);
         res[i][0] = basesn;
         res[i][1] = temp;
         pos = postData.indexOf("udpPortsBase", pos + 16);
