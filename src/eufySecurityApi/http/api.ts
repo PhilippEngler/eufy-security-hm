@@ -60,7 +60,6 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         Model_type: "PHONE",
         timezone: "GMT+01:00",
         "Cache-Control": "no-cache",
-        "User-Agent": "okhttp/3.12.1",
     };
 
     constructor(api : EufySecurityApi, username: string, password: string, location: number, log: Logger) {
