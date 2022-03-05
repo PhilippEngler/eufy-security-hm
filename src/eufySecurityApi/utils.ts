@@ -1,7 +1,10 @@
 import * as crypto from "crypto";
 import { Config } from "./config";
+
 import { InvalidPropertyValueError } from "./error";
 import { PropertyMetadataAny, PropertyMetadataNumeric } from "./http";
+import { EufySecurityPersistentData } from ".";
+
 import { Logger } from "./utils/logging";
 
 export const removeLastChar = function(text: string, char: string): string {
@@ -106,6 +109,7 @@ export const parseValue = function(metadata: PropertyMetadataAny, value: unknown
     return value;
 };
 
+
 export const validValue = function(metadata: PropertyMetadataAny, value: unknown): void {
     if (metadata.type === "number") {
         const numberMetadata = metadata as PropertyMetadataNumeric;
@@ -114,4 +118,4 @@ export const validValue = function(metadata: PropertyMetadataAny, value: unknown
             throw new InvalidPropertyValueError(`Value "${numericValue}" isn't a valid value for property "${numberMetadata.name}"`);
         }
     }
-};
+}
