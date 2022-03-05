@@ -561,6 +561,14 @@ export abstract class Device extends TypedEmitter<DeviceEvents> {
         return DeviceType.CAMERA2C_PRO == type;
     }
 
+    static isFirstCamera(type: number): boolean {
+        return DeviceType.CAMERA == type;
+    }
+
+    static isCameraE(type: number): boolean {
+        return DeviceType.CAMERA_E == type;
+    }
+
     static isCamera2Product(type: number): boolean {
         return Device.isCamera2(type) || Device.isCamera2C(type) || Device.isCamera2Pro(type) || Device.isCamera2CPro(type);
     }
@@ -677,6 +685,14 @@ export abstract class Device extends TypedEmitter<DeviceEvents> {
 
     public isSoloCameras(): boolean {
         return Device.isSoloCameras(this.rawDevice.device_type);
+    }
+
+    public isFirstCamera(): boolean {
+        return Device.isFirstCamera(this.rawDevice.device_type);
+    }
+
+    public isCameraE(): boolean {
+        return Device.isCameraE(this.rawDevice.device_type);
     }
 
     public isCamera2(): boolean {
@@ -797,7 +813,7 @@ export abstract class Device extends TypedEmitter<DeviceEvents> {
 
     public getDeviceTypeString() : string
     {
-        if(this.isCamera())
+        if(this.isFirstCamera() || this.isCameraE() || this.isCamera2() || this.isCamera2C() || this.isCamera2Pro() || this.isCamera2CPro())
         {
             return "camera";
         }

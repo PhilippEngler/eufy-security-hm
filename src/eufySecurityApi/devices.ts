@@ -1,6 +1,6 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, PropertyName, RawValues } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock } from './http';
 import { EufySecurityEvents } from './interfaces';
 
 /**
@@ -49,23 +49,23 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         device = new CommonDevice(this.httpService, this.resDevices[deviceSerial]);
                         if(device.isCamera())
                         {
-                            if(!device.isIndoorCamera() && !device.isFloodLight() && !device.isDoorbell() && !device.isSoloCameras())
+                            if(device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro())
                             {
                                 device = new Camera(this.httpService, this.resDevices[deviceSerial]);
                             }
-                            else if(device.isIndoorCamera() && !device.isFloodLight() && !device.isDoorbell() && !device.isSoloCameras())
+                            else if(device.isIndoorCamera())
                             {
                                 device = new IndoorCamera(this.httpService, this.resDevices[deviceSerial]);
                             }
-                            else if(!device.isIndoorCamera() && device.isFloodLight() && !device.isDoorbell() && !device.isSoloCameras())
+                            else if(device.isFloodLight())
                             {
                                 device = new FloodlightCamera(this.httpService, this.resDevices[deviceSerial]);
                             }
-                            else if(!device.isIndoorCamera() && !device.isFloodLight() && device.isDoorbell() && !device.isSoloCameras())
+                            else if(device.isDoorbell())
                             {
                                 device = new DoorbellCamera(this.httpService, this.resDevices[deviceSerial]);
                             }
-                            else if(!device.isIndoorCamera() && !device.isFloodLight() && !device.isDoorbell() && device.isSoloCameras())
+                            else if(device.isSoloCameras())
                             {
                                 device = new SoloCamera(this.httpService, this.resDevices[deviceSerial]);
                             }
@@ -76,6 +76,22 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                             this.addEventListener(device, "PersonDetected");
 
                             this.devices[device.getSerial()] = device;
+                        }
+                        else if(device.isKeyPad())
+                        {
+                            device = new Keypad(this.httpService, this.resDevices[deviceSerial]);
+                        }
+                        else if(device.isEntrySensor())
+                        {
+                            device = new EntrySensor(this.httpService, this.resDevices[deviceSerial]);
+                        }
+                        else if(device.isMotionSensor())
+                        {
+                            device = new MotionSensor(this.httpService, this.resDevices[deviceSerial]);
+                        }
+                        else if(device.isLock())
+                        {
+                            device = new Lock(this.httpService, this.resDevices[deviceSerial]);
                         }
                     }
                 }
