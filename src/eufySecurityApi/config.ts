@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { parse, stringify } from 'ini';
+import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from './push/models';
 import { Logger } from './utils/logging';
 
 export class Config
@@ -25,7 +26,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 8;
+        return 9;
     }
 
     /**
@@ -271,6 +272,29 @@ export class Config
             this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 8 finished.");
         }
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 9)
+        {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 9...");
+            if(this.filecontent.indexOf("country") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'country' and 'language'.");
+                this.filecontent = this.filecontent.replace(`location=${this.getLocation()}`, `location=${this.getLocation()}\r\ncountry=DE\r\nlanguage=de\r\n\r\n`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.filecontent.indexOf("[EufyAPIPushData]") == -1)
+            {
+                this.logger.logInfoBasic(" adding '[EufyAPIPushData]'.");
+                this.filecontent = this.filecontent.replace(`language=${this.getLanguage()}`, `language=${this.getLanguage()}\r\n\r\n[EufyAPIPushData]\r\ntrusted_device_name=eufyclient\r\nserial_number=\r\nevent_duration_seconds=10\r\naccept_invitations=false\r\nopen_udid=\r\nfid_response_name=\r\nfid_response_fid=\r\nfid_response_refresh_token=\r\nfid_response_auth_token_token=\r\nfid_response_auth_token_expires_in=\r\nfid_response_auth_token_expires_at=\r\ncheckin_response_stats_ok=\r\ncheckin_response_time_ms=\r\ncheckin_response_android_id=\r\ncheckin_response_security_token=\r\ncheckin_response_version_info=\r\ncheckin_response_device_data_version_info=\r\ngcm_response_token=\r\npersistent_ids=\r\n\r\n`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...Stage2 update to version 9 finished.");
+        }
 
         if(updated)
         {
@@ -315,7 +339,29 @@ export class Config
         fc += "[EufyAPILoginData]\r\n";
         fc += "email=\r\n";
         fc += "password=\r\n";
-        fc += "location=1\r\n\r\n";
+        fc += "location=1\r\n";
+        fc += "country=DE\r\n";
+        fc += "language=de\r\n\r\n";
+        fc += "[EufyAPIPushData]\r\n";
+        fc += "trusted_device_name=eufyclient\r\n";
+        fc += "serial_number=\r\n";
+        fc += "event_duration_seconds=10\r\n";
+        fc += "accept_invitations=false\r\n";
+        fc += "open_udid=\r\n";
+        fc += "fid_response_name=\r\n";
+        fc += "fid_response_fid=\r\n";
+        fc += "fid_response_refresh_token=\r\n";
+        fc += "fid_response_auth_token_token=\r\n";
+        fc += "fid_response_auth_token_expires_in=\r\n";
+        fc += "fid_response_auth_token_expires_at=\r\n";
+        fc += "checkin_response_stats_ok=\r\n";
+        fc += "checkin_response_time_ms=\r\n";
+        fc += "checkin_response_android_id=\r\n";
+        fc += "checkin_response_security_token=\r\n";
+        fc += "checkin_response_version_info=\r\n";
+        fc += "checkin_response_device_data_version_info=\r\n";
+        fc += "gcm_response_token=\r\n";
+        fc += "persistent_ids=\r\n\r\n";
         fc += "[EufyTokenData]\r\n";
         fc += "token=\r\n";
         fc += "tokenexpires=0\r\n\r\n";
@@ -340,7 +386,7 @@ export class Config
         fc += "api_update_links24_active=false\r\n";
         fc += "api_update_links_active=true\r\n";
         fc += "api_update_links_timespan=15\r\n";
-        fc += "api_log_level=0\r\n";
+        fc += "api_log_level=0\r\n\r\n"
 
         writeFileSync('./config.ini', fc);
         this.loadConfig();
@@ -1313,7 +1359,7 @@ export class Config
     /**
      * Returns the UDP port for the HomeBase.
      * @param baseSerial The serial of the HomeBase.
-     * @returns Zhe UDP port for the HomeBase.
+     * @returns The UDP port for the HomeBase.
      */
     public getUdpLocalPortsPerBase(baseSerial : string) : string
     {
@@ -1381,6 +1427,341 @@ export class Config
 
             this.writeConfig();
             this.loadConfig();
+        }
+    }
+
+    /**
+     * Get the trusted device name for push connection.
+     * @returns The trusted device name.
+     */
+    public getTrustedDeviceName() : string
+    {
+        try
+        {
+            return this.config['EufyAPIPushData']['trusted_device_name'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the trusted device name for push connection.
+     * @param trustedDeviceName The trusted device name
+     */
+    public setTrustedDeviceName(trustedDeviceName : string) : void
+    {
+        if(this.config['EufyAPIPushData']['trusted_device_name'] != trustedDeviceName)
+        {
+            this.config['EufyAPIPushData']['trusted_device_name'] = trustedDeviceName;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the number of seconds as string how long the event shoud remain in state true.
+     * @returns A String value contaiong the seconds
+     */
+    public getEventDurationSeconds() : string
+    {
+        try
+        {
+            return this.config['EufyAPIPushData']['event_duration_seconds'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the number of seconds as string how long the event shoud remain in state true.
+     * @param eventDurationSeconds A String value contaiong the seconds
+     */
+    public setEventDurationSeconds(eventDurationSeconds : string) : void
+    {
+        if(this.config['EufyAPIPushData']['event_duration_seconds'] != eventDurationSeconds)
+        {
+            this.config['EufyAPIPushData']['event_duration_seconds'] = eventDurationSeconds;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the boolean value if invitations should be accepted.
+     * @returns A boolean value
+     */
+    public getAcceptInvitations() : boolean
+    {
+        try
+        {
+            return this.config['EufyAPIPushData']['accept_invitations'];
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set the boolean value if invitations should be accepted.
+     * @param acceptInvitations A boolean value
+     */
+    public setAcceptInvitations(acceptInvitations : boolean) : void
+    {
+        if(this.config['EufyAPIPushData']['accept_invitations'] != acceptInvitations)
+        {
+            this.config['EufyAPIPushData']['accept_invitations'] = acceptInvitations;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the openudid for push connections.
+     * @returns The openudid
+     */
+    public getOpenudid() : string
+    {
+        try
+        {
+            return this.config['EufyAPIPushData']['open_udid'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the openudid for push connections.
+     * @param openudid The openudid to set
+     */
+    public setOpenudid(openudid : string) : void
+    {
+        if(this.config['EufyAPIPushData']['open_udid'] != openudid)
+        {
+            this.config['EufyAPIPushData']['open_udid'] = openudid;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the serial number for push connections.
+     * @returns The serial number
+     */
+    public getSerialNumber() : string
+    {
+        try
+        {
+            return this.config['EufyAPIPushData']['serial_number'];
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the serial number for push connections.
+     * @param serialNumber The serial number to set
+     */
+    public setSerialNumber(serialNumber : string) : void
+    {
+        if(this.config['EufyAPIPushData']['serial_number'] != serialNumber)
+        {
+            this.config['EufyAPIPushData']['serial_number'] = serialNumber;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the fid response credentials for push connections.
+     * @returns The fid response credentials.
+     */
+    public getCredentialsFidResponse() : FidInstallationResponse | null
+    {
+        try
+        {
+            var res: FidInstallationResponse = {name: this.config['EufyAPIPushData']['fid_response_name'], fid: this.config['EufyAPIPushData']['fid_response_fid'], refreshToken: this.config['EufyAPIPushData']['fid_response_refresh_Token'], authToken: { token: this.config['EufyAPIPushData']['fid_response_auth_token_token'], expiresIn: this.config['EufyAPIPushData']['fid_response_auth_token_expires_in'], expiresAt: this.config['EufyAPIPushData']['fid_response_auth_token_expires_at'] }}
+            this.logger.logInfoBasic(`Build FidResponse: name: ${res.name}; fid: ${res.fid}; refreshToken: ${res.refreshToken}; authToken: ${res.authToken}`);
+            return res;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Set the fid response credentials for push connections.
+     * @param fidResponse 
+     */
+    public setCredentialsFidResponse(fidResponse : FidInstallationResponse) : void
+    {
+        if(this.config['EufyAPIPushData']['fid_response_name'] != fidResponse.name || this.config['EufyAPIPushData']['fid_response_fid'] != fidResponse.fid || this.config['EufyAPIPushData']['fid_response_refresh_Token'] != fidResponse.refreshToken || this.config['EufyAPIPushData']['fid_response_auth_token_token'] != fidResponse.authToken.token || this.config['EufyAPIPushData']['fid_response_auth_token_expires_in'] != fidResponse.authToken.expiresIn || this.config['EufyAPIPushData']['fid_response_auth_token_expires_at'] != fidResponse.authToken.expiresAt)
+        {
+            this.config['EufyAPIPushData']['fid_response_name'] = fidResponse.name;
+            this.config['EufyAPIPushData']['fid_response_fid'] = fidResponse.fid;
+            this.config['EufyAPIPushData']['fid_response_refresh_Token'] = fidResponse.refreshToken;
+            this.config['EufyAPIPushData']['fid_response_auth_token_token'] = fidResponse.authToken.token;
+            this.config['EufyAPIPushData']['fid_response_auth_token_expires_in'] = fidResponse.authToken.expiresIn;
+            this.config['EufyAPIPushData']['fid_response_auth_token_expires_at'] = fidResponse.authToken.expiresAt;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the checkin response credentials for push connections.
+     * @returns The checkin response credentials
+     */
+    public getCredentialsCheckinResponse() : CheckinResponse | null
+    {
+        try
+        {
+            var res: CheckinResponse = {statsOk: this.config['EufyAPIPushData']['checkin_response_stats_ok'], timeMs: this.config['EufyAPIPushData']['checkin_response_time_ms'], androidId: this.config['EufyAPIPushData']['checkin_response_android_id'], securityToken: this.config['EufyAPIPushData']['checkin_response_security_token'], versionInfo: this.config['EufyAPIPushData']['checkin_response_version_info'], deviceDataVersionInfo: this.config['EufyAPIPushData']['checkin_response_device_data_version_info']}
+            this.logger.logInfoBasic(`Build CheckinResponse: statsOK: ${res.statsOk}; timeMs: ${res.timeMs}; androidId: ${res.androidId}; securityToken: ${res.securityToken}; versionInfo: ${res.versionInfo}; deviceDataVersionInfo: ${res.deviceDataVersionInfo}`);
+            return res;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Set the checkin response credentials for push connections.
+     * @param checkinResponse The checkin response credentials
+     */
+    public setCredentialsCheckinResponse(checkinResponse : CheckinResponse) : void
+    {
+        if(this.config['EufyAPIPushData']['checkin_response_stats_ok'] != checkinResponse.statsOk || this.config['EufyAPIPushData']['checkin_response_time_ms'] != checkinResponse.timeMs || this.config['EufyAPIPushData']['checkin_response_android_id'] != checkinResponse.androidId || this.config['EufyAPIPushData']['checkin_response_security_token'] != checkinResponse.securityToken || this.config['EufyAPIPushData']['checkin_response_version_info'] != checkinResponse.versionInfo || this.config['EufyAPIPushData']['checkin_response_device_data_version_info'] != checkinResponse.deviceDataVersionInfo)
+        {
+            this.config['EufyAPIPushData']['checkin_response_stats_ok'] = checkinResponse.statsOk;
+            this.config['EufyAPIPushData']['checkin_response_time_ms'] = checkinResponse.timeMs;
+            this.config['EufyAPIPushData']['checkin_response_android_id'] = checkinResponse.androidId;
+            this.config['EufyAPIPushData']['checkin_response_security_token'] = checkinResponse.securityToken;
+            this.config['EufyAPIPushData']['checkin_response_version_info'] = checkinResponse.versionInfo;
+            this.config['EufyAPIPushData']['checkin_response_device_data_version_info'] = checkinResponse.deviceDataVersionInfo;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the gcm response credentials for push connections.
+     * @returns The gcm response credentials
+     */
+    public getCredentialsGcmResponse() : GcmRegisterResponse | null
+    {
+        try
+        {
+            var res: GcmRegisterResponse = {token: this.config['EufyAPIPushData']['gcm_response_token']}
+            this.logger.logInfoBasic(`Build GcmRegisterResponse: token: ${res.token}`);
+            return res;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Set the gcm response credentials for push connections.
+     * @param gcmResponse the gcm response credentials
+     */
+    public setCredentialsGcmResponse(gcmResponse : GcmRegisterResponse) : void
+    {
+        if(this.config['EufyAPIPushData']['gcm_response_token'] != gcmResponse.token)
+        {
+            this.config['EufyAPIPushData']['gcm_response_token'] = gcmResponse.token;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the persistent id credentials for push connections.
+     * @returns The persistent id credentials
+     */
+    public getCredentialsPersistentIds() : string[]
+    {
+        try
+        {
+            return this.config['EufyAPIPushData']['persistent_ids'];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    /**
+     * Set the persistent id credentials for push connections.
+     * @param persistentIds The persistent id credentials
+     */
+    public setCredentialsPersistentIds(persistentIds : string[]) : void
+    {
+        if(this.config['EufyAPIPushData']['persistent_ids'] != persistentIds)
+        {
+            this.config['EufyAPIPushData']['persistent_ids'] = persistentIds;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the country code.
+     * @returns The country code
+     */
+    public getCountry() : string
+    {
+        try
+        {
+            return this.config['EufyAPILoginData']['country'];
+        }
+        catch
+        {
+            return "DE";
+        }
+    }
+
+    /**
+     * Set the country code.
+     * @param country The country code.
+     */
+    public setCountry(country : string) : void
+    {
+        if(this.config['EufyAPILoginData']['country'] != country)
+        {
+            this.config['EufyAPILoginData']['country'] = country;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the language code.
+     * @returns The language code
+     */
+    public getLanguage() : string
+    {
+        try
+        {
+            return this.config['EufyAPILoginData']['language'];
+        }
+        catch
+        {
+            return "en";
+        }
+    }
+
+    /**
+     * Set the language code.
+     * @param language The language code
+     */
+    public setLanguage(language : string) : void
+    {
+        if(this.config['EufyAPILoginData']['language'] != language)
+        {
+            this.config['EufyAPILoginData']['language'] = language;
+            this.hasChanged = true;
         }
     }
 }

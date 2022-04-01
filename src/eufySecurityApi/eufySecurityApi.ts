@@ -3,6 +3,8 @@ import { HTTPApi, GuardMode, Station, Device, AuthResult, PropertyName, Camera, 
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
+import { PushService } from './pushService';
+import { generateUDID, generateSerialnumber } from './utils';
 import { Devices } from './devices'
 import { Bases } from './bases';
 import { P2PConnectionType } from './p2p';
@@ -14,6 +16,7 @@ export class EufySecurityApi
     private httpService !: HTTPApi;
     private httpApiAuth : AuthResult;
     private homematicApi !: HomematicApi;
+    private pushService !: PushService;
     private devices !: Devices;
     private bases !: Bases;
     private taskUpdateDeviceInfo !: NodeJS.Timeout;
@@ -49,12 +52,31 @@ export class EufySecurityApi
         {
             this.httpService = new HTTPApi(this, this.config.getEmailAddress(), this.config.getPassword(), Number.parseInt(this.config.getLocation()), this.logger);
 
+            this.httpService.setCountry(this.config.getCountry());
+            this.httpService.setLanguage(this.config.getLanguage());
+            this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
+            if (this.config.getOpenudid() == "") {
+                this.config.setOpenudid(generateUDID());
+                this.logger.debug("Generated new openudid:", this.config.getOpenudid());
+            }
+            this.httpService.setOpenUDID(this.config.getOpenudid());
+    
+            if (this.config.getSerialNumber() == "") {
+                this.config.setSerialNumber(generateSerialnumber(12));
+                this.logger.debug("Generated new serial_number:", this.config.getSerialNumber());
+            }
+            this.httpService.setSerialNumber(this.config.getSerialNumber());
+    
+            
+
             this.httpService.setToken(this.getToken());
             this.httpService.setTokenExpiration(new Date(Number.parseInt(this.getTokenExpire())*1000));
 
             this.httpApiAuth = await this.httpService.authenticate();
             if(this.httpApiAuth == AuthResult.OK)
             {
+                this.pushService = new PushService(this, this.httpService, this.config,this.logger);
+
                 await this.httpService.updateDeviceInfo();
 
                 this.bases = new Bases(this, this.httpService);
@@ -81,6 +103,14 @@ export class EufySecurityApi
     public getServiceState() : string
     {
         return this.serviceState;
+    }
+
+    /**
+     * Close all push service connections
+     */
+    public closePushService() : void
+    {
+        this.pushService.closePushService();
     }
 
     /**
@@ -228,6 +258,18 @@ export class EufySecurityApi
     }
 
     /**
+     * Returns all devices as Devices-object
+     * @returns All devices as object
+     */
+    public async getRawDevices() : Promise<Devices> 
+    {
+        await this.updateDeviceData();
+        await this.devices.loadDevices();
+            
+        return this.devices;
+    }
+
+    /**
      * Returns a JSON-Representation of a given devices.
      */
      public async getDevice(deviceSerial : string) : Promise<string>
@@ -321,6 +363,18 @@ export class EufySecurityApi
         }
     
         return json;
+    }
+
+    /**
+     * Get all bases as Bases-object.
+     * @returns All bases as object.
+     */
+    public async getRawBases() : Promise<Bases> 
+    {
+        await this.updateDeviceData();
+        await this.bases.loadBases();
+            
+        return this.bases;
     }
 
     /**
@@ -1668,7 +1722,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.5.6";
+        return "1.6.0";
     }
 
     /**
@@ -1677,6 +1731,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "1.5.0";
+        return "1.6.6";
     }
 }

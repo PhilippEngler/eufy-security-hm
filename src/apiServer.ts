@@ -713,6 +713,8 @@ function getAllUdpPortsForBases(postData : string) : string[][]
  */
 async function stopServer()
 {
+    logger.logInfoBasic("Stopping Push Service...");
+    api.closePushService();
     logger.logInfoBasic("Stopping P2P-Connections...");
     await api.closeP2PConnections();
     logger.logInfoBasic("Stopping scheduled tasks...");
