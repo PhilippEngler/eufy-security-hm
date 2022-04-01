@@ -1,6 +1,6 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice } from './http';
 import { EufySecurityEvents } from './interfaces';
 
 /**
@@ -69,13 +69,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                             {
                                 device = new SoloCamera(this.httpService, this.resDevices[deviceSerial]);
                             }
-
-                            this.addEventListener(device, "PropertyChanged");
-                            this.addEventListener(device, "RawPropertyChanged");
-                            this.addEventListener(device, "MotionDetected");
-                            this.addEventListener(device, "PersonDetected");
-
-                            this.devices[device.getSerial()] = device;
                         }
                         else if(device.isKeyPad())
                         {
@@ -93,6 +86,26 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         {
                             device = new Lock(this.httpService, this.resDevices[deviceSerial]);
                         }
+                        else
+                        {
+                            device = new UnknownDevice(this.httpService, this.resDevices[deviceSerial]);
+                        }                        
+
+                        this.addEventListener(device, "PropertyChanged");
+                        this.addEventListener(device, "PropertyRenewed");
+                        this.addEventListener(device, "RawPropertyChanged");
+                        this.addEventListener(device, "RawPropertyRenewed");
+                        this.addEventListener(device, "CryingDetected");
+                        this.addEventListener(device, "SoundDetected");
+                        this.addEventListener(device, "PetDetected");
+                        this.addEventListener(device, "MotionDetected");
+                        this.addEventListener(device, "PersonDetected");
+                        this.addEventListener(device, "Rings");
+                        this.addEventListener(device, "Locked");
+                        this.addEventListener(device, "Open");
+                        this.addEventListener(device, "Ready");
+
+                        this.devices[device.getSerial()] = device;
                     }
                 }
             }
@@ -117,10 +130,19 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             for (var deviceSerial in this.resDevices)
             {
-                this.addEventListener(this.devices[deviceSerial], "PropertyChanged");
-                this.addEventListener(this.devices[deviceSerial], "RawPropertyChanged");
-                this.addEventListener(this.devices[deviceSerial], "MotionDetected");
-                this.addEventListener(this.devices[deviceSerial], "PersonDetected");
+                this.removeEventListener(this.devices[deviceSerial], "PropertyChanged");
+                this.removeEventListener(this.devices[deviceSerial], "PropertyRenewed");
+                this.removeEventListener(this.devices[deviceSerial], "RawPropertyChanged");
+                this.removeEventListener(this.devices[deviceSerial], "RawPropertyRenewed");
+                this.removeEventListener(this.devices[deviceSerial], "CryingDetected");
+                this.removeEventListener(this.devices[deviceSerial], "SoundDetected");
+                this.removeEventListener(this.devices[deviceSerial], "PetDetected");
+                this.removeEventListener(this.devices[deviceSerial], "MotionDetected");
+                this.removeEventListener(this.devices[deviceSerial], "PersonDetected");
+                this.removeEventListener(this.devices[deviceSerial], "Rings");
+                this.removeEventListener(this.devices[deviceSerial], "Locked");
+                this.removeEventListener(this.devices[deviceSerial], "Open");
+                this.removeEventListener(this.devices[deviceSerial], "Ready");
             }
         }
     }
@@ -144,19 +166,55 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             case "PropertyChanged":
                 device.on("property changed", (device : Device, name : string, value : PropertyValue) => this.onPropertyChanged(device, name, value));
-                this.api.logDebug(`Listener 'PropertyChanged' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
+                break;
+            case "PropertyRenewed":
+                device.on("property renewed", (device : Device, name : string, value : PropertyValue) => this.onPropertyRenewed(device, name, value));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property renewed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 device.on("raw property changed", (device : Device, type : number, value : string, modified : number) => this.onRawPropertyChanged(device, type, value, modified));
-                this.api.logDebug(`Listener 'RawPropertyChanged' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property changed")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RawPropertyRenewed":
+                device.on("raw property renewed", (device : Device, type : number, value : string, modified : number) => this.onRawPropertyRenewed(device, type, value, modified));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property renewed")} Listener.`);
+                break;
+            case "CryingDetected":
+                device.on("crying detected", (device : Device, state : boolean) => this.onCryingDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("crying detected")} Listener.`);
+                break;
+            case "SoundDetected":
+                device.on("sound detected", (device : Device, state : boolean) => this.onSoundDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("sound detected")} Listener.`);
+                break;
+            case "PetDetected":
+                device.on("pet detected", (device : Device, state : boolean) => this.onPetDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.on("motion detected", (device : Device, state : boolean) => this.onMotionDetected(device, state));
-                this.api.logDebug(`Listener 'MotionDetected' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
                 device.on("person detected", (device : Device, state : boolean, person : string) => this.onPersonDetected(device, state, person));
-                this.api.logDebug(`Listener 'PersonDetected' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
+                break;
+            case "Rings":
+                device.on("rings", (device : Device, state : boolean) => this.onRings(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("rings")} Listener.`);
+                break;
+            case "Locked":
+                device.on("locked", (device : Device, state : boolean) => this.onLocked(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("locked")} Listener.`);
+                break;
+            case "Open":
+                device.on("open", (device : Device, state : boolean) => this.onOpen(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("open")} Listener.`);
+                break;
+            case "Ready":
+                device.on("ready", (device : Device) => this.onReady(device));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("ready")} Listener.`);
                 break;
         }
     }
@@ -172,19 +230,55 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             case "PropertyChanged":
                 device.removeAllListeners("property changed");
-                this.api.logDebug(`Listener 'PropertyChanged' for device ${device.getSerial()} removed. Total ${device.listenerCount("property changed")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("property changed")} Listener.`);
+                break;
+            case "PropertyRenewed":
+                device.removeAllListeners("property renewed");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("property renewed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 device.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener 'RawPropertyChanged' for device ${device.getSerial()} removed. Total ${device.listenerCount("raw property changed")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RawPropertyRenewed":
+                device.removeAllListeners("raw property renewed");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("raw property renewed")} Listener.`);
+                break;
+            case "CryingDetected":
+                device.removeAllListeners("crying detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("crying detected")} Listener.`);
+                break;
+            case "SoundDetected":
+                device.removeAllListeners("sound detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("sound detected")} Listener.`);
+                break;
+            case "PetDetected":
+                device.removeAllListeners("pet detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.removeAllListeners("motion detected");
-                this.api.logDebug(`Listener 'MotionDetected' for device ${device.getSerial()} removed. Total ${device.listenerCount("motion detected")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
                 device.removeAllListeners("person detected");
-                this.api.logDebug(`Listener 'PersonDetected' for device ${device.getSerial()} removed. Total ${device.listenerCount("person detected")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("person detected")} Listener.`);
+                break;
+            case "Rings":
+                device.removeAllListeners("rings");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("rings")} Listener.`);
+                break;
+            case "Locked":
+                device.removeAllListeners("locked");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("locked")} Listener.`);
+                break;
+            case "Open":
+                device.removeAllListeners("open");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("open")} Listener.`);
+                break;
+            case "Ready":
+                device.removeAllListeners("ready");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("ready")} Listener.`);
                 break;
         }
     }
@@ -200,7 +294,19 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         //this.emit("device property changed", device, name, value);
         this.api.logDebug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value.value}`);
     }
-
+    
+    /**
+     * The action to be one when event PropertyRenewed is fired.
+     * @param device The device as Device object.
+     * @param name The name of the renewed value.
+     * @param value The value and timestamp of the new value as PropertyValue.
+     */
+    private async onPropertyRenewed(device : Device, name : string, value : PropertyValue): Promise<void>
+    {
+        //this.emit("device property renewed", device, name, value);
+        this.api.logDebug(`Event "PropertyRenewed": device: ${device.getSerial()} | name: ${name} | value: ${value.value}`);
+    }
+    
     /**
      * The action to be one when event RawPropertyChanged is fired.
      * @param device The device as Device object.
@@ -213,6 +319,49 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         //this.emit("device raw property changed", device, type, value, modified);
         this.api.logDebug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value} | modified: ${modified}`);
     }
+    
+    /**
+     * The action to be one when event RawPropertyRenewed is fired.
+     * @param device The device as Device object.
+     * @param type The number of the raw-value in the eufy ecosystem.
+     * @param value The new value as string.
+     * @param modified The timestamp of the last change.
+     */
+    private async onRawPropertyRenewed(device : Device, type : number, value : string, modified : number): Promise<void>
+    {
+        //this.emit("device raw property renewed", device, type, value, modified);
+        this.api.logDebug(`Event "RawPropertyRenewed": device: ${device.getSerial()} | type: ${type} | value: ${value} | modified: ${modified}`);
+    }
+
+    /**
+     * The action to be one when event CryingDetected is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private async onCryingDetected(device : Device, state : boolean): Promise<void>
+    {
+        this.api.logInfo(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
+    }
+
+    /**
+     * The action to be one when event SoundDetected is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private async onSoundDetected(device : Device, state : boolean): Promise<void>
+    {
+        this.api.logInfo(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
+    }
+
+    /**
+     * The action to be one when event PetDetected is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private async onPetDetected(device : Device, state : boolean): Promise<void>
+    {
+        this.api.logInfo(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+    }
 
     /**
      * The action to be one when event MotionDetected is fired.
@@ -221,7 +370,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onMotionDetected(device : Device, state : boolean): Promise<void>
     {
-        this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
     }
 
     /**
@@ -232,7 +381,47 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onPersonDetected(device : Device, state : boolean, person : string): Promise<void>
     {
-        this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+    }
+
+    /**
+     * The action to be one when event Rings is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private async onRings(device : Device, state : boolean): Promise<void>
+    {
+        this.api.logInfo(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
+    }
+
+    /**
+     * The action to be one when event Locked is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private async onLocked(device : Device, state : boolean): Promise<void>
+    {
+        this.api.logInfo(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
+    }
+
+    /**
+     * The action to be one when event Open is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private async onOpen(device : Device, state : boolean): Promise<void>
+    {
+        this.api.logInfo(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
+    }
+
+    /**
+     * The action to be one when event Ready is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private async onReady(device : Device): Promise<void>
+    {
+        this.api.logInfo(`Event "Ready": device: ${device.getSerial()}`);
     }
 
     /**
