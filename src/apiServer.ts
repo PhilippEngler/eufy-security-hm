@@ -117,16 +117,16 @@ class ApiServer
                         responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
                     case "getDevices":
-                        responseString = await api.getDevices();
+                        responseString = await api.getDevicesAsJSON();
                         break;
                     case "getDevice":
                         if(url.length == 3)
                         {
-                            responseString = await api.getDevice(url[2]);
+                            responseString = await api.getDeviceAsJSON(url[2]);
                         }
                         break;
                     case "getBases":
-                        responseString = await api.getBases();
+                        responseString = await api.getBasesAsJSON();
                         break;
                     case "getMode":
                         if(url.length == 2)

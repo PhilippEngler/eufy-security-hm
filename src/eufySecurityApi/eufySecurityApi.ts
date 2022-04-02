@@ -288,7 +288,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of all devices.
      */
-    public async getDevices() : Promise<string> 
+    public async getDevicesAsJSON() : Promise<string> 
     {
         try
         {
@@ -351,7 +351,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given devices.
      */
-     public async getDevice(deviceSerial : string) : Promise<string>
+     public async getDeviceAsJSON(deviceSerial : string) : Promise<string>
     {
         await this.updateDeviceData();
         await this.devices.loadDevices();
@@ -397,7 +397,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of all bases including the guard mode.
      */
-    public async getBases() : Promise<string>
+    public async getBasesAsJSON() : Promise<string>
     {
         try
         {
