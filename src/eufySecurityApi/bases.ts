@@ -4,6 +4,9 @@ import { EufySecurityEvents } from './interfaces';
 import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, DeviceType } from './http';
 import { sleep } from './push/utils';
 import { Devices } from "./devices";
+import { CommandResult, StreamMetadata } from ".";
+import internal from "stream";
+import { AlarmEvent } from "./p2p";
 
 /**
  * Represents all the Bases in the account.
@@ -66,15 +69,15 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
 
                         if(this.api.getApiUseUpdateStateEvent())
                         {
-                            this.addEventListenerInstantly(this.bases[stationSerial], "GuardModeChanged");
-                            this.addEventListenerInstantly(this.bases[stationSerial], "PropertyChanged");
-                            this.addEventListenerInstantly(this.bases[stationSerial], "RawPropertyChanged");
+                            this.addEventListener(this.bases[stationSerial], "GuardModeChanged", false);
+                            this.addEventListener(this.bases[stationSerial], "PropertyChanged", false);
+                            this.addEventListener(this.bases[stationSerial], "RawPropertyChanged", false);
                         }
 
-                        this.addEventListenerInstantly(this.bases[stationSerial], "RawDevicePropertyChanged");
-                        this.addEventListenerInstantly(this.bases[stationSerial], "ChargingState");
-                        this.addEventListenerInstantly(this.bases[stationSerial], "WifiRssi");
-                        this.addEventListenerInstantly(this.bases[stationSerial], "RuntimeState");
+                        this.addEventListener(this.bases[stationSerial], "RawDevicePropertyChanged", false);
+                        this.addEventListener(this.bases[stationSerial], "ChargingState", false);
+                        this.addEventListener(this.bases[stationSerial], "WifiRssi", false);
+                        this.addEventListener(this.bases[stationSerial], "RuntimeState", false);
                     }
                 }
                 
@@ -256,82 +259,106 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Add instantly a given event listener for a given base.
+     * Add a given event listener for a given base.
      * @param base The base as Station object.
      * @param eventListenerName The event listener name as string.
+     * @param delayed false if add instantly, for a 5s delay set true. 
      */
-    public addEventListenerInstantly(base : Station, eventListenerName : string) : void
+    public async addEventListener(base : Station, eventListenerName : string, delayed : boolean) : Promise<void>
     {
-        switch (eventListenerName)
+        if(delayed == true)
         {
-            case "GuardModeChanged":
-                base.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardModeChanged(station, guardMode));
-                this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("guard mode")} Listener.`);
-                break;
-            case "PropertyChanged":
-                base.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onPropertyChanged(station, name, value));
-                this.api.logDebug(`Listener 'PropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
-                break;
-            case "RawPropertyChanged":
-                base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onRawPropertyChanged(station, type, value, modified));
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property changed")} Listener.`);
-                break;
-            case "RuntimeState":
-                base.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number, modified: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature, modified));
-                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} added. Total ${base.listenerCount("runtime state")} Listener.`);
-                break;
-            case "ChargingState":
-                base.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel, modified));
-                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} added. Total ${base.listenerCount("charging state")} Listener.`);
-                break;
-            case "WifiRssi":
-                base.on("wifi rssi", (station: Station, channel: number, rssi: number, modified: number) => this.onStationWifiRssi(station, channel, rssi, modified));
-                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} added. Total ${base.listenerCount("wifi rssi")} Listener.`);
-                break;
-            case "RawDevicePropertyChanged":
-                base.on("raw device property changed", (deviceSN: string, params: RawValues) => this.onRawDevicePropertyChanged(deviceSN, params));
-                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} added. Total ${base.listenerCount("raw device property changed")} Listener.`);
-                break;
+            await sleep(5000);
         }
-    }
-
-    /**
-     * Add 5 seconds delayed a given event listener for a given base.
-     * @param base The base as Station object.
-     * @param eventListenerName The event listener name as string.
-     */
-    public async addEventListenerDelayed(base : Station, eventListenerName : string) : Promise<void>
-    {
-        await sleep(5000);
         switch (eventListenerName)
         {
+            case "Connect":
+                base.on("connect", (station : Station) => this.onStationConnect(station));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("connect")} Listener.`);
+                break;
+            case "Close":
+                base.on("close", (station : Station) => this.onStationClose(station));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("close")} Listener.`);
+                break;
+            case "RawDevicePropertyChanged":
+                base.on("raw device property changed", (deviceSN: string, params: RawValues) => this.onStationRawDevicePropertyChanged(deviceSN, params));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("raw device property changed")} Listener.`);
+                break;
+            case "LivestreamStart":
+                base.on("livestream start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationLivestreamStart(station, channel, metadata, videoStream, audioStream));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("livestream start")} Listener.`);
+                break;
+            case "LivestreamStop":
+                base.on("livestream stop", (station : Station, channel : number) => this.onStationLivestreamStop(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("livestream stop")} Listener.`);
+                break;
+            case "DownloadStart":
+                base.on("download start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("download start")} Listener.`);
+                break;
+            case "DownloadStop":
+                base.on("download finish", (station : Station, channel : number) => this.onStationDownloadFinish(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("download finish")} Listener.`);
+                break;
+            case "CommandResult":
+                base.on("command result", (station : Station, result : CommandResult) => this.onStationCommandResult(station, result));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("command result")} Listener.`);
+                break;
             case "GuardModeChanged":
-                base.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardModeChanged(station, guardMode));
-                this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("guard mode")} Listener.`);
+                base.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardMode(station, guardMode));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("guard mode")} Listener.`);
+                break;
+            case "CurrentMode":
+                base.on("current mode", (station : Station, guardMode : number) => this.onStationCurrentMode(station, guardMode));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("current mode")} Listener.`);
+                break;
+            case "RTSPLivestreamStart":
+                base.on("rtsp livestream start", (station : Station, channel : number) => this.onStationRTSPLivestreamStart(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("rtsp livestream start")} Listener.`);
+                break;
+            case "RTSPLivestreamStop":
+                base.on("rtsp livestream stop", (station : Station, channel : number) => this.onStationRTSPLivestreamStop(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("rtsp livestream stop")} Listener.`);
+                break;
+            case "RTSPUrl":
+                base.on("rtsp url", (station : Station, channel : number) => this.onStationRTSPURL(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
-                base.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onPropertyChanged(station, name, value));
-                this.api.logDebug(`Listener 'PropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("property changed")} Listener.`);
+                base.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onStationPropertyChanged(station, name, value));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+            case "PropertyRenewed":
+                base.on("property renewed", (station : Station, name : string, value : PropertyValue) => this.onStationPropertyRenewed(station, name, value));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("property renewed")} Listener.`);
                 break;
             case "RawPropertyChanged":
-                base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onRawPropertyChanged(station, type, value, modified));
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("raw property changed")} Listener.`);
+                base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onStationRawPropertyChanged(station, type, value, modified));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RawPropertyRenewed":
+                base.on("raw property renewed", (station : Station, type : number, value : string, modified : number) => this.onStationRawPropertyRenewed(station, type, value, modified));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property renewed")} Listener.`);
+                break; 
+            case "AlarmEvent":
+                base.on("alarm event", (station : Station, alarmEvent : AlarmEvent) => this.onStationAlarmEvent(station, alarmEvent));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm event")} Listener.`);
                 break;
             case "RuntimeState":
                 base.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number, modified: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature, modified));
-                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("runtime state")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("runtime state")} Listener.`);
                 break;
             case "ChargingState":
                 base.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel, modified));
-                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("charging state")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("charging state")} Listener.`);
                 break;
             case "WifiRssi":
                 base.on("wifi rssi", (station: Station, channel: number, rssi: number, modified: number) => this.onStationWifiRssi(station, channel, rssi, modified));
-                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("wifi rssi")} Listener.`);
                 break;
-            case "RawDevicePropertyChanged":
-                base.on("raw device property changed", (deviceSN: string, params: RawValues) => this.onRawDevicePropertyChanged(deviceSN, params));
-                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} added delayed. Total ${base.listenerCount("raw device property changed")} Listener.`);
+            case "FloodlightManualSwitch":
+                base.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean, modified : number) => this.onStationFloodlightManualSwitch(station, channel, enabled, modified));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("floodlight manual switch")} Listener.`);
                 break;
         }
     }
@@ -345,33 +372,93 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         switch (eventListenerName)
         {
-            case "GuardModeChanged":
-                base.removeAllListeners("guard mode");
-                this.api.logDebug(`Listener 'GuardModeChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("guard mode")} Listener.`);
+            case "Connect":
+                base.removeAllListeners("connect");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("connect")} Listener.`);
                 break;
-            case "PropertyChanged":
-                base.removeAllListeners("property changed");
-                this.api.logDebug(`Listener 'PropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
-                break;
-            case "RawPropertyChanged":
-                base.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener 'RawPropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property changed")} Listener.`);
-                break;
-            case "RuntimeState":
-                base.removeAllListeners("runtime state");
-                this.api.logDebug(`Listener 'RuntimeState' for base ${base.getSerial()} removed. Total ${base.listenerCount("runtime state")} Listener.`);
-                break;
-            case "ChargingState":
-                base.removeAllListeners("charging state");
-                this.api.logDebug(`Listener 'ChargingState' for base ${base.getSerial()} removed. Total ${base.listenerCount("charging state")} Listener.`);
-                break;
-            case "WifiRssi":
-                base.removeAllListeners("wifi rssi");
-                this.api.logDebug(`Listener 'WifiRssi' for base ${base.getSerial()} removed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+            case "Close":
+                base.removeAllListeners("close");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("close")} Listener.`);
                 break;
             case "RawDevicePropertyChanged":
                 base.removeAllListeners("raw device property changed");
-                this.api.logDebug(`Listener 'RawDevicePropertyChanged' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw device property changed")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw device property changed")} Listener.`);
+                break;
+            case "LivestreamStart":
+                base.removeAllListeners("livestream start");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream start")} Listener.`);
+                break;
+            case "LivestreamStop":
+                base.removeAllListeners("livestream stop");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream stop")} Listener.`);
+                break;
+            case "DownloadStart":
+                base.removeAllListeners("download start");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("download start")} Listener.`);
+                break;
+            case "DownloadFinish":
+                base.removeAllListeners("download finish");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("download finish")} Listener.`);
+                break;
+            case "CommandResult":
+                base.removeAllListeners("command result");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("command result")} Listener.`);
+                break;
+            case "GuardModeChanged":
+                base.removeAllListeners("guard mode");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("guard mode")} Listener.`);
+                break;
+            case "CurrentMode":
+                base.removeAllListeners("current mode");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("current mode")} Listener.`);
+                break;
+            case "RTSPLivestreamStart":
+                base.removeAllListeners("rtsp livestream start");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp livestream start")} Listener.`);
+                break;
+            case "RTSPLivestreamStop":
+                base.removeAllListeners("rtsp livestream stop");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp livestream stop")} Listener.`);
+                break;
+            case "RTSPURL":
+                base.removeAllListeners("rtsp url");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp url")} Listener.`);
+                break;
+            case "PropertyChanged":
+                base.removeAllListeners("property changed");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
+                break;
+            case "PropertyRenewed":
+                base.removeAllListeners("property renewed");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("property renewed")} Listener.`);
+                break;
+            case "RawPropertyChanged":
+                base.removeAllListeners("raw property changed");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property changed")} Listener.`);
+                break;
+            case "RawPropertyRenewd":
+                base.removeAllListeners("raw property renewed");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property renewed")} Listener.`);
+                break;
+            case "AlarmEvent":
+                base.removeAllListeners("alarm event");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm event")} Listener.`);
+                break;
+            case "RuntimeState":
+                base.removeAllListeners("runtime state");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("runtime state")} Listener.`);
+                break;
+            case "ChargingState":
+                base.removeAllListeners("charging state");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("charging state")} Listener.`);
+                break;
+            case "WifiRssi":
+                base.removeAllListeners("wifi rssi");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                break;
+            case "FloodlightManualSwitch":
+                base.removeAllListeners("floodlight manual switch");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("floodlight manual switch")} Listener.`);
                 break;
         }
     }
@@ -385,31 +472,145 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         switch (eventListenerName)
         {
-            case "GuardModeChanged":
+            case "Connect":
+                return base.listenerCount("connect");
+            case "Close":
+                return base.listenerCount("close");
+            case "RawDevicePropertyChanged":
+                return base.listenerCount("raw device property changed");
+            case "LivestreamStart":
+                return base.listenerCount("livestream start");
+            case "LivestreamStop":
+                return base.listenerCount("livestream stop");
+            case "DownloadStart":
+                return base.listenerCount("download start");
+            case "DownloadFinish":
+                return base.listenerCount("download finish");
+            case "CommandResult":
+                return base.listenerCount("command result");
+            case "GuardMode":
                 return base.listenerCount("guard mode");
+            case "CurrentMode":
+                return base.listenerCount("current mode");
+            case "RTSPLivestreamStart":
+                return base.listenerCount("rtsp livestream start");
+            case "RTSPLivestreamStop":
+                return base.listenerCount("rtsp livestream stop");
+            case "RTSPURL":
+                return base.listenerCount("rtsp url");
             case "PropertyChanged":
                 return base.listenerCount("property changed");
+            case "PropertyRenewed":
+                return base.listenerCount("property renewed");
             case "RawPropertyChanged":
                 return base.listenerCount("raw property changed");
+            case "RawPropertyRenewd":
+                return base.listenerCount("raw property renewed");
+            case "AlarmEvent":
+                return base.listenerCount("alarm event");
             case "RuntimeState":
                 return base.listenerCount("runtime state");
             case "ChargingState":
                 return base.listenerCount("charging state");
             case "WifiRssi":
                 return base.listenerCount("wifi rssi");
-            case "RawDevicePropertyChanged":
-                return base.listenerCount("raw device property changed");
+            case "FloodlightManualSwitch":
+                return base.listenerCount("floodlight manual switch");
         }
         return -1;
     }
 
     /**
-     * The action to be one when event GuardModeChanged is fired.
+     * The action to be done when event Connect is fired.
+     * @param station The base as Station object.
+     */
+    private async onStationConnect(station : Station): Promise<void>
+    {
+        this.api.logDebug(`Event "Connect": base: ${station.getSerial()}`);
+    }
+
+    /**
+     * The action to be done when event Close is fired.
+     * @param station The base as Station object.
+     */
+    private async onStationClose(station : Station): Promise<void>
+    {
+        this.api.logDebug(`Event "Close": base: ${station.getSerial()}`);
+    }
+
+    /**
+     * The action to be done when event RawDevicePropertyChanged is fired.
+     * @param deviceSerial The serial of the device the raw values changed for.
+     * @param values The raw values for the device.
+     */
+    private async onStationRawDevicePropertyChanged(deviceSerial: string, values: RawValues): Promise<void>
+    {
+        this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
+        this.devices.updateDeviceProperties(deviceSerial, values);
+    }
+
+    /**
+     * The action to be done when event LivestreamStart is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     * @param metadata The metadata.
+     * @param videoStream The videoStream.
+     * @param audioStream  The audioStream.
+     */
+    private async onStationLivestreamStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable): Promise<void>
+    {
+        this.api.logDebug(`Event "LivestreamStart": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event LivestreamStop is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     */
+    private async onStationLivestreamStop(station : Station, channel : number): Promise<void>
+    {
+        this.api.logDebug(`Event "LivestreamStop": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event DownloadStart is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     * @param metadata The metadata.
+     * @param videoStream The videoStream.
+     * @param audioStream  The audioStream.
+     */
+    private async onStationDownloadStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable): Promise<void>
+    {
+        this.api.logDebug(`Event "DownloadStart": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event DownloadFinish is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     */
+    private async onStationDownloadFinish(station : Station, channel : number): Promise<void>
+    {
+        this.api.logDebug(`Event "DownloadFinish": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event StationResult is fired.
+     * @param station The base as Station object.
+     * @param command The result.
+     */
+    private async onStationCommandResult(station : Station, command : CommandResult): Promise<void>
+    {
+        this.api.logDebug(`Event "DownloadFinish": base: ${station.getSerial()} | result: ${command}`);
+    }
+
+    /**
+     * The action to be done when event GuardMode is fired.
      * @param station The base as Station object.
      * @param guardMode The new guard mode as GuardMode.
-     * @param currentMode The new current mode as GuardMode.
      */
-    private async onStationGuardModeChanged(station : Station, guardMode : number): Promise<void>
+    private async onStationGuardMode(station : Station, guardMode : number): Promise<void>
     {
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
@@ -418,18 +619,67 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | guard mode: ${guardMode}`);
+            this.api.logDebug(`Event "GuardMode": base: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeBase(station.getSerial());
         }
     }
 
     /**
-     * The action to be one when event PropertyChanged is fired.
+     * The action to be done when event CurrentMode is fired.
+     * @param station The base as Station object.
+     * @param guardMode The new guard mode as GuardMode.
+     */
+    private async onStationCurrentMode(station : Station, guardMode : number): Promise<void>
+    {
+        if(this.skipNextModeChangeEvent[station.getSerial()] == true)
+        {
+            this.api.logDebug("Event skipped due to locally forced changeCurrentMode.");
+            this.skipNextModeChangeEvent[station.getSerial()] = false;
+        }
+        else
+        {
+            this.api.logDebug(`Event "CurrentMode": base: ${station.getSerial()} | guard mode: ${guardMode}`);
+            await this.api.updateGuardModeBase(station.getSerial());
+        }
+    }
+
+    /**
+     * The action to be done when event RTSPLivestreamStart is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     */
+    private async onStationRTSPLivestreamStart(station : Station, channel : number): Promise<void>
+    {
+        this.api.logDebug(`Event "RTSPLivestreamStart": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event RTSPLivestreamStop is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     */
+    private async onStationRTSPLivestreamStop(station : Station, channel : number): Promise<void>
+    {
+        this.api.logDebug(`Event "RTSPLivestreamStop": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event RTSPURL is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     */
+    private async onStationRTSPURL(station : Station, channel : number): Promise<void>
+    {
+        this.api.logDebug(`Event "RTSPURL": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event PropertyChanged is fired.
      * @param station The base as Station object.
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    private async onPropertyChanged(station : Station, name : string, value : PropertyValue): Promise<void>
+    private async onStationPropertyChanged(station : Station, name : string, value : PropertyValue): Promise<void>
     {
         if(name != "guardMode" && name != "currentMode")
         {
@@ -438,13 +688,27 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * The action to be one when event RawPropertyChanged is fired.
+     * The action to be done when event PropertyRenewed is fired.
+     * @param station The base as Station object.
+     * @param name The name of the renewed value.
+     * @param value The value and timestamp of the renewed value as PropertyValue.
+     */
+    private async onStationPropertyRenewed(station : Station, name : string, value : PropertyValue): Promise<void>
+    {
+        if(name != "guardMode" && name != "currentMode")
+        {
+            this.api.logDebug(`Event "PropertyRenewed": base: ${station.getSerial()} | name: ${name} | value: ${value.value}`);
+        }
+    }
+
+    /**
+     * The action to be done when event RawPropertyChanged is fired.
      * @param station The base as Station object.
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
      * @param modified The timestamp of the last change.
      */
-    private async onRawPropertyChanged(station : Station, type : number, value : string, modified : number): Promise<void>
+    private async onStationRawPropertyChanged(station : Station, type : number, value : string, modified : number): Promise<void>
     {
         if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
@@ -453,50 +717,80 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * The action to be one when event StationRuntimeState is fired.
+     * The action to be done when event RawPropertyRenewed is fired.
      * @param station The base as Station object.
-     * @param channel The cannel to define the device.
+     * @param type The number of the raw-value in the eufy ecosystem.
+     * @param value The renewed value as string.
+     * @param modified The timestamp of the last change.
+     */
+    private async onStationRawPropertyRenewed(station : Station, type : number, value : string, modified : number): Promise<void>
+    {
+        if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
+        {
+            this.api.logDebug(`Event "RawPropertyRenewed": base: ${station.getSerial()} | type: ${type} | value: ${value}`);
+        }
+    }
+
+    /**
+     * The action to be done when event AlarmEvent is fired.
+     * @param station The base as Station object.
+     * @param alarmEvent The alarmEvent.
+     */
+    private async onStationAlarmEvent(station : Station, alarmEvent : AlarmEvent): Promise<void>
+    {
+        this.api.logDebug(`Event "AlarmEvent": base: ${station.getSerial()} | alarmEvent: ${alarmEvent}`);
+    }
+
+    /**
+     * The action to be done when event StationRuntimeState is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
      * @param batteryLevel The battery level as percentage value.
      * @param temperature The temperature as degree value.
      * @param modified The datetime stamp the values have changed.
      */
-    private onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number, modified: number): void {
+    private async onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number, modified: number): Promise<void>
+    {
         this.api.logDebug(`Event "RuntimeState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
         this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature, modified);
     }
 
     /**
-     * The action to be one when event StationChargingState is fired.
+     * The action to be done when event StationChargingState is fired.
      * @param station The base as Station object.
-     * @param channel The cannel to define the device.
+     * @param channel The channel to define the device.
      * @param chargeType The current carge state.
      * @param batteryLevel The battery level as percentage value.
      * @param modified The datetime stamp the values have changed.
      */
-    private onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number): void {
+    private async onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number): Promise<void>
+    {
         this.api.logDebug(`Event "ChargingState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
         this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel, modified);
     }
 
     /**
-     * The action to be one when event StationWifiRssi is fired.
+     * The action to be done when event StationWifiRssi is fired.
      * @param station The base as Station object.
-     * @param channel The cannel to define the device.
+     * @param channel The channel to define the device.
      * @param rssi The current rssi value.
      * @param modified The datetime stamp the values have changed.
      */
-    private onStationWifiRssi(station: Station, channel: number, rssi: number, modified: number): void {
+    private async onStationWifiRssi(station: Station, channel: number, rssi: number, modified: number): Promise<void>
+    {
         this.api.logDebug(`Event "WifiRssi": base: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
         this.devices.updateWifiRssi(station.getSerial(), channel, rssi, modified);
     }
 
     /**
-     * The action to be one when event RawDevicePropertyChanged is fired.
-     * @param deviceSerial The serial of the device the raw values changed for.
-     * @param values The raw values for the device.
+     * The action to be done when event FloodlightManualSwitch is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     * @param enabled The value for the floodlight.
+     * @param modified The datetime stamp the values have changed.
      */
-    private onRawDevicePropertyChanged(deviceSerial: string, values: RawValues): void {
-        this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
-        this.devices.updateDeviceProperties(deviceSerial, values);
+    private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean, modified : number): Promise<void>
+    {
+        this.api.logDebug(`Event "FloodlightManualSwitch": base: ${station.getSerial()} | channelt: ${channel} | enabled: ${enabled}`);
     }
 }
