@@ -77,7 +77,14 @@ export class EufySecurityApi
             {
                 if(this.config.getApiUsePushService() == true)
                 {
-                    this.pushService = new PushService(this, this.httpService, this.config,this.logger);
+                    if(this.config.getCountry() != "" || this.config.getLanguage() != "")
+                    {
+                        this.pushService = new PushService(this, this.httpService, this.config,this.logger);
+                    }
+                    else
+                    {
+                        this.logger.logInfo(1, "No country and/or language given. Skipping creating push service.")
+                    }
                 }
 
                 await this.httpService.updateDeviceInfo();
