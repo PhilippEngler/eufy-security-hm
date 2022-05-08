@@ -346,6 +346,18 @@ class ApiServer
                             location = getDataFromPOSTData(postData, "location", "string");
                         }
 
+                        var country = "";
+                        if(postData.indexOf("country") >= 0)
+                        {
+                            country = getDataFromPOSTData(postData, "country", "string");
+                        }
+
+                        var language = "";
+                        if(postData.indexOf("language") >= 0)
+                        {
+                            language = getDataFromPOSTData(postData, "language", "string");
+                        }
+
                         var useHttp = false;
                         if(postData.indexOf("useHttp") >= 0)
                         {
@@ -458,6 +470,12 @@ class ApiServer
                             updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "string");
                         }
 
+                        var usepushservice = false;
+                        if(postData.indexOf("usePushService") >= 0)
+                        {
+                            usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
+                        }
+
                         var apiloglevel = "0";
                         if(postData.indexOf("logLevel") >= 0)
                         {
@@ -504,7 +522,7 @@ class ApiServer
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, location, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
+                            responseString = api.setConfig(username, password, location, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                         }
                         else
                         {

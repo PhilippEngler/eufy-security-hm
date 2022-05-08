@@ -75,7 +75,10 @@ export class EufySecurityApi
             this.httpApiAuth = await this.httpService.authenticate();
             if(this.httpApiAuth == AuthResult.OK)
             {
-                this.pushService = new PushService(this, this.httpService, this.config,this.logger);
+                if(this.config.getApiUsePushService() == true)
+                {
+                    this.pushService = new PushService(this, this.httpService, this.config,this.logger);
+                }
 
                 await this.httpService.updateDeviceInfo();
 
@@ -110,7 +113,10 @@ export class EufySecurityApi
      */
     public closePushService() : void
     {
-        this.pushService.closePushService();
+        if(this.pushService)
+        {
+            this.pushService.closePushService();
+        }
     }
 
     /**
@@ -1128,6 +1134,8 @@ export class EufySecurityApi
         json += `"username":"${this.config.getEmailAddress()}",`;
         json += `"password":"${this.config.getPassword()}",`;
         json += `"location":"${this.config.getLocation()}",`;
+        json += `"country":"${this.config.getCountry()}",`;
+        json += `"language":"${this.config.getLanguage()}",`;
         json += `"api_http_active":"${this.config.getApiUseHttp()}",`;
         json += `"api_http_port":"${this.config.getApiPortHttp()}",`;
         json += `"api_https_active":"${this.config.getApiUseHttps()}",`;
@@ -1147,6 +1155,7 @@ export class EufySecurityApi
         json += `"api_use_update_links":"${this.config.getApiUseUpdateLinks()}",`;
         json += `"api_use_update_links_only_when_active":"${this.config.getApiUpdateLinksOnlyWhenActive()}",`;
         json += `"api_update_links_timespan":"${this.config.getApiUpdateLinksTimespan()}",`;
+        json += `"api_use_pushservice":"${this.config.getApiUsePushService()}",`;
         json += `"api_log_level":"${this.config.getApiLogLevel()}"}]}`;
     
         return json;
@@ -1156,6 +1165,9 @@ export class EufySecurityApi
      * Save the config got from webui.
      * @param username The username for the eufy security account.
      * @param password The password for the eufy security account.
+     * @param location The location the eufy account is created for.
+     * @param country The country the eufy account is created for.
+     * @param language The language the eufy account is using.
      * @param api_use_http Should the api use http.
      * @param api_port_http The http port for the api.
      * @param api_use_https Should the api use https.
@@ -1177,7 +1189,7 @@ export class EufySecurityApi
      * @param api_log_level The log level.
      * @returns 
      */
-    public setConfig(username : string, password : string, location : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state_event : boolean, api_use_update_state_intervall : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : string, api_log_level : string) : string
+    public setConfig(username : string, password : string, location : string, country : string, language : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state_event : boolean, api_use_update_state_intervall : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : string, api_use_pushservice : boolean, api_log_level : string) : string
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
@@ -1194,6 +1206,8 @@ export class EufySecurityApi
         this.config.setEmailAddress(username);
         this.config.setPassword(password);
         this.config.setLocation(Number.parseInt(location));
+        this.config.setCountry(country);
+        this.config.setLanguage(language);
         this.config.setApiUseHttp(api_use_http);
         this.config.setApiPortHttp(api_port_http);
         this.config.setApiUseHttps(api_use_https);
@@ -1267,6 +1281,7 @@ export class EufySecurityApi
         {
             this.setupScheduledTask(this.taskUpdateLinks, "getLibrary");
         }
+        this.config.setApiUsePushService(api_use_pushservice);
         this.config.setApiLogLevel(api_log_level);
 
         var res = this.config.writeConfig();
@@ -1801,7 +1816,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0";
+        return "1.6.0-b2";
     }
 
     /**

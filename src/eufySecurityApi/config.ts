@@ -26,7 +26,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 9;
+        return 10;
     }
 
     /**
@@ -295,6 +295,21 @@ export class Config
             this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 9 finished.");
         }
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 10)
+        {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 10...");
+            if(this.filecontent.indexOf("api_use_pushservice") == -1)
+            {
+                this.logger.logInfoBasic(" adding 'api_use_pushservice'.");
+                this.filecontent = this.filecontent.replace(`api_log_level=${this.getApiLogLevel()}`, `api_use_pushservice=false\r\napi_log_level=${this.getApiLogLevel()}\r\n\r\n`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...Stage2 update to version 10 finished.");
+        }
 
         if(updated)
         {
@@ -386,6 +401,7 @@ export class Config
         fc += "api_update_links24_active=false\r\n";
         fc += "api_update_links_active=true\r\n";
         fc += "api_update_links_timespan=15\r\n";
+        fc += "api_use_pushservice=false\r\n";
         fc += "api_log_level=0\r\n\r\n"
 
         writeFileSync('./config.ini', fc);
@@ -1427,6 +1443,35 @@ export class Config
 
             this.writeConfig();
             this.loadConfig();
+        }
+    }
+
+    /**
+     * Get the value for enableing or diableing push service.
+     * @returns Boolean for enableing or diableing.
+     */
+    public getApiUsePushService() : boolean
+    {
+        try
+        {
+            return this.config['EufyAPIServiceData']['api_use_pushservice'];
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set if push service is used.
+     * @param usePushService The value if push service is used.
+     */
+    public setApiUsePushService(usePushService : boolean) : void
+    {
+        if(this.config['EufyAPIPushData']['api_use_pushservice'] != usePushService)
+        {
+            this.config['EufyAPIPushData']['api_use_pushservice'] = usePushService;
+            this.hasChanged = true;
         }
     }
 

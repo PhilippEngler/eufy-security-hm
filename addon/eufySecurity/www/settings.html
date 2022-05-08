@@ -113,14 +113,33 @@
 											<hr>
 											<h5>Weitere Einstellungen</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label for="txtUsername">Standort des eufy Security Accounts.</label>
-												<select name="location" id="cbLocation" class="custom-select mb-2" required>
+												<label for="cbLocation">Standort des eufy Security Accounts.</label>
+												<select name="location" id="cbLocation" class="custom-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option disabled value="-1">automatische Auswahl</option>
 													<option disabled value="0">alle Regionen außer Europa</option>
 													<option value="1">Europa</option>
 												</select>
 												<small class="form-text text-muted">Der Standort, für den Sie den eufy Security Account erstellt haben. Auch wenn Sie hier einen anderen Wert angeben, verbindet sich der Client trotzdem mit der richtigen Region. Diese wird ihm von eufy mitgeteilt, wenn er sich bei einem fremden Standort anmeldet.</small>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="cbCountry">Land des eufy Security Accounts.</label>
+												<select name="location" id="cbCountry" class="custom-select" required>
+													<option disabled selected value style="display: none;">Bitte auswählen...</option>
+													<option value="DE">Deutschland</option>
+													<option value="AT">Österreich</option>
+													<option value="CH">Schweiz</option>
+												</select>
+												<small class="form-text text-muted">Das Land, für den Sie den eufy Security Account erstellt haben.</small>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="cbLanguage">Land des eufy Security Accounts.</label>
+												<select name="location" id="cbLanguage" class="custom-select" required>
+													<option disabled selected value style="display: none;">Bitte auswählen...</option>
+													<option value="de">deutsch</option>
+													<option value="en">englisch</option>
+												</select>
+												<small class="form-text text-muted">Die Sprache, die für den eufy Security Account genutzt wird.</small>
 											</div>
 										</div>
 									</div>
@@ -175,9 +194,9 @@
 												<label class="mb-2" for="cbConnectionType">Herstellen der Verbindung zu den Basisstationen.</label>
 												<select name="connectionType" id="cbConnectionType" class="custom-select mb-2" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
-													<option disabled value="0">bevorzuge lokale Verbindung</option>
+													<option value="0">bevorzuge lokale Verbindung</option>
 													<option value="1">nur lokale Verbindung</option>
-													<option disabled value="2">schnellste Verbindung</option>
+													<option value="2">schnellste Verbindung</option>
 												</select>
 											</div>
 											<div class="custom-control custom-switch">
@@ -244,6 +263,12 @@
 												<div class="invalid-feedback">
 													Bitte geben Sie ein Intervall zwischen 15 und 240 Minuten ein.
 												</div>
+											</div>
+											<hr>
+											<h5>Einstellungen für Pushbenachrichtigungen</h5>
+											<div class="custom-control custom-switch">
+												<input type="checkbox" name="usePushService" class="custom-control-input" id="chkUsePushService">
+												<label class="custom-control-label" for="chkUsePushService">Pushbenachrichtigungen aktivieren</label>
 											</div>
 											<hr>
 											<h5>Einstellungen für Protokollierung</h5>
@@ -586,6 +611,8 @@
 				document.getElementById("txtUsername").setAttribute("disabled", true);
 				document.getElementById("txtPassword").setAttribute("disabled", true);
 				document.getElementById("cbLocation").setAttribute("disabled", true);
+				document.getElementById("cbCountry").setAttribute("disabled", true);
+				document.getElementById("cbLanguage").setAttribute("disabled", true);
 				document.getElementById("txtPortHttp").setAttribute("disabled", true);
 				document.getElementById("txtPortHttps").setAttribute("disabled", true);
 				document.getElementById("txtPortHttps").setAttribute("disabled", true);
@@ -597,6 +624,7 @@
 				document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
 				document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
 				document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
+				document.getElementById("chkUsePushService").setAttribute("disabled", true);
 				document.getElementById("cbLogLevel").setAttribute("disabled", true);
 			}
 
@@ -605,9 +633,12 @@
 				document.getElementById("txtUsername").removeAttribute("disabled");
 				document.getElementById("txtPassword").removeAttribute("disabled");
 				document.getElementById("cbLocation").removeAttribute("disabled");
+				document.getElementById("cbCountry").removeAttribute("disabled");
+				document.getElementById("cbLanguage").removeAttribute("disabled");
 				document.getElementById("cbConnectionType").removeAttribute("disabled");
 				document.getElementById('txtDefaultImagePath').removeAttribute("disabled");
 				document.getElementById('txtDefaultVideoPath').removeAttribute("disabled");
+				document.getElementById("chkUsePushService").removeAttribute("disabled");
 				document.getElementById("cbLogLevel").removeAttribute("disabled");
 			}
 
@@ -686,7 +717,7 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, password, accountlocation, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, apiloglevel;
+				var xmlHttp, objResp, objIter, username, password, accountlocation, accountcountry, accountlanguage, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, api_use_pushservice, apiloglevel;
 				var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -704,6 +735,8 @@
 									username = objResp.data[objIter].username;
 									password = objResp.data[objIter].password;
 									accountlocation = objResp.data[objIter].location;
+									accountcountry = objResp.data[objIter].country;;
+									accountlanguage = objResp.data[objIter].language;;
 									apiusehttp = objResp.data[objIter].api_http_active;
 									apiporthttp = objResp.data[objIter].api_http_port;
 									apiusehttps = objResp.data[objIter].api_https_active;
@@ -722,6 +755,7 @@
 									apiuseupdatelinks = objResp.data[objIter].api_use_update_links;
 									apiuseupdatelinksonlywhenactive =objResp.data[objIter].api_use_update_links_only_when_active;
 									apiupdatelinkstimespan = objResp.data[objIter].api_update_links_timespan;
+									apiusepushservice = objResp.data[objIter].api_use_pushservice;
 									apiloglevel = objResp.data[objIter].api_log_level;
 								}
 								var text = document.getElementById('txtUsername');
@@ -735,6 +769,22 @@
 								else
 								{
 									document.getElementById("cbLocation").value = (Number.parseInt(accountlocation));
+								}
+								if(accountcountry == undefined || accountcountry == "" )
+								{
+									document.getElementById("cbCountry").selectedIndex = "";
+								}
+								else
+								{
+									document.getElementById("cbCountry").value = accountcountry;
+								}
+								if(accountlanguage == undefined || accountlanguage == "" )
+								{
+									document.getElementById("cbLanguage").selectedIndex = "";
+								}
+								else
+								{
+									document.getElementById("cbLanguage").value = accountlanguage;
 								}
 								if(apiusehttp == "true")
 								{
@@ -849,6 +899,10 @@
 								}
 								text = document.getElementById('txtUpdateLinksIntervallTimespan');
 								text.value=apiupdatelinkstimespan;
+								if(api_use_pushservice == "true")
+								{
+									document.getElementById("chkUsePushService").setAttribute("checked", true);
+								}
 								if(apiloglevel == undefined || !(apiloglevel == "0" || apiloglevel == "1" || apiloglevel == "2" || apiloglevel == "3"))
 								{
 									document.getElementById("cbLogLevel").selectedIndex = "";
@@ -873,7 +927,7 @@
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'ReadyState' ist '4'.</small></div>`;
+						document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small></div>`;
 					}
 					else
 					{
@@ -1023,7 +1077,7 @@
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'ReadyState' ist '4'.</small></div>`;
+						document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small></div>`;
 					}
 					else
 					{
