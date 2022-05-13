@@ -52,8 +52,22 @@ export class EufySecurityApi
         {
             this.httpService = new HTTPApi(this, this.config.getEmailAddress(), this.config.getPassword(), Number.parseInt(this.config.getLocation()), this.logger);
 
-            this.httpService.setCountry(this.config.getCountry());
-            this.httpService.setLanguage(this.config.getLanguage());
+            try
+            {
+                this.httpService.setCountry(this.config.getCountry());
+            }
+            catch (e)
+            {
+                this.logger.logInfo(1, "No country given.")
+            }
+            try
+            {
+                this.httpService.setLanguage(this.config.getLanguage());
+            }
+            catch (e)
+            {
+                this.logger.logInfo(1, "No language given.")
+            }
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
             if (this.config.getOpenudid() == "") {
                 this.config.setOpenudid(generateUDID());
@@ -77,11 +91,12 @@ export class EufySecurityApi
             {
                 if(this.config.getApiUsePushService() == true)
                 {
-                    if(this.config.getCountry() != "" || this.config.getLanguage() != "")
+                    this.logger.logInfo(1, "Creating push...")
+                    try
                     {
-                        this.pushService = new PushService(this, this.httpService, this.config,this.logger);
+                        this.pushService = new PushService(this, this.httpService, this.config, this.logger);
                     }
-                    else
+                    catch(e)
                     {
                         this.logger.logInfo(1, "No country and/or language given. Skipping creating push service.")
                     }
@@ -1201,7 +1216,7 @@ export class EufySecurityApi
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
         var taskSetupLinksNeeded = false;
-        if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getLocation() != location || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports || this.config.getApiUseUpdateStateEvent() != api_use_update_state_event)
+        if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getLocation() != location || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getConnectionType() != api_connection_type || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports || this.config.getApiUseUpdateStateEvent() != api_use_update_state_event)
         {
             serviceRestart = true;
         }
@@ -1823,7 +1838,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0-b2";
+        return "1.6.0-b3";
     }
 
     /**

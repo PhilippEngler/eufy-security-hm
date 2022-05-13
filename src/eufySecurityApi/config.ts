@@ -310,6 +310,29 @@ export class Config
             this.hasChanged = true;
             this.logger.logInfoBasic("...Stage2 update to version 10 finished.");
         }
+        if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) == 10)
+        {
+            this.logger.logInfoBasic("Configfile needs country and language check...");
+            if(this.getCountry() == "")
+            {
+                this.logger.logInfoBasic(" setting 'country' to standard value.");
+                this.filecontent = this.filecontent.replace(`country=`, `country=DE`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.getLanguage() == "")
+            {
+                this.logger.logInfoBasic(" setting 'language' to standard value.");
+                this.filecontent = this.filecontent.replace(`language=`, `language=de`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...country and language check finished.");
+        }
 
         if(updated)
         {
