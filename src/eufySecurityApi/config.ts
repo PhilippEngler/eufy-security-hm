@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { parse, stringify } from 'ini';
+import { Bases } from './bases';
 import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from './push/models';
 import { Logger } from './utils/logging';
 
@@ -259,7 +260,7 @@ export class Config
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 8)
         {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 8...");
+            /*this.logger.logInfoBasic("Configfile needs Stage2 update to version 8...");
             if(this.filecontent.indexOf("location") == -1)
             {
                 this.logger.logInfoBasic(" adding 'location'.");
@@ -270,7 +271,7 @@ export class Config
             }
             updated = true;
             this.hasChanged = true;
-            this.logger.logInfoBasic("...Stage2 update to version 8 finished.");
+            this.logger.logInfoBasic("...Stage2 update to version 8 finished.");*/
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 9)
         {
@@ -278,7 +279,7 @@ export class Config
             if(this.filecontent.indexOf("country") == -1)
             {
                 this.logger.logInfoBasic(" adding 'country' and 'language'.");
-                this.filecontent = this.filecontent.replace(`location=${this.getLocation()}`, `location=${this.getLocation()}\r\ncountry=DE\r\nlanguage=de\r\n\r\n`);
+                this.filecontent = this.filecontent.replace(`password=${this.getPassword()}`, `password=${this.getPassword()}\r\ncountry=DE\r\nlanguage=de\r\n\r\n`);
                 this.config = parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
@@ -321,10 +322,26 @@ export class Config
                 updated = true;
                 this.hasChanged = true;
             }
+            if(this.getCountry() == "undefined")
+            {
+                this.logger.logInfoBasic(" setting 'country' to standard value.");
+                this.filecontent = this.filecontent.replace(`country="undefined"`, `country=DE`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
             if(this.getLanguage() == "")
             {
                 this.logger.logInfoBasic(" setting 'language' to standard value.");
                 this.filecontent = this.filecontent.replace(`language=`, `language=de`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if(this.getLanguage() == "undefined")
+            {
+                this.logger.logInfoBasic(" setting 'language' to standard value.");
+                this.filecontent = this.filecontent.replace(`language=undefined`, `language=de`);
                 this.config = parse(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
@@ -377,7 +394,6 @@ export class Config
         fc += "[EufyAPILoginData]\r\n";
         fc += "email=\r\n";
         fc += "password=\r\n";
-        fc += "location=1\r\n";
         fc += "country=DE\r\n";
         fc += "language=de\r\n\r\n";
         fc += "[EufyAPIPushData]\r\n";
@@ -414,7 +430,6 @@ export class Config
         fc += "api_https_pkey_string=\r\n";
         fc += "api_connection_type=1\r\n";
         fc += "api_udp_local_static_ports_active=false\r\n";
-        //fc += "api_udp_local_static_ports=52789,52790";
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
         fc += "api_camera_default_video=\r\n";
@@ -438,20 +453,28 @@ export class Config
      */
     public updateWithNewBase(baseSerial : string) : boolean
     {
-        this.writeConfig();
-        var fc = readFileSync('./config.ini', 'utf-8');
-        fc += "\r\n[EufyP2PData_" + baseSerial + "]\r\n";
-        fc += "p2p_did=\r\n";
-        fc += "dsk_key=\r\n";
-        fc += "dsk_key_creation=\r\n";
-        fc += "actor_id=\r\n";
-        fc += "base_ip_address=\r\n";
-        fc += "base_port=\r\n";
-        fc += "udp_ports=\r\n";
+        var res = this.writeConfig();
+        if (res == "ok" || res == "saved")
+        {
+            this.logger.logInfoBasic(`Adding frame for Base ${baseSerial}.`);
+            var fc = readFileSync('./config.ini', 'utf-8');
+            fc += "\r\n[EufyP2PData_" + baseSerial + "]\r\n";
+            fc += "p2p_did=\r\n";
+            fc += "dsk_key=\r\n";
+            fc += "dsk_key_creation=\r\n";
+            fc += "actor_id=\r\n";
+            fc += "base_ip_address=\r\n";
+            fc += "base_port=\r\n";
+            fc += "udp_ports=\r\n";
 
-        writeFileSync('./config.ini', fc);
-        this.loadConfig();
-        return true;
+            writeFileSync('./config.ini', fc);
+            this.loadConfig();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /**
@@ -540,34 +563,6 @@ export class Config
         {
             this.config['EufyAPILoginData']['password'] = password;
             this.hasChanged = true;
-        }
-    }
-
-    /**
-     * Set the location for the eufy security account.
-     * @param location The location to set.
-     */
-    public setLocation(location : number) : void
-    {
-        if(this.config['EufyAPILoginData']['location'] != location)
-        {
-            this.config['EufyAPILoginData']['location'] = location;
-            this.hasChanged = true;
-        }
-    }
-
-    /**
-     * Get the location for the eufy security account.
-     */
-    public getLocation() : string
-    {
-        try
-        {
-            return this.config['EufyAPILoginData']['location'];
-        }
-        catch
-        {
-            return "";
         }
     }
 
@@ -1420,16 +1415,30 @@ export class Config
      */
     public setUdpLocalPortPerBase(baseSerial: string, udp_ports : string) : boolean
     {
-        if(baseSerial != undefined && udp_ports != undefined)
+        var res;
+        if(this.isBaseInConfig(baseSerial) == false)
         {
-            if(this.config['EufyP2PData_' + baseSerial]['udp_ports'] != udp_ports)
-            {
-                this.config['EufyP2PData_' + baseSerial]['udp_ports'] = udp_ports;
-                this.hasChanged = true;
-                return true;
-            }
+            this.logger.logInfo(1, `Base ${baseSerial} not in config.`)
+            res = this.updateWithNewBase(baseSerial);
         }
-        return false;
+        else
+        {
+            res = true;
+        }
+        if(res)
+        {
+            if(baseSerial != undefined && udp_ports != undefined)
+            {
+                if(this.config['EufyP2PData_' + baseSerial]['udp_ports'] != udp_ports)
+                {
+                    this.config['EufyP2PData_' + baseSerial]['udp_ports'] = udp_ports;
+                    this.hasChanged = true;
+                    res = true;
+                }
+            }
+            res = false;
+        }
+        return res;
     }
 
     /**
@@ -1491,9 +1500,9 @@ export class Config
      */
     public setApiUsePushService(usePushService : boolean) : void
     {
-        if(this.config['EufyAPIPushData']['api_use_pushservice'] != usePushService)
+        if(this.config['EufyAPIServiceData']['api_use_pushservice'] != usePushService)
         {
-            this.config['EufyAPIPushData']['api_use_pushservice'] = usePushService;
+            this.config['EufyAPIServiceData']['api_use_pushservice'] = usePushService;
             this.hasChanged = true;
         }
     }
@@ -1644,6 +1653,22 @@ export class Config
     }
 
     /**
+     * Checks if the push credentals are stored in config.
+     * @returns true if the credentals are set, otherwise false.
+     */
+    public hasPushCredentials() : boolean
+    {
+        if(this.getCredentialsCheckinResponse() != null && this.getCredentialsFidResponse() != null && this.getCredentialsGcmResponse() != null)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /**
      * Get the fid response credentials for push connections.
      * @returns The fid response credentials.
      */
@@ -1652,7 +1677,6 @@ export class Config
         try
         {
             var res: FidInstallationResponse = {name: this.config['EufyAPIPushData']['fid_response_name'], fid: this.config['EufyAPIPushData']['fid_response_fid'], refreshToken: this.config['EufyAPIPushData']['fid_response_refresh_Token'], authToken: { token: this.config['EufyAPIPushData']['fid_response_auth_token_token'], expiresIn: this.config['EufyAPIPushData']['fid_response_auth_token_expires_in'], expiresAt: this.config['EufyAPIPushData']['fid_response_auth_token_expires_at'] }}
-            this.logger.logInfoBasic(`Build FidResponse: name: ${res.name}; fid: ${res.fid}; refreshToken: ${res.refreshToken}; authToken: ${res.authToken}`);
             return res;
         }
         catch
@@ -1688,7 +1712,6 @@ export class Config
         try
         {
             var res: CheckinResponse = {statsOk: this.config['EufyAPIPushData']['checkin_response_stats_ok'], timeMs: this.config['EufyAPIPushData']['checkin_response_time_ms'], androidId: this.config['EufyAPIPushData']['checkin_response_android_id'], securityToken: this.config['EufyAPIPushData']['checkin_response_security_token'], versionInfo: this.config['EufyAPIPushData']['checkin_response_version_info'], deviceDataVersionInfo: this.config['EufyAPIPushData']['checkin_response_device_data_version_info']}
-            this.logger.logInfoBasic(`Build CheckinResponse: statsOK: ${res.statsOk}; timeMs: ${res.timeMs}; androidId: ${res.androidId}; securityToken: ${res.securityToken}; versionInfo: ${res.versionInfo}; deviceDataVersionInfo: ${res.deviceDataVersionInfo}`);
             return res;
         }
         catch
@@ -1724,7 +1747,6 @@ export class Config
         try
         {
             var res: GcmRegisterResponse = {token: this.config['EufyAPIPushData']['gcm_response_token']}
-            this.logger.logInfoBasic(`Build GcmRegisterResponse: token: ${res.token}`);
             return res;
         }
         catch

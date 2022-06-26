@@ -78,6 +78,7 @@
 				<ul>
 					<li><code>/getBases</code>: Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
 					<li><code>/getDevices</code>: Liefert alle Geräte des Accounts als JSON-String zurück.</li>
+					<li><code>/getHouses</code>: Liefert alle Hausobjekte des Accounts als JSON-String zurück.</li>
 					<li><code>/getMode</code>: Liefert den Status aller Basisstationen als JSON-String zurück.</li>
 					<li><code>/getMode/<i>BASE_SERIAL</i></code>: Liefert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> als JSON-String zurück.</li>
 					<li><code>/setMode/<i>MODE</i></code>: Ändert den Status aller Basisstationen auf <i>MODE</i>. <i>MODE</i> kann einer der folgenden Werte sein. Die Antwort ist ein JSON-String.</li>
@@ -91,6 +92,8 @@
 						<li><code>home</code>: zu Hause</li>
 						<li><code>off</code>: ausgeschaltet</li>
 						<li><code>schedule</code>: Zeitplan</li>
+						<li><code>privacyOn</code>: Indoorcam ausschalten</li>
+						<li><code>privacyOff</code>: Indoorcam einschalten</li>
 					</ul>
 					<li><code>/setMode/<i>BASE_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
 					<li><code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.</li>

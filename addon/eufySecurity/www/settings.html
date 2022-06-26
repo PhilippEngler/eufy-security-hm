@@ -113,16 +113,6 @@
 											<hr>
 											<h5>Weitere Einstellungen</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label for="cbLocation">Standort des eufy Security Accounts.</label>
-												<select name="location" id="cbLocation" class="custom-select" required>
-													<option disabled selected value style="display: none;">Bitte auswählen...</option>
-													<option disabled value="-1">automatische Auswahl</option>
-													<option disabled value="0">alle Regionen außer Europa</option>
-													<option value="1">Europa</option>
-												</select>
-												<small class="form-text text-muted">Der Standort, für den Sie den eufy Security Account erstellt haben. Auch wenn Sie hier einen anderen Wert angeben, verbindet sich der Client trotzdem mit der richtigen Region. Diese wird ihm von eufy mitgeteilt, wenn er sich bei einem fremden Standort anmeldet.</small>
-											</div>
-											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mt-2" for="cbCountry">Land des eufy Security Accounts.</label>
 												<select name="country" id="cbCountry" class="custom-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
@@ -133,7 +123,7 @@
 												<small class="form-text text-muted">Das Land, für den Sie den eufy Security Account erstellt haben.</small>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mt-2" for="cbLanguage">Land des eufy Security Accounts.</label>
+												<label class="mt-2" for="cbLanguage">Sprache des eufy Security Accounts.</label>
 												<select name="language" id="cbLanguage" class="custom-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option value="de">deutsch</option>
@@ -192,12 +182,13 @@
 											<h5>Einstellungen für die Verbindung zu den Basisstationen</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mb-2" for="cbConnectionType">Herstellen der Verbindung zu den Basisstationen.</label>
-												<select name="connectionType" id="cbConnectionType" class="custom-select mb-2" required>
+												<select name="connectionType" id="cbConnectionType" class="custom-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option value="0">bevorzuge lokale Verbindung</option>
 													<option value="1">nur lokale Verbindung</option>
 													<option value="2">schnellste Verbindung</option>
 												</select>
+												<small class="form-text text-muted mb-2">Diese Einstellung gilt nur für die Geräte 'HomeBase', 'HomeBase E' und 'HomeBase 2'.</small>
 											</div>
 											<div class="custom-control custom-switch">
 												<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mt-2 mb-2" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
@@ -610,7 +601,6 @@
 			{
 				document.getElementById("txtUsername").setAttribute("disabled", true);
 				document.getElementById("txtPassword").setAttribute("disabled", true);
-				document.getElementById("cbLocation").setAttribute("disabled", true);
 				document.getElementById("cbCountry").setAttribute("disabled", true);
 				document.getElementById("cbLanguage").setAttribute("disabled", true);
 				document.getElementById("txtPortHttp").setAttribute("disabled", true);
@@ -632,7 +622,6 @@
 			{
 				document.getElementById("txtUsername").removeAttribute("disabled");
 				document.getElementById("txtPassword").removeAttribute("disabled");
-				document.getElementById("cbLocation").removeAttribute("disabled");
 				document.getElementById("cbCountry").removeAttribute("disabled");
 				document.getElementById("cbLanguage").removeAttribute("disabled");
 				document.getElementById("cbConnectionType").removeAttribute("disabled");
@@ -717,7 +706,7 @@
 			
 			function loadData()
 			{
-				var xmlHttp, objResp, objIter, username, password, accountlocation, accountcountry, accountlanguage, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, api_use_pushservice, apiloglevel;
+				var xmlHttp, objResp, objIter, username, password, accountcountry, accountlanguage, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, api_use_pushservice, apiloglevel;
 				var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -734,7 +723,6 @@
 								{
 									username = objResp.data[objIter].username;
 									password = objResp.data[objIter].password;
-									accountlocation = objResp.data[objIter].location;
 									accountcountry = objResp.data[objIter].country;;
 									accountlanguage = objResp.data[objIter].language;;
 									apiusehttp = objResp.data[objIter].api_http_active;
@@ -762,14 +750,6 @@
 								text.value = username;
 								text = document.getElementById('txtPassword');
 								text.value = password;
-								if(accountlocation == undefined || accountlocation < "-1" || accountlocation > "1" )
-								{
-									document.getElementById("cbLocation").selectedIndex = "";
-								}
-								else
-								{
-									document.getElementById("cbLocation").value = (Number.parseInt(accountlocation));
-								}
 								if(accountcountry == undefined || accountcountry == "" )
 								{
 									document.getElementById("cbCountry").selectedIndex = "";
@@ -993,7 +973,7 @@
 							}
 							else
 							{
-								if(objResp.reason = "System variables in config disabled.")
+								if(objResp.reason == "System variables in config disabled.")
 								{
 									document.getElementById("divSystemVariablesHint").innerHTML = "";
 									document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-info mb-0" role="alert">Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.</div>`;
@@ -1001,7 +981,7 @@
 								else
 								{
 									document.getElementById("divSystemVariablesHint").innerHTML = "";
-									document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
+									document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.<br /><small class="form-text text-muted">Es ist folgender Fehler ist aufgetreten: '${objResp.reason}'</small></div>`;
 								}
 							}
 						}

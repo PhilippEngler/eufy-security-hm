@@ -1,12 +1,12 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, DeviceType } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType } from './http';
 import { sleep } from './push/utils';
 import { Devices } from "./devices";
 import { CommandResult, StreamMetadata } from ".";
 import internal from "stream";
-import { AlarmEvent } from "./p2p";
+import { AlarmEvent, P2PConnectionType } from "./p2p";
 
 /**
  * Represents all the Bases in the account.
@@ -21,6 +21,11 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private devices !: Devices;
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
 
+    private readonly P2P_REFRESH_INTERVAL_MIN = 720;
+    private refreshEufySecurityP2PTimeout: {
+        [dataType: string]: NodeJS.Timeout;
+    } = {};
+
     /**
      * Create the Bases objects holding all bases in the account.
      * @param api The eufySecurityApi.
@@ -32,6 +37,87 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         this.api = api;
         this.httpService = httpService;
         this.serialNumbers = [];
+
+        this.httpService.on("hubs", (hubs: Hubs) => this.handleHubs(hubs));
+    }
+
+    /**
+     * Put all bases and their settings in format so that we can work with them.
+     * @param hubs The object containing the bases.
+     */
+    private handleHubs(hubs: Hubs): void
+    {
+        this.api.logDebug("Got hubs:", hubs);
+        this.resBases = hubs;
+
+        for (var stationSerial in this.resBases)
+        {
+            if(this.bases[stationSerial])
+            {
+                this.updateStation(this.resBases[stationSerial]);
+            }
+            else
+            {
+                this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
+                this.skipNextModeChangeEvent[stationSerial] = false;
+                this.serialNumbers.push(stationSerial);
+                this.bases[stationSerial].connect();
+
+                if(this.api.getApiUseUpdateStateEvent())
+                {
+                    this.addEventListener(this.bases[stationSerial], "GuardModeChanged", false);
+                    this.addEventListener(this.bases[stationSerial], "CurrentMode", false);
+                    this.addEventListener(this.bases[stationSerial], "PropertyChanged", false);
+                    this.addEventListener(this.bases[stationSerial], "RawPropertyChanged", false);
+                }
+
+                this.addEventListener(this.bases[stationSerial], "Connect", false);
+                this.addEventListener(this.bases[stationSerial], "Close", false);
+                this.addEventListener(this.bases[stationSerial], "RawDevicePropertyChanged", false);
+                this.addEventListener(this.bases[stationSerial], "LivestreamStart", false);
+                this.addEventListener(this.bases[stationSerial], "LivestreamStop", false);
+                this.addEventListener(this.bases[stationSerial], "DownloadStart", false);
+                this.addEventListener(this.bases[stationSerial], "DownloadFinish", false);
+                this.addEventListener(this.bases[stationSerial], "CommandResult", false);
+                this.addEventListener(this.bases[stationSerial], "RTSPLivestreamStart", false);
+                this.addEventListener(this.bases[stationSerial], "RTSPLivestreamStop", false);
+                this.addEventListener(this.bases[stationSerial], "RTSPUrl", false);
+                this.addEventListener(this.bases[stationSerial], "AlarmEvent", false);
+                this.addEventListener(this.bases[stationSerial], "RuntimeState", false);
+                this.addEventListener(this.bases[stationSerial], "ChargingState", false);
+                this.addEventListener(this.bases[stationSerial], "WifiRssi", false);
+                this.addEventListener(this.bases[stationSerial], "FloodlightManualSwitch", false);
+            }
+        }
+        this.saveBasesSettings();
+    }
+
+    /**
+     * Update the base information.
+     * @param hub The object containg the specific hub.
+     */
+    private updateStation(hub : StationListResponse) : void
+    {
+        if (Object.keys(this.bases).includes(hub.station_sn))
+        {
+            this.bases[hub.station_sn].update(hub, this.bases[hub.station_sn] !== undefined && this.bases[hub.station_sn].isConnected());
+            if (!this.bases[hub.station_sn].isConnected() && !this.bases[hub.station_sn].isEnergySavingDevice())
+            {
+                if(this.bases[hub.station_sn].getDeviceType() == DeviceType.STATION)
+                {
+                    this.bases[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                }
+                else
+                {
+                    this.bases[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
+                }
+                this.bases[hub.station_sn].connect();
+            }
+        }
+        else
+        {
+            this.api.logError(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
+        }
     }
 
     /**
@@ -44,49 +130,13 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * (Re)Loads all Bases and the settings of them.
+     * (Re)Loads all bases and the settings of them.
      */
     public async loadBases() : Promise<void>
     {
         try
         {
             this.resBases = this.httpService.getHubs();
-            
-            if(this.resBases != null)
-            {
-                for (var stationSerial in this.resBases)
-                {
-                    if(this.bases[stationSerial])
-                    {
-                        this.bases[stationSerial].update(this.resBases[stationSerial]);
-                    }
-                    else
-                    {
-                        this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
-                        this.skipNextModeChangeEvent[stationSerial] = false;
-                        this.serialNumbers.push(stationSerial);
-                        await this.bases[stationSerial].connect();
-
-                        if(this.api.getApiUseUpdateStateEvent())
-                        {
-                            this.addEventListener(this.bases[stationSerial], "GuardModeChanged", false);
-                            this.addEventListener(this.bases[stationSerial], "PropertyChanged", false);
-                            this.addEventListener(this.bases[stationSerial], "RawPropertyChanged", false);
-                        }
-
-                        this.addEventListener(this.bases[stationSerial], "RawDevicePropertyChanged", false);
-                        this.addEventListener(this.bases[stationSerial], "ChargingState", false);
-                        this.addEventListener(this.bases[stationSerial], "WifiRssi", false);
-                        this.addEventListener(this.bases[stationSerial], "RuntimeState", false);
-                    }
-                }
-                
-                await this.saveBasesSettings();
-            }
-            else
-            {
-                this.bases = {};
-            }
         }
         catch (e : any)
         {
@@ -109,13 +159,28 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     await this.bases[stationSerial].close();
                     
                     this.removeEventListener(this.bases[stationSerial], "GuardModeChanged");
+                    this.removeEventListener(this.bases[stationSerial], "CurrentMode");
                     this.removeEventListener(this.bases[stationSerial], "PropertyChanged");
                     this.removeEventListener(this.bases[stationSerial], "RawPropertyChanged");
+                    this.removeEventListener(this.bases[stationSerial], "Connect");
+                    this.removeEventListener(this.bases[stationSerial], "Close");
                     this.removeEventListener(this.bases[stationSerial], "RawDevicePropertyChanged");
+                    this.removeEventListener(this.bases[stationSerial], "LivestreamStart");
+                    this.removeEventListener(this.bases[stationSerial], "LivestreamStop");
+                    this.removeEventListener(this.bases[stationSerial], "DownloadStart");
+                    this.removeEventListener(this.bases[stationSerial], "DownloadFinish");
+                    this.removeEventListener(this.bases[stationSerial], "CommandResult");
+                    this.removeEventListener(this.bases[stationSerial], "RTSPLivestreamStart");
+                    this.removeEventListener(this.bases[stationSerial], "RTSPLivestreamStop");
+                    this.removeEventListener(this.bases[stationSerial], "RTSPUrl");
+                    this.removeEventListener(this.bases[stationSerial], "AlarmEvent");
+                    this.removeEventListener(this.bases[stationSerial], "RuntimeState");
                     this.removeEventListener(this.bases[stationSerial], "ChargingState");
                     this.removeEventListener(this.bases[stationSerial], "WifiRssi");
-                    this.removeEventListener(this.bases[stationSerial], "RuntimeState");
-                }
+                    this.removeEventListener(this.bases[stationSerial], "FloodlightManualSwitch");
+
+                    clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
+                }                
             }
         }
     }
@@ -125,7 +190,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     public async updateDeviceData() : Promise<void>
     {
-        await this.httpService.updateDeviceInfo().catch(error => {
+        await this.httpService.refreshAllData().catch(error => {
             this.api.logError("Error occured at updateDeviceData while API data refreshing.", error);
         });
         Object.values(this.bases).forEach(async (station: Station) => {
@@ -207,7 +272,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 {
                     await sleep(1000);
                     await this.loadBases();
-                    if(this.bases[stationSerial].getGuardMode().value as number == guardMode)
+                    if(this.bases[stationSerial].getGuardMode() as number == guardMode)
                     {
                         this.api.logInfo(`Detected changed alarm mode for station ${stationSerial} after ${(i+1)} iterations.`);
                         res = true;
@@ -235,7 +300,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             {
                 await sleep(1000);
                 await this.loadBases();
-                if(this.bases[baseSerial].getGuardMode().value as number == guardMode)
+                if(this.bases[baseSerial].getGuardMode() as number == guardMode)
                 {
                     this.api.logInfo(`Detected changed alarm mode for station ${baseSerial} after ${(i+1)} iterations.`);
                     res = true;
@@ -296,7 +361,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.on("download start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("download start")} Listener.`);
                 break;
-            case "DownloadStop":
+            case "DownloadFinish":
                 base.on("download finish", (station : Station, channel : number) => this.onStationDownloadFinish(station, channel));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("download finish")} Listener.`);
                 break;
@@ -328,37 +393,32 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onStationPropertyChanged(station, name, value));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
                 break;
-            case "PropertyRenewed":
-                base.on("property renewed", (station : Station, name : string, value : PropertyValue) => this.onStationPropertyRenewed(station, name, value));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("property renewed")} Listener.`);
-                break;
             case "RawPropertyChanged":
-                base.on("raw property changed", (station : Station, type : number, value : string, modified : number) => this.onStationRawPropertyChanged(station, type, value, modified));
+                base.on("raw property changed", (station : Station, type : number, value : string) => this.onStationRawPropertyChanged(station, type, value));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property changed")} Listener.`);
                 break;
-            case "RawPropertyRenewed":
-                base.on("raw property renewed", (station : Station, type : number, value : string, modified : number) => this.onStationRawPropertyRenewed(station, type, value, modified));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property renewed")} Listener.`);
-                break; 
             case "AlarmEvent":
                 base.on("alarm event", (station : Station, alarmEvent : AlarmEvent) => this.onStationAlarmEvent(station, alarmEvent));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm event")} Listener.`);
                 break;
             case "RuntimeState":
-                base.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number, modified: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature, modified));
+                base.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("runtime state")} Listener.`);
                 break;
             case "ChargingState":
-                base.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel, modified));
+                base.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("charging state")} Listener.`);
                 break;
             case "WifiRssi":
-                base.on("wifi rssi", (station: Station, channel: number, rssi: number, modified: number) => this.onStationWifiRssi(station, channel, rssi, modified));
+                base.on("wifi rssi", (station: Station, channel: number, rssi: number) => this.onStationWifiRssi(station, channel, rssi));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("wifi rssi")} Listener.`);
                 break;
             case "FloodlightManualSwitch":
-                base.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean, modified : number) => this.onStationFloodlightManualSwitch(station, channel, enabled, modified));
+                base.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean) => this.onStationFloodlightManualSwitch(station, channel, enabled));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("floodlight manual switch")} Listener.`);
+                break;
+            default:
+                this.api.logInfo(`The listener '${eventListenerName}' for bases is unknown.`);
                 break;
         }
     }
@@ -428,17 +488,9 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.removeAllListeners("property changed");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
                 break;
-            case "PropertyRenewed":
-                base.removeAllListeners("property renewed");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("property renewed")} Listener.`);
-                break;
             case "RawPropertyChanged":
                 base.removeAllListeners("raw property changed");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property changed")} Listener.`);
-                break;
-            case "RawPropertyRenewd":
-                base.removeAllListeners("raw property renewed");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property renewed")} Listener.`);
                 break;
             case "AlarmEvent":
                 base.removeAllListeners("alarm event");
@@ -500,12 +552,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 return base.listenerCount("rtsp url");
             case "PropertyChanged":
                 return base.listenerCount("property changed");
-            case "PropertyRenewed":
-                return base.listenerCount("property renewed");
             case "RawPropertyChanged":
                 return base.listenerCount("raw property changed");
-            case "RawPropertyRenewd":
-                return base.listenerCount("raw property renewed");
             case "AlarmEvent":
                 return base.listenerCount("alarm event");
             case "RuntimeState":
@@ -524,9 +572,25 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event Connect is fired.
      * @param station The base as Station object.
      */
-    private async onStationConnect(station : Station): Promise<void>
+    private async onStationConnect(station : Station) : Promise<void>
     {
         this.api.logDebug(`Event "Connect": base: ${station.getSerial()}`);
+        this.emit("station connect", station);
+        if (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()))
+        {
+            station.getCameraInfo().catch(error => {
+                this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+            });
+            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined)
+            {
+                clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
+            }
+            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+                station.getCameraInfo().catch(error => {
+                    this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                });
+            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+        }
     }
 
     /**
@@ -535,7 +599,19 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationClose(station : Station): Promise<void>
     {
-        this.api.logDebug(`Event "Close": base: ${station.getSerial()}`);
+        this.api.logInfo(`Event "Close": base: ${station.getSerial()}`);
+        this.emit("station close", station);
+        /*for (const device_sn of this.cameraStationLivestreamTimeout.keys())
+        {
+            this.devices.getDevice(device_sn).then((device: Device) => {
+                if (device !== null && device.getStationSerial() === station.getSerial()) {
+                    clearTimeout(this.cameraStationLivestreamTimeout.get(device_sn)!);
+                    this.cameraStationLivestreamTimeout.delete(device_sn);
+                }
+            }).catch((error) => {
+                this.api.logError(`Station ${station.getSerial()} - Error:`, error);
+            });
+        }*/
     }
 
     /**
@@ -683,21 +759,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(name != "guardMode" && name != "currentMode")
         {
-            this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | name: ${name} | value: ${value.value}`);
-        }
-    }
-
-    /**
-     * The action to be done when event PropertyRenewed is fired.
-     * @param station The base as Station object.
-     * @param name The name of the renewed value.
-     * @param value The value and timestamp of the renewed value as PropertyValue.
-     */
-    private async onStationPropertyRenewed(station : Station, name : string, value : PropertyValue): Promise<void>
-    {
-        if(name != "guardMode" && name != "currentMode")
-        {
-            this.api.logDebug(`Event "PropertyRenewed": base: ${station.getSerial()} | name: ${name} | value: ${value.value}`);
+            this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | name: ${name} | value: ${value}`);
         }
     }
 
@@ -708,26 +770,11 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param value The new value as string.
      * @param modified The timestamp of the last change.
      */
-    private async onStationRawPropertyChanged(station : Station, type : number, value : string, modified : number): Promise<void>
+    private async onStationRawPropertyChanged(station : Station, type : number, value : string): Promise<void>
     {
         if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
             this.api.logDebug(`Event "RawPropertyChanged": base: ${station.getSerial()} | type: ${type} | value: ${value}`);
-        }
-    }
-
-    /**
-     * The action to be done when event RawPropertyRenewed is fired.
-     * @param station The base as Station object.
-     * @param type The number of the raw-value in the eufy ecosystem.
-     * @param value The renewed value as string.
-     * @param modified The timestamp of the last change.
-     */
-    private async onStationRawPropertyRenewed(station : Station, type : number, value : string, modified : number): Promise<void>
-    {
-        if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
-        {
-            this.api.logDebug(`Event "RawPropertyRenewed": base: ${station.getSerial()} | type: ${type} | value: ${value}`);
         }
     }
 
@@ -749,10 +796,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param temperature The temperature as degree value.
      * @param modified The datetime stamp the values have changed.
      */
-    private async onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number, modified: number): Promise<void>
+    private async onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number): Promise<void>
     {
         this.api.logDebug(`Event "RuntimeState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
-        this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature, modified);
+        this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature);
     }
 
     /**
@@ -763,10 +810,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param batteryLevel The battery level as percentage value.
      * @param modified The datetime stamp the values have changed.
      */
-    private async onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number, modified: number): Promise<void>
+    private async onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number): Promise<void>
     {
         this.api.logDebug(`Event "ChargingState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
-        this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel, modified);
+        this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel);
     }
 
     /**
@@ -776,10 +823,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param rssi The current rssi value.
      * @param modified The datetime stamp the values have changed.
      */
-    private async onStationWifiRssi(station: Station, channel: number, rssi: number, modified: number): Promise<void>
+    private async onStationWifiRssi(station: Station, channel: number, rssi: number): Promise<void>
     {
         this.api.logDebug(`Event "WifiRssi": base: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
-        this.devices.updateWifiRssi(station.getSerial(), channel, rssi, modified);
+        this.devices.updateWifiRssi(station.getSerial(), channel, rssi);
     }
 
     /**
@@ -789,7 +836,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param enabled The value for the floodlight.
      * @param modified The datetime stamp the values have changed.
      */
-    private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean, modified : number): Promise<void>
+    private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean): Promise<void>
     {
         this.api.logDebug(`Event "FloodlightManualSwitch": base: ${station.getSerial()} | channelt: ${channel} | enabled: ${enabled}`);
     }

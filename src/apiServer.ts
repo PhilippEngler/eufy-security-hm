@@ -3,7 +3,7 @@ import { createServer as createServerHttps } from 'https';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
-import { GuardMode } from './eufySecurityApi/http';
+import { GuardMode, PropertyName } from './eufySecurityApi/http';
 import { Logger } from './eufySecurityApi/utils/logging';
 import { exec } from 'child_process';
 import { log } from 'console';
@@ -128,6 +128,21 @@ class ApiServer
                     case "getBases":
                         responseString = await api.getBasesAsJSON();
                         break;
+                    case "getBase":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.getBaseAsJSON(url[2]);
+                        }
+                        break;
+                    case "getHouses":
+                        responseString = await api.getHousesAsJSON();
+                        break;
+                    case "getHouse":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.getHouseAsJSON(url[2]);
+                        }
+                        break;
                     case "getMode":
                         if(url.length == 2)
                         {
@@ -176,6 +191,12 @@ class ApiServer
                                 case "schedule":
                                     responseString = await api.setGuardMode(GuardMode.SCHEDULE);
                                     break;
+                                case "privacyOn":
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all bases"}`;
+                                    break;
+                                case "privacyOff":
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all bases"}`;
+                                    break;
                                 default:
                                     responseString = `{"success":false,"message":"Unknown mode to set."}`;
                             }
@@ -210,6 +231,12 @@ class ApiServer
                                     break;
                                 case "schedule":
                                     responseString = await api.setGuardModeBase(url[2], GuardMode.SCHEDULE);
+                                    break;
+                                case "privacyOn":
+                                    responseString = await api.setPrivacyMode(url[2], PropertyName.DeviceEnabled, false);
+                                    break;
+                                case "privacyOff":
+                                    responseString = await api.setPrivacyMode(url[2], PropertyName.DeviceEnabled, true);
                                     break;
                                 default:
                                     responseString = `{"success":false,"message":"Unknown mode to set."}`;
@@ -340,12 +367,6 @@ class ApiServer
                             password = getDataFromPOSTData(postData, "password", "string");
                         }
 
-                        var location = "";
-                        if(postData.indexOf("location") >= 0)
-                        {
-                            location = getDataFromPOSTData(postData, "location", "string");
-                        }
-
                         var country = "";
                         if(postData.indexOf("country") >= 0)
                         {
@@ -474,6 +495,7 @@ class ApiServer
                         if(postData.indexOf("usePushService") >= 0)
                         {
                             usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
+                            logger.logInfoBasic(`set pushservice: ${usepushservice}`);
                         }
 
                         var apiloglevel = "0";
@@ -482,10 +504,6 @@ class ApiServer
                             apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
                         }
 
-                        if(checkNumberValue(location, -1, 1) == false)
-                        {
-                            isDataOK = false;
-                        }
                         if(checkNumberValue(apiporthttp, 1, 53535) == false)
                         {
                             isDataOK = false;
@@ -522,7 +540,7 @@ class ApiServer
                         {
                             apiPortFile(Number(apiporthttp), Number(apiporthttps));
 
-                            responseString = api.setConfig(username, password, location, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                            responseString = api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                         }
                         else
                         {
