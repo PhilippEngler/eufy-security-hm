@@ -1,12 +1,13 @@
 import got from "got";
-import qs from "qs";
+import * as qs from "qs";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import { buildCheckinRequest, convertTimestampMs, generateFid, parseCheckinResponse, sleep } from "./utils";
 import { CheckinResponse, Credentials, CusPushData, DoorbellPushData, FidInstallationResponse, FidTokenResponse, GcmRegisterResponse, IndoorPushData, RawPushMessage, PushMessage, BatteryDoorbellPushData, LockPushData } from "./models";
 import { PushClient } from "./client";
 import { PushNotificationServiceEvents } from "./interfaces";
-import { Device, DeviceType } from "../http";
+import { Device } from "../http/device";
+import { DeviceType } from "../http/types";
 import { getAbsoluteFilePath } from "../http/utils";
 
 import { Logger } from "../utils/logging";
@@ -102,10 +103,10 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             const response = await got(url, {
                 method: "post",
                 json: {
-                    fid: fid,
-                    appId: `${this.APP_ID}`,
-                    authVersion: `${this.AUTH_VERSION}`,
-                    sdkVersion: "a:16.3.1",
+                    installation: {
+                        appId: `${this.APP_ID}`,
+                        sdkVersion: "a:16.3.1",
+                    }
                 },
                 headers: {
                     "X-Android-Package": `${this.APP_PACKAGE}`,
@@ -322,7 +323,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             // CusPush
             normalized_message.type = Number.parseInt(message.payload.type);
 
-            if (Device.isBatteryDoorbell(normalized_message.type) || Device.isBatteryDoorbell2(normalized_message.type)) {
+            if (Device.isBatteryDoorbell(normalized_message.type) || Device.isWiredDoorbellDual(normalized_message.type)) {
                 const push_data = message.payload.payload as BatteryDoorbellPushData;
 
                 normalized_message.name = push_data.name ? push_data.name : "";

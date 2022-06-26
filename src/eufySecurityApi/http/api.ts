@@ -4,6 +4,7 @@ import { isValid as isValidCountry } from "i18n-iso-countries";
 import { isValid as isValidLanguage } from "@cospired/i18n-iso-languages";
 import { createECDH, ECDH } from "crypto";
 import * as schedule from "node-schedule";
+import pThrottle from "p-throttle";
 
 import { ResultResponse, LoginResultResponse, TrustDevice, Cipher, Voice, EventRecordResponse, Invite, ConfirmInvite, SensorHistoryEntry, ApiResponse, CaptchaResponse, LoginRequest, HouseDetail, DeviceListResponse, StationListResponse, HouseInviteListResponse, HouseListResponse, PassportProfileResponse } from "./models"
 import { HTTPApiEvents, Ciphers, FullDevices, Hubs, Voices, Invites, HTTPApiRequest, HTTPApiPersistentData, Houses, LoginOptions } from "./interfaces";
@@ -19,19 +20,12 @@ import { EufySecurityApi } from "../eufySecurityApi";
 export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     private static apiDomainBase = "https://extend.eufylife.com";
-    /* older ones:
-    private apiBase = "https://mysecurity.eufylife.com/api/v1";
-    private apiBase = "https://security-app-eu.eufylife.com/v1";
-    */
-    /* actual:
-    private apiBase = "https://security-app.eufylife.com";
-    */
+
     private apiBase: string;
 
     private api : EufySecurityApi;
     private username: string;
     private password: string;
-    private userId: string|null = null;
     private ecdh: ECDH = createECDH("prime256v1");
     private serverPublicKey = "04c5c00c4f8d1197cc7c3167c52bf7acb054d722f0ef08dcd7e0883236e0d72a3868d9750cb47fa4619248f3d83f0f662671dadc6e2d31c2f41db0161651c7c076";
 
@@ -42,6 +36,11 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     private log: Logger;
     private connected = false;
     private requestEufyCloud: Got;
+
+    private throttle = pThrottle({
+        limit: 6,
+        interval: 10000,
+    });
 
     private devices: FullDevices = {};
     private hubs: Hubs = {};
@@ -95,8 +94,24 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
             responseType: "json",
             //throwHttpErrors: false,
             retry: {
-                limit: 1,
-                methods: ["GET", "POST"]
+                limit: 3,
+                methods: ["GET", "POST"],
+                statusCodes: [
+                    408,
+                    413,
+                    423,
+                    429,
+                    500,
+                    502,
+                    503,
+                    504,
+                    521,
+                    522,
+                    524
+                ],
+                calculateDelay: ({ computedValue }) => {
+                    return computedValue * 3;
+                }
             },
             hooks: {
                 afterResponse: [
@@ -149,6 +164,11 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
                         return error;
                     }
+                ],
+                beforeRequest: [
+                    async _options => {
+                        await this.throttle(async () => { return; })();
+                    }
                 ]
             },
             mutableDefaults: true
@@ -173,7 +193,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         throw new ApiBaseLoadError(result.code, result.msg);
     }
 
-    static async initialize(api: EufySecurityApi, country: string, username: string, password: string, log: Logger,  persistentData?: HTTPApiPersistentData): Promise<HTTPApi> {
+    static async initialize(api: EufySecurityApi, country: string, username: string, password: string, log: Logger, persistentData?: HTTPApiPersistentData): Promise<HTTPApi> {
         if (isValidCountry(country) && country.length === 2) {
             const apiBase = await this.getApiBaseFromCloud(country);
             return new HTTPApi(api, apiBase, country, username, password, log, persistentData);
@@ -282,9 +302,8 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                         /*if (dataresult.server_secret_info?.public_key)
                             this.serverPublicKey = dataresult.server_secret_info.public_key;*/
                         this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
-                        
+
                         this.api.setTokenData(this.token as string, this.tokenExpiration.getTime().toString());
-                        
                         if (!this.connected)
                             this.emit("connect");
                         this.connected = true;
@@ -297,9 +316,8 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                         this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
 
                         this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
-                        
-                        this.api.setTokenData(this.token as string, this.tokenExpiration.getTime().toString());
 
+                        this.api.setTokenData(this.token as string, this.tokenExpiration.getTime().toString());
                         await this.sendVerifyCode(VerfyCodeTypes.TYPE_EMAIL);
                         this.emit("tfa request");
                     } else if (result.code == ResponseErrorCode.LOGIN_NEED_CAPTCHA || result.code == ResponseErrorCode.LOGIN_CAPTCHA_ERROR) {

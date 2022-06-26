@@ -1,4 +1,4 @@
-import { Logger } from "ts-log";
+import { Logger } from '../utils/logging';
 
 import { CommandType } from "../p2p/types";
 import { ParamType } from "./types";
