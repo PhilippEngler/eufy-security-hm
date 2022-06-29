@@ -674,8 +674,9 @@ export class EufySecurityApi
         json += `"local_ip_address":"${base.getLANIPAddress()}",`;
         json += `"guard_mode":"${base.getGuardMode()}",`;
         //json += `"guard_mode_last_change_time":"${base.getGuardMode().timestamp/1000}"}`;
-        json += `"guard_mode_last_change_time":"n/a"},`;
-        json += `"is_connected":"${base.isConnected()}"}`;
+        json += `"guard_mode_last_change_time":"n/a",`;
+        json += `"is_connected":"${base.isConnected()}"`;
+        json += `}`;
         return json;
     }
 
