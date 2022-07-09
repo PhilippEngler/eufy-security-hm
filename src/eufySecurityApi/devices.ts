@@ -1,8 +1,9 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { DeviceNotFoundError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType } from './http';
 import { EufySecurityEvents } from './interfaces';
+import { P2PConnectionType } from "./p2p";
 
 /**
  * Represents all the Devices in the account.
@@ -28,6 +29,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         this.httpService.on("devices", (devices: FullDevices) => this.handleDevices(devices));
     }
 
+    /**
+     * Handle the devices so that they can be used by the addon.
+     * @param devices The devices object with all devices.
+     */
     private async handleDevices(devices: FullDevices): Promise<void> {
         this.resDevices = devices;
         
@@ -113,18 +118,32 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Update the device information.
+     * @param device The device object to update.
+     */
     private async updateDevice(device: DeviceListResponse): Promise<void>
     {
         var bases = this.api.getBases().getBases();
         for (var baseSerial in bases)
         {
-            bases[baseSerial].setConnectionType(this.api.getP2PConnectionType());
-            bases[baseSerial].connect();
+            if (!bases[baseSerial].isConnected())
+            {
+                if(bases[baseSerial].getDeviceType() == DeviceType.STATION)
+                {
+                    bases[baseSerial].setConnectionType(this.api.getP2PConnectionType());
+                }
+                else
+                {
+                    bases[baseSerial].setConnectionType(P2PConnectionType.QUICKEST);
+                }
+                bases[baseSerial].connect();
+            }
         }
 
         if (Object.keys(this.devices).includes(device.device_sn))
         {
-            this.devices[device.device_sn].update(device, bases[device.station_sn] !== undefined && bases[device.station_sn].isConnected())
+            this.devices[device.device_sn].update(device, bases[device.station_sn] !== undefined && !bases[device.station_sn].isIntegratedDevice() && bases[device.station_sn].isConnected())
         }
         else
         {
