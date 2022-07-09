@@ -109,6 +109,18 @@ export class EufySecurityApi
     }
 
     /**
+     * Set the state of the service to the given value.
+     * @returns The state of the service.
+     */
+    public setServiceState(state : string)
+    {
+        if(state == "init" || state == "ok" || state == "shutdown")
+        {
+            this.serviceState = state;
+        }
+    }
+
+    /**
      * Close all push service connections
      */
     public closePushService() : void

@@ -749,6 +749,8 @@ function getAllUdpPortsForBases(postData : string) : string[][]
  */
 async function stopServer()
 {
+    logger.logInfoBasic("Set service state to shutdown...");
+    api.setServiceState("shutdown");
     logger.logInfoBasic("Stopping Push Service...");
     api.closePushService();
     logger.logInfoBasic("Stopping P2P-Connections...");

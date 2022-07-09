@@ -20,6 +20,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private bases : { [stationSerial : string ] : Station} = {};
     private devices !: Devices;
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
+    private reconnectTimeout : { [stationSerial : string] : NodeJS.Timeout | undefined} = {};
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
     private refreshEufySecurityP2PTimeout: {
@@ -60,6 +61,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             {
                 this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
+                this.reconnectTimeout[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
                 this.bases[stationSerial].connect();
 
@@ -324,6 +326,17 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * Force reconnect to a given base.
+     * @param stationSerial The serial of the base to reconnect.
+     */
+    private async forceReconnect(stationSerial : string) : Promise<void>
+    {
+        this.api.logInfo(`Reconnect for base ${stationSerial} forced after 5 mins.`);
+        await this.bases[stationSerial].connect();
+        this.reconnectTimeout[stationSerial] = undefined;
+    }
+
+    /**
      * Add a given event listener for a given base.
      * @param base The base as Station object.
      * @param eventListenerName The event listener name as string.
@@ -576,6 +589,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         this.api.logDebug(`Event "Connect": base: ${station.getSerial()}`);
         this.emit("station connect", station);
+        //disable timeout after connected
+        this.reconnectTimeout[station.getSerial()] = undefined;
         if (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()))
         {
             station.getCameraInfo().catch(error => {
@@ -601,6 +616,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         this.api.logInfo(`Event "Close": base: ${station.getSerial()}`);
         this.emit("station close", station);
+
+        if(this.api.getServiceState() != "shutdown")
+        {
+            //start timeout for 5 mins
+            this.reconnectTimeout[station.getSerial()] = setTimeout(async() => { await this.forceReconnect(station.getSerial()) }, 300000);
+        }
         /*for (const device_sn of this.cameraStationLivestreamTimeout.keys())
         {
             this.devices.getDevice(device_sn).then((device: Device) => {
