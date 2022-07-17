@@ -7,6 +7,7 @@ import { Devices } from "./devices";
 import { CommandResult, StreamMetadata } from ".";
 import internal from "stream";
 import { AlarmEvent, P2PConnectionType } from "./p2p";
+import { TalkbackStream } from "./p2p/talkback";
 
 /**
  * Represents all the Bases in the account.
@@ -78,6 +79,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(this.bases[stationSerial], "RawDevicePropertyChanged", false);
                 this.addEventListener(this.bases[stationSerial], "LivestreamStart", false);
                 this.addEventListener(this.bases[stationSerial], "LivestreamStop", false);
+                this.addEventListener(this.bases[stationSerial], "LivestreamError", false);
                 this.addEventListener(this.bases[stationSerial], "DownloadStart", false);
                 this.addEventListener(this.bases[stationSerial], "DownloadFinish", false);
                 this.addEventListener(this.bases[stationSerial], "CommandResult", false);
@@ -89,6 +91,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(this.bases[stationSerial], "ChargingState", false);
                 this.addEventListener(this.bases[stationSerial], "WifiRssi", false);
                 this.addEventListener(this.bases[stationSerial], "FloodlightManualSwitch", false);
+                this.addEventListener(this.bases[stationSerial], "AlarmDelayEvent", false);
+                this.addEventListener(this.bases[stationSerial], "TalkbackStarted", false);
+                this.addEventListener(this.bases[stationSerial], "TalkbackStopped", false);
+                this.addEventListener(this.bases[stationSerial], "TalkbackError", false);
+                this.addEventListener(this.bases[stationSerial], "AlarmArmedEvent", false);
+                this.addEventListener(this.bases[stationSerial], "AlarmArmDelayEvent", false);
             }
         }
         this.saveBasesSettings();
@@ -169,6 +177,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.bases[stationSerial], "RawDevicePropertyChanged");
                     this.removeEventListener(this.bases[stationSerial], "LivestreamStart");
                     this.removeEventListener(this.bases[stationSerial], "LivestreamStop");
+                    this.removeEventListener(this.bases[stationSerial], "LivestreamError");
                     this.removeEventListener(this.bases[stationSerial], "DownloadStart");
                     this.removeEventListener(this.bases[stationSerial], "DownloadFinish");
                     this.removeEventListener(this.bases[stationSerial], "CommandResult");
@@ -180,6 +189,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.bases[stationSerial], "ChargingState");
                     this.removeEventListener(this.bases[stationSerial], "WifiRssi");
                     this.removeEventListener(this.bases[stationSerial], "FloodlightManualSwitch");
+                    this.removeEventListener(this.bases[stationSerial], "AlarmDelayEvent");
+                    this.removeEventListener(this.bases[stationSerial], "TalkbackStarted");
+                    this.removeEventListener(this.bases[stationSerial], "TalkbackStopped");
+                    this.removeEventListener(this.bases[stationSerial], "TalkbackError");
+                    this.removeEventListener(this.bases[stationSerial], "AlarmArmedEvent");
+                    this.removeEventListener(this.bases[stationSerial], "AlarmArmDelayEvent");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                 }                
@@ -378,6 +393,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.on("livestream stop", (station : Station, channel : number) => this.onStationLivestreamStop(station, channel));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("livestream stop")} Listener.`);
                 break;
+            case "LivestreamError":
+                base.on("livestream error", (station : Station, channel : number) => this.onStationLivestreamError(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("livestream error")} Listener.`);
+                break;
             case "DownloadStart":
                 base.on("download start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("download start")} Listener.`);
@@ -438,6 +457,30 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean) => this.onStationFloodlightManualSwitch(station, channel, enabled));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("floodlight manual switch")} Listener.`);
                 break;
+            case "AlarmDelayEvent":
+                base.on("alarm delay event", (station: Station, alarmDelayEvent: AlarmEvent, alarmDelay : number) => this.onStationAlarmDelayEvent(station, alarmDelayEvent, alarmDelay));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm delay event")} Listener.`);
+                break;
+            case "TalkbackStarted":
+                base.on("talkback started", (station: Station, channel: number, talkbackStream : TalkbackStream) => this.onStationTalkbackStarted(station, channel, talkbackStream));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback started")} Listener.`);
+                break;
+            case "TalkbackStopped":
+                base.on("talkback stopped", (station: Station, channel: number) => this.onStationTalkbackStopped(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback stopped")} Listener.`);
+                break;
+            case "talkback error":
+                base.on("talkback error", (station: Station, channel: number, error : Error) => this.onStationTalkbackError(station, channel, error));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback error")} Listener.`);
+                break;
+            case "AlarmArmedEvent":
+                base.on("alarm armed event", (station: Station) => this.onStationAlarmArmedEvent(station));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm armed event")} Listener.`);
+                break;
+            case "AlarmArmDelayEvent":
+                base.on("alarm arm delay event", (station: Station, alarmDelay: number) => this.onStationAlarmArmDelayEvent(station, alarmDelay));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for bases is unknown.`);
                 break;
@@ -472,6 +515,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             case "LivestreamStop":
                 base.removeAllListeners("livestream stop");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream stop")} Listener.`);
+                break;
+            case "LivestreamSError":
+                base.removeAllListeners("livestream error");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp livestream stop")} Listener.`);
                 break;
             case "DownloadStart":
                 base.removeAllListeners("download start");
@@ -533,6 +580,33 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.removeAllListeners("floodlight manual switch");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("floodlight manual switch")} Listener.`);
                 break;
+            case "AlarmDelayEvent":
+                base.removeAllListeners("alarm delay event");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm delay event")} Listener.`);
+                break;
+            case "TalkbackStarted":
+                base.removeAllListeners("talkback started");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback started")} Listener.`);
+                break;
+            case "TalkbackStopped":
+                base.removeAllListeners("talkback stopped");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback stopped")} Listener.`);
+                break;
+            case "talkback error":
+                base.removeAllListeners("talkback error");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback error")} Listener.`);
+                break;
+            case "AlarmArmedEvent":
+                base.removeAllListeners("alarm armed event");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm armed event")} Listener.`);
+                break;
+            case "AlarmArmDelayEvent":
+                base.removeAllListeners("alarm arm delay event");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
+                break;
+            default:
+                this.api.logInfo(`The listener '${eventListenerName}' for bases is unknown.`);
+                break;
         }
     }
 
@@ -555,6 +629,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 return base.listenerCount("livestream start");
             case "LivestreamStop":
                 return base.listenerCount("livestream stop");
+            case "LivestreamError":
+                return base.listenerCount("livestream error");
             case "DownloadStart":
                 return base.listenerCount("download start");
             case "DownloadFinish":
@@ -585,6 +661,18 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 return base.listenerCount("wifi rssi");
             case "FloodlightManualSwitch":
                 return base.listenerCount("floodlight manual switch");
+            case "AlarmDelayEvent":
+                return base.listenerCount("alarm delay event");
+            case "TalkbackStarted":
+                return base.listenerCount("talkback started");
+            case "TalkbackStopped":
+                return base.listenerCount("talkback stopped");
+            case "talkback error":
+                return base.listenerCount("talkback error");
+            case "AlarmArmedEvent":
+                return base.listenerCount("alarm armed event");
+            case "AlarmArmDelayEvent":
+                return base.listenerCount("alarm arm delay event");
         }
         return -1;
     }
@@ -676,6 +764,16 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private async onStationLivestreamStop(station : Station, channel : number): Promise<void>
     {
         this.api.logDebug(`Event "LivestreamStop": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    /**
+     * The action to be done when event LivestreamError is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     */
+    private async onStationLivestreamError(station : Station, channel : number): Promise<void>
+    {
+        this.api.logDebug(`Event "LivestreamError": base: ${station.getSerial()} | channel: ${channel}`);
     }
 
     /**
@@ -798,7 +896,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param station The base as Station object.
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
-     * @param modified The timestamp of the last change.
      */
     private async onStationRawPropertyChanged(station : Station, type : number, value : string): Promise<void>
     {
@@ -824,7 +921,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param batteryLevel The battery level as percentage value.
      * @param temperature The temperature as degree value.
-     * @param modified The datetime stamp the values have changed.
      */
     private async onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number): Promise<void>
     {
@@ -838,7 +934,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param chargeType The current carge state.
      * @param batteryLevel The battery level as percentage value.
-     * @param modified The datetime stamp the values have changed.
      */
     private async onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number): Promise<void>
     {
@@ -851,7 +946,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param station The base as Station object.
      * @param channel The channel to define the device.
      * @param rssi The current rssi value.
-     * @param modified The datetime stamp the values have changed.
      */
     private async onStationWifiRssi(station: Station, channel: number, rssi: number): Promise<void>
     {
@@ -864,10 +958,39 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param station The base as Station object.
      * @param channel The channel to define the device.
      * @param enabled The value for the floodlight.
-     * @param modified The datetime stamp the values have changed.
      */
     private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean): Promise<void>
     {
-        this.api.logDebug(`Event "FloodlightManualSwitch": base: ${station.getSerial()} | channelt: ${channel} | enabled: ${enabled}`);
+        this.api.logDebug(`Event "FloodlightManualSwitch": base: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
+    }
+
+    private async onStationAlarmDelayEvent(station : Station, alarmDelayEvent : AlarmEvent, alarmDelay : number): Promise<void>
+    {
+        this.api.logDebug(`Event "AlarmDelayEvent": base: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
+    }
+
+    private async onStationTalkbackStarted(station: Station, channel: number, talkbackStream : TalkbackStream): Promise<void>
+    {
+        this.api.logDebug(`Event "TalkbackStarted": base: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
+    }
+
+    private async onStationTalkbackStopped(station: Station, channel: number): Promise<void>
+    {
+        this.api.logDebug(`Event "TalkbackStopped": base: ${station.getSerial()} | channel: ${channel}`);
+    }
+
+    private async onStationTalkbackError(station: Station, channel: number, error : Error): Promise<void>
+    {
+        this.api.logDebug(`Event "TalkbackError": base: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
+    }
+
+    private async onStationAlarmArmedEvent(station: Station): Promise<void>
+    {
+        this.api.logDebug(`Event "AlarmArmedEvent": base: ${station.getSerial()}`);
+    }
+
+    private async onStationAlarmArmDelayEvent(station: Station, alarmDelay: number): Promise<void>
+    {
+        this.api.logDebug(`Event "AlarmArmDelayEvent": base: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
     }
 }
