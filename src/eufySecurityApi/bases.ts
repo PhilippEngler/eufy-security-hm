@@ -331,9 +331,17 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async forceReconnect(stationSerial : string) : Promise<void>
     {
-        this.api.logInfo(`Reconnect for base ${stationSerial} forced after 5 mins.`);
-        await this.bases[stationSerial].connect();
-        this.reconnectTimeout[stationSerial] = undefined;
+        if(this.bases[stationSerial].isConnected() == false)
+        {
+            this.api.logInfo(`Reconnect for base ${stationSerial} forced after 5 minutes.`);
+            clearTimeout(this.reconnectTimeout[stationSerial]);
+            this.reconnectTimeout[stationSerial] = undefined;
+            await this.bases[stationSerial].connect();
+        }
+        else
+        {
+            this.api.logInfo(`Reconnect for base ${stationSerial} already done.`);
+        }
     }
 
     /**
@@ -590,6 +598,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "Connect": base: ${station.getSerial()}`);
         this.emit("station connect", station);
         //disable timeout after connected
+        clearTimeout(this.reconnectTimeout[station.getSerial()]);
         this.reconnectTimeout[station.getSerial()] = undefined;
         if (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()))
         {
