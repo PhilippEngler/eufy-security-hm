@@ -1155,7 +1155,7 @@ export class Camera extends Device {
     public getLastCameraImageURL(): PropertyValue {
         return this.getPropertyValue(PropertyName.DevicePictureUrl);
     }
-    
+
     public getLastCameraVideoURL() : string
     {
         if(this.isCamera())

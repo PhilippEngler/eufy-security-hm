@@ -2198,6 +2198,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.1.0-b(c138)";
+        return "2.1.1";
     }
 }
