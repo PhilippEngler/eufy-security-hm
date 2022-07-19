@@ -516,9 +516,9 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.removeAllListeners("livestream stop");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream stop")} Listener.`);
                 break;
-            case "LivestreamSError":
+            case "LivestreamError":
                 base.removeAllListeners("livestream error");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp livestream stop")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream stop")} Listener.`);
                 break;
             case "DownloadStart":
                 base.removeAllListeners("download start");
