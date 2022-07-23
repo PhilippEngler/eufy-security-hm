@@ -71,7 +71,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
     }
 
     public updateProperty(name: string, value: PropertyValue): boolean {
-        if ((this.properties[name] !== undefined&& this.properties[name] !== value)
+        if ((this.properties[name] !== undefined && this.properties[name] !== value)
             || this.properties[name] === undefined) {
             this.properties[name] = value;
             if (!name.startsWith("hidden-")) {
@@ -1635,6 +1635,7 @@ export class DoorbellCamera extends Camera {
                             }, eventDurationSeconds * 1000));
                             break;
                         case DoorbellPushEvent.FACE_DETECTION:
+                        case DoorbellPushEvent.FAMILY_DETECTION:
                             this.updateProperty(PropertyName.DevicePersonDetected, true);
                             this.updateProperty(PropertyName.DevicePersonName, !isEmpty(message.person_name) ? message.person_name! : "Unknown");
                             if (!isEmpty(message.pic_url))
@@ -2008,7 +2009,6 @@ export class Lock extends Device {
                     {
                         const cmdType = this.isLockBle() || this.isLockBleNoFinger() ? CommandType.CMD_DOORLOCK_GET_STATE : CommandType.CMD_SMARTLOCK_QUERY_STATUS;
                         this.updateRawProperty(cmdType, "4");
-                        this.emit("locked", this, this.getPropertyValue(PropertyName.DeviceLocked) as boolean);
                         break;
                     }
                     case LockPushEvent.APP_UNLOCK:
@@ -2020,7 +2020,6 @@ export class Lock extends Device {
                     {
                         const cmdType = this.isLockBle() || this.isLockBleNoFinger() ? CommandType.CMD_DOORLOCK_GET_STATE : CommandType.CMD_SMARTLOCK_QUERY_STATUS;
                         this.updateRawProperty(cmdType, "3");
-                        this.emit("locked", this, this.getPropertyValue(PropertyName.DeviceLocked) as boolean);
                         break;
                     }
                     case LockPushEvent.LOCK_MECHANICAL_ANOMALY:
