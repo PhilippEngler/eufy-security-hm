@@ -124,6 +124,10 @@ class ApiServer
                         {
                             responseString = await api.getDeviceAsJSON(url[2]);
                         }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
                         break;
                     case "getBases":
                         responseString = await api.getBasesAsJSON();
@@ -132,6 +136,10 @@ class ApiServer
                         if(url.length == 3)
                         {
                             responseString = await api.getBaseAsJSON(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getHouses":
@@ -142,6 +150,10 @@ class ApiServer
                         {
                             responseString = await api.getHouseAsJSON(url[2]);
                         }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
                         break;
                     case "getMode":
                         if(url.length == 2)
@@ -151,6 +163,10 @@ class ApiServer
                         else if(url.length == 3)
                         {
                             responseString = await api.getGuardModeBase(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getConfig":
