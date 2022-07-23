@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, WiredDoorbellCamera, BatteryDoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -463,8 +463,8 @@ export class EufySecurityApi
             json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            //json += `"last_camera_image_time":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl).timestamp/1000}",`;
-            json += `"last_camera_image_time":"n/a",`;
+            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial())}",`;
+            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"led_enabled":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -479,8 +479,8 @@ export class EufySecurityApi
             json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            //json += `"last_camera_image_time":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl).timestamp/1000}",`;
-            json += `"last_camera_image_time":"n/a",`;
+            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial())}",`;
+            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"led_enabled":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -489,21 +489,17 @@ export class EufySecurityApi
         }
         else if (device instanceof FloodlightCamera)
         {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            //json += `"last_camera_image_time":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl).timestamp/1000}",`;
-            json += `"last_camera_image_time":"n/a",`;
+            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial())}",`;
+            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"led_enabled":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
             json += `"auto_night_vision_enabled":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
             json += `"anti_theft_detection_enabled":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
         }
-        else if (device instanceof DoorbellCamera)
+        else if (device instanceof BatteryDoorbellCamera)
         {
             json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
             json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
@@ -511,8 +507,20 @@ export class EufySecurityApi
             json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            //json += `"last_camera_image_time":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl).timestamp/1000}",`;
-            json += `"last_camera_image_time":"n/a",`;
+            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial())}",`;
+            //json += `"last_camera_image_time":"n/a",`;
+            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
+            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
+            json += `"led_enabled":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
+            json += `"auto_night_vision_enabled":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
+            json += `"anti_theft_detection_enabled":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
+        }
+        else if (device instanceof WiredDoorbellCamera)
+        {
+            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
+            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
+            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial())}",`;
+            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"led_enabled":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -527,8 +535,8 @@ export class EufySecurityApi
             json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            //json += `"last_camera_image_time":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl).timestamp/1000}",`;
-            json += `"last_camera_image_time":"n/a",`;
+            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial())}",`;
+            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"led_enabled":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -2189,7 +2197,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0-b5";
+        return "1.6.0-b6";
     }
 
     /**
@@ -2198,6 +2206,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.1.1";
+        return "2.1.2-b(c158)";
     }
 }

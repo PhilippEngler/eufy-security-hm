@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { DeviceNotFoundError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, DoorbellCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, EventFilterType, EventRecordResponse } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { P2PConnectionType } from "./p2p";
 
@@ -14,6 +14,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private httpService : HTTPApi;
     private resDevices !: FullDevices;
     private devices : {[deviceSerial:string] : any} = {};
+    private lastVideoTimeForDevices : {[deviceSerial:string] : any} = {};
     private loadingDevices?: Promise<unknown>;
 
     /**
@@ -113,6 +114,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     this.addEventListener(device, "Ready");
 
                     this.devices[device.getSerial()] = device;
+                    this.lastVideoTimeForDevices[device.getSerial()] = undefined;
+                    this.setLastVideoTime(device.getSerial(), await this.getLastVideoTimeFromCloud(device.getSerial()));
                 }
             }
         }
@@ -407,7 +410,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
-     * @param modified The timestamp of the last change.
      */
     private async onRawPropertyChanged(device : Device, type : number, value : string): Promise<void>
     {
@@ -423,6 +425,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onCryingDetected(device : Device, state : boolean): Promise<void>
     {
         this.api.logInfo(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -433,6 +436,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onSoundDetected(device : Device, state : boolean): Promise<void>
     {
         this.api.logInfo(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -443,6 +447,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPetDetected(device : Device, state : boolean): Promise<void>
     {
         this.api.logInfo(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -453,6 +458,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onMotionDetected(device : Device, state : boolean): Promise<void>
     {
         this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -464,6 +470,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPersonDetected(device : Device, state : boolean, person : string): Promise<void>
     {
         this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -474,6 +481,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onRings(device : Device, state : boolean): Promise<void>
     {
         this.api.logInfo(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
+        this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -499,7 +507,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * The action to be one when event Ready is fired.
      * @param device The device as Device object.
-     * @param state The new state.
      */
     private async onReady(device : Device): Promise<void>
     {
@@ -531,7 +538,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to specify the device.
      * @param batteryLevel The battery level value.
      * @param temperature The temperature value.
-     * @param modified The datetime stamp the values have changed.
      */
     public updateBatteryValues(baseSerial: string, channel: number, batteryLevel: number, temperature: number) : void
     {
@@ -561,7 +567,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to specify the device.
      * @param chargeType The charge state.
      * @param batteryLevel The battery level value.
-     * @param modified The datetime stamp the values have changed.
      */
     public updateChargingState(baseSerial: string, channel: number, chargeType: number, batteryLevel: number) : void
     {
@@ -590,7 +595,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param baseSerial The serial of the base.
      * @param channel The channel to specify the device.
      * @param rssi The rssi value.
-     * @param modified The datetime stamp the values have changed.
      */
     public updateWifiRssi(baseSerial : string, channel: number, rssi: number) : void
     {
@@ -617,5 +621,40 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     public updateDeviceProperties(deviceSerial: string, values: RawValues): void
     {
         this.devices[deviceSerial].updateRawProperties(values);
+    }
+
+    private async getLastVideoTimeFromCloud(deviceSerial : string) : Promise <number | undefined>
+    {
+        var lastVideoTime = await this.httpService.getAllVideoEvents({deviceSN : deviceSerial}, 1);
+        if(lastVideoTime !== undefined && lastVideoTime.length >= 1)
+        {
+            return lastVideoTime[0].create_time;
+        }
+        else
+        {
+            return undefined;
+        }
+    }
+
+    private setLastVideoTime(deviceSerial : string, time : number | undefined) : void
+    {
+        if(time !== undefined)
+        {
+            this.lastVideoTimeForDevices[deviceSerial] = time;
+        }
+        else
+        {
+            this.lastVideoTimeForDevices[deviceSerial] = undefined;
+        }
+    }
+
+    private setLastVideoTimeNow(deviceSerial : string) : void
+    {
+        this.lastVideoTimeForDevices[deviceSerial] = new Date().getTime();
+    }
+
+    public getLastVideoTime(deviceSerial : string) : number | undefined
+    {
+        return this.lastVideoTimeForDevices[deviceSerial];
     }
 }
