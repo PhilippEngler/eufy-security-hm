@@ -64,6 +64,14 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.reconnectTimeout[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
+                if(this.bases[stationSerial].getDeviceType() == DeviceType.STATION)
+                {
+                    this.bases[stationSerial].setConnectionType(this.api.getP2PConnectionType());
+                }
+                else
+                {
+                    this.bases[stationSerial].setConnectionType(P2PConnectionType.QUICKEST);
+                }
                 this.bases[stationSerial].connect();
 
                 if(this.api.getApiUseUpdateStateEvent())
@@ -355,6 +363,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
+            clearTimeout(this.reconnectTimeout[stationSerial]);
             this.api.logInfo(`Reconnect for base ${stationSerial} already done.`);
         }
     }
@@ -469,7 +478,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.on("talkback stopped", (station: Station, channel: number) => this.onStationTalkbackStopped(station, channel));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback stopped")} Listener.`);
                 break;
-            case "talkback error":
+            case "TalkbackError":
                 base.on("talkback error", (station: Station, channel: number, error : Error) => this.onStationTalkbackError(station, channel, error));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback error")} Listener.`);
                 break;
@@ -518,7 +527,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 break;
             case "LivestreamError":
                 base.removeAllListeners("livestream error");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream stop")} Listener.`);
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
                 base.removeAllListeners("download start");
@@ -548,7 +557,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.removeAllListeners("rtsp livestream stop");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp livestream stop")} Listener.`);
                 break;
-            case "RTSPURL":
+            case "RTSPUrl":
                 base.removeAllListeners("rtsp url");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp url")} Listener.`);
                 break;
@@ -592,7 +601,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.removeAllListeners("talkback stopped");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback stopped")} Listener.`);
                 break;
-            case "talkback error":
+            case "TalkbackError":
                 base.removeAllListeners("talkback error");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback error")} Listener.`);
                 break;
@@ -645,7 +654,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 return base.listenerCount("rtsp livestream start");
             case "RTSPLivestreamStop":
                 return base.listenerCount("rtsp livestream stop");
-            case "RTSPURL":
+            case "RTSPUrl":
                 return base.listenerCount("rtsp url");
             case "PropertyChanged":
                 return base.listenerCount("property changed");
@@ -667,7 +676,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 return base.listenerCount("talkback started");
             case "TalkbackStopped":
                 return base.listenerCount("talkback stopped");
-            case "talkback error":
+            case "TalkbackError":
                 return base.listenerCount("talkback error");
             case "AlarmArmedEvent":
                 return base.listenerCount("alarm armed event");
