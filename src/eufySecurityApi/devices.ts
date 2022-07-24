@@ -623,6 +623,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         this.devices[deviceSerial].updateRawProperties(values);
     }
 
+    /**
+     * Retrieves the last video event for the given device.
+     * @param deviceSerial The serial of the device.
+     * @returns The time as timestamp or undefined.
+     */
     private async getLastVideoTimeFromCloud(deviceSerial : string) : Promise <number | undefined>
     {
         var lastVideoTime = await this.httpService.getAllVideoEvents({deviceSN : deviceSerial}, 1);
@@ -636,6 +641,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Set the last video time to the array.
+     * @param deviceSerial The serial of the device.
+     * @param time The time as timestamp or undefined.
+     */
     private setLastVideoTime(deviceSerial : string, time : number | undefined) : void
     {
         if(time !== undefined)
@@ -648,11 +658,20 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Set the time for the last video to the current time.
+     * @param deviceSerial The serial of the device.
+     */
     private setLastVideoTimeNow(deviceSerial : string) : void
     {
         this.lastVideoTimeForDevices[deviceSerial] = new Date().getTime();
     }
 
+    /**
+     * Retrieve the last video time from the array.
+     * @param deviceSerial The device serial.
+     * @returns The timestamp as number or undefined.
+     */
     public getLastVideoTime(deviceSerial : string) : number | undefined
     {
         return this.lastVideoTimeForDevices[deviceSerial];

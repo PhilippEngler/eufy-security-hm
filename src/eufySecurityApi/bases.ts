@@ -973,31 +973,63 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "FloodlightManualSwitch": base: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
     }
 
+    /**
+     * The action to be done when event AlarmDelayEvent is fired.
+     * @param station The base as Station object.
+     * @param alarmDelayEvent The AlarmDelayedEvent.
+     * @param alarmDelay The delay in ms.
+     */
     private async onStationAlarmDelayEvent(station : Station, alarmDelayEvent : AlarmEvent, alarmDelay : number): Promise<void>
     {
         this.api.logDebug(`Event "AlarmDelayEvent": base: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
     }
 
+    /**
+     * The action to be done when event TalkbackStarted is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     * @param talkbackStream The TalbackStream object.
+     */
     private async onStationTalkbackStarted(station: Station, channel: number, talkbackStream : TalkbackStream): Promise<void>
     {
         this.api.logDebug(`Event "TalkbackStarted": base: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
     }
 
+    /**
+     * The action to be done when event TalkbackStopped is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     */
     private async onStationTalkbackStopped(station: Station, channel: number): Promise<void>
     {
         this.api.logDebug(`Event "TalkbackStopped": base: ${station.getSerial()} | channel: ${channel}`);
     }
 
+    /**
+     * The action to be done when event TalkbackError is fired.
+     * @param station The base as Station object.
+     * @param channel The channel to define the device.
+     * @param error The error object.
+     */
     private async onStationTalkbackError(station: Station, channel: number, error : Error): Promise<void>
     {
         this.api.logDebug(`Event "TalkbackError": base: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
     }
 
+    /**
+     * The action to be done when event AlarmArmedEvent is fired.
+     * @param station The base as Station object.
+     */
     private async onStationAlarmArmedEvent(station: Station): Promise<void>
     {
         this.api.logDebug(`Event "AlarmArmedEvent": base: ${station.getSerial()}`);
     }
 
+    /**
+     * The action to be done when event AlarmArmDelayEvent is fired.
+     * @param station The base as Station object.
+     * @param alarmDelay The delay in ms.
+     */
     private async onStationAlarmArmDelayEvent(station: Station, alarmDelay: number): Promise<void>
     {
         this.api.logDebug(`Event "AlarmArmDelayEvent": base: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
