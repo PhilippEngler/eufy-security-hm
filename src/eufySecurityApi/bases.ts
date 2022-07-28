@@ -491,7 +491,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
                 break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for bases is unknown.`);
+                this.api.logInfo(`The listener '${eventListenerName}' for base ${base.getSerial()} is unknown.`);
                 break;
         }
     }
@@ -614,7 +614,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
                 break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for bases is unknown.`);
+                this.api.logInfo(`The listener '${eventListenerName}' for base ${base.getSerial()} is unknown.`);
                 break;
         }
     }
