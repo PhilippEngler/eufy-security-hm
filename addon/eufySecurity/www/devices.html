@@ -303,19 +303,19 @@
 							}
 							else
 							{
-								bases += `<div class="alert alert-danger" role="alert">Es wurden keine Basisstationen gefunden.</div>`;
+								bases += `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Es wurden keine Basisstationen gefunden.</div>`;
 							}
 							document.getElementById("basestations").innerHTML = bases;
 							type = "";
 						}
 						else
 						{
-							document.getElementById("basestations").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+							document.getElementById("basestations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("basestations").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+						document.getElementById("basestations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 					}
 					else
 					{
@@ -381,7 +381,7 @@
 												break;
 											default:
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Kamera">`;
-												type = "Kamera";
+												type = "unbekannt";
 										}
 										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "0")
 										{
@@ -425,9 +425,21 @@
 												imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Indoor Cam 2K">`;
 												type = "Indoor Cam 2K";
 												break;
+											case "T8401":
+												imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Indoor Cam 1080p">`;
+												type = "Indoor Cam 1080p";
+												break;
 											case "T8410":
 												imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Indoor Cam 2K P&T">`;
 												type = "Indoor Cam 2K P&T";
+												break;
+											case "T8411":
+												imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Indoor Cam Pan&Tilt 1080p">`;
+												type = "Indoor Cam Pan&Tilt 1080p";
+												break;
+											case "T8411":
+												imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Indoor Cam Mini">`;
+												type = "Indoor Cam Mini";
 												break;
 											default:
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Innenkamera">`;
