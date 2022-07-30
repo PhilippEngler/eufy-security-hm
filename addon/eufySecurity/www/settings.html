@@ -10,7 +10,7 @@
 		
 		<!-- Bootstrap core CSS -->
 		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
-		
+
 		<!-- Bootstrap icon font CSS -->
 		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
 		
@@ -24,44 +24,84 @@
 				user-select: none;
 			}
 			
-			@media (min-width: 768px) {
+			@media (min-width: 872px) {
 				.bd-placeholder-img-lg {
 					font-size: 3.5rem;
 				}
+			}
+			
+			.b-example-divider {
+				height: 3rem;
+				background-color: rgba(0, 0, 0, .1);
+				border: solid rgba(0, 0, 0, .15);
+				border-width: 1px 0;
+				box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+			}
+			
+			.b-example-vr {
+				flex-shrink: 0;
+				width: 1.5rem;
+				height: 100vh;
+			}
+			
+			.bi {
+				vertical-align: -.125em;
+				fill: currentColor;
+			}
+			
+			.nav-scroller {
+				position: relative;
+				z-index: 2;
+				height: 2.75rem;
+				overflow-y: hidden;
+			}
+			
+			.nav-scroller .nav {
+				display: flex;
+				flex-wrap: nowrap;
+				padding-bottom: 1rem;
+				margin-top: -1px;
+				overflow-x: auto;
+				text-align: center;
+				white-space: nowrap;
+ 				-webkit-overflow-scrolling: touch;
 			}
 		</style>
 		
 		<!-- Custom styles for this template -->
 		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
 		<link href="assets/dist/css/footer.css" rel="stylesheet">
+		<link href="assets/dist/css/eufySecurityAddOn.css" rel="stylesheet">
 	</head>
 	<body>
 		<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-			<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
-			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarCollapse">
-				<ul class="navbar-nav mr-auto">
-					<li class="nav-item">
-						<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
-					</li>
-					<li class="nav-item active">
-						<a id="lnkSettings" class="nav-link" href="settings.html">Einstellungen<span class="sr-only">(current)</span></a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
-					</li>
-				</ul>
+			<div class="container-fluid">
+				<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarCollapse">
+					<ul class="navbar-nav me-auto mb-2 mb-md-0">
+						<li class="nav-item">
+							<a id="lnkHome" class="nav-link" href="/addons/eufySecurity"">Home</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkSettings" class="nav-link active" aria-current="page" href="settings.html">Einstellungen</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
+						</li>
+						<li class="nav-item active">
+							<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</nav>
 		
@@ -114,7 +154,7 @@
 											<h5>Weitere Einstellungen</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mt-2" for="cbCountry">Land des eufy Security Accounts.</label>
-												<select name="country" id="cbCountry" class="custom-select" required>
+												<select name="country" id="cbCountry" class="form-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option value="DE">Deutschland</option>
 													<option value="AT">Österreich</option>
@@ -124,7 +164,7 @@
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mt-2" for="cbLanguage">Sprache des eufy Security Accounts.</label>
-												<select name="language" id="cbLanguage" class="custom-select" required>
+												<select name="language" id="cbLanguage" class="form-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option value="de">deutsch</option>
 													<option value="en">englisch</option>
@@ -182,7 +222,7 @@
 											<h5>Einstellungen für die Verbindung zu den Basisstationen</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mb-2" for="cbConnectionType">Herstellen der Verbindung zu den Basisstationen.</label>
-												<select name="connectionType" id="cbConnectionType" class="custom-select" required>
+												<select name="connectionType" id="cbConnectionType" class="form-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option value="0">bevorzuge lokale Verbindung</option>
 													<option value="1">nur lokale Verbindung</option>
@@ -267,7 +307,7 @@
 												<label for="cbLogLevel">Umfang der Protokollierung.</label>
 												<div id="alertLogLevel">
 												</div>
-												<select name="logLevel" id="cbLogLevel" class="custom-select" oninput="checkLogLevel(this.value);" required>
+												<select name="logLevel" id="cbLogLevel" class="form-select" oninput="checkLogLevel(this.value);" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option value="0">grundlegende Informationen</option>
 													<option value="1">alle Informationen</option>
@@ -350,8 +390,8 @@
 		
 		<div id="toastCheckConfigFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Überprüfung der Eingaben.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Überprüfung der Eingaben.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -362,8 +402,8 @@
 
 		<div id="toastSaveConfigOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Speicherung der Einstellungen.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Speicherung der Einstellungen.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -374,8 +414,8 @@
 
 		<div id="toastSaveConfigOKRestart" class="toast bg-success" role="alert" data-autohide="true" data-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Speicherung der Einstellungen.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Speicherung der Einstellungen.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -386,8 +426,8 @@
 		
 		<div id="toastSaveConfigFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Speicherung der Einstellungen.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Speicherung der Einstellungen.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -398,8 +438,8 @@
 		
 		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Tokendaten löschen.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Tokendaten löschen.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -410,8 +450,8 @@
 		
 		<div id="toastRemoveTokenFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Tokendaten löschen.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Tokendaten löschen.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -422,8 +462,8 @@
 
 		<div id="toastRestartOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Service neu starten.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Service neu starten.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -434,8 +474,8 @@
 		
 		<div id="toastRestartFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="mr-auto">Service neu starten.</strong>
-				<button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+				<strong class="me-auto">Service neu starten.</strong>
+				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
 					&times;
 				</button>
 			</div>
@@ -494,8 +534,6 @@
 			</div>
 		</div>
 		
-		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
-		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script>
 			port = "";

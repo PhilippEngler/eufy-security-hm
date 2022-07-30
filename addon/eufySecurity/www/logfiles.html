@@ -21,44 +21,84 @@
 				user-select: none;
 			}
 			
-			@media (min-width: 768px) {
+			@media (min-width: 872px) {
 				.bd-placeholder-img-lg {
 					font-size: 3.5rem;
 				}
+			}
+			
+			.b-example-divider {
+				height: 3rem;
+				background-color: rgba(0, 0, 0, .1);
+				border: solid rgba(0, 0, 0, .15);
+				border-width: 1px 0;
+				box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+			}
+			
+			.b-example-vr {
+				flex-shrink: 0;
+				width: 1.5rem;
+				height: 100vh;
+			}
+			
+			.bi {
+				vertical-align: -.125em;
+				fill: currentColor;
+			}
+			
+			.nav-scroller {
+				position: relative;
+				z-index: 2;
+				height: 2.75rem;
+				overflow-y: hidden;
+			}
+			
+			.nav-scroller .nav {
+				display: flex;
+				flex-wrap: nowrap;
+				padding-bottom: 1rem;
+				margin-top: -1px;
+				overflow-x: auto;
+				text-align: center;
+				white-space: nowrap;
+ 				-webkit-overflow-scrolling: touch;
 			}
 		</style>
 		
 		<!-- Custom styles for this template -->
 		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
 		<link href="assets/dist/css/footer.css" rel="stylesheet">
+		<link href="assets/dist/css/eufySecurityAddOn.css" rel="stylesheet">
 	</head>
 	<body>
 		<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-			<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
-			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarCollapse">
-				<ul class="navbar-nav mr-auto">
-					<li class="nav-item">
-						<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkSettings" class="nav-link" href="settings.html">Einstellungen</a>
-					</li>
-					<li class="nav-item active">
-						<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien<span class="sr-only">(current)</span></a>
-					</li>
-					<li class="nav-item">
-						<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
-					</li>
-				</ul>
+			<div class="container-fluid">
+				<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="collapse navbar-collapse" id="navbarCollapse">
+					<ul class="navbar-nav me-auto mb-2 mb-md-0">
+						<li class="nav-item">
+							<a id="lnkHome" class="nav-link" href="/addons/eufySecurity"">Home</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkSettings" class="nav-link" href="settings.html">Einstellungen</a>
+						</li>
+						<li class="nav-item">
+							<a id="lnkLogfiles" class="nav-link active" aria-current="page" href="logfiles.html">Logdateien</a>
+						</li>
+						<li class="nav-item active">
+							<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</nav>
 		
@@ -82,7 +122,7 @@
 								</div>
 							</div>
 							<div class="card-footer">
-								<button id="downlLogfile" onclick="downloadLogfile()" type="button" class="btn btn-outline-primary mr-3">Download</button>
+								<button id="downlLogfile" onclick="downloadLogfile()" type="button" class="btn btn-outline-primary me-3">Download</button>
 								<button id="deleteLogfileData" onclick="emptyLogfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
 							</div>
 						</div>
@@ -98,7 +138,7 @@
 								</div>
 							</div>
 							<div class="card-footer">
-								<button id="downlErrfile" onclick="downloadErrfile()" type="button" class="btn btn-outline-primary mr-3">Download</button>
+								<button id="downlErrfile" onclick="downloadErrfile()" type="button" class="btn btn-outline-primary me-3">Download</button>
 								<button id="deleteErrfileData" onclick="emptyErrfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
 							</div>
 						</div>
@@ -114,8 +154,6 @@
 			</div>
 		</footer>
 		
-		<script src="assets/dist/js/jquery-3.5.1.slim.min.js"></script>
-		<script>window.jQuery || document.write('<script src="assets/dist/js/bootstrap.bundle.min.js"><\/script>')</script>
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script>
