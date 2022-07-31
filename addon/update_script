@@ -167,6 +167,13 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   #if [ -e ${ADDON_DIR}/node_modules/wrappy ]; then
   #  rm -r ${ADDON_DIR}/node_modules/wrappy
   #fi
+  if [ -e ${ADDON_DIR}/node_modules/@babel ]; then
+    rm -r ${ADDON_DIR}/node_modules/@babel
+  fi
+  # remove unused jquery-3.5.1.slim.min.js file
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js
+  fi
 fi
 
 # create necessary directories
