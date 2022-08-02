@@ -122,11 +122,11 @@
 									<h5 class="card-header">alle Basen</h5>
 									<div class="row no-gutters">
 										<div class="card-body">
-											<h6 class="card-subtitle mb-2 text-muted">Ändern des Status aller Basen</h6>
-											<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary my-2 me-3" disabled>abwesend</button>
-											<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary my-2 me-3" disabled>zu Hause</button>
-											<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary my-2 me-3" disabled>Zeitsteuerung</button>
-											<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2" disabled>deaktiviert</button>
+											<h6 class="card-subtitle mb-2 text-muted ms-3">Ändern des Status aller Basen</h6>
+											<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary my-2 ms-3" disabled>abwesend</button>
+											<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary my-2 ms-3" disabled>zu Hause</button>
+											<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary my-2 ms-3" disabled>Zeitsteuerung</button>
+											<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2 ms-3" disabled>deaktiviert</button>
 										</div>
 									</div>
 									<div class="card-footer" id="lastEventTimeAll">
@@ -147,19 +147,19 @@
 			</div>
 		</footer>
 		
-		<div id="toastOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Änderung des Status.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">&times;</button>
+				<button type="button" class="ms-2 mb-1 close" data-bs-dismiss="toast">&times;</button>
 			</div>
 			<div class="toast-body text-white">
 				Die Änderung des Status wurde erfolgreich durchgeführt.
 			</div>
 		</div>
-		<div id="toastFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Änderung des Status.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">&times;</button>
+				<button type="button" class="ms-2 mb-1 close" data-bs-dismiss="toast">&times;</button>
 			</div>
 			<div class="toast-body text-white">
 				Bei der Änderung des Status ist ein Fehler aufgetreten.
@@ -431,12 +431,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 							document.getElementById("btnArmAll").innerHTML = "abwesend";
@@ -467,12 +469,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 						}
@@ -506,12 +510,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 							document.getElementById("btnHomeAll").innerHTML = "zu Hause";
@@ -542,12 +548,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 						}
@@ -581,12 +589,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 							document.getElementById("btnScheduleAll").innerHTML = "Zeitsteuerung";
@@ -617,12 +627,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 						}
@@ -656,12 +668,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 							document.getElementById("btnDisarmAll").innerHTML = "deaktiviert";
@@ -692,12 +706,14 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastOK").toast('show');
+								const toast = new bootstrap.Toast(toastOK);
+								toast.show();
 								loadData(false);
 							}
 							else
 							{
-								$("#toastFailed").toast('show');
+								const toast = new bootstrap.Toast(toastFailed);
+								toast.show();
 								loadData(false);
 							}
 						}

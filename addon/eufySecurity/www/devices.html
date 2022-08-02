@@ -123,17 +123,17 @@
 			</div>
 		</footer>
 
-		<div class="modal fade" id="modalNotImplemented" role="alert" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="lblModalNotImplemented" aria-hidden="true">
+		<div class="modal fade" id="modalNotImplemented" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalNotImplemented" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
-					<div class="modal-header alert-primary">
+					<div class="modal-header text-bg-primary">
 						<h5 class="modal-title" id="lblModalTitle">Funktion noch nicht implementiert.</h5>
 					</div>
 					<div class="modal-body">
 						Diese Funktionalität ist derzeit noch nicht implementiert und wird in einer der nächsten Versionen verfügbar sein.
 					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="btnOKModalNotImplemented" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
 					</div>
 				</div>
 			</div>
@@ -601,12 +601,18 @@
 
 			function showDeviceSettings(deviceId)
 			{
-				$('#modalNotImplemented').modal('show');
+				const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
+				//document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");
+				//document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
+				myModal.show();
 			}
 
 			function showBaseSettings(baseId)
 			{
-				$('#modalNotImplemented').modal('show');
+				const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
+				//document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");
+				//document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
+				myModal.show();
 			}
 		</script>
 	</body>

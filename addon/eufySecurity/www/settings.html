@@ -182,9 +182,9 @@
 									<div class="col-md-12">
 										<div class="card-body" >
 											<h5>Einstellungen für HTTP</h5>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="useHttp" class="custom-control-input" id="chkUseHttp" onchange="changeValue(useHttp)">
-												<label class="custom-control-label" for="chkUseHttp">HTTP aktiv</label>
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" role="switch" name="useHttp" id="chkUseHttp" onchange="changeValue(useHttp)">
+												<label class="form-check-label" for="chkUseHttp">HTTP aktiv</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mt-2" for="txtPortHttp">Port über den die eufy Security API über HTTP erreichbar sein soll.</label>
@@ -196,9 +196,9 @@
 											</div>
 											<hr>
 											<h5>Einstellungen für HTTPS</h5>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="useHttps" class="custom-control-input" id="chkUseHttps" onchange="changeValue(useHttps)">
-												<label class="custom-control-label" for="chkUseHttps">HTTPS aktiv</label>
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" role="switch" name="useHttps" id="chkUseHttps" onchange="changeValue(useHttps)">
+												<label class="form-check-label" for="chkUseHttps">HTTPS aktiv</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mt-2" for="portHttpsport">Port über den die eufy Security API über HTTPS erreichbar sein soll.</label>
@@ -230,18 +230,18 @@
 												</select>
 												<small class="form-text text-muted mb-2">Diese Einstellung gilt nur für die Geräte 'HomeBase', 'HomeBase E' und 'HomeBase 2'.</small>
 											</div>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="useUdpStaticPorts" class="custom-control-input mt-2 mb-2" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
-												<label class="custom-control-label mt-2" for="chkUseUdpStaticPorts">Verbindung zu den Basisstation über feste Ports aufbauen</label>
+											<div class="form-check form-switch mt-2 mb-2">
+												<input class="form-check-input" type="checkbox" role="switch" name="useUdpStaticPorts" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
+												<label class="form-check-label" for="chkUseUdpStaticPorts">Verbindung zu den Basisstation über feste Ports aufbauen</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid" id="useUDPStaticPortsBases">
 												
 											</div>
 											<hr>
 											<h5>Einstellungen für die Aktualisierung der Systemvariablen</h5>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="useSystemVariables" class="custom-control-input" id="chkUseSystemVariables" onchange="changeValue(useSystemVariables)">
-												<label class="custom-control-label" for="chkUseSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" role="switch" name="useSystemVariables" id="chkUseSystemVariables" onchange="changeValue(useSystemVariables)">
+												<label class="form-check-label" for="chkUseSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
 											</div>
 											<hr>
 											<h5>Einstellungen für Standardbild der Kameras</h5>
@@ -259,14 +259,14 @@
 											</div>
 											<hr>
 											<h5>Einstellungen für regelmäßige Aktualisierung des Modus</h5>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="useUpdateStateEvent" class="custom-control-input" id="chkUpdateStateEvent" onchange="changeValue(useUpdateStateEvent)">
-												<label class="custom-control-label" for="chkUpdateStateEvent">Modus automatisch durch von der HomeBase gesendete Ereignisse aktualisieren</label>
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateEvent" id="chkUpdateStateEvent" onchange="changeValue(useUpdateStateEvent)">
+												<label class="form-check-label" for="chkUpdateStateEvent">Modus automatisch durch von der HomeBase gesendete Ereignisse aktualisieren</label>
 												<!--<small class="form-text text-muted">Statusänderungen werden von der HomeBase direkt nach einer externen Änderung gemeldet und aktualisiert.</small>-->
 											</div>
-											<div class="custom-control custom-switch mt-2">
-												<input type="checkbox" name="useUpdateStateIntervall" class="custom-control-input" id="chkUpdateStateIntervall" onchange="changeValue(useUpdateStateIntervall)">
-												<label class="custom-control-label" for="chkUpdateStateIntervall">Modus regelmäßig intervallbasierend aktualisieren</label>
+											<div class="form-check form-switch mt-2">
+												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateIntervall" id="chkUpdateStateIntervall" onchange="changeValue(useUpdateStateIntervall)">
+												<label class="form-check-label" for="chkUpdateStateIntervall">Modus regelmäßig intervallbasierend aktualisieren</label>
 												<!--<small class="form-text text-muted">Status wird in regelmäßigen Abständen abgerufen.</small>-->
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
@@ -279,13 +279,13 @@
 											</div>
 											<hr>
 											<h5>Einstellungen für regelmäßige Aktualisierung der Links</h5>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="useUpdateLinksIntervall" class="custom-control-input" id="chkUseUpdateLinksIntervall" onchange="changeValue(useUpdateLinksIntervall)">
-												<label class="custom-control-label" for="chkUseUpdateLinksIntervall">Links regelmäßig aktualisieren</label>
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateLinksIntervall" id="chkUseUpdateLinksIntervall" onchange="changeValue(useUpdateLinksIntervall)">
+												<label class="form-check-label" for="chkUseUpdateLinksIntervall">Links regelmäßig aktualisieren</label>
 											</div>
-											<div class="custom-control custom-switch mt-2">
-												<input type="checkbox" name="useUpdateLinksOnlyWhenActive" class="custom-control-input" id="chkUpdateLinksOnlyWhenActive">
-												<label class="custom-control-label" for="chkUpdateLinksOnlyWhenActive">Links nur regelmäßig aktualisieren, wenn System aktiv ist</label>
+											<div class="form-check form-switch mt-2">
+												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateLinksOnlyWhenActive" id="chkUpdateLinksOnlyWhenActive">
+												<label class="form-check-label" for="chkUpdateLinksOnlyWhenActive">Links nur regelmäßig aktualisieren, wenn System aktiv ist</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mt-2" for="txtUpdateLinksIntervallTimespan">Zeit zwischen den Aktualisierungen.</label>
@@ -297,9 +297,9 @@
 											</div>
 											<hr>
 											<h5>Einstellungen für Pushbenachrichtigungen</h5>
-											<div class="custom-control custom-switch">
-												<input type="checkbox" name="usePushService" class="custom-control-input" id="chkUsePushService">
-												<label class="custom-control-label" for="chkUsePushService">Pushbenachrichtigungen aktivieren</label>
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" role="switch" name="usePushService" id="chkUsePushService">
+												<label class="form-check-label" for="chkUsePushService">Pushbenachrichtigungen aktivieren</label>
 											</div>
 											<hr>
 											<h5>Einstellungen für Protokollierung</h5>
@@ -388,147 +388,131 @@
 			</div>
 		</footer>
 		
-		<div id="toastCheckConfigFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastCheckConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Überprüfung der Eingaben.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Die Überprüfung der Eingaben ist fehlgeschlagen. Bitte überprüfen Sie die rot markierten Eingabefelder und beachten Sie die Hinweise.
 			</div>
 		</div>
 
-		<div id="toastSaveConfigOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastSaveConfigOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Speicherung der Einstellungen.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Die Einstellungen wurden erfolgreich gespeichert.
 			</div>
 		</div>
 
-		<div id="toastSaveConfigOKRestart" class="toast bg-success" role="alert" data-autohide="true" data-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastSaveConfigOKRestart" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Speicherung der Einstellungen.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Die Einstellungen wurden erfolgreich gespeichert. Der Service wird neu gestartet.
 			</div>
 		</div>
 		
-		<div id="toastSaveConfigFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastSaveConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Speicherung der Einstellungen.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
 			</div>
 		</div>
 		
-		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Tokendaten löschen.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Die Tokendaten wurden erfolgreich gelöscht.
 			</div>
 		</div>
 		
-		<div id="toastRemoveTokenFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastRemoveTokenFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Tokendaten löschen.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Bei dem Löschen der Tokendaten ist ein Fehler aufgetreten.
 			</div>
 		</div>
 
-		<div id="toastRestartOK" class="toast bg-success" role="alert" data-autohide="true" data-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastRestartOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Service neu starten.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Der Service wird neu gestartet.
 			</div>
 		</div>
 		
-		<div id="toastRestartFailed" class="toast bg-danger" role="alert" data-autohide="true" data-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastRestartFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
 				<strong class="me-auto">Service neu starten.</strong>
-				<button type="button" class="ms-2 mb-1 close" data-dismiss="toast">
-					&times;
-				</button>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
 			<div class="toast-body text-white">
 				Bei dem Neustart des Services ist ein Fehler aufgetreten.
 			</div>
 		</div>
 
-		<div class="modal fade" id="modalAtLeastOneNeedsActivation" role="alert" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="lblModalAtLeastOneNeedsActivation" aria-hidden="true">
+		<div class="modal fade" id="modalAtLeastOneNeedsActivation" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalAtLeastOneNeedsActivation" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
-					<div class="modal-header alert-danger">
+					<div class="modal-header text-bg-danger">
 						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
 					</div>
 					<div class="modal-body">
 						Um die Erreichbarkeit der API zu gewährleisten, muss mindestens eine der beiden Optionen ('HTTP aktiv' oder 'HTTPS aktiv') aktiviert sein.<br /><br />
 						Mit 'OK' wird die zuletzt deaktivierte Option wieder aktiviert.
 					</div>
-					<div class="modal-footer alert-secondary">
-						<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="modalAtLeastOneNeedsActivationBtnOK" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="modal fade" id="modalStateEventOrIntervall" role="alert" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="lblModalStateEventOrIntervall" aria-hidden="true">
+		<div class="modal fade" id="modalStateEventOrIntervall" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalStateEventOrIntervall" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
-					<div class="modal-header alert-danger">
+					<div class="modal-header text-bg-danger">
 						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
 					</div>
 					<div class="modal-body">
-						Es kann nicht gleichzeitig die Option "Modus automatisch unmittelbar nach externer Änderung aktualisieren" und die Option "Modus regelmäßig intervallbasierend aktualisieren" aktiviert werden.<br /><br />
-						Mit 'OK' bleibt die zuletzt aktivierte Option aktiviert.
+						Es kann nicht gleichzeitig die Option "Modus automatisch durch von der HomeBase gesendete Ereignisse aktualisieren" und die Option "Modus regelmäßig intervallbasierend aktualisieren" aktiviert werden.<br /><br />
+						Mit 'OK' wird die zuletzt aktivierte Option deaktiviert.
 					</div>
-					<div class="modal-footer alert-secondary">
-						<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="modalStateEventOrIntervallBtnOK" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="modal fade" id="modalUDPPortsEqualWrong" role="alert" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="lblModalUDPPortsEqualWrong" aria-hidden="true">
+		<div class="modal fade" id="modalUDPPortsEqualWrong" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalUDPPortsEqualWrong" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
-					<div class="modal-header alert-danger">
+					<div class="modal-header text-bg-danger">
 						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
 					</div>
-					<div class="modal-body">
+					<div class="modal-body" id="modalUDPPortsEqualWrongMessage">
 						
 					</div>
-					<div class="modal-footer alert-secondary">
-						<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="modalUDPPortsEqualWrongBtnOK" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
 					</div>
 				</div>
 			</div>
@@ -678,7 +662,8 @@
 					{
 						event.preventDefault();
 						event.stopPropagation();
-						$("#toastCheckConfigFailed").toast('show');
+						const toast = new bootstrap.Toast(toastCheckConfigFailed);
+						toast.show();
 					}
 					
 					//form.classList.add('was-validated');
@@ -1057,7 +1042,8 @@
 				
 				xmlHttp.addEventListener( "error", function( event ) {
 					document.getElementById("resultMessage").innerHTML = "";
-					$("#toastSaveConfigFailed").toast('show');
+					const toast = new bootstrap.Toast(toastSaveConfigFailed);
+					toast.show();
 				} );
 				
 				xmlHttp.onreadystatechange = function()
@@ -1072,12 +1058,14 @@
 								if(obfFD.serviceRestart == true)
 								{
 									document.getElementById("resultMessage").innerHTML = "";
-									$("#toastSaveConfigOKRestart").toast('show');
+									const toast = new bootstrap.Toast(toastSaveConfigOKRestart);
+									toast.show();
 								}
 								else
 								{
 									document.getElementById("resultMessage").innerHTML = "";
-									$("#toastSaveConfigOK").toast('show');
+									const toast = new bootstrap.Toast(toastSaveConfigOK);
+									toast.show();
 								}
 								loadData();
 								loadSystemVariables();
@@ -1085,7 +1073,8 @@
 							else
 							{
 								document.getElementById("resultMessage").innerHTML = "";
-								$("#toastSaveConfigFailed").toast('show');
+								const toast = new bootstrap.Toast(toastSaveConfigFailed);
+								toast.show();
 							}
 						}
 						catch (e)
@@ -1163,16 +1152,19 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true && objResp.dataRemoved == true)
 							{
-								$("#toastRemoveTokenOK").toast('show');
+								const toast = new bootstrap.Toast(toastRemoveTokenOK);
+								toast.show();
 							}
 							else
 							{
-								$("#toastRemoveTokenFailed").toast('show');
+								const toast = new bootstrap.Toast(toastRestartFailed);
+								toast.show();
 							}
 						}
 						catch (e)
 						{
-							$("#toastRemoveTokenFailed").toast('show');
+							const toast = new bootstrap.Toast(toastRestartFailed);
+							toast.show();
 						}
 					}
 					else if (this.readyState == 4)
@@ -1203,16 +1195,19 @@
 							objResp = JSON.parse(this.responseText);
 							if(objResp.success == true)
 							{
-								$("#toastRestartOK").toast('show');
+								const toast = new bootstrap.Toast(toastRestartOK);
+								toast.show();
 							}
 							else
 							{
-								$("#toastRestartFailed").toast('show');
+								const toast = new bootstrap.Toast(toastRestartFailed);
+								toast.show();
 							}
 						}
 						catch (e)
 						{
-							$("#toastRestartFailed").toast('show');
+							const toast = new bootstrap.Toast(toastRestartFailed);
+							toast.show();
 						}
 					}
 					else if (this.readyState == 4)
@@ -1271,8 +1266,10 @@
 						{
 							if((element.checked == false) && (document.getElementById("chkUseHttps").checked == false))
 							{
-								$('#modalAtLeastOneNeedsActivation').modal('show');
-								$('#modalAtLeastOneNeedsActivation').one('click', '.btn-primary', function() { checkCheckField(element.id); });
+								const myModal = new bootstrap.Modal(document.getElementById('modalAtLeastOneNeedsActivation'));
+								document.getElementById("modalAtLeastOneNeedsActivationBtnOK").removeAttribute("onClick");
+								document.getElementById("modalAtLeastOneNeedsActivationBtnOK").setAttribute("onClick", `checkCheckField("chkUseHttp")`);
+								myModal.show();
 							}
 							else
 							{
@@ -1291,8 +1288,10 @@
 						{
 							if((element.checked == false) && (document.getElementById("chkUseHttp").checked == false))
 							{
-								$('#modalAtLeastOneNeedsActivation').modal('show');
-								$('#modalAtLeastOneNeedsActivation').one('click', '.btn-primary', function() { checkCheckField(element.id); });
+								const myModal = new bootstrap.Modal(document.getElementById('modalAtLeastOneNeedsActivation'));
+								document.getElementById("modalAtLeastOneNeedsActivationBtnOK").removeAttribute("onClick");
+								document.getElementById("modalAtLeastOneNeedsActivationBtnOK").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
+								myModal.show();
 							}
 							else
 							{
@@ -1335,8 +1334,10 @@
 						{
 							if(document.getElementById("chkUpdateStateEvent").checked == true)
 							{
-								$('#modalStateEventOrIntervall').modal('show');
-								$('#modalStateEventOrIntervall').one('click', '.btn-primary', function() { uncheckCheckField("chkUpdateStateEvent"); });
+								const myModal = new bootstrap.Modal(document.getElementById('modalStateEventOrIntervall'));
+								document.getElementById("modalStateEventOrIntervallBtnOK").removeAttribute("onClick");
+								document.getElementById("modalStateEventOrIntervallBtnOK").setAttribute("onClick", `uncheckCheckField("chkUpdateStateEvent")`);
+								myModal.show();
 							}
 							document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
 						}
@@ -1362,8 +1363,10 @@
 						{
 							if(document.getElementById("chkUpdateStateIntervall").checked == true)
 							{
-								$('#modalStateEventOrIntervall').modal('show');
-								$('#modalStateEventOrIntervall').one('click', '.btn-primary', function() { uncheckCheckField("chkUpdateStateIntervall"); });
+								const myModal = new bootstrap.Modal(document.getElementById('modalStateEventOrIntervall'));
+								document.getElementById("modalStateEventOrIntervallBtnOK").removeAttribute("onClick");
+								document.getElementById("modalStateEventOrIntervallBtnOK").setAttribute("onClick", `uncheckCheckField("chkUpdateStateEvent")`);
+								myModal.show();
 								
 							}
 							document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
@@ -1441,10 +1444,11 @@
 				
 				if(error == true)
 				{
-					var modal = $('#modalUDPPortsEqualWrong');
-					modal.find(".modal-body").html(errorMessage);
-					$('#modalUDPPortsEqualWrong').modal('show');
-					$('#modalUDPPortsEqualWrong').one('click', '.btn-primary', function() { clearInputField(elementName.id); });
+					const myModal = new bootstrap.Modal(document.getElementById('modalUDPPortsEqualWrong'));
+					document.getElementById("modalUDPPortsEqualWrongBtnOK").removeAttribute("onClick");
+					document.getElementById("modalUDPPortsEqualWrongBtnOK").setAttribute("onClick", `clearInputField("` + elementName.id + `")`);
+					document.getElementById("modalUDPPortsEqualWrongMessage").innerHTML = errorMessage;
+					myModal.show();
 				}
 			}
 

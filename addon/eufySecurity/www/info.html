@@ -146,7 +146,7 @@
 				<p>Bei beiden Varianten werden die entsprechenden Systemvariablen automatisch gesetzt, wenn in den Einstellungen die Option Änderung der Systemvariablen aktiviert wurde.</p>
 				<p>Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.</p>
 				<h4>Informationen zum Projekt</h4>
-				<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
+				<p>Alle Informationen und Dateien zu diesem AddOn finden Sie auf der <a href="https://github.com/PhilippEngler/eufy-security-hm" target="_blank">GitHub-Seite des AddOns</a>. Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
 				<h5>eufy Security API:</h5>
 				<ul>
 					<li>bropat <a href="https://github.com/bropat/eufy-security-client" target="_blank">eufy-security-client</a></li>
@@ -157,8 +157,8 @@
 				</ul>
 				<h5>Webseite:</h5>
 				<ul>
-					<li><a href="https://getbootstrap.com" target="_blank">bootstrap</a></li>
-					<li><a href="https://icons.getbootstrap.com/" target="_blank">bootstrap-icons</a></li>
+					<li><a href="https://getbootstrap.com" target="_blank">Bootstrap</a></li>
+					<li><a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a></li>
 				</ul>
 				<h5>CCU AddOn:</h5>
 				<ul>
@@ -293,7 +293,7 @@
 						objResp = JSON.parse(this.responseText);
 						if(objResp.success == true)
 						{
-							info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.0`;
+							info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.1`;
 							
 							document.getElementById("versionInfo").innerHTML = info;
 							
