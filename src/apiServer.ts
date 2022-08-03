@@ -571,14 +571,18 @@ class ApiServer
                         response.writeHead(200);
                         response.end(responseString);
 
-                        if(resJSON.serviceRestart == true)
+                        if(resJSON.success == true && resJSON.serviceRestart == true)
                         {
                             logger.logInfoBasic("Settings saved. Restarting apiServer.");
                             restartServer();
                         }
-                        else
+                        else if(resJSON.success == true && resJSON.serviceRestart == false)
                         {
                             logger.logInfoBasic("Settings saved.");
+                        }
+                        else
+                        {
+                            logger.logInfoBasic("Error during saving settings.");
                         }
                     });
                 }
@@ -716,13 +720,13 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
     {
         var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n","");
-        temp = temp.substr(2, temp.indexOf("----") - 4);
+        temp = temp.substring(2, temp.indexOf("----") - 2);
         return temp;
     }
     else if(dataType == "boolean")
     {
         var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
-        temp = temp.substr(2, temp.indexOf("----") - 4);
+        temp = temp.substring(2, temp.indexOf("----") - 2);
         if(temp.trim() == "on")
         {
             return true;

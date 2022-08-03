@@ -588,16 +588,16 @@ export class EufySecurityApi
      */
     public async getDevicesAsJSON() : Promise<string> 
     {
-        await this.httpService.refreshStationData();
-        await this.httpService.refreshDeviceData();
-
         try
         {
+            await this.httpService.refreshStationData();
+            await this.httpService.refreshDeviceData();
+
             if(this.devices)
             {
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
-            
+
                 var devices = this.devices.getDevices();
                 var json = "";
 
@@ -610,8 +610,6 @@ export class EufySecurityApi
                             json += ",";
                         }
                         json += this.makeJsonForDevice(devices[deviceSerial]);
-                            
-                        
                     }
                     json = `{"success":true,"data":[${json}]}`;
                     this.setLastConnectionInfo(true);
@@ -2197,7 +2195,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0-b6";
+        return "1.6.0-b7";
     }
 
     /**
