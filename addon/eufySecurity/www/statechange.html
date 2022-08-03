@@ -354,7 +354,7 @@
 									//bases += `<div class="row no-gutters">`;
 									bases += `<div class="card-body">${buttons}</div>`;
 									//bases += `</div>`;
-									if(objResp.data[objIter].guard_mode_last_change_time != "" && objResp.data[objIter].guard_mode_last_change_time != "undefined")
+									if(objResp.data[objIter].guard_mode_last_change_time != "" && objResp.data[objIter].guard_mode_last_change_time != "n/a" && objResp.data[objIter].guard_mode_last_change_time != "undefined")
 									{
 										lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guard_mode_last_change_time)*1000));
 										if(parseInt(objResp.data[objIter].guard_mode_last_change_time)*1000 > lastChangeTimeAll)
@@ -376,7 +376,15 @@
 							document.getElementById("btnScheduleAll").removeAttribute("disabled");
 							document.getElementById("btnDisarmAll").removeAttribute("disabled");
 							document.getElementById("bases").innerHTML = bases;
-							document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: ${makeDateTimeString(new Date(lastChangeTimeAll))}</small>`;
+							if(lastChangeTimeAll == -1)
+							{
+								lastChangeTimeAll = "unbekannt";
+							}
+							else
+							{
+								lastChangeTimeAll = makeDateTimeString(new Date(lastChangeTimeAll))
+							}
+							document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: ${lastChangeTimeAll}</small>`;
 							type = "";
 						}
 						else
