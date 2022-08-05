@@ -21,6 +21,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private bases : { [stationSerial : string ] : Station} = {};
     private devices !: Devices;
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
+    private lastGuardModeChangeTimeForBases : {[baseSerial:string] : any} = {};
     private reconnectTimeout : { [stationSerial : string] : NodeJS.Timeout | undefined} = {};
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
@@ -47,7 +48,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * Put all bases and their settings in format so that we can work with them.
      * @param hubs The object containing the bases.
      */
-    private handleHubs(hubs: Hubs): void
+    private async handleHubs(hubs: Hubs): Promise<void>
     {
         this.api.logDebug("Got hubs:", hubs);
         this.resBases = hubs;
@@ -105,6 +106,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(this.bases[stationSerial], "TalkbackError", false);
                 this.addEventListener(this.bases[stationSerial], "AlarmArmedEvent", false);
                 this.addEventListener(this.bases[stationSerial], "AlarmArmDelayEvent", false);
+                this.lastGuardModeChangeTimeForBases[stationSerial] = undefined;
+                this.setLastGuardModeChangeTime(stationSerial, await this.getLastEventFromCloud(stationSerial));
             }
         }
         this.saveBasesSettings();
@@ -825,6 +828,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationGuardMode(station : Station, guardMode : number): Promise<void>
     {
+        this.setLastGuardModeChangeTimeNow(station.getSerial());
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
             this.api.logDebug("Event skipped due to locally forced changeGuardMode.");
@@ -1033,5 +1037,59 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private async onStationAlarmArmDelayEvent(station: Station, alarmDelay: number): Promise<void>
     {
         this.api.logDebug(`Event "AlarmArmDelayEvent": base: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
+    }
+
+    /**
+     * Retrieves the last guard mode change event for the given base.
+     * @param baseSerial The serial of the base.
+     * @returns The time as timestamp or undefined.
+     */
+    private async getLastEventFromCloud(baseSerial : string) : Promise <number | undefined>
+    {
+        var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({deviceSN : baseSerial}, 1);
+        if(lastGuardModeChangeTime !== undefined && lastGuardModeChangeTime.length >= 1)
+        {
+            return lastGuardModeChangeTime[0].create_time;
+        }
+        else
+        {
+            return undefined;
+        }
+    }
+
+    /**
+     * Set the last guard mode change time to the array.
+     * @param baseSerial The serial of the base.
+     * @param time The time as timestamp or undefined.
+     */
+    private setLastGuardModeChangeTime(baseSerial : string, time : number | undefined) : void
+    {
+        if(time !== undefined)
+        {
+            this.lastGuardModeChangeTimeForBases[baseSerial] = time;
+        }
+        else
+        {
+            this.lastGuardModeChangeTimeForBases[baseSerial] = undefined;
+        }
+    }
+
+    /**
+     * Set the time for the last guard mode change to the current time.
+     * @param baseSerial The serial of the base.
+     */
+    private setLastGuardModeChangeTimeNow(baseSerial : string) : void
+    {
+        this.lastGuardModeChangeTimeForBases[baseSerial] = new Date().getTime();
+    }
+
+    /**
+     * Retrieve the last guard mode change time from the array.
+     * @param baseSerial The base serial.
+     * @returns The timestamp as number or undefined.
+     */
+    public getLastGuardModeChangeTime(baseSerial : string) : number | undefined
+    {
+        return this.lastGuardModeChangeTimeForBases[baseSerial];
     }
 }
