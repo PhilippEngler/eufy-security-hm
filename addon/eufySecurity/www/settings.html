@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" class="h-100">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -69,43 +69,44 @@
 		</style>
 		
 		<!-- Custom styles for this template -->
-		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
-		<link href="assets/dist/css/footer.css" rel="stylesheet">
+		<link href="assets/dist/css/sticky-footer-navbar.css" rel="stylesheet">
 		<link href="assets/dist/css/eufySecurityAddOn.css" rel="stylesheet">
 	</head>
-	<body>
-		<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
-			<div class="container-fluid">
-				<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
-				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-				<div class="collapse navbar-collapse" id="navbarCollapse">
-					<ul class="navbar-nav me-auto mb-2 mb-md-0">
-						<li class="nav-item">
-							<a id="lnkHome" class="nav-link" href="/addons/eufySecurity"">Home</a>
-						</li>
-						<li class="nav-item">
-							<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
-						</li>
-						<li class="nav-item">
-							<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
-						</li>
-						<li class="nav-item">
-							<a id="lnkSettings" class="nav-link active" aria-current="page" href="settings.html">Einstellungen</a>
-						</li>
-						<li class="nav-item">
-							<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
-						</li>
-						<li class="nav-item active">
-							<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
-						</li>
-					</ul>
+	<body class="d-flex flex-column h-100">
+		<header>
+			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
+				<div class="container-fluid">
+					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse" id="navbarCollapse">
+						<ul class="navbar-nav me-auto mb-2 mb-md-0">
+							<li class="nav-item">
+								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity"">Home</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkSettings" class="nav-link active" aria-current="page" href="settings.html">Einstellungen</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
+							</li>
+							<li class="nav-item active">
+								<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
+							</li>
+						</ul>
+					</div>
 				</div>
-			</div>
-		</nav>
+			</nav>
+		</header>
 		
-		<main role="main" class="container-fluid">
+		<main class="container-fluid">
 			<div id="browserWarning">
 			</div>
 			<div id="loadApiSettingsError">
@@ -381,8 +382,8 @@
 				</form>
 			</div>
 		</main>
-		
-		<footer class="footer">
+
+		<footer class="footer mt-auto py-3 bg-light">
 			<div class="container-fluid">
 				<span class="text-muted">&copy; 2020-2022 Philipp Engler</span>
 			</div>

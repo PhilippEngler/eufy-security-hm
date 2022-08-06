@@ -1,0 +1,11 @@
+/* CSS for sticky navbar and footer. */
+
+/* Show it is fixed to the top */
+main {
+  padding-top: 4.5rem;
+}
+
+/* Some padding */
+main > .container-fluid {
+  padding: 60px 15px 0;
+}
