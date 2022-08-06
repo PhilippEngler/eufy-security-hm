@@ -170,9 +170,129 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/node_modules/@babel ]; then
     rm -r ${ADDON_DIR}/node_modules/@babel
   fi
-  # remove unused jquery-3.5.1.slim.min.js file
+  # remove unused asset files
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/footer.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/footer.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/css/navbar-top-fixed.css ]; then
+    rm ${ADDON_DIR}/www/assets/dist/css/navbar-top-fixed.css
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js.map
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js.map
+  fi
   if [ -e ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js ]; then
     rm ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/popper.min.js
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map ]; then
+    rm ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map
   fi
 fi
 
