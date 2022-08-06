@@ -71,6 +71,7 @@
 		<!-- Custom styles for this template -->
 		<link href="assets/dist/css/navbar-top-fixed.css" rel="stylesheet">
 		<link href="assets/dist/css/footer.css" rel="stylesheet">
+		<link href="assets/dist/css/eufySecurityAddOn.css" rel="stylesheet">
 	</head>
 	<body>
 		<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
@@ -422,7 +423,7 @@
 										}
 										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "0")
 										{
-											lastVideo = `Letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000))}`;
+											lastVideo = `Letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)))}`;
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
 										}
 										else
@@ -472,7 +473,7 @@
 										}
 										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a")
 										{
-											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000));
+											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)));
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
 										}
 										else
@@ -517,7 +518,7 @@
 										}
 										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a")
 										{
-											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)*1000));
+											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)));
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
 										}
 										else

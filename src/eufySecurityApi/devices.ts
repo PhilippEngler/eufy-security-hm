@@ -115,7 +115,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
                     this.devices[device.getSerial()] = device;
                     this.lastVideoTimeForDevices[device.getSerial()] = undefined;
-                    this.setLastVideoTime(device.getSerial(), await this.getLastVideoTimeFromCloud(device.getSerial()));
+                    this.setLastVideoTime(device.getSerial(), await this.getLastVideoTimeFromCloud(device.getSerial()), "sec");
                 }
             }
         }
@@ -646,11 +646,21 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @param time The time as timestamp or undefined.
      */
-    private setLastVideoTime(deviceSerial : string, time : number | undefined) : void
+    private setLastVideoTime(deviceSerial : string, time : number | undefined, timestampType : string) : void
     {
         if(time !== undefined)
         {
-            this.lastVideoTimeForDevices[deviceSerial] = time;
+            switch (timestampType)
+            {
+                case "sec":
+                    this.lastVideoTimeForDevices[deviceSerial] = time * 1000;
+                    break;
+                case "ms":
+                    this.lastVideoTimeForDevices[deviceSerial] = time;
+                    break;
+                default:
+                    this.lastVideoTimeForDevices[deviceSerial] = undefined;
+            }
         }
         else
         {
@@ -664,7 +674,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private setLastVideoTimeNow(deviceSerial : string) : void
     {
-        this.lastVideoTimeForDevices[deviceSerial] = new Date().getTime();
+        this.setLastVideoTime(deviceSerial, new Date().getTime(), "ms");
     }
 
     /**

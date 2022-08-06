@@ -107,7 +107,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(this.bases[stationSerial], "AlarmArmedEvent", false);
                 this.addEventListener(this.bases[stationSerial], "AlarmArmDelayEvent", false);
                 this.lastGuardModeChangeTimeForBases[stationSerial] = undefined;
-                this.setLastGuardModeChangeTime(stationSerial, await this.getLastEventFromCloud(stationSerial));
+                this.setLastGuardModeChangeTime(stationSerial, await this.getLastEventFromCloud(stationSerial), "sec");
             }
         }
         this.saveBasesSettings();
@@ -1062,11 +1062,21 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param baseSerial The serial of the base.
      * @param time The time as timestamp or undefined.
      */
-    private setLastGuardModeChangeTime(baseSerial : string, time : number | undefined) : void
+    private setLastGuardModeChangeTime(baseSerial : string, time : number | undefined, timestampType : string) : void
     {
         if(time !== undefined)
         {
-            this.lastGuardModeChangeTimeForBases[baseSerial] = time;
+            switch (timestampType)
+            {
+                case "sec":
+                    this.lastGuardModeChangeTimeForBases[baseSerial] = time * 1000;
+                    break;
+                case "ms":
+                    this.lastGuardModeChangeTimeForBases[baseSerial] = time;
+                    break;
+                default:
+                    this.lastGuardModeChangeTimeForBases[baseSerial] = undefined;
+            }
         }
         else
         {
@@ -1080,7 +1090,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private setLastGuardModeChangeTimeNow(baseSerial : string) : void
     {
-        this.lastGuardModeChangeTimeForBases[baseSerial] = new Date().getTime();
+        this.setLastGuardModeChangeTime(baseSerial, new Date().getTime(), "ms");
     }
 
     /**

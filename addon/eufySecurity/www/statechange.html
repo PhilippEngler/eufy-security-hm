@@ -356,10 +356,10 @@
 									//bases += `</div>`;
 									if(objResp.data[objIter].guard_mode_last_change_time != "" && objResp.data[objIter].guard_mode_last_change_time != "n/a" && objResp.data[objIter].guard_mode_last_change_time != "undefined")
 									{
-										lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guard_mode_last_change_time)*1000));
-										if(parseInt(objResp.data[objIter].guard_mode_last_change_time)*1000 > lastChangeTimeAll)
+										lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guard_mode_last_change_time)));
+										if(parseInt(objResp.data[objIter].guard_mode_last_change_time) > lastChangeTimeAll)
 										{
-											lastChangeTimeAll = parseInt(objResp.data[objIter].guard_mode_last_change_time*1000);
+											lastChangeTimeAll = parseInt(objResp.data[objIter].guard_mode_last_change_time);
 										}
 									}
 									else
