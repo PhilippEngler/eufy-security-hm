@@ -141,11 +141,17 @@
 				</ul>
 				<p>Über Skripte können Sie die API abfragen. Dazu haben Sie zwei Möglichkeiten:</p>
 				<ul>
-					<li>Möchten Sie die Antwort nicht auswerten, können Sie beispielsweise mittels <br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code><br /> im Hintergrund ausführen.</li>
-					<li>Möchten Sie die Antwort auswerten, können Sie wie folgt vorgehen: <br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><br />Die JSON-Antwort finden Sie im String <code>res</code>.</li>
+					<li>Möchten Sie die Antwort nicht auswerten, können Sie folgenden Code verwenden, um die Anfrage im Hintergrund (d.h. nicht-blockierend) auszuführen:<br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code><br /></li>
+					<li>Möchten Sie die Antwort auswerten, können Sie folgenden Code verwenden:<br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><br />Die JSON-Antwort finden Sie im String <code>res</code>.</li>
 				</ul>
-				<p>Bei beiden Varianten werden die entsprechenden Systemvariablen automatisch gesetzt, wenn in den Einstellungen die Option Änderung der Systemvariablen aktiviert wurde.</p>
+				<p>Bei beiden Varianten werden die entsprechenden Systemvariablen automatisch gesetzt, wenn in den Einstellungen die Option "Systemvariablen bei API Aktionen automatisch aktualisieren" aktiviert wurde.</p>
 				<p>Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.</p>
+				<p>Die Zeitstempel der letzten Ereinisse werden nur in folgenden Fällen gesetzt und aktualisiert:</p>
+				<ul>
+					<li>Zeitpunkt der Änderung des Modus bei Basisstationen: die Einstellung "Modus automatisch durch von der HomeBase gesendete Ereignisse aktualisieren" muss aktiviert sein</li>
+					<li>Zeitpunkt des letzten Videoevents bei Kameras: die Einstellung "Pushbenachrichtigungen aktivieren" muss aktiviert sein</li>
+				</ul>
+				<p>Ist die entsprechende Einstellung nicht aktiviert, wird bei Basisstationen "letzter Statuswechsel: unbekannt" und bei Kameras "keine Aufnahme" angezeigt.</p>
 				<h4>Informationen zum Projekt</h4>
 				<p>Alle Informationen und Dateien zu diesem AddOn finden Sie auf der <a href="https://github.com/PhilippEngler/eufy-security-hm" target="_blank">GitHub-Seite des AddOns</a>.</p>
 				<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
@@ -168,8 +174,6 @@
 					<li>Sebastian Raff (hobbyquaker) <a href="https://github.com/hobbyquaker" target="_blank">GitHub</a></li>
 					<li>sowie die vielen Hinweise der <a href="https://www.homematic-forum.de" target="_blank">HomeMatic-Forum Community</a></li>
 				</ul>
-				</p>
-				<br />
 			</div>
 		</main>
 
