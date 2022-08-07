@@ -2041,6 +2041,15 @@ export class EufySecurityApi
     }
 
     /**
+     * Returns the current value for using push service.
+     * @returns A boolean value if push service is enabled or not.
+     */
+    public getApiUsePushService() : boolean
+    {
+        return this.config.getApiUsePushService();
+    }
+
+    /**
      * Setup all scheduled task, when allowed by settings.
      */
     private setupScheduledTasks() : void
@@ -2195,7 +2204,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0-b7";
+        return "1.6.0-rc2";
     }
 
     /**

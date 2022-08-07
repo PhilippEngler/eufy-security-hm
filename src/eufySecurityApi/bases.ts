@@ -48,7 +48,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * Put all bases and their settings in format so that we can work with them.
      * @param hubs The object containing the bases.
      */
-    private async handleHubs(hubs: Hubs): Promise<void>
+    private handleHubs(hubs: Hubs): void
     {
         this.api.logDebug("Got hubs:", hubs);
         this.resBases = hubs;
@@ -64,6 +64,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.reconnectTimeout[stationSerial] = undefined;
+                this.lastGuardModeChangeTimeForBases[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
                 if(this.bases[stationSerial].getDeviceType() == DeviceType.STATION)
                 {
@@ -81,6 +82,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     this.addEventListener(this.bases[stationSerial], "CurrentMode", false);
                     this.addEventListener(this.bases[stationSerial], "PropertyChanged", false);
                     this.addEventListener(this.bases[stationSerial], "RawPropertyChanged", false);
+                    this.setLastGuardModeChangeTimeFromCloud(stationSerial);
                 }
 
                 this.addEventListener(this.bases[stationSerial], "Connect", false);
@@ -106,8 +108,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(this.bases[stationSerial], "TalkbackError", false);
                 this.addEventListener(this.bases[stationSerial], "AlarmArmedEvent", false);
                 this.addEventListener(this.bases[stationSerial], "AlarmArmDelayEvent", false);
-                this.lastGuardModeChangeTimeForBases[stationSerial] = undefined;
-                this.setLastGuardModeChangeTime(stationSerial, await this.getLastEventFromCloud(stationSerial), "sec");
             }
         }
         this.saveBasesSettings();
@@ -1085,6 +1085,15 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * Helper function to retrieve the last event time from cloud and set the value to the array.
+     * @param baseSerial The serial of the base.
+     */
+    private async setLastGuardModeChangeTimeFromCloud(baseSerial : string) : Promise<void>
+    {
+        this.setLastGuardModeChangeTime(baseSerial, await this.getLastEventFromCloud(baseSerial), "sec");
+    }
+
+    /**
      * Set the time for the last guard mode change to the current time.
      * @param baseSerial The serial of the base.
      */
@@ -1095,7 +1104,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
 
     /**
      * Retrieve the last guard mode change time from the array.
-     * @param baseSerial The base serial.
+     * @param baseSerial The serial of the base.
      * @returns The timestamp as number or undefined.
      */
     public getLastGuardModeChangeTime(baseSerial : string) : number | undefined
