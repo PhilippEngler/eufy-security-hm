@@ -239,11 +239,13 @@ export class EufySecurityApi
 
         await sleep(10);
         await this.refreshCloudData();
-        
+
         //await this.loadData();
-        
+
         this.setupScheduledTasks();
-        
+
+        this.handleLastModeChangeData(this.bases.getBases());
+
         this.serviceState = "ok";
 
         this.logInfo(`Country: ${this.httpService.getCountry()} | Language: ${this.httpService.getLanguage()}`);
@@ -970,8 +972,14 @@ export class EufySecurityApi
                     this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                    //this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
-                    this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
+                    if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
+                    {
+                        this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
+                    }
+                    else
+                    {
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0));
+                    }
                 }
                 else
                 {
@@ -1138,8 +1146,14 @@ export class EufySecurityApi
                     json += `"guard_mode":"${base.getGuardMode()}"}`;
                     this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
                     this.setLastConnectionInfo(true);
-                    //this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(base.getGuardMode().timestamp));
-                    this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
+                    if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
+                    {
+                        this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
+                    }
+                    else
+                    {
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0));
+                    }
                 }
                 else
                 {
@@ -1320,25 +1334,40 @@ export class EufySecurityApi
      */
     public handleLastModeChangeData(bases : { [stationSerial: string]: Station })
     {
-        var base : Station;
-        
-        var tempModeChange;
-        var lastModeChange = new Date(1970, 1, 1);
-        
-        for (var stationSerial in bases)
+        if(this.config.getApiUseUpdateStateEvent() == true)
         {
-            base = bases[stationSerial];
-            //tempModeChange = new Date(base.getGuardMode().timestamp);
-            tempModeChange = "n/a";
-            /*if(lastModeChange < tempModeChange)
+            var base : Station;
+
+            var tempModeChange;
+            var lastModeChange = new Date(1970, 1, 1);
+
+            for (var stationSerial in bases)
             {
-                lastModeChange = tempModeChange;
-            }*/
-            //this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), tempModeChange);
-            this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), tempModeChange);
+                base = bases[stationSerial];
+                tempModeChange = new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0)
+                if(lastModeChange < tempModeChange)
+                {
+                    lastModeChange = tempModeChange;
+                }
+                if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
+                {
+                    this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
+                }
+                else
+                {
+                    this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0));
+                }
+            }
+            this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
         }
-        //this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
-        this.setSystemVariableString("eufyLastModeChangeTime", "n/a");
+        else
+        {
+            for (var stationSerial in bases)
+            {
+                this.setSystemVariableString("eufyLastModeChangeTime" + stationSerial, "n/a");
+            }
+            this.setSystemVariableString("eufyLastModeChangeTime", "n/a");
+        }
     }
 
     /**
