@@ -1189,6 +1189,11 @@ export class EufySecurityApi
         return json;
     }
 
+    /**
+     * Set the systemvariable for a given base.
+     * @param baseSerial The serial of the base.
+     * @param guardMode The guard mode to set.
+     */
     public updateBaseGuardModeSystemVariable(baseSerial : string, guardMode : PropertyValue)
     {
         this.setSystemVariableString("eufyCentralState" + baseSerial, this.convertGuardModeToString(guardMode as GuardMode));
@@ -1507,7 +1512,7 @@ export class EufySecurityApi
      */
     public getUDPLocalPortForBase(baseSerial : string) : number
     {
-        if(this.config.getUseUdpLocalPorts() == true)
+        if(this.getUseUdpLocalPorts() == true)
         {
             try
             {

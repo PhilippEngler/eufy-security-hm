@@ -1,13 +1,14 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode } from './http';
 import { sleep } from './push/utils';
 import { Devices } from "./devices";
 import { CommandResult, StreamMetadata } from ".";
 import internal from "stream";
 import { AlarmEvent, P2PConnectionType } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
+import { parseValue } from "./utils";
 
 /**
  * Represents all the Bases in the account.
@@ -278,7 +279,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     public async setGuardModeBase(baseSerial : string, guardMode : GuardMode) : Promise<boolean>
     {
         this.skipNextModeChangeEvent[baseSerial] = true;
-        await this.bases[baseSerial].setGuardMode(guardMode);
+        await this.setStationProperty(baseSerial, PropertyName.StationGuardMode, guardMode);
         return await this.checkChangedGuardMode(guardMode, false, this.bases[baseSerial].getSerial());
     }
 
@@ -1113,5 +1114,70 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     public getLastGuardModeChangeTime(baseSerial : string) : number | undefined
     {
         return this.lastGuardModeChangeTimeForBases[baseSerial];
+    }
+
+    /**
+     * Set the given property for the given base to the given value.
+     * @param stationSerial The serial of the base the property is to change.
+     * @param name The name of the property.
+     * @param value The value of the property.
+     */
+    public async setStationProperty(stationSerial : string, name : string, value : unknown): Promise<void>
+    {
+        const station = this.bases[stationSerial];
+        const metadata = station.getPropertyMetadata(name);
+
+        value = parseValue(metadata, value);
+
+        switch (name)
+        {
+            case PropertyName.StationGuardMode:
+                await station.setGuardMode(value as number);
+                break;
+            case PropertyName.StationAlarmTone:
+                await station.setStationAlarmTone(value as number);
+                break;
+            case PropertyName.StationAlarmVolume:
+                await station.setStationAlarmRingtoneVolume(value as number);
+                break;
+            case PropertyName.StationPromptVolume:
+                await station.setStationPromptVolume(value as number);
+                break;
+            case PropertyName.StationNotificationSwitchModeApp:
+                await station.setStationNotificationSwitchMode(NotificationSwitchMode.APP, value as boolean);
+                break;
+            case PropertyName.StationNotificationSwitchModeGeofence:
+                await station.setStationNotificationSwitchMode(NotificationSwitchMode.GEOFENCE, value as boolean);
+                break;
+            case PropertyName.StationNotificationSwitchModeSchedule:
+                await station.setStationNotificationSwitchMode(NotificationSwitchMode.SCHEDULE, value as boolean);
+                break;
+            case PropertyName.StationNotificationSwitchModeKeypad:
+                await station.setStationNotificationSwitchMode(NotificationSwitchMode.KEYPAD, value as boolean);
+                break;
+            case PropertyName.StationNotificationStartAlarmDelay:
+                await station.setStationNotificationStartAlarmDelay(value as boolean);
+                break;
+            case PropertyName.StationTimeFormat:
+                await station.setStationTimeFormat(value as number);
+                break;
+            case PropertyName.StationSwitchModeWithAccessCode:
+                await station.setStationSwitchModeWithAccessCode(value as boolean);
+                break;
+            case PropertyName.StationAutoEndAlarm:
+                await station.setStationAutoEndAlarm(value as boolean);
+                break;
+            case PropertyName.StationTurnOffAlarmWithButton:
+                await station.setStationTurnOffAlarmWithButton(value as boolean);
+                break;
+            default:
+                if (!Object.values(PropertyName).includes(name as PropertyName))
+                {
+                    return;
+                    //throw new ReadOnlyPropertyError(`Property ${name} is read only`);
+                }
+                return;
+                //throw new InvalidPropertyError(`Station ${stationSN} has no writable property named ${name}`);
+        }
     }
 }

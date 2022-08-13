@@ -723,13 +723,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
     /**
      * Set the given property for the given device to the given value.
-     * @param deviceSN The serial of the device the property is to change.
+     * @param deviceSerial The serial of the device the property is to change.
      * @param name The name of the property.
      * @param value The value of the property.
      */
-    public async setDeviceProperty(deviceSN: string, name: string, value: unknown) : Promise<void>
+    public async setDeviceProperty(deviceSerial : string, name : string, value : unknown) : Promise<void>
     {
-        const device = await this.devices[deviceSN];
+        const device = await this.devices[deviceSerial];
         const station = this.api.getBases().getBases()[device.getStationSerial()];
         const metadata = device.getPropertyMetadata(name);
 
