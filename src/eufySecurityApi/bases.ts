@@ -829,6 +829,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private async onStationGuardMode(station : Station, guardMode : number): Promise<void>
     {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
+        this.api.updateBaseGuardModeSystemVariable(station.getSerial(), guardMode)
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
             this.api.logDebug("Event skipped due to locally forced changeGuardMode.");

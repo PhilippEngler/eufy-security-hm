@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, WiredDoorbellCamera, BatteryDoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, WiredDoorbellCamera, BatteryDoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail, PropertyValue } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -863,7 +863,7 @@ export class EufySecurityApi
                             mode = -2;
                         }
                     
-                        this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
+                        this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
                     }
                     json = `{"success":true,"data":[${json}]}`;
 
@@ -965,7 +965,7 @@ export class EufySecurityApi
                 if(base)
                 {
                     json = `{"success":true,"data":["${this.makeJsonForBase(base)}"]}`;
-                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
+                    this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
@@ -1062,7 +1062,7 @@ export class EufySecurityApi
                             json += `{"base_id":"${base.getSerial()}",`;
                             json += `"result":"success",`;
                             json += `"guard_mode":"${base.getGuardMode()}"}`;
-                            this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
+                            this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
                         }
                         else
                         {
@@ -1070,7 +1070,7 @@ export class EufySecurityApi
                             json += `{"base_id":"${base.getSerial()}",`;
                             json += `"result":"failure",`;
                             json += `"guard_mode":"${base.getGuardMode()}"}`;
-                            this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
+                            this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
                             this.logError(`Error occured at setGuardMode: Failed to switch mode for base ${base.getSerial()}.`);
                         }
                     }
@@ -1148,7 +1148,7 @@ export class EufySecurityApi
                     json += `{"base_id":"${base.getSerial()}",`;
                     json += `"result":"success",`;
                     json += `"guard_mode":"${base.getGuardMode()}"}`;
-                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
+                    this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
                     this.setLastConnectionInfo(true);
                     if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
                     {
@@ -1165,7 +1165,7 @@ export class EufySecurityApi
                     json += `{"base_id":"${base.getSerial()}",`;
                     json += `"result":"failure",`;
                     json += `"guard_mode":"${base.getGuardMode()}"}`;
-                    this.setSystemVariableString("eufyCentralState" + base.getSerial(), this.convertGuardModeToString(base.getGuardMode() as GuardMode));
+                    this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
                     this.setLastConnectionInfo(false);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     this.logError(`Error occured at setGuardMode: Failed to switch mode for base ${base.getSerial()}.`);
@@ -1187,6 +1187,11 @@ export class EufySecurityApi
         }
 
         return json;
+    }
+
+    public updateBaseGuardModeSystemVariable(baseSerial : string, guardMode : PropertyValue)
+    {
+        this.setSystemVariableString("eufyCentralState" + baseSerial, this.convertGuardModeToString(guardMode as GuardMode));
     }
 
     /**
