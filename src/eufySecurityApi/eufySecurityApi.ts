@@ -1124,6 +1124,15 @@ export class EufySecurityApi
         {
             if(this.bases)
             {
+                if(this.devices.existDevice(baseSerial) == true)
+                {
+                    const device : Device = await this.devices.getDevices()[baseSerial];
+                    if(device.isEnabled() == false)
+                    {
+                        await this.setPrivacyMode(baseSerial, true);
+                    }
+                }
+
                 await this.bases.setGuardModeBase(baseSerial, guardMode);
 
                 var bases = this.bases.getBases();
@@ -1180,52 +1189,50 @@ export class EufySecurityApi
         return json;
     }
 
-    public async setProperty(propertyName : PropertyName, value : any) : Promise<string>
+    /**
+     * Enable or disable the privacy mode of the device.
+     * @param deviceSerial The serial of the device.
+     * @param value The value to set.
+     * @returns A JSON string with the result.
+     */
+    public async setPrivacyMode(deviceSerial : string, value : any) : Promise<string>
     {
-        return "";
-    }
-
-    public async setPrivacyMode(deviceSerial : string, propertyName : PropertyName, value : any) : Promise<string>
-    {
-        const device : Device = await this.devices.getDevices()[deviceSerial];
-
-        //if(device.isIndoorCamera())
-        //{
-            if(device.isEnabled() == value)
-            {
-                return `{"success":true,"info":"The value for privacy mode on device ${deviceSerial} already set."}`;
-            }
-            else
-            {
-                const station = this.bases.getBases()[(device.getStationSerial())];
-                const metadata = device.getPropertyMetadata(propertyName);
-                
-                value = parseValue(metadata, value);
-                
-                await station.enableDevice(device, value);
-                
-                await sleep(2500);
-                
-                await this.updateDeviceData();
-                await this.httpService.refreshStationData();
-                await this.httpService.refreshDeviceData();
-                
-                await this.devices.loadDevices();
-
-                if(await this.devices.getDevices()[deviceSerial].isEnabled() == value as boolean)
+        if(this.devices.existDevice(deviceSerial) == true)
+        {
+            const device : Device = await this.devices.getDevices()[deviceSerial];
+            //if(device.isIndoorCamera())
+            //{
+                if(device.isEnabled() == value)
                 {
-                    return `{"success":true,"enabled":${value as boolean}}`;
+                    return `{"success":true,"info":"The value for privacy mode on device ${deviceSerial} already set."}`;
                 }
                 else
                 {
-                    return `{"success":false,"enabled":${!(value as boolean)}}`;
+                    await this.devices.setDeviceProperty(deviceSerial, PropertyName.DeviceEnabled, value);
+                    await sleep(2500);
+                    await this.updateDeviceData();
+                    await this.httpService.refreshStationData();
+                    await this.httpService.refreshDeviceData();
+                    await this.devices.loadDevices();
+                    if(await this.devices.getDevices()[deviceSerial].isEnabled() == value as boolean)
+                    {
+                        return `{"success":true,"enabled":${value as boolean}}`;
+                    }
+                    else
+                    {
+                        return `{"success":false,"enabled":${!(value as boolean)}}`;
+                    }
                 }
-            }
-        /*}
+            /*}
+            else
+            {
+                return `{"success":false,"reason":"Device ${deviceSerial} does not support privacy mode."}`;
+            }*/
+        }
         else
         {
-            return `{"success":false,"reason":"Device ${deviceSerial} does not support privacy mode."}`;
-        }*/
+            return `{"success":false,"reason":"Device ${deviceSerial} does not exists."}`;
+        }
     }
 
     /**

@@ -1,9 +1,10 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { DeviceNotFoundError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, EventFilterType, EventRecordResponse } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { P2PConnectionType } from "./p2p";
+import { parseValue } from "./utils";
 
 /**
  * Represents all the Devices in the account.
@@ -283,6 +284,24 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     public getDevices() : {[deviceSerial: string]: any} 
     {
         return this.devices;
+    }
+
+    /**
+     * Checks if a device with the given serial exists.
+     * @param deviceSerial The deviceSerial of the device to check.
+     * @returns True if device exists, otherwise false.
+     */
+    public existDevice(deviceSerial : string) : boolean
+    {
+        var res = this.devices[deviceSerial];
+        if(res)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /**
@@ -670,6 +689,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             this.lastVideoTimeForDevices[deviceSerial] = undefined;
         }
+
+        this.api.updateCameraEventTimeSystemVariable(deviceSerial, this.lastVideoTimeForDevices[deviceSerial]);
     }
 
     /**
@@ -698,5 +719,407 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     public getLastVideoTime(deviceSerial : string) : number | undefined
     {
         return this.lastVideoTimeForDevices[deviceSerial];
+    }
+
+    /**
+     * Set the given property for the given device to the given value.
+     * @param deviceSN The serial of the device the property is to change.
+     * @param name The name of the property.
+     * @param value The value of the property.
+     */
+    public async setDeviceProperty(deviceSN: string, name: string, value: unknown) : Promise<void>
+    {
+        const device = await this.devices[deviceSN];
+        const station = this.api.getBases().getBases()[device.getStationSerial()];
+        const metadata = device.getPropertyMetadata(name);
+
+        value = parseValue(metadata, value);
+
+        switch (name)
+        {
+            case PropertyName.DeviceEnabled:
+                await station.enableDevice(device, value as boolean);
+                break;
+            case PropertyName.DeviceStatusLed:
+                await station.setStatusLed(device, value as boolean);
+                break;
+            case PropertyName.DeviceAutoNightvision:
+                await station.setAutoNightVision(device, value as boolean);
+                break;
+            case PropertyName.DeviceMotionDetection:
+                await station.setMotionDetection(device, value as boolean);
+                break;
+            case PropertyName.DeviceSoundDetection:
+                await station.setSoundDetection(device, value as boolean);
+                break;
+            case PropertyName.DevicePetDetection:
+                await station.setPetDetection(device, value as boolean);
+                break;
+            case PropertyName.DeviceRTSPStream:
+                await station.setRTSPStream(device, value as boolean);
+                break;
+            case PropertyName.DeviceAntitheftDetection:
+                await station.setAntiTheftDetection(device, value as boolean);
+                break;
+            case PropertyName.DeviceLocked:
+                await station.lockDevice(device, value as boolean);
+                break;
+            case PropertyName.DeviceWatermark:
+                await station.setWatermark(device, value as number);
+                break;
+            case PropertyName.DeviceLight:
+                await station.switchLight(device, value as boolean);
+                break;
+            case PropertyName.DeviceLightSettingsEnable:
+                await station.setFloodlightLightSettingsEnable(device, value as boolean);
+                break;
+            case PropertyName.DeviceLightSettingsBrightnessManual:
+                await station.setFloodlightLightSettingsBrightnessManual(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsBrightnessMotion:
+                await station.setFloodlightLightSettingsBrightnessMotion(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsBrightnessSchedule:
+                await station.setFloodlightLightSettingsBrightnessSchedule(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsMotionTriggered:
+                await station.setFloodlightLightSettingsMotionTriggered(device, value as boolean);
+                break;
+            case PropertyName.DeviceLightSettingsMotionTriggeredDistance:
+                await station.setFloodlightLightSettingsMotionTriggeredDistance(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsMotionTriggeredTimer:
+                await station.setFloodlightLightSettingsMotionTriggeredTimer(device, value as number);
+                break;
+            case PropertyName.DeviceMicrophone:
+                await station.setMicMute(device, value as boolean);
+                break;
+            case PropertyName.DeviceSpeaker:
+                await station.enableSpeaker(device, value as boolean);
+                break;
+            case PropertyName.DeviceSpeakerVolume:
+                await station.setSpeakerVolume(device, value as number);
+                break;
+            case PropertyName.DeviceAudioRecording:
+                await station.setAudioRecording(device, value as boolean);
+                break;
+            case PropertyName.DevicePowerSource:
+                await station.setPowerSource(device, value as number);
+                break;
+            case PropertyName.DevicePowerWorkingMode:
+                await station.setPowerWorkingMode(device, value as number);
+                break;
+            case PropertyName.DeviceRecordingEndClipMotionStops:
+                await station.setRecordingEndClipMotionStops(device, value as boolean);
+                break;
+            case PropertyName.DeviceRecordingClipLength:
+                await station.setRecordingClipLength(device, value as number);
+                break;
+            case PropertyName.DeviceRecordingRetriggerInterval:
+                await station.setRecordingRetriggerInterval(device, value as number);
+                break;
+            case PropertyName.DeviceVideoStreamingQuality:
+                await station.setVideoStreamingQuality(device, value as number);
+                break;
+            case PropertyName.DeviceVideoRecordingQuality:
+                await station.setVideoRecordingQuality(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivity:
+                await station.setMotionDetectionSensitivity(device, value as number);
+                break;
+            case PropertyName.DeviceMotionTracking:
+                await station.setMotionTracking(device, value as boolean);
+                break;
+            case PropertyName.DeviceMotionDetectionType:
+                await station.setMotionDetectionType(device, value as number);
+                break;
+            case PropertyName.DeviceMotionZone:
+                await station.setMotionZone(device, value as string);
+                break;
+            case PropertyName.DeviceVideoWDR:
+                await station.setWDR(device, value as boolean);
+                break;
+            case PropertyName.DeviceRingtoneVolume:
+                await station.setRingtoneVolume(device, value as number);
+                break;
+            case PropertyName.DeviceChimeIndoor:
+                await station.enableIndoorChime(device, value as boolean);
+                break;
+            case PropertyName.DeviceChimeHomebase:
+                await station.enableHomebaseChime(device, value as boolean);
+                break;
+            case PropertyName.DeviceChimeHomebaseRingtoneVolume:
+                await station.setHomebaseChimeRingtoneVolume(device, value as number);
+                break;
+            case PropertyName.DeviceChimeHomebaseRingtoneType:
+                await station.setHomebaseChimeRingtoneType(device, value as number);
+                break;
+            case PropertyName.DeviceNotificationType:
+                await station.setNotificationType(device, value as NotificationType);
+                break;
+            case PropertyName.DeviceNotificationPerson:
+                await station.setNotificationPerson(device, value as boolean);
+                break;
+            case PropertyName.DeviceNotificationPet:
+                await station.setNotificationPet(device, value as boolean);
+                break;
+            case PropertyName.DeviceNotificationAllOtherMotion:
+                await station.setNotificationAllOtherMotion(device, value as boolean);
+                break;
+            case PropertyName.DeviceNotificationAllSound:
+                await station.setNotificationAllSound(device, value as boolean);
+                break;
+            case PropertyName.DeviceNotificationCrying:
+                await station.setNotificationCrying(device, value as boolean);
+                break;
+            case PropertyName.DeviceNotificationMotion:
+                await station.setNotificationMotion(device, value as boolean);
+                break;
+            case PropertyName.DeviceNotificationRing:
+                await station.setNotificationRing(device, value as boolean);
+                break;
+            case PropertyName.DeviceChirpVolume:
+                await station.setChirpVolume(device, value as number);
+                break;
+            case PropertyName.DeviceChirpTone:
+                await station.setChirpTone(device, value as number);
+                break;
+            case PropertyName.DeviceVideoHDR:
+                await station.setHDR(device, value as boolean);
+                break;
+            case PropertyName.DeviceVideoDistortionCorrection:
+                await station.setDistortionCorrection(device, value as boolean);
+                break;
+            case PropertyName.DeviceVideoRingRecord:
+                await station.setRingRecord(device, value as number);
+                break;
+            case PropertyName.DeviceRotationSpeed:
+                await station.setPanAndTiltRotationSpeed(device, value as number);
+                break;
+            case PropertyName.DeviceNightvision:
+                await station.setNightVision(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionRange:
+                await station.setMotionDetectionRange(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionRangeStandardSensitivity:
+                await station.setMotionDetectionRangeStandardSensitivity(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionRangeAdvancedLeftSensitivity:
+                await station.setMotionDetectionRangeAdvancedLeftSensitivity(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionRangeAdvancedMiddleSensitivity:
+                await station.setMotionDetectionRangeAdvancedMiddleSensitivity(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionRangeAdvancedRightSensitivity:
+                await station.setMotionDetectionRangeAdvancedRightSensitivity(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionTestMode:
+                await station.setMotionDetectionTestMode(device, value as boolean);
+                break;
+            case PropertyName.DeviceMotionTrackingSensitivity:
+                await station.setMotionTrackingSensitivity(device, value as number);
+                break;
+            case PropertyName.DeviceMotionAutoCruise:
+                await station.setMotionAutoCruise(device, value as boolean);
+                break;
+            case PropertyName.DeviceMotionOutOfViewDetection:
+                await station.setMotionOutOfViewDetection(device, value as boolean);
+                break;
+            case PropertyName.DeviceLightSettingsColorTemperatureManual:
+                await station.setLightSettingsColorTemperatureManual(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsColorTemperatureMotion:
+                await station.setLightSettingsColorTemperatureMotion(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsColorTemperatureSchedule:
+                await station.setLightSettingsColorTemperatureSchedule(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsMotionActivationMode:
+                await station.setLightSettingsMotionActivationMode(device, value as number);
+                break;
+            case PropertyName.DeviceVideoNightvisionImageAdjustment:
+                await station.setVideoNightvisionImageAdjustment(device, value as boolean);
+                break;
+            case PropertyName.DeviceVideoColorNightvision:
+                await station.setVideoColorNightvision(device, value as boolean);
+                break;
+            case PropertyName.DeviceAutoCalibration:
+                await station.setAutoCalibration(device, value as boolean);
+                break;
+            case PropertyName.DeviceLockSettingsAutoLock:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsAutoLock, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsAutoLockSchedule:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsAutoLockSchedule, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsAutoLockScheduleStartTime:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsAutoLockScheduleStartTime, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsAutoLockScheduleEndTime:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsAutoLockScheduleEndTime, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsAutoLockTimer:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsAutoLockTimer, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsNotification:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsNotification, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsNotificationLocked:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsNotificationLocked, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsNotificationUnlocked:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsNotificationUnlocked, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsOneTouchLocking:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsOneTouchLocking, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsScramblePasscode:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsScramblePasscode, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsSound:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsSound, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsWrongTryProtection:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsWrongTryProtection, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsWrongTryAttempts:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsWrongTryAttempts, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLockSettingsWrongTryLockdownTime:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsWrongTryLockdownTime, value as PropertyValue);
+                break;
+            case PropertyName.DeviceLoiteringDetection:
+                await station.setLoiteringDetection(device, value as boolean);
+                break;
+            case PropertyName.DeviceLoiteringDetectionRange:
+                await station.setLoiteringDetectionRange(device, value as number);
+                break;
+            case PropertyName.DeviceLoiteringDetectionLength:
+                await station.setLoiteringDetectionLength(device, value as number);
+                break;
+            case PropertyName.DeviceLoiteringCustomResponseAutoVoiceResponse:
+                await station.setLoiteringCustomResponseAutoVoiceResponse(device, value as boolean);
+                break;
+            case PropertyName.DeviceLoiteringCustomResponseHomeBaseNotification:
+                await station.setLoiteringCustomResponseHomeBaseNotification(device, value as boolean);
+                break;
+            case PropertyName.DeviceLoiteringCustomResponsePhoneNotification:
+                await station.setLoiteringCustomResponsePhoneNotification(device, value as boolean);
+                break;
+            case PropertyName.DeviceLoiteringCustomResponseAutoVoiceResponseVoice:
+                await station.setLoiteringCustomResponseAutoVoiceResponseVoice(device, value as number);
+                break;
+            case PropertyName.DeviceLoiteringCustomResponseTimeFrom:
+                await station.setLoiteringCustomResponseTimeFrom(device, value as string);
+                break;
+            case PropertyName.DeviceLoiteringCustomResponseTimeTo:
+                await station.setLoiteringCustomResponseTimeTo(device, value as string);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityMode:
+                await station.setMotionDetectionSensitivityMode(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityStandard:
+                await station.setMotionDetectionSensitivityStandard(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedA:
+                await station.setMotionDetectionSensitivityAdvancedA(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedB:
+                await station.setMotionDetectionSensitivityAdvancedB(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedC:
+                await station.setMotionDetectionSensitivityAdvancedC(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedD:
+                await station.setMotionDetectionSensitivityAdvancedD(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedE:
+                await station.setMotionDetectionSensitivityAdvancedE(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedF:
+                await station.setMotionDetectionSensitivityAdvancedF(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedG:
+                await station.setMotionDetectionSensitivityAdvancedG(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionSensitivityAdvancedH:
+                await station.setMotionDetectionSensitivityAdvancedH(device, value as number);
+                break;
+            case PropertyName.DeviceDeliveryGuard:
+                await station.setDeliveryGuard(device, value as boolean);
+                break;
+            case PropertyName.DeviceDeliveryGuardPackageGuarding:
+                await station.setDeliveryGuardPackageGuarding(device, value as boolean);
+                break;
+            case PropertyName.DeviceDeliveryGuardPackageGuardingVoiceResponseVoice:
+                await station.setDeliveryGuardPackageGuardingVoiceResponseVoice(device, value as number);
+                break;
+            case PropertyName.DeviceDeliveryGuardPackageGuardingActivatedTimeFrom:
+                await station.setDeliveryGuardPackageGuardingActivatedTimeFrom(device, value as string);
+                break;
+            case PropertyName.DeviceDeliveryGuardPackageGuardingActivatedTimeTo:
+                await station.setDeliveryGuardPackageGuardingActivatedTimeTo(device, value as string);
+                break;
+            case PropertyName.DeviceDeliveryGuardUncollectedPackageAlert:
+                await station.setDeliveryGuardUncollectedPackageAlert(device, value as boolean);
+                break;
+            case PropertyName.DeviceDeliveryGuardPackageLiveCheckAssistance:
+                await station.setDeliveryGuardPackageLiveCheckAssistance(device, value as boolean);
+                break;
+            case PropertyName.DeviceDualCamWatchViewMode:
+                await station.setDualCamWatchViewMode(device, value as number);
+                break;
+            case PropertyName.DeviceRingAutoResponse:
+                await station.setRingAutoResponse(device, value as boolean);
+                break;
+            case PropertyName.DeviceRingAutoResponseVoiceResponse:
+                await station.setRingAutoResponseVoiceResponse(device, value as boolean);
+                break;
+            case PropertyName.DeviceRingAutoResponseVoiceResponseVoice:
+                await station.setRingAutoResponseVoiceResponseVoice(device, value as number);
+                break;
+            case PropertyName.DeviceRingAutoResponseTimeFrom:
+                await station.setRingAutoResponseTimeFrom(device, value as string);
+                break;
+            case PropertyName.DeviceRingAutoResponseTimeTo:
+                await station.setRingAutoResponseTimeTo(device, value as string);
+                break;
+            case PropertyName.DeviceNotificationRadarDetector:
+                await station.setNotificationRadarDetector(device, value as boolean);
+                break;
+            case PropertyName.DeviceSoundDetectionSensitivity:
+                await station.setSoundDetectionSensitivity(device, value as number);
+                break;
+            case PropertyName.DeviceContinuousRecording:
+                await station.setContinuousRecording(device, value as boolean);
+                break;
+            case PropertyName.DeviceContinuousRecordingType:
+                await station.setContinuousRecordingType(device, value as number);
+                break;
+            case PropertyName.DeviceDefaultAngle:
+                await station.enableDefaultAngle(device, value as boolean);
+                break;
+            case PropertyName.DeviceDefaultAngleIdleTime:
+                await station.setDefaultAngleIdleTime(device, value as number);
+                break;
+            case PropertyName.DeviceNotificationIntervalTime:
+                await station.setNotificationIntervalTime(device, value as number);
+                break;
+            case PropertyName.DeviceSoundDetectionRoundLook:
+                await station.setSoundDetectionRoundLook(device, value as boolean);
+                break;
+            case PropertyName.DeviceDeliveryGuardUncollectedPackageAlertTimeToCheck:
+                await station.setDeliveryGuardUncollectedPackageAlertTimeToCheck(device, value as string);
+                break;
+            default:
+                if (!Object.values(PropertyName).includes(name as PropertyName))
+                {
+                    return;
+                    //throw new ReadOnlyPropertyError(`Property ${name} is read only`);
+                }
+                return;
+                //throw new InvalidPropertyError(`Device ${deviceSN} has no writable property named ${name}`);
+        }
     }
 }

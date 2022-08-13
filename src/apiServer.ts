@@ -3,10 +3,9 @@ import { createServer as createServerHttps } from 'https';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
-import { GuardMode, PropertyName } from './eufySecurityApi/http';
+import { GuardMode } from './eufySecurityApi/http';
 import { Logger } from './eufySecurityApi/utils/logging';
 import { exec } from 'child_process';
-import { log } from 'console';
 
 process.chdir(__dirname);
 var apiServer !: ApiServer;
@@ -249,10 +248,10 @@ class ApiServer
                                     responseString = await api.setGuardModeBase(url[2], GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
-                                    responseString = await api.setPrivacyMode(url[2], PropertyName.DeviceEnabled, false);
+                                    responseString = await api.setPrivacyMode(url[2], false);
                                     break;
                                 case "privacyOff":
-                                    responseString = await api.setPrivacyMode(url[2], PropertyName.DeviceEnabled, true);
+                                    responseString = await api.setPrivacyMode(url[2], true);
                                     break;
                                 default:
                                     responseString = `{"success":false,"message":"Unknown mode to set."}`;
