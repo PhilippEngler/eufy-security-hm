@@ -725,7 +725,6 @@ export class EufySecurityApi
                     }
                     json = `{"success":true,"data":[${json}]}`;
                     this.setLastConnectionInfo(true);
-                    //this.handleLastModeChangeData(bases);
                 }
                 else
                 {
@@ -880,7 +879,6 @@ export class EufySecurityApi
                     }
 
                     this.setLastConnectionInfo(true);
-                    //this.handleLastModeChangeData(bases);
                 }
                 else
                 {
@@ -1082,7 +1080,6 @@ export class EufySecurityApi
                         this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
                         this.setLastConnectionInfo(true);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                        //this.handleLastModeChangeData(bases);
                     }
                     else
                     {
@@ -1240,64 +1237,55 @@ export class EufySecurityApi
         await this.httpService.refreshDeviceData();
                 
         var json = "";
-        //try
-        //{
+        try
+        {
             if(this.devices)
             {
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
                 var devices = this.devices.getDevices();
-                var dev : Camera;
+                var device : Camera;
 
                 if(devices)
                 {
                     for (var deviceSerial in devices)
                     {
-                        dev = devices[deviceSerial];
-                        if(dev.getDeviceTypeString() == "camera")
+                        device = devices[deviceSerial];
+                        if(device.getDeviceTypeString() == "camera")
                         {
                             if(json.endsWith("}"))
                             {
                                 json += ",";
                             }
-                            json += `{"device_id":"${dev.getSerial()}",`;
-                            //json += `"last_camera_image_time":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL().timestamp/1000 : 0}",`;
-                            json += `"last_camera_image_time":"n/a",`;
-                            json += `"last_camera_image_url":"${(dev.getLastCameraImageURL() != undefined) ? dev.getLastCameraImageURL() : ""}",`;
-                            if(dev.getLastCameraVideoURL() == "")
+                            json += `{"device_id":"${deviceSerial}",`;
+                            json += `"last_camera_image_url":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL() : ""}",`;
+                            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(deviceSerial) == undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial)}",`;
+                            //json += `"last_camera_image_time":"n/a",`;
+                            if(device.getLastCameraVideoURL() == "")
                             {
                                 json += `"last_camera_video_url":"${this.config.getApiCameraDefaultVideo()}"`;
                             }
                             else
                             {
-                                json += `"last_camera_video_url":"${dev.getLastCameraVideoURL()}"`;
+                                json += `"last_camera_video_url":"${device.getLastCameraVideoURL()}"`;
                             }
                             json += "}";
-                            if(dev.getLastCameraImageURL() == undefined)
+                            if(device.getLastCameraImageURL() == undefined)
                             {
-                                this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerial(), "");
+                                this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getApiCameraDefaultImage());
                             }
                             else
                             {
-                                //this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerial(), this.makeDateTimeString(dev.getLastCameraImageURL().timestamp));
-                                this.setSystemVariableString("eufyCameraVideoTime" + dev.getSerial(), "n/a");
+                                this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, device.getLastCameraImageURL() as string);
                             }
-                            if(dev.getLastCameraImageURL() == undefined)
+                            if(device.getLastCameraVideoURL() == "")
                             {
-                                this.setSystemVariableString("eufyCameraImageURL" + dev.getSerial(), this.config.getApiCameraDefaultImage());
-                            }
-                            else
-                            {
-                                this.setSystemVariableString("eufyCameraImageURL" + dev.getSerial(), dev.getLastCameraImageURL() as string);
-                            }
-                            if(dev.getLastCameraVideoURL() == "")
-                            {
-                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerial(), this.config.getApiCameraDefaultVideo());
+                                this.setSystemVariableString("eufyCameraVideoURL" + deviceSerial, this.config.getApiCameraDefaultVideo());
                             }
                             else
                             {
-                                this.setSystemVariableString("eufyCameraVideoURL" + dev.getSerial(), dev.getLastCameraVideoURL());
+                                this.setSystemVariableString("eufyCameraVideoURL" + deviceSerial, device.getLastCameraVideoURL());
                             }
                         }
                     }
@@ -1315,59 +1303,22 @@ export class EufySecurityApi
             {
                 json = `{"success":false,"reason":"No connection to eufy."}`;
             }
-        /*}
+        }
         catch (e : any)
         {
             this.logError("Error occured at getLibrary().");
             this.setLastConnectionInfo(false);
             json = `{"success":false,"reason":"${e.message}"}`;
-        }*/
+        }
 
         return json;
     }
 
     /**
-     * Set the systemvariables for last mode change time.
-     * @param bases The array with all bases.
+     * Updates the last guard mode change time systemvariable for a given base.
+     * @param stationSerial The serial of the base.
+     * @param timestamp The timestamp to set.
      */
-    /*public handleLastModeChangeData(bases : { [stationSerial: string]: Station })
-    {
-        if(this.config.getApiUseUpdateStateEvent() == true)
-        {
-            var base : Station;
-
-            var tempModeChange;
-            var lastModeChange = new Date(1970, 1, 1);
-
-            for (var stationSerial in bases)
-            {
-                base = bases[stationSerial];
-                tempModeChange = new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0)
-                if(lastModeChange < tempModeChange)
-                {
-                    lastModeChange = tempModeChange;
-                }
-                if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
-                {
-                    this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
-                }
-                else
-                {
-                    this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0));
-                }
-            }
-            this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
-        }
-        else
-        {
-            for (var stationSerial in bases)
-            {
-                this.setSystemVariableString("eufyLastModeChangeTime" + stationSerial, "n/a");
-            }
-            this.setSystemVariableString("eufyLastModeChangeTime", "n/a");
-        }
-    }*/
-
     public updateStationGuardModeChangeTimeSystemVariable(stationSerial : string, timestamp : number | undefined)
     {
         if(this.getApiUseUpdateStateEvent() == true && timestamp != undefined)
@@ -1381,6 +1332,9 @@ export class EufySecurityApi
         this.updateGlobalStationGuardModeChangeTimeSystemVariable();
     }
 
+    /**
+     * Update the global station guard mode change time systemvariable.
+     */
     public updateGlobalStationGuardModeChangeTimeSystemVariable()
     {
         var bases = this.bases.getBases();
@@ -1399,7 +1353,12 @@ export class EufySecurityApi
         }
         this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
     }
-    
+
+    /**
+     * Updates the last camera event time systemvariable for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param timestamp The timestamp to set.
+     */
     public updateCameraEventTimeSystemVariable(deviceSerial : string, timestamp : number | undefined)
     {
         if(this.getApiUsePushService() == true && timestamp != undefined)
