@@ -244,8 +244,6 @@ export class EufySecurityApi
 
         this.setupScheduledTasks();
 
-        this.handleLastModeChangeData(this.bases.getBases());
-
         this.serviceState = "ok";
 
         this.logInfo(`Country: ${this.httpService.getCountry()} | Language: ${this.httpService.getLanguage()}`);
@@ -727,7 +725,7 @@ export class EufySecurityApi
                     }
                     json = `{"success":true,"data":[${json}]}`;
                     this.setLastConnectionInfo(true);
-                    this.handleLastModeChangeData(bases);
+                    //this.handleLastModeChangeData(bases);
                 }
                 else
                 {
@@ -882,7 +880,7 @@ export class EufySecurityApi
                     }
 
                     this.setLastConnectionInfo(true);
-                    this.handleLastModeChangeData(bases);
+                    //this.handleLastModeChangeData(bases);
                 }
                 else
                 {
@@ -1084,7 +1082,7 @@ export class EufySecurityApi
                         this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
                         this.setLastConnectionInfo(true);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                        this.handleLastModeChangeData(bases);
+                        //this.handleLastModeChangeData(bases);
                     }
                     else
                     {
@@ -1332,7 +1330,7 @@ export class EufySecurityApi
      * Set the systemvariables for last mode change time.
      * @param bases The array with all bases.
      */
-    public handleLastModeChangeData(bases : { [stationSerial: string]: Station })
+    /*public handleLastModeChangeData(bases : { [stationSerial: string]: Station })
     {
         if(this.config.getApiUseUpdateStateEvent() == true)
         {
@@ -1367,6 +1365,50 @@ export class EufySecurityApi
                 this.setSystemVariableString("eufyLastModeChangeTime" + stationSerial, "n/a");
             }
             this.setSystemVariableString("eufyLastModeChangeTime", "n/a");
+        }
+    }*/
+
+    public updateStationGuardModeChangeTimeSystemVariable(stationSerial : string, timestamp : number | undefined)
+    {
+        if(this.getApiUseUpdateStateEvent() == true && timestamp != undefined)
+        {
+            this.setSystemVariableTime("eufyLastModeChangeTime" + stationSerial, new Date(timestamp));
+        }
+        else
+        {
+            this.setSystemVariableString("eufyLastModeChangeTime" + stationSerial, "n/a");
+        }
+        this.updateGlobalStationGuardModeChangeTimeSystemVariable();
+    }
+
+    public updateGlobalStationGuardModeChangeTimeSystemVariable()
+    {
+        var bases = this.bases.getBases();
+        var base;
+        var tempModeChange;
+        var lastModeChange = new Date(1970, 1, 1);
+
+        for (var stationSerial in bases)
+        {
+            base = bases[stationSerial];
+            tempModeChange = new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0)
+            if(lastModeChange < tempModeChange)
+            {
+                lastModeChange = tempModeChange;
+            }
+        }
+        this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
+    }
+    
+    public updateCameraEventTimeSystemVariable(deviceSerial : string, timestamp : number | undefined)
+    {
+        if(this.getApiUsePushService() == true && timestamp != undefined)
+        {
+            this.setSystemVariableTime("eufyCameraVideoTime" + deviceSerial, new Date(timestamp));
+        }
+        else
+        {
+            this.setSystemVariableString("eufyCameraVideoTime" + deviceSerial, "n/a");
         }
     }
 

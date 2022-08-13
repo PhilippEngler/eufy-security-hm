@@ -1082,6 +1082,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         {
             this.lastGuardModeChangeTimeForBases[baseSerial] = undefined;
         }
+
+        this.api.updateStationGuardModeChangeTimeSystemVariable(baseSerial, this.lastGuardModeChangeTimeForBases[baseSerial]);
     }
 
     /**
