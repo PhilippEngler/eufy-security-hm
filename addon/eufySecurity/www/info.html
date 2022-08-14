@@ -139,6 +139,7 @@
 					<li><code>/setMode/<i>BASE_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
 					<li><code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.</li>
 				</ul>
+				<p>Bitte beachten Sie, dass einige Modi nur mit bestimmten Gerätetypen genutzt werden könnnen. Sollten Sie einen vom Gerät nicht unterstützen Modus setzten wollen, erhalten Sie eine entsprechende Meldung.</p>
 				<p>Über Skripte können Sie die API abfragen. Dazu haben Sie zwei Möglichkeiten:</p>
 				<ul>
 					<li>Möchten Sie die Antwort nicht auswerten, können Sie folgenden Code verwenden, um die Anfrage im Hintergrund (d.h. nicht-blockierend) auszuführen:<br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code><br /></li>
