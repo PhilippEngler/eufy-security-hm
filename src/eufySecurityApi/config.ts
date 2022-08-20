@@ -27,7 +27,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 10;
+        return 11;
     }
 
     /**
@@ -309,7 +309,7 @@ export class Config
             }
             updated = true;
             this.hasChanged = true;
-            this.logger.logInfoBasic("...Stage2 update to version 10 finished.");
+            this.logger.logInfoBasic("...Stage2 update to version 11 finished.");
         }
         if(Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) == 10)
         {
@@ -349,6 +349,7 @@ export class Config
             updated = true;
             this.hasChanged = true;
             this.logger.logInfoBasic("...country and language check finished.");
+            this.logger.logInfoBasic("...Stage2 update to version 11 finished.");
         }
 
         if(updated)

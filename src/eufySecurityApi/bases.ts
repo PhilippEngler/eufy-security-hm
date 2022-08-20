@@ -819,7 +819,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationCommandResult(station : Station, command : CommandResult): Promise<void>
     {
-        this.api.logDebug(`Event "DownloadFinish": base: ${station.getSerial()} | result: ${command}`);
+        this.api.logDebug(`Event "CommandResult": base: ${station.getSerial()} | result: ${command}`);
     }
 
     /**
