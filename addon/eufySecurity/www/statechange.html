@@ -355,7 +355,7 @@
 									//bases += `<div class="row no-gutters">`;
 									bases += `<div class="card-body">${buttons}</div>`;
 									//bases += `</div>`;
-									if(objResp.data[objIter].guard_mode_last_change_time != "" && objResp.data[objIter].guard_mode_last_change_time != "n/a" && objResp.data[objIter].guard_mode_last_change_time != "undefined")
+									if(objResp.data[objIter].guard_mode_last_change_time != "" && objResp.data[objIter].guard_mode_last_change_time != "n/a" && objResp.data[objIter].guard_mode_last_change_time != "n/d" && objResp.data[objIter].guard_mode_last_change_time != "undefined")
 									{
 										lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guard_mode_last_change_time)));
 										if(parseInt(objResp.data[objIter].guard_mode_last_change_time) > lastChangeTimeAll)
@@ -363,10 +363,15 @@
 											lastChangeTimeAll = parseInt(objResp.data[objIter].guard_mode_last_change_time);
 										}
 									}
+									else if(myObj.data[object].last_camera_image_time == "n/a")
+									{
+										lastChangeTime = "letzter Statuswechsel unbekannt";
+									}
 									else
 									{
-										lastChangeTime = "unbekannt";
+										lastChangeTime = "letzter Statuswechsel nicht verfügbar";
 									}
+									
 									bases += `<div class="card-footer"><small class="text-muted">Letzer Statuswechsel: ${lastChangeTime}</small></div>`;
 									bases += `</div>`;
 									bases += `</div>`;

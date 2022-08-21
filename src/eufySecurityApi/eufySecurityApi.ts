@@ -1566,7 +1566,7 @@ export class EufySecurityApi
     /**
      * Get all config data needed for the webui.
      */
-    public getConfig() : string
+    public getAPIConfig() : string
     {
         var json = `{"success":true,"data":[{`;
         json += `"configfile_version":"${this.config.getConfigFileVersion()}",`;

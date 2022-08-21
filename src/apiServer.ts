@@ -169,7 +169,7 @@ class ApiServer
                         }
                         break;
                     case "getConfig":
-                        responseString = api.getConfig();
+                        responseString = api.getAPIConfig();
                         break;
                     case "getApiInfo":
                         responseString = api.getApiVersion();

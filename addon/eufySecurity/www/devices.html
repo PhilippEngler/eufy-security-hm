@@ -422,14 +422,18 @@
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Kamera">`;
 												type = "Kamera";
 										}
-										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "0")
+										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "n/d" && myObj.data[object].last_camera_image_time != "0")
 										{
 											lastVideo = `Letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)))}`;
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
 										}
-										else
+										else if(myObj.data[object].last_camera_image_time == "n/a")
 										{
 											lastVideo = "keine Aufnahme";
+										}
+										else
+										{
+											lastVideo = "letzte Aufnahme nicht verfügbar";
 										}
 										cams += `<div class="col mb-3">`;
 										cams += `<div class="card">`;
@@ -472,14 +476,18 @@
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Innenkamera">`;
 												type = "Innenkamera";
 										}
-										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a")
+										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "n/d" && myObj.data[object].last_camera_image_time != "0")
 										{
 											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)));
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
 										}
-										else
+										else if(myObj.data[object].last_camera_image_time == "n/a")
 										{
 											lastVideo = "keine Aufnahme";
+										}
+										else
+										{
+											lastVideo = "letzte Aufnahme nicht verfügbar";
 										}
 										indoorcams += `<div class="col mb-3">`;
 										indoorcams += `<div class="card">`;
@@ -517,14 +525,18 @@
 												imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Flutlichtkamera">`;
 												type = "Flutlichtkamera";
 										}
-										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a")
+										if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "n/d" && myObj.data[object].last_camera_image_time != "0")
 										{
 											lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)));
 											lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
 										}
-										else
+										else if(myObj.data[object].last_camera_image_time == "n/a")
 										{
 											lastVideo = "keine Aufnahme";
+										}
+										else
+										{
+											lastVideo = "letzte Aufnahme nicht verfügbar";
 										}
 										floodlightcams += `<div class="col mb-3">`;
 										floodlightcams += `<div class="card">`;
