@@ -28,6 +28,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         this.api = api;
         this.httpService = httpService;
 
+        if(this.api.getApiUsePushService() == false)
+        {
+            this.api.logInfo("Last video event times will not be retrieved due to settings.");
+        }
+
         this.httpService.on("devices", (devices: FullDevices) => this.handleDevices(devices));
     }
 
@@ -132,7 +137,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
                     this.devices[device.getSerial()] = device;
                     this.lastVideoTimeForDevices[device.getSerial()] = undefined;
-                    if(this.api.getApiUsePushService() == true)
+                    if(this.api.getApiUsePushService())
                     {
                         this.setLastVideoTimeFromCloud(device.getSerial());
                     }

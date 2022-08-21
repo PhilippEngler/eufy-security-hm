@@ -42,6 +42,11 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         this.httpService = httpService;
         this.serialNumbers = [];
 
+        if(this.api.getApiUseUpdateStateEvent() == false)
+        {
+            this.api.logInfo("Last guard mode change times will not be retrieved due to settings.");
+        }
+
         this.httpService.on("hubs", (hubs: Hubs) => this.handleHubs(hubs));
     }
 
