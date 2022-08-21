@@ -6,7 +6,7 @@ import { sleep } from './push/utils';
 import { Devices } from "./devices";
 import { CommandResult, StreamMetadata } from ".";
 import internal from "stream";
-import { AlarmEvent, P2PConnectionType } from "./p2p";
+import { AlarmEvent, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue } from "./utils";
 
@@ -87,6 +87,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 }
 
                 this.addEventListener(this.bases[stationSerial], "Connect", false);
+                this.addEventListener(this.bases[stationSerial], "ConnectionError", false);
                 this.addEventListener(this.bases[stationSerial], "Close", false);
                 this.addEventListener(this.bases[stationSerial], "RawDevicePropertyChanged", false);
                 this.addEventListener(this.bases[stationSerial], "LivestreamStart", false);
@@ -109,6 +110,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(this.bases[stationSerial], "TalkbackError", false);
                 this.addEventListener(this.bases[stationSerial], "AlarmArmedEvent", false);
                 this.addEventListener(this.bases[stationSerial], "AlarmArmDelayEvent", false);
+                this.addEventListener(this.bases[stationSerial], "SecondaryCommandResult", false);
+                this.addEventListener(this.bases[stationSerial], "DeviceShakeAlarm", false);
+                this.addEventListener(this.bases[stationSerial], "Device911Alarm", false);
+                this.addEventListener(this.bases[stationSerial], "DeviceJammed", false);
+                this.addEventListener(this.bases[stationSerial], "DeviceLowBattery", false);
+                this.addEventListener(this.bases[stationSerial], "DeviceWrongTryProtectAlarm", false);
             }
         }
         this.saveBasesSettings();
@@ -185,6 +192,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.bases[stationSerial], "PropertyChanged");
                     this.removeEventListener(this.bases[stationSerial], "RawPropertyChanged");
                     this.removeEventListener(this.bases[stationSerial], "Connect");
+                    this.removeEventListener(this.bases[stationSerial], "ConnectionError");
                     this.removeEventListener(this.bases[stationSerial], "Close");
                     this.removeEventListener(this.bases[stationSerial], "RawDevicePropertyChanged");
                     this.removeEventListener(this.bases[stationSerial], "LivestreamStart");
@@ -207,6 +215,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.bases[stationSerial], "TalkbackError");
                     this.removeEventListener(this.bases[stationSerial], "AlarmArmedEvent");
                     this.removeEventListener(this.bases[stationSerial], "AlarmArmDelayEvent");
+                    this.removeEventListener(this.bases[stationSerial], "SecondaryCommandResult");
+                    this.removeEventListener(this.bases[stationSerial], "DeviceShakeAlarm");
+                    this.removeEventListener(this.bases[stationSerial], "Device911Alarm");
+                    this.removeEventListener(this.bases[stationSerial], "DeviceJammed");
+                    this.removeEventListener(this.bases[stationSerial], "DeviceLowBattery");
+                    this.removeEventListener(this.bases[stationSerial], "DeviceWrongTryProtectAlarm");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                 }                
@@ -390,6 +404,9 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.on("connect", (station : Station) => this.onStationConnect(station));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("connect")} Listener.`);
                 break;
+            case "ConnectionError":
+                base.on("connection error", (station : Station, error : Error) => this.onStationConnectionError(station, error));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("connection error")} Listeners.`);
             case "Close":
                 base.on("close", (station : Station) => this.onStationClose(station));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("close")} Listener.`);
@@ -494,6 +511,30 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.on("alarm arm delay event", (station: Station, alarmDelay: number) => this.onStationAlarmArmDelayEvent(station, alarmDelay));
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
                 break;
+            case "SecondaryCommandResult":
+                base.on("secondary command result", (station: Station, result: CommandResult) => this.onStationSecondaryCommandResult(station, result));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("secondary command result")} Listener.`);
+                break;
+            case "DeviceShakeAlarm":
+                base.on("device shake alarm", (deviceSN: string, event: SmartSafeShakeAlarmEvent) => this.onStationDeviceShakeAlarm(deviceSN, event));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device shake alarm")} Listener.`);
+                break;
+            case "Device911Alarm":
+                base.on("device 911 alarm", (deviceSN: string, event: SmartSafeAlarm911Event) => this.onStationDevice911Alarm(deviceSN, event));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device 911 alarm")} Listener.`);
+                break;
+            case "DeviceJammed":
+                base.on("device jammed", (deviceSN: string) => this.onStationDeviceJammed(deviceSN));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device jammed")} Listener.`);
+                break;
+            case "DeviceLowBattery":
+                base.on("device low battery", (deviceSN: string) => this.onStationDeviceLowBattery(deviceSN));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device low battery")} Listener.`);
+                break;
+            case "DeviceWrongTryProtectAlarm":
+                base.on("device wrong try-protect alarm", (deviceSN: string) => this.onStationDeviceWrongTryProtectAlarm(deviceSN));
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device wrong try-protect alarm")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for base ${base.getSerial()} is unknown.`);
                 break;
@@ -512,6 +553,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             case "Connect":
                 base.removeAllListeners("connect");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("connect")} Listener.`);
+                break;
+            case "ConnectionEroor":
+                base.removeAllListeners("connection error");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("connection error")} Listener.`);
                 break;
             case "Close":
                 base.removeAllListeners("close");
@@ -617,6 +662,30 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 base.removeAllListeners("alarm arm delay event");
                 this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
                 break;
+            case "SecondaryCommandResult":
+                base.removeAllListeners("secondary command result");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("secondary command result")} Listener.`);
+                break;
+            case "DeviceShakeAlarm":
+                base.removeAllListeners("device shake alarm");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device shake alarm")} Listener.`);
+                break;
+            case "Device911Alarm":
+                base.removeAllListeners("device 911 alarm");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device 911 alarm")} Listener.`);
+                break;
+            case "DeviceJammed":
+                base.removeAllListeners("device jammed");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device jammed")} Listener.`);
+                break;
+            case "DeviceLowBattery":
+                base.removeAllListeners("device low battery");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device low battery")} Listener.`);
+                break;
+            case "DeviceWrongTryProtectAlarm":
+                base.removeAllListeners("device wrong try-protect alarm");
+                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device wrong try-protect alarm")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for base ${base.getSerial()} is unknown.`);
                 break;
@@ -634,6 +703,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         {
             case "Connect":
                 return base.listenerCount("connect");
+            case "ConnectionError":
+                return base.listenerCount("connection error");
             case "Close":
                 return base.listenerCount("close");
             case "RawDevicePropertyChanged":
@@ -686,6 +757,18 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                 return base.listenerCount("alarm armed event");
             case "AlarmArmDelayEvent":
                 return base.listenerCount("alarm arm delay event");
+            case "SecondaryCommandResult":
+                return base.listenerCount("secondary command result");
+            case "DeviceShakeAlarm":
+                return base.listenerCount("device shake alarm");
+            case "Device911Alarm":
+                return base.listenerCount("device 911 alarm");
+            case "DeviceJammed":
+                return base.listenerCount("device jammed");
+            case "DeviceLowBattery":
+                return base.listenerCount("device low battery");
+            case "DeviceWrongTryProtectAlarm":
+                return base.listenerCount("device wrong try-protect alarm");
         }
         return -1;
     }
@@ -701,7 +784,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         //disable timeout after connected
         clearTimeout(this.reconnectTimeout[station.getSerial()]);
         this.reconnectTimeout[station.getSerial()] = undefined;
-        if (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()))
+        if ((Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType())))
         {
             station.getCameraInfo().catch(error => {
                 this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
@@ -710,12 +793,25 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             {
                 clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
             }
-            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                station.getCameraInfo().catch(error => {
-                    this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
-                });
-            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+            if (!station.isEnergySavingDevice())
+            {
+                this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+                    station.getCameraInfo().catch(error => {
+                        this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                    });
+                }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+            }
         }
+    }
+
+    /**
+     * The action to be done when event Connection Error is fired.
+     * @param station The base as Station object.
+     * @param error Ther error occured.
+     */
+    private onStationConnectionError(station: Station, error: Error): void
+    {
+        this.emit("station connection error", station, error);
     }
 
     /**
@@ -820,6 +916,16 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private async onStationCommandResult(station : Station, command : CommandResult): Promise<void>
     {
         this.api.logDebug(`Event "CommandResult": base: ${station.getSerial()} | result: ${command}`);
+    }
+
+    /**
+     * The action to be done when event SecondaryCommandResult is fired.
+     * @param station The base as Station object.
+     * @param result The result.
+     */
+    private onStationSecondaryCommandResult(station: Station, result: CommandResult): void
+    {
+        this.api.logDebug(`Event "SecondaryCommandResult": base: ${station.getSerial()} | result: ${result}`);
     }
 
     /**
@@ -1039,6 +1145,53 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private async onStationAlarmArmDelayEvent(station: Station, alarmDelay: number): Promise<void>
     {
         this.api.logDebug(`Event "AlarmArmDelayEvent": base: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
+    }
+
+    /**
+     * The action to be done when event DeviceShakeAlarm is fired.
+     * @param deviceSN The device serial.
+     * @param event The SmartSafeShakeAlarmEvent event.
+     */
+    private onStationDeviceShakeAlarm(deviceSN: string, event: SmartSafeShakeAlarmEvent): void
+    {
+        this.api.logDebug(`Event "DeviceShakeAlarm": device: ${deviceSN} | event: ${event}`);
+    }
+
+    /**
+     * The action to be done when event Device911Alarm is fired.
+     * @param deviceSN The device serial.
+     * @param event The SmartSafeAlarm911Event event.
+     */
+    private onStationDevice911Alarm(deviceSN: string, event: SmartSafeAlarm911Event): void
+    {
+        this.api.logDebug(`Event "Device911Alarm": device: ${deviceSN} | event: ${event}`);
+    }
+
+    /**
+     * The action to be done when event DeviceJammed is fired.
+     * @param deviceSN The device serial.
+     */
+    private onStationDeviceJammed(deviceSN: string): void
+    {
+        this.api.logDebug(`Event "DeviceJammed": device: ${deviceSN}`);
+    }
+
+    /**
+     * The action to be done when event DeviceLowBattery is fired.
+     * @param deviceSN The device serial.
+     */
+    private onStationDeviceLowBattery(deviceSN: string): void
+    {
+        this.api.logDebug(`Event "DeviceLowBattery": device: ${deviceSN}`);
+    }
+
+    /**
+     * The action to be done when event DeviceWrongTryProtectAlarm is fired.
+     * @param deviceSN The device serial.
+     */
+    private onStationDeviceWrongTryProtectAlarm(deviceSN: string): void
+    {
+        this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSN}`);
     }
 
     /**
