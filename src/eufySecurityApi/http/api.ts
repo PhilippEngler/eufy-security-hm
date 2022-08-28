@@ -21,7 +21,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     private static apiDomainBase = "https://extend.eufylife.com";
 
-    private apiBase: string;
+    private apiBase;
 
     private api : EufySecurityApi;
     private username: string;

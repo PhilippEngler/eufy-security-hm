@@ -23,7 +23,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private devices !: Devices;
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
     private lastGuardModeChangeTimeForBases : {[baseSerial:string] : any} = {};
-    private reconnectTimeout : { [stationSerial : string] : NodeJS.Timeout | undefined} = {};
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
     private refreshEufySecurityP2PTimeout: {
@@ -69,7 +68,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             {
                 this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
-                this.reconnectTimeout[stationSerial] = undefined;
                 this.lastGuardModeChangeTimeForBases[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
                 if(this.bases[stationSerial].getDeviceType() == DeviceType.STATION)
@@ -228,6 +226,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.bases[stationSerial], "DeviceWrongTryProtectAlarm");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
+                    delete this.refreshEufySecurityP2PTimeout[stationSerial];
                 }                
             }
         }
@@ -380,13 +379,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         if(this.bases[stationSerial].isConnected() == false)
         {
             this.api.logInfo(`Reconnect for base ${stationSerial} forced after 5 minutes.`);
-            clearTimeout(this.reconnectTimeout[stationSerial]);
-            this.reconnectTimeout[stationSerial] = undefined;
             await this.bases[stationSerial].connect();
         }
         else
         {
-            clearTimeout(this.reconnectTimeout[stationSerial]);
             this.api.logInfo(`Reconnect for base ${stationSerial} already done.`);
         }
     }
@@ -786,9 +782,6 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         this.api.logDebug(`Event "Connect": base: ${station.getSerial()}`);
         this.emit("station connect", station);
-        //disable timeout after connected
-        clearTimeout(this.reconnectTimeout[station.getSerial()]);
-        this.reconnectTimeout[station.getSerial()] = undefined;
         if ((Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType())))
         {
             station.getCameraInfo().catch(error => {
@@ -797,6 +790,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined)
             {
                 clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
+                delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
             }
             if (!station.isEnergySavingDevice())
             {
@@ -830,8 +824,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
 
         if(this.api.getServiceState() != "shutdown")
         {
-            //start timeout for 5 mins
-            this.reconnectTimeout[station.getSerial()] = setTimeout(async() => { await this.forceReconnect(station.getSerial()) }, 300000);
+            
         }
         /*for (const device_sn of this.cameraStationLivestreamTimeout.keys())
         {
@@ -918,9 +911,56 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      * @param station The base as Station object.
      * @param command The result.
      */
-    private async onStationCommandResult(station : Station, command : CommandResult): Promise<void>
+    private async onStationCommandResult(station : Station, result : CommandResult): Promise<void>
     {
-        this.api.logDebug(`Event "CommandResult": base: ${station.getSerial()} | result: ${command}`);
+        this.api.logInfo(`Event "CommandResult": base: ${station.getSerial()} | result: ${result}`);
+        /*if (result.return_code === 0) {
+            this.devices.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                //TODO: Finish SmartSafe implementation - check better the if below
+                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLock()) ||
+                    (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS)) {
+                    if (device.hasProperty(result.customData.property.name)) {
+                        device.updateProperty(result.customData.property.name, result.customData.property.value);
+                    } else if (station.hasProperty(result.customData.property.name)) {
+                        station.updateProperty(result.customData.property.name, result.customData.property.value);
+                    }
+                } else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === CommandName.DeviceSnooze) {
+                    const snoozeTime = result.customData.command.value !== undefined && result.customData.command.value.snooze_time !== undefined ? result.customData.command.value.snooze_time as number : 0;
+                    if (snoozeTime > 0) {
+                        device.updateProperty(PropertyName.DeviceSnooze, true);
+                        device.updateProperty(PropertyName.DeviceSnoozeTime, snoozeTime);
+                    }
+                    this.httpService.refreshAllData().then(() => {
+                        const snoozeStartTime = device.getPropertyValue(PropertyName.DeviceHiddenSnoozeStartTime) as number;
+                        const currentTime = Math.trunc(new Date().getTime() / 1000);
+                        let timeoutMS;
+                        if (snoozeStartTime !== undefined && snoozeStartTime !== 0) {
+                            timeoutMS = (snoozeStartTime + snoozeTime - currentTime) * 1000;
+                        } else {
+                            timeoutMS = snoozeTime * 1000;
+                        }
+                        /*this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
+                            device.updateProperty(PropertyName.DeviceSnooze, false);
+                            device.updateProperty(PropertyName.DeviceSnoozeTime, 0);
+                            delete this.deviceSnoozeTimeout[device.getSerial()];
+                        }, timeoutMS);*//*
+                    }).catch(error => {
+                        this.api.logError("Error during API data refreshing", error);
+                    });
+                }
+            }).catch((error) => {
+                if (error instanceof DeviceNotFoundError) {
+                    if (result.customData !== undefined && result.customData.property !== undefined) {
+                        station.updateProperty(result.customData.property.name, result.customData.property.value);
+                    }
+                } else {
+                    this.api.logError(`Station command result error (station: ${station.getSerial()})`, error);
+                }
+            });
+            if (station.isIntegratedDevice() && result.command_type === CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL) {
+                station.getCameraInfo();
+            }
+        }*/
     }
 
     /**

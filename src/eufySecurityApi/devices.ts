@@ -1167,34 +1167,34 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             case PropertyName.DeviceAutoCalibration:
                 await station.setAutoCalibration(device, value as boolean);
                 break;
-            case PropertyName.DeviceLockSettingsAutoLock:
-            case PropertyName.DeviceLockSettingsAutoLockSchedule:
-            case PropertyName.DeviceLockSettingsAutoLockScheduleStartTime:
-            case PropertyName.DeviceLockSettingsAutoLockScheduleEndTime:
-            case PropertyName.DeviceLockSettingsAutoLockTimer:
-            case PropertyName.DeviceLockSettingsOneTouchLocking:
-            case PropertyName.DeviceLockSettingsSound:
+            case PropertyName.DeviceAutoLock:
+            case PropertyName.DeviceAutoLockSchedule:
+            case PropertyName.DeviceAutoLockScheduleStartTime:
+            case PropertyName.DeviceAutoLockScheduleEndTime:
+            case PropertyName.DeviceAutoLockTimer:
+            case PropertyName.DeviceOneTouchLocking:
+            case PropertyName.DeviceSound:
                 await station.setAdvancedLockParams(device, name, value as PropertyValue);
                 break;
-            case PropertyName.DeviceLockSettingsNotification:
-                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsNotification, value as PropertyValue);
+            case PropertyName.DeviceNotification:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceNotification, value as PropertyValue);
                 break;
-            case PropertyName.DeviceLockSettingsNotificationLocked:
-                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsNotificationLocked, value as PropertyValue);
+            case PropertyName.DeviceNotificationLocked:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceNotificationLocked, value as PropertyValue);
                 break;
-            case PropertyName.DeviceLockSettingsNotificationUnlocked:
-                await station.setAdvancedLockParams(device, PropertyName.DeviceLockSettingsNotificationUnlocked, value as PropertyValue);
+            case PropertyName.DeviceNotificationUnlocked:
+                await station.setAdvancedLockParams(device, PropertyName.DeviceNotificationUnlocked, value as PropertyValue);
                 break;
-            case PropertyName.DeviceLockSettingsScramblePasscode:
+            case PropertyName.DeviceScramblePasscode:
                 await station.setScramblePasscode(device,value as boolean);
                 break;
-            case PropertyName.DeviceLockSettingsWrongTryProtection:
+            case PropertyName.DeviceWrongTryProtection:
                 await station.setWrongTryProtection(device, value as boolean);
                 break;
-            case PropertyName.DeviceLockSettingsWrongTryAttempts:
+            case PropertyName.DeviceWrongTryAttempts:
                 await station.setWrongTryAttempts(device, value as number);
                 break;
-            case PropertyName.DeviceLockSettingsWrongTryLockdownTime:
+            case PropertyName.DeviceWrongTryLockdownTime:
                 await station.setWrongTryLockdownTime(device, value as number);
                 break;
             case PropertyName.DeviceLoiteringDetection:
@@ -1340,6 +1340,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             case PropertyName.DeviceNotificationWrongTryProtect:
             case PropertyName.DeviceNotificationJammed:
                 await station.setSmartSafeParams(device, name, value as PropertyValue);
+                break;
+            case PropertyName.DeviceVideoTypeStoreToNAS:
+                await station.setVideoTypeStoreToNAS(device, value as number);
                 break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))

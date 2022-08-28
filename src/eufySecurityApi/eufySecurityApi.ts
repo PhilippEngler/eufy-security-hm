@@ -2260,7 +2260,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0-rc2";
+        return "1.6.0-rc3";
     }
 
     /**
@@ -2269,6 +2269,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.2.0-rc1";
+        return "2.2.0-rc2";
     }
 }
