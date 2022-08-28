@@ -4,9 +4,9 @@ import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
 import { PushService } from './pushService';
-import { generateUDID, generateSerialnumber, parseValue } from './utils';
+import { generateUDID, generateSerialnumber } from './utils';
 import { Devices } from './devices'
-import { Bases } from './bases';
+import { Stations } from './stations';
 import { P2PConnectionType } from './p2p';
 import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
@@ -20,7 +20,7 @@ export class EufySecurityApi
     private pushService !: PushService;
     private houses !: EufyHouses;
     private devices !: Devices;
-    private stations !: Bases;
+    private stations !: Stations;
     private connected = false;
     private retries = 0;
     private serviceState : string = "init";
@@ -233,7 +233,7 @@ export class EufySecurityApi
         }*/
 
         this.houses = new EufyHouses(this, this.httpService);
-        this.stations = new Bases(this, this.httpService);
+        this.stations = new Stations(this, this.httpService);
         this.devices = new Devices(this, this.httpService);
 
         await sleep(10);
@@ -769,7 +769,7 @@ export class EufySecurityApi
      * Get all stations as Stations-object.
      * @returns All stations as object.
      */
-    public async getRawStations() : Promise<Bases> 
+    public async getRawStations() : Promise<Stations> 
     {
         //await this.httpService.refreshStationData();
         //await this.httpService.refreshDeviceData();

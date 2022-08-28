@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { parse, stringify } from 'ini';
-import { Bases } from './bases';
 import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from './push/models';
 import { Logger } from './utils/logging';
 
