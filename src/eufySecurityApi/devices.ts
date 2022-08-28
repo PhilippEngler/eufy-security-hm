@@ -1,7 +1,8 @@
 import { TypedEmitter } from "tiny-typed-emitter";
+import { Bases } from "./bases";
 import { DeviceNotFoundError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe, Stations } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue } from "./utils";
@@ -17,6 +18,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private devices : {[deviceSerial:string] : any} = {};
     private lastVideoTimeForDevices : {[deviceSerial:string] : any} = {};
     private loadingDevices?: Promise<unknown>;
+    private deviceSnoozeTimeout: {
+        [dataType: string]: NodeJS.Timeout;
+    } = {};
 
     /**
      * Create the Devices objects holding all devices in the account.
@@ -152,7 +156,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async updateDevice(device: DeviceListResponse): Promise<void>
     {
-        var bases = this.api.getBases().getBases();
+        var bases = this.api.getStations();
         for (var baseSerial in bases)
         {
             if (!bases[baseSerial].isConnected())
@@ -309,6 +313,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    public close() : void
+    {
+        Object.keys(this.deviceSnoozeTimeout).forEach(device_sn => {
+            clearTimeout(this.deviceSnoozeTimeout[device_sn]);
+            delete this.deviceSnoozeTimeout[device_sn];
+        });
+    }
+
     /**
      * Returns all Devices.
      */
@@ -333,6 +345,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             return false;
         }
+    }
+
+    public setDeviceSnooze(device : Device, timeoutMS : number) : void
+    {
+        this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
+            device.updateProperty(PropertyName.DeviceSnooze, false);
+            device.updateProperty(PropertyName.DeviceSnoozeTime, 0);
+            delete this.deviceSnoozeTimeout[device.getSerial()];
+        }, timeoutMS);
     }
 
     /**
@@ -545,6 +566,22 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         //this.emit("device property changed", device, name, value);
         this.api.logDebug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
+        try
+        {
+            this.emit("device property changed", device, name, value);
+            if (name === PropertyName.DeviceRTSPStream && (value as boolean) === true && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) === undefined || (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) as string) === "")))
+            {
+                this.api.getStation(device.getStationSerial()).setRTSPStream(device, true);
+            }
+            else if (name === PropertyName.DeviceRTSPStream && (value as boolean) === false)
+            {
+                device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, "");
+            }
+        }
+        catch (error)
+        {
+            this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name})`, error);
+        }
     }
     
     /**
@@ -653,6 +690,17 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onReady(device : Device): Promise<void>
     {
         this.api.logInfo(`Event "Ready": device: ${device.getSerial()}`);
+        try
+        {
+            if (device.getPropertyValue(PropertyName.DeviceRTSPStream) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStream) as boolean) === true)
+            {
+                this.api.getStation(device.getStationSerial()).setRTSPStream(device, true);
+            }
+        }
+        catch (error)
+        {
+            this.api.logError(`Device ready error (device: ${device.getSerial()})`, error);
+        }
     }
 
     /**
@@ -756,14 +804,31 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         this.emit("device jammed", device, state);
     }
 
+    public async getDevice(deviceSerial : string) : Promise<Device>
+    {
+        if (this.loadingDevices !== undefined)
+        {
+            await this.loadingDevices;
+        }
+        if (Object.keys(this.devices).includes(deviceSerial))
+        {
+            return this.devices[deviceSerial];
+        }
+        throw new DeviceNotFoundError(`Device with this serial ${deviceSerial} doesn't exists!`);
+    }
+
     /**
      * Returns a device specified by station and channel.
      * @param baseSerial The serial of the base.
      * @param channel The channel to specify the device.
      * @returns The device specified by base and channel.
      */
-    public getDeviceByStationAndChannel(baseSerial : string, channel : number) : Device
+    public async getDeviceByStationAndChannel(baseSerial : string, channel : number) : Promise<Device>
     {
+        if (this.loadingDevices !== undefined)
+        {
+            await this.loadingDevices;
+        }
         for (const device of Object.values(this.devices))
         {
             if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial))
@@ -771,89 +836,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 return device;
             }
         }
-        this.api.logError(`No device with channel ${channel} found on station with serial number: ${baseSerial}.`);
-        throw new Error("Error");
-    }
-
-    /**
-     * Update the battery and temperature information for a given device.
-     * @param baseSerial The serial of the base.
-     * @param channel The channel to specify the device.
-     * @param batteryLevel The battery level value.
-     * @param temperature The temperature value.
-     */
-    public updateBatteryValues(baseSerial: string, channel: number, batteryLevel: number, temperature: number) : void
-    {
-        try
-        {
-            const device = this.getDeviceByStationAndChannel(baseSerial, channel);
-            const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
-            if (metadataBattery !== undefined)
-            {
-                device.updateRawProperty(metadataBattery.key as number, batteryLevel.toString());
-            }
-            const metadataBatteryTemperature = device.getPropertyMetadata(PropertyName.DeviceBatteryTemp);
-            if (metadataBatteryTemperature !== undefined)
-            {
-                device.updateRawProperty(metadataBatteryTemperature.key as number, temperature.toString());
-            }
-        }
-        catch (error)
-        {
-            this.api.logError(`Station runtime state error (station: ${baseSerial} channel: ${channel})`, error);
-        }
-    }
-
-    /**
-     * Update the charge state and battery value information for a given device.
-     * @param baseSerial The serial of the base.
-     * @param channel The channel to specify the device.
-     * @param chargeType The charge state.
-     * @param batteryLevel The battery level value.
-     */
-    public updateChargingState(baseSerial: string, channel: number, chargeType: number, batteryLevel: number) : void
-    {
-        try
-        {
-            const device = this.getDeviceByStationAndChannel(baseSerial, channel);
-            const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
-            if (metadataBattery !== undefined)
-            {
-                device.updateRawProperty(metadataBattery.key as number, batteryLevel.toString());
-            }
-            const metadataChargingStatus = device.getPropertyMetadata(PropertyName.DeviceChargingStatus);
-            if (metadataChargingStatus !== undefined)
-            {
-                device.updateRawProperty(metadataChargingStatus.key as number, chargeType.toString());
-            }
-        }
-        catch (error)
-        {
-            this.api.logError(`Station charging state error (station: ${baseSerial} channel: ${channel})`, error);
-        }
-    }
-
-    /**
-     * Update the wifi rssi value information for a given device.
-     * @param baseSerial The serial of the base.
-     * @param channel The channel to specify the device.
-     * @param rssi The rssi value.
-     */
-    public updateWifiRssi(baseSerial : string, channel: number, rssi: number) : void
-    {
-        try
-        {
-            const device = this.getDeviceByStationAndChannel(baseSerial, channel);
-            const metadataWifiRssi = device.getPropertyMetadata(PropertyName.DeviceWifiRSSI);
-            if (metadataWifiRssi !== undefined)
-            {
-                device.updateRawProperty(metadataWifiRssi.key as number, rssi.toString());
-            }
-        }
-        catch (error)
-        {
-            this.api.logError(`Station wifi rssi error (station: ${baseSerial} channel: ${channel})`, error);
-        }
+        throw new DeviceNotFoundError(`No device with channel ${channel} found on station with serial number: ${baseSerial}!`);
     }
 
     /**
@@ -950,7 +933,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     public async setDeviceProperty(deviceSerial : string, name : string, value : unknown) : Promise<void>
     {
         const device = await this.devices[deviceSerial];
-        const station = this.api.getBases().getBases()[device.getStationSerial()];
+        const station = this.api.getStation(device.getStationSerial());
         const metadata = device.getPropertyMetadata(name);
 
         value = parseValue(metadata, value);

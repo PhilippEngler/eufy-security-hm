@@ -449,17 +449,17 @@ export class Config
     }
 
     /**
-     * Add section for a new Base.
-     * @param baseSerial Serialnumber of the new Base.
+     * Add section for a new station.
+     * @param stationSerial Serialnumber of the new station.
      */
-    public updateWithNewBase(baseSerial : string) : boolean
+    public updateWithNewStation(stationSerial : string) : boolean
     {
         var res = this.writeConfig();
         if (res == "ok" || res == "saved")
         {
-            this.logger.logInfoBasic(`Adding frame for Base ${baseSerial}.`);
+            this.logger.logInfoBasic(`Adding frame for station ${stationSerial}.`);
             var fc = readFileSync('./config.ini', 'utf-8');
-            fc += "\r\n[EufyP2PData_" + baseSerial + "]\r\n";
+            fc += "\r\n[EufyP2PData_" + stationSerial + "]\r\n";
             fc += "p2p_did=\r\n";
             fc += "dsk_key=\r\n";
             fc += "dsk_key_creation=\r\n";
@@ -479,12 +479,12 @@ export class Config
     }
 
     /**
-     * Checks if the Base given by serialnumber is in the config.
-     * @param baseSerial The serial of the Base to check.
+     * Checks if the station given by serialnumber is in the config.
+     * @param stationSerial The serial of the station to check.
      */
-    public isBaseInConfig(baseSerial : string) : boolean
+    public isStationInConfig(stationSerial : string) : boolean
     {
-        if(this.filecontent.indexOf("EufyP2PData_" + baseSerial) < 0)
+        if(this.filecontent.indexOf("EufyP2PData_" + stationSerial) < 0)
         {
             return false;
         }
@@ -568,7 +568,7 @@ export class Config
     }
 
     /**
-     * Returns true if the connection type for connecting with HomeBases.
+     * Returns true if the connection type for connecting with station.
      */
     public getConnectionType() : string
     {
@@ -635,7 +635,7 @@ export class Config
             var array : string[];
             for (array of ports)
             {
-                if(this.setUdpLocalPortPerBase(array[0], array[1]) == false)
+                if(this.setUdpLocalPortPerStation(array[0], array[1]) == false)
                 {
                     err = true;
                 }
@@ -1212,14 +1212,14 @@ export class Config
     }
 
     /**
-     * Get the P2P_DID for the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the P2P_DID for the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    public getP2PData_p2p_did(baseSerial : string) : string
+    public getP2PData_p2p_did(stationSerial : string) : string
     {
         try
         {
-            return this.config['EufyP2PData_' + baseSerial]['p2p_did'];
+            return this.config['EufyP2PData_' + stationSerial]['p2p_did'];
         }
         catch
         {
@@ -1228,28 +1228,28 @@ export class Config
     }
 
     /**
-     * Set the P2P_DID for the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Set the P2P_DID for the given station.
+     * @param stationSerial The serialnumber of the station.
      * @param p2p_did The P2P_DID to set.
      */
-    private setP2PData_p2p_did(baseSerial : string, p2p_did : string) : void
+    private setP2PData_p2p_did(stationSerial : string, p2p_did : string) : void
     {
-        if(this.config['EufyP2PData_' + baseSerial]['p2p_did'] != p2p_did)
+        if(this.config['EufyP2PData_' + stationSerial]['p2p_did'] != p2p_did)
         {
-            this.config['EufyP2PData_' + baseSerial]['p2p_did'] = p2p_did;
+            this.config['EufyP2PData_' + stationSerial]['p2p_did'] = p2p_did;
             this.hasChanged = true;
         }
     }
 
     /**
-     * Get the DSK_KEY for the given base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the DSK_KEY for the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    public getP2PData_dsk_key(baseSerial: string) : string
+    public getP2PData_dsk_key(stationSerial: string) : string
     {
         try
         {
-            return this.config['EufyP2PData_' + baseSerial]['dsk_key'];
+            return this.config['EufyP2PData_' + stationSerial]['dsk_key'];
         }
         catch
         {
@@ -1258,28 +1258,28 @@ export class Config
     }
 
     /**
-     * Set the DSK_KEY for the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Set the DSK_KEY for the given station.
+     * @param stationSerial The serialnumber of the station.
      * @param dsk_key The DSK_KEY to set.
      */
-    private setP2PData_dsk_key(baseSerial: string, dsk_key : string) : void
+    private setP2PData_dsk_key(stationSerial: string, dsk_key : string) : void
     {
-        if(this.config['EufyP2PData_' + baseSerial]['dsk_key'] != dsk_key)
+        if(this.config['EufyP2PData_' + stationSerial]['dsk_key'] != dsk_key)
         {
-            this.config['EufyP2PData_' + baseSerial]['dsk_key'] = dsk_key;
+            this.config['EufyP2PData_' + stationSerial]['dsk_key'] = dsk_key;
             this.hasChanged = true;
         }
     }
 
     /**
      * Get the timestamp the DSK_KEY is to expire.
-     * @param baseSerial The serialnumber of the Base.
+     * @param stationSerial The serialnumber of the station.
      */
-    public getP2PData_dsk_key_creation(baseSerial: string) : string
+    public getP2PData_dsk_key_creation(stationSerial: string) : string
     {
         try
         {
-            return this.config['EufyP2PData_' + baseSerial]['dsk_key_creation'];
+            return this.config['EufyP2PData_' + stationSerial]['dsk_key_creation'];
         }
         catch
         {
@@ -1289,27 +1289,27 @@ export class Config
 
     /**
      * Set the timestamp the DSK_KEY is to expire.
-     * @param baseSerial The serialnumber of the Base.
+     * @param stationSerial The serialnumber of the station.
      * @param dsk_key_creation The timestamp of the expire.
      */
-    private setP2PData_dsk_key_creation(baseSerial: string, dsk_key_creation : string) : void
+    private setP2PData_dsk_key_creation(stationSerial: string, dsk_key_creation : string) : void
     {
-        if(this.config['EufyP2PData_' + baseSerial]['dsk_key_creation'] != dsk_key_creation)
+        if(this.config['EufyP2PData_' + stationSerial]['dsk_key_creation'] != dsk_key_creation)
         {
-            this.config['EufyP2PData_' + baseSerial]['dsk_key_creation'] = dsk_key_creation;
+            this.config['EufyP2PData_' + stationSerial]['dsk_key_creation'] = dsk_key_creation;
             this.hasChanged = true;
         }
     }
 
     /**
-     * Get the actor id of the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the actor id of the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    public getP2PData_actor_id(baseSerial: string) : string
+    public getP2PData_actor_id(stationSerial: string) : string
     {
         try
         {
-            return this.config['EufyP2PData_' + baseSerial]['actor_id'];
+            return this.config['EufyP2PData_' + stationSerial]['actor_id'];
         }
         catch
         {
@@ -1318,28 +1318,28 @@ export class Config
     }
 
     /**
-     * Set the actor id of the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Set the actor id of the given station.
+     * @param stationSerial The serialnumber of the station.
      * @param actor_id The actor id to set.
      */
-    private setP2PData_actor_id(baseSerial: string, actor_id : string) : void
+    private setP2PData_actor_id(stationSerial: string, actor_id : string) : void
     {
-        if(this.config['EufyP2PData_' + baseSerial]['actor_id'] != actor_id)
+        if(this.config['EufyP2PData_' + stationSerial]['actor_id'] != actor_id)
         {
-            this.config['EufyP2PData_' + baseSerial]['actor_id'] = actor_id;
+            this.config['EufyP2PData_' + stationSerial]['actor_id'] = actor_id;
             this.hasChanged = true;
         }
     }
 
     /**
-     * Get the local ip address of the Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the local ip address of the station.
+     * @param stationSerial The serialnumber of the station.
      */
-    public getP2PData_base_ip_address(baseSerial: string) : string
+    public getP2PData_station_ip_address(stationSerial: string) : string
     {
         try
         {
-            return this.config['EufyP2PData_' + baseSerial]['base_ip_address'];
+            return this.config['EufyP2PData_' + stationSerial]['base_ip_address'];
         }
         catch
         {
@@ -1348,28 +1348,28 @@ export class Config
     }
 
     /**
-     * Set the local ip address of the given Base.
-     * @param baseSerial The serialnumber of the Base.
-     * @param base_ip_address The local ip address.
+     * Set the local ip address of the given station.
+     * @param stationSerial The serialnumber of the station.
+     * @param station_ip_address The local ip address.
      */
-    private setP2PData_base_ip_address(baseSerial: string, base_ip_address : string) : void
+    private setP2PData_station_ip_address(stationSerial: string, station_ip_address : string) : void
     {
-        if(this.config['EufyP2PData_' + baseSerial]['base_ip_address'] != base_ip_address)
+        if(this.config['EufyP2PData_' + stationSerial]['base_ip_address'] != station_ip_address)
         {
-            this.config['EufyP2PData_' + baseSerial]['base_ip_address'] = base_ip_address;
+            this.config['EufyP2PData_' + stationSerial]['base_ip_address'] = station_ip_address;
             this.hasChanged = true;
         }
     }
 
     /**
-     * Get the last used port for P2P connunication with the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the last used port for P2P connunication with the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    public getP2PData_base_port(baseSerial: string) : string
+    public getP2PData_station_port(stationSerial: string) : string
     {
         try
         {
-            return this.config['EufyP2PData_' + baseSerial]['base_port'];
+            return this.config['EufyP2PData_' + stationSerial]['base_port'];
         }
         catch
         {
@@ -1378,29 +1378,29 @@ export class Config
     }
 
     /**
-     * Set the port used for 2P communication with the given Base.
-     * @param baseSerial The serialnumber of the Base.
-     * @param base_port The port to set.
+     * Set the port used for 2P communication with the given station.
+     * @param stationSerial The serialnumber of the station.
+     * @param station_port The port to set.
      */
-    private setP2PData_base_port(baseSerial: string, base_port : string) : void
+    private setP2PData_station_port(stationSerial: string, station_port : string) : void
     {
-        if(this.config['EufyP2PData_' + baseSerial]['base_port'] != base_port)
+        if(this.config['EufyP2PData_' + stationSerial]['base_port'] != station_port)
         {
-            this.config['EufyP2PData_' + baseSerial]['base_port'] = base_port;
+            this.config['EufyP2PData_' + stationSerial]['base_port'] = station_port;
             this.hasChanged = true;
         }
     }
 
     /**
-     * Returns the UDP port for the HomeBase.
-     * @param baseSerial The serial of the HomeBase.
-     * @returns The UDP port for the HomeBase.
+     * Returns the UDP port for the station.
+     * @param stationSerial The serial of the station.
+     * @returns The UDP port for the station.
      */
-    public getUdpLocalPortsPerBase(baseSerial : string) : string
+    public getUdpLocalPortsPerStation(stationSerial : string) : string
     {
         try
         {
-            return this.config['EufyP2PData_' + baseSerial]['udp_ports'];
+            return this.config['EufyP2PData_' + stationSerial]['udp_ports'];
         }
         catch
         {
@@ -1409,18 +1409,18 @@ export class Config
     }
 
     /**
-     * Set the UDP port for a HomeBase.
-     * @param baseSerial The serial for the HomeBase.
+     * Set the UDP port for a station.
+     * @param stationSerial The serial for the station.
      * @param udp_ports The UDP port.
      * @returns True on success otherwise false.
      */
-    public setUdpLocalPortPerBase(baseSerial: string, udp_ports : string) : boolean
+    public setUdpLocalPortPerStation(stationSerial: string, udp_ports : string) : boolean
     {
         var res;
-        if(this.isBaseInConfig(baseSerial) == false)
+        if(this.isStationInConfig(stationSerial) == false)
         {
-            this.logger.logInfo(1, `Base ${baseSerial} not in config.`)
-            res = this.updateWithNewBase(baseSerial);
+            this.logger.logInfo(1, `Station ${stationSerial} not in config.`)
+            res = this.updateWithNewStation(stationSerial);
         }
         else
         {
@@ -1428,11 +1428,11 @@ export class Config
         }
         if(res)
         {
-            if(baseSerial != undefined && udp_ports != undefined)
+            if(stationSerial != undefined && udp_ports != undefined)
             {
-                if(this.config['EufyP2PData_' + baseSerial]['udp_ports'] != udp_ports)
+                if(this.config['EufyP2PData_' + stationSerial]['udp_ports'] != udp_ports)
                 {
-                    this.config['EufyP2PData_' + baseSerial]['udp_ports'] = udp_ports;
+                    this.config['EufyP2PData_' + stationSerial]['udp_ports'] = udp_ports;
                     this.hasChanged = true;
                     res = true;
                 }
@@ -1443,23 +1443,23 @@ export class Config
     }
 
     /**
-     * Saves the P2P releated data for a given base. If the base is currently not in config, it will be created before the config data is populated.
+     * Saves the P2P releated data for a given station. If the station is currently not in config, it will be created before the config data is populated.
      * The config data will be saved and the config is reloaded.
      * 
-     * @param baseSerial The serialnumber of the base
+     * @param stationSerial The serialnumber of the station
      * @param p2p_did The P2P_DID for the P2P connection
      * @param dsk_key The DSK_KEY for the P2P connection
      * @param dsk_key_creation The timestamp the DSK_KEY will be unusable
      * @param actor_id The actor id for P2P communication
-     * @param base_ip_address The local ip address of the base
-     * @param base_port The port the P2P communication with the base is done
+     * @param station_ip_address The local ip address of the station
+     * @param station_port The port the P2P communication with the station is done
      */
-    public setP2PData(baseSerial : string, p2p_did : string,  dsk_key : string,  dsk_key_creation : string, actor_id : string, base_ip_address : string, base_port : string) : void
+    public setP2PData(stationSerial : string, p2p_did : string,  dsk_key : string,  dsk_key_creation : string, actor_id : string, station_ip_address : string, station_port : string) : void
     {
         var res;
-        if(this.isBaseInConfig(baseSerial) == false)
+        if(this.isStationInConfig(stationSerial) == false)
         {
-            res = this.updateWithNewBase(baseSerial);
+            res = this.updateWithNewStation(stationSerial);
         }
         else
         {
@@ -1467,12 +1467,12 @@ export class Config
         }
         if (res)
         {
-            this.setP2PData_p2p_did(baseSerial, p2p_did);
-            this.setP2PData_dsk_key(baseSerial, dsk_key);
-            this.setP2PData_dsk_key_creation(baseSerial, dsk_key_creation);
-            this.setP2PData_actor_id(baseSerial, actor_id);
-            this.setP2PData_base_ip_address(baseSerial, base_ip_address);
-            this.setP2PData_base_port(baseSerial, base_port);
+            this.setP2PData_p2p_did(stationSerial, p2p_did);
+            this.setP2PData_dsk_key(stationSerial, dsk_key);
+            this.setP2PData_dsk_key_creation(stationSerial, dsk_key_creation);
+            this.setP2PData_actor_id(stationSerial, actor_id);
+            this.setP2PData_station_ip_address(stationSerial, station_ip_address);
+            this.setP2PData_station_port(stationSerial, station_port);
 
             this.writeConfig();
             this.loadConfig();
@@ -1538,7 +1538,7 @@ export class Config
     }
 
     /**
-     * Get the number of seconds as string how long the event shoud remain in state true.
+     * Get the string of seconds as string how long the event shoud remain in state true.
      * @returns A String value contaiong the seconds
      */
     public getEventDurationSeconds() : string
@@ -1550,6 +1550,22 @@ export class Config
         catch
         {
             return "";
+        }
+    }
+
+    /**
+     * Get the number of seconds as string how long the event shoud remain in state true.
+     * @returns A number value contaiong the seconds
+     */
+    public getEventDurationSecondsAsNumber() : number
+    {
+        try
+        {
+            return this.config['EufyAPIPushData']['event_duration_seconds'] as number;
+        }
+        catch
+        {
+            return -1;
         }
     }
 

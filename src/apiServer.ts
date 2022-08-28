@@ -128,13 +128,15 @@ class ApiServer
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "getStations":
                     case "getBases":
-                        responseString = await api.getBasesAsJSON();
+                        responseString = await api.getStationsAsJSON();
                         break;
+                    case "getStation":
                     case "getBase":
                         if(url.length == 3)
                         {
-                            responseString = await api.getBaseAsJSON(url[2]);
+                            responseString = await api.getStationAsJSON(url[2]);
                         }
                         else
                         {
@@ -161,7 +163,7 @@ class ApiServer
                         }
                         else if(url.length == 3)
                         {
-                            responseString = await api.getGuardModeBase(url[2]);
+                            responseString = await api.getGuardModeStation(url[2]);
                         }
                         else
                         {
@@ -207,10 +209,10 @@ class ApiServer
                                     responseString = await api.setGuardMode(GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
-                                    responseString = `{"success":false,"message":"This mode cannot be set for all bases"}`;
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations"}`;
                                     break;
                                 case "privacyOff":
-                                    responseString = `{"success":false,"message":"This mode cannot be set for all bases"}`;
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations"}`;
                                     break;
                                 default:
                                     responseString = `{"success":false,"message":"Unknown mode to set."}`;
@@ -221,31 +223,31 @@ class ApiServer
                             switch (url[3])
                             {
                                 case "away":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.AWAY);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.AWAY);
                                     break;
                                 case "custom1":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.CUSTOM1);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.CUSTOM1);
                                     break;
                                 case "custom2":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.CUSTOM2);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.CUSTOM2);
                                     break;
                                 case "custom3":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.CUSTOM3);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.CUSTOM3);
                                     break;
                                 case "disarmed":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.DISARMED);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.DISARMED);
                                     break;
                                 case "geo":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.GEO);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.GEO);
                                     break;
                                 case "home":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.HOME);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.HOME);
                                     break;
                                 case "off":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.OFF);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.OFF);
                                     break;
                                 case "schedule":
-                                    responseString = await api.setGuardModeBase(url[2], GuardMode.SCHEDULE);
+                                    responseString = await api.setGuardModeStation(url[2], GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
                                     responseString = await api.setPrivacyMode(url[2], false);
@@ -449,7 +451,7 @@ class ApiServer
                         var apiudpports : string[][] = [[],[]];
                         if(postData.indexOf("udpPortsBase") >= 0)
                         {
-                            apiudpports = getAllUdpPortsForBases(postData);
+                            apiudpports = getAllUdpPortsForStations(postData);
                         }
 
                         var useSystemVariables = false;
@@ -739,11 +741,11 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
 }
 
 /**
- * Helperfunction for extracting the UDP ports for each base from the post event.
+ * Helperfunction for extracting the UDP ports for each setGuardModeStation from the post event.
  * @param postData The data from the post event.
- * @returns The array with the baseserials and the port number.
+ * @returns The array with the setGuardModeStationserials and the port number.
  */
-function getAllUdpPortsForBases(postData : string) : string[][]
+function getAllUdpPortsForStations(postData : string) : string[][]
 {
     var pos = postData.indexOf("udpPortsBase");
     var res : string[][] = [[],[]];
@@ -751,10 +753,10 @@ function getAllUdpPortsForBases(postData : string) : string[][]
     while (pos > 0)
     {
         var temp = postData.substring(pos + 29);
-        var basesn = postData.substring(pos + 12, pos + 28);
+        var stationSerial = postData.substring(pos + 12, pos + 28);
         temp = temp.replace("\r\n","");
         temp = temp.substring(2, temp.indexOf("----") - 2);
-        res[i][0] = basesn;
+        res[i][0] = stationSerial;
         res[i][1] = temp;
 
         pos = postData.indexOf("udpPortsBase", pos + 16);

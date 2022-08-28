@@ -153,17 +153,17 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                 this.logger.error(`Error processing server push notification for device/station/house removal`, error);
             }*/
 
-            var rawBases = await this.api.getRawBases();
-            var bases = rawBases.getBases();
-            for(var baseSerial in bases)
+            var rawStations = await this.api.getRawStations();
+            var stations = rawStations.getStations();
+            for(var stationSerial in stations)
             {
                 try
                 {
-                    bases[baseSerial].processPushNotification(message);
+                    stations[stationSerial].processPushNotification(message);
                 }
                 catch (error)
                 {
-                    this.logger.error(`Error processing push notification for station ${baseSerial}`, error);
+                    this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
                 }
             }
             var rawDevices = await this.api.getRawDevices();

@@ -56,7 +56,7 @@ export class Station extends TypedEmitter<StationEvents> {
 
     connectToP2P()
     {
-        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress() as string, this.eufySecurityApi.getUDPLocalPortForBase(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api);
+        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress() as string, this.eufySecurityApi.getUDPLocalPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api);
         this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
         this.p2pSession.on("timeout", () => this.onTimeout());
@@ -412,7 +412,7 @@ export class Station extends TypedEmitter<StationEvents> {
         switch (this.rawStation.device_type)
         {
             case DeviceType.STATION:
-                return `basestation`;
+                return `station`;
             case DeviceType.FLOODLIGHT || DeviceType.FLOODLIGHT_CAMERA_8422 || DeviceType.FLOODLIGHT_CAMERA_8423 || DeviceType.FLOODLIGHT_CAMERA_8424:
                 return `floodlight`;
             case DeviceType.INDOOR_CAMERA || DeviceType.INDOOR_CAMERA_1080 || DeviceType.INDOOR_COST_DOWN_CAMERA || DeviceType.INDOOR_PT_CAMERA || DeviceType.INDOOR_PT_CAMERA_1080:
@@ -424,7 +424,7 @@ export class Station extends TypedEmitter<StationEvents> {
         }
         /*if(this.rawStation.device_type == DeviceType.STATION)
         {
-            return "basestation";
+            return "station";
         }
         else
         {

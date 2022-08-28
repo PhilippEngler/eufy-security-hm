@@ -1,12 +1,12 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe } from './http';
 import { sleep } from './push/utils';
 import { Devices } from "./devices";
-import { CommandResult, StreamMetadata } from ".";
+import { CommandResult, DeviceNotFoundError, NotSupportedError, StationNotFoundError, StreamMetadata } from ".";
 import internal from "stream";
-import { AlarmEvent, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
+import { AlarmEvent, ChargingType, CommandType, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue } from "./utils";
 
@@ -18,11 +18,10 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private api : EufySecurityApi;
     private httpService : HTTPApi;
     private serialNumbers : string[];
-    private resBases !: Hubs;
-    private bases : { [stationSerial : string ] : Station} = {};
-    private devices !: Devices;
+    private resStations !: Hubs;
+    private stations : { [stationSerial : string ] : Station} = {};
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
-    private lastGuardModeChangeTimeForBases : {[baseSerial:string] : any} = {};
+    private lastGuardModeChangeTimeForStations : { [stationSerial : string] : any } = {};
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
     private refreshEufySecurityP2PTimeout: {
@@ -30,7 +29,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     } = {};
 
     /**
-     * Create the Bases objects holding all bases in the account.
+     * Create the Bases objects holding all stations in the account.
      * @param api The eufySecurityApi.
      * @param httpService The httpService.
      */
@@ -50,100 +49,100 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Put all bases and their settings in format so that we can work with them.
-     * @param hubs The object containing the bases.
+     * Put all stations and their settings in format so that we can work with them.
+     * @param hubs The object containing the stations.
      */
     private handleHubs(hubs: Hubs): void
     {
         this.api.logDebug("Got hubs:", hubs);
-        this.resBases = hubs;
+        this.resStations = hubs;
 
-        for (var stationSerial in this.resBases)
+        for (var stationSerial in this.resStations)
         {
-            if(this.bases[stationSerial])
+            if(this.stations[stationSerial])
             {
-                this.updateStation(this.resBases[stationSerial]);
+                this.updateStation(this.resStations[stationSerial]);
             }
             else
             {
-                this.bases[stationSerial] = new Station(this.api, this.httpService, this.resBases[stationSerial]);
+                this.stations[stationSerial] = new Station(this.api, this.httpService, this.resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
-                this.lastGuardModeChangeTimeForBases[stationSerial] = undefined;
+                this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                if(this.bases[stationSerial].getDeviceType() == DeviceType.STATION)
+                if(this.stations[stationSerial].getDeviceType() == DeviceType.STATION)
                 {
-                    this.bases[stationSerial].setConnectionType(this.api.getP2PConnectionType());
+                    this.stations[stationSerial].setConnectionType(this.api.getP2PConnectionType());
                 }
                 else
                 {
-                    this.bases[stationSerial].setConnectionType(P2PConnectionType.QUICKEST);
+                    this.stations[stationSerial].setConnectionType(P2PConnectionType.QUICKEST);
                 }
-                this.bases[stationSerial].connect();
+                this.stations[stationSerial].connect();
 
                 if(this.api.getApiUseUpdateStateEvent())
                 {
-                    this.addEventListener(this.bases[stationSerial], "GuardModeChanged", false);
-                    this.addEventListener(this.bases[stationSerial], "CurrentMode", false);
-                    this.addEventListener(this.bases[stationSerial], "PropertyChanged", false);
-                    this.addEventListener(this.bases[stationSerial], "RawPropertyChanged", false);
+                    this.addEventListener(this.stations[stationSerial], "GuardModeChanged", false);
+                    this.addEventListener(this.stations[stationSerial], "CurrentMode", false);
+                    this.addEventListener(this.stations[stationSerial], "PropertyChanged", false);
+                    this.addEventListener(this.stations[stationSerial], "RawPropertyChanged", false);
                     this.setLastGuardModeChangeTimeFromCloud(stationSerial);
                 }
 
-                this.addEventListener(this.bases[stationSerial], "Connect", false);
-                this.addEventListener(this.bases[stationSerial], "ConnectionError", false);
-                this.addEventListener(this.bases[stationSerial], "Close", false);
-                this.addEventListener(this.bases[stationSerial], "RawDevicePropertyChanged", false);
-                this.addEventListener(this.bases[stationSerial], "LivestreamStart", false);
-                this.addEventListener(this.bases[stationSerial], "LivestreamStop", false);
-                this.addEventListener(this.bases[stationSerial], "LivestreamError", false);
-                this.addEventListener(this.bases[stationSerial], "DownloadStart", false);
-                this.addEventListener(this.bases[stationSerial], "DownloadFinish", false);
-                this.addEventListener(this.bases[stationSerial], "CommandResult", false);
-                this.addEventListener(this.bases[stationSerial], "RTSPLivestreamStart", false);
-                this.addEventListener(this.bases[stationSerial], "RTSPLivestreamStop", false);
-                this.addEventListener(this.bases[stationSerial], "RTSPUrl", false);
-                this.addEventListener(this.bases[stationSerial], "AlarmEvent", false);
-                this.addEventListener(this.bases[stationSerial], "RuntimeState", false);
-                this.addEventListener(this.bases[stationSerial], "ChargingState", false);
-                this.addEventListener(this.bases[stationSerial], "WifiRssi", false);
-                this.addEventListener(this.bases[stationSerial], "FloodlightManualSwitch", false);
-                this.addEventListener(this.bases[stationSerial], "AlarmDelayEvent", false);
-                this.addEventListener(this.bases[stationSerial], "TalkbackStarted", false);
-                this.addEventListener(this.bases[stationSerial], "TalkbackStopped", false);
-                this.addEventListener(this.bases[stationSerial], "TalkbackError", false);
-                this.addEventListener(this.bases[stationSerial], "AlarmArmedEvent", false);
-                this.addEventListener(this.bases[stationSerial], "AlarmArmDelayEvent", false);
-                this.addEventListener(this.bases[stationSerial], "SecondaryCommandResult", false);
-                this.addEventListener(this.bases[stationSerial], "DeviceShakeAlarm", false);
-                this.addEventListener(this.bases[stationSerial], "Device911Alarm", false);
-                this.addEventListener(this.bases[stationSerial], "DeviceJammed", false);
-                this.addEventListener(this.bases[stationSerial], "DeviceLowBattery", false);
-                this.addEventListener(this.bases[stationSerial], "DeviceWrongTryProtectAlarm", false);
+                this.addEventListener(this.stations[stationSerial], "Connect", false);
+                this.addEventListener(this.stations[stationSerial], "ConnectionError", false);
+                this.addEventListener(this.stations[stationSerial], "Close", false);
+                this.addEventListener(this.stations[stationSerial], "RawDevicePropertyChanged", false);
+                this.addEventListener(this.stations[stationSerial], "LivestreamStart", false);
+                this.addEventListener(this.stations[stationSerial], "LivestreamStop", false);
+                this.addEventListener(this.stations[stationSerial], "LivestreamError", false);
+                this.addEventListener(this.stations[stationSerial], "DownloadStart", false);
+                this.addEventListener(this.stations[stationSerial], "DownloadFinish", false);
+                this.addEventListener(this.stations[stationSerial], "CommandResult", false);
+                this.addEventListener(this.stations[stationSerial], "RTSPLivestreamStart", false);
+                this.addEventListener(this.stations[stationSerial], "RTSPLivestreamStop", false);
+                this.addEventListener(this.stations[stationSerial], "RTSPUrl", false);
+                this.addEventListener(this.stations[stationSerial], "AlarmEvent", false);
+                this.addEventListener(this.stations[stationSerial], "RuntimeState", false);
+                this.addEventListener(this.stations[stationSerial], "ChargingState", false);
+                this.addEventListener(this.stations[stationSerial], "WifiRssi", false);
+                this.addEventListener(this.stations[stationSerial], "FloodlightManualSwitch", false);
+                this.addEventListener(this.stations[stationSerial], "AlarmDelayEvent", false);
+                this.addEventListener(this.stations[stationSerial], "TalkbackStarted", false);
+                this.addEventListener(this.stations[stationSerial], "TalkbackStopped", false);
+                this.addEventListener(this.stations[stationSerial], "TalkbackError", false);
+                this.addEventListener(this.stations[stationSerial], "AlarmArmedEvent", false);
+                this.addEventListener(this.stations[stationSerial], "AlarmArmDelayEvent", false);
+                this.addEventListener(this.stations[stationSerial], "SecondaryCommandResult", false);
+                this.addEventListener(this.stations[stationSerial], "DeviceShakeAlarm", false);
+                this.addEventListener(this.stations[stationSerial], "Device911Alarm", false);
+                this.addEventListener(this.stations[stationSerial], "DeviceJammed", false);
+                this.addEventListener(this.stations[stationSerial], "DeviceLowBattery", false);
+                this.addEventListener(this.stations[stationSerial], "DeviceWrongTryProtectAlarm", false);
             }
         }
-        this.saveBasesSettings();
+        this.saveStationsSettings();
     }
 
     /**
-     * Update the base information.
+     * Update the station information.
      * @param hub The object containg the specific hub.
      */
     private updateStation(hub : StationListResponse) : void
     {
-        if (Object.keys(this.bases).includes(hub.station_sn))
+        if (Object.keys(this.stations).includes(hub.station_sn))
         {
-            this.bases[hub.station_sn].update(hub, this.bases[hub.station_sn] !== undefined && this.bases[hub.station_sn].isConnected());
-            if (!this.bases[hub.station_sn].isConnected() && !this.bases[hub.station_sn].isEnergySavingDevice())
+            this.stations[hub.station_sn].update(hub, this.stations[hub.station_sn] !== undefined && this.stations[hub.station_sn].isConnected());
+            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice())
             {
-                if(this.bases[hub.station_sn].getDeviceType() == DeviceType.STATION)
+                if(this.stations[hub.station_sn].getDeviceType() == DeviceType.STATION)
                 {
-                    this.bases[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                    this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 }
                 else
                 {
-                    this.bases[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
+                    this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
                 }
-                this.bases[hub.station_sn].connect();
+                this.stations[hub.station_sn].connect();
             }
         }
         else
@@ -153,77 +152,68 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Set the devices connected with the account.
-     * @param devices The devices to set.
+     * (Re)Loads all stations and the settings of them.
      */
-    public setDevices(devices : Devices) : void
-    {
-        this.devices = devices;
-    }
-
-    /**
-     * (Re)Loads all bases and the settings of them.
-     */
-    public async loadBases() : Promise<void>
+    public async loadStations() : Promise<void>
     {
         try
         {
-            this.resBases = this.httpService.getHubs();
+            this.resStations = this.httpService.getHubs();
         }
         catch (e : any)
         {
-            this.bases = {};
+            this.stations = {};
             throw new Error(e);
         }
     }
 
     /**
-     * Close all P2P connection for all bases.
+     * Close all P2P connection for all stations.
      */
     public async closeP2PConnections() : Promise<void>
     {
-        if(this.resBases != null)
+        if(this.resStations != null)
         {
-            for (var stationSerial in this.resBases)
+            for (var stationSerial in this.resStations)
             {
-                if(this.bases[stationSerial])
+                if(this.stations[stationSerial])
                 {
-                    await this.bases[stationSerial].close();
+                    await this.stations[stationSerial].close();
                     
-                    this.removeEventListener(this.bases[stationSerial], "GuardModeChanged");
-                    this.removeEventListener(this.bases[stationSerial], "CurrentMode");
-                    this.removeEventListener(this.bases[stationSerial], "PropertyChanged");
-                    this.removeEventListener(this.bases[stationSerial], "RawPropertyChanged");
-                    this.removeEventListener(this.bases[stationSerial], "Connect");
-                    this.removeEventListener(this.bases[stationSerial], "ConnectionError");
-                    this.removeEventListener(this.bases[stationSerial], "Close");
-                    this.removeEventListener(this.bases[stationSerial], "RawDevicePropertyChanged");
-                    this.removeEventListener(this.bases[stationSerial], "LivestreamStart");
-                    this.removeEventListener(this.bases[stationSerial], "LivestreamStop");
-                    this.removeEventListener(this.bases[stationSerial], "LivestreamError");
-                    this.removeEventListener(this.bases[stationSerial], "DownloadStart");
-                    this.removeEventListener(this.bases[stationSerial], "DownloadFinish");
-                    this.removeEventListener(this.bases[stationSerial], "CommandResult");
-                    this.removeEventListener(this.bases[stationSerial], "RTSPLivestreamStart");
-                    this.removeEventListener(this.bases[stationSerial], "RTSPLivestreamStop");
-                    this.removeEventListener(this.bases[stationSerial], "RTSPUrl");
-                    this.removeEventListener(this.bases[stationSerial], "AlarmEvent");
-                    this.removeEventListener(this.bases[stationSerial], "RuntimeState");
-                    this.removeEventListener(this.bases[stationSerial], "ChargingState");
-                    this.removeEventListener(this.bases[stationSerial], "WifiRssi");
-                    this.removeEventListener(this.bases[stationSerial], "FloodlightManualSwitch");
-                    this.removeEventListener(this.bases[stationSerial], "AlarmDelayEvent");
-                    this.removeEventListener(this.bases[stationSerial], "TalkbackStarted");
-                    this.removeEventListener(this.bases[stationSerial], "TalkbackStopped");
-                    this.removeEventListener(this.bases[stationSerial], "TalkbackError");
-                    this.removeEventListener(this.bases[stationSerial], "AlarmArmedEvent");
-                    this.removeEventListener(this.bases[stationSerial], "AlarmArmDelayEvent");
-                    this.removeEventListener(this.bases[stationSerial], "SecondaryCommandResult");
-                    this.removeEventListener(this.bases[stationSerial], "DeviceShakeAlarm");
-                    this.removeEventListener(this.bases[stationSerial], "Device911Alarm");
-                    this.removeEventListener(this.bases[stationSerial], "DeviceJammed");
-                    this.removeEventListener(this.bases[stationSerial], "DeviceLowBattery");
-                    this.removeEventListener(this.bases[stationSerial], "DeviceWrongTryProtectAlarm");
+                    this.removeEventListener(this.stations[stationSerial], "GuardModeChanged");
+                    this.removeEventListener(this.stations[stationSerial], "CurrentMode");
+                    this.removeEventListener(this.stations[stationSerial], "PropertyChanged");
+                    this.removeEventListener(this.stations[stationSerial], "RawPropertyChanged");
+                    this.removeEventListener(this.stations[stationSerial], "Connect");
+                    this.removeEventListener(this.stations[stationSerial], "ConnectionError");
+                    this.removeEventListener(this.stations[stationSerial], "Close");
+                    this.removeEventListener(this.stations[stationSerial], "RawDevicePropertyChanged");
+                    this.removeEventListener(this.stations[stationSerial], "LivestreamStart");
+                    this.removeEventListener(this.stations[stationSerial], "LivestreamStop");
+                    this.removeEventListener(this.stations[stationSerial], "LivestreamError");
+                    this.removeEventListener(this.stations[stationSerial], "DownloadStart");
+                    this.removeEventListener(this.stations[stationSerial], "DownloadFinish");
+                    this.removeEventListener(this.stations[stationSerial], "CommandResult");
+                    this.removeEventListener(this.stations[stationSerial], "RTSPLivestreamStart");
+                    this.removeEventListener(this.stations[stationSerial], "RTSPLivestreamStop");
+                    this.removeEventListener(this.stations[stationSerial], "RTSPUrl");
+                    this.removeEventListener(this.stations[stationSerial], "AlarmEvent");
+                    this.removeEventListener(this.stations[stationSerial], "RuntimeState");
+                    this.removeEventListener(this.stations[stationSerial], "ChargingState");
+                    this.removeEventListener(this.stations[stationSerial], "WifiRssi");
+                    this.removeEventListener(this.stations[stationSerial], "FloodlightManualSwitch");
+                    this.removeEventListener(this.stations[stationSerial], "AlarmDelayEvent");
+                    this.removeEventListener(this.stations[stationSerial], "TalkbackStarted");
+                    this.removeEventListener(this.stations[stationSerial], "TalkbackStopped");
+                    this.removeEventListener(this.stations[stationSerial], "TalkbackError");
+                    this.removeEventListener(this.stations[stationSerial], "AlarmArmedEvent");
+                    this.removeEventListener(this.stations[stationSerial], "AlarmArmDelayEvent");
+                    this.removeEventListener(this.stations[stationSerial], "SecondaryCommandResult");
+                    this.removeEventListener(this.stations[stationSerial], "DeviceShakeAlarm");
+                    this.removeEventListener(this.stations[stationSerial], "Device911Alarm");
+                    this.removeEventListener(this.stations[stationSerial], "DeviceJammed");
+                    this.removeEventListener(this.stations[stationSerial], "DeviceLowBattery");
+                    this.removeEventListener(this.stations[stationSerial], "DeviceWrongTryProtectAlarm");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
@@ -240,7 +230,7 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         await this.httpService.refreshAllData().catch(error => {
             this.api.logError("Error occured at updateDeviceData while API data refreshing.", error);
         });
-        Object.values(this.bases).forEach(async (station: Station) => {
+        Object.values(this.stations).forEach(async (station: Station) => {
             if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
             {
                 await station.getCameraInfo().catch(error => {
@@ -253,73 +243,87 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     /**
      * Save the relevant settings (mainly for P2P-Connection) to the config
      */
-    public async saveBasesSettings() : Promise<void>
+    public async saveStationsSettings() : Promise<void>
     {
-        await this.api.saveBasesSettings(this.bases, this.serialNumbers);
+        await this.api.saveStationsSettings(this.stations, this.serialNumbers);
     }
 
     /**
-     * Returns a Array of all Bases.
+     * Returns a Array of all stations.
      */
-    public getBases() : {[stationSerial: string] : Station}
+    public getStations() : {[stationSerial: string] : Station}
     {
-        return this.bases;
+        return this.stations;
     }
 
     /**
-     * Get the guard mode for all bases.
+     * Returns the serial object specified by the station serial.
+     * @param stationSerial The serial of the station to retrive.
+     * @returns The station object.
      */
-    public getGuardMode() : {[stationSerial: string] : Station}
+    public getStation(stationSerial : string) : Station
     {
-        return this.getBases();
+        if (Object.keys(this.stations).includes(stationSerial))
+        {
+            return this.stations[stationSerial];
+        }
+        throw new StationNotFoundError(`No station with serial number: ${stationSerial}!`);
     }
 
     /**
-     * Set the guard mode of all bases to the given mode.
+     * Get the guard mode for all stations.
+     */
+    public getGuardMode() : { [stationSerial : string ] : Station}
+    {
+        return this.getStations();
+    }
+
+    /**
+     * Set the guard mode of all stations to the given mode.
      * @param guardMode The target guard mode.
      */
     public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
     {
-        for (var stationSerial in this.bases)
+        for (var stationSerial in this.stations)
         {
             this.skipNextModeChangeEvent[stationSerial] = true;
-            await this.bases[stationSerial].setGuardMode(guardMode)
+            await this.stations[stationSerial].setGuardMode(guardMode)
             await sleep(500);
         }
         return await this.checkChangedGuardMode(guardMode, true, "");
     }
 
     /**
-     * Set the guard mode for the given base to the given mode.
-     * @param baseSerial The serial of the base the mode to change.
+     * Set the guard mode for the given station to the given mode.
+     * @param stationSerial The serial of the station the mode to change.
      * @param guardMode The target guard mode.
      */
-    public async setGuardModeBase(baseSerial : string, guardMode : GuardMode) : Promise<boolean>
+    public async setGuardModeStation(stationSerial : string, guardMode : GuardMode) : Promise<boolean>
     {
-        this.skipNextModeChangeEvent[baseSerial] = true;
-        await this.setStationProperty(baseSerial, PropertyName.StationGuardMode, guardMode);
-        return await this.checkChangedGuardMode(guardMode, false, this.bases[baseSerial].getSerial());
+        this.skipNextModeChangeEvent[stationSerial] = true;
+        await this.setStationProperty(stationSerial, PropertyName.StationGuardMode, guardMode);
+        return await this.checkChangedGuardMode(guardMode, false, this.stations[stationSerial].getSerial());
     }
 
     /**
      * Check the guardMode after changing if the guardMode has changed.
-     * @param guardMode The guradMode the base should be set to.
-     * @param checkAllBases true, if all bases should be checked, otherwise false
-     * @param baseSerial The serial of the base the mode to change.
+     * @param guardMode The guradMode the station should be set to.
+     * @param checkAllStations true, if all stations should be checked, otherwise false
+     * @param stationSerial The serial of the station the mode to change.
      */
-    private async checkChangedGuardMode(guardMode : GuardMode, checkAllBases : boolean, baseSerial : string) : Promise<boolean>
+    private async checkChangedGuardMode(guardMode : GuardMode, checkAllStations : boolean, stationSerial : string) : Promise<boolean>
     {
         var res = false;
-        if(checkAllBases == true)
+        if(checkAllStations == true)
         {
             var cnt = 0;
-            for (var stationSerial in this.bases)
+            for (var stationSerial in this.stations)
             {
                 for(var i=0; i<20; i++)
                 {
                     await sleep(1000);
-                    await this.loadBases();
-                    if(this.bases[stationSerial].getGuardMode() as number == guardMode)
+                    await this.loadStations();
+                    if(this.stations[stationSerial].getGuardMode() as number == guardMode)
                     {
                         this.api.logInfo(`Detected changed alarm mode for station ${stationSerial} after ${(i+1)} iterations.`);
                         res = true;
@@ -346,17 +350,17 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
             for(var i=0; i<20; i++)
             {
                 await sleep(1000);
-                await this.loadBases();
-                if(this.bases[baseSerial].getGuardMode() as number == guardMode)
+                await this.loadStations();
+                if(this.stations[stationSerial].getGuardMode() as number == guardMode)
                 {
-                    this.api.logInfo(`Detected changed alarm mode for station ${baseSerial} after ${(i+1)} iterations.`);
+                    this.api.logInfo(`Detected changed alarm mode for station ${stationSerial} after ${(i+1)} iterations.`);
                     res = true;
                     break;
                 }
             }
             if(res == false)
             {
-                this.api.logInfo(`Changed alarm mode for station ${baseSerial} could not be detected after 20 iterations.`);
+                this.api.logInfo(`Changed alarm mode for station ${stationSerial} could not be detected after 20 iterations.`);
             }
         }
 
@@ -371,29 +375,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Force reconnect to a given base.
-     * @param stationSerial The serial of the base to reconnect.
-     */
-    private async forceReconnect(stationSerial : string) : Promise<void>
-    {
-        if(this.bases[stationSerial].isConnected() == false)
-        {
-            this.api.logInfo(`Reconnect for base ${stationSerial} forced after 5 minutes.`);
-            await this.bases[stationSerial].connect();
-        }
-        else
-        {
-            this.api.logInfo(`Reconnect for base ${stationSerial} already done.`);
-        }
-    }
-
-    /**
-     * Add a given event listener for a given base.
-     * @param base The base as Station object.
+     * Add a given event listener for a given station.
+     * @param station The station as Station object.
      * @param eventListenerName The event listener name as string.
      * @param delayed false if add instantly, for a 5s delay set true. 
      */
-    public async addEventListener(base : Station, eventListenerName : string, delayed : boolean) : Promise<void>
+    public async addEventListener(station : Station, eventListenerName : string, delayed : boolean) : Promise<void>
     {
         if(delayed == true)
         {
@@ -402,385 +389,385 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         switch (eventListenerName)
         {
             case "Connect":
-                base.on("connect", (station : Station) => this.onStationConnect(station));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("connect")} Listener.`);
+                station.on("connect", (station : Station) => this.onStationConnect(station));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connect")} Listener.`);
                 break;
             case "ConnectionError":
-                base.on("connection error", (station : Station, error : Error) => this.onStationConnectionError(station, error));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("connection error")} Listeners.`);
+                station.on("connection error", (station : Station, error : Error) => this.onStationConnectionError(station, error));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connection error")} Listeners.`);
             case "Close":
-                base.on("close", (station : Station) => this.onStationClose(station));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("close")} Listener.`);
+                station.on("close", (station : Station) => this.onStationClose(station));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("close")} Listener.`);
                 break;
             case "RawDevicePropertyChanged":
-                base.on("raw device property changed", (deviceSN: string, params: RawValues) => this.onStationRawDevicePropertyChanged(deviceSN, params));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("raw device property changed")} Listener.`);
+                station.on("raw device property changed", (deviceSN: string, params: RawValues) => this.onStationRawDevicePropertyChanged(deviceSN, params));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw device property changed")} Listener.`);
                 break;
             case "LivestreamStart":
-                base.on("livestream start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationLivestreamStart(station, channel, metadata, videoStream, audioStream));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("livestream start")} Listener.`);
+                station.on("livestream start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationLivestreamStart(station, channel, metadata, videoStream, audioStream));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream start")} Listener.`);
                 break;
             case "LivestreamStop":
-                base.on("livestream stop", (station : Station, channel : number) => this.onStationLivestreamStop(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("livestream stop")} Listener.`);
+                station.on("livestream stop", (station : Station, channel : number) => this.onStationLivestreamStop(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
-                base.on("livestream error", (station : Station, channel : number) => this.onStationLivestreamError(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("livestream error")} Listener.`);
+                station.on("livestream error", (station : Station, channel : number) => this.onStationLivestreamError(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
-                base.on("download start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("download start")} Listener.`);
+                station.on("download start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download start")} Listener.`);
                 break;
             case "DownloadFinish":
-                base.on("download finish", (station : Station, channel : number) => this.onStationDownloadFinish(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("download finish")} Listener.`);
+                station.on("download finish", (station : Station, channel : number) => this.onStationDownloadFinish(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download finish")} Listener.`);
                 break;
             case "CommandResult":
-                base.on("command result", (station : Station, result : CommandResult) => this.onStationCommandResult(station, result));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("command result")} Listener.`);
+                station.on("command result", (station : Station, result : CommandResult) => this.onStationCommandResult(station, result));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("command result")} Listener.`);
                 break;
             case "GuardModeChanged":
-                base.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardMode(station, guardMode));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("guard mode")} Listener.`);
+                station.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardMode(station, guardMode));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
             case "CurrentMode":
-                base.on("current mode", (station : Station, guardMode : number) => this.onStationCurrentMode(station, guardMode));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("current mode")} Listener.`);
+                station.on("current mode", (station : Station, guardMode : number) => this.onStationCurrentMode(station, guardMode));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("current mode")} Listener.`);
                 break;
             case "RTSPLivestreamStart":
-                base.on("rtsp livestream start", (station : Station, channel : number) => this.onStationRTSPLivestreamStart(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("rtsp livestream start")} Listener.`);
+                station.on("rtsp livestream start", (station : Station, channel : number) => this.onStationRTSPLivestreamStart(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream start")} Listener.`);
                 break;
             case "RTSPLivestreamStop":
-                base.on("rtsp livestream stop", (station : Station, channel : number) => this.onStationRTSPLivestreamStop(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("rtsp livestream stop")} Listener.`);
+                station.on("rtsp livestream stop", (station : Station, channel : number) => this.onStationRTSPLivestreamStop(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream stop")} Listener.`);
                 break;
             case "RTSPUrl":
-                base.on("rtsp url", (station : Station, channel : number) => this.onStationRTSPURL(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("rtsp url")} Listener.`);
+                station.on("rtsp url", (station : Station, channel : number, value: string) => this.onStationRTSPURL(station, channel, value));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
-                base.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onStationPropertyChanged(station, name, value));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("property changed")} Listener.`);
+                station.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onStationPropertyChanged(station, name, value));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
-                base.on("raw property changed", (station : Station, type : number, value : string) => this.onStationRawPropertyChanged(station, type, value));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("raw property changed")} Listener.`);
+                station.on("raw property changed", (station : Station, type : number, value : string) => this.onStationRawPropertyChanged(station, type, value));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw property changed")} Listener.`);
                 break;
             case "AlarmEvent":
-                base.on("alarm event", (station : Station, alarmEvent : AlarmEvent) => this.onStationAlarmEvent(station, alarmEvent));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm event")} Listener.`);
+                station.on("alarm event", (station : Station, alarmEvent : AlarmEvent) => this.onStationAlarmEvent(station, alarmEvent));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm event")} Listener.`);
                 break;
             case "RuntimeState":
-                base.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("runtime state")} Listener.`);
+                station.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("runtime state")} Listener.`);
                 break;
             case "ChargingState":
-                base.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("charging state")} Listener.`);
+                station.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("charging state")} Listener.`);
                 break;
             case "WifiRssi":
-                base.on("wifi rssi", (station: Station, channel: number, rssi: number) => this.onStationWifiRssi(station, channel, rssi));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                station.on("wifi rssi", (station: Station, channel: number, rssi: number) => this.onStationWifiRssi(station, channel, rssi));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("wifi rssi")} Listener.`);
                 break;
             case "FloodlightManualSwitch":
-                base.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean) => this.onStationFloodlightManualSwitch(station, channel, enabled));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("floodlight manual switch")} Listener.`);
+                station.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean) => this.onStationFloodlightManualSwitch(station, channel, enabled));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("floodlight manual switch")} Listener.`);
                 break;
             case "AlarmDelayEvent":
-                base.on("alarm delay event", (station: Station, alarmDelayEvent: AlarmEvent, alarmDelay : number) => this.onStationAlarmDelayEvent(station, alarmDelayEvent, alarmDelay));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm delay event")} Listener.`);
+                station.on("alarm delay event", (station: Station, alarmDelayEvent: AlarmEvent, alarmDelay : number) => this.onStationAlarmDelayEvent(station, alarmDelayEvent, alarmDelay));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm delay event")} Listener.`);
                 break;
             case "TalkbackStarted":
-                base.on("talkback started", (station: Station, channel: number, talkbackStream : TalkbackStream) => this.onStationTalkbackStarted(station, channel, talkbackStream));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback started")} Listener.`);
+                station.on("talkback started", (station: Station, channel: number, talkbackStream : TalkbackStream) => this.onStationTalkbackStarted(station, channel, talkbackStream));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback started")} Listener.`);
                 break;
             case "TalkbackStopped":
-                base.on("talkback stopped", (station: Station, channel: number) => this.onStationTalkbackStopped(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback stopped")} Listener.`);
+                station.on("talkback stopped", (station: Station, channel: number) => this.onStationTalkbackStopped(station, channel));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback stopped")} Listener.`);
                 break;
             case "TalkbackError":
-                base.on("talkback error", (station: Station, channel: number, error : Error) => this.onStationTalkbackError(station, channel, error));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("talkback error")} Listener.`);
+                station.on("talkback error", (station: Station, channel: number, error : Error) => this.onStationTalkbackError(station, channel, error));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback error")} Listener.`);
                 break;
             case "AlarmArmedEvent":
-                base.on("alarm armed event", (station: Station) => this.onStationAlarmArmedEvent(station));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm armed event")} Listener.`);
+                station.on("alarm armed event", (station: Station) => this.onStationAlarmArmedEvent(station));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm armed event")} Listener.`);
                 break;
             case "AlarmArmDelayEvent":
-                base.on("alarm arm delay event", (station: Station, alarmDelay: number) => this.onStationAlarmArmDelayEvent(station, alarmDelay));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
+                station.on("alarm arm delay event", (station: Station, alarmDelay: number) => this.onStationArmDelayEvent(station, alarmDelay));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm arm delay event")} Listener.`);
                 break;
             case "SecondaryCommandResult":
-                base.on("secondary command result", (station: Station, result: CommandResult) => this.onStationSecondaryCommandResult(station, result));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("secondary command result")} Listener.`);
+                station.on("secondary command result", (station: Station, result: CommandResult) => this.onStationSecondaryCommandResult(station, result));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("secondary command result")} Listener.`);
                 break;
             case "DeviceShakeAlarm":
-                base.on("device shake alarm", (deviceSN: string, event: SmartSafeShakeAlarmEvent) => this.onStationDeviceShakeAlarm(deviceSN, event));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device shake alarm")} Listener.`);
+                station.on("device shake alarm", (deviceSN: string, event: SmartSafeShakeAlarmEvent) => this.onStationDeviceShakeAlarm(deviceSN, event));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device shake alarm")} Listener.`);
                 break;
             case "Device911Alarm":
-                base.on("device 911 alarm", (deviceSN: string, event: SmartSafeAlarm911Event) => this.onStationDevice911Alarm(deviceSN, event));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device 911 alarm")} Listener.`);
+                station.on("device 911 alarm", (deviceSN: string, event: SmartSafeAlarm911Event) => this.onStationDevice911Alarm(deviceSN, event));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device 911 alarm")} Listener.`);
                 break;
             case "DeviceJammed":
-                base.on("device jammed", (deviceSN: string) => this.onStationDeviceJammed(deviceSN));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device jammed")} Listener.`);
+                station.on("device jammed", (deviceSN: string) => this.onStationDeviceJammed(deviceSN));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device jammed")} Listener.`);
                 break;
             case "DeviceLowBattery":
-                base.on("device low battery", (deviceSN: string) => this.onStationDeviceLowBattery(deviceSN));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device low battery")} Listener.`);
+                station.on("device low battery", (deviceSN: string) => this.onStationDeviceLowBattery(deviceSN));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device low battery")} Listener.`);
                 break;
             case "DeviceWrongTryProtectAlarm":
-                base.on("device wrong try-protect alarm", (deviceSN: string) => this.onStationDeviceWrongTryProtectAlarm(deviceSN));
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} added. Total ${base.listenerCount("device wrong try-protect alarm")} Listener.`);
+                station.on("device wrong try-protect alarm", (deviceSN: string) => this.onStationDeviceWrongTryProtectAlarm(deviceSN));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
                 break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for base ${base.getSerial()} is unknown.`);
+                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
                 break;
         }
     }
 
     /**
-     * Remove all event listeners for a given event type for a given base.
-     * @param base The base as Station object.
+     * Remove all event listeners for a given event type for a given station.
+     * @param station The station as Station object.
      * @param eventListenerName The event listener name as string.
      */
-    public removeEventListener(base : Station, eventListenerName : string) : void
+    public removeEventListener(station : Station, eventListenerName : string) : void
     {
         switch (eventListenerName)
         {
             case "Connect":
-                base.removeAllListeners("connect");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("connect")} Listener.`);
+                station.removeAllListeners("connect");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connect")} Listener.`);
                 break;
             case "ConnectionEroor":
-                base.removeAllListeners("connection error");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("connection error")} Listener.`);
+                station.removeAllListeners("connection error");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connection error")} Listener.`);
                 break;
             case "Close":
-                base.removeAllListeners("close");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("close")} Listener.`);
+                station.removeAllListeners("close");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("close")} Listener.`);
                 break;
             case "RawDevicePropertyChanged":
-                base.removeAllListeners("raw device property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw device property changed")} Listener.`);
+                station.removeAllListeners("raw device property changed");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("raw device property changed")} Listener.`);
                 break;
             case "LivestreamStart":
-                base.removeAllListeners("livestream start");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream start")} Listener.`);
+                station.removeAllListeners("livestream start");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream start")} Listener.`);
                 break;
             case "LivestreamStop":
-                base.removeAllListeners("livestream stop");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream stop")} Listener.`);
+                station.removeAllListeners("livestream stop");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
-                base.removeAllListeners("livestream error");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("livestream error")} Listener.`);
+                station.removeAllListeners("livestream error");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
-                base.removeAllListeners("download start");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("download start")} Listener.`);
+                station.removeAllListeners("download start");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("download start")} Listener.`);
                 break;
             case "DownloadFinish":
-                base.removeAllListeners("download finish");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("download finish")} Listener.`);
+                station.removeAllListeners("download finish");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("download finish")} Listener.`);
                 break;
             case "CommandResult":
-                base.removeAllListeners("command result");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("command result")} Listener.`);
+                station.removeAllListeners("command result");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("command result")} Listener.`);
                 break;
             case "GuardModeChanged":
-                base.removeAllListeners("guard mode");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("guard mode")} Listener.`);
+                station.removeAllListeners("guard mode");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
             case "CurrentMode":
-                base.removeAllListeners("current mode");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("current mode")} Listener.`);
+                station.removeAllListeners("current mode");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("current mode")} Listener.`);
                 break;
             case "RTSPLivestreamStart":
-                base.removeAllListeners("rtsp livestream start");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp livestream start")} Listener.`);
+                station.removeAllListeners("rtsp livestream start");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp livestream start")} Listener.`);
                 break;
             case "RTSPLivestreamStop":
-                base.removeAllListeners("rtsp livestream stop");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp livestream stop")} Listener.`);
+                station.removeAllListeners("rtsp livestream stop");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp livestream stop")} Listener.`);
                 break;
             case "RTSPUrl":
-                base.removeAllListeners("rtsp url");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("rtsp url")} Listener.`);
+                station.removeAllListeners("rtsp url");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
-                base.removeAllListeners("property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("property changed")} Listener.`);
+                station.removeAllListeners("property changed");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
-                base.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("raw property changed")} Listener.`);
+                station.removeAllListeners("raw property changed");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("raw property changed")} Listener.`);
                 break;
             case "AlarmEvent":
-                base.removeAllListeners("alarm event");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm event")} Listener.`);
+                station.removeAllListeners("alarm event");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm event")} Listener.`);
                 break;
             case "RuntimeState":
-                base.removeAllListeners("runtime state");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("runtime state")} Listener.`);
+                station.removeAllListeners("runtime state");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("runtime state")} Listener.`);
                 break;
             case "ChargingState":
-                base.removeAllListeners("charging state");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("charging state")} Listener.`);
+                station.removeAllListeners("charging state");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("charging state")} Listener.`);
                 break;
             case "WifiRssi":
-                base.removeAllListeners("wifi rssi");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("wifi rssi")} Listener.`);
+                station.removeAllListeners("wifi rssi");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("wifi rssi")} Listener.`);
                 break;
             case "FloodlightManualSwitch":
-                base.removeAllListeners("floodlight manual switch");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("floodlight manual switch")} Listener.`);
+                station.removeAllListeners("floodlight manual switch");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("floodlight manual switch")} Listener.`);
                 break;
             case "AlarmDelayEvent":
-                base.removeAllListeners("alarm delay event");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm delay event")} Listener.`);
+                station.removeAllListeners("alarm delay event");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm delay event")} Listener.`);
                 break;
             case "TalkbackStarted":
-                base.removeAllListeners("talkback started");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback started")} Listener.`);
+                station.removeAllListeners("talkback started");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback started")} Listener.`);
                 break;
             case "TalkbackStopped":
-                base.removeAllListeners("talkback stopped");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback stopped")} Listener.`);
+                station.removeAllListeners("talkback stopped");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback stopped")} Listener.`);
                 break;
             case "TalkbackError":
-                base.removeAllListeners("talkback error");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("talkback error")} Listener.`);
+                station.removeAllListeners("talkback error");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback error")} Listener.`);
                 break;
             case "AlarmArmedEvent":
-                base.removeAllListeners("alarm armed event");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm armed event")} Listener.`);
+                station.removeAllListeners("alarm armed event");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm armed event")} Listener.`);
                 break;
             case "AlarmArmDelayEvent":
-                base.removeAllListeners("alarm arm delay event");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("alarm arm delay event")} Listener.`);
+                station.removeAllListeners("alarm arm delay event");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm arm delay event")} Listener.`);
                 break;
             case "SecondaryCommandResult":
-                base.removeAllListeners("secondary command result");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("secondary command result")} Listener.`);
+                station.removeAllListeners("secondary command result");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("secondary command result")} Listener.`);
                 break;
             case "DeviceShakeAlarm":
-                base.removeAllListeners("device shake alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device shake alarm")} Listener.`);
+                station.removeAllListeners("device shake alarm");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device shake alarm")} Listener.`);
                 break;
             case "Device911Alarm":
-                base.removeAllListeners("device 911 alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device 911 alarm")} Listener.`);
+                station.removeAllListeners("device 911 alarm");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device 911 alarm")} Listener.`);
                 break;
             case "DeviceJammed":
-                base.removeAllListeners("device jammed");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device jammed")} Listener.`);
+                station.removeAllListeners("device jammed");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device jammed")} Listener.`);
                 break;
             case "DeviceLowBattery":
-                base.removeAllListeners("device low battery");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device low battery")} Listener.`);
+                station.removeAllListeners("device low battery");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device low battery")} Listener.`);
                 break;
             case "DeviceWrongTryProtectAlarm":
-                base.removeAllListeners("device wrong try-protect alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for base ${base.getSerial()} removed. Total ${base.listenerCount("device wrong try-protect alarm")} Listener.`);
+                station.removeAllListeners("device wrong try-protect alarm");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
                 break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for base ${base.getSerial()} is unknown.`);
+                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
                 break;
         }
     }
 
     /**
-     * Returns the number of attached listeners for a given base and a given event.
-     * @param base The base the number of attached listners to count.
+     * Returns the number of attached listeners for a given station and a given event.
+     * @param station The station the number of attached listners to count.
      * @param eventListenerName The name of the event the attached listeners to count.
      */
-    public countEventListener(base : Station, eventListenerName : string) : number
+    public countEventListener(station : Station, eventListenerName : string) : number
     {
         switch (eventListenerName)
         {
             case "Connect":
-                return base.listenerCount("connect");
+                return station.listenerCount("connect");
             case "ConnectionError":
-                return base.listenerCount("connection error");
+                return station.listenerCount("connection error");
             case "Close":
-                return base.listenerCount("close");
+                return station.listenerCount("close");
             case "RawDevicePropertyChanged":
-                return base.listenerCount("raw device property changed");
+                return station.listenerCount("raw device property changed");
             case "LivestreamStart":
-                return base.listenerCount("livestream start");
+                return station.listenerCount("livestream start");
             case "LivestreamStop":
-                return base.listenerCount("livestream stop");
+                return station.listenerCount("livestream stop");
             case "LivestreamError":
-                return base.listenerCount("livestream error");
+                return station.listenerCount("livestream error");
             case "DownloadStart":
-                return base.listenerCount("download start");
+                return station.listenerCount("download start");
             case "DownloadFinish":
-                return base.listenerCount("download finish");
+                return station.listenerCount("download finish");
             case "CommandResult":
-                return base.listenerCount("command result");
+                return station.listenerCount("command result");
             case "GuardMode":
-                return base.listenerCount("guard mode");
+                return station.listenerCount("guard mode");
             case "CurrentMode":
-                return base.listenerCount("current mode");
+                return station.listenerCount("current mode");
             case "RTSPLivestreamStart":
-                return base.listenerCount("rtsp livestream start");
+                return station.listenerCount("rtsp livestream start");
             case "RTSPLivestreamStop":
-                return base.listenerCount("rtsp livestream stop");
+                return station.listenerCount("rtsp livestream stop");
             case "RTSPUrl":
-                return base.listenerCount("rtsp url");
+                return station.listenerCount("rtsp url");
             case "PropertyChanged":
-                return base.listenerCount("property changed");
+                return station.listenerCount("property changed");
             case "RawPropertyChanged":
-                return base.listenerCount("raw property changed");
+                return station.listenerCount("raw property changed");
             case "AlarmEvent":
-                return base.listenerCount("alarm event");
+                return station.listenerCount("alarm event");
             case "RuntimeState":
-                return base.listenerCount("runtime state");
+                return station.listenerCount("runtime state");
             case "ChargingState":
-                return base.listenerCount("charging state");
+                return station.listenerCount("charging state");
             case "WifiRssi":
-                return base.listenerCount("wifi rssi");
+                return station.listenerCount("wifi rssi");
             case "FloodlightManualSwitch":
-                return base.listenerCount("floodlight manual switch");
+                return station.listenerCount("floodlight manual switch");
             case "AlarmDelayEvent":
-                return base.listenerCount("alarm delay event");
+                return station.listenerCount("alarm delay event");
             case "TalkbackStarted":
-                return base.listenerCount("talkback started");
+                return station.listenerCount("talkback started");
             case "TalkbackStopped":
-                return base.listenerCount("talkback stopped");
+                return station.listenerCount("talkback stopped");
             case "TalkbackError":
-                return base.listenerCount("talkback error");
+                return station.listenerCount("talkback error");
             case "AlarmArmedEvent":
-                return base.listenerCount("alarm armed event");
+                return station.listenerCount("alarm armed event");
             case "AlarmArmDelayEvent":
-                return base.listenerCount("alarm arm delay event");
+                return station.listenerCount("alarm arm delay event");
             case "SecondaryCommandResult":
-                return base.listenerCount("secondary command result");
+                return station.listenerCount("secondary command result");
             case "DeviceShakeAlarm":
-                return base.listenerCount("device shake alarm");
+                return station.listenerCount("device shake alarm");
             case "Device911Alarm":
-                return base.listenerCount("device 911 alarm");
+                return station.listenerCount("device 911 alarm");
             case "DeviceJammed":
-                return base.listenerCount("device jammed");
+                return station.listenerCount("device jammed");
             case "DeviceLowBattery":
-                return base.listenerCount("device low battery");
+                return station.listenerCount("device low battery");
             case "DeviceWrongTryProtectAlarm":
-                return base.listenerCount("device wrong try-protect alarm");
+                return station.listenerCount("device wrong try-protect alarm");
         }
         return -1;
     }
 
     /**
      * The action to be done when event Connect is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      */
     private async onStationConnect(station : Station) : Promise<void>
     {
-        this.api.logDebug(`Event "Connect": base: ${station.getSerial()}`);
+        this.api.logDebug(`Event "Connect": station: ${station.getSerial()}`);
         this.emit("station connect", station);
         if ((Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType())))
         {
@@ -805,21 +792,22 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
 
     /**
      * The action to be done when event Connection Error is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param error Ther error occured.
      */
     private onStationConnectionError(station: Station, error: Error): void
     {
+        this.api.logDebug(`Event "ConnectionError": station: ${station.getSerial()}`);
         this.emit("station connection error", station, error);
     }
 
     /**
      * The action to be done when event Close is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      */
     private async onStationClose(station : Station): Promise<void>
     {
-        this.api.logInfo(`Event "Close": base: ${station.getSerial()}`);
+        this.api.logInfo(`Event "Close": station: ${station.getSerial()}`);
         this.emit("station close", station);
 
         if(this.api.getServiceState() != "shutdown")
@@ -829,7 +817,8 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         /*for (const device_sn of this.cameraStationLivestreamTimeout.keys())
         {
             this.devices.getDevice(device_sn).then((device: Device) => {
-                if (device !== null && device.getStationSerial() === station.getSerial()) {
+                if (device !== null && device.getStationSerial() === station.getSerial())
+                {
                     clearTimeout(this.cameraStationLivestreamTimeout.get(device_sn)!);
                     this.cameraStationLivestreamTimeout.delete(device_sn);
                 }
@@ -847,12 +836,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private async onStationRawDevicePropertyChanged(deviceSerial: string, values: RawValues): Promise<void>
     {
         this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
-        this.devices.updateDeviceProperties(deviceSerial, values);
+        this.api.updateDeviceProperties(deviceSerial, values);
     }
 
     /**
      * The action to be done when event LivestreamStart is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param metadata The metadata.
      * @param videoStream The videoStream.
@@ -860,32 +849,47 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationLivestreamStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable): Promise<void>
     {
-        this.api.logDebug(`Event "LivestreamStart": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station livestream start", station, device, metadata, videoStream, audioStream);
+        }).catch((error) => {
+            this.api.logError(`Station start livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event LivestreamStop is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
     private async onStationLivestreamStop(station : Station, channel : number): Promise<void>
     {
-        this.api.logDebug(`Event "LivestreamStop": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station livestream stop", station, device);
+        }).catch((error) => {
+            this.api.logError(`Station stop livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event LivestreamError is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
     private async onStationLivestreamError(station : Station, channel : number): Promise<void>
     {
-        this.api.logDebug(`Event "LivestreamError": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "LivestreamError": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            station.stopLivestream(device);
+        }).catch((error) => {
+            this.api.logError(`Station livestream error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
+        });
     }
 
     /**
      * The action to be done when event DownloadStart is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param metadata The metadata.
      * @param videoStream The videoStream.
@@ -893,40 +897,56 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationDownloadStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable): Promise<void>
     {
-        this.api.logDebug(`Event "DownloadStart": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "DownloadStart": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station download start", station, device, metadata, videoStream, audioStream);
+        }).catch((error) => {
+            this.api.logError(`Station start download error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event DownloadFinish is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
     private async onStationDownloadFinish(station : Station, channel : number): Promise<void>
     {
-        this.api.logDebug(`Event "DownloadFinish": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "DownloadFinish": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station download finish", station, device);
+        }).catch((error) => {
+            this.api.logError(`Station finish download error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
-     * The action to be done when event StationResult is fired.
-     * @param station The base as Station object.
+     * The action to be done when event StationCommandResult is fired.
+     * @param station The station as Station object.
      * @param command The result.
      */
     private async onStationCommandResult(station : Station, result : CommandResult): Promise<void>
     {
-        this.api.logInfo(`Event "CommandResult": base: ${station.getSerial()} | result: ${result}`);
-        /*if (result.return_code === 0) {
-            this.devices.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+        this.api.logDebug(`Event "CommandResult": station: ${station.getSerial()} | result: ${result}`);
+        if (result.return_code === 0) {
+            this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
                 //TODO: Finish SmartSafe implementation - check better the if below
-                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLock()) ||
-                    (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS)) {
-                    if (device.hasProperty(result.customData.property.name)) {
+                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLock()) || (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS))
+                {
+                    if (device.hasProperty(result.customData.property.name))
+                    {
                         device.updateProperty(result.customData.property.name, result.customData.property.value);
-                    } else if (station.hasProperty(result.customData.property.name)) {
+                    }
+                    else if (station.hasProperty(result.customData.property.name))
+                    {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
-                } else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === CommandName.DeviceSnooze) {
+                }
+                else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === CommandName.DeviceSnooze)
+                {
                     const snoozeTime = result.customData.command.value !== undefined && result.customData.command.value.snooze_time !== undefined ? result.customData.command.value.snooze_time as number : 0;
-                    if (snoozeTime > 0) {
+                    if (snoozeTime > 0)
+                    {
                         device.updateProperty(PropertyName.DeviceSnooze, true);
                         device.updateProperty(PropertyName.DeviceSnoozeTime, snoozeTime);
                     }
@@ -934,54 +954,87 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
                         const snoozeStartTime = device.getPropertyValue(PropertyName.DeviceHiddenSnoozeStartTime) as number;
                         const currentTime = Math.trunc(new Date().getTime() / 1000);
                         let timeoutMS;
-                        if (snoozeStartTime !== undefined && snoozeStartTime !== 0) {
+                        if (snoozeStartTime !== undefined && snoozeStartTime !== 0)
+                        {
                             timeoutMS = (snoozeStartTime + snoozeTime - currentTime) * 1000;
-                        } else {
+                        }
+                        else
+                        {
                             timeoutMS = snoozeTime * 1000;
                         }
-                        /*this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
-                            device.updateProperty(PropertyName.DeviceSnooze, false);
-                            device.updateProperty(PropertyName.DeviceSnoozeTime, 0);
-                            delete this.deviceSnoozeTimeout[device.getSerial()];
-                        }, timeoutMS);*//*
+                        this.api.setDeviceSnooze(device, timeoutMS);
                     }).catch(error => {
                         this.api.logError("Error during API data refreshing", error);
                     });
                 }
             }).catch((error) => {
-                if (error instanceof DeviceNotFoundError) {
-                    if (result.customData !== undefined && result.customData.property !== undefined) {
+                if (error instanceof DeviceNotFoundError)
+                {
+                    if (result.customData !== undefined && result.customData.property !== undefined)
+                    {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
-                } else {
+                }
+                else
+                {
                     this.api.logError(`Station command result error (station: ${station.getSerial()})`, error);
                 }
             });
-            if (station.isIntegratedDevice() && result.command_type === CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL) {
+            if (station.isIntegratedDevice() && result.command_type === CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
+            {
+                this.api.logInfo(`Event "CommandResult": station: ${station.getSerial()} | result.customData: ${result.customData}`);
                 station.getCameraInfo();
             }
-        }*/
+        }
     }
 
     /**
      * The action to be done when event SecondaryCommandResult is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param result The result.
      */
     private onStationSecondaryCommandResult(station: Station, result: CommandResult): void
     {
-        this.api.logDebug(`Event "SecondaryCommandResult": base: ${station.getSerial()} | result: ${result}`);
+        this.api.logDebug(`Event "SecondaryCommandResult": station: ${station.getSerial()} | result: ${result}`);
+        if (result.return_code === 0)
+        {
+            this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                if (result.customData !== undefined && result.customData.property !== undefined)
+                {
+                    if (device.hasProperty(result.customData.property.name))
+                    {
+                        device.updateProperty(result.customData.property.name, result.customData.property.value);
+                    }
+                    else if (station.hasProperty(result.customData.property.name))
+                    {
+                        station.updateProperty(result.customData.property.name, result.customData.property.value);
+                    }
+                }
+            }).catch((error) => {
+                if (error instanceof DeviceNotFoundError)
+                {
+                    if (result.customData !== undefined && result.customData.property !== undefined)
+                    {
+                        station.updateProperty(result.customData.property.name, result.customData.property.value);
+                    }
+                }
+                else
+                {
+                    this.api.logError(`Station secondary command result error (station: ${station.getSerial()})`, error);
+                }
+            });
+        }
     }
 
     /**
      * The action to be done when event GuardMode is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param guardMode The new guard mode as GuardMode.
      */
     private async onStationGuardMode(station : Station, guardMode : number): Promise<void>
     {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
-        this.api.updateBaseGuardModeSystemVariable(station.getSerial(), guardMode)
+        this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode)
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
             this.api.logDebug("Event skipped due to locally forced changeGuardMode.");
@@ -989,14 +1042,14 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug(`Event "GuardMode": base: ${station.getSerial()} | guard mode: ${guardMode}`);
-            await this.api.updateGuardModeBase(station.getSerial());
+            this.api.logDebug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+            await this.api.updateGuardModeStation(station.getSerial());
         }
     }
 
     /**
      * The action to be done when event CurrentMode is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param guardMode The new guard mode as GuardMode.
      */
     private async onStationCurrentMode(station : Station, guardMode : number): Promise<void>
@@ -1008,44 +1061,60 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug(`Event "CurrentMode": base: ${station.getSerial()} | guard mode: ${guardMode}`);
-            await this.api.updateGuardModeBase(station.getSerial());
+            this.api.logDebug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+            await this.api.updateGuardModeStation(station.getSerial());
         }
     }
 
     /**
      * The action to be done when event RTSPLivestreamStart is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
     private async onStationRTSPLivestreamStart(station : Station, channel : number): Promise<void>
     {
-        this.api.logDebug(`Event "RTSPLivestreamStart": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "RTSPLivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station rtsp livestream start", station, device);
+        }).catch((error) => {
+            this.api.logError(`Station start rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event RTSPLivestreamStop is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
     private async onStationRTSPLivestreamStop(station : Station, channel : number): Promise<void>
     {
-        this.api.logDebug(`Event "RTSPLivestreamStop": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "RTSPLivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station rtsp livestream stop", station, device);
+        }).catch((error) => {
+            this.api.logError(`Station stop rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event RTSPURL is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationRTSPURL(station : Station, channel : number): Promise<void>
+    private async onStationRTSPURL(station : Station, channel : number, value : string): Promise<void>
     {
-        this.api.logDebug(`Event "RTSPURL": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "RTSPURL": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station rtsp url", station, device, value);
+            device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, value);
+        }).catch((error) => {
+            this.api.logError(`Station rtsp url error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event PropertyChanged is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
@@ -1053,13 +1122,13 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(name != "guardMode" && name != "currentMode")
         {
-            this.api.logDebug(`Event "PropertyChanged": base: ${station.getSerial()} | name: ${name} | value: ${value}`);
+            this.api.logDebug(`Event "PropertyChanged": station: ${station.getSerial()} | name: ${name} | value: ${value}`);
         }
     }
 
     /**
      * The action to be done when event RawPropertyChanged is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
      */
@@ -1067,129 +1136,187 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     {
         if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
-            this.api.logDebug(`Event "RawPropertyChanged": base: ${station.getSerial()} | type: ${type} | value: ${value}`);
+            this.api.logDebug(`Event "RawPropertyChanged": station: ${station.getSerial()} | type: ${type} | value: ${value}`);
         }
     }
 
     /**
      * The action to be done when event AlarmEvent is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param alarmEvent The alarmEvent.
      */
     private async onStationAlarmEvent(station : Station, alarmEvent : AlarmEvent): Promise<void>
     {
-        this.api.logDebug(`Event "AlarmEvent": base: ${station.getSerial()} | alarmEvent: ${alarmEvent}`);
+        this.api.logDebug(`Event "AlarmEvent": station: ${station.getSerial()} | alarmEvent: ${alarmEvent}`);
     }
 
     /**
      * The action to be done when event StationRuntimeState is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param batteryLevel The battery level as percentage value.
      * @param temperature The temperature as degree value.
      */
     private async onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number): Promise<void>
     {
-        this.api.logDebug(`Event "RuntimeState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
-        this.devices.updateBatteryValues(station.getSerial(), channel, batteryLevel, temperature);
+        this.api.logDebug(`Event "RuntimeState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            if (device.hasProperty(PropertyName.DeviceBattery))
+            {
+                const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
+                device.updateRawProperty(metadataBattery.key as number, batteryLevel.toString());
+            }
+            if (device.hasProperty(PropertyName.DeviceBatteryTemp))
+            {
+                const metadataBatteryTemperature = device.getPropertyMetadata(PropertyName.DeviceBatteryTemp);
+                device.updateRawProperty(metadataBatteryTemperature.key as number, temperature.toString());
+            }
+        }).catch((error) => {
+            this.api.logError(`Station runtime state error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event StationChargingState is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param chargeType The current carge state.
      * @param batteryLevel The battery level as percentage value.
      */
     private async onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number): Promise<void>
     {
-        this.api.logDebug(`Event "ChargingState": base: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
-        this.devices.updateChargingState(station.getSerial(), channel, chargeType, batteryLevel);
+        this.api.logDebug(`Event "ChargingState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            if (device.hasProperty(PropertyName.DeviceBattery))
+            {
+                const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
+                if (chargeType !== ChargingType.PLUGGED && batteryLevel > 0)
+                    device.updateRawProperty(metadataBattery.key as number, batteryLevel.toString());
+            }
+            if (device.hasProperty(PropertyName.DeviceChargingStatus))
+            {
+                const metadataChargingStatus = device.getPropertyMetadata(PropertyName.DeviceChargingStatus);
+                device.updateRawProperty(metadataChargingStatus.key as number, chargeType.toString());
+            }
+        }).catch((error) => {
+            this.api.logError(`Station charging state error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event StationWifiRssi is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param rssi The current rssi value.
      */
     private async onStationWifiRssi(station: Station, channel: number, rssi: number): Promise<void>
     {
-        this.api.logDebug(`Event "WifiRssi": base: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
-        this.devices.updateWifiRssi(station.getSerial(), channel, rssi);
+        this.api.logDebug(`Event "WifiRssi": station: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            if (device.hasProperty(PropertyName.DeviceWifiRSSI))
+            {
+                const metadataWifiRssi = device.getPropertyMetadata(PropertyName.DeviceWifiRSSI);
+                device.updateRawProperty(metadataWifiRssi.key as number, rssi.toString());
+            }
+        }).catch((error) => {
+            this.api.logError(`Station wifi rssi error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event FloodlightManualSwitch is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param enabled The value for the floodlight.
      */
     private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean): Promise<void>
     {
-        this.api.logDebug(`Event "FloodlightManualSwitch": base: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
+        this.api.logDebug(`Event "FloodlightManualSwitch": station: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            if (device.hasProperty(PropertyName.DeviceLight)) {
+                const metadataLight = device.getPropertyMetadata(PropertyName.DeviceLight);
+                device.updateRawProperty(metadataLight.key as number, enabled === true ? "1" : "0");
+            }
+        }).catch((error) => {
+            this.api.logError(`Station floodlight manual switch error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event AlarmDelayEvent is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param alarmDelayEvent The AlarmDelayedEvent.
      * @param alarmDelay The delay in ms.
      */
     private async onStationAlarmDelayEvent(station : Station, alarmDelayEvent : AlarmEvent, alarmDelay : number): Promise<void>
     {
-        this.api.logDebug(`Event "AlarmDelayEvent": base: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
+        this.api.logDebug(`Event "AlarmDelayEvent": station: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
     }
 
     /**
      * The action to be done when event TalkbackStarted is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param talkbackStream The TalbackStream object.
      */
     private async onStationTalkbackStarted(station: Station, channel: number, talkbackStream : TalkbackStream): Promise<void>
     {
-        this.api.logDebug(`Event "TalkbackStarted": base: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
+        this.api.logDebug(`Event "TalkbackStarted": station: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station talkback start", station, device, talkbackStream);
+        }).catch((error) => {
+            this.api.logError(`Station talkback start error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event TalkbackStopped is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
     private async onStationTalkbackStopped(station: Station, channel: number): Promise<void>
     {
-        this.api.logDebug(`Event "TalkbackStopped": base: ${station.getSerial()} | channel: ${channel}`);
+        this.api.logDebug(`Event "TalkbackStopped": station: ${station.getSerial()} | channel: ${channel}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            this.emit("station talkback stop", station, device);
+        }).catch((error) => {
+            this.api.logError(`Station talkback stop error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**
      * The action to be done when event TalkbackError is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param channel The channel to define the device.
      * @param error The error object.
      */
     private async onStationTalkbackError(station: Station, channel: number, error : Error): Promise<void>
     {
-        this.api.logDebug(`Event "TalkbackError": base: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
+        this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
+        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+            station.stopTalkback(device);
+        }).catch((error) => {
+            this.api.logError(`Station talkback error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
+        });
     }
 
     /**
      * The action to be done when event AlarmArmedEvent is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      */
     private async onStationAlarmArmedEvent(station: Station): Promise<void>
     {
-        this.api.logDebug(`Event "AlarmArmedEvent": base: ${station.getSerial()}`);
+        this.api.logDebug(`Event "AlarmArmedEvent": station: ${station.getSerial()}`);
     }
 
     /**
      * The action to be done when event AlarmArmDelayEvent is fired.
-     * @param station The base as Station object.
+     * @param station The station as Station object.
      * @param alarmDelay The delay in ms.
      */
-    private async onStationAlarmArmDelayEvent(station: Station, alarmDelay: number): Promise<void>
+    private async onStationArmDelayEvent(station: Station, alarmDelay: number): Promise<void>
     {
-        this.api.logDebug(`Event "AlarmArmDelayEvent": base: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
+        this.api.logDebug(`Event "ArmDelayEvent": station: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
     }
 
     /**
@@ -1200,6 +1327,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private onStationDeviceShakeAlarm(deviceSN: string, event: SmartSafeShakeAlarmEvent): void
     {
         this.api.logDebug(`Event "DeviceShakeAlarm": device: ${deviceSN} | event: ${event}`);
+        this.api.getDevice(deviceSN).then((device: Device) => {
+            if (device.isSmartSafe())
+                (device as SmartSafe).shakeEvent(event, this.api.getConfig().getEventDurationSecondsAsNumber());
+        }).catch((error) => {
+            this.api.logError(`onStationShakeAlarm device ${deviceSN} error`, error);
+        });
     }
 
     /**
@@ -1210,6 +1343,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private onStationDevice911Alarm(deviceSN: string, event: SmartSafeAlarm911Event): void
     {
         this.api.logDebug(`Event "Device911Alarm": device: ${deviceSN} | event: ${event}`);
+        this.api.getDevice(deviceSN).then((device: Device) => {
+            if (device.isSmartSafe())
+                (device as SmartSafe).alarm911Event(event, this.api.getConfig().getEventDurationSecondsAsNumber());
+        }).catch((error) => {
+            this.api.logError(`onStation911Alarm device ${deviceSN} error`, error);
+        });
     }
 
     /**
@@ -1219,6 +1358,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private onStationDeviceJammed(deviceSN: string): void
     {
         this.api.logDebug(`Event "DeviceJammed": device: ${deviceSN}`);
+        this.api.getDevice(deviceSN).then((device: Device) => {
+            if (device.isSmartSafe())
+                (device as SmartSafe).jammedEvent(this.api.getConfig().getEventDurationSecondsAsNumber());
+        }).catch((error) => {
+            this.api.logError(`onStationDeviceJammed device ${deviceSN} error`, error);
+        });
     }
 
     /**
@@ -1228,6 +1373,12 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private onStationDeviceLowBattery(deviceSN: string): void
     {
         this.api.logDebug(`Event "DeviceLowBattery": device: ${deviceSN}`);
+        this.api.getDevice(deviceSN).then((device: Device) => {
+            if (device.isSmartSafe())
+                (device as SmartSafe).lowBatteryEvent(this.api.getConfig().getEventDurationSecondsAsNumber());
+        }).catch((error) => {
+            this.api.logError(`onStationDeviceLowBattery device ${deviceSN} error`, error);
+        });
     }
 
     /**
@@ -1237,16 +1388,22 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
     private onStationDeviceWrongTryProtectAlarm(deviceSN: string): void
     {
         this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSN}`);
+        this.api.getDevice(deviceSN).then((device: Device) => {
+            if (device.isSmartSafe())
+                (device as SmartSafe).wrongTryProtectAlarmEvent(this.api.getConfig().getEventDurationSecondsAsNumber());
+        }).catch((error) => {
+            this.api.logError(`onStationDeviceWrongTryProtectAlarm device ${deviceSN} error`, error);
+        });
     }
 
     /**
-     * Retrieves the last guard mode change event for the given base.
-     * @param baseSerial The serial of the base.
+     * Retrieves the last guard mode change event for the given station.
+     * @param stationSerial The serial of the station.
      * @returns The time as timestamp or undefined.
      */
-    private async getLastEventFromCloud(baseSerial : string) : Promise <number | undefined>
+    private async getLastEventFromCloud(stationSerial : string) : Promise <number | undefined>
     {
-        var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({deviceSN : baseSerial}, 1);
+        var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({deviceSN : stationSerial}, 1);
         if(lastGuardModeChangeTime !== undefined && lastGuardModeChangeTime.length >= 1)
         {
             return lastGuardModeChangeTime[0].create_time;
@@ -1259,70 +1416,70 @@ export class Bases extends TypedEmitter<EufySecurityEvents>
 
     /**
      * Set the last guard mode change time to the array.
-     * @param baseSerial The serial of the base.
+     * @param stationSerial The serial of the station.
      * @param time The time as timestamp or undefined.
      */
-    private setLastGuardModeChangeTime(baseSerial : string, time : number | undefined, timestampType : string) : void
+    private setLastGuardModeChangeTime(stationSerial : string, time : number | undefined, timestampType : string) : void
     {
         if(time !== undefined)
         {
             switch (timestampType)
             {
                 case "sec":
-                    this.lastGuardModeChangeTimeForBases[baseSerial] = time * 1000;
+                    this.lastGuardModeChangeTimeForStations[stationSerial] = time * 1000;
                     break;
                 case "ms":
-                    this.lastGuardModeChangeTimeForBases[baseSerial] = time;
+                    this.lastGuardModeChangeTimeForStations[stationSerial] = time;
                     break;
                 default:
-                    this.lastGuardModeChangeTimeForBases[baseSerial] = undefined;
+                    this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
             }
         }
         else
         {
-            this.lastGuardModeChangeTimeForBases[baseSerial] = undefined;
+            this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
         }
 
-        this.api.updateStationGuardModeChangeTimeSystemVariable(baseSerial, this.lastGuardModeChangeTimeForBases[baseSerial]);
+        this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations[stationSerial]);
     }
 
     /**
      * Helper function to retrieve the last event time from cloud and set the value to the array.
-     * @param baseSerial The serial of the base.
+     * @param stationSerial The serial of the station.
      */
-    private async setLastGuardModeChangeTimeFromCloud(baseSerial : string) : Promise<void>
+    private async setLastGuardModeChangeTimeFromCloud(stationSerial : string) : Promise<void>
     {
-        this.setLastGuardModeChangeTime(baseSerial, await this.getLastEventFromCloud(baseSerial), "sec");
+        this.setLastGuardModeChangeTime(stationSerial, await this.getLastEventFromCloud(stationSerial), "sec");
     }
 
     /**
      * Set the time for the last guard mode change to the current time.
-     * @param baseSerial The serial of the base.
+     * @param stationSerial The serial of the station.
      */
-    private setLastGuardModeChangeTimeNow(baseSerial : string) : void
+    private setLastGuardModeChangeTimeNow(stationSerial : string) : void
     {
-        this.setLastGuardModeChangeTime(baseSerial, new Date().getTime(), "ms");
+        this.setLastGuardModeChangeTime(stationSerial, new Date().getTime(), "ms");
     }
 
     /**
      * Retrieve the last guard mode change time from the array.
-     * @param baseSerial The serial of the base.
+     * @param stationSerial The serial of the station.
      * @returns The timestamp as number or undefined.
      */
-    public getLastGuardModeChangeTime(baseSerial : string) : number | undefined
+    public getLastGuardModeChangeTime(stationSerial : string) : number | undefined
     {
-        return this.lastGuardModeChangeTimeForBases[baseSerial];
+        return this.lastGuardModeChangeTimeForStations[stationSerial];
     }
 
     /**
-     * Set the given property for the given base to the given value.
-     * @param stationSerial The serial of the base the property is to change.
+     * Set the given property for the given station to the given value.
+     * @param stationSerial The serial of the station the property is to change.
      * @param name The name of the property.
      * @param value The value of the property.
      */
     public async setStationProperty(stationSerial : string, name : string, value : unknown): Promise<void>
     {
-        const station = this.bases[stationSerial];
+        const station = this.stations[stationSerial];
         const metadata = station.getPropertyMetadata(name);
 
         value = parseValue(metadata, value);

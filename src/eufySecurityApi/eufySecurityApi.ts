@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, WiredDoorbellCamera, BatteryDoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail, PropertyValue } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, WiredDoorbellCamera, BatteryDoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail, PropertyValue, RawValues } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -20,7 +20,7 @@ export class EufySecurityApi
     private pushService !: PushService;
     private houses !: EufyHouses;
     private devices !: Devices;
-    private bases !: Bases;
+    private stations !: Bases;
     private connected = false;
     private retries = 0;
     private serviceState : string = "init";
@@ -132,13 +132,13 @@ export class EufySecurityApi
     }
 
     /**
-     * Close all P2P connections from all bases and all devices
+     * Close all P2P connections from all stations and all devices
      */
     public async closeP2PConnections() : Promise<void>
     {
-        if(this.bases != null)
+        if(this.stations != null)
         {
-            await this.bases.closeP2PConnections();
+            await this.stations.closeP2PConnections();
         }
         if(this.devices != null)
         {
@@ -233,9 +233,8 @@ export class EufySecurityApi
         }*/
 
         this.houses = new EufyHouses(this, this.httpService);
-        this.bases = new Bases(this, this.httpService);
+        this.stations = new Bases(this, this.httpService);
         this.devices = new Devices(this, this.httpService);
-        this.bases.setDevices(this.devices);
 
         await sleep(10);
         await this.refreshCloudData();
@@ -250,19 +249,29 @@ export class EufySecurityApi
     }
 
     /**
-     * Retruns the Bases object.
-     * @returns The Bases object.
+     * Returns the all stations as array.
+     * @returns The array with all stations.
      */
-    public getBases() : Bases
+    public getStations() : { [stationSerial : string] : Station }
     {
-        return this.bases;
+        return this.stations.getStations();
+    }
+
+    /**
+     * Returns the station object specified by the station serial.
+     * @param stationSerial The serial of the station to retrive.
+     * @returns The station as object.
+     */
+    public getStation(stationSerial : string) : Station
+    {
+        return this.stations.getStation(stationSerial);
     }
 
     /**
      * Return the Devices object.
      * @returns The Devices object.
      */
-    public getDevices() : Devices
+    public getDevicesObject() : Devices
     {
         return this.devices;
     }
@@ -309,7 +318,7 @@ export class EufySecurityApi
     }
 
     /**
-     * (Re)Loads all Bases and Devices and the settings of them.
+     * (Re)Loads all Stations and Devices and the settings of them.
      */
     public async loadData() : Promise<void>
     {
@@ -319,11 +328,11 @@ export class EufySecurityApi
 
         /*try
         {
-            await this.bases.loadBases();
+            await this.stations.loadStations();
         }
         catch (e : any)
         {
-            this.logError("Error occured at loadData() -> loadBases. Error: " + e.message);
+            this.logError("Error occured at loadData() -> loadStations. Error: " + e.message);
             this.setLastConnectionInfo(false);
         }
         try
@@ -451,7 +460,7 @@ export class EufySecurityApi
         json += `"name":"${device.getName()}",`;
         json += `"hardware_Version":"${device.getHardwareVersion()}",`;
         json += `"software_version":"${device.getSoftwareVersion()}",`;
-        json += `"base_serial":"${device.getStationSerial()}",`;
+        json += `"station_serial":"${device.getStationSerial()}",`;
         json += `"enabled":"${device.getPropertyValue(PropertyName.DeviceEnabled) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceEnabled)}",`;
         json += `"wifi_rssi":"${device.getPropertyValue(PropertyName.DeviceWifiRSSI) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWifiRSSI)}",`;
         json += `"wifi_rssi_signal_level":"${device.getPropertyValue(PropertyName.DeviceWifiSignalLevel) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWifiSignalLevel)}",`;
@@ -684,60 +693,60 @@ export class EufySecurityApi
     }
 
     /**
-     * Create a JSON string for a given base.
-     * @param base The base the JSON string created for.
+     * Create a JSON string for a given station.
+     * @param station The station the JSON string created for.
      */
-    private makeJsonForBase(base : Station) : string
+    private makeJsonForStation(station : Station) : string
     {
-        var json = `{"base_id":"${base.getSerial()}",`;
-        json += `"eufy_device_id":"${base.getId()}",`;
-        json += `"device_type":"${base.getDeviceTypeString()}",`;
-        json += `"model":"${base.getModel()}",`;
-        json += `"name":"${base.getName()}",`;
-        json += `"hardware_Version":"${base.getHardwareVersion()}",`;
-        json += `"software_version":"${base.getSoftwareVersion()}",`;
-        json += `"mac_address":"${base.getMACAddress()}",`;
-        json += `"external_ip_address":"${base.getIPAddress()}",`;
-        json += `"local_ip_address":"${base.getLANIPAddress()}",`;
-        json += `"guard_mode":"${base.getGuardMode()}",`;
-        json += `"guard_mode_last_change_time":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined ? "n/a" : this.bases.getLastGuardModeChangeTime(base.getSerial()))}",`;
+        var json = `{"station_id":"${station.getSerial()}",`;
+        json += `"eufy_device_id":"${station.getId()}",`;
+        json += `"device_type":"${station.getDeviceTypeString()}",`;
+        json += `"model":"${station.getModel()}",`;
+        json += `"name":"${station.getName()}",`;
+        json += `"hardware_Version":"${station.getHardwareVersion()}",`;
+        json += `"software_version":"${station.getSoftwareVersion()}",`;
+        json += `"mac_address":"${station.getMACAddress()}",`;
+        json += `"external_ip_address":"${station.getIPAddress()}",`;
+        json += `"local_ip_address":"${station.getLANIPAddress()}",`;
+        json += `"guard_mode":"${station.getGuardMode()}",`;
+        json += `"guard_mode_last_change_time":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}",`;
         //json += `"guard_mode_last_change_time":"n/a",`;
-        json += `"is_connected":"${base.isConnected()}"`;
+        json += `"is_connected":"${station.isConnected()}"`;
         json += `}`;
         return json;
     }
 
     /**
-     * Returns a JSON-Representation of all bases including the guard mode.
+     * Returns a JSON-Representation of all stations including the guard mode.
      */
-    public async getBasesAsJSON() : Promise<string>
+    public async getStationsAsJSON() : Promise<string>
     {
         try
         {
-            if(this.bases)
+            if(this.stations)
             {
-                await this.bases.loadBases();
-                var bases = this.bases.getBases();
+                await this.stations.loadStations();
+                var stations = this.stations.getStations();
                 var json = "";
-                var base : Station;
+                var station : Station;
 
-                if(bases)
+                if(stations)
                 {
-                    for (var stationSerial in bases)
+                    for (var stationSerial in stations)
                     {
-                        base = bases[stationSerial];
+                        station = stations[stationSerial];
                         if(json.endsWith("}"))
                         {
                             json += ",";
                         }
-                        json += this.makeJsonForBase(base);
+                        json += this.makeJsonForStation(station);
                     }
                     json = `{"success":true,"data":[${json}]}`;
                     this.setLastConnectionInfo(true);
                 }
                 else
                 {
-                    json = `{"success":false,"reason":"No bases found."}`;
+                    json = `{"success":false,"reason":"No stations found."}`;
                     this.setLastConnectionInfo(false);
                 }
             }
@@ -748,7 +757,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            this.logError("Error occured at getBases()." + e.message);
+            this.logError("Error occured at getStations()." + e.message);
             this.setLastConnectionInfo(false);
             json = `{"success":false,"reason":"${e.message}"}`;
         }
@@ -757,23 +766,23 @@ export class EufySecurityApi
     }
 
     /**
-     * Get all bases as Bases-object.
-     * @returns All bases as object.
+     * Get all stations as Stations-object.
+     * @returns All stations as object.
      */
-    public async getRawBases() : Promise<Bases> 
+    public async getRawStations() : Promise<Bases> 
     {
         //await this.httpService.refreshStationData();
         //await this.httpService.refreshDeviceData();
         await this.updateDeviceData();
-        await this.bases.loadBases();
+        await this.stations.loadStations();
             
-        return this.bases;
+        return this.stations;
     }
 
     /**
      * Returns a JSON-Representation of a given devices.
      */
-     public async getBaseAsJSON(stationSerial : string) : Promise<string>
+     public async getStationAsJSON(stationSerial : string) : Promise<string>
     {
         await this.httpService.refreshStationData();
         await this.httpService.refreshDeviceData();
@@ -784,7 +793,7 @@ export class EufySecurityApi
         var json : string = "";
         try
         {
-            json = `{"success":true,"data":[${this.makeJsonForBase(devices[stationSerial])}]}`;
+            json = `{"success":true,"data":[${this.makeJsonForStation(devices[stationSerial])}]}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -795,84 +804,104 @@ export class EufySecurityApi
         return json;
     }
 
-    /**
-     * Retrieves all config-relevat data for each Base and update the config.
-     * @param bases All Bases in the account.
-     * @param serialNumbers The serial numbers of all Bases in the account.
-     */
-    public async saveBasesSettings(bases : {[stationSerial:string] : Station}, serialNumbers : string[]) : Promise<void>
+    public async getDevice(deviceSerial : string) : Promise<Device>
     {
-        if(this.bases)
+        return this.devices.getDevice(deviceSerial);
+    }
+
+    public async getDeviceByStationAndChannel(stationSerial : string, channel : number) : Promise<Device>
+    {
+        return this.devices.getDeviceByStationAndChannel(stationSerial, channel);
+    }
+
+    public setDeviceSnooze(device : Device, timeoutMS : number) : void
+    {
+        this.devices.setDeviceSnooze(device, timeoutMS);
+    }
+
+    public updateDeviceProperties(deviceSerial : string, values : RawValues) : void
+    {
+        this.devices.updateDeviceProperties(deviceSerial, values);
+    }
+
+    /**
+     * Retrieves all config-relevat data for each station and update the config.
+     * @param stations All stations in the account.
+     * @param serialNumbers The serial numbers of all stations in the account.
+     */
+    public async saveStationsSettings(stations : {[stationSerial:string] : Station}, stationSerials : string[]) : Promise<void>
+    {
+        if(this.stations)
         {
-            for (var stationSerial in bases)
+            for (var stationSerial in stations)
             {
-                var base = bases[stationSerial];
+                var station = stations[stationSerial];
 
                 var p2p_did = this.config.getP2PData_p2p_did(stationSerial);
                 var dsk_key = this.config.getP2PData_dsk_key(stationSerial);
                 var dsk_key_creation = this.config.getP2PData_dsk_key_creation(stationSerial);
                 var actor_id = this.config.getP2PData_actor_id(stationSerial);
-                var base_ip_address = this.config.getP2PData_base_ip_address(stationSerial);
+                var station_ip_address = this.config.getP2PData_station_ip_address(stationSerial);
 
                 var updateNeed = false;
 
-                //if(p2p_did != base.getP2pDid() || dsk_key != await base.getDSKKey() || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress().value)
-                if(p2p_did != base.getP2pDid() || actor_id != base.getActorId() || base_ip_address != base.getLANIPAddress())
+                //if(p2p_did != station.getP2pDid() || dsk_key != await station.getDSKKey() || actor_id != station.getActorId() || station_ip_address != station.getLANIPAddress().value)
+                if(p2p_did != station.getP2pDid() || actor_id != station.getActorId() || station_ip_address != station.getLANIPAddress())
                 {
                     updateNeed = true;
                 }
 
-                /*if(dsk_key_creation != base.getDskKeyExpiration().toString())
+                /*if(dsk_key_creation != station.getDskKeyExpiration().toString())
                 {
                     updateNeed = true;
                 }*/
 
                 if(updateNeed == true)
                 {
-                    //this.config.setP2PData(stationSerial, base.getP2pDid(), await base.getDSKKey(), base.getDSKKeyExpiration().toString(), base.getActorId(), String(base.getLANIPAddress().value), "");
-                    this.config.setP2PData(stationSerial, base.getP2pDid(), "", "", base.getActorId(), String(base.getLANIPAddress()), "");
+                    //this.config.setP2PData(stationSerial, station.getP2pDid(), await station.getDSKKey(), station.getDSKKeyExpiration().toString(), station.getActorId(), String(station.getLANIPAddress().value), "");
+                    this.config.setP2PData(stationSerial, station.getP2pDid(), "", "", station.getActorId(), String(station.getLANIPAddress()), "");
                 }
             }
         }
     }
 
     /**
-     * Returns the guard mode of all bases as json string.
+     * Returns the guard mode of all stations as json string.
      */
     public async getGuardMode() : Promise<string>
     {
         try
         {
-            if(this.bases)
+            if(this.stations)
             {
-                await this.bases.loadBases();
+                await this.stations.loadStations();
 
                 var mode = -1;
-                var bases = this.bases.getBases();
+                var stations = this.stations.getStations();
                 var json = "";
-                var base : Station;
+                var station : Station;
 
-                if(bases)
+                if(stations)
                 {
-                    for (var stationSerial in bases)
+                    for (var stationSerial in stations)
                     {
-                        base = bases[stationSerial];
+                        station = stations[stationSerial];
                         if(json.endsWith("}"))
                         {
                             json += ",";
                         }
-                        json += this.makeJsonForBase(base);
+                        json += this.makeJsonForStation(station);
 
                         if(mode == -1)
                         {
-                            mode = base.getGuardMode() as number;
+                            mode = station.getGuardMode() as number;
                         }
-                        else if (mode != base.getGuardMode())
+                        else if (mode != station.getGuardMode())
                         {
                             mode = -2;
                         }
                     
-                        this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
+                        this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     }
                     json = `{"success":true,"data":[${json}]}`;
 
@@ -891,7 +920,7 @@ export class EufySecurityApi
                 }
                 else
                 {
-                    json = `{"success":false,"reason":"No Bases found."}`;
+                    json = `{"success":false,"reason":"No stations found."}`;
                     this.setLastConnectionInfo(false);
                 }
             }
@@ -911,30 +940,30 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the guard mode of all bases.
+     * Returns the guard mode of all stations.
      */
     public async getGuardModeAsGuardMode() : Promise<GuardMode>
     {
         var mode = -1;
         try
         {
-            if(this.bases)
+            if(this.stations)
             {
-                await this.bases.loadBases();
+                await this.stations.loadStations();
 
-                var bases = this.bases.getBases();
-                var base : Station;
+                var stations = this.stations.getStations();
+                var station : Station;
 
-                if(bases)
+                if(stations)
                 {
-                    for (var stationSerial in bases)
+                    for (var stationSerial in stations)
                     {
-                        base = bases[stationSerial];
+                        station = stations[stationSerial];
                         if(mode == -1)
                         {
-                            mode = base.getGuardMode() as number;
+                            mode = station.getGuardMode() as number;
                         }
-                        else if (mode != base.getGuardMode())
+                        else if (mode != station.getGuardMode())
                         {
                             mode = -2;
                         }
@@ -956,39 +985,39 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the guard mode of one bases.
+     * Returns the guard mode of one stations.
      */
-    public async getGuardModeBase (stationSerial : string) : Promise<string>
+    public async getGuardModeStation (stationSerial : string) : Promise<string>
     {
         try
         {
-            if(this.bases)
+            if(this.stations)
             {
-                await this.bases.loadBases();
+                await this.stations.loadStations();
 
-                var bases = this.bases.getBases();
+                var stations = this.stations.getStations();
                 var json = "";
-                var base : Station;
+                var station : Station;
 
-                base = bases[stationSerial];
-                if(base)
+                station = stations[stationSerial];
+                if(station)
                 {
-                    json = `{"success":true,"data":["${this.makeJsonForBase(base)}"]}`;
-                    this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
+                    json = `{"success":true,"data":["${this.makeJsonForStation(station)}"]}`;
+                    this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                    if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
+                    if(this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined)
                     {
-                        this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
+                        this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
                     else
                     {
-                        this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0));
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + station.getSerial(), new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0));
                     }
                 }
                 else
                 {
-                    json = `{"success":false,"reason":"No such base found."}`;
+                    json = `{"success":false,"reason":"No such station found."}`;
                     this.setLastConnectionInfo(false);
                 }
             }
@@ -1000,7 +1029,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            this.logError("Error occured at getGuardModeBase().");
+            this.logError("Error occured at getGuardModeStation().");
             this.setLastConnectionInfo(false);
             json = `{"success":false,"reason":"${e.message}"}`;
         }
@@ -1009,23 +1038,23 @@ export class EufySecurityApi
     }
 
     /**
-     * Update the guard mode for a given base.
-     * @param stationSerial The serialnumber of the base.
+     * Update the guard mode for a given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    public async updateGuardModeBase(stationSerial : string) : Promise<void>
+    public async updateGuardModeStation(stationSerial : string) : Promise<void>
     {
-        await this.getGuardModeBase(stationSerial);
+        await this.getGuardModeStation(stationSerial);
         if(this.waitUpdateState)
         {
             clearTimeout(this.waitUpdateState);
         }
-        this.waitUpdateState = setTimeout(async() => { await this.updateGuardModeBases(); }, 10000);
+        this.waitUpdateState = setTimeout(async() => { await this.updateGuardModeStations(); }, 10000);
     }
 
     /**
      * Update guard mode when changed by event.
      */
-    private async updateGuardModeBases() : Promise<void>
+    private async updateGuardModeStations() : Promise<void>
     {
         if(this.waitUpdateState)
         {
@@ -1035,52 +1064,52 @@ export class EufySecurityApi
     }
 
     /**
-     * Set the guard mode of all bases to the given mode.
+     * Set the guard mode of all stations to the given mode.
      * @param guardMode The target guard mode.
      */
     public async setGuardMode(guardMode : GuardMode) : Promise<string>
     {
         try
         {
-            if(this.bases)
+            if(this.stations)
             {
                 var err = 0;
-                var res = await this.bases.setGuardMode(guardMode);
+                var res = await this.stations.setGuardMode(guardMode);
 
                 if(res == true)
                 {
                     //await sleep(2500);
 
-                    //await this.bases.loadBases();
-                    var bases = this.bases.getBases();
+                    //await this.stations.loadStations();
+                    var stations = this.stations.getStations();
                     
-                    var base : Station;
+                    var station : Station;
                     var json = "";
 
-                    for (var stationSerial in bases)
+                    for (var stationSerial in stations)
                     {
-                        base = bases[stationSerial];
+                        station = stations[stationSerial];
                         
                         if(json.endsWith("}"))
                         {
                             json += ",";
                         }
                         
-                        if(guardMode == base.getGuardMode())
+                        if(guardMode == station.getGuardMode())
                         {
-                            json += `{"base_id":"${base.getSerial()}",`;
+                            json += `{"station_id":"${station.getSerial()}",`;
                             json += `"result":"success",`;
-                            json += `"guard_mode":"${base.getGuardMode()}"}`;
-                            this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
+                            json += `"guard_mode":"${station.getGuardMode()}"}`;
+                            this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                         }
                         else
                         {
                             err = err + 1;
-                            json += `{"base_id":"${base.getSerial()}",`;
+                            json += `{"station_id":"${station.getSerial()}",`;
                             json += `"result":"failure",`;
-                            json += `"guard_mode":"${base.getGuardMode()}"}`;
-                            this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
-                            this.logError(`Error occured at setGuardMode: Failed to switch mode for base ${base.getSerial()}.`);
+                            json += `"guard_mode":"${station.getGuardMode()}"}`;
+                            this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
+                            this.logError(`Error occured at setGuardMode: Failed to switch mode for station ${station.getSerial()}.`);
                         }
                     }
                     if (err==0)
@@ -1096,14 +1125,14 @@ export class EufySecurityApi
                         this.setSystemVariableString("eufyCurrentState", "unbekannt");
                         this.setLastConnectionInfo(false);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                        this.logError("Error occured at setGuardMode: Failed to switch mode for bases.");
+                        this.logError("Error occured at setGuardMode: Failed to switch mode for station.");
                     }
                     json += "]}";
                 }
                 else
                 {
-                    json = `{"success":false,"reason":"Failed to communicate with HomeBase."}`;
-                    this.logError("Error occured at setGuardMode: Failed to communicate with HomeBase.");
+                    json = `{"success":false,"reason":"Failed to communicate with station."}`;
+                    this.logError("Error occured at setGuardMode: Failed to communicate with station.");
                 }
             }
             else
@@ -1123,61 +1152,61 @@ export class EufySecurityApi
     }
 
     /**
-     * Set the guard mode for the given base to the given mode.
-     * @param baseSerial The serial of the base the mode to change.
+     * Set the guard mode for the given station to the given mode.
+     * @param stationSerial The serial of the station the mode to change.
      * @param guardMode The target guard mode.
      */
-    public async setGuardModeBase(baseSerial : string, guardMode : GuardMode) : Promise<string>
+    public async setGuardModeStation(stationSerial : string, guardMode : GuardMode) : Promise<string>
     {
         try
         {
-            if(this.bases)
+            if(this.stations)
             {
-                if(this.devices.existDevice(baseSerial) == true)
+                if(this.devices.existDevice(stationSerial) == true)
                 {
-                    const device : Device = await this.devices.getDevices()[baseSerial];
+                    const device : Device = await this.devices.getDevices()[stationSerial];
                     if(device.isEnabled() == false)
                     {
-                        await this.setPrivacyMode(baseSerial, true);
+                        await this.setPrivacyMode(stationSerial, true);
                     }
                 }
 
-                await this.bases.setGuardModeBase(baseSerial, guardMode);
+                await this.stations.setGuardModeStation(stationSerial, guardMode);
 
-                var bases = this.bases.getBases();
+                var stations = this.stations.getStations();
                 
-                var base : Station;
-                base = bases[baseSerial];
+                var station : Station;
+                station = stations[stationSerial];
 
                 var json = "";
 
-                if(guardMode == base.getGuardMode())
+                if(guardMode == station.getGuardMode())
                 {
                     json = `{"success":true,"data":[`;
-                    json += `{"base_id":"${base.getSerial()}",`;
+                    json += `{"station_id":"${station.getSerial()}",`;
                     json += `"result":"success",`;
-                    json += `"guard_mode":"${base.getGuardMode()}"}`;
-                    this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
+                    json += `"guard_mode":"${station.getGuardMode()}"}`;
+                    this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
-                    if(this.bases.getLastGuardModeChangeTime(base.getSerial()) == undefined)
+                    if(this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined)
                     {
-                        this.setSystemVariableString("eufyLastModeChangeTime" + base.getSerial(), "n/a");
+                        this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
                     else
                     {
-                        this.setSystemVariableTime("eufyLastModeChangeTime" + base.getSerial(), new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0));
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + station.getSerial(), new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0));
                     }
                 }
                 else
                 {
                     json = `{"success":false,"data":[`;
-                    json += `{"base_id":"${base.getSerial()}",`;
+                    json += `{"station_id":"${station.getSerial()}",`;
                     json += `"result":"failure",`;
-                    json += `"guard_mode":"${base.getGuardMode()}"}`;
-                    this.updateBaseGuardModeSystemVariable(base.getSerial(), base.getGuardMode());
+                    json += `"guard_mode":"${station.getGuardMode()}"}`;
+                    this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(false);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                    this.logError(`Error occured at setGuardMode: Failed to switch mode for base ${base.getSerial()}.`);
+                    this.logError(`Error occured at setGuardMode: Failed to switch mode for station ${station.getSerial()}.`);
                 }
                 json += "]}";
             }
@@ -1199,13 +1228,13 @@ export class EufySecurityApi
     }
 
     /**
-     * Set the systemvariable for a given base.
-     * @param baseSerial The serial of the base.
+     * Set the systemvariable for a given station.
+     * @param stationSerial The serial of the station.
      * @param guardMode The guard mode to set.
      */
-    public updateBaseGuardModeSystemVariable(baseSerial : string, guardMode : PropertyValue)
+    public updateStationGuardModeSystemVariable(stationSerial : string, guardMode : PropertyValue)
     {
-        this.setSystemVariableString("eufyCentralState" + baseSerial, this.convertGuardModeToString(guardMode as GuardMode));
+        this.setSystemVariableString("eufyCentralState" + stationSerial, this.convertGuardModeToString(guardMode as GuardMode));
     }
 
     /**
@@ -1341,8 +1370,8 @@ export class EufySecurityApi
     }
 
     /**
-     * Updates the last guard mode change time systemvariable for a given base.
-     * @param stationSerial The serial of the base.
+     * Updates the last guard mode change time systemvariable for a given station.
+     * @param stationSerial The serial of the station.
      * @param timestamp The timestamp to set.
      */
     public updateStationGuardModeChangeTimeSystemVariable(stationSerial : string, timestamp : number | undefined)
@@ -1363,15 +1392,15 @@ export class EufySecurityApi
      */
     public updateGlobalStationGuardModeChangeTimeSystemVariable()
     {
-        var bases = this.bases.getBases();
-        var base;
+        var stations = this.stations.getStations();
+        var station;
         var tempModeChange;
         var lastModeChange = new Date(1970, 1, 1);
 
-        for (var stationSerial in bases)
+        for (var stationSerial in stations)
         {
-            base = bases[stationSerial];
-            tempModeChange = new Date(this.bases.getLastGuardModeChangeTime(base.getSerial()) ?? 0)
+            station = stations[stationSerial];
+            tempModeChange = new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0)
             if(lastModeChange < tempModeChange)
             {
                 lastModeChange = tempModeChange;
@@ -1493,20 +1522,20 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the ports should be used for communication with HomeBases.
+     * Returns the ports should be used for communication with stations.
      */
     public getUDPLocalPorts() : string
     {
         var json = "";
-        if(this.bases)
+        if(this.stations)
         {
-            var bases = this.bases.getBases();
+            var stations = this.stations.getStations();
 
-            if(bases)
+            if(stations)
             {
-                for (var stationSerial in bases)
+                for (var stationSerial in stations)
                 {
-                    var temp = this.config.getUdpLocalPortsPerBase(stationSerial);
+                    var temp = this.config.getUdpLocalPortsPerStation(stationSerial);
                     json += `"api_udp_local_static_ports_${stationSerial}":"${temp}",`;
                 }
             }
@@ -1515,17 +1544,17 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the specified UDP port for communication with the HomeBase.
-     * @param baseSerial The serial for the HomeBase.
-     * @returns The UDP port for the connection to the HomeBase.
+     * Returns the specified UDP port for communication with the station.
+     * @param stationSerial The serial for the station.
+     * @returns The UDP port for the connection to the station.
      */
-    public getUDPLocalPortForBase(baseSerial : string) : number
+    public getUDPLocalPortForStation(stationSerial : string) : number
     {
         if(this.getUseUdpLocalPorts() == true)
         {
             try
             {
-                return Number.parseInt(this.config.getUdpLocalPortsPerBase(baseSerial));
+                return Number.parseInt(this.config.getUdpLocalPortsPerStation(stationSerial));
             }
             catch
             {
@@ -1539,15 +1568,15 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the internal ip address for the given the HomeBase.
-     * @param baseSerial The serial for the HomeBase.
+     * Returns the internal ip address for the given the station.
+     * @param stationSerial The serial for the station.
      * @returns The internal ip address.
      */
-    public getLocalIpAddressForBase(baseSerial : string) : string
+    public getLocalIpAddressForStation(stationSerial : string) : string
     {
         try
         {
-            return this.config.getP2PData_base_ip_address(baseSerial);
+            return this.config.getP2PData_station_ip_address(stationSerial);
         }
         catch
         {
@@ -1561,6 +1590,11 @@ export class EufySecurityApi
     public getApiUseUpdateStateEvent() : boolean
     {
         return this.config.getApiUseUpdateStateEvent();
+    }
+
+    public getConfig() : Config
+    {
+        return this.config;
     }
 
     /**
@@ -1610,13 +1644,13 @@ export class EufySecurityApi
      * @param api_port_https The https port for the api.
      * @param api_key_https The key for https.
      * @param api_cert_https The cert for https.
-     * @param api_connection_type The connection type for connecting with HomeBases.
-     * @param api_use_udp_local_static_ports Should the api use static ports to connect with HomeBase.
-     * @param api_udp_local_static_ports The local ports for connection with HomeBase.
+     * @param api_connection_type The connection type for connecting with station.
+     * @param api_use_udp_local_static_ports Should the api use static ports to connect with station.
+     * @param api_udp_local_static_ports The local ports for connection with station.
      * @param api_use_system_variables Should the api update related systemvariables.
      * @param api_camera_default_image The path to the default image.
      * @param api_camera_default_video The path to the default video.
-     * @param api_use_update_state_event Should the api use HomeBase events for updateing the state.
+     * @param api_use_update_state_event Should the api use station events for updateing the state.
      * @param api_use_update_state_intervall Should the api schedule a task for updateing the state.
      * @param api_update_state_timespan The time between two scheduled runs of update state.
      * @param api_use_update_links Should the api schedule a task for updateing the links.
@@ -1653,14 +1687,14 @@ export class EufySecurityApi
         this.config.setUseUdpLocalPorts(api_use_udp_local_static_ports);
         if(api_udp_local_static_ports[0][0] == undefined)
         {
-            if(this.bases)
+            if(this.stations)
             {
-                var bases = this.bases.getBases();
-                if(bases)
+                var stations = this.stations.getStations();
+                if(stations)
                 {
-                    for (var stationSerial in bases)
+                    for (var stationSerial in stations)
                     {
-                        if(this.config.setUdpLocalPortPerBase(stationSerial, "") == true)
+                        if(this.config.setUdpLocalPortPerStation(stationSerial, "") == true)
                         {
                             serviceRestart = true;
                         }
@@ -1763,13 +1797,13 @@ export class EufySecurityApi
         {
             if(this.config.getApiUseSystemVariables() == true)
             {
-                if(this.bases && this.devices)
+                if(this.stations && this.devices)
                 {
                     await this.loadData();
 
-                    var base : Station;
+                    var station : Station;
                     var device : Device;
-                    var bases = this.bases.getBases();
+                    var stations = this.stations.getStations();
                     var devices = this.devices.getDevices();
 
                     var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime","eufyLastModeChangeTime"];
@@ -1794,18 +1828,18 @@ export class EufySecurityApi
                         i = i + 1;
                     }
 
-                    for (var stationSerial in bases)
+                    for (var stationSerial in stations)
                     {
                         if(json.endsWith("}"))
                         {
                             json += ",";
                         }
-                        base = bases[stationSerial];
+                        station = stations[stationSerial];
                         
-                        json += `{"sysVar_name":"eufyCentralState${base.getSerial()}",`;
-                        json += `"sysVar_info":"aktueller Status der Basis ${base.getSerial()}",`;
+                        json += `{"sysVar_name":"eufyCentralState${station.getSerial()}",`;
+                        json += `"sysVar_info":"aktueller Status der Basis ${station.getSerial()}",`;
                         
-                        if(await this.homematicApi.isSystemVariableAvailable("eufyCentralState" + base.getSerial()) == true)
+                        if(await this.homematicApi.isSystemVariableAvailable("eufyCentralState" + station.getSerial()) == true)
                         {
                             json += `"sysVar_available":true`;
                         }
@@ -1816,10 +1850,10 @@ export class EufySecurityApi
 
                         json += "}";
                         
-                        json += `,{"sysVar_name":"eufyLastModeChangeTime${base.getSerial()}",`;
-                        json += `"sysVar_info":"Zeitpunkt des letzten Moduswechsels der Basis ${base.getSerial()}",`;
+                        json += `,{"sysVar_name":"eufyLastModeChangeTime${station.getSerial()}",`;
+                        json += `"sysVar_info":"Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}",`;
                         
-                        if(await this.homematicApi.isSystemVariableAvailable("eufyLastModeChangeTime" + base.getSerial()) == true)
+                        if(await this.homematicApi.isSystemVariableAvailable("eufyLastModeChangeTime" + station.getSerial()) == true)
                         {
                             json += `"sysVar_available":true`;
                         }
@@ -2034,7 +2068,7 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the P2P connection type determine how to connect to the HomeBases.
+     * Returns the P2P connection type determine how to connect to the station.
      * @returns The P2PConnection type.
      */
     public getP2PConnectionType() : P2PConnectionType
@@ -2243,7 +2277,7 @@ export class EufySecurityApi
      */
     public async updateDeviceData(): Promise<void>
     {
-        await this.bases.updateDeviceData();
+        await this.stations.updateDeviceData();
     }
 
     /**
