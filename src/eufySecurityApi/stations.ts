@@ -314,11 +314,21 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            return await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
+            var res : boolean;
+            this.stations[stationSerial].removeAllListeners("guard mode");
+            res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
                 return true;
             }, () => {
                 return false;
             });
+            this.stations[stationSerial].removeAllListeners("guard mode");
+            this.addEventListener(this.stations[stationSerial], "GuardModeChanged", false);
+            if(res == true)
+            {
+                this.setLastGuardModeChangeTimeNow(stationSerial);
+                this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
+            }
+            return res;
         }
     }
 
@@ -329,7 +339,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param timeout The timespan in ms maximal to wait for the event.
      * @returns Returns true or false.
      */
-    private async waitForGuardModeEvent(station : Station, guardMode : number, timeout : number,) : Promise<boolean>
+    private async waitForGuardModeEvent(station : Station, guardMode : number, timeout : number) : Promise<boolean>
     {
         return new Promise<boolean>(async (resolve, reject) => {
             var timer : NodeJS.Timeout;
@@ -339,83 +349,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 resolve(true);
             }
 
-            station.once("guard mode", (station : Station, guardMode : number) => listener());
-            this.api.logInfo(`Listener for ${station.getSerial()} created.`);
+            station.addListener("guard mode", () => listener());
             timer = setTimeout(() => {
                 reject(false);
             }, timeout);
-            this.api.logInfo(`Going to change GuardMode for ${station.getSerial()}.`);
             await this.setStationProperty(station.getSerial(), PropertyName.StationGuardMode, guardMode);
         });
-    }
-
-    /**
-     * Check the guardMode after changing if the guardMode has changed.
-     * @param guardMode The guradMode the station should be set to.
-     * @param checkAllStations true, if all stations should be checked, otherwise false
-     * @param stationSerial The serial of the station the mode to change.
-     */
-    private async checkChangedGuardMode(guardMode : GuardMode, checkAllStations : boolean, stationSerial : string) : Promise<boolean>
-    {
-        var res = false;
-        if(checkAllStations == true)
-        {
-            var cnt = 0;
-            for (var stationSerial in this.stations)
-            {
-                for(var i=0; i<20; i++)
-                {
-                    await sleep(1000);
-                    await this.loadStations();
-                    if(this.stations[stationSerial].getGuardMode() as number == guardMode)
-                    {
-                        this.api.logInfo(`Detected changed alarm mode for station ${stationSerial} after ${(i+1)} iterations.`);
-                        res = true;
-                        break;
-                    }
-                }
-                if(res == false)
-                {
-                    this.api.logInfo(`Changed alarm mode for station ${stationSerial} could not be detected after 20 iterations.`);
-                    cnt = cnt + 1;
-                }
-            }
-            if(cnt == 0)
-            {
-                res = true;
-            }
-            else
-            {
-                res = false;
-            }
-        }
-        else
-        {
-            for(var i=0; i<20; i++)
-            {
-                await sleep(1000);
-                await this.loadStations();
-                if(this.stations[stationSerial].getGuardMode() as number == guardMode)
-                {
-                    this.api.logInfo(`Detected changed alarm mode for station ${stationSerial} after ${(i+1)} iterations.`);
-                    res = true;
-                    break;
-                }
-            }
-            if(res == false)
-            {
-                this.api.logInfo(`Changed alarm mode for station ${stationSerial} could not be detected after 20 iterations.`);
-            }
-        }
-
-        if(res == true)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
     }
 
     /**
@@ -586,7 +525,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeAllListeners("connect");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connect")} Listener.`);
                 break;
-            case "ConnectionEroor":
+            case "ConnectionError":
                 station.removeAllListeners("connection error");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connection error")} Listener.`);
                 break;
@@ -1078,7 +1017,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationGuardMode(station : Station, guardMode : number): Promise<void>
     {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
-        this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode)
+        this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
             this.api.logDebug("Event skipped due to locally forced changeGuardMode.");

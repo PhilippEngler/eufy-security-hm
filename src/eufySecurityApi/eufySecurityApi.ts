@@ -271,9 +271,49 @@ export class EufySecurityApi
      * Return the Devices object.
      * @returns The Devices object.
      */
-    public getDevicesObject() : Devices
+    public getDevices() : { [deviceSerial : string] : Device }
     {
-        return this.devices;
+        return this.devices.getDevices();
+    }
+
+    /**
+     * Returns a device specified by a given serial.
+     * @param deviceSerial The serial of the device.
+     * @returns The device as object.
+     */
+    public async getDevice(deviceSerial : string) : Promise<Device>
+    {
+        return await this.devices.getDevice(deviceSerial);
+    }
+
+    /**
+     * Returns a device specified by station serial and channel.
+     * @param stationSerial The serial of the station.
+     * @param channel The channel of the device.
+     * @returns The device as object.
+     */
+    public async getDeviceByStationAndChannel(stationSerial : string, channel : number) : Promise<Device>
+    {
+        return this.devices.getDeviceByStationAndChannel(stationSerial, channel);
+    }
+
+    /**
+     * Returns all houses of the account.
+     * @returns The houses object.
+     */
+    public getHouses() : {[houseId:string] : any}
+    {
+        return this.houses.getHouses();
+    }
+
+    /**
+     * Returns a house specified by houseId.
+     * @param houseId The houseId of the house.
+     * @returns The house as object.
+     */
+    public getHouse(houseId : string) : HouseDetail
+    {
+        return this.houses.getHouse(houseId);
     }
 
     /**
@@ -382,7 +422,7 @@ export class EufySecurityApi
         {
             if(this.houses)
             {
-                var houses = this.houses.getHouses();
+                var houses = this.getHouses();
                 var json = "";
 
                 if(houses)
@@ -393,7 +433,7 @@ export class EufySecurityApi
                         {
                             json += ",";
                         }
-                        json += this.makeJsonForHouse(this.houses.getHouse(house_id));
+                        json += this.makeJsonForHouse(this.getHouse(house_id));
                             
                         
                     }
@@ -424,7 +464,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given house.
      */
-     public async getHouseAsJSON(house_id : string) : Promise<string>
+     public async getHouseAsJSON(houseId : string) : Promise<string>
     {
         await this.httpService.refreshHouseData();
         //await this.httpService.refreshStationData();
@@ -432,11 +472,11 @@ export class EufySecurityApi
         //await this.updateDeviceData();
         //await this.devices.loadDevices();
 
-        var devices = this.devices.getDevices();
+        var house = this.getHouse(houseId);
         var json : string = "";
         try
         {
-            json = `{"success":true,"data":[${this.makeJsonForHouse(devices[house_id])}]}`;
+            json = `{"success":true,"data":[${this.makeJsonForHouse(house)}]}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -616,7 +656,7 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var devices = this.devices.getDevices();
+                var devices = this.getDevices();
                 var json = "";
 
                 if(devices)
@@ -677,7 +717,7 @@ export class EufySecurityApi
         await this.updateDeviceData();
         await this.devices.loadDevices();
 
-        var devices = this.devices.getDevices();
+        var devices = this.getDevices();
         var json : string = "";
         try
         {
@@ -726,7 +766,7 @@ export class EufySecurityApi
             if(this.stations)
             {
                 await this.stations.loadStations();
-                var stations = this.stations.getStations();
+                var stations = this.getStations();
                 var json = "";
                 var station : Station;
 
@@ -780,7 +820,7 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns a JSON-Representation of a given devices.
+     * Returns a JSON-Representation of a given station.
      */
      public async getStationAsJSON(stationSerial : string) : Promise<string>
     {
@@ -789,11 +829,11 @@ export class EufySecurityApi
         await this.updateDeviceData();
         //await this.devices.loadDevices();
 
-        var devices = this.devices.getDevices();
+        var station = this.getStations();
         var json : string = "";
         try
         {
-            json = `{"success":true,"data":[${this.makeJsonForStation(devices[stationSerial])}]}`;
+            json = `{"success":true,"data":[${this.makeJsonForStation(station[stationSerial])}]}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -804,21 +844,21 @@ export class EufySecurityApi
         return json;
     }
 
-    public async getDevice(deviceSerial : string) : Promise<Device>
-    {
-        return this.devices.getDevice(deviceSerial);
-    }
-
-    public async getDeviceByStationAndChannel(stationSerial : string, channel : number) : Promise<Device>
-    {
-        return this.devices.getDeviceByStationAndChannel(stationSerial, channel);
-    }
-
+    /**
+     * Snoozes a given device for a given time.
+     * @param device The device as object.
+     * @param timeoutMS The snooze time in ms.
+     */
     public setDeviceSnooze(device : Device, timeoutMS : number) : void
     {
         this.devices.setDeviceSnooze(device, timeoutMS);
     }
 
+    /**
+     * The action to be done when event RawDevicePropertyChanged is fired.
+     * @param deviceSerial The serial of the device the raw values changed for.
+     * @param values The raw values for the device.
+     */
     public updateDeviceProperties(deviceSerial : string, values : RawValues) : void
     {
         this.devices.updateDeviceProperties(deviceSerial, values);
@@ -877,7 +917,7 @@ export class EufySecurityApi
                 await this.stations.loadStations();
 
                 var mode = -1;
-                var stations = this.stations.getStations();
+                var stations = this.getStations();
                 var json = "";
                 var station : Station;
 
@@ -951,7 +991,7 @@ export class EufySecurityApi
             {
                 await this.stations.loadStations();
 
-                var stations = this.stations.getStations();
+                var stations = this.getStations();
                 var station : Station;
 
                 if(stations)
@@ -995,7 +1035,7 @@ export class EufySecurityApi
             {
                 await this.stations.loadStations();
 
-                var stations = this.stations.getStations();
+                var stations = this.getStations();
                 var json = "";
                 var station : Station;
 
@@ -1081,7 +1121,7 @@ export class EufySecurityApi
                     //await sleep(2500);
 
                     //await this.stations.loadStations();
-                    var stations = this.stations.getStations();
+                    var stations = this.getStations();
                     
                     var station : Station;
                     var json = "";
@@ -1164,23 +1204,23 @@ export class EufySecurityApi
             {
                 if(this.devices.existDevice(stationSerial) == true)
                 {
-                    const device : Device = await this.devices.getDevices()[stationSerial];
+                    const device : Device = await this.getDevices()[stationSerial];
                     if(device.isEnabled() == false)
                     {
                         await this.setPrivacyMode(stationSerial, true);
                     }
                 }
 
-                await this.stations.setGuardModeStation(stationSerial, guardMode);
+                var res = await this.stations.setGuardModeStation(stationSerial, guardMode);
 
-                var stations = this.stations.getStations();
+                var stations = this.getStations();
                 
                 var station : Station;
                 station = stations[stationSerial];
 
                 var json = "";
 
-                if(guardMode == station.getGuardMode())
+                if(res)
                 {
                     json = `{"success":true,"data":[`;
                     json += `{"station_id":"${station.getSerial()}",`;
@@ -1247,7 +1287,7 @@ export class EufySecurityApi
     {
         if(this.devices.existDevice(deviceSerial) == true)
         {
-            const device : Device = await this.devices.getDevices()[deviceSerial];
+            const device : Device = await this.getDevices()[deviceSerial];
             //if(device.isIndoorCamera())
             //{
                 if(device.isEnabled() == value)
@@ -1262,7 +1302,7 @@ export class EufySecurityApi
                     await this.httpService.refreshStationData();
                     await this.httpService.refreshDeviceData();
                     await this.devices.loadDevices();
-                    if(await this.devices.getDevices()[deviceSerial].isEnabled() == value as boolean)
+                    if(await this.getDevices()[deviceSerial].isEnabled() == value as boolean)
                     {
                         return `{"success":true,"enabled":${value as boolean}}`;
                     }
@@ -1299,8 +1339,8 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var devices = this.devices.getDevices();
-                var device : Camera;
+                var devices = this.getDevices();
+                var device;
 
                 if(devices)
                 {
@@ -1309,6 +1349,7 @@ export class EufySecurityApi
                         device = devices[deviceSerial];
                         if(device.getDeviceTypeString() == "camera")
                         {
+                            device = devices[deviceSerial] as Camera;
                             if(json.endsWith("}"))
                             {
                                 json += ",";
@@ -1392,7 +1433,7 @@ export class EufySecurityApi
      */
     public updateGlobalStationGuardModeChangeTimeSystemVariable()
     {
-        var stations = this.stations.getStations();
+        var stations = this.getStations();
         var station;
         var tempModeChange;
         var lastModeChange = new Date(1970, 1, 1);
@@ -1529,7 +1570,7 @@ export class EufySecurityApi
         var json = "";
         if(this.stations)
         {
-            var stations = this.stations.getStations();
+            var stations = this.getStations();
 
             if(stations)
             {
@@ -1689,7 +1730,7 @@ export class EufySecurityApi
         {
             if(this.stations)
             {
-                var stations = this.stations.getStations();
+                var stations = this.getStations();
                 if(stations)
                 {
                     for (var stationSerial in stations)
@@ -1803,8 +1844,8 @@ export class EufySecurityApi
 
                     var station : Station;
                     var device : Device;
-                    var stations = this.stations.getStations();
-                    var devices = this.devices.getDevices();
+                    var stations = this.getStations();
+                    var devices = this.getDevices();
 
                     var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime","eufyLastModeChangeTime"];
                     var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus","Zeitpunkt des letzten Moduswechsels"];

@@ -43,7 +43,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Handle the devices so that they can be used by the addon.
      * @param devices The devices object with all devices.
      */
-    private async handleDevices(devices: FullDevices): Promise<void>
+    private async handleDevices(devices : FullDevices) : Promise<void>
     {
         this.resDevices = devices;
         
@@ -153,7 +153,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Update the device information.
      * @param device The device object to update.
      */
-    private async updateDevice(device: DeviceListResponse): Promise<void>
+    private async updateDevice(device : DeviceListResponse) : Promise<void>
     {
         var bases = this.api.getStations();
         for (var baseSerial in bases)
@@ -190,85 +190,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         try
         {
             this.resDevices = this.httpService.getDevices();
-            /*var deviceSerial : string;
-            var device : Device;
-            
-            if(this.resDevices != null)
-            {
-                for (deviceSerial in this.resDevices)
-                {
-                    if(this.devices[deviceSerial])
-                    {
-                        device = this.devices[deviceSerial];
-                        device.update(this.resDevices[deviceSerial]);
-                    }
-                    else
-                    {
-                        device = await CommonDevice.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        if(device.isCamera())
-                        {
-                            if(device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro())
-                            {
-                                device = await Camera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                            }
-                            else if(device.isIndoorCamera())
-                            {
-                                device = await IndoorCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                            }
-                            else if(device.isFloodLight())
-                            {
-                                device = await FloodlightCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                            }
-                            else if(device.isDoorbell())
-                            {
-                                device = await DoorbellCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                            }
-                            else if(device.isSoloCameras())
-                            {
-                                device = await SoloCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                            }
-                        }
-                        else if(device.isKeyPad())
-                        {
-                            device = await Keypad.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isEntrySensor())
-                        {
-                            device = await EntrySensor.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isMotionSensor())
-                        {
-                            device = await MotionSensor.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isLock())
-                        {
-                            device = await Lock.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else
-                        {
-                            device = await UnknownDevice.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }                        
-
-                        this.addEventListener(device, "PropertyChanged");
-                        this.addEventListener(device, "RawPropertyChanged");
-                        this.addEventListener(device, "CryingDetected");
-                        this.addEventListener(device, "SoundDetected");
-                        this.addEventListener(device, "PetDetected");
-                        this.addEventListener(device, "MotionDetected");
-                        this.addEventListener(device, "PersonDetected");
-                        this.addEventListener(device, "Rings");
-                        this.addEventListener(device, "Locked");
-                        this.addEventListener(device, "Open");
-                        this.addEventListener(device, "Ready");
-
-                        this.devices[device.getSerial()] = device;
-                    }
-                }
-            }
-            else
-            {
-                this.devices = {};
-            }*/
         }
         catch (e : any)
         {
@@ -312,6 +233,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Close devices.
+     */
     public close() : void
     {
         Object.keys(this.deviceSnoozeTimeout).forEach(device_sn => {
@@ -323,9 +247,49 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Returns all Devices.
      */
-    public getDevices() : {[deviceSerial: string]: any} 
+    public getDevices() : { [deviceSerial : string]: any } 
     {
         return this.devices;
+    }
+
+    /**
+     * Get the device specified by serial number.
+     * @param deviceSerial The serial of the device.
+     * @returns The device as Device object.
+     */
+    public async getDevice(deviceSerial : string) : Promise<Device>
+    {
+        if (this.loadingDevices !== undefined)
+        {
+            await this.loadingDevices;
+        }
+        if (Object.keys(this.devices).includes(deviceSerial))
+        {
+            return this.devices[deviceSerial];
+        }
+        throw new DeviceNotFoundError(`Device with this serial ${deviceSerial} doesn't exists!`);
+    }
+
+    /**
+     * Returns a device specified by station and channel.
+     * @param baseSerial The serial of the base.
+     * @param channel The channel to specify the device.
+     * @returns The device specified by base and channel.
+     */
+    public async getDeviceByStationAndChannel(baseSerial : string, channel : number) : Promise<Device>
+    {
+        if (this.loadingDevices !== undefined)
+        {
+            await this.loadingDevices;
+        }
+        for (const device of Object.values(this.devices))
+        {
+            if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial))
+            {
+                return device;
+            }
+        }
+        throw new DeviceNotFoundError(`No device with channel ${channel} found on station with serial number: ${baseSerial}!`);
     }
 
     /**
@@ -346,6 +310,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Snoozes a given device for a given time.
+     * @param device The device as object.
+     * @param timeoutMS The snooze time in ms.
+     */
     public setDeviceSnooze(device : Device, timeoutMS : number) : void
     {
         this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
@@ -801,41 +770,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceJammed(device: Device, state: boolean): void {
         this.emit("device jammed", device, state);
-    }
-
-    public async getDevice(deviceSerial : string) : Promise<Device>
-    {
-        if (this.loadingDevices !== undefined)
-        {
-            await this.loadingDevices;
-        }
-        if (Object.keys(this.devices).includes(deviceSerial))
-        {
-            return this.devices[deviceSerial];
-        }
-        throw new DeviceNotFoundError(`Device with this serial ${deviceSerial} doesn't exists!`);
-    }
-
-    /**
-     * Returns a device specified by station and channel.
-     * @param baseSerial The serial of the base.
-     * @param channel The channel to specify the device.
-     * @returns The device specified by base and channel.
-     */
-    public async getDeviceByStationAndChannel(baseSerial : string, channel : number) : Promise<Device>
-    {
-        if (this.loadingDevices !== undefined)
-        {
-            await this.loadingDevices;
-        }
-        for (const device of Object.values(this.devices))
-        {
-            if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial))
-            {
-                return device;
-            }
-        }
-        throw new DeviceNotFoundError(`No device with channel ${channel} found on station with serial number: ${baseSerial}!`);
     }
 
     /**

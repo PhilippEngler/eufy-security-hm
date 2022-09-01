@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, HouseDetail, Houses } from './http';
+import { HTTPApi, HouseDetail, Houses, HouseListResponse } from './http';
 
 /**
  * Represents all the Houses the account has access to.
@@ -12,7 +12,7 @@ export class EufyHouses extends TypedEmitter<EufySecurityEvents>
     private httpService : HTTPApi;
 
     //private houses: Houses = {};
-    private houses : {[houseId:string] : any} = {};
+    private houses : { [houseId : string] : any } = {};
     
     /**
      * Create the Houses objects holding all houses in the account.
@@ -28,6 +28,10 @@ export class EufyHouses extends TypedEmitter<EufySecurityEvents>
         this.httpService.on("houses", (houses: Houses) => this.handleHouses(houses));
     }
 
+    /**
+     * Handle the houses of the account.
+     * @param houses The houses object.
+     */
     private handleHouses(houses: Houses) : void
     {
         this.api.logDebug("Got houses:", houses);
@@ -35,11 +39,20 @@ export class EufyHouses extends TypedEmitter<EufySecurityEvents>
         this.houses = houses;
     }
 
+    /**
+     * Returns all houses of the account.
+     * @returns All houses of the account.
+     */
     public getHouses() : Houses
     {
         return this.houses;
     }
 
+    /**
+     * Returns a house object of the specified house.
+     * @param house_id The houseId.
+     * @returns The house object.
+     */
     public getHouse(house_id : string) : HouseDetail
     {
         return this.houses[house_id];

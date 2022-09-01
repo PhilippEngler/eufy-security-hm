@@ -381,11 +381,14 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private lookup(host?: string): void {
         this.log.info(`host: ${host === undefined ? "undefined" : host}  | localIPAddress: ${this.localIPAddress === undefined ? "undefined" : this.localIPAddress}`);
-        if (this.localIPAddress === undefined && this.localIPAddressSettings != "") {
+        if (this.localIPAddress === undefined && this.localIPAddressSettings !== "") {
+            this.log.info(`Z1`);
             this.localIPAddress = this.localIPAddressSettings;
-        } else {
+        } else if (this.localIPAddress !== this.localIPAddressSettings) {
+            this.log.info(`Z2`);
             this.localIPAddress = undefined;
         }
+        this.log.info(`localIPAddress: ${this.localIPAddress}`);
         if (host === undefined && this.localIPAddress !== undefined) {
             host = this.localIPAddress;
         } else {
@@ -411,7 +414,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             this.lookupTimeout = undefined;
             this.log.error(`Station ${this.rawStation.station_sn} - All address lookup tentatives failed.`);
             if (this.localIPAddress !== undefined)
-                //this.localIPAddress = undefined
+                this.localIPAddress = undefined
             this._disconnected();
         }, this.MAX_LOOKUP_TIMEOUT);
     }
