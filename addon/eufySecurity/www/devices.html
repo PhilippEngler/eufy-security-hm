@@ -114,7 +114,7 @@
 			<div id="content">
 				<h3>Geräte</h3>
 				<p>Hier finden Sie alle Geräte, die dem angegebenen Account zugeordnet sind.</p>
-				<p id="bases"></p>
+				<p id="stations"></p>
 				<p id="devices"></p>
 			</div>
 		</main>
@@ -236,15 +236,15 @@
 
 			function initContent()
 			{
-				loadBases();
+				loadStations();
 				loadDevices();
 			}
 			
-			function loadBases()
+			function loadStations()
 			{
-				document.getElementById("bases").innerHTML = `<p id="basestations"></p>`;
+				document.getElementById("stations").innerHTML = `<p id="stations"></p>`;
 				
-				var xmlhttp, myObj, base, bases = "";
+				var xmlhttp, myObj, station, stations = "";
 				var imagepath = "";
 				var type = "";
 				var state = "";
@@ -260,13 +260,13 @@
 						{
 							if(myObj.data.length > 0)
 							{
-								bases += `<h4>Basisstationen</h4>`;
-								bases += `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
-								for (base in myObj.data)
+								stations += `<h4>Basisstationen</h4>`;
+								stations += `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
+								for (station in myObj.data)
 								{
-									if(myObj.data[base].device_type == "basestation")
+									if(myObj.data[station].device_type == "station")
 									{
-										switch (myObj.data[base].model)
+										switch (myObj.data[station].model)
 										{
 											case "T8001":
 												imagepath = `<img src="assets/devices/eufyHomeBase.png" class="card-img-top" alt="HomeBase">`;
@@ -284,7 +284,7 @@
 												imagepath = `<img src="assets/devices/eufyHomeBase2.png" class="card-img-top" alt="HomeBase">`;
 												type="HomeBase";
 										}
-										switch (myObj.data[base].guard_mode)
+										switch (myObj.data[station].guard_mode)
 										{
 											case "0":
 												state = "abwesend";
@@ -316,49 +316,49 @@
 											default:
 												state="unbekannt";
 										}
-										bases += `<div class="col">`;
-										bases += `<div class="card mb-3">`;
-										bases += `<div class="card-header">`;
-										bases += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[base].name}</h5></div>`;
-										bases += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showBaseSettings('${myObj.data[base].base_id}')"></i></h5></span></div>`;
-										bases += `</div>`
-										bases += `<div class="row no-gutters">`;
-										bases += `<div class="col-md-4">${imagepath}</div>`;
-										bases += `<div class="col-md-8">`;
-										bases += `<div class="card-body" style="margin-left: -1rem">`;
-										bases += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-										bases += `<p class="card-text">${myObj.data[base].base_id}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${myObj.data[base].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
-										bases += `</div>`;
-										bases += `</div>`;
-										bases += `</div>`;
-										bases += `<div class="card-footer">`;
-										bases += `<small class="text-muted">IP-Adresse: ${myObj.data[base].local_ip_address} (${myObj.data[base].external_ip_address})</small>`;
-										bases += `</div>`;
-										bases += `</div>`;
-										bases += `</div>`;
+										stations += `<div class="col">`;
+										stations += `<div class="card mb-3">`;
+										stations += `<div class="card-header">`;
+										stations += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[station].name}</h5></div>`;
+										stations += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showStationSettings('${myObj.data[station].station_id}')"></i></h5></span></div>`;
+										stations += `</div>`
+										stations += `<div class="row no-gutters">`;
+										stations += `<div class="col-md-4">${imagepath}</div>`;
+										stations += `<div class="col-md-8">`;
+										stations += `<div class="card-body" style="margin-left: -1rem">`;
+										stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
+										stations += `<p class="card-text">${myObj.data[station].station_id}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${myObj.data[station].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
+										stations += `</div>`;
+										stations += `</div>`;
+										stations += `</div>`;
+										stations += `<div class="card-footer">`;
+										stations += `<small class="text-muted">IP-Adresse: ${myObj.data[station].local_ip_address} (${myObj.data[station].external_ip_address})</small>`;
+										stations += `</div>`;
+										stations += `</div>`;
+										stations += `</div>`;
 									}
 								}
-								bases += `</div>`;
+								stations += `</div>`;
 							}
 							else
 							{
-								bases += `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Es wurden keine Basisstationen gefunden.</div>`;
+								stations += `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Es wurden keine Basisstationen gefunden.</div>`;
 							}
-							document.getElementById("basestations").innerHTML = bases;
+							document.getElementById("stations").innerHTML = stations;
 							type = "";
 						}
 						else
 						{
-							document.getElementById("basestations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+							document.getElementById("stations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("basestations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+						document.getElementById("stations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 					}
 					else
 					{
-						document.getElementById("basestations").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Basisstationen...</strong></div>`;
+						document.getElementById("stations").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Basisstationen...</strong></div>`;
 					}
 				};
 				xmlhttp.open("GET", url, true);
@@ -621,7 +621,7 @@
 				myModal.show();
 			}
 
-			function showBaseSettings(baseId)
+			function showStationSettings(stationId)
 			{
 				const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
 				//document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");

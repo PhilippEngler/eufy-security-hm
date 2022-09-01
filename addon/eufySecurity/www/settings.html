@@ -229,13 +229,13 @@
 													<option value="1">nur lokale Verbindung</option>
 													<option value="2">schnellste Verbindung</option>
 												</select>
-												<small class="form-text text-muted mb-2">Diese Einstellung gilt nur für die Geräte 'HomeBase', 'HomeBase E' und 'HomeBase 2'.</small>
+												<small class="form-text text-muted mb-2">Diese Einstellung gilt nur für die Basisstation 'HomeBase', 'HomeBase E' und 'HomeBase 2'.</small>
 											</div>
 											<div class="form-check form-switch mt-2 mb-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUdpStaticPorts" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
 												<label class="form-check-label" for="chkUseUdpStaticPorts">Verbindung zu den Basisstation über feste Ports aufbauen</label>
 											</div>
-											<div id="useUDPStaticPortsBases">
+											<div id="useUDPStaticPortsStations">
 												
 											</div>
 											<hr>
@@ -262,8 +262,8 @@
 											<h5>Einstellungen für regelmäßige Aktualisierung des Modus</h5>
 											<div class="form-check form-switch">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateEvent" id="chkUpdateStateEvent" onchange="changeValue(useUpdateStateEvent)">
-												<label class="form-check-label" for="chkUpdateStateEvent">Modus automatisch durch von der HomeBase gesendete Ereignisse aktualisieren</label>
-												<!--<small class="form-text text-muted">Statusänderungen werden von der HomeBase direkt nach einer externen Änderung gemeldet und aktualisiert.</small>-->
+												<label class="form-check-label" for="chkUpdateStateEvent">Modus automatisch durch von der Basisstation gesendete Ereignisse aktualisieren</label>
+												<!--<small class="form-text text-muted">Statusänderungen werden von der Basisstation direkt nach einer externen Änderung gemeldet und aktualisiert.</small>-->
 											</div>
 											<div class="form-check form-switch mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateIntervall" id="chkUpdateStateIntervall" onchange="changeValue(useUpdateStateIntervall)">
@@ -494,7 +494,7 @@
 						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
 					</div>
 					<div class="modal-body">
-						Es kann nicht gleichzeitig die Option "Modus automatisch durch von der HomeBase gesendete Ereignisse aktualisieren" und die Option "Modus regelmäßig intervallbasierend aktualisieren" aktiviert werden.<br /><br />
+						Es kann nicht gleichzeitig die Option "Modus automatisch durch von der Basisstation gesendete Ereignisse aktualisieren" und die Option "Modus regelmäßig intervallbasierend aktualisieren" aktiviert werden.<br /><br />
 						Mit 'OK' wird die zuletzt aktivierte Option deaktiviert.
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
@@ -617,7 +617,7 @@
 			function initContent()
 			{
 				validateForm();
-				loadBases();
+				loadStations();
 				loadSystemVariables();
 			}
 
@@ -672,9 +672,9 @@
 				}, false);
 			}
 
-			function loadBases()
+			function loadStations()
 			{
-				var xmlHttp, objResp, objIter, bases = "";
+				var xmlHttp, objResp, objIter, stations = "";
 				var url = `${location.protocol}//${location.hostname}:${port}/getBases`;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.overrideMimeType('application/json');
@@ -689,39 +689,39 @@
 							{
 								for (objIter in objResp.data)
 								{
-									bases += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsBase${objResp.data[objIter].base_id}">UDP Port für Verbindung mit HomeBase ${objResp.data[objIter].base_id} (${objResp.data[objIter].name}).</label>`;
-									bases += `<input type="text" name="udpPortsBase${objResp.data[objIter].base_id}" id="txtUdpPortsBase${objResp.data[objIter].base_id}" class="form-control" placeholder="UDP Port ${objResp.data[objIter].base_id}" onfocusout="checkUDPPorts(udpPortsBase${objResp.data[objIter].base_id})" required>`;
-									bases += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basis zugeordnet sein.</small>`;
-									bases += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basis zugeordnet.</div></div>`;
+									stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[objIter].station_id}">UDP Port für Verbindung mit der Basisstation ${objResp.data[objIter].station_id} (${objResp.data[objIter].name}).</label>`;
+									stations += `<input type="text" name="udpPortsStation${objResp.data[objIter].station_id}" id="txtUdpPortsStation${objResp.data[objIter].station_id}" class="form-control" placeholder="UDP Port ${objResp.data[objIter].station_id}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[objIter].station_id})" required>`;
+									stations += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basisstation zugeordnet sein.</small>`;
+									stations += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basisstation zugeordnet sein.</div></div>`;
 								}
 								document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
-								document.getElementById("useUDPStaticPortsBases").innerHTML = bases;
+								document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
 								loadData();
 							}
 							else
 							{
-								document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+								document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
 								document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 								loadData();
 							}
 						}
 						catch (e)
 						{
-							document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+							document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
 							document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 							loadData();
 						}
 					}
 					else if (this.readyState == 4)
 					{
-						document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+						document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
 						document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 						loadData();
 					}
 					else
 					{
 						document.getElementById("resultLoading").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Einstellungen...</strong></div>`;
-						document.getElementById("useUDPStaticPortsBases").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Basisstationen...</strong></div>`;
+						document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Basisstationen...</strong></div>`;
 						document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 					}
 				};
@@ -841,11 +841,11 @@
 								var element = document.getElementsByTagName("INPUT");
 								for (var i=0, m=element.length; i<m; i++)
 								{
-									if(element[i].name.startsWith("udpPortsBase"))
+									if(element[i].name.startsWith("udpPortsStation"))
 									{
-										var tempSerial = element[i].name.replace("udpPortsBase", "");
+										var tempSerial = element[i].name.replace("udpPortsStation", "");
 										var tempPorts = objResp.data[objIter]["api_udp_local_static_ports_" + tempSerial];
-										text = document.getElementById('txtUdpPortsBase' + tempSerial);
+										text = document.getElementById('txtUdpPortsStation' + tempSerial);
 										if(tempPorts == undefined || tempPorts == "undefined")
 										{
 											text.value = "";
@@ -858,8 +858,8 @@
 										
 										if(apiuseudplocalstaticports == "false")
 										{
-											document.getElementById('txtUdpPortsBase' + tempSerial).setAttribute("disabled", true);
-											//document.getElementById('txtUdpPortsBase' + tempSerial).removeAttribute("disabled", true);
+											document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
+											//document.getElementById('txtUdpPortsStation' + tempSerial).removeAttribute("disabled", true);
 										}
 									}
 								}
@@ -1309,10 +1309,10 @@
 							var element = document.getElementsByTagName("INPUT");
 							for (var i=0, m=element.length; i<m; i++)
 							{
-								if(element[i].name.startsWith("udpPortsBase"))
+								if(element[i].name.startsWith("udpPortsStation"))
 								{
-									var tempSerial = element[i].name.replace("udpPortsBase", "");
-									document.getElementById('txtUdpPortsBase' + tempSerial).removeAttribute("disabled");
+									var tempSerial = element[i].name.replace("udpPortsStation", "");
+									document.getElementById('txtUdpPortsStation' + tempSerial).removeAttribute("disabled");
 								}
 							}
 							//document.getElementById("txtUdpPorts").removeAttribute("disabled");
@@ -1322,10 +1322,10 @@
 							var element = document.getElementsByTagName("INPUT");
 							for (var i=0, m=element.length; i<m; i++)
 							{
-								if(element[i].name.startsWith("udpPortsBase"))
+								if(element[i].name.startsWith("udpPortsStation"))
 								{
-									var tempSerial = element[i].name.replace("udpPortsBase", "");
-									document.getElementById('txtUdpPortsBase' + tempSerial).setAttribute("disabled", true);
+									var tempSerial = element[i].name.replace("udpPortsStation", "");
+									document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
 								}
 							}
 							//document.getElementById("txtUdpPorts").setAttribute("disabled", true);
@@ -1407,7 +1407,7 @@
 				var regex = new RegExp("^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$");
 				for (var i=0, m=element.length; i<m; i++)
 				{
-					if(element[i].name.startsWith("udpPortsBase"))
+					if(element[i].name.startsWith("udpPortsStation"))
 					{
 						cnt = cnt + 1;
 					}
@@ -1428,15 +1428,15 @@
 				{
 					for(var i=0, m=element.length; i<m; i++)
 					{
-						if(element[i].name.startsWith("udpPortsBase"))
+						if(element[i].name.startsWith("udpPortsStation"))
 						{
-							var eName = 'txtUdpPortsBase' + element[i].name.replace("udpPortsBase", "");
+							var eName = 'txtUdpPortsStation' + element[i].name.replace("udpPortsStation", "");
 							if(eName != elementName.id)
 							{
-								if(document.getElementById('txtUdpPortsBase' + element[i].name.replace("udpPortsBase", "")).value == elementName.value)
+								if(document.getElementById('txtUdpPortsStation' + element[i].name.replace("udpPortsStation", "")).value == elementName.value)
 								{
 									error = true;
-									errorMessage = "Sie haben einen Port eingegeben, der bereits für eine andere HomeBase oder ein anderes Gerät eingegeben wurde.<br /><br />Die Eingabe wird nun gelöscht."
+									errorMessage = "Sie haben einen Port eingegeben, der bereits für eine andere Basisstation oder ein anderes Gerät eingegeben wurde.<br /><br />Die Eingabe wird nun gelöscht."
 									break;
 								}
 							}

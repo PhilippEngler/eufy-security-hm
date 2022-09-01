@@ -149,10 +149,10 @@
 				<p>Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.</p>
 				<p>Die Zeitstempel der letzten Ereinisse werden nur in folgenden Fällen gesetzt und aktualisiert:</p>
 				<ul>
-					<li>Zeitpunkt der Änderung des Modus bei Basisstationen: die Einstellung "Modus automatisch durch von der HomeBase gesendete Ereignisse aktualisieren" muss aktiviert sein</li>
+					<li>Zeitpunkt der Änderung des Modus bei Basisstationen: die Einstellung "Modus automatisch durch von der Basisstation gesendete Ereignisse aktualisieren" muss aktiviert sein</li>
 					<li>Zeitpunkt des letzten Videoevents bei Kameras: die Einstellung "Pushbenachrichtigungen aktivieren" muss aktiviert sein</li>
 				</ul>
-				<p>Ist die entsprechende Einstellung nicht aktiviert, wird bei Basisstationen "letzter Statuswechsel: unbekannt" und bei Kameras "keine Aufnahme" angezeigt.</p>
+				<p>Ist die entsprechende Einstellung nicht aktiviert, wird bei Basisstationen "letzter Statuswechsel: unbekannt" und bei Kameras "letzte Aufnahme nicht verfügbar" angezeigt.</p>
 				<h4>Informationen zum Projekt</h4>
 				<p>Alle Informationen und Dateien zu diesem AddOn finden Sie auf der <a href="https://github.com/PhilippEngler/eufy-security-hm" target="_blank">GitHub-Seite des AddOns</a>.</p>
 				<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
@@ -300,7 +300,7 @@
 						objResp = JSON.parse(this.responseText);
 						if(objResp.success == true)
 						{
-							info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.1`;
+							info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.2`;
 							
 							document.getElementById("versionInfo").innerHTML = info;
 							
