@@ -244,8 +244,6 @@ export class EufySecurityApi
         this.setupScheduledTasks();
 
         this.serviceState = "ok";
-
-        this.logInfo(`Country: ${this.httpService.getCountry()} | Language: ${this.httpService.getLanguage()}`);
     }
 
     /**
@@ -364,28 +362,7 @@ export class EufySecurityApi
     {
         await this.httpService.refreshHouseData();
         await this.httpService.refreshStationData();
-        await this.httpService.refreshDeviceData()
-
-        /*try
-        {
-            await this.stations.loadStations();
-        }
-        catch (e : any)
-        {
-            this.logError("Error occured at loadData() -> loadStations. Error: " + e.message);
-            this.setLastConnectionInfo(false);
-        }
-        try
-        {
-            await this.updateDeviceData();
-            
-            await this.devices.loadDevices();
-        }
-        catch (e : any)
-        {
-            this.logError("Error occured at loadData() -> loadDevices. Error: " + e.message);
-            this.setLastConnectionInfo(false);
-        }*/
+        await this.httpService.refreshDeviceData();
     }
     
     /**
@@ -469,8 +446,6 @@ export class EufySecurityApi
         await this.httpService.refreshHouseData();
         //await this.httpService.refreshStationData();
         //await this.httpService.refreshDeviceData();
-        //await this.updateDeviceData();
-        //await this.devices.loadDevices();
 
         var house = this.getHouse(houseId);
         var json : string = "";
@@ -513,7 +488,6 @@ export class EufySecurityApi
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
             json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -538,7 +512,6 @@ export class EufySecurityApi
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
             json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -550,7 +523,6 @@ export class EufySecurityApi
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
             json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -566,7 +538,6 @@ export class EufySecurityApi
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
             json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -578,7 +549,6 @@ export class EufySecurityApi
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
             json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -594,7 +564,6 @@ export class EufySecurityApi
             json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
             json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
             json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            //json += `"last_camera_image_time":"n/a",`;
             json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
             json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
             json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
@@ -1118,9 +1087,6 @@ export class EufySecurityApi
 
                 if(res == true)
                 {
-                    //await sleep(2500);
-
-                    //await this.stations.loadStations();
                     var stations = this.getStations();
                     
                     var station : Station;
@@ -1357,7 +1323,6 @@ export class EufySecurityApi
                             json += `{"device_id":"${deviceSerial}",`;
                             json += `"last_camera_image_url":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL() : ""}",`;
                             json += `"last_camera_image_time":"${this.devices.getLastVideoTime(deviceSerial) == undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial)}",`;
-                            //json += `"last_camera_image_time":"n/a",`;
                             if(device.getLastCameraVideoURL() == "")
                             {
                                 json += `"last_camera_video_url":"${this.config.getApiCameraDefaultVideo()}"`;
@@ -2138,12 +2103,22 @@ export class EufySecurityApi
      * @param message The message to add to the logfile.
      * @param additionalMessages Additional message(s) to be added.
      */
+    public logInfoBasic(message : string, ...additionalMessages : any) : void
+    {
+        this.logger.logInfoBasic(message, ...additionalMessages);
+    }
+
+    /**
+     * Add a given message to the logfile if the loglevel is set to info.
+     * @param message The message to add to the logfile.
+     * @param additionalMessages Additional message(s) to be added.
+     */
     public logInfo(message : string, ...additionalMessages : any) : void
     {
         this.logger.logInfo(this.config.getApiLogLevel(), message, ...additionalMessages);
     }
 
-    /** Add a given message to the errorfile.
+    /** Add a given message to the errorfile and to the logfile if loglevel is set to error.
      * @param message The message to add to the errorfile.
      * @param additionalMessages Additional message(s) to be added.
      */
@@ -2153,7 +2128,7 @@ export class EufySecurityApi
     }
 
     /**
-     * Add a given message to the debug.
+     * Add a given message to the logfile if loglevel is set to debug.
      * @param message The message to add to the errorfile.
      * @param additionalMessages Additional message(s) to be added.
      */
@@ -2192,7 +2167,6 @@ export class EufySecurityApi
             clearInterval(this.taskUpdateDeviceInfo);
         }
         this.taskUpdateDeviceInfo = setInterval(async() => { await this.updateDeviceData(); }, (5 * 60 * 1000));
-        //this.taskUpdateDeviceInfo = setInterval(async() => { await this.httpService.refreshStationData(); await this.httpService.refreshDeviceData(); }, (5 * 60 * 1000));
         this.logger.logInfoBasic(`  updateDeviceData scheduled (runs every 5 minutes).`);
 
         if(this.config.getApiUseUpdateStateIntervall())

@@ -41,7 +41,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         if(this.api.getApiUseUpdateStateEvent() == false)
         {
-            this.api.logInfo("Last guard mode change times will not be retrieved due to settings.");
+            this.api.logInfoBasic("Retrieving last guard mode change times disabled in settings.");
         }
 
         this.httpService.on("hubs", (hubs: Hubs) => this.handleHubs(hubs));
@@ -315,14 +315,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         else
         {
             var res : boolean;
-            this.stations[stationSerial].removeAllListeners("guard mode");
             res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
                 return true;
             }, () => {
                 return false;
             });
-            this.stations[stationSerial].removeAllListeners("guard mode");
-            this.addEventListener(this.stations[stationSerial], "GuardModeChanged", false);
             if(res == true)
             {
                 this.setLastGuardModeChangeTimeNow(stationSerial);
@@ -343,14 +340,17 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         return new Promise<boolean>(async (resolve, reject) => {
             var timer : NodeJS.Timeout;
+            var funcListener = () => listener();
 
             function listener() {
+                station.removeListener("guard mode", funcListener);
                 clearTimeout(timer);
                 resolve(true);
             }
 
-            station.addListener("guard mode", () => listener());
+            station.addListener("guard mode", funcListener);
             timer = setTimeout(() => {
+                station.removeListener("guard mode", funcListener);
                 reject(false);
             }, timeout);
             await this.setStationProperty(station.getSerial(), PropertyName.StationGuardMode, guardMode);
@@ -791,7 +791,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationClose(station : Station): Promise<void>
     {
         this.api.logInfo(`Event "Close": station: ${station.getSerial()}`);
-        this.emit("station close", station);
+        //this.emit("station close", station);
 
         if(this.api.getServiceState() != "shutdown")
         {
@@ -1355,7 +1355,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationDeviceLowBattery(deviceSerial: string): void
     {
-        this.api.logDebug(`Event "DeviceLowBattery": device: ${deviceSerial}`);
+        this.api.logInfo(`Event "DeviceLowBattery": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).lowBatteryEvent(this.api.getConfig().getEventDurationSecondsAsNumber());

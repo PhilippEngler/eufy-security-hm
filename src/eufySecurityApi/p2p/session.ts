@@ -380,22 +380,17 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     }
 
     private lookup(host?: string): void {
-        this.log.info(`host: ${host === undefined ? "undefined" : host}  | localIPAddress: ${this.localIPAddress === undefined ? "undefined" : this.localIPAddress}`);
         if (this.localIPAddress === undefined && this.localIPAddressSettings !== "") {
-            this.log.info(`Z1`);
             this.localIPAddress = this.localIPAddressSettings;
         } else if (this.localIPAddress !== this.localIPAddressSettings) {
-            this.log.info(`Z2`);
             this.localIPAddress = undefined;
         }
-        this.log.info(`localIPAddress: ${this.localIPAddress}`);
         if (host === undefined && this.localIPAddress !== undefined) {
             host = this.localIPAddress;
         } else {
             const localIP = getLocalIpAddress();
             host = localIP.substring(0, localIP.lastIndexOf(".") + 1).concat("255")
         }
-        this.log.info(`host: ${host}`);
         
         if(this.connectionType == P2PConnectionType.ONLY_LOCAL)
         {

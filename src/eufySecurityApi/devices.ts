@@ -33,7 +33,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
         if(this.api.getApiUsePushService() == false)
         {
-            this.api.logInfo("Last video event times will not be retrieved due to settings.");
+            this.api.logInfoBasic("Retrieving last video event times disabled in settings.");
         }
 
         this.httpService.on("devices", (devices: FullDevices) => this.handleDevices(devices));
@@ -657,7 +657,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onReady(device : Device): Promise<void>
     {
-        this.api.logInfo(`Event "Ready": device: ${device.getSerial()}`);
+        this.api.logDebug(`Event "Ready": device: ${device.getSerial()}`);
         try
         {
             if (device.getPropertyValue(PropertyName.DeviceRTSPStream) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStream) as boolean) === true)

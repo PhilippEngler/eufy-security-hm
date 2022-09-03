@@ -209,10 +209,10 @@ class ApiServer
                                     responseString = await api.setGuardMode(GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
-                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations"}`;
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations."}`;
                                     break;
                                 case "privacyOff":
-                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations"}`;
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations."}`;
                                     break;
                                 default:
                                     responseString = `{"success":false,"message":"Unknown mode to set."}`;
