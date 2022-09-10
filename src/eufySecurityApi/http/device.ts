@@ -1147,24 +1147,6 @@ export class Device extends TypedEmitter<DeviceEvents> {
     }
 }
 
-export class CommonDevice extends Device
-{
-    public getStateChannel(): string {
-        return "common";
-    }
-
-    protected constructor(api: HTTPApi, device: DeviceListResponse) {
-        super(api, device);
-    }
-
-    static async initialize(api: HTTPApi, device: DeviceListResponse): Promise<CommonDevice> {
-        const commonDevice = new CommonDevice(api, device);
-        commonDevice.initializeState();
-        return commonDevice;
-    }
-
-}
-
 export class Camera extends Device {
 
     private _isStreaming = false;

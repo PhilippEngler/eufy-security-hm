@@ -56,6 +56,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug("Got hubs:", hubs);
         this.resStations = hubs;
 
+        var station : Station;
+        const stationsSNs: string[] = Object.keys(this.stations);
+        const newStationsSNs = Object.keys(hubs);
+
         for (var stationSerial in this.resStations)
         {
             if(this.stations[stationSerial])
@@ -64,62 +68,114 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
             else
             {
-                this.stations[stationSerial] = new Station(this.api, this.httpService, this.resStations[stationSerial]);
+                station = new Station(this.api, this.httpService, this.resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                if(this.stations[stationSerial].getDeviceType() == DeviceType.STATION)
+                if(station.getDeviceType() == DeviceType.STATION)
                 {
-                    this.stations[stationSerial].setConnectionType(this.api.getP2PConnectionType());
+                    station.setConnectionType(this.api.getP2PConnectionType());
                 }
                 else
                 {
-                    this.stations[stationSerial].setConnectionType(P2PConnectionType.QUICKEST);
+                    station.setConnectionType(P2PConnectionType.QUICKEST);
                 }
-                this.stations[stationSerial].connect();
+                station.connect();
 
                 if(this.api.getApiUseUpdateStateEvent())
                 {
-                    this.addEventListener(this.stations[stationSerial], "GuardModeChanged", false);
-                    this.addEventListener(this.stations[stationSerial], "CurrentMode", false);
-                    this.addEventListener(this.stations[stationSerial], "PropertyChanged", false);
-                    this.addEventListener(this.stations[stationSerial], "RawPropertyChanged", false);
+                    this.addEventListener(station, "GuardModeChanged", false);
+                    this.addEventListener(station, "CurrentMode", false);
+                    this.addEventListener(station, "PropertyChanged", false);
+                    this.addEventListener(station, "RawPropertyChanged", false);
                     this.setLastGuardModeChangeTimeFromCloud(stationSerial);
                 }
 
-                this.addEventListener(this.stations[stationSerial], "Connect", false);
-                this.addEventListener(this.stations[stationSerial], "ConnectionError", false);
-                this.addEventListener(this.stations[stationSerial], "Close", false);
-                this.addEventListener(this.stations[stationSerial], "RawDevicePropertyChanged", false);
-                this.addEventListener(this.stations[stationSerial], "LivestreamStart", false);
-                this.addEventListener(this.stations[stationSerial], "LivestreamStop", false);
-                this.addEventListener(this.stations[stationSerial], "LivestreamError", false);
-                this.addEventListener(this.stations[stationSerial], "DownloadStart", false);
-                this.addEventListener(this.stations[stationSerial], "DownloadFinish", false);
-                this.addEventListener(this.stations[stationSerial], "CommandResult", false);
-                this.addEventListener(this.stations[stationSerial], "RTSPLivestreamStart", false);
-                this.addEventListener(this.stations[stationSerial], "RTSPLivestreamStop", false);
-                this.addEventListener(this.stations[stationSerial], "RTSPUrl", false);
-                this.addEventListener(this.stations[stationSerial], "AlarmEvent", false);
-                this.addEventListener(this.stations[stationSerial], "RuntimeState", false);
-                this.addEventListener(this.stations[stationSerial], "ChargingState", false);
-                this.addEventListener(this.stations[stationSerial], "WifiRssi", false);
-                this.addEventListener(this.stations[stationSerial], "FloodlightManualSwitch", false);
-                this.addEventListener(this.stations[stationSerial], "AlarmDelayEvent", false);
-                this.addEventListener(this.stations[stationSerial], "TalkbackStarted", false);
-                this.addEventListener(this.stations[stationSerial], "TalkbackStopped", false);
-                this.addEventListener(this.stations[stationSerial], "TalkbackError", false);
-                this.addEventListener(this.stations[stationSerial], "AlarmArmedEvent", false);
-                this.addEventListener(this.stations[stationSerial], "AlarmArmDelayEvent", false);
-                this.addEventListener(this.stations[stationSerial], "SecondaryCommandResult", false);
-                this.addEventListener(this.stations[stationSerial], "DeviceShakeAlarm", false);
-                this.addEventListener(this.stations[stationSerial], "Device911Alarm", false);
-                this.addEventListener(this.stations[stationSerial], "DeviceJammed", false);
-                this.addEventListener(this.stations[stationSerial], "DeviceLowBattery", false);
-                this.addEventListener(this.stations[stationSerial], "DeviceWrongTryProtectAlarm", false);
+                this.addEventListener(station, "Connect", false);
+                this.addEventListener(station, "ConnectionError", false);
+                this.addEventListener(station, "Close", false);
+                this.addEventListener(station, "RawDevicePropertyChanged", false);
+                this.addEventListener(station, "LivestreamStart", false);
+                this.addEventListener(station, "LivestreamStop", false);
+                this.addEventListener(station, "LivestreamError", false);
+                this.addEventListener(station, "DownloadStart", false);
+                this.addEventListener(station, "DownloadFinish", false);
+                this.addEventListener(station, "CommandResult", false);
+                this.addEventListener(station, "RTSPLivestreamStart", false);
+                this.addEventListener(station, "RTSPLivestreamStop", false);
+                this.addEventListener(station, "RTSPUrl", false);
+                this.addEventListener(station, "AlarmEvent", false);
+                this.addEventListener(station, "RuntimeState", false);
+                this.addEventListener(station, "ChargingState", false);
+                this.addEventListener(station, "WifiRssi", false);
+                this.addEventListener(station, "FloodlightManualSwitch", false);
+                this.addEventListener(station, "AlarmDelayEvent", false);
+                this.addEventListener(station, "TalkbackStarted", false);
+                this.addEventListener(station, "TalkbackStopped", false);
+                this.addEventListener(station, "TalkbackError", false);
+                this.addEventListener(station, "AlarmArmedEvent", false);
+                this.addEventListener(station, "AlarmArmDelayEvent", false);
+                this.addEventListener(station, "SecondaryCommandResult", false);
+                this.addEventListener(station, "DeviceShakeAlarm", false);
+                this.addEventListener(station, "Device911Alarm", false);
+                this.addEventListener(station, "DeviceJammed", false);
+                this.addEventListener(station, "DeviceLowBattery", false);
+                this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
+
+                this.addStation(station);
             }
         }
+        
+        for (const stationSN of stationsSNs)
+        {
+            if (!newStationsSNs.includes(stationSN))
+            {
+                this.removeStation(this.getStation(stationSN));
+            }
+        }
+
         this.saveStationsSettings();
+    }
+
+    /**
+     * Add the given station for using.
+     * @param station The station object to add.
+     */
+    private addStation(station : Station) : void
+    {
+        const serial = station.getSerial();
+        if (serial && !Object.keys(this.stations).includes(serial))
+        {
+            this.stations[serial] = station;
+            this.emit("station added", station);
+        }
+        else
+        {
+            this.api.logDebug(`Station with this serial ${station.getSerial()} exists already and couldn't be added again!`);
+        }
+    }
+
+    /**
+     * Remove the given station.
+     * @param station The station object to remove.
+     */
+    private removeStation(station : Station) : void
+    {
+        const serial = station.getSerial();
+        if (serial && Object.keys(this.stations).includes(serial))
+        {
+            delete this.stations[serial];
+            station.removeAllListeners();
+            if (station.isConnected())
+            {
+                station.close();
+            }
+            this.emit("station removed", station);
+        }
+        else
+        {
+            this.api.logDebug(`Station with this serial ${station.getSerial()} doesn't exists and couldn't be removed!`);
+        }
     }
 
     /**

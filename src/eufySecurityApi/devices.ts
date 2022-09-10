@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { DeviceNotFoundError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, CommonDevice, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue } from "./utils";
@@ -46,6 +46,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async handleDevices(devices : FullDevices) : Promise<void>
     {
         this.resDevices = devices;
+
+        const deviceSNs: string[] = Object.keys(this.devices);
+        const newDeviceSNs = Object.keys(devices);
         
         var deviceSerial : string;
         var device : Device;
@@ -61,52 +64,47 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
                 else
                 {
-                    device = await CommonDevice.initialize(this.httpService, this.resDevices[deviceSerial]);
-                    if(device.isCamera())
+                    if(Device.isIndoorCamera(this.resDevices[deviceSerial].device_type))
                     {
-                        if(device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro())
-                        {
-                            device = await Camera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isIndoorCamera())
-                        {
-                            device = await IndoorCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isFloodLight())
-                        {
-                            device = await FloodlightCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isBatteryDoorbell())
-                        {
-                            device = await BatteryDoorbellCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isWiredDoorbell())
-                        {
-                            device = await WiredDoorbellCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
-                        else if(device.isSoloCameras())
-                        {
-                            device = await SoloCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        }
+                        device = await IndoorCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
                     }
-                    else if(device.isKeyPad())
+                    else if(Device.isSoloCameras(this.resDevices[deviceSerial].device_type))
                     {
-                        device = await Keypad.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await SoloCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
                     }
-                    else if(device.isEntrySensor())
+                    else if(Device.isBatteryDoorbell(this.resDevices[deviceSerial].device_type))
                     {
-                        device = await EntrySensor.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await BatteryDoorbellCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
                     }
-                    else if(device.isMotionSensor())
+                    else if(Device.isWiredDoorbell(this.resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(this.resDevices[deviceSerial].device_type))
+                    {
+                        device = await WiredDoorbellCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                    } 
+                    else if(Device.isFloodLight(this.resDevices[deviceSerial].device_type))
+                    {
+                        device = await FloodlightCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                    }                        
+                    else if(Device.isCamera(this.resDevices[deviceSerial].device_type))
+                    {
+                        device = await Camera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                    }
+                    else if(Device.isLock(this.resDevices[deviceSerial].device_type))
+                    {
+                        device = await Lock.initialize(this.httpService, this.resDevices[deviceSerial]);
+                    }
+                    else if(Device.isMotionSensor(this.resDevices[deviceSerial].device_type))
                     {
                         device = await MotionSensor.initialize(this.httpService, this.resDevices[deviceSerial]);
                     }
-                    else if(device.isLock())
+                    else if(Device.isEntrySensor(this.resDevices[deviceSerial].device_type))
                     {
-                        device = await Lock.initialize(this.httpService, this.resDevices[deviceSerial]);
-                        //this.mqttService.subscribeLock(device.getSerial());
+                        device = await EntrySensor.initialize(this.httpService, this.resDevices[deviceSerial]);
                     }
-                    else if (device.isSmartSafe())
+                    else if(Device.isKeyPad(this.resDevices[deviceSerial].device_type))
+                    {
+                        device = await Keypad.initialize(this.httpService, this.resDevices[deviceSerial]);
+                    }
+                    else if (Device.isSmartSafe(this.resDevices[deviceSerial].device_type))
                     {
                         device = await SmartSafe.initialize(this.httpService, this.resDevices[deviceSerial]);
                     }
@@ -138,14 +136,68 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     this.addEventListener(device, "LowBattery");
                     this.addEventListener(device, "Jammed");
 
-                    this.devices[device.getSerial()] = device;
-                    this.lastVideoTimeForDevices[device.getSerial()] = undefined;
-                    if(this.api.getApiUsePushService())
-                    {
-                        this.setLastVideoTimeFromCloud(device.getSerial());
-                    }
+                    this.addDevice(device);
                 }
             }
+
+            for (const deviceSN of deviceSNs)
+            {
+                if (!newDeviceSNs.includes(deviceSN))
+                {
+                    this.getDevice(deviceSN).then((device: Device) => {
+                        this.removeDevice(device);
+                    }).catch((error) => {
+                        this.api.logError("Error removing device", error);
+                    });
+                }
+            }
+        }
+    }
+
+    /**
+     * Add the given device for using.
+     * @param device The device object to add.
+     */
+    private addDevice(device : Device) : void
+    {
+        const serial = device.getSerial()
+        if (serial && !Object.keys(this.devices).includes(serial))
+        {
+            this.devices[serial] = device;
+            this.lastVideoTimeForDevices[serial] = undefined;
+            if(this.api.getApiUsePushService())
+            {
+                this.setLastVideoTimeFromCloud(serial);
+            }
+            this.emit("device added", device);
+
+            if (device.isLock())
+            {
+                //this.mqttService.subscribeLock(device.getSerial());
+            }
+        }
+        else
+        {
+            this.api.logDebug(`Device with this serial ${device.getSerial()} exists already and couldn't be added again!`);
+        }
+    }
+
+    /**
+     * Remove the given device.
+     * @param device The device object to remove.
+     */
+    private removeDevice(device : Device) : void
+    {
+        const serial = device.getSerial()
+        if (serial && Object.keys(this.devices).includes(serial))
+        {
+            delete this.devices[serial];
+            device.removeAllListeners();
+            this.emit("device removed", device);
+        }
+        else
+        {
+            this.api.logDebug(`Device with this serial ${device.getSerial()} doesn't exists and couldn't be removed!`);
         }
     }
 

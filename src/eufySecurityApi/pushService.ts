@@ -7,6 +7,7 @@ import { EufySecurityEvents } from './interfaces';
 import { PushNotificationService } from "./push/service";
 import { CheckinResponse, Credentials, FidInstallationResponse, GcmRegisterResponse, PushMessage } from "./push/models";
 import { Logger } from './utils/logging';
+import { ServerPushEvent } from "./push/types";
 
 export class PushService extends TypedEmitter<EufySecurityEvents>
 {
@@ -37,8 +38,6 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
         if(this.config.hasPushCredentials())
         {
-            //this.credential = {fidResponse: this.config.getCredentialsFidResponse() as FidInstallationResponse, checkinResponse: this.config.getCredentialsCheckinResponse() as CheckinResponse, gcmResponse: this.config.getCredentialsGcmResponse() as GcmRegisterResponse};
-            
             this.credential = this.getPushCredentials();
             this.pushService.setCredentials(this.credential);
         }
@@ -73,8 +72,6 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             this.logger.logInfoBasic("Push notification connection closed.");
             this.emit("push close");
         });
-
-        //this.registerPushNotifications(this.credential, this.config.getCredentialsPersistentIds());
     }
 
     public async registerPushNotifications(credentials? : Credentials, persistentIds? : string[]) : Promise<void>
@@ -141,17 +138,17 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             {
                 this.logger.error(`Error processing server push notification for device invitation`, error);
             }*/
-            /*try
+            try
             {
                 if (message.type === ServerPushEvent.REMOVE_DEVICE || message.type === ServerPushEvent.REMOVE_HOMEBASE || message.type === ServerPushEvent.HOUSE_REMOVE)
                 {
-                    this.refreshCloudData();
+                    this.api.refreshCloudData();
                 }
             }
             catch (error)
             {
                 this.logger.error(`Error processing server push notification for device/station/house removal`, error);
-            }*/
+            }
 
             var rawStations = await this.api.getRawStations();
             var stations = rawStations.getStations();
