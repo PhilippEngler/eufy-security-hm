@@ -117,7 +117,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
      * Save the Credentials to config.
      * @param credentials The Credentials.
      */
-    private savePushCredentials(credentials: Credentials | undefined): void
+    private savePushCredentials(credentials : Credentials | undefined) : void
     {
         if(credentials != undefined)
         {
@@ -157,7 +157,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
      * Process a incoming PushMessage.
      * @param message The PushMessage to process.
      */
-    private async onPushMessage(message: PushMessage): Promise<void>
+    private async onPushMessage(message : PushMessage) : Promise<void>
     {
         this.emit("push message", message);
 

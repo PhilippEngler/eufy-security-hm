@@ -1,9 +1,9 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, StationEvents } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, StationEvents, Camera } from './http';
 import { sleep } from './push/utils';
-import { CommandResult, DeviceNotFoundError, StationNotFoundError, StreamMetadata } from ".";
+import { CommandResult, DeviceNotFoundError, NotSupportedError, StationNotFoundError, StreamMetadata } from ".";
 import internal from "stream";
 import { AlarmEvent, ChargingType, CommandType, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
@@ -17,13 +17,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private api : EufySecurityApi;
     private httpService : HTTPApi;
     private serialNumbers : string[];
-    private stations : { [stationSerial : string ] : Station} = {};
+    private stations : { [stationSerial : string ] : Station } = {};
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
     private lastGuardModeChangeTimeForStations : { [stationSerial : string] : any } = {};
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
-    private refreshEufySecurityP2PTimeout: {
-        [dataType: string]: NodeJS.Timeout;
+
+    private cameraMaxLivestreamSeconds = 30;
+    private cameraStationLivestreamTimeout: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
+    private cameraCloudLivestreamTimeout: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
+
+    private refreshEufySecurityP2PTimeout : {
+        [dataType : string] : NodeJS.Timeout;
     } = {};
 
     /**
@@ -50,13 +55,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Put all stations and their settings in format so that we can work with them.
      * @param hubs The object containing the stations.
      */
-    private handleHubs(hubs: Hubs): void
+    private handleHubs(hubs: Hubs) : void
     {
         this.api.logDebug("Got hubs:", hubs);
         const resStations = hubs;
 
         var station : Station;
-        const stationsSNs: string[] = Object.keys(this.stations);
+        const stationsSNs : string[] = Object.keys(this.stations);
         const newStationsSNs = Object.keys(hubs);
 
         for (var stationSerial in resStations)
@@ -221,6 +226,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    public async close() : Promise<void>
+    {
+        for (const device_sn of this.cameraStationLivestreamTimeout.keys())
+        {
+            this.stopStationLivestream(device_sn);
+        }
+        for (const device_sn of this.cameraCloudLivestreamTimeout.keys())
+        {
+            this.stopCloudLivestream(device_sn);
+        }
+
+        await this.closeP2PConnections();
+    }
+
     /**
      * Close all P2P connection for all stations.
      */
@@ -294,6 +313,128 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         });
     }
 
+    public setCameraMaxLivestreamDuration(seconds : number) : void
+    {
+        this.cameraMaxLivestreamSeconds = seconds;
+    }
+
+    public getCameraMaxLivestreamDuration() : number
+    {
+        return this.cameraMaxLivestreamSeconds;
+    }
+
+    public async startStationLivestream(deviceSN : string) : Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+        const station = this.getStation(device.getStationSerial());
+
+        if(!device.hasCommand(CommandName.DeviceStartLivestream))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        const camera = device as Camera;
+        if(!station.isLiveStreaming(camera))
+        {
+            station.startLivestream(camera);
+
+            this.cameraStationLivestreamTimeout.set(deviceSN, setTimeout(() => {
+                this.api.logInfo(`Stopping the station stream for the device ${deviceSN}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                this.stopStationLivestream(deviceSN);
+            }, this.cameraMaxLivestreamSeconds * 1000));
+        }
+        else
+        {
+            this.api.logWarn(`The station stream for the device ${deviceSN} cannot be started, because it is already streaming!`);
+        }
+    }
+
+    public async startCloudLivestream(deviceSN : string) : Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+        const station = this.getStation(device.getStationSerial());
+
+        if(!device.hasCommand(CommandName.DeviceStartLivestream))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        const camera = device as Camera;
+        if(!camera.isStreaming())
+        {
+            const url = await camera.startStream();
+            if (url !== "") {
+                this.cameraCloudLivestreamTimeout.set(deviceSN, setTimeout(() => {
+                    this.api.logInfo(`Stopping the station stream for the device ${deviceSN}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                    this.stopCloudLivestream(deviceSN);
+                }, this.cameraMaxLivestreamSeconds * 1000));
+                this.emit("cloud livestream start", station, camera, url);
+            }
+            else
+            {
+                this.api.logError(`Failed to start cloud stream for the device ${deviceSN}`);
+            }
+        }
+        else
+        {
+            this.api.logWarn(`The cloud stream for the device ${deviceSN} cannot be started, because it is already streaming!`);
+        }
+    }
+
+    public async stopStationLivestream(deviceSN : string) : Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+        const station = this.getStation(device.getStationSerial());
+
+        if(!device.hasCommand(CommandName.DeviceStopLivestream))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        if(station.isConnected() && station.isLiveStreaming(device))
+        {
+            await station.stopLivestream(device);
+        }
+        else
+        {
+            this.api.logWarn(`The station stream for the device ${deviceSN} cannot be stopped, because it isn't streaming!`);
+        }
+
+        const timeout = this.cameraStationLivestreamTimeout.get(deviceSN);
+        if(timeout) {
+            clearTimeout(timeout);
+            this.cameraStationLivestreamTimeout.delete(deviceSN);
+        }
+    }
+
+    public async stopCloudLivestream(deviceSN: string): Promise<void> {
+        const device = await this.api.getDevice(deviceSN);
+        const station = this.getStation(device.getStationSerial());
+
+        if(!device.hasCommand(CommandName.DeviceStopLivestream))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        const camera = device as Camera;
+        if(camera.isStreaming())
+        {
+            await camera.stopStream();
+            this.emit("cloud livestream stop", station, camera);
+        }
+        else
+        {
+            this.api.logWarn(`The cloud stream for the device ${deviceSN} cannot be stopped, because it isn't streaming!`);
+        }
+
+        const timeout = this.cameraCloudLivestreamTimeout.get(deviceSN);
+        if(timeout)
+        {
+            clearTimeout(timeout);
+            this.cameraCloudLivestreamTimeout.delete(deviceSN);
+        }
+    }
+
     /**
      * Save the relevant settings (mainly for P2P-Connection) to the config
      */
@@ -305,7 +446,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Returns a Array of all stations.
      */
-    public getStations() : {[stationSerial: string] : Station}
+    public getStations() : { [stationSerial : string] : Station}
     {
         return this.stations;
     }
@@ -833,7 +974,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param error Ther error occured.
      */
-    private onStationConnectionError(station: Station, error: Error): void
+    private onStationConnectionError(station : Station, error : Error) : void
     {
         this.api.logDebug(`Event "ConnectionError": station: ${station.getSerial()}`);
         this.emit("station connection error", station, error);
@@ -843,7 +984,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event Close is fired.
      * @param station The station as Station object.
      */
-    private async onStationClose(station : Station): Promise<void>
+    private async onStationClose(station : Station) : Promise<void>
     {
         this.api.logInfo(`Event "Close": station: ${station.getSerial()}`);
         //this.emit("station close", station);
@@ -852,9 +993,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         {
             
         }
-        /*for (const device_sn of this.cameraStationLivestreamTimeout.keys())
+        for (const device_sn of this.cameraStationLivestreamTimeout.keys())
         {
-            this.devices.getDevice(device_sn).then((device: Device) => {
+            this.api.getDevice(device_sn).then((device: Device) => {
                 if (device !== null && device.getStationSerial() === station.getSerial())
                 {
                     clearTimeout(this.cameraStationLivestreamTimeout.get(device_sn)!);
@@ -863,7 +1004,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }).catch((error) => {
                 this.api.logError(`Station ${station.getSerial()} - Error:`, error);
             });
-        }*/
+        }
     }
 
     /**
@@ -871,7 +1012,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device the raw values changed for.
      * @param values The raw values for the device.
      */
-    private async onStationRawDevicePropertyChanged(deviceSerial: string, values: RawValues): Promise<void>
+    private async onStationRawDevicePropertyChanged(deviceSerial : string, values : RawValues) : Promise<void>
     {
         this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
         this.api.updateDeviceProperties(deviceSerial, values);
@@ -885,7 +1026,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param videoStream The videoStream.
      * @param audioStream  The audioStream.
      */
-    private async onStationLivestreamStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable): Promise<void>
+    private async onStationLivestreamStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -900,7 +1041,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationLivestreamStop(station : Station, channel : number): Promise<void>
+    private async onStationLivestreamStop(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -915,7 +1056,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationLivestreamError(station : Station, channel : number): Promise<void>
+    private async onStationLivestreamError(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamError": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -933,7 +1074,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param videoStream The videoStream.
      * @param audioStream  The audioStream.
      */
-    private async onStationDownloadStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable): Promise<void>
+    private async onStationDownloadStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
     {
         this.api.logDebug(`Event "DownloadStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -948,7 +1089,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationDownloadFinish(station : Station, channel : number): Promise<void>
+    private async onStationDownloadFinish(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "DownloadFinish": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -963,7 +1104,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param command The result.
      */
-    private async onStationCommandResult(station : Station, result : CommandResult): Promise<void>
+    private async onStationCommandResult(station : Station, result : CommandResult) : Promise<void>
     {
         this.api.logDebug(`Event "CommandResult": station: ${station.getSerial()} | result: ${result}`);
         if (result.return_code === 0) {
@@ -1031,7 +1172,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param result The result.
      */
-    private onStationSecondaryCommandResult(station: Station, result: CommandResult): void
+    private onStationSecondaryCommandResult(station : Station, result : CommandResult) : void
     {
         this.api.logDebug(`Event "SecondaryCommandResult": station: ${station.getSerial()} | result: ${result}`);
         if (result.return_code === 0)
@@ -1069,7 +1210,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param guardMode The new guard mode as GuardMode.
      */
-    private async onStationGuardMode(station : Station, guardMode : number): Promise<void>
+    private async onStationGuardMode(station : Station, guardMode : number) : Promise<void>
     {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
@@ -1090,7 +1231,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param guardMode The new guard mode as GuardMode.
      */
-    private async onStationCurrentMode(station : Station, guardMode : number): Promise<void>
+    private async onStationCurrentMode(station : Station, guardMode : number) : Promise<void>
     {
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
@@ -1109,7 +1250,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationRTSPLivestreamStart(station : Station, channel : number): Promise<void>
+    private async onStationRTSPLivestreamStart(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "RTSPLivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1124,7 +1265,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationRTSPLivestreamStop(station : Station, channel : number): Promise<void>
+    private async onStationRTSPLivestreamStop(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "RTSPLivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1139,7 +1280,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationRTSPURL(station : Station, channel : number, value : string): Promise<void>
+    private async onStationRTSPURL(station : Station, channel : number, value : string) : Promise<void>
     {
         this.api.logDebug(`Event "RTSPURL": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1156,7 +1297,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    private async onStationPropertyChanged(station : Station, name : string, value : PropertyValue): Promise<void>
+    private async onStationPropertyChanged(station : Station, name : string, value : PropertyValue) : Promise<void>
     {
         if(name != "guardMode" && name != "currentMode")
         {
@@ -1170,7 +1311,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
      */
-    private async onStationRawPropertyChanged(station : Station, type : number, value : string): Promise<void>
+    private async onStationRawPropertyChanged(station : Station, type : number, value : string) : Promise<void>
     {
         if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
@@ -1183,7 +1324,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param alarmEvent The alarmEvent.
      */
-    private async onStationAlarmEvent(station : Station, alarmEvent : AlarmEvent): Promise<void>
+    private async onStationAlarmEvent(station : Station, alarmEvent : AlarmEvent) : Promise<void>
     {
         this.api.logDebug(`Event "AlarmEvent": station: ${station.getSerial()} | alarmEvent: ${alarmEvent}`);
     }
@@ -1195,7 +1336,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param batteryLevel The battery level as percentage value.
      * @param temperature The temperature as degree value.
      */
-    private async onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number): Promise<void>
+    private async onStationRuntimeState(station : Station, channel : number, batteryLevel : number, temperature : number) : Promise<void>
     {
         this.api.logDebug(`Event "RuntimeState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1221,7 +1362,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param chargeType The current carge state.
      * @param batteryLevel The battery level as percentage value.
      */
-    private async onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number): Promise<void>
+    private async onStationChargingState(station : Station, channel : number, chargeType : number, batteryLevel : number) : Promise<void>
     {
         this.api.logDebug(`Event "ChargingState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1247,7 +1388,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param rssi The current rssi value.
      */
-    private async onStationWifiRssi(station: Station, channel: number, rssi: number): Promise<void>
+    private async onStationWifiRssi(station : Station, channel : number, rssi : number) : Promise<void>
     {
         this.api.logDebug(`Event "WifiRssi": station: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1267,7 +1408,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param enabled The value for the floodlight.
      */
-    private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean): Promise<void>
+    private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "FloodlightManualSwitch": station: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1286,7 +1427,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param alarmDelayEvent The AlarmDelayedEvent.
      * @param alarmDelay The delay in ms.
      */
-    private async onStationAlarmDelayEvent(station : Station, alarmDelayEvent : AlarmEvent, alarmDelay : number): Promise<void>
+    private async onStationAlarmDelayEvent(station : Station, alarmDelayEvent : AlarmEvent, alarmDelay : number) : Promise<void>
     {
         this.api.logDebug(`Event "AlarmDelayEvent": station: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
     }
@@ -1297,7 +1438,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param talkbackStream The TalbackStream object.
      */
-    private async onStationTalkbackStarted(station: Station, channel: number, talkbackStream : TalkbackStream): Promise<void>
+    private async onStationTalkbackStarted(station : Station, channel : number, talkbackStream : TalkbackStream) : Promise<void>
     {
         this.api.logDebug(`Event "TalkbackStarted": station: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1312,7 +1453,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationTalkbackStopped(station: Station, channel: number): Promise<void>
+    private async onStationTalkbackStopped(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "TalkbackStopped": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1328,7 +1469,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param error The error object.
      */
-    private async onStationTalkbackError(station: Station, channel: number, error : Error): Promise<void>
+    private async onStationTalkbackError(station : Station, channel : number, error : Error) : Promise<void>
     {
         this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
         this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
@@ -1342,7 +1483,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event AlarmArmedEvent is fired.
      * @param station The station as Station object.
      */
-    private async onStationAlarmArmedEvent(station: Station): Promise<void>
+    private async onStationAlarmArmedEvent(station : Station) : Promise<void>
     {
         this.api.logDebug(`Event "AlarmArmedEvent": station: ${station.getSerial()}`);
     }
@@ -1352,7 +1493,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param alarmDelay The delay in ms.
      */
-    private async onStationArmDelayEvent(station: Station, alarmDelay: number): Promise<void>
+    private async onStationArmDelayEvent(station : Station, alarmDelay : number) : Promise<void>
     {
         this.api.logDebug(`Event "ArmDelayEvent": station: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
     }
@@ -1362,7 +1503,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The device serial.
      * @param event The SmartSafeShakeAlarmEvent event.
      */
-    private onStationDeviceShakeAlarm(deviceSerial: string, event: SmartSafeShakeAlarmEvent): void
+    private onStationDeviceShakeAlarm(deviceSerial : string, event : SmartSafeShakeAlarmEvent) : void
     {
         this.api.logDebug(`Event "DeviceShakeAlarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
@@ -1378,7 +1519,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The device serial.
      * @param event The SmartSafeAlarm911Event event.
      */
-    private onStationDevice911Alarm(deviceSerial: string, event: SmartSafeAlarm911Event): void
+    private onStationDevice911Alarm(deviceSerial : string, event : SmartSafeAlarm911Event) : void
     {
         this.api.logDebug(`Event "Device911Alarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
@@ -1393,7 +1534,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event DeviceJammed is fired.
      * @param deviceSerial The device serial.
      */
-    private onStationDeviceJammed(deviceSerial: string): void
+    private onStationDeviceJammed(deviceSerial : string) : void
     {
         this.api.logDebug(`Event "DeviceJammed": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
@@ -1408,7 +1549,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event DeviceLowBattery is fired.
      * @param deviceSerial The device serial.
      */
-    private onStationDeviceLowBattery(deviceSerial: string): void
+    private onStationDeviceLowBattery(deviceSerial : string) : void
     {
         this.api.logInfo(`Event "DeviceLowBattery": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
@@ -1423,7 +1564,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event DeviceWrongTryProtectAlarm is fired.
      * @param deviceSerial The device serial.
      */
-    private onStationDeviceWrongTryProtectAlarm(deviceSerial: string): void
+    private onStationDeviceWrongTryProtectAlarm(deviceSerial : string) : void
     {
         this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
@@ -1515,7 +1656,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the property.
      * @param value The value of the property.
      */
-    public async setStationProperty(stationSerial : string, name : string, value : unknown): Promise<void>
+    public async setStationProperty(stationSerial : string, name : string, value : unknown) : Promise<void>
     {
         const station = this.stations[stationSerial];
         const metadata = station.getPropertyMetadata(name);

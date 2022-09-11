@@ -142,7 +142,7 @@ export class EufySecurityApi
         this.closePushService();
         this.closeMqttService();
         
-        await this.closeStationP2PConnections();
+        await this.closeStation();
 
         this.closeDevice();
 
@@ -157,7 +157,7 @@ export class EufySecurityApi
      */
     private closePushService() : void
     {
-        this.logInfoBasic("Stopping PushServices...");
+        this.logInfoBasic("Stopping PushService...");
         if(this.pushService)
         {
             this.pushService.close();
@@ -169,7 +169,7 @@ export class EufySecurityApi
      */
     private closeMqttService() : void
     {
-        this.logInfoBasic("Stopping MqttServices...");
+        this.logInfoBasic("Stopping MqttService...");
         if(this.mqttService)
         {
             this.mqttService.close();
@@ -179,9 +179,10 @@ export class EufySecurityApi
     /**
      * Close all P2P connections from all stations.
      */
-    private async closeStationP2PConnections() : Promise<void>
+    private async closeStation() : Promise<void>
     {
         this.logInfoBasic("Closing connections to all stations...");
+        this.devices.close();
         if(this.stations != null)
         {
             await this.stations.closeP2PConnections();
@@ -371,7 +372,7 @@ export class EufySecurityApi
      * Returns all houses of the account.
      * @returns The houses object.
      */
-    public getHouses() : {[houseId:string] : any}
+    public getHouses() : { [houseId : string] : any}
     {
         return this.houses.getHouses();
     }
@@ -914,7 +915,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given station.
      */
-     public async getStationAsJSON(stationSerial : string) : Promise<string>
+    public async getStationAsJSON(stationSerial : string) : Promise<string>
     {
         await this.httpService.refreshStationData();
         await this.httpService.refreshDeviceData();
@@ -961,7 +962,7 @@ export class EufySecurityApi
      * @param stations All stations in the account.
      * @param serialNumbers The serial numbers of all stations in the account.
      */
-    public async saveStationsSettings(stations : {[stationSerial:string] : Station}, stationSerials : string[]) : Promise<void>
+    public async saveStationsSettings(stations : { [stationSerial : string] : Station}, stationSerials : string[]) : Promise<void>
     {
         if(this.stations)
         {
@@ -2261,6 +2262,16 @@ export class EufySecurityApi
     }
 
     /**
+     * Add a given message to the logfile if loglevel is set to warn.
+     * @param message The message to add to the errorfile.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    public logWarn(message : string, ...additionalMessages : any) : void
+    {
+        this.logger.logWarn(this.config.getApiLogLevel(), message, ...additionalMessages);
+    }
+
+    /**
      * Returns the current api log level.
      * @returns The current log level.
      */
@@ -2413,7 +2424,7 @@ export class EufySecurityApi
     /**
      * The method called when update device data is called.
      */
-    public async updateDeviceData(): Promise<void>
+    public async updateDeviceData() : Promise<void>
     {
         await this.stations.updateDeviceData();
     }

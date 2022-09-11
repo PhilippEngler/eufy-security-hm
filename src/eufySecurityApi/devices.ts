@@ -13,11 +13,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 {
     private api : EufySecurityApi;
     private httpService : HTTPApi;
-    private devices : {[deviceSerial:string] : any} = {};
-    private lastVideoTimeForDevices : {[deviceSerial:string] : any} = {};
-    private loadingDevices?: Promise<unknown>;
-    private deviceSnoozeTimeout: {
-        [dataType: string]: NodeJS.Timeout;
+    private devices : { [deviceSerial : string] : any } = {};
+    private lastVideoTimeForDevices : { [deviceSerial : string] : any } = {};
+    private loadingDevices? : Promise<unknown>;
+    private deviceSnoozeTimeout : {
+        [dataType : string] : NodeJS.Timeout;
     } = {};
 
     /**
@@ -281,7 +281,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.removeEventListener(this.devices[deviceSerial], "LowBattery");
                 this.removeEventListener(this.devices[deviceSerial], "Jammed");
 
-                this.devices[deviceSerial].destroy();
+                (this.devices[deviceSerial] as Device).destroy();
             }
         }
     }
@@ -300,7 +300,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Returns all Devices.
      */
-    public getDevices() : { [deviceSerial : string]: any } 
+    public getDevices() : { [deviceSerial : string] : any } 
     {
         return this.devices;
     }
@@ -583,7 +583,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    private async onPropertyChanged(device : Device, name : string, value : PropertyValue): Promise<void>
+    private async onPropertyChanged(device : Device, name : string, value : PropertyValue) : Promise<void>
     {
         //this.emit("device property changed", device, name, value);
         this.api.logDebug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
@@ -611,7 +611,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
      */
-    private async onRawPropertyChanged(device : Device, type : number, value : string): Promise<void>
+    private async onRawPropertyChanged(device : Device, type : number, value : string) : Promise<void>
     {
         //this.emit("device raw property changed", device, type, value, modified);
         this.api.logDebug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value}`);
@@ -622,7 +622,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onCryingDetected(device : Device, state : boolean): Promise<void>
+    private async onCryingDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
         this.setLastVideoTimeNow(device.getSerial());
@@ -633,7 +633,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onSoundDetected(device : Device, state : boolean): Promise<void>
+    private async onSoundDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
         this.setLastVideoTimeNow(device.getSerial());
@@ -644,7 +644,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onPetDetected(device : Device, state : boolean): Promise<void>
+    private async onPetDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
         this.setLastVideoTimeNow(device.getSerial());
@@ -655,7 +655,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onMotionDetected(device : Device, state : boolean): Promise<void>
+    private async onMotionDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
         this.setLastVideoTimeNow(device.getSerial());
@@ -667,7 +667,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The new state.
      * @param person The person detected.
      */
-    private async onPersonDetected(device : Device, state : boolean, person : string): Promise<void>
+    private async onPersonDetected(device : Device, state : boolean, person : string) : Promise<void>
     {
         this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
         this.setLastVideoTimeNow(device.getSerial());
@@ -678,7 +678,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onRings(device : Device, state : boolean): Promise<void>
+    private async onRings(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
         this.setLastVideoTimeNow(device.getSerial());
@@ -689,7 +689,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onLocked(device : Device, state : boolean): Promise<void>
+    private async onLocked(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
     }
@@ -699,7 +699,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onOpen(device : Device, state : boolean): Promise<void>
+    private async onOpen(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
     }
@@ -708,7 +708,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * The action to be one when event Ready is fired.
      * @param device The device as Device object.
      */
-    private async onReady(device : Device): Promise<void>
+    private async onReady(device : Device) : Promise<void>
     {
         this.api.logDebug(`Event "Ready": device: ${device.getSerial()}`);
         try
@@ -729,7 +729,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageDelivered(device: Device, state: boolean): void {
+    private onDevicePackageDelivered(device : Device, state : boolean) : void {
         this.emit("device package delivered", device, state);
     }
 
@@ -738,7 +738,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageStranded(device: Device, state: boolean): void {
+    private onDevicePackageStranded(device : Device, state : boolean) : void {
         this.emit("device package stranded", device, state);
     }
 
@@ -747,7 +747,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageTaken(device: Device, state: boolean): void {
+    private onDevicePackageTaken(device : Device, state : boolean) : void {
         this.emit("device package taken", device, state);
     }
 
@@ -756,7 +756,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceSomeoneLoitering(device: Device, state: boolean): void {
+    private onDeviceSomeoneLoitering(device : Device, state : boolean) : void {
         this.emit("device someone loitering", device, state);
     }
 
@@ -765,7 +765,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceRadarMotionDetected(device: Device, state: boolean): void {
+    private onDeviceRadarMotionDetected(device : Device, state : boolean) : void {
         this.emit("device radar motion detected", device, state);
     }
 
@@ -775,7 +775,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The state.
      * @param detail The detail.
      */
-    private onDevice911Alarm(device: Device, state: boolean, detail: SmartSafeAlarm911Event): void {
+    private onDevice911Alarm(device : Device, state : boolean, detail : SmartSafeAlarm911Event) : void {
         this.emit("device 911 alarm", device, state, detail);
     }
 
@@ -785,7 +785,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The state.
      * @param detail The detail.
      */
-    private onDeviceShakeAlarm(device: Device, state: boolean, detail: SmartSafeShakeAlarmEvent): void {
+    private onDeviceShakeAlarm(device : Device, state : boolean, detail : SmartSafeShakeAlarmEvent) : void {
         this.emit("device shake alarm", device, state, detail);
     }
 
@@ -794,7 +794,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceWrongTryProtectAlarm(device: Device, state: boolean): void {
+    private onDeviceWrongTryProtectAlarm(device : Device, state : boolean) : void {
         this.emit("device wrong try-protect alarm", device, state);
     }
 
@@ -803,7 +803,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceLongTimeNotClose(device: Device, state: boolean): void {
+    private onDeviceLongTimeNotClose(device : Device, state : boolean) : void {
         this.emit("device long time not close", device, state);
     }
 
@@ -812,7 +812,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceLowBattery(device: Device, state: boolean): void {
+    private onDeviceLowBattery(device : Device, state : boolean) : void {
         this.emit("device low battery", device, state);
     }
 
@@ -821,7 +821,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceJammed(device: Device, state: boolean): void {
+    private onDeviceJammed(device : Device, state : boolean) : void {
         this.emit("device jammed", device, state);
     }
 
@@ -830,7 +830,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @param values The raw values.
      */
-    public updateDeviceProperties(deviceSerial: string, values: RawValues): void
+    public updateDeviceProperties(deviceSerial : string, values : RawValues) : void
     {
         this.devices[deviceSerial].updateRawProperties(values);
     }
