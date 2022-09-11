@@ -4,6 +4,7 @@ import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
 import { PushService } from './pushService';
+import { MqttService } from './mqttService';
 import { generateUDID, generateSerialnumber } from './utils';
 import { Devices } from './devices'
 import { Stations } from './stations';
@@ -18,6 +19,7 @@ export class EufySecurityApi
     private httpService !: HTTPApi;
     private homematicApi !: HomematicApi;
     private pushService !: PushService;
+    private mqttService !: MqttService;
     private houses !: EufyHouses;
     private devices !: Devices;
     private stations !: Stations;
@@ -84,16 +86,18 @@ export class EufySecurityApi
 
             if(this.config.getApiUsePushService() == true)
             {
-                this.logger.logInfoBasic("Started initializing push notification connection.")
+                this.logger.logInfoBasic("Started initializing push notification connection.");
                 try
                 {
                     this.pushService = new PushService(this, this.httpService, this.config, this.logger);
                 }
                 catch(e)
                 {
-                    this.logger.logInfoBasic("No country and/or language given. Skipping creating push service.")
+                    this.logger.logInfoBasic("No country and/or language given. Skipping creating push service.");
                 }
             }
+
+            this.mqttService = new MqttService(this, this.httpService, this.config, this.logger);
 
             await this.connect();
         }
@@ -121,28 +125,78 @@ export class EufySecurityApi
     }
 
     /**
+     * Close the EufySecurityApi.
+     */
+    public async close() : Promise<void>
+    {
+        /*for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
+            this.stopStationLivestream(device_sn);
+        }
+        for (const device_sn of this.cameraCloudLivestreamTimeout.keys()) {
+            this.stopCloudLivestream(device_sn);
+        }*/
+
+        if (this.refreshEufySecurityCloudTimeout !== undefined)
+            clearTimeout(this.refreshEufySecurityCloudTimeout);
+
+        this.closePushService();
+        this.closeMqttService();
+        
+        await this.closeStationP2PConnections();
+
+        this.closeDevice();
+
+        /*if (this.connected)
+            this.emit("close");*/
+
+        this.connected = false;
+    }
+
+    /**
      * Close all push service connections
      */
-    public closePushService() : void
+    private closePushService() : void
     {
+        this.logInfoBasic("Stopping PushServices...");
         if(this.pushService)
         {
-            this.pushService.closePushService();
+            this.pushService.close();
         }
     }
 
     /**
-     * Close all P2P connections from all stations and all devices
+     * Close the MqttService
      */
-    public async closeP2PConnections() : Promise<void>
+    private closeMqttService() : void
     {
+        this.logInfoBasic("Stopping MqttServices...");
+        if(this.mqttService)
+        {
+            this.mqttService.close();
+        }
+    }
+
+    /**
+     * Close all P2P connections from all stations.
+     */
+    private async closeStationP2PConnections() : Promise<void>
+    {
+        this.logInfoBasic("Closing connections to all stations...");
         if(this.stations != null)
         {
             await this.stations.closeP2PConnections();
         }
+    }
+
+    /**
+     * Close all devices.
+     */
+    private async closeDevice() : Promise<void>
+    {
+        this.logInfoBasic("Closing connections to all devices...");
         if(this.devices != null)
         {
-            this.devices.closeP2PConnections();
+            this.devices.closeDevices();
         }
     }
     
@@ -172,12 +226,30 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns a boolean value to indicate the connection state to eufy.
+     * Returns a boolean value to indicate the connection state.
      * @returns True if connected to eufy, otherwise false.
      */
     public isConnected() : boolean
     {
         return this.connected;
+    }
+
+    /**
+     * Returns the connection state of the mqtt service.
+     * @returns Connection state of the MqttService as boolean value.
+     */
+    public isMqttServiceConnected() : boolean
+    {
+        return this.mqttService.isConnected();
+    }
+
+    /**
+     * Returns the MqttService object.
+     * @returns The MqttSerivce object.
+     */
+    public getMqttService() : MqttService
+    {
+        return this.mqttService;
     }
 
     /**
@@ -219,18 +291,18 @@ export class EufySecurityApi
 
         if(this.pushService)
         {
-            this.pushService.registerPushNotifications();
+            this.pushService.connect();
         }
 
-        /*const loginData = this.httpService.getPersistentData();
+        const loginData = this.httpService.getPersistentData();
         if (loginData)
         {
             this.mqttService.connect(loginData.user_id, this.config.getOpenudid(), this.httpService.getAPIBase(), loginData.email);
         }
         else
         {
-            this.logger.warn("No login data recevied to initialize MQTT connection...");
-        }*/
+            this.logger.warn("No mqtt login data received. Skipping creating mqtt service.");
+        }
 
         this.houses = new EufyHouses(this, this.httpService);
         this.stations = new Stations(this, this.httpService);

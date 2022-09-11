@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, HouseDetail, Houses, HouseListResponse } from './http';
+import { HTTPApi, HouseDetail, Houses } from './http';
 
 /**
  * Represents all the Houses the account has access to.

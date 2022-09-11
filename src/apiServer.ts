@@ -772,12 +772,10 @@ async function stopServer()
 {
     logger.logInfoBasic("Set service state to shutdown...");
     api.setServiceState("shutdown");
-    logger.logInfoBasic("Stopping Push Service...");
-    api.closePushService();
-    logger.logInfoBasic("Stopping P2P-Connections...");
-    await api.closeP2PConnections();
     logger.logInfoBasic("Stopping scheduled tasks...");
     api.clearScheduledTasks();
+    logger.logInfoBasic("Stopping api...");
+    await api.close();
     logger.logInfoBasic("Write config...");
     api.writeConfig();
     logger.logInfoBasic("Stopping...");

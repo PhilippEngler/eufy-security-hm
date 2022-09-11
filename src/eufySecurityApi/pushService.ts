@@ -20,7 +20,14 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
     private pushCloudChecked = false;
     private credential !: Credentials;
     private persistentIds !: string[];
-    
+
+    /**
+     * Create the PushService object.
+     * @param api The EufySecurityApi.
+     * @param httpService The HTTPApi.
+     * @param config The Config.
+     * @param logger The Logger.
+     */
     constructor(api : EufySecurityApi, httpService : HTTPApi, config : Config, logger : Logger)
     {
         super();
@@ -32,6 +39,9 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
         this.initialize();
     }
 
+    /**
+     * Initialize the PushSerivce.
+     */
     private async initialize() : Promise<void>
     {
         this.pushService = new PushNotificationService(this.logger);
@@ -74,7 +84,12 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
         });
     }
 
-    public async registerPushNotifications(credentials? : Credentials, persistentIds? : string[]) : Promise<void>
+    /**
+     * Connect the PushService.
+     * @param credentials The Credentials.
+     * @param persistentIds The persistentIds.
+     */
+    public async connect(credentials? : Credentials, persistentIds? : string[]) : Promise<void>
     {
         if (credentials)
         {
@@ -88,13 +103,20 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
         this.pushService.open();
     }
 
-    public closePushService() : void
+    /**
+     * Close the PushService.
+     */
+    public close() : void
     {
         this.savePushPersistentIds();
 
         this.pushService.close();
     }
 
+    /**
+     * Save the Credentials to config.
+     * @param credentials The Credentials.
+     */
     private savePushCredentials(credentials: Credentials | undefined): void
     {
         if(credentials != undefined)
@@ -105,21 +127,36 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Returns the credentials stored in config.
+     * @returns The Credentials.
+     */
     private getPushCredentials() : Credentials
     {
         return {fidResponse: this.config.getCredentialsFidResponse() as FidInstallationResponse, checkinResponse: this.config.getCredentialsCheckinResponse() as CheckinResponse, gcmResponse: this.config.getCredentialsGcmResponse() as GcmRegisterResponse};;
     }
 
+    /**
+     * Save the persistentIds to config.
+     */
     private savePushPersistentIds() : void
     {
         this.config.setCredentialsPersistentIds(this.getPushPersistentIds());
     }
 
+    /**
+     * Return the persistentIds stored in config.
+     * @returns The persistentIds.
+     */
     public getPushPersistentIds() : string[]
     {
         return this.pushService.getPersistentIds();
     }
 
+    /**
+     * Process a incoming PushMessage.
+     * @param message The PushMessage to process.
+     */
     private async onPushMessage(message: PushMessage): Promise<void>
     {
         this.emit("push message", message);

@@ -13,7 +13,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 {
     private api : EufySecurityApi;
     private httpService : HTTPApi;
-    private resDevices !: FullDevices;
     private devices : {[deviceSerial:string] : any} = {};
     private lastVideoTimeForDevices : {[deviceSerial:string] : any} = {};
     private loadingDevices?: Promise<unknown>;
@@ -45,7 +44,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async handleDevices(devices : FullDevices) : Promise<void>
     {
-        this.resDevices = devices;
+        const resDevices = devices;
 
         const deviceSNs: string[] = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
@@ -53,64 +52,64 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         var deviceSerial : string;
         var device : Device;
         
-        if(this.resDevices != null)
+        if(resDevices != null)
         {
-            for (deviceSerial in this.resDevices)
+            for (deviceSerial in resDevices)
             {
                 if(this.devices[deviceSerial])
                 {
                     device = this.devices[deviceSerial];
-                    this.updateDevice(this.resDevices[deviceSerial]);
+                    this.updateDevice(resDevices[deviceSerial]);
                 }
                 else
                 {
-                    if(Device.isIndoorCamera(this.resDevices[deviceSerial].device_type))
+                    if(Device.isIndoorCamera(resDevices[deviceSerial].device_type))
                     {
-                        device = await IndoorCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await IndoorCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if(Device.isSoloCameras(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isSoloCameras(resDevices[deviceSerial].device_type))
                     {
-                        device = await SoloCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await SoloCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if(Device.isBatteryDoorbell(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isBatteryDoorbell(resDevices[deviceSerial].device_type))
                     {
-                        device = await BatteryDoorbellCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await BatteryDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if(Device.isWiredDoorbell(this.resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type))
                     {
-                        device = await WiredDoorbellCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await WiredDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     } 
-                    else if(Device.isFloodLight(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isFloodLight(resDevices[deviceSerial].device_type))
                     {
-                        device = await FloodlightCamera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await FloodlightCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }                        
-                    else if(Device.isCamera(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isCamera(resDevices[deviceSerial].device_type))
                     {
-                        device = await Camera.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await Camera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if(Device.isLock(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isLock(resDevices[deviceSerial].device_type))
                     {
-                        device = await Lock.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await Lock.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if(Device.isMotionSensor(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isMotionSensor(resDevices[deviceSerial].device_type))
                     {
-                        device = await MotionSensor.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await MotionSensor.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if(Device.isEntrySensor(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isEntrySensor(resDevices[deviceSerial].device_type))
                     {
-                        device = await EntrySensor.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await EntrySensor.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if(Device.isKeyPad(this.resDevices[deviceSerial].device_type))
+                    else if(Device.isKeyPad(resDevices[deviceSerial].device_type))
                     {
-                        device = await Keypad.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await Keypad.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    else if (Device.isSmartSafe(this.resDevices[deviceSerial].device_type))
+                    else if (Device.isSmartSafe(resDevices[deviceSerial].device_type))
                     {
-                        device = await SmartSafe.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await SmartSafe.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else
                     {
-                        device = await UnknownDevice.initialize(this.httpService, this.resDevices[deviceSerial]);
+                        device = await UnknownDevice.initialize(this.httpService, resDevices[deviceSerial]);
                     }                        
 
                     this.addEventListener(device, "PropertyChanged");
@@ -173,7 +172,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
             if (device.isLock())
             {
-                //this.mqttService.subscribeLock(device.getSerial());
+                this.api.getMqttService().subscribeLock(device.getSerial());
             }
         }
         else
@@ -241,7 +240,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         try
         {
-            this.resDevices = this.httpService.getDevices();
+            this.handleDevices(this.httpService.getDevices());
         }
         catch (e : any)
         {
@@ -251,13 +250,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Close all P2P connection for all devices.
+     * Close all connections for all devices.
      */
-    public closeP2PConnections() : void
+    public closeDevices() : void
     {
-        if(this.resDevices != null)
+        if(this.devices != null)
         {
-            for (var deviceSerial in this.resDevices)
+            for (var deviceSerial in this.devices)
             {
                 this.removeEventListener(this.devices[deviceSerial], "PropertyChanged");
                 this.removeEventListener(this.devices[deviceSerial], "RawPropertyChanged");
@@ -281,6 +280,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.removeEventListener(this.devices[deviceSerial], "LongTimeNotClose");
                 this.removeEventListener(this.devices[deviceSerial], "LowBattery");
                 this.removeEventListener(this.devices[deviceSerial], "Jammed");
+
+                this.devices[deviceSerial].destroy();
             }
         }
     }

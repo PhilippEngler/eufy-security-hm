@@ -17,7 +17,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private api : EufySecurityApi;
     private httpService : HTTPApi;
     private serialNumbers : string[];
-    private resStations !: Hubs;
     private stations : { [stationSerial : string ] : Station} = {};
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
     private lastGuardModeChangeTimeForStations : { [stationSerial : string] : any } = {};
@@ -54,21 +53,21 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private handleHubs(hubs: Hubs): void
     {
         this.api.logDebug("Got hubs:", hubs);
-        this.resStations = hubs;
+        const resStations = hubs;
 
         var station : Station;
         const stationsSNs: string[] = Object.keys(this.stations);
         const newStationsSNs = Object.keys(hubs);
 
-        for (var stationSerial in this.resStations)
+        for (var stationSerial in resStations)
         {
             if(this.stations[stationSerial])
             {
-                this.updateStation(this.resStations[stationSerial]);
+                this.updateStation(resStations[stationSerial]);
             }
             else
             {
-                station = new Station(this.api, this.httpService, this.resStations[stationSerial]);
+                station = new Station(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
@@ -213,7 +212,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         try
         {
-            this.resStations = this.httpService.getHubs();
+            this.handleHubs(this.httpService.getHubs());
         }
         catch (e : any)
         {
@@ -227,9 +226,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     public async closeP2PConnections() : Promise<void>
     {
-        if(this.resStations != null)
+        if(this.stations != null)
         {
-            for (var stationSerial in this.resStations)
+            for (var stationSerial in this.stations)
             {
                 if(this.stations[stationSerial])
                 {
