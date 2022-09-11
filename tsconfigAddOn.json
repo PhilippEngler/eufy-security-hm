@@ -1,15 +1,14 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "allowJs": false,
     "checkJs": false,
-    "target": "es6",
     "noEmit": false,
-    "declaration": false,
-    "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./addon/eufySecurity",
-    "esModuleInterop": true,
     "strict": true,
+    "declaration": false,
+    "sourceMap": false,
     "typeRoots": [
       "src/@types",
       "node_modules/@types"
