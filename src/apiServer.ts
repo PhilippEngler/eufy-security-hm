@@ -774,7 +774,7 @@ async function stopServer()
     api.setServiceState("shutdown");
     logger.logInfoBasic("Stopping scheduled tasks...");
     api.clearScheduledTasks();
-    logger.logInfoBasic("Stopping api...");
+    logger.logInfoBasic("Stopping EufySecurityApi...");
     await api.close();
     logger.logInfoBasic("Write config...");
     api.writeConfig();

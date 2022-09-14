@@ -97,7 +97,7 @@ export class EufySecurityApi
                 }
             }
 
-            this.mqttService = new MqttService(this, this.httpService, this.config, this.logger);
+            this.mqttService = new MqttService(this, this.config, this.logger);
 
             await this.connect();
         }
@@ -831,19 +831,18 @@ export class EufySecurityApi
      */
     private makeJsonForStation(station : Station) : string
     {
-        var json = `{"station_id":"${station.getSerial()}",`;
+        var json = `{"station_id":"${station.getPropertyValue(PropertyName.SerialNumber)}",`;
         json += `"eufy_device_id":"${station.getId()}",`;
         json += `"device_type":"${station.getDeviceTypeString()}",`;
-        json += `"model":"${station.getModel()}",`;
-        json += `"name":"${station.getName()}",`;
-        json += `"hardware_Version":"${station.getHardwareVersion()}",`;
-        json += `"software_version":"${station.getSoftwareVersion()}",`;
-        json += `"mac_address":"${station.getMACAddress()}",`;
+        json += `"model":"${station.getPropertyValue(PropertyName.Model)}",`;
+        json += `"name":"${station.getPropertyValue(PropertyName.Name)}",`;
+        json += `"hardware_Version":"${station.getPropertyValue(PropertyName.HardwareVersion)}",`;
+        json += `"software_version":"${station.getPropertyValue(PropertyName.SoftwareVersion)}",`;
+        json += `"mac_address":"${station.getPropertyValue(PropertyName.StationMacAddress)}",`;
         json += `"external_ip_address":"${station.getIPAddress()}",`;
-        json += `"local_ip_address":"${station.getLANIPAddress()}",`;
-        json += `"guard_mode":"${station.getGuardMode()}",`;
+        json += `"local_ip_address":"${station.getPropertyValue(PropertyName.StationLANIpAddress)}",`;
+        json += `"guard_mode":"${station.getPropertyValue(PropertyName.StationGuardMode)}",`;
         json += `"guard_mode_last_change_time":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}",`;
-        //json += `"guard_mode_last_change_time":"n/a",`;
         json += `"is_connected":"${station.isConnected()}"`;
         json += `}`;
         return json;

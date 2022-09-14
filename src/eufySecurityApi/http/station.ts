@@ -415,21 +415,17 @@ export class Station extends TypedEmitter<StationEvents> {
                 return `station`;
             case DeviceType.FLOODLIGHT || DeviceType.FLOODLIGHT_CAMERA_8422 || DeviceType.FLOODLIGHT_CAMERA_8423 || DeviceType.FLOODLIGHT_CAMERA_8424:
                 return `floodlight`;
-            case DeviceType.INDOOR_CAMERA || DeviceType.INDOOR_CAMERA_1080 || DeviceType.INDOOR_COST_DOWN_CAMERA || DeviceType.INDOOR_PT_CAMERA || DeviceType.INDOOR_PT_CAMERA_1080:
+            case DeviceType.INDOOR_CAMERA || DeviceType.INDOOR_CAMERA_1080 || DeviceType.INDOOR_COST_DOWN_CAMERA || DeviceType.INDOOR_OUTDOOR_CAMERA_1080P || DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT || DeviceType.INDOOR_OUTDOOR_CAMERA_2K || DeviceType.INDOOR_PT_CAMERA || DeviceType.INDOOR_PT_CAMERA_1080:
                 return `indoorcamera`;
             case DeviceType.SOLO_CAMERA || DeviceType.SOLO_CAMERA_PRO || DeviceType.SOLO_CAMERA_SPOTLIGHT_1080 || DeviceType.SOLO_CAMERA_SPOTLIGHT_2K || DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
                 return `solocamera`;
+            case DeviceType.DOORBELL || DeviceType.DOORBELL_SOLO || DeviceType.BATTERY_DOORBELL || DeviceType.BATTERY_DOORBELL_2 || DeviceType.BATTERY_DOORBELL_PLUS:
+                return `doorbell`;
+            case DeviceType.LOCK_8503 || DeviceType.LOCK_8504 || DeviceType.LOCK_8530 || DeviceType.LOCK_8592 || DeviceType.LOCK_85A3 || DeviceType.LOCK_BLE || DeviceType.LOCK_BLE_NO_FINGER || DeviceType.LOCK_WIFI || DeviceType.LOCK_WIFI_NO_FINGER:
+                return `lock`;
             default:
                 return `unknown(${this.rawStation.device_type})`;
         }
-        /*if(this.rawStation.device_type == DeviceType.STATION)
-        {
-            return "station";
-        }
-        else
-        {
-            return `unknown(${this.rawStation.device_type})`;
-        }*/
     }
 
     public getActorId() : string

@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 
 import { EufySecurityApi } from './eufySecurityApi';
 import { Config } from './config';
-import { Device, HTTPApi, Lock } from './http';
+import { Device, Lock } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { MQTTService } from "./mqtt/service";
 import { Logger } from './utils/logging';
@@ -13,21 +13,18 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     private api : EufySecurityApi;
     private config : Config;
     private logger : Logger;
-    private httpService !: HTTPApi;
     private mqttService!: MQTTService;
 
     /**
      * Create the PushService object.
      * @param api The EufySecurityApi.
-     * @param httpService The HTTPApi.
      * @param config The Config.
      * @param logger The Logger.
      */
-    constructor(api : EufySecurityApi, httpService : HTTPApi, config : Config, logger : Logger)
+    constructor(api : EufySecurityApi, config : Config, logger : Logger)
     {
         super();
         this.api = api;
-        this.httpService = httpService;
         this.config = config;
         this.logger = logger;
         
