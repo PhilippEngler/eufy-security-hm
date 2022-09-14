@@ -80,7 +80,7 @@
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link active" aria-current="page" href="/addons/eufySecurity"">Home</a>
+								<a id="lnkHome" class="nav-link active" aria-current="page" href="/addons/eufySecurity">Home</a>
 							</li>
 							<li class="nav-item">
 								<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
@@ -127,38 +127,16 @@
 		</footer>
 		
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
+		<script src="assets/dist/js/bootstrap.min.js"></script>
+		<script src="assets/dist/js/addon.js"></script>
 		<script>
-			checkIE();
-			
-			function checkIE()
+			if(window.navigator.userAgent.indexOf("Trident") > 0)
 			{
-				if (window.document.documentMode)
-				{
-					var warning = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-					warning += `<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>`;
-					warning += `Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.`;
-					warning += `</div>`;
-					document.getElementById("browserWarning").innerHTML = warning;
-					document.getElementById("content").innerHTML = "";
-				}
-				else
-				{
-					if(!(window.location.search == ""))
-					{
-						addQueryStringToLinks(window.location.search);
-					}
-				}
+				alert("Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.");
 			}
-
-			function addQueryStringToLinks(sessionID)
+			else
 			{
-				document.getElementById("lnkMain").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
-				document.getElementById("lnkHome").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
-				document.getElementById("lnkDevices").setAttribute("href", document.getElementById("lnkDevices").getAttribute("href") + sessionID);
-				document.getElementById("lnkStatechange").setAttribute("href", document.getElementById("lnkStatechange").getAttribute("href") + sessionID);
-				document.getElementById("lnkSettings").setAttribute("href", document.getElementById("lnkSettings").getAttribute("href") + sessionID);
-				document.getElementById("lnkLogfiles").setAttribute("href", document.getElementById("lnkLogfiles").getAttribute("href") + sessionID);
-				document.getElementById("lnkInfo").setAttribute("href", document.getElementById("lnkInfo").getAttribute("href") + sessionID);
+				start("index");
 			}
 		</script>
 	</body>

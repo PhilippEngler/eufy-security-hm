@@ -80,7 +80,7 @@
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity"">Home</a>
+								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
 							</li>
 							<li class="nav-item">
 								<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
@@ -123,8 +123,8 @@
 								</div>
 							</div>
 							<div class="card-footer">
-								<button id="downlLogfile" onclick="downloadLogfile()" type="button" class="btn btn-outline-primary me-3">Download</button>
-								<button id="deleteLogfileData" onclick="emptyLogfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
+								<button id="downlLogfile" onclick="downloadFile('log')" type="button" class="btn btn-outline-primary me-3">Download</button>
+								<button id="deleteLogfileData" onclick="emptyLogfile('log')" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
 							</div>
 						</div>
 					</div>
@@ -139,8 +139,8 @@
 								</div>
 							</div>
 							<div class="card-footer">
-								<button id="downlErrfile" onclick="downloadErrfile()" type="button" class="btn btn-outline-primary me-3">Download</button>
-								<button id="deleteErrfileData" onclick="emptyErrfileData()" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
+								<button id="downlErrfile" onclick="downloadFile('err')" type="button" class="btn btn-outline-primary me-3">Download</button>
+								<button id="deleteErrfileData" onclick="emptyLogfile('err')" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
 							</div>
 						</div>
 					</div>
@@ -157,244 +157,15 @@
 		
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script src="assets/dist/js/bootstrap.min.js"></script>
+		<script src="assets/dist/js/addon.js"></script>
 		<script>
-			port = "";
-			checkIE();
-			
-			function checkIE()
+			if(window.navigator.userAgent.indexOf("Trident") > 0)
 			{
-				if (window.document.documentMode)
-				{
-					var warning = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-					warning += `<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>`;
-					warning += `Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.`;
-					warning += `</div>`;
-					document.getElementById("browserWarning").innerHTML = warning;
-					document.getElementById("content").innerHTML = "";
-				}
-				else
-				{
-					if(!(window.location.search == ""))
-					{
-						addQueryStringToLinks(window.location.search);
-					}
-					getAPIPort();
-				}
+				alert("Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.");
 			}
-
-			function addQueryStringToLinks(sessionID)
+			else
 			{
-				document.getElementById("lnkMain").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
-				document.getElementById("lnkHome").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
-				document.getElementById("lnkDevices").setAttribute("href", document.getElementById("lnkDevices").getAttribute("href") + sessionID);
-				document.getElementById("lnkStatechange").setAttribute("href", document.getElementById("lnkStatechange").getAttribute("href") + sessionID);
-				document.getElementById("lnkSettings").setAttribute("href", document.getElementById("lnkSettings").getAttribute("href") + sessionID);
-				document.getElementById("lnkLogfiles").setAttribute("href", document.getElementById("lnkLogfiles").getAttribute("href") + sessionID);
-				document.getElementById("lnkInfo").setAttribute("href", document.getElementById("lnkInfo").getAttribute("href") + sessionID);
-			}
-
-			function getAPIPort()
-			{
-				var apiPorts;
-				var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.txt`;
-				xmlHttp = new XMLHttpRequest();
-				xmlHttp.overrideMimeType('text/plain');
-				xmlHttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						try
-						{
-							apiPorts = this.responseText;
-							apiPorts = apiPorts.split(",")
-							
-							if(apiPorts.length == 2)
-							{
-								port = apiPorts[0];
-								if(location.protocol == "https:")
-								{
-									port = apiPorts[1];
-								}
-							}
-							else
-							{
-								port = "52789";
-								if(location.protocol == "https:")
-								{
-									port = "52790";
-								}
-							}
-
-							initContent();
-						}
-						catch (e)
-						{
-							var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-							loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
-							loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>`;
-							loadSettingsError += `</div>`;
-							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
-						}
-					}
-					else if (this.readyState == 4)
-					{
-						var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-						loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
-						loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei 'apiPorts.txt' im Webseitenverzeichnisses dieses AddOns.</small>`;
-						loadSettingsError += `</div>`;
-						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
-					}
-				};
-				xmlHttp.open("GET", url, true);
-				xmlHttp.send();
-			}
-
-			function initContent()
-			{
-				loadLog(true);
-				loadErr(true);
-			}
-			
-			function loadLog(showLoading)
-			{
-				var xmlHttp;
-				var url = `${location.protocol}//${location.hostname}:${port}/getLogFileContent`;
-				xmlHttp = new XMLHttpRequest();
-				xmlHttp.overrideMimeType('application/json');
-				xmlHttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						var log = this.responseText;
-						log = log.replace(/  /g, " &nbsp;");
-						log = log.replace(/<[^>]*>/g, '');
-						log = log.replace(/\n/g, "<br />");
-						document.getElementById("log").innerHTML = `<code>${log}</code>`;
-					}
-					else if (this.readyState == 4)
-					{
-						document.getElementById("log").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Protokolldatei.</div>`;
-					}
-					else
-					{
-						if(showLoading == true)
-						{
-							document.getElementById("log").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Protokolldatei...</strong></div>`;
-						}
-					}
-				};
-				xmlHttp.open("GET", url, true);
-				xmlHttp.send();
-			}
-			
-			function loadErr(showLoading)
-			{
-				var xmlHttp;
-				var url = `${location.protocol}//${location.hostname}:${port}/getErrorFileContent`;
-				xmlHttp = new XMLHttpRequest();
-				xmlHttp.overrideMimeType('application/json');
-				xmlHttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						var err = this.responseText;
-						err = err.replace(/  /g, " &nbsp;");
-						err = err.replace(/<[^>]*>/g, '');
-						err = err.replace(/\n/g, "<br >");
-						document.getElementById("err").innerHTML = `<code>${err}</code>`;
-					}
-					else if (this.readyState == 4)
-					{
-						document.getElementById("err").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Fehlerprotokolldatei.</div>`;
-					}
-					else
-					{
-						if(showLoading == true)
-						{
-							document.getElementById("err").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Fehlerprotokolldatei...</strong></div>`;
-						}
-					}
-				};
-				xmlHttp.open("GET", url, true);
-				xmlHttp.send();
-			}
-			
-			function emptyLogfileData()
-			{
-				var xmlhttp, myObj;
-				var url=`${location.protocol}//${location.hostname}:${port}/clearLogFile`;
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.overrideMimeType('application/json');
-				xmlhttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						myObj = JSON.parse(this.responseText);
-						if(myObj.success == true)
-						{
-							loadLog();
-						}
-						else
-						{
-							
-						}
-					}
-					else if (this.readyState == 4)
-					{
-						
-					}
-					else
-					{
-						
-					}
-				};
-				xmlhttp.open("GET", url, true);
-				xmlhttp.send();
-			}
-			
-			function emptyErrfileData()
-			{
-				var xmlhttp, myObj;
-				var url = `${location.protocol}//${location.hostname}:${port}/clearErrFile`;
-				xmlhttp = new XMLHttpRequest();
-				xmlhttp.overrideMimeType('application/json');
-				xmlhttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						myObj = JSON.parse(this.responseText);
-						if(myObj.success == true)
-						{
-							loadErr();
-						}
-						else
-						{
-							
-						}
-					}
-					else if (this.readyState == 4)
-					{
-						
-					}
-					else
-					{
-						
-					}
-				};
-				xmlhttp.open("GET", url, true);
-				xmlhttp.send();
-			}
-
-			function downloadLogfile()
-			{
-				var url = `${location.protocol}//${location.hostname}:${port}/downloadLogFile`;
-				window.open(url);
-			}
-
-			function downloadErrfile()
-			{
-				var url=`${location.protocol}//${location.hostname}:${port}/downloadErrFile`;
-				window.open(url);
+				start("logfiles");
 			}
 		</script>
 	</body>

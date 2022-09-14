@@ -80,7 +80,7 @@
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity"">Home</a>
+								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
 							</li>
 							<li class="nav-item">
 								<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
@@ -117,7 +117,8 @@
 				<h4>Hinweise zur Nutzung</h4>
 				<p>Die API stellt derzeit folgende Funktionen bereit:</p>
 				<ul>
-					<li><code>/getBases</code>: Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
+					<li><code>/getStations</code>: Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
+					<li><code>/getBases</code> (nicht mehr nutzen, wird ersetzt durch <code>/getStations</code>): Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
 					<li><code>/getDevices</code>: Liefert alle Geräte des Accounts als JSON-String zurück.</li>
 					<li><code>/getHouses</code>: Liefert alle Hausobjekte des Accounts als JSON-String zurück.</li>
 					<li><code>/getMode</code>: Liefert den Status aller Basisstationen als JSON-String zurück.</li>
@@ -186,144 +187,15 @@
 		
 		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 		<script src="assets/dist/js/bootstrap.min.js"></script>
+		<script src="assets/dist/js/addon.js"></script>
 		<script>
-			port = "";
-			checkIE();
-			
-			function checkIE()
+			if(window.navigator.userAgent.indexOf("Trident") > 0)
 			{
-				if (window.document.documentMode)
-				{
-					var warning = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-					warning += `<h4>Diese Webseite ist nicht für den Internet Explorer entwickelt.</h4>`;
-					warning += `Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.`;
-					warning += `</div>`;
-					document.getElementById("browserWarning").innerHTML = warning;
-					document.getElementById("content").innerHTML = "";
-				}
-				else
-				{
-					if(!(window.location.search == ""))
-					{
-						addQueryStringToLinks(window.location.search);
-					}
-					getAPIPort();
-				}
+				alert("Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.");
 			}
-
-			function addQueryStringToLinks(sessionID)
+			else
 			{
-				document.getElementById("lnkMain").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
-				document.getElementById("lnkHome").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + sessionID);
-				document.getElementById("lnkDevices").setAttribute("href", document.getElementById("lnkDevices").getAttribute("href") + sessionID);
-				document.getElementById("lnkStatechange").setAttribute("href", document.getElementById("lnkStatechange").getAttribute("href") + sessionID);
-				document.getElementById("lnkSettings").setAttribute("href", document.getElementById("lnkSettings").getAttribute("href") + sessionID);
-				document.getElementById("lnkLogfiles").setAttribute("href", document.getElementById("lnkLogfiles").getAttribute("href") + sessionID);
-				document.getElementById("lnkInfo").setAttribute("href", document.getElementById("lnkInfo").getAttribute("href") + sessionID);
-			}
-
-			function getAPIPort()
-			{
-				var apiPorts;
-				var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.txt`;
-				xmlHttp = new XMLHttpRequest();
-				xmlHttp.overrideMimeType('text/plain');
-				xmlHttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						try
-						{
-							apiPorts = this.responseText;
-							apiPorts = apiPorts.split(",")
-							
-							if(apiPorts.length == 2)
-							{
-								port = apiPorts[0];
-								if(location.protocol == "https:")
-								{
-									port = apiPorts[1];
-								}
-							}
-							else
-							{
-								port = "52789";
-								if(location.protocol == "https:")
-								{
-									port = "52790";
-								}
-							}
-
-							initContent();
-						}
-						catch (e)
-						{
-							var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-							loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
-							loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
-							loadSettingsError += `</div>`;
-							document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;;
-						}
-					}
-					else if (this.readyState == 4)
-					{
-						var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-						loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
-						loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
-						loadSettingsError += `</div>`;
-						document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
-					}
-				};
-				xmlHttp.open("GET", url, true);
-				xmlHttp.send();
-			}
-
-			function initContent()
-			{
-				loadData(true);
-			}
-			
-			function loadData(showLoading)
-			{
-				var xmlHttp, objResp, info = "";
-				var imagepath = "";
-				var type = "";
-				var state = "";
-				var buttons = "";
-				var url = `${location.protocol}//${location.hostname}:${port}/getApiInfo`;
-				xmlHttp = new XMLHttpRequest();
-				xmlHttp.overrideMimeType('application/json');
-				xmlHttp.onreadystatechange = function()
-				{
-					if (this.readyState == 4 && this.status == 200)
-					{
-						objResp = JSON.parse(this.responseText);
-						if(objResp.success == true)
-						{
-							info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.2`;
-							
-							document.getElementById("versionInfo").innerHTML = info;
-							
-						}
-						else
-						{
-							document.getElementById("versionInfo").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Versionsinformationen.</div>`;
-						}
-					}
-					else if (this.readyState == 4)
-					{
-						document.getElementById("versionInfo").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Versionsinformationen.</div>`;
-					}
-					else
-					{
-						if(showLoading == true)
-						{
-							document.getElementById("versionInfo").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Versionsinformationen...</strong></div>`;
-						}
-					}
-				};
-				xmlHttp.open("GET", url, true);
-				xmlHttp.send();
+				start("info");
 			}
 		</script>
 	</body>
