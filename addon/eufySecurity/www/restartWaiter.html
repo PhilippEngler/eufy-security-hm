@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="de" class="h-100">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="">
+		<meta name="author" content="Philipp Engler">
+		<meta name="generator" content="Jekyll v4.1.1">
+		<title>eufy Security AddOn für HomeMatic</title>
+		
+		<!-- Bootstrap core CSS -->
+		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
+
+		<!-- Bootstrap icon font CSS -->
+		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
+		
+		<style>
+			.bd-placeholder-img {
+				font-size: 1.125rem;
+				text-anchor: middle;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+			
+			@media (min-width: 768px) {
+				.bd-placeholder-img-lg {
+					font-size: 3.5rem;
+				}
+			}
+			
+			.b-example-divider {
+				height: 3rem;
+				background-color: rgba(0, 0, 0, .1);
+				border: solid rgba(0, 0, 0, .15);
+				border-width: 1px 0;
+				box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+			}
+			
+			.b-example-vr {
+				flex-shrink: 0;
+				width: 1.5rem;
+				height: 100vh;
+			}
+			
+			.bi {
+				vertical-align: -.125em;
+				fill: currentColor;
+			}
+			
+			.nav-scroller {
+				position: relative;
+				z-index: 2;
+				height: 2.75rem;
+				overflow-y: hidden;
+			}
+			
+			.nav-scroller .nav {
+				display: flex;
+				flex-wrap: nowrap;
+				padding-bottom: 1rem;
+				margin-top: -1px;
+				overflow-x: auto;
+				text-align: center;
+				white-space: nowrap;
+ 				-webkit-overflow-scrolling: touch;
+			}
+		</style>
+		
+		<!-- Custom styles for this template -->
+		<link href="assets/dist/css/sticky-footer-navbar.css" rel="stylesheet">
+		<link href="assets/dist/css/eufySecurityAddOn.css" rel="stylesheet">
+	</head>
+	<body class="d-flex flex-column h-100">
+		<header>
+			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
+				<div class="container-fluid">
+					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse" id="navbarCollapse">
+						<ul class="navbar-nav me-auto mb-2 mb-md-0">
+							<li class="nav-item">
+								<a id="lnkHome" class="nav-link disabled" aria-current="page" href="/addons/eufySecurity">Home</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkDevices" class="nav-link disabled" href="devices.html">Geräte</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkStatechange" class="nav-link disabled" href="statechange.html">Statusänderung</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkSettings" class="nav-link disabled" href="settings.html">Einstellungen</a>
+							</li>
+							<li class="nav-item">
+								<a id="lnkLogfiles" class="nav-link disabled" href="logfiles.html">Logdateien</a>
+							</li>
+							<li class="nav-item active">
+								<a id="lnkInfo" class="nav-link disabled" href="info.html">Über</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</nav>
+		</header>
+		
+		<main class="container-fluid">
+			<div id="loadApiSettingsError">
+			</div>
+			<div id="content">
+				<h2>Service wird neu gestartet</h2>
+                <p>Bitte warten Sie, wärend der Service neu gestartet wird. Sie werden anschließend auf die vorherige Seite weitergeleitet.</p>
+                
+                <div class="d-flex align-items-center" id="serviceRestart"><div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><strong>Warte auf Start des Services...</strong></div>
+                <div class="d-flex align-items-center" id="serviceInit"><i class="bi-circle fs-2 my-3 mx-4 float-left text-muted" title="Einstellungen"></i><div class="fw-bold text-muted">Warte auf Initialisierung des Services...</div></div>
+
+			</div>
+		</main>
+
+		<footer class="footer mt-auto py-3 bg-light">
+			<div class="container-fluid">
+				<span class="text-muted">&copy; 2020-2022 Philipp Engler</span>
+			</div>
+		</footer>
+
+		<div id="toastSaveConfigOKRestart" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="me-auto">Speicherung der Einstellungen.</strong>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
+			</div>
+			<div class="toast-body text-white">
+				Die Einstellungen wurden erfolgreich gespeichert. Der Service wird neu gestartet.
+			</div>
+		</div>
+		
+		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="me-auto">Tokendaten löschen.</strong>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
+			</div>
+			<div class="toast-body text-white">
+				Die Tokendaten wurden erfolgreich gelöscht.
+			</div>
+		</div>
+
+		<div id="toastRestartOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="me-auto">Service neu starten.</strong>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
+			</div>
+			<div class="toast-body text-white">
+				Der Service wird neu gestartet.
+			</div>
+		</div>
+		
+		<script src="assets/dist/js/bootstrap.bundle.min.js"></script>
+		<script src="assets/dist/js/bootstrap.min.js"></script>
+		<script src="assets/dist/js/addon.js"></script>
+		<script>
+			if(window.navigator.userAgent.indexOf("Trident") > 0)
+			{
+				alert("Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.");
+			}
+			else
+			{
+				start("restartWaiter");
+			}
+		</script>
+	</body>
+</html>

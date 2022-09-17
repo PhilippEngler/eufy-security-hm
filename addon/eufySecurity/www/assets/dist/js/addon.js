@@ -21,7 +21,14 @@ function start(page)
         }
         if(getParameterFromURLSearchParams(urlParams, "redirect"))
         {
-            redirectTarget = getParameterFromURLSearchParams(urlParams, "redirect") + redirectTarget;
+            if(getParameterFromURLSearchParams(urlParams, "redirect") == "index.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "devices.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "statechange.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "settings.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "logfiles.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "info.html")
+            {
+                redirectTarget = getParameterFromURLSearchParams(urlParams, "redirect") + redirectTarget;
+            }
+            else
+            {
+                redirectTarget = "";
+            }
         }
         else
         {
@@ -125,7 +132,7 @@ function initContent(page)
             loadDataInfo(true);
             break;
         case "restartWaiter":
-            checkServiceState(0);
+            restartAPIService();
             break;
     }
 }
@@ -1450,8 +1457,10 @@ function saveConfig()
                     if(obfFD.serviceRestart == true)
                     {
                         document.getElementById("resultMessage").innerHTML = "";
-                        const toast = new bootstrap.Toast(toastSaveConfigOKRestart);
-                        toast.show();
+                        //const toast = new bootstrap.Toast(toastSaveConfigOKRestart);
+                        //toast.show();
+                        window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+                        return;
                     }
                     else
                     {
@@ -1543,8 +1552,10 @@ function removeTokenData()
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true && objResp.dataRemoved == true)
                 {
-                    const toast = new bootstrap.Toast(toastRemoveTokenOK);
-                    toast.show();
+                    //const toast = new bootstrap.Toast(toastRemoveTokenOK);
+                    //toast.show();
+                    window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+                    return;
                 }
                 else
                 {
@@ -1582,8 +1593,10 @@ function restartService()
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    const toast = new bootstrap.Toast(toastRestartOK);
-                    toast.show();
+                    //const toast = new bootstrap.Toast(toastRestartOK);
+                    //toast.show();
+                    window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+                    return;
                 }
                 else
                 {
@@ -2004,13 +2017,21 @@ function loadDataInfo(showLoading)
  * Scripts for restartWaiter.html
  */
 //#region restartWaiter.html
-function checkServiceState(cntStart)
+async function restartAPIService()
 {
-    var xmlHttp, objResp, objIter, bases = "";
+    const toast = new bootstrap.Toast(toastRestartOK);
+    toast.show();
+    await delay(7500);
+    checkServiceState(0, 0, 0);
+}
+
+async function checkServiceState(cntStart, cntInit, postInit)
+{
+    var xmlHttp, objResp;
     var url = `${location.protocol}//${location.hostname}:${port}/getServiceState`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
-    xmlHttp.onreadystatechange = function()
+    xmlHttp.onreadystatechange = async function()
     {
         if (this.readyState == 4 && this.status == 200)
         {
@@ -2019,48 +2040,130 @@ function checkServiceState(cntStart)
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    alert(objResp.message);
-                    if(objResp.message == "ok")
+                    //console.log(`Resp: ${objResp.message} | cntStart: ${cntStart} | cntInit: ${cntInit} | postInit: ${postInit}`);
+                    if(objResp.message == "init")
                     {
-                        alert("DONE");
-                        window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/` + redirectTarget;
+                        if(cntInit == 0)
+                        {
+                            var startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">Service wurde gestartet.</div>`;
+                            document.getElementById("serviceRestart").innerHTML = startDone;
+                            var initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">Warte auf Initialisierung des Services...</div>`;
+                            document.getElementById("serviceInit").innerHTML = initStart;
+                        }
+                        if(cntInit < 20)
+                        {
+                            cntInit = cntInit + 1;
+                            await delay(1000);
+                            checkServiceState(cntStart, cntInit, postInit);
+                            //return;
+                        }
+                        else
+                        {
+                            alert("Maximum cntInit reached.");
+                        }
+                    }
+                    else if(objResp.message == "ok")
+                    {
+                        if(cntInit == 0 && postInit == 0)
+                        {
+                            var startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">Service wurde gestartet.</div>`;
+                            document.getElementById("serviceRestart").innerHTML = startDone;
+                            var initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">Warte auf Initialisierung des Services...</div>`;
+                            document.getElementById("serviceInit").innerHTML = initStart;
+                        }
+                        if(postInit < 5)
+                        {
+                            postInit = postInit + 1;
+                            await delay(1000);
+                            checkServiceState(cntStart, cntInit, postInit);
+                            //return;
+                        }
+                        else
+                        {
+                            var startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">Service wurde gestartet.</div>`;
+                            document.getElementById("serviceRestart").innerHTML = startDone;
+                            var initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">Service wurde initializiert. Sie werden nun weitergeleitet...</div>`;
+                            document.getElementById("serviceInit").innerHTML = initDone;
+                            await delay(5000);
+                            window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/` + redirectTarget;
+                        }
+                    }
+                    else if(objResp.message == "shutdown")
+                    {
+                        cntStart = 0;
+                        cntInit = 0;
+                        postInit = 0;
+                        await delay(5000);
+                        checkServiceState(cntStart, cntInit, postInit);
+                        //return;
                     }
                     else
                     {
                         if(cntStart < 20)
                         {
                             cntStart = cntStart + 1;
-                            checkServiceState(cntStart);
-                            return;
+                            await delay(1000);
+                            checkServiceState(cntStart, cntInit, postInit);
+                            //return;
+                        }
+                        else
+                        {
+                            alert("Maximum cntStart reached (pos1).");
                         }
                     }
                 }
                 else
                 {
+                    //console.log(`Resp: ${objResp.message} | cntStart: ${cntStart} | cntInit: ${cntInit} | postInit: ${postInit}`);
                     if(cntStart < 20)
                     {
                         cntStart = cntStart + 1;
-                        checkServiceState(cntStart);
-                        return;
+                        await delay(1000);
+                        checkServiceState(cntStart, cntInit, postInit);
+                        //return;
+                    }
+                    else
+                    {
+                        alert("Maximum cntStart reached (pos2).");
                     }
                 }
             }
             catch (e)
             {
+                alert(e.message);
                 if(cntStart < 20)
                 {
                     cntStart = cntStart + 1;
-                    checkServiceState(cntStart);
-                    return;
+                    await delay(1000);
+                    checkServiceState(cntStart, cntInit, postInit);
+                    //return;
+                }
+                else
+                {
+                    alert("Maximum cntStart reached (pos3).");
                 }
             }
         }
         else if (this.readyState == 4)
-        {}
+        {
+            //console.log(`ReadyState: ${this.readyState} | status: ${this.status} | cntStart: ${cntStart} | cntInit: ${cntInit} | postInit: ${postInit}`);
+            if(cntStart < 20)
+            {
+                cntStart = cntStart + 1;
+                await delay(2000);
+                checkServiceState(cntStart, cntInit, postInit);
+                //return;
+            }
+        }
         else
         {}
     };
     xmlHttp.open("GET", url, true);
     xmlHttp.send();
+}
+
+function delay(time)
+{
+    return new Promise(resolve => setTimeout(resolve, time));
 }
 //#endregion
