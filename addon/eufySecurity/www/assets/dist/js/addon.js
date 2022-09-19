@@ -188,7 +188,7 @@ function makeDateTimeString(dateTime)
                     stations += `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
                     for (station in myObj.data)
                     {
-                        if(myObj.data[station].device_type == "station")
+                        if(myObj.data[station].deviceType == "station")
                         {
                             switch (myObj.data[station].model)
                             {
@@ -208,7 +208,7 @@ function makeDateTimeString(dateTime)
                                     imagepath = `<img src="assets/devices/eufyHomeBase2.png" class="card-img-top" alt="HomeBase">`;
                                     type="HomeBase";
                             }
-                            switch (myObj.data[station].guard_mode)
+                            switch (myObj.data[station].guardMode)
                             {
                                 case "0":
                                     state = "abwesend";
@@ -244,19 +244,19 @@ function makeDateTimeString(dateTime)
                             stations += `<div class="card mb-3">`;
                             stations += `<div class="card-header">`;
                             stations += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[station].name}</h5></div>`;
-                            stations += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showStationSettings('${myObj.data[station].station_id}')"></i></h5></span></div>`;
+                            stations += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showStationSettings('${myObj.data[station].serialNumber}')"></i></h5></span></div>`;
                             stations += `</div>`;
                             stations += `<div class="row no-gutters">`;
                             stations += `<div class="col-md-4">${imagepath}</div>`;
                             stations += `<div class="col-md-8">`;
                             stations += `<div class="card-body" style="margin-left: -1rem">`;
                             stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            stations += `<p class="card-text">${myObj.data[station].station_id}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${myObj.data[station].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
+                            stations += `<p class="card-text">${myObj.data[station].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${myObj.data[station].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
                             stations += `</div>`;
                             stations += `</div>`;
                             stations += `</div>`;
                             stations += `<div class="card-footer">`;
-                            stations += `<small class="text-muted">IP-Adresse: ${myObj.data[station].local_ip_address} (${myObj.data[station].external_ip_address})</small>`;
+                            stations += `<small class="text-muted">IP-Adresse: ${myObj.data[station].lanIpAddress} (${myObj.data[station].wanIpAddress})</small>`;
                             stations += `</div>`;
                             stations += `</div>`;
                             stations += `</div>`;
@@ -314,7 +314,7 @@ function loadDevices()
                 {
                     for (object in myObj.data)
                     {
-                        if(myObj.data[object].device_type == "camera")
+                        if(myObj.data[object].deviceType == "camera")
                         {
                             switch (myObj.data[object].model)
                             {
@@ -346,12 +346,12 @@ function loadDevices()
                                     imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Kamera">`;
                                     type = "Kamera";
                             }
-                            if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "n/d" && myObj.data[object].last_camera_image_time != "0")
+                            if(myObj.data[object].pictureTime != "" && myObj.data[object].pictureTime != "n/a" && myObj.data[object].pictureTime != "n/d" && myObj.data[object].pictureTime != "0")
                             {
-                                lastVideo = `Letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)))}`;
-                                lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
+                                lastVideo = `Letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(myObj.data[object].pictureTime)))}`;
+                                lastVideo += ` | <a href="${myObj.data[object].pictureUrl}">Standbild</a>`;
                             }
-                            else if(myObj.data[object].last_camera_image_time == "n/a")
+                            else if(myObj.data[object].pictureTime == "n/a")
                             {
                                 lastVideo = "keine Aufnahme";
                             }
@@ -364,9 +364,9 @@ function loadDevices()
                             cams += `<div class="card-header">`;
                             cams += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[object].name}</h5></div>`;
                             cams += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">`;
-                            cams += `<i class="${myObj.data[object].wifi_rssi_signal_level == 0 ? "bi-reception-0" : myObj.data[object].wifi_rssi_signal_level == 1 ? "bi-reception-1" : myObj.data[object].wifi_rssi_signal_level == 2 ? "bi-reception-2" : myObj.data[object].wifi_rssi_signal_level == 3 ? "bi-reception-3" : myObj.data[object].wifi_rssi_signal_level == 4 ? "bi-reception-4" : "bi-wifi-off"}" title="WiFi Empfangsstärke: ${myObj.data[object].wifi_rssi}dB"></i>`;
+                            cams += `<i class="${myObj.data[object].wifiSignalLevel == 0 ? "bi-reception-0" : myObj.data[object].wifiSignalLevel == 1 ? "bi-reception-1" : myObj.data[object].wifiSignalLevel == 2 ? "bi-reception-2" : myObj.data[object].wifiSignalLevel == 3 ? "bi-reception-3" : myObj.data[object].wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off"}" title="WiFi Empfangsstärke: ${myObj.data[object].wifi_rssi}dB"></i>`;
                             cams += `&nbsp;&nbsp;`;
-                            cams += `<i class="text-muted bi-gear" title="Einstellungen" onclick="showDeviceSettings('${myObj.data[object].device_id}')"></i>`;
+                            cams += `<i class="text-muted bi-gear" title="Einstellungen" onclick="showDeviceSettings('${myObj.data[object].serialNumber}')"></i>`;
                             cams += `</h5></span></div>`;
                             cams += `</div>`;
                             cams += `<div class="row no-gutters">`;
@@ -374,7 +374,7 @@ function loadDevices()
                             cams += `<div class="col-md-8">`;
                             cams += `<div class="card-body" style="margin-left: -1rem">`;
                             cams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            cams += `<p class="card-text">${myObj.data[object].device_id}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i> ${myObj.data[object].software_version}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_charging == 1 ? "bi-battery-charging" : myObj.data[object].battery_charge < 16 ? "bi-battery" : myObj.data[object].battery_charge < 50 ? "bi-battery-half" : "bi-battery-full"} ${myObj.data[object].battery_charge < 6 ? "text-danger" : myObj.data[object].battery_charge < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${myObj.data[object].battery_charge}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].battery_temperature < 0 ? "bi-thermometer-low" : myObj.data[object].battery_temperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp${myObj.data[object].battery_temperature}&deg;C</span></p>`;
+                            cams += `<p class="card-text">${myObj.data[object].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i> ${myObj.data[object].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].chargingStatus == 1 ? "bi-battery-charging" : myObj.data[object].battery < 16 ? "bi-battery" : myObj.data[object].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${myObj.data[object].battery < 6 ? "text-danger" : myObj.data[object].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${myObj.data[object].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].batteryTemperature < 0 ? "bi-thermometer-low" : myObj.data[object].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp${myObj.data[object].batteryTemperature}&deg;C</span></p>`;
                             cams += `</div>`;
                             cams += `</div>`;
                             cams += `</div>`;
@@ -384,7 +384,7 @@ function loadDevices()
                             cams += `</div>`;
                             cams += `</div>`;
                         }
-                        else if(myObj.data[object].device_type == "indoorcamera")
+                        else if(myObj.data[object].deviceType == "indoorcamera")
                         {
                             switch (myObj.data[object].model)
                             {
@@ -399,12 +399,12 @@ function loadDevices()
                                     imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Innenkamera">`;
                                     type = "Innenkamera";
                             }
-                            if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "n/d" && myObj.data[object].last_camera_image_time != "0")
+                            if(myObj.data[object].pictureTime != "" && myObj.data[object].pictureTime != "n/a" && myObj.data[object].pictureTime != "n/d" && myObj.data[object].pictureTime != "0")
                             {
-                                lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)));
-                                lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
+                                lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].pictureTime)));
+                                lastVideo += ` | <a href="${myObj.data[object].pictureUrl}">Standbild</a>`;
                             }
-                            else if(myObj.data[object].last_camera_image_time == "n/a")
+                            else if(myObj.data[object].pictureTime == "n/a")
                             {
                                 lastVideo = "keine Aufnahme";
                             }
@@ -420,7 +420,7 @@ function loadDevices()
                             indoorcams += `<div class="col-md-8">`;
                             indoorcams += `<div class="card-body" style="margin-left: -1rem">`;
                             indoorcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            indoorcams += `<p class="card-text">${myObj.data[object].device_id}<br />SW: ${myObj.data[object].software_version}<br /></p>`;
+                            indoorcams += `<p class="card-text">${myObj.data[object].serialNumber}<br />SW: ${myObj.data[object].softwareVersion}<br /></p>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
@@ -430,13 +430,13 @@ function loadDevices()
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
                         }
-                        else if(myObj.data[object].device_type == "doorbell")
+                        else if(myObj.data[object].deviceType == "doorbell")
                         {
                             // T8210 > Video Doorbell 2K (battery)
                             // T8200 > Video Doorbell 2K (wired)
                             // T8222 > Video Doorbell 1080p (battery)
                         }
-                        else if(myObj.data[object].device_type == "floodlight")
+                        else if(myObj.data[object].deviceType == "floodlight")
                         {
                             switch (myObj.data[object].model)
                             {
@@ -448,12 +448,12 @@ function loadDevices()
                                     imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Flutlichtkamera">`;
                                     type = "Flutlichtkamera";
                             }
-                            if(myObj.data[object].last_camera_image_time != "" && myObj.data[object].last_camera_image_time != "n/a" && myObj.data[object].last_camera_image_time != "n/d" && myObj.data[object].last_camera_image_time != "0")
+                            if(myObj.data[object].pictureTime != "" && myObj.data[object].pictureTime != "n/a" && myObj.data[object].pictureTime != "n/d" && myObj.data[object].pictureTime != "0")
                             {
-                                lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].last_camera_image_time)));
-                                lastVideo += ` | <a href="${myObj.data[object].last_camera_image_url}">Standbild</a>`;
+                                lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].pictureTime)));
+                                lastVideo += ` | <a href="${myObj.data[object].pictureUrl}">Standbild</a>`;
                             }
-                            else if(myObj.data[object].last_camera_image_time == "n/a")
+                            else if(myObj.data[object].pictureTime == "n/a")
                             {
                                 lastVideo = "keine Aufnahme";
                             }
@@ -469,7 +469,7 @@ function loadDevices()
                             floodlightcams += `<div class="col-md-8">`;
                             floodlightcams += `<div class="card-body" style="margin-left: -1rem">`;
                             floodlightcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            floodlightcams += `<p class="card-text">${myObj.data[object].device_id}"<br />SW: ${myObj.data[object].software_version}</p>`;
+                            floodlightcams += `<p class="card-text">${myObj.data[object].serialNumber}"<br />SW: ${myObj.data[object].softwareVersion}</p>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
@@ -479,11 +479,11 @@ function loadDevices()
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
                         }
-                        else if(myObj.data[object].device_type == "lock")
+                        else if(myObj.data[object].deviceType == "lock")
                         {}
-                        else if(myObj.data[object].device_type == "keypad")
+                        else if(myObj.data[object].deviceType == "keypad")
                         {}
-                        else if(myObj.data[object].device_type == "sensor")
+                        else if(myObj.data[object].deviceType == "sensor")
                         {}
                     }
                     if(cams != "")
@@ -568,7 +568,7 @@ function loadDataStatechange(showLoading)
 				stations = `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
 				for (objIter in objResp.data)
 				{
-					if(objResp.data[objIter].device_type == "station")
+					if(objResp.data[objIter].deviceType == "station")
 					{
 						switch (objResp.data[objIter].model)
 						{
@@ -588,35 +588,35 @@ function loadDataStatechange(showLoading)
 								imagepath = `<img src="assets/devices/eufyHomeBase2.png" class="card-img-top" alt="HomeBase">`;
 								type="HomeBase";
 						}
-						switch (objResp.data[objIter].guard_mode)
+						switch (objResp.data[objIter].guardMode)
 						{
                             case "0":
 								state = "abwesend";
-								buttons =  `<button id="btnArm${objResp.data[objIter].station_id}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].station_id}" onclick="setHome('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].station_id}" onclick="setSchedule('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].station_id}" onclick="setDisarm('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
+								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>abwesend</button>`;
+								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" onclick="setHome('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
+								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" onclick="setSchedule('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
+								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" onclick="setDisarm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
 								break;
 							case "1":
 								state = "zu Hause";
-								buttons =  `<button id="btnArm${objResp.data[objIter].station_id}" onclick="setArm('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].station_id}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].station_id}" onclick="setSchedule('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].station_id}" onclick="setDisarm('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
+								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" onclick="setArm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
+								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>zu Hause</button>`;
+								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" onclick="setSchedule('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
+								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" onclick="setDisarm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
 								break;
 							case "2":
 								state = "Zeitsteuerung";
-								buttons =  `<button id="btnArm${objResp.data[objIter].station_id}" onclick="setArm('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].station_id}" onclick="setHome('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].station_id}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].station_id}" onclick="setDisarm('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
+								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" onclick="setArm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
+								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" onclick="setHome('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
+								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>Zeitsteuerung</button>`;
+								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" onclick="setDisarm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
 								break;
 							case "63":
 								state = "deaktiviert";
-								buttons =  `<button id="btnArm${objResp.data[objIter].station_id}" onclick="setArm('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].station_id}" onclick="setHome('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].station_id}" onclick="setSchedule('${objResp.data[objIter].station_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].station_id}" type="button" class="btn btn-sm btn-primary mb-2" disabled>deaktiviert</button>`;
+								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" onclick="setArm('${objResp.data[objIter].statserialNumberion_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
+								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" onclick="setHome('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
+								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" onclick="setSchedule('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
+								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2" disabled>deaktiviert</button>`;
 								break;
 							default:
 								state="unbekannt";
@@ -629,19 +629,19 @@ function loadDataStatechange(showLoading)
 						stations += `<div class="col-md-8">`;
 						stations += `<div class="card-body" style="margin-left: -1rem">`;
 						stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-						stations += `<p class="card-text">${objResp.data[objIter].station_id}<br /><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;<span id="state_${objResp.data[objIter].station_id}">${state}</span></span></p>`;
+						stations += `<p class="card-text">${objResp.data[objIter].serialNumber}<br /><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;<span id="state_${objResp.data[objIter].serialNumber}">${state}</span></span></p>`;
 						stations += `</div>`;
 						stations += `</div>`;
 						stations += `</div>`;
 						//stations += `<div class="row no-gutters">`;
 						stations += `<div class="card-body">${buttons}</div>`;
 						//stations += `</div>`;
-						if(objResp.data[objIter].guard_mode_last_change_time != "" && objResp.data[objIter].guard_mode_last_change_time != "n/a" && objResp.data[objIter].guard_mode_last_change_time != "n/d" && objResp.data[objIter].guard_mode_last_change_time != "undefined")
+						if(objResp.data[objIter].guardModeTime != "" && objResp.data[objIter].guardModeTime != "n/a" && objResp.data[objIter].guardModeTime != "n/d" && objResp.data[objIter].guardModeTime != "undefined")
 						{
-							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guard_mode_last_change_time)));
-							if(parseInt(objResp.data[objIter].guard_mode_last_change_time) > lastChangeTimeAll)
+							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guardModeTime)));
+							if(parseInt(objResp.data[objIter].guardModeTime) > lastChangeTimeAll)
 							{
-								lastChangeTimeAll = parseInt(objResp.data[objIter].guard_mode_last_change_time);
+								lastChangeTimeAll = parseInt(objResp.data[objIter].guardModeTime);
 							}
 						}
 						else if(myObj.data[object].last_camera_image_time == "n/a")
@@ -1098,8 +1098,8 @@ function loadStationsSettings()
                 {
                     for (objIter in objResp.data)
                     {
-                        stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[objIter].station_id}">UDP Port für Verbindung mit der Basisstation ${objResp.data[objIter].station_id} (${objResp.data[objIter].name}).</label>`;
-                        stations += `<input type="text" name="udpPortsStation${objResp.data[objIter].station_id}" id="txtUdpPortsStation${objResp.data[objIter].station_id}" class="form-control" placeholder="UDP Port ${objResp.data[objIter].station_id}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[objIter].station_id})" required>`;
+                        stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[objIter].serialNumber}">UDP Port für Verbindung mit der Basisstation ${objResp.data[objIter].serialNumber} (${objResp.data[objIter].name}).</label>`;
+                        stations += `<input type="text" name="udpPortsStation${objResp.data[objIter].serialNumber}" id="txtUdpPortsStation${objResp.data[objIter].serialNumber}" class="form-control" placeholder="UDP Port ${objResp.data[objIter].serialNumber}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[objIter].serialNumber})" required>`;
                         stations += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basisstation zugeordnet sein.</small>`;
                         stations += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basisstation zugeordnet sein.</div></div>`;
                     }

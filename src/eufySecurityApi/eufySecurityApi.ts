@@ -541,193 +541,25 @@ export class EufySecurityApi
      */
     private makeJsonForDevice(device : Device) : string
     {
-        var json = `{"device_id":"${device.getSerial()}",`;
-        json += `"eufy_device_id":"${device.getId()}",`;
-        json += `"device_type":"${device.getDeviceTypeString()}",`;
+        var properties = device.getProperties();
+        var json = `{"eufyDeviceId":"${device.getId()}",`;
+        json += `"deviceType":"${device.getDeviceTypeString()}",`;
         json += `"model":"${device.getModel()}",`;
         json += `"name":"${device.getName()}",`;
-        json += `"hardware_Version":"${device.getHardwareVersion()}",`;
-        json += `"software_version":"${device.getSoftwareVersion()}",`;
-        json += `"station_serial":"${device.getStationSerial()}",`;
-        json += `"enabled":"${device.getPropertyValue(PropertyName.DeviceEnabled) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceEnabled)}",`;
-        json += `"wifi_rssi":"${device.getPropertyValue(PropertyName.DeviceWifiRSSI) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWifiRSSI)}",`;
-        json += `"wifi_rssi_signal_level":"${device.getPropertyValue(PropertyName.DeviceWifiSignalLevel) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWifiSignalLevel)}",`;
-        if(device instanceof Camera)
+        json += `"hardwareVersion":"${device.getHardwareVersion()}",`;
+        json += `"softwareVersion":"${device.getSoftwareVersion()}",`;
+        json += `"stationSerialNumber":"${device.getStationSerial()}"`;
+        for(var property in properties)
         {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
-            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-            json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
-            json += `"night_vision":"${device.getPropertyValue(PropertyName.DeviceNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceNightvision)}",`;
-            json += `"auto_night_vision":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
-            json += `"light":"${device.getPropertyValue(PropertyName.DeviceLight) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceLight)}",`;
-            json += `"microphone":"${device.getPropertyValue(PropertyName.DeviceMicrophone) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMicrophone)}",`;
-            json += `"speaker":"${device.getPropertyValue(PropertyName.DeviceSpeaker) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeaker)}",`;
-            json += `"speaker_volume":"${device.getPropertyValue(PropertyName.DeviceSpeakerVolume) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeakerVolume)}",`;
-            json += `"audio_recording":"${device.getPropertyValue(PropertyName.DeviceAudioRecording) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAudioRecording)}",`;
-            json += `"power_source":"${device.getPropertyValue(PropertyName.DevicePowerSource) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerSource)}",`;
-            json += `"power_working_mode":"${device.getPropertyValue(PropertyName.DevicePowerWorkingMode) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerWorkingMode)}",`;
-            json += `"recording_clip_length":"${device.getPropertyValue(PropertyName.DeviceRecordingClipLength) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceRecordingClipLength)}",`;
-            json += `"motion_detection_sensitivity":"${device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity)}",`;
-            json += `"antitheft_detection":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
-        }
-        else if (device instanceof IndoorCamera)
-        {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
-            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-            json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
-            json += `"night_vision":"${device.getPropertyValue(PropertyName.DeviceNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceNightvision)}",`;
-            json += `"auto_night_vision":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
-            json += `"light":"${device.getPropertyValue(PropertyName.DeviceLight) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceLight)}",`;
-            json += `"microphone":"${device.getPropertyValue(PropertyName.DeviceMicrophone) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMicrophone)}",`;
-            json += `"speaker":"${device.getPropertyValue(PropertyName.DeviceSpeaker) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeaker)}",`;
-            json += `"speaker_volume":"${device.getPropertyValue(PropertyName.DeviceSpeakerVolume) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeakerVolume)}",`;
-            json += `"audio_recording":"${device.getPropertyValue(PropertyName.DeviceAudioRecording) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAudioRecording)}",`;
-            json += `"power_source":"${device.getPropertyValue(PropertyName.DevicePowerSource) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerSource)}",`;
-            json += `"power_working_mode":"${device.getPropertyValue(PropertyName.DevicePowerWorkingMode) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerWorkingMode)}",`;
-            json += `"recording_clip_length":"${device.getPropertyValue(PropertyName.DeviceRecordingClipLength) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceRecordingClipLength)}",`;
-            json += `"motion_detection_sensitivity":"${device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity)}",`;
-            json += `"antitheft_detection":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
-        }
-        else if (device instanceof FloodlightCamera)
-        {
-            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
-            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-            json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
-            json += `"night_vision":"${device.getPropertyValue(PropertyName.DeviceNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceNightvision)}",`;
-            json += `"auto_night_vision":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
-            json += `"light":"${device.getPropertyValue(PropertyName.DeviceLight) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceLight)}",`;
-            json += `"microphone":"${device.getPropertyValue(PropertyName.DeviceMicrophone) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMicrophone)}",`;
-            json += `"speaker":"${device.getPropertyValue(PropertyName.DeviceSpeaker) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeaker)}",`;
-            json += `"speaker_volume":"${device.getPropertyValue(PropertyName.DeviceSpeakerVolume) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeakerVolume)}",`;
-            json += `"audio_recording":"${device.getPropertyValue(PropertyName.DeviceAudioRecording) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAudioRecording)}",`;
-            json += `"power_source":"${device.getPropertyValue(PropertyName.DevicePowerSource) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerSource)}",`;
-            json += `"power_working_mode":"${device.getPropertyValue(PropertyName.DevicePowerWorkingMode) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerWorkingMode)}",`;
-            json += `"recording_clip_length":"${device.getPropertyValue(PropertyName.DeviceRecordingClipLength) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceRecordingClipLength)}",`;
-            json += `"motion_detection_sensitivity":"${device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity)}",`;
-            json += `"antitheft_detection":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
-        }
-        else if (device instanceof BatteryDoorbellCamera)
-        {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
-            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-            json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
-            json += `"night_vision":"${device.getPropertyValue(PropertyName.DeviceNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceNightvision)}",`;
-            json += `"auto_night_vision":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
-            json += `"light":"${device.getPropertyValue(PropertyName.DeviceLight) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceLight)}",`;
-            json += `"microphone":"${device.getPropertyValue(PropertyName.DeviceMicrophone) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMicrophone)}",`;
-            json += `"speaker":"${device.getPropertyValue(PropertyName.DeviceSpeaker) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeaker)}",`;
-            json += `"speaker_volume":"${device.getPropertyValue(PropertyName.DeviceSpeakerVolume) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeakerVolume)}",`;
-            json += `"audio_recording":"${device.getPropertyValue(PropertyName.DeviceAudioRecording) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAudioRecording)}",`;
-            json += `"power_source":"${device.getPropertyValue(PropertyName.DevicePowerSource) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerSource)}",`;
-            json += `"power_working_mode":"${device.getPropertyValue(PropertyName.DevicePowerWorkingMode) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerWorkingMode)}",`;
-            json += `"recording_clip_length":"${device.getPropertyValue(PropertyName.DeviceRecordingClipLength) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceRecordingClipLength)}",`;
-            json += `"motion_detection_sensitivity":"${device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity)}",`;
-            json += `"antitheft_detection":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
-        }
-        else if (device instanceof WiredDoorbellCamera)
-        {
-            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
-            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-            json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
-            json += `"night_vision":"${device.getPropertyValue(PropertyName.DeviceNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceNightvision)}",`;
-            json += `"auto_night_vision":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
-            json += `"light":"${device.getPropertyValue(PropertyName.DeviceLight) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceLight)}",`;
-            json += `"microphone":"${device.getPropertyValue(PropertyName.DeviceMicrophone) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMicrophone)}",`;
-            json += `"speaker":"${device.getPropertyValue(PropertyName.DeviceSpeaker) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeaker)}",`;
-            json += `"speaker_volume":"${device.getPropertyValue(PropertyName.DeviceSpeakerVolume) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeakerVolume)}",`;
-            json += `"audio_recording":"${device.getPropertyValue(PropertyName.DeviceAudioRecording) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAudioRecording)}",`;
-            json += `"power_source":"${device.getPropertyValue(PropertyName.DevicePowerSource) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerSource)}",`;
-            json += `"power_working_mode":"${device.getPropertyValue(PropertyName.DevicePowerWorkingMode) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerWorkingMode)}",`;
-            json += `"recording_clip_length":"${device.getPropertyValue(PropertyName.DeviceRecordingClipLength) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceRecordingClipLength)}",`;
-            json += `"motion_detection_sensitivity":"${device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity)}",`;
-            json += `"antitheft_detection":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
-        }
-        else if (device instanceof SoloCamera)
-        {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
-            json += `"last_camera_image_url":"${device.getPropertyValue(PropertyName.DevicePictureUrl) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePictureUrl)}",`;
-            json += `"last_camera_image_time":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-            json += `"status_led":"${device.getPropertyValue(PropertyName.DeviceStatusLed) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceStatusLed)}",`;
-            json += `"night_vision":"${device.getPropertyValue(PropertyName.DeviceNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceNightvision)}",`;
-            json += `"auto_night_vision":"${device.getPropertyValue(PropertyName.DeviceAutoNightvision) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAutoNightvision)}",`;
-            json += `"light":"${device.getPropertyValue(PropertyName.DeviceLight) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceLight)}",`;
-            json += `"microphone":"${device.getPropertyValue(PropertyName.DeviceMicrophone) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMicrophone)}",`;
-            json += `"speaker":"${device.getPropertyValue(PropertyName.DeviceSpeaker) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeaker)}",`;
-            json += `"speaker_volume":"${device.getPropertyValue(PropertyName.DeviceSpeakerVolume) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceSpeakerVolume)}",`;
-            json += `"audio_recording":"${device.getPropertyValue(PropertyName.DeviceAudioRecording) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAudioRecording)}",`;
-            json += `"power_source":"${device.getPropertyValue(PropertyName.DevicePowerSource) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerSource)}",`;
-            json += `"power_working_mode":"${device.getPropertyValue(PropertyName.DevicePowerWorkingMode) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DevicePowerWorkingMode)}",`;
-            json += `"recording_clip_length":"${device.getPropertyValue(PropertyName.DeviceRecordingClipLength) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceRecordingClipLength)}",`;
-            json += `"motion_detection_sensitivity":"${device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetectionSensitivity)}",`;
-            json += `"antitheft_detection":"${device.getPropertyValue(PropertyName.DeviceAntitheftDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceAntitheftDetection)}"`;
-        }
-        else if (device instanceof Keypad)
-        {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-        }
-        else if (device instanceof EntrySensor)
-        {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-        }
-        else if (device instanceof MotionSensor)
-        {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
-            json += `"motion_detection":"${device.getPropertyValue(PropertyName.DeviceMotionDetection) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceMotionDetection)}",`;
-        }
-        else if (device instanceof Lock)
-        {
-            json += `"battery_charge":"${device.getPropertyValue(PropertyName.DeviceBattery) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBattery)}",`;
-            json += `"battery_temperature":"${device.getPropertyValue(PropertyName.DeviceBatteryTemp) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryTemp)}",`;
-            json += `"battery_low":"${device.getPropertyValue(PropertyName.DeviceBatteryLow) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceBatteryLow)}",`;
-            json += `"battery_charging":"${device.getPropertyValue(PropertyName.DeviceChargingStatus) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceChargingStatus)}",`;
-            json += `"watermark":"${device.getPropertyValue(PropertyName.DeviceWatermark) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceWatermark)}",`;
-            json += `"state":"${device.getPropertyValue(PropertyName.DeviceState) == undefined ? "n/a" : device.getPropertyValue(PropertyName.DeviceState)}",`;
+            switch (property)
+            {
+                case PropertyName.DevicePictureUrl:
+                    json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
+                    json += `,"pictureTime":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}"`;
+                    break;
+                default:
+                    json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
+            }
         }
         json += `}`;
 
@@ -831,19 +663,23 @@ export class EufySecurityApi
      */
     private makeJsonForStation(station : Station) : string
     {
-        var json = `{"station_id":"${station.getPropertyValue(PropertyName.SerialNumber)}",`;
-        json += `"eufy_device_id":"${station.getId()}",`;
-        json += `"device_type":"${station.getDeviceTypeString()}",`;
-        json += `"model":"${station.getPropertyValue(PropertyName.Model)}",`;
-        json += `"name":"${station.getPropertyValue(PropertyName.Name)}",`;
-        json += `"hardware_Version":"${station.getPropertyValue(PropertyName.HardwareVersion)}",`;
-        json += `"software_version":"${station.getPropertyValue(PropertyName.SoftwareVersion)}",`;
-        json += `"mac_address":"${station.getPropertyValue(PropertyName.StationMacAddress)}",`;
-        json += `"external_ip_address":"${station.getIPAddress()}",`;
-        json += `"local_ip_address":"${station.getPropertyValue(PropertyName.StationLANIpAddress)}",`;
-        json += `"guard_mode":"${station.getPropertyValue(PropertyName.StationGuardMode)}",`;
-        json += `"guard_mode_last_change_time":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}",`;
-        json += `"is_connected":"${station.isConnected()}"`;
+        var properties = station.getProperties();
+        var json = `{"eufyDeviceId":"${station.getId()}"`;
+        json += `,"deviceType":"${station.getDeviceTypeString()}"`;
+        json += `,"wanIpAddress":"${station.getIPAddress()}"`;
+        json += `,"is_connected":"${station.isConnected()}"`;
+        for (var property in properties)
+        {
+            switch (property)
+            {
+                case PropertyName.StationGuardMode:
+                    json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
+                    json += `,"guardModeTime":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}"`;
+                    break;
+                default:
+                    json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
+            }
+        }
         json += `}`;
         return json;
     }
