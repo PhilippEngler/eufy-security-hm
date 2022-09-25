@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * v1.1 - 20220925
+ * v1.2 - 20220925
  */
 port = "";
 redirectTarget = "";
@@ -1045,11 +1045,11 @@ function showStationSettings(stationId)
     document.getElementById("cbStationAlarmTone").selectedIndex = 0;
     document.getElementById("rgStationAlarmVolume").value = 1;
     document.getElementById("rgStationPromtVolume").value = 0;
-    document.getElementById("chkSwitchToSchedule").removeAttribute("checked");
-    document.getElementById("chkSwitchToGeofencing").removeAttribute("checked");
-    document.getElementById("chkSwitchByApp").removeAttribute("checked");
-    document.getElementById("chkSwitchByKeypad").removeAttribute("checked");
-    document.getElementById("chkStartAlarmDelay").removeAttribute("checked");
+    document.getElementById("chkStationSwitchToSchedule").removeAttribute("checked");
+    document.getElementById("chkStationSwitchToGeofencing").removeAttribute("checked");
+    document.getElementById("chkStationSwitchByApp").removeAttribute("checked");
+    document.getElementById("chkStationSwitchByKeypad").removeAttribute("checked");
+    document.getElementById("chkStationStartAlarmDelay").removeAttribute("checked");
 
     document.getElementById("cardStationStorageSettings").classList.add("collapse", true);
     document.getElementById("cardStationAudioSettings").classList.add("collapse", true);
@@ -1092,47 +1092,47 @@ function showStationSettings(stationId)
 
                     if(objResp.data[0].notificationSwitchModeSchedule == "true")
                     {
-                        document.getElementById("chkSwitchToSchedule").setAttribute("checked", true);
+                        document.getElementById("chkStationSwitchToSchedule").setAttribute("checked", true);
                     }
                     else
                     {
-                        document.getElementById("chkSwitchToSchedule").removeAttribute("checked");
+                        document.getElementById("chkStationSwitchToSchedule").removeAttribute("checked");
                     }
                     if(objResp.data[0].notificationSwitchModeGeofence == "true")
                     {
-                        document.getElementById("chkSwitchToGeofencing").setAttribute("checked", true);
+                        document.getElementById("chkStationSwitchToGeofencing").setAttribute("checked", true);
                     }
                     else
                     {
-                        document.getElementById("chkSwitchToGeofencing").removeAttribute("checked");
+                        document.getElementById("chkStationSwitchToGeofencing").removeAttribute("checked");
                     }
                     if(objResp.data[0].notificationSwitchModeApp == "true")
                     {
-                        document.getElementById("chkSwitchByApp").setAttribute("checked", true);
+                        document.getElementById("chkStationSwitchByApp").setAttribute("checked", true);
                     }
                     else
                     {
-                        document.getElementById("chkSwitchByApp").removeAttribute("checked");
+                        document.getElementById("chkStationSwitchByApp").removeAttribute("checked");
                     }
                     if(objResp.data[0].notificationSwitchModeKeypad == "true")
                     {
-                        document.getElementById("chkSwitchByKeypad").setAttribute("checked", true);
+                        document.getElementById("chkStationSwitchByKeypad").setAttribute("checked", true);
                     }
                     else
                     {
-                        document.getElementById("chkSwitchByKeypad").removeAttribute("checked");
+                        document.getElementById("chkStationSwitchByKeypad").removeAttribute("checked");
                     }
                     if(objResp.data[0].notificationStartAlarmDelay == "true")
                     {
-                        document.getElementById("chkStartAlarmDelay").setAttribute("checked", true);
+                        document.getElementById("chkStationStartAlarmDelay").setAttribute("checked", true);
                     }
                     else
                     {
-                        document.getElementById("chkStartAlarmDelay").removeAttribute("checked");
+                        document.getElementById("chkStationStartAlarmDelay").removeAttribute("checked");
                     }
 
                     document.getElementById("lblModalStationSettingsInfo").innerHTML = ``;
-                    if(objResp.data[0].model != "T8112" && objResp.data[0].model != "T8113" && objResp.data[0].model != "T8114")
+                    if(objResp.data[0].model != "T8002" && objResp.data[0].model != "T8010")
                     {
                         document.getElementById("lblModalStationSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
                     }
