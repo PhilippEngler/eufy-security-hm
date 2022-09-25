@@ -115,6 +115,9 @@ class ApiServer
                     case "getServiceState":
                         responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
+                    case "getAccountInfo":
+                        responseString = `{"success":true,"message":${await api.getAccountInfo()}}`;
+                        break;
                     case "getDevices":
                         responseString = await api.getDevicesAsJSON();
                         break;
@@ -122,6 +125,26 @@ class ApiServer
                         if(url.length == 3)
                         {
                             responseString = await api.getDeviceAsJSON(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getDevicePropertiesMetadata":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.getDevicePropertiesMetadataAsJSON(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getDeviceProperties":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.getDevicePropertiesAsJSON(url[2]);
                         }
                         else
                         {
@@ -137,6 +160,26 @@ class ApiServer
                         if(url.length == 3)
                         {
                             responseString = await api.getStationAsJSON(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationPropertiesMetadata":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.getStationPropertiesMetadataAsJSON(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationProperties":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.getStationPropertiesAsJSON(url[2]);
                         }
                         else
                         {

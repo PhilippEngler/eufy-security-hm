@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, WiredDoorbellCamera, BatteryDoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail, PropertyValue, RawValues } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, IndoorCamera, FloodlightCamera, WiredDoorbellCamera, BatteryDoorbellCamera, SoloCamera, MotionSensor, EntrySensor, Keypad, Lock, LoginOptions, HouseDetail, PropertyValue, RawValues, PropertyMetadataAny } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -122,6 +122,13 @@ export class EufySecurityApi
         {
             this.serviceState = state;
         }
+    }
+
+    public async getAccountInfo() : Promise<string>
+    {
+        var res = "";
+        res = JSON.stringify(await this.httpService.getPassportProfile());
+        return res;
     }
 
     /**
@@ -444,18 +451,18 @@ export class EufySecurityApi
      */
     private makeJsonForHouse(house : HouseDetail) : string
     {
-        var json = `{"house_id":"${house.house_id}",`;
-        json += `"house_name":"${house.house_name}",`;
-        json += `"is_default":"${house.is_default}",`;
-        json += `"geofence_id":"${house.geofence_id}",`;
-        json += `"address":"${house.address}",`;
-        json += `"latitude":"${house.latitude}",`;
-        json += `"longitude":"${house.longitude}",`;
-        json += `"radius_range":"${house.radius_range}",`;
-        json += `"location_msg":"${house.location_msg}",`;
-        json += `"create_time":"${house.create_time}",`;
-        json += `"away_mode":"${house.away_mode}",`;
-        json += `"home_mode":"${house.home_mode}"`;
+        var json = `{"houseId":"${house.house_id}"`;
+        json += `,"houseName":"${house.house_name}"`;
+        json += `,"isDefault":"${house.is_default}"`;
+        json += `,"geofenceId":"${house.geofence_id}"`;
+        json += `,"address":"${house.address}"`;
+        json += `,"latitude":"${house.latitude}"`;
+        json += `,"longitude":"${house.longitude}"`;
+        json += `,"radiusRange":"${house.radius_range}"`;
+        json += `,"locationMsg":"${house.location_msg}"`;
+        json += `,"createTime":"${house.create_time}"`;
+        json += `,"awayMode":"${house.away_mode}"`;
+        json += `,"homeMode":"${house.home_mode}"`;
         json += `}`;
 
         return json;
@@ -542,13 +549,14 @@ export class EufySecurityApi
     private makeJsonForDevice(device : Device) : string
     {
         var properties = device.getProperties();
-        var json = `{"eufyDeviceId":"${device.getId()}",`;
-        json += `"deviceType":"${device.getDeviceTypeString()}",`;
-        json += `"model":"${device.getModel()}",`;
-        json += `"name":"${device.getName()}",`;
-        json += `"hardwareVersion":"${device.getHardwareVersion()}",`;
-        json += `"softwareVersion":"${device.getSoftwareVersion()}",`;
-        json += `"stationSerialNumber":"${device.getStationSerial()}"`;
+        var propertyMetadata : PropertyMetadataAny;
+        var json = `{"eufyDeviceId":"${device.getId()}"`;
+        json += `,"deviceType":"${this.devices.getDeviceTypeAsString(device)}"`;
+        json += `,"model":"${device.getModel()}"`;
+        json += `,"name":"${device.getName()}"`;
+        json += `,"hardwareVersion":"${device.getHardwareVersion()}"`;
+        json += `,"softwareVersion":"${device.getSoftwareVersion()}"`;
+        json += `,"stationSerialNumber":"${device.getStationSerial()}"`;
         for(var property in properties)
         {
             switch (property)
@@ -635,7 +643,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given devices.
      */
-     public async getDeviceAsJSON(deviceSerial : string) : Promise<string>
+    public async getDeviceAsJSON(deviceSerial : string) : Promise<string>
     {
         //await this.httpService.refreshStationData();
         //await this.httpService.refreshDeviceData();
@@ -658,6 +666,51 @@ export class EufySecurityApi
     }
 
     /**
+     * Returns a JSON string with the device properties metadata.
+     * @param deviceSerial The device serial for the device.
+     * @returns JSON string with all properties metadata.
+     */
+    public async getDevicePropertiesMetadataAsJSON(deviceSerial : string) : Promise<string>
+    {
+        var devices = this.getDevices();
+        var json : string = "";
+        try
+        {
+            json = `{"success":true,"type":"${devices[deviceSerial].getModel()}","data":[${JSON.stringify(devices[deviceSerial].getPropertiesMetadata())}]}`;
+            this.setLastConnectionInfo(true);
+        }
+        catch
+        {
+            json = `{"success":false,"reason":"No devices found."}`;
+            this.setLastConnectionInfo(false);
+        }
+        return json;
+    }
+
+
+    /**
+     * Returns a JSON string with the device properties.
+     * @param deviceSerial The device serial for the device.
+     * @returns JSON string with all properties.
+     */
+    public async getDevicePropertiesAsJSON(deviceSerial : string) : Promise<string>
+    {
+        var devices = this.getDevices();
+        var json : string = "";
+        try
+        {
+            json = `{"success":true,"type":"${devices[deviceSerial].getModel()}","data":[${JSON.stringify(devices[deviceSerial].getProperties())}]}`;
+            this.setLastConnectionInfo(true);
+        }
+        catch
+        {
+            json = `{"success":false,"reason":"No devices found."}`;
+            this.setLastConnectionInfo(false);
+        }
+        return json;
+    }
+
+    /**
      * Create a JSON string for a given station.
      * @param station The station the JSON string created for.
      */
@@ -667,7 +720,7 @@ export class EufySecurityApi
         var json = `{"eufyDeviceId":"${station.getId()}"`;
         json += `,"deviceType":"${station.getDeviceTypeString()}"`;
         json += `,"wanIpAddress":"${station.getIPAddress()}"`;
-        json += `,"is_connected":"${station.isConnected()}"`;
+        json += `,"isP2PConnected":"${station.isConnected()}"`;
         for (var property in properties)
         {
             switch (property)
@@ -675,6 +728,11 @@ export class EufySecurityApi
                 case PropertyName.StationGuardMode:
                     json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
                     json += `,"guardModeTime":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}"`;
+                    break;
+                case PropertyName.StationHomeSecuritySettings:
+                case PropertyName.StationAwaySecuritySettings:
+                    json += `,"${property}":[`;
+                    json += `${JSON.stringify(properties[property])}]`;
                     break;
                 default:
                     json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
@@ -745,6 +803,52 @@ export class EufySecurityApi
         await this.stations.loadStations();
             
         return this.stations;
+    }
+
+
+    /**
+     * Returns a JSON string with the station properties metadata.
+     * @param stationSerial The station serial for the station.
+     * @returns JSON string with all properties metadata.
+     */
+    public async getStationPropertiesMetadataAsJSON(stationSerial : string) : Promise<string>
+    {
+        var stations = this.getStations();
+        var json : string = "";
+        try
+        {
+            json = `{"success":true,"type":"${stations[stationSerial].getModel()}","data":[${JSON.stringify(stations[stationSerial].getPropertiesMetadata())}]}`;
+            this.setLastConnectionInfo(true);
+        }
+        catch
+        {
+            json = `{"success":false,"reason":"No devices found."}`;
+            this.setLastConnectionInfo(false);
+        }
+        return json;
+    }
+
+
+    /**
+     * Returns a JSON string with the station properties metadata.
+     * @param stationSerial The device serial for the station.
+     * @returns JSON string with all properties metadata.
+     */
+    public async getStationPropertiesAsJSON(stationSerial : string) : Promise<string>
+    {
+        var stations = this.getStations();
+        var json : string = "";
+        try
+        {
+            json = `{"success":true,"type":"${stations[stationSerial].getModel()}","data":[${JSON.stringify(stations[stationSerial].getProperties())}]}`;
+            this.setLastConnectionInfo(true);
+        }
+        catch
+        {
+            json = `{"success":false,"reason":"No devices found."}`;
+            this.setLastConnectionInfo(false);
+        }
+        return json;
     }
 
     /**
@@ -1272,7 +1376,7 @@ export class EufySecurityApi
                     for (var deviceSerial in devices)
                     {
                         device = devices[deviceSerial];
-                        if(device.getDeviceTypeString() == "camera")
+                        if(this.devices.getDeviceTypeAsString(device) == "camera")
                         {
                             device = devices[deviceSerial] as Camera;
                             if(json.endsWith("}"))
@@ -1280,15 +1384,15 @@ export class EufySecurityApi
                                 json += ",";
                             }
                             json += `{"device_id":"${deviceSerial}",`;
-                            json += `"last_camera_image_url":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL() : ""}",`;
-                            json += `"last_camera_image_time":"${this.devices.getLastVideoTime(deviceSerial) == undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial)}",`;
+                            json += `"pictureUrl":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL() : ""}",`;
+                            json += `"pictureTime":"${this.devices.getLastVideoTime(deviceSerial) == undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial)}",`;
                             if(device.getLastCameraVideoURL() == "")
                             {
-                                json += `"last_camera_video_url":"${this.config.getApiCameraDefaultVideo()}"`;
+                                json += `"videoUrl":"${this.config.getApiCameraDefaultVideo()}"`;
                             }
                             else
                             {
-                                json += `"last_camera_video_url":"${device.getLastCameraVideoURL()}"`;
+                                json += `"videoUrl":"${device.getLastCameraVideoURL()}"`;
                             }
                             json += "}";
                             if(device.getLastCameraImageURL() == undefined)
@@ -2278,7 +2382,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0-rc3";
+        return "1.6.0-rc4";
     }
 
     /**

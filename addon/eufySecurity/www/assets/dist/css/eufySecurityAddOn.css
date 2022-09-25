@@ -98,3 +98,16 @@ code {
 .jumbotron-background {
   background-color: #e9ecef !important;
 }
+
+.img-container {
+  position: relative;
+  text-align: center;
+}
+
+.img-overlay-text-centered {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  overflow-wrap: anywhere;
+  transform: translate(0%, -50%);
+}

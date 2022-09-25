@@ -378,6 +378,51 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * Returns a string with the type of the device.
+     * @param device The device.
+     * @returns A string with the type of the device.
+     */
+    public getDeviceTypeAsString(device : Device) : string
+    {
+        if(device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro())
+        {
+            return "camera";
+        }
+        else if(device.isEntrySensor())
+        {
+            return "sensor";
+        }
+        else if(device.isKeyPad())
+        {
+            return "keypad";
+        }
+        else if(device.isDoorbell())
+        {
+            return "doorbell";
+        }
+        else if(device.isIndoorCamera())
+        {
+            return "indoorcamera";
+        }
+        else if(device.isSoloCameras())
+        {
+            return "solocamera";
+        }
+        else if(device.isFloodLight())
+        {
+            return "floodlight";
+        }
+        else if (device.isLock())
+        {
+            return "lock";
+        }
+        else
+        {
+            return `unknown(${device.getRawDevice().device_type})`;
+        }
+    }
+
+    /**
      * Add a given event listener for a given device.
      * @param device The device as Device object.
      * @param eventListenerName The event listener name as string.

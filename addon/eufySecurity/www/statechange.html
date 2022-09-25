@@ -114,18 +114,25 @@
 				<p>Hier finden Sie den aktuellen Status Ihrer Basisstationen und können diesen entweder für eine Basisstation oder für alle Basisstationen ändern.</p>
 				<p>
 					<div id="allstations">
-						<!--<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">-->
-						<div class="row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-3">
+						<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-2 row-cols-xl-2">
 							<div class="col">
 								<div class="card mb-3">
 									<h5 class="card-header">alle Stationen</h5>
-									<div class="row no-gutters">
-										<div class="card-body">
-											<h6 class="card-subtitle mb-2 text-muted ms-3">Ändern des Status aller Stationen</h6>
-											<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary my-2 ms-3" disabled>abwesend</button>
-											<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary my-2 ms-3" disabled>zu Hause</button>
-											<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary my-2 ms-3" disabled>Zeitsteuerung</button>
-											<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary my-2 ms-3" disabled>deaktiviert</button>
+									<div class="card-body">
+										<h6 class="card-text text-muted">Ändern des Status aller Stationen</h6>
+										<div class="row g-2">
+											<div class="col-sm-3">
+												<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button>
+											</div>
+											<div class="col-sm-3">
+												<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary col-12 h-100" disabled>zu Hause</button>
+											</div>
+											<div class="col-sm-3">
+												<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary col-12 h-100" disabled>Zeit&shy;steue&shy;rung</button>
+											</div>
+											<div class="col-sm-3">
+												<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary col-12 h-100" disabled>de&shy;ak&shy;ti&shy;viert</button>
+											</div>
 										</div>
 									</div>
 									<div class="card-footer" id="lastEventTimeAll">
@@ -142,7 +149,7 @@
 
 		<footer class="footer mt-auto py-3 bg-light">
 			<div class="container-fluid">
-				<span class="text-muted">&copy; 2020-2022 Philipp Engler</span>
+				<span id="footerCopyright" class="text-muted">&copy; 2020 Philipp Engler</span>
 			</div>
 		</footer>
 		
@@ -169,6 +176,7 @@
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
 		<script>
+			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)
 			{
 				alert("Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.");

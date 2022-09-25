@@ -1109,42 +1109,6 @@ export class Device extends TypedEmitter<DeviceEvents> {
     public isEnabled(): PropertyValue {
         return this.getPropertyValue(PropertyName.DeviceEnabled);
     }
-
-    public getDeviceTypeString() : string
-    {
-        if(this.isFirstCamera() || this.isCameraE() || this.isCamera2() || this.isCamera2C() || this.isCamera2Pro() || this.isCamera2CPro())
-        {
-            return "camera";
-        }
-        else if(this.isEntrySensor())
-        {
-            return "sensor";
-        }
-        else if(this.isKeyPad())
-        {
-            return "keypad";
-        }
-        else if(this.isDoorbell())
-        {
-            return "doorbell";
-        }
-        else if(this.isIndoorCamera())
-        {
-            return "indoorcamera";
-        }
-        else if(this.isFloodLight())
-        {
-            return "floodlight";
-        }
-        else if (this.isLock())
-        {
-            return "lock";
-        }
-        else
-        {
-            return `unknown(${this.rawDevice.device_type})`;
-        }
-    }
 }
 
 export class Camera extends Device {

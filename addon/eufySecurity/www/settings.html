@@ -384,7 +384,7 @@
 
 		<footer class="footer mt-auto py-3 bg-light">
 			<div class="container-fluid">
-				<span class="text-muted">&copy; 2020-2022 Philipp Engler</span>
+				<span id="footerCopyright" class="text-muted">&copy; 2020 Philipp Engler</span>
 			</div>
 		</footer>
 		
@@ -522,6 +522,7 @@
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
 		<script>
+			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)
 			{
 				alert("Die Funktionalität der Webseite kann beim Internet Explorer nicht sichergestellt werden. Nutzen Sie bitte Firefox, Microsoft Edge, Safari oder einen anderen unterstützen Browser.");

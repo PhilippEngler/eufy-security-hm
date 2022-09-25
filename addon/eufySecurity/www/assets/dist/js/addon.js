@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * v1.0 - 20220911
+ * v1.1 - 20220925
  */
 port = "";
 redirectTarget = "";
@@ -159,6 +159,142 @@ function makeDateTimeString(dateTime)
 {
 	return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}:${dateTime.getSeconds().toString().padStart(2,'0')}`);
 }
+
+function getStationName(model)
+{
+    switch (model)
+    {
+        case "T8001":
+            return "HomeBase";
+        case "T8002":
+            return "HomeBase E";
+        case "T8010":
+            return "HomeBase 2";
+        case "T8030":
+            return "HomeBase 3";
+        default:
+            return "unbekannte HomeBase";
+        }
+}
+
+function getDeviceName(model)
+{
+    switch (model)
+    {
+        //eufyCams
+        case "T8111":
+            return "eufyCam";
+        case "T8112":
+            return "eufyCam E";
+        case "T8113":
+            return "eufyCam 2C";
+        case "T8114":
+            return "eufyCam 2";
+        case "T8140":
+            return "eufyCam 2 Pro";
+        case "T8142":
+            return "eufyCam 2C Pro";
+        case "T8160":
+            return "eufyCam 3";
+        case "T8161":
+            return "eufyCam 3C";
+        //IndoorCams
+        case "T8400":
+            return "IndoorCam C24";
+        case "T8401":
+            return "IndoorCam C22";
+        case "T8410":
+            return "IndoorCam P24";
+        case "T8411":
+            return "IndoorCam P22";
+        case "T8414":
+            return "IndoorCam Mini 2k";
+        //SoloCams
+        case "T8122":
+            return "SoloCam L20";
+        case "T8123":
+            return "SoloCam L40";
+        case "T8424":
+            return "SoloCam S40";
+        case "T8130":
+            return "SoloCam E20";
+        case "T8131":
+            return "SoloCam E40";
+        case "T8150":
+            return "4G Starlight Camera";
+        //Doorbels
+        case "T8200":
+            return "Video Doorbell 2K (wired)";
+        case "T8201":
+            return "Video Doorbell 1080p (wired)";
+        case "T8202":
+            return "Video Doorbell 2K Pro (wired)";
+        case "T8203":
+            return "Video Doorbell Dual 2K (wired)";
+        case "T8210":
+            return "Video Doorbell 2K (battery)";
+        case "T8213":
+            return "Video Doorbell Dual 2K (battery)";
+        case "T8220":
+            return "Video Doorbell Slim";
+        case "T8221":
+            return "Video Doorbell 2E";
+        case "T8222":
+            return "Video Doorbell 1080p (battery)";
+        //Floodlight
+        case "T8420":
+            return "FloodlightCam 1080p";
+        case "T8422":
+            return "FloodlightCam E 2k";
+        case "T8423":
+            return "FloodlightCam 2 Pro";
+        case "T8424":
+            return "FloodlightCam 2k";
+        //Lock
+        //Keypad
+        case "T8960":
+            return "Keypad";
+        //Sensor
+        case "T8900":
+            return "Entry Sensor";
+        case "T8910":
+            return "Motion Sensor";
+        default:
+            return "unbekanntes Gerät";
+    }
+}
+
+function getGuardModeAsString(guardMode)
+{
+    switch (guardMode)
+    {
+        case "0":
+            return "abwesend";
+        case "1":
+            return "zu Hause";
+        case "2":
+            return "Zeitplan";
+        case "3":
+            return "Benutzerdefiniert 1";
+        case "4":
+            return "Benutzerdefiniert 2";
+        case "5":
+            return "Benutzerdefiniert 3";
+        case "6":
+            return "ausgeschaltet";
+        case "47":
+            return "Geofencing";
+        case "63":
+            return "deaktiviert";
+        default:
+            return "unbekannt";
+    }
+}
+
+function getWifiSignalLevelIcon(wifiSignalLevel)
+{
+    return wifiSignalLevel == 0 ? "bi-reception-0" : wifiSignalLevel == 1 ? "bi-reception-1" : wifiSignalLevel == 2 ? "bi-reception-2" : wifiSignalLevel == 3 ? "bi-reception-3" : wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off";
+}
 //#endregion
 
 /**
@@ -168,7 +304,7 @@ function makeDateTimeString(dateTime)
  function loadStations()
  {
     document.getElementById("stations").innerHTML = `<p id="stations"></p>`;
-    var xmlhttp, myObj, station, stations = "";
+    var xmlhttp, objResp, station, stations = "";
     var imagepath = "";
     var type = "";
     var state = "";
@@ -179,84 +315,39 @@ function makeDateTimeString(dateTime)
     {
         if (this.readyState == 4 && this.status == 200)
         {
-            myObj = JSON.parse(this.responseText);
-            if(myObj.success == true)
+            objResp = JSON.parse(this.responseText);
+            if(objResp.success == true)
             {
-                if(myObj.data.length > 0)
+                if(objResp.data.length > 0)
                 {
                     stations += `<h4>Basisstationen</h4>`;
                     stations += `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
-                    for (station in myObj.data)
+                    for (station in objResp.data)
                     {
-                        if(myObj.data[station].deviceType == "station")
+                        if(objResp.data[station].deviceType == "station")
                         {
-                            switch (myObj.data[station].model)
-                            {
-                                case "T8001":
-                                    imagepath = `<img src="assets/devices/eufyHomeBase.png" class="card-img-top" alt="HomeBase">`;
-                                    type="HomeBase";
-                                    break;
-                                case "T8002":
-                                    imagepath = `<img src="assets/devices/eufyHomeBase.png" class="card-img-top" alt="HomeBase E">`;
-                                    type="HomeBase E";
-                                    break;
-                                case "T8010":
-                                    imagepath = `<img src="assets/devices/eufyHomeBase2.png" class="card-img-top" alt="HomeBase 2">`;
-                                    type="HomeBase 2";
-                                    break;
-                                default:
-                                    imagepath = `<img src="assets/devices/eufyHomeBase2.png" class="card-img-top" alt="HomeBase">`;
-                                    type="HomeBase";
-                            }
-                            switch (myObj.data[station].guardMode)
-                            {
-                                case "0":
-                                    state = "abwesend";
-                                    break;
-                                case "1":
-                                    state = "zu Hause";
-                                    break;
-                                case "2":
-                                    state = "Zeitplan";
-                                    break;
-                                case "3":
-                                    state = "Benutzerdefiniert 1";
-                                    break;
-                                case "4":
-                                    state = "Benutzerdefiniert 2";
-                                    break;
-                                case "5":
-                                    state = "Benutzerdefiniert 3";
-                                    break;
-                                case "6":
-                                    state = "ausgeschaltet";
-                                    break;
-                                case "47":
-                                    state = "Geofencing";
-                                    break;
-                                case "63":
-                                    state = "deaktiviert";
-                                    break;
-                                default:
-                                    state="unbekannt";
-                            }
+                            type = getStationName(objResp.data[station].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[station].model})</div>`;
+                            state = getGuardModeAsString(objResp.data[station].guardMode);
                             stations += `<div class="col">`;
                             stations += `<div class="card mb-3">`;
                             stations += `<div class="card-header">`;
-                            stations += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[station].name}</h5></div>`;
-                            stations += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showStationSettings('${myObj.data[station].serialNumber}')"></i></h5></span></div>`;
+                            stations += `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[station].name}</h5></div>`;
+                            stations += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showStationSettings('${objResp.data[station].serialNumber}')"></i></h5></span></div>`;
                             stations += `</div>`;
-                            stations += `<div class="row no-gutters">`;
-                            stations += `<div class="col-md-4">${imagepath}</div>`;
+
+                            stations += `<div class="row g-0">`;
+                            stations += `<div class="col-md-4 img-container">${imagepath}</div>`;
                             stations += `<div class="col-md-8">`;
-                            stations += `<div class="card-body" style="margin-left: -1rem">`;
+                            stations += `<div class="card-body">`;
                             stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            stations += `<p class="card-text">${myObj.data[station].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${myObj.data[station].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
+                            stations += `<p class="card-text">${objResp.data[station].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[station].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
                             stations += `</div>`;
                             stations += `</div>`;
                             stations += `</div>`;
+
                             stations += `<div class="card-footer">`;
-                            stations += `<small class="text-muted">IP-Adresse: ${myObj.data[station].lanIpAddress} (${myObj.data[station].wanIpAddress})</small>`;
+                            stations += `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small>`;
                             stations += `</div>`;
                             stations += `</div>`;
                             stations += `</div>`;
@@ -291,12 +382,15 @@ function makeDateTimeString(dateTime)
 
 function loadDevices()
 {
-    var xmlhttp, myObj, object;
+    var xmlhttp, objResp, device;
     var text = "";
     var cams = "";
     var indoorcams = "";
+    var solocams = "";
     var doorbellcams = "";
     var floodlightcams = "";
+    var keypads = "";
+    var sensors = "";
     var imagepath = "";
     var type = "";
     var lastVideo = "keine Aufnahme";
@@ -307,51 +401,23 @@ function loadDevices()
     {
         if (this.readyState == 4 && this.status == 200)
         {
-            myObj = JSON.parse(this.responseText);
-            if(myObj.success == true)
+            objResp = JSON.parse(this.responseText);
+            if(objResp.success == true)
             {
-                if(myObj.data.length > 0)
+                if(objResp.data.length > 0)
                 {
-                    for (object in myObj.data)
+                    for (device in objResp.data)
                     {
-                        if(myObj.data[object].deviceType == "camera")
+                        if(objResp.data[device].deviceType == "camera")
                         {
-                            switch (myObj.data[object].model)
+                            type = getDeviceName(objResp.data[device].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
+                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
                             {
-                                case "T8111":
-                                    imagepath = `<img src="assets/devices/eufyCamE.png" class="card-img-top" alt="eufyCam">`;
-                                    type = "eufyCam";
-                                    break;
-                                case "T8112":
-                                    imagepath = `<img src="assets/devices/eufyCamE.png" class="card-img-top" alt="eufyCam E">`;
-                                    type = "eufyCam E";
-                                    break;
-                                case "T8113":
-                                    imagepath = `<img src="assets/devices/eufyCam2c.png" class="card-img-top" alt="eufyCam 2C">`;
-                                    type = "eufyCam 2C";
-                                    break;
-                                case "T8114":
-                                    imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="eufyCam 2">`;
-                                    type = "eufyCam 2";
-                                    break;
-                                case "T8140":
-                                    imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="eufyCam 2 Pro">`;
-                                    type = "eufyCam 2 Pro";
-                                    break;
-                                case "T8142":
-                                    imagepath = `<img src="assets/devices/eufyCam2c.png" class="card-img-top" alt="eufyCam 2C Pro">`;
-                                    type = "eufyCam 2C Pro";
-                                    break;
-                                default:
-                                    imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Kamera">`;
-                                    type = "Kamera";
+                                lastVideo = `letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)))}`;
+                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
                             }
-                            if(myObj.data[object].pictureTime != "" && myObj.data[object].pictureTime != "n/a" && myObj.data[object].pictureTime != "n/d" && myObj.data[object].pictureTime != "0")
-                            {
-                                lastVideo = `Letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(myObj.data[object].pictureTime)))}`;
-                                lastVideo += ` | <a href="${myObj.data[object].pictureUrl}">Standbild</a>`;
-                            }
-                            else if(myObj.data[object].pictureTime == "n/a")
+                            else if(objResp.data[device].pictureTime == "n/a")
                             {
                                 lastVideo = "keine Aufnahme";
                             }
@@ -362,19 +428,21 @@ function loadDevices()
                             cams += `<div class="col mb-3">`;
                             cams += `<div class="card">`;
                             cams += `<div class="card-header">`;
-                            cams += `<div style="text-align:left; float:left;"><h5 class="mb-0">${myObj.data[object].name}</h5></div>`;
+                            cams += `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[device].name}</h5></div>`;
                             cams += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">`;
-                            cams += `<i class="${myObj.data[object].wifiSignalLevel == 0 ? "bi-reception-0" : myObj.data[object].wifiSignalLevel == 1 ? "bi-reception-1" : myObj.data[object].wifiSignalLevel == 2 ? "bi-reception-2" : myObj.data[object].wifiSignalLevel == 3 ? "bi-reception-3" : myObj.data[object].wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off"}" title="WiFi Empfangsstärke: ${myObj.data[object].wifi_rssi}dB"></i>`;
+                            cams += `<i class="${getWifiSignalLevelIcon(objResp.data[device].wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data[device].wifiRssi}dB"></i>`;
                             cams += `&nbsp;&nbsp;`;
-                            cams += `<i class="text-muted bi-gear" title="Einstellungen" onclick="showDeviceSettings('${myObj.data[object].serialNumber}')"></i>`;
+                            cams += `<i class="text-muted bi-gear" title="Einstellungen" onclick="showDeviceSettings('${objResp.data[device].serialNumber}')"></i>`;
                             cams += `</h5></span></div>`;
                             cams += `</div>`;
-                            cams += `<div class="row no-gutters">`;
-                            cams += `<div class="col-md-4">${imagepath}</div>`;
+
+                            cams += `<div class="row g-0">`;
+                            cams += `<div class="col-md-4 img-container">${imagepath}</div>`;
                             cams += `<div class="col-md-8">`;
-                            cams += `<div class="card-body" style="margin-left: -1rem">`;
+
+                            cams += `<div class="card-body">`;
                             cams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            cams += `<p class="card-text">${myObj.data[object].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i> ${myObj.data[object].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].chargingStatus == 1 ? "bi-battery-charging" : myObj.data[object].battery < 16 ? "bi-battery" : myObj.data[object].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${myObj.data[object].battery < 6 ? "text-danger" : myObj.data[object].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${myObj.data[object].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${myObj.data[object].batteryTemperature < 0 ? "bi-thermometer-low" : myObj.data[object].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp${myObj.data[object].batteryTemperature}&deg;C</span></p>`;
+                            cams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></p>`;
                             cams += `</div>`;
                             cams += `</div>`;
                             cams += `</div>`;
@@ -384,27 +452,16 @@ function loadDevices()
                             cams += `</div>`;
                             cams += `</div>`;
                         }
-                        else if(myObj.data[object].deviceType == "indoorcamera")
+                        else if(objResp.data[device].deviceType == "indoorcamera")
                         {
-                            switch (myObj.data[object].model)
+                            type = getDeviceName(objResp.data[device].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
+                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
                             {
-                                case "T8400":
-                                    imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Indoor Cam 2K">`;
-                                    type = "Indoor Cam 2K";
-                                    break;
-                                case "T8410":
-                                    imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Indoor Cam 2K P&T">`;                                        type = "Indoor Cam 2K P&T";
-                                    break;
-                                default:
-                                    imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Innenkamera">`;
-                                    type = "Innenkamera";
+                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
+                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
                             }
-                            if(myObj.data[object].pictureTime != "" && myObj.data[object].pictureTime != "n/a" && myObj.data[object].pictureTime != "n/d" && myObj.data[object].pictureTime != "0")
-                            {
-                                lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].pictureTime)));
-                                lastVideo += ` | <a href="${myObj.data[object].pictureUrl}">Standbild</a>`;
-                            }
-                            else if(myObj.data[object].pictureTime == "n/a")
+                            else if(objResp.data[device].pictureTime == "n/a")
                             {
                                 lastVideo = "keine Aufnahme";
                             }
@@ -414,46 +471,108 @@ function loadDevices()
                             }
                             indoorcams += `<div class="col mb-3">`;
                             indoorcams += `<div class="card">`;
-                            indoorcams += `<h5 class="card-header">${myObj.data[object].name}</h5>`;
-                            indoorcams += `<div class="row no-gutters">`;
-                            indoorcams += `<div class="col-md-4">${imagepath}</div>`;
+                            indoorcams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
+
+                            indoorcams += `<div class="row g-0">`;
+                            indoorcams += `<div class="col-md-4 img-container">${imagepath}</div>`;
                             indoorcams += `<div class="col-md-8">`;
-                            indoorcams += `<div class="card-body" style="margin-left: -1rem">`;
+
+                            indoorcams += `<div class="card-body">`;
                             indoorcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            indoorcams += `<p class="card-text">${myObj.data[object].serialNumber}<br />SW: ${myObj.data[object].softwareVersion}<br /></p>`;
+                            indoorcams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
                             indoorcams += `<div class="card-footer">`;
-                            indoorcams += `<small class="text-muted">Letzte Aufnahme: ${lastVideo}</small>`;
+                            indoorcams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
                         }
-                        else if(myObj.data[object].deviceType == "doorbell")
+                        else if(objResp.data[device].deviceType == "solocamera")
                         {
-                            // T8210 > Video Doorbell 2K (battery)
-                            // T8200 > Video Doorbell 2K (wired)
-                            // T8222 > Video Doorbell 1080p (battery)
+                            type = getDeviceName(objResp.data[device].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
+                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
+                            {
+                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
+                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
+                            }
+                            else if(objResp.data[device].pictureTime == "n/a")
+                            {
+                                lastVideo = "keine Aufnahme";
+                            }
+                            else
+                            {
+                                lastVideo = "letzte Aufnahme nicht verfügbar";
+                            }
+                            solocams += `<div class="col mb-3">`;
+                            solocams += `<div class="card">`;
+                            solocams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
+
+                            solocams += `<div class="row g-0">`;
+                            solocams += `<div class="col-md-4 img-container">${imagepath}</div>`;
+                            solocams += `<div class="col-md-8">`;
+
+                            solocams += `<div class="card-body">`;
+                            solocams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
+                            solocams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            solocams += `</div>`;
+                            solocams += `</div>`;
+                            solocams += `</div>`;
+                            solocams += `<div class="card-footer">`;
+                            solocams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
+                            solocams += `</div>`;
+                            solocams += `</div>`;
+                            solocams += `</div>`;
                         }
-                        else if(myObj.data[object].deviceType == "floodlight")
+                        else if(objResp.data[device].deviceType == "doorbell")
                         {
-                            switch (myObj.data[object].model)
+                            type = getDeviceName(objResp.data[device].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="122" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
+                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
                             {
-                                case "T8420":
-                                    imagepath = `<img src="assets/devices/eufyFloodLightCam.png" class="card-img-top" alt="Floodlight Camera">`;
-                                    type = "Floodlight Camera";
-                                    break;
-                                default:
-                                    imagepath = `<img src="assets/devices/eufyCam2.png" class="card-img-top" alt="Flutlichtkamera">`;
-                                    type = "Flutlichtkamera";
+                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
+                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
                             }
-                            if(myObj.data[object].pictureTime != "" && myObj.data[object].pictureTime != "n/a" && myObj.data[object].pictureTime != "n/d" && myObj.data[object].pictureTime != "0")
+                            else if(objResp.data[device].pictureTime == "n/a")
                             {
-                                lastVideo = makeDateTimeString(new Date(parseInt(myObj.data[object].pictureTime)));
-                                lastVideo += ` | <a href="${myObj.data[object].pictureUrl}">Standbild</a>`;
+                                lastVideo = "keine Aufnahme";
                             }
-                            else if(myObj.data[object].pictureTime == "n/a")
+                            else
+                            {
+                                lastVideo = "letzte Aufnahme nicht verfügbar";
+                            }
+                            doorbellcams += `<div class="col mb-3">`;
+                            doorbellcams += `<div class="card">`;
+                            doorbellcams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
+
+                            doorbellcams += `<div class="row g-0">`;
+                            doorbellcams += `<div class="col-md-4 img-container">${imagepath}</div>`;
+                            doorbellcams += `<div class="col-md-8">`;
+
+                            doorbellcams += `<div class="card-body">`;
+                            doorbellcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
+                            doorbellcams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            doorbellcams += `</div>`;
+                            doorbellcams += `</div>`;
+                            doorbellcams += `</div>`;
+                            doorbellcams += `<div class="card-footer">`;
+                            doorbellcams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
+                            doorbellcams += `</div>`;
+                            doorbellcams += `</div>`;
+                            doorbellcams += `</div>`;
+                        }
+                        else if(objResp.data[device].deviceType == "floodlight")
+                        {
+                            type = getDeviceName(objResp.data[device].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
+                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
+                            {
+                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
+                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
+                            }
+                            else if(objResp.data[device].pictureTime == "n/a")
                             {
                                 lastVideo = "keine Aufnahme";
                             }
@@ -463,28 +582,82 @@ function loadDevices()
                             }
                             floodlightcams += `<div class="col mb-3">`;
                             floodlightcams += `<div class="card">`;
-                            floodlightcams += `<h5 class="card-header">${myObj.data[object].name}</h5>`;
-                            floodlightcams += `<div class="row no-gutters">`;
-                            floodlightcams += `<div class="col-md-4">${imagepath}</div>`;
+                            floodlightcams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
+
+                            floodlightcams += `<div class="row g-0">`;
+                            floodlightcams += `<div class="col-md-4 img-container">${imagepath}</div>`;
                             floodlightcams += `<div class="col-md-8">`;
-                            floodlightcams += `<div class="card-body" style="margin-left: -1rem">`;
+
+                            floodlightcams += `<div class="card-body">`;
                             floodlightcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            floodlightcams += `<p class="card-text">${myObj.data[object].serialNumber}"<br />SW: ${myObj.data[object].softwareVersion}</p>`;
+                            floodlightcams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `<div class="card-footer">`;
-                            floodlightcams += `<small class="text-muted">Letzte Aufnahme: ${lastVideo}</small>`;
+                            floodlightcams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
                         }
-                        else if(myObj.data[object].deviceType == "lock")
-                        {}
-                        else if(myObj.data[object].deviceType == "keypad")
-                        {}
-                        else if(myObj.data[object].deviceType == "sensor")
-                        {}
+                        else if(objResp.data[device].deviceType == "lock")
+                        {
+                            //T8500 > Smart Lock Front Door
+                            //T8501 > Solo Smart Lock D20
+                            //T8503 > Smart Lock R10
+                            //T8503 > Smart Lock R20   T8592 > Keypad
+                            //T8519 > Smart Lock Touch
+                            //T8520 > Smart Lock Touch und Wi-Fi
+                            //T8530 > Video Smart Lock   T8021 > Wi-Fi Bridge und Doorbell Chime
+                        }
+                        else if(objResp.data[device].deviceType == "keypad")
+                        {
+                            type = getDeviceName(objResp.data[device].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
+                            keypads += `<div class="col mb-3">`;
+                            keypads += `<div class="card">`;
+                            keypads += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
+
+                            keypads += `<div class="row g-0">`;
+                            keypads += `<div class="col-md-4 img-container">${imagepath}</div>`;
+                            keypads += `<div class="col-md-8">`;
+
+                            keypads += `<div class="card-body">`;
+                            keypads += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
+                            keypads += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            keypads += `</div>`;
+                            keypads += `</div>`;
+                            keypads += `</div>`;
+                            keypads += `<div class="card-footer">`;
+                            keypads += `<small class="text-muted"></small>`;
+                            keypads += `</div>`;
+                            keypads += `</div>`;
+                            keypads += `</div>`;
+                        }
+                        else if(objResp.data[device].deviceType == "sensor")
+                        {
+                            type = getDeviceName(objResp.data[device].model);
+                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
+                            sensors += `<div class="col mb-3">`;
+                            sensors += `<div class="card">`;
+                            sensors += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
+
+                            sensors += `<div class="row g-0">`;
+                            sensors += `<div class="col-md-4 img-container">${imagepath}</div>`;
+                            sensors += `<div class="col-md-8">`;
+
+                            sensors += `<div class="card-body">`;
+                            sensors += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
+                            sensors += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            sensors += `</div>`;
+                            sensors += `</div>`;
+                            sensors += `</div>`;
+                            sensors += `<div class="card-footer">`;
+                            sensors += `<small class="text-muted"></small>`;
+                            sensors += `</div>`;
+                            sensors += `</div>`;
+                            sensors += `</div>`;
+                        }
                     }
                     if(cams != "")
                     {
@@ -496,9 +669,29 @@ function loadDevices()
                         text += `<p id="indoorcameras"><h4>Innenkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${indoorcams}</div></p>`;
                         type="";
                     }
+                    if(solocams != "")
+                    {
+                        text += `<p id="solocameras"><h4>Solokameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${solocams}</div></p>`;
+                        type="";
+                    }
+                    if(doorbellcams != "")
+                    {
+                        text += `<p id="doorbellcameras"><h4>Videotürklingeln</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${doorbellcams}</div></p>`;
+                        type="";
+                    }
                     if(floodlightcams != "")
                     {
                         text += `<p id="floodlightcameras"><h4>Flutlichtkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${floodlightcams}</div></p>`;
+                        type = "";
+                    }
+                    if(keypads != "")
+                    {
+                        text += `<p id="keypads"><h4>Keypads</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${keypads}</div></p>`;
+                        type = "";
+                    }
+                    if(sensors != "")
+                    {
+                        text += `<p id="sensors"><h4>Sensoren</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${sensors}</div></p>`;
                         type = "";
                     }
                     document.getElementById("devices").innerHTML =  text;
@@ -528,18 +721,447 @@ function loadDevices()
 
 function showDeviceSettings(deviceId)
 {
-    const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
+    //const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
     //document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");
     //document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
+    const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
+    
+    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-2"></span>`;
+    document.getElementById("lblModalDeviceSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
+    document.getElementById("lblDeviceModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
+    document.getElementById("lblDeviceName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
+    document.getElementById("lblDeviceSerial").innerHTML = `<span class="placeholder col-8 placeholder-lg"></span>`;
+    document.getElementById("lblDeviceInfo").innerHTML= `<i class="bi-gear" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>`;
+    document.getElementById("chkDeviceEnabled").removeAttribute("checked");
+    document.getElementById("chkDeviceAntitheftDetection").removeAttribute("checked");
+    document.getElementById("chkDeviceStatusLed").removeAttribute("checked");
+    document.getElementById("rbDeviceWMOptimalAccu").removeAttribute("checked");
+    document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
+    document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
+    document.getElementById("lblDevicePowerSource").innerHTML = ``;
+
+
+
+    document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
+    document.getElementById("chkDeviceAudioRecording").setAttribute("disabled", true);
+    document.getElementById("chkDeviceSpeakerEnable").removeAttribute("checked");
+    document.getElementById("rgDeviceSpeakerVolume").setAttribute("disabled", true);
+    document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
+    document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
+    document.getElementById("rbDeviceNTFullEffect").removeAttribute("checked");
+
+    document.getElementById("cardDeviceCommonSettings").classList.add("collapse", true);
+    document.getElementById("cardDevicePowerManagerSettings").classList.add("collapse", true);
+    document.getElementById("cardDeviceVideoSettings").classList.add("collapse", true);
+    document.getElementById("cardDeviceAudioSettings").classList.add("collapse", true);
+    document.getElementById("cardDeviceNotificationSettings").classList.add("collapse", true);
+
     myModal.show();
+
+    var xmlhttp, objResp;
+    var url = `${location.protocol}//${location.hostname}:${port}/getDevice/${deviceId}`;
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.overrideMimeType('application/json');
+    xmlhttp.onreadystatechange = function()
+    {
+        if (this.readyState == 4 && this.status == 200)
+        {
+            objResp = JSON.parse(this.responseText);
+            if(objResp.success == true)
+            {
+                if(objResp.data.length = 1)
+                {
+                    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `Einstellungen "${objResp.data[0].name}" (${deviceId})</h5>`;
+
+                    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${deviceId})</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(objResp.data[0].wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data[0].wifiRssi}dB"></i></div>`;
+
+                    document.getElementById("lblDeviceModel").innerHTML = `<h5 class="card-subtitle mb-2">${getDeviceName(objResp.data[0].model)} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
+                    document.getElementById("lblDeviceName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h5>`;
+                    document.getElementById("lblDeviceSerial").innerHTML = `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[0].serialNumber}</h6>`;
+                    document.getElementById("lblDeviceInfo").innerHTML = `<h6 class="card-subtitle mb-2 text-muted"><span class="text-nowrap"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}&nbsp;&nbsp;&nbsp;&nbsp;<i class="${objResp.data[0].battery == 1 ? "bi-battery-charging" : objResp.data[0].battery < 5 ? "bi-battery" : objResp.data[0].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[0].battery < 5 ? "text-danger" : objResp.data[0].battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[0].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[0].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[0].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[0].batteryTemperature}&deg;C</span></h6>`;
+
+                    if(objResp.data[0].enabled == "true")
+                    {
+                        document.getElementById("chkDeviceEnabled").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkDeviceEnabled").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].antitheftDetection == "true")
+                    {
+                        document.getElementById("chkDeviceAntitheftDetection").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkDeviceAntitheftDetection").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].statusLed == "true")
+                    {
+                        document.getElementById("chkDeviceStatusLed").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkDeviceStatusLed").removeAttribute("checked");
+                    }
+                    switch (objResp.data[0].powerWorkingMode)
+                    {
+                        case "0":
+                            document.getElementById("rbDeviceWMOptimalAccu").setAttribute("checked", true);
+                            document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
+                            document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
+                            document.getElementById("divDeviceCustomRecordingSettings").classList.add("collapse", true);
+                            break;
+                        case "1":
+                            document.getElementById("rbDeviceWMOptimalAccu").removeAttribute("checked");
+                            document.getElementById("rbDeviceWMOptimalSurv").setAttribute("checked", true);
+                            document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
+                            document.getElementById("divDeviceCustomRecordingSettings").classList.add("collapse", true);
+                            break;
+                        case "2":
+                            document.getElementById("rbDeviceWMOptimalAccu").removeAttribute("checked");
+                            document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
+                            document.getElementById("rbDeviceWMCustom").setAttribute("checked", true);
+                            document.getElementById("divDeviceCustomRecordingSettings").classList.remove("collapse");
+                            break;
+                        default:
+                            document.getElementById("rbDeviceWMOptimalAccu").removeAttribute("checked");
+                            document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
+                            document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
+                    }
+                    document.getElementById("rgDeviceCustomRecordingSettingsClipLength").value = Number.parseInt(objResp.data[0].recordingClipLength);
+                    document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").value = Number.parseInt(objResp.data[0].recordingRetriggerInterval);
+                    if(objResp.data[0].recordingEndClipMotionStops == true)
+                    {
+                        document.getElementById("chkDeviceCustomRecordingSettingsStoppWhenMotionEnds").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkDeviceCustomRecordingSettingsStoppWhenMotionEnds").removeAttribute("checked");
+                    }
+                    switch (objResp.data[0].powerSource)
+                    {
+                        case "0":
+                            document.getElementById("lblDevicePowerSource").innerHTML = `Batterie`;
+                            break;
+                        case "1":
+                            document.getElementById("lblDevicePowerSource").innerHTML = `Solar`;
+                            break;
+                        default:
+                            document.getElementById("lblDevicePowerSource").innerHTML = `unbekannt`;
+                    }
+                    switch (objResp.data[0].watermark)
+                    {
+                        case "0":
+                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data[0].watermark) + 1);
+                            break;
+                        case "1":
+                            if(objResp.data[0].model == "T8112")
+                            {
+                                document.getElementById("cbDeviceWatermark").selectedIndex = 0;
+                            }
+                            else
+                            {
+                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data[0].watermark) + 1);
+                            }
+                            break;
+                        case "2":
+                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data[0].watermark) + 1);
+                            break;
+                        default:
+                            document.getElementById("cbDeviceWatermark").selectedIndex = 0
+                    }
+                    if(objResp.data[0].autoNightvision == undefined)
+                    {
+                        document.getElementById("divDeviceAutoNightvision").classList.add("collapse", true);
+                    }
+                    else
+                    {
+                        document.getElementById("divDeviceAutoNightvision").classList.remove("collapse");
+                        if(objResp.data[0].autoNightvision == "true")
+                        {
+                            document.getElementById("chkDeviceAutoNightvision").setAttribute("checked", true);
+                        }
+                        else
+                        {
+                            document.getElementById("chkDeviceAutoNightvision").removeAttribute("checked");
+                        }
+                    }
+                    if(objResp.data[0].nightvision == undefined)
+                    {
+                        document.getElementById("divDeviceNightvision").classList.add("collapse", true);
+                    }
+                    else
+                    {
+                        document.getElementById("divDeviceNightvision").classList.remove("collapse");
+                        document.getElementById("cbDeviceNightvision").selectedIndex = (Number.parseInt(objResp.data[0].nightvision));
+                    }
+                    if(objResp.data[0].microphone == "true")
+                    {
+                        document.getElementById("chkDeviceMicrophoneEnable").setAttribute("checked", true);
+                        document.getElementById("chkDeviceAudioRecording").removeAttribute("disabled");
+                    }
+                    else
+                    {
+                        document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].audioRecording == "true")
+                    {
+                        if(objResp.data[0].microphone == "true")
+                        {
+                            document.getElementById("divDeviceAudioRecording").classList.remove("collapse");
+                        }
+                        else
+                        {
+                            document.getElementById("divDeviceAudioRecording").classList.add("collapse", true);
+                        }
+                        document.getElementById("chkDeviceAudioRecording").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        if(objResp.data[0].microphone == "true")
+                        {
+                            document.getElementById("divDeviceAudioRecording").classList.add("collapse", true);
+                        }
+                        else
+                        {
+                            document.getElementById("divDeviceAudioRecording").classList.remove("collapse");
+                        }
+                        document.getElementById("chkDeviceAudioRecording").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].speaker == "true")
+                    {
+                        document.getElementById("chkDeviceSpeakerEnable").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkDeviceSpeakerEnable").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].speakerVolume != undefined)
+                    {
+                        if(objResp.data[0].speaker == "true")
+                        {
+                            document.getElementById("lblDeviceSpeakerVolume").classList.add("collapse", true);
+                            document.getElementById("rgDeviceSpeakerVolume").classList.add("collapse", true);
+                        }
+                        else
+                        {
+                            document.getElementById("lblDeviceSpeakerVolume").classList.remove("collapse");
+                            document.getElementById("rgDeviceSpeakerVolume").classList.remove("collapse");
+                        }
+                        document.getElementById("rgDeviceSpeakerVolume").removeAttribute("disabled");
+                        document.getElementById("lblDeviceSpeakerVolume").classList.remove("collapse");
+                        document.getElementById("rgDeviceSpeakerVolume").classList.remove("collapse");
+                        switch (objResp.data[0].speakerVolume)
+                        {
+                            case "90":
+                                document.getElementById("rgDeviceSpeakerVolume").value = 1;
+                                break;
+                            case "92":
+                                document.getElementById("rgDeviceSpeakerVolume").value = 2;
+                                break;
+                            case "93":
+                                document.getElementById("rgDeviceSpeakerVolume").value = 3;
+                                break;
+                            default:
+                                document.getElementById("rgDeviceSpeakerVolume").value = 1;
+                        }
+                    }
+                    else
+                    {
+                        document.getElementById("lblDeviceSpeakerVolume").classList.add("collapse", true);
+                        document.getElementById("rgDeviceSpeakerVolume").classList.add("collapse", true);
+                    }
+                    switch (objResp.data[0].notificationType)
+                    {
+                        case "1":
+                            document.getElementById("rbDeviceNTMostEfficient").setAttribute("checked", true);
+                            document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
+                            document.getElementById("rbDeviceNTFullEffect").removeAttribute("checked");
+                            break;
+                        case "2":
+                            document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
+                            document.getElementById("rbDeviceNTIncludeThumbnail").setAttribute("checked", true);
+                            document.getElementById("rbDeviceNTFullEffect").removeAttribute("checked");
+                            break;
+                        case "3":
+                            document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
+                            document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
+                            document.getElementById("rbDeviceNTFullEffect").setAttribute("checked", true);
+                            break;
+                        default:
+                            document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
+                            document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
+                            document.getElementById("rbDeviceNTFullEffect").removeAttribute("checked");
+                    }
+
+                    document.getElementById("lblModalDeviceSettingsInfo").innerHTML = ``;
+                    if(objResp.data[0].model != "T8112" && objResp.data[0].model != "T8113" && objResp.data[0].model != "T8114")
+                    {
+                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
+                    }
+                    document.getElementById("lblModalDeviceSettingsInfo").innerHTML += `<div class="alert alert-primary" role="alert">Das Speichern der Einstellungen ist zur Zeit nicht möglich.</div>`;
+                    document.getElementById("cardDeviceCommonSettings").classList.remove("collapse");
+                    document.getElementById("cardDevicePowerManagerSettings").classList.remove("collapse");
+                    document.getElementById("cardDeviceVideoSettings").classList.remove("collapse");
+                    document.getElementById("cardDeviceAudioSettings").classList.remove("collapse");
+                    document.getElementById("cardDeviceNotificationSettings").classList.remove("collapse");
+                }
+                else
+                {
+                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Es wurden keine Geräte gefunden.</div>`;
+                }
+            }
+            else
+            {
+                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+            }
+        }
+        else if (this.readyState == 4)
+        {
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+        }
+        else
+        {
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Einstellungen des Geräts...</strong></div>`;
+        }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
 }
 
 function showStationSettings(stationId)
 {
-    const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
+    //const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
     //document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");
     //document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
+    const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
+    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-2"></span>`;
+    document.getElementById("lblModalStationSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
+    document.getElementById("lblStationModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
+    document.getElementById("lblStationName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
+    document.getElementById("lblStationSerial").innerHTML = `<span class="placeholder col-8 placeholder-lg"></span>`;
+    document.getElementById("lblStationFirmware").innerHTML= `<i class="bi-gear" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span>`;
+    document.getElementById("cbStationAlarmTone").selectedIndex = 0;
+    document.getElementById("rgStationAlarmVolume").value = 1;
+    document.getElementById("rgStationPromtVolume").value = 0;
+    document.getElementById("chkSwitchToSchedule").removeAttribute("checked");
+    document.getElementById("chkSwitchToGeofencing").removeAttribute("checked");
+    document.getElementById("chkSwitchByApp").removeAttribute("checked");
+    document.getElementById("chkSwitchByKeypad").removeAttribute("checked");
+    document.getElementById("chkStartAlarmDelay").removeAttribute("checked");
+
+    document.getElementById("cardStationStorageSettings").classList.add("collapse", true);
+    document.getElementById("cardStationAudioSettings").classList.add("collapse", true);
+    document.getElementById("cardStationNofificationSettings").classList.add("collapse", true);
+
     myModal.show();
+
+    var xmlhttp, objResp;
+    var url = `${location.protocol}//${location.hostname}:${port}/getStation/${stationId}`;
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.overrideMimeType('application/json');
+    xmlhttp.onreadystatechange = function()
+    {
+        if (this.readyState == 4 && this.status == 200)
+        {
+            objResp = JSON.parse(this.responseText);
+            if(objResp.success == true)
+            {
+                if(objResp.data.length = 1)
+                {
+                    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">Einstellungen "${objResp.data[0].name}" (${stationId})</h5></div>`;
+                    document.getElementById("lblStationModel").innerHTML = `<h5 class="card-subtitle mb-2">${getStationName(objResp.data[0].model)} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
+                    document.getElementById("lblStationName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h6>`;
+                    document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[0].serialNumber}</h6>`;
+                    document.getElementById("lblStationFirmware").innerHTML = `<h6 class="card-subtitle mb-2 text-muted"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}</h6>`;
+
+                    if(objResp.data[0].model == "T8002")
+                    {
+                        if(objResp.data[0].alarmTone == "255")
+                        {
+                            document.getElementById("cbStationAlarmTone").selectedIndex = 1;
+                        }
+                    }
+                    else
+                    {
+                        document.getElementById("cbStationAlarmTone").selectedIndex = (Number.parseInt(objResp.data[0].alarmTone) + 1);
+                    }
+                    document.getElementById("rgStationAlarmVolume").value = objResp.data[0].alarmVolume;
+                    document.getElementById("rgStationPromtVolume").value = objResp.data[0].promtVolume;
+
+                    if(objResp.data[0].notificationSwitchModeSchedule == "true")
+                    {
+                        document.getElementById("chkSwitchToSchedule").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkSwitchToSchedule").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].notificationSwitchModeGeofence == "true")
+                    {
+                        document.getElementById("chkSwitchToGeofencing").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkSwitchToGeofencing").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].notificationSwitchModeApp == "true")
+                    {
+                        document.getElementById("chkSwitchByApp").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkSwitchByApp").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].notificationSwitchModeKeypad == "true")
+                    {
+                        document.getElementById("chkSwitchByKeypad").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkSwitchByKeypad").removeAttribute("checked");
+                    }
+                    if(objResp.data[0].notificationStartAlarmDelay == "true")
+                    {
+                        document.getElementById("chkStartAlarmDelay").setAttribute("checked", true);
+                    }
+                    else
+                    {
+                        document.getElementById("chkStartAlarmDelay").removeAttribute("checked");
+                    }
+
+                    document.getElementById("lblModalStationSettingsInfo").innerHTML = ``;
+                    if(objResp.data[0].model != "T8112" && objResp.data[0].model != "T8113" && objResp.data[0].model != "T8114")
+                    {
+                        document.getElementById("lblModalStationSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
+                    }
+                    document.getElementById("lblModalStationSettingsInfo").innerHTML += `<div class="alert alert-primary" role="alert">Das Speichern der Einstellungen ist zur Zeit nicht möglich.</div>`;
+                    //document.getElementById("cardStationStorageSettings").classList.remove("collapse");
+                    document.getElementById("cardStationAudioSettings").classList.remove("collapse");
+                    document.getElementById("cardStationNofificationSettings").classList.remove("collapse");
+                }
+                else
+                {
+                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Es wurden keine Geräte gefunden.</div>`;
+                }
+            }
+            else
+            {
+                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+            }
+        }
+        else if (this.readyState == 4)
+        {
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+        }
+        else
+        {
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Einstellungen des Geräts...</strong></div>`;
+        }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
 }
 //#endregion
 
@@ -549,7 +1171,7 @@ function showStationSettings(stationId)
 //#region statechange.html
 function loadDataStatechange(showLoading)
 {
-	var xmlHttp, objResp, objIter, stations = "", lastChangeTime;
+	var xmlHttp, objResp, station, stations = "", lastChangeTime;
 	var lastChangeTimeAll = -1;
 	var imagepath = "";
 	var type = "";
@@ -566,85 +1188,69 @@ function loadDataStatechange(showLoading)
 			if(objResp.success == true)
 			{
 				stations = `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
-				for (objIter in objResp.data)
+				for (station in objResp.data)
 				{
-					if(objResp.data[objIter].deviceType == "station")
+					if(objResp.data[station].deviceType == "station")
 					{
-						switch (objResp.data[objIter].model)
-						{
-							case "T8001":
-								imagepath = `<img src="assets/devices/eufyHomeBase.png" class="card-img-top" alt="HomeBase">`;
-								type="HomeBase";
-								break;
-							case "T8002":
-								imagepath = `<img src="assets/devices/eufyHomeBase.png" class="card-img-top" alt="HomeBase E">`;
-								type="HomeBase E";
-								break;
-							case "T8010":
-								imagepath = `<img src="assets/devices/eufyHomeBase2.png" class="card-img-top" alt="HomeBase 2">`;
-								type="HomeBase 2";
-								break;
-							default:
-								imagepath = `<img src="assets/devices/eufyHomeBase2.png" class="card-img-top" alt="HomeBase">`;
-								type="HomeBase";
-						}
-						switch (objResp.data[objIter].guardMode)
+						type = getStationName(objResp.data[station].model);
+                        imagepath = `<svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[station].model})</div>`;
+                        switch (objResp.data[station].guardMode)
 						{
                             case "0":
 								state = "abwesend";
-								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" onclick="setHome('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" onclick="setSchedule('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" onclick="setDisarm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "1":
 								state = "zu Hause";
-								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" onclick="setArm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" onclick="setSchedule('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" onclick="setDisarm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "2":
 								state = "Zeitsteuerung";
-								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" onclick="setArm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" onclick="setHome('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2 me-3" disabled>Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" onclick="setDisarm('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary my-2">deaktiviert</button>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "63":
 								state = "deaktiviert";
-								buttons =  `<button id="btnArm${objResp.data[objIter].serialNumber}" onclick="setArm('${objResp.data[objIter].statserialNumberion_id}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">abwesend</button>`;
-								buttons += `<button id="btnHome${objResp.data[objIter].serialNumber}" onclick="setHome('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">zu Hause</button>`;
-								buttons += `<button id="btnSchedule${objResp.data[objIter].serialNumber}" onclick="setSchedule('${objResp.data[objIter].serialNumber}')" type="button" class="btn btn-sm btn-primary mb-2 me-3">Zeitsteuerung</button>`;
-								buttons += `<button id="btnDisarm${objResp.data[objIter].serialNumber}" type="button" class="btn btn-sm btn-primary mb-2" disabled>deaktiviert</button>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].statserialNumberion_id}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							default:
-								state="unbekannt";
+								state = "unbekannt";
 						}
 						stations += `<div class="col">`;
 						stations += `<div class="card mb-3">`;
-						stations += `<h5 class="card-header">${objResp.data[objIter].name}</h5>`;
-						stations += `<div class="row no-gutters">`;
-						stations += `<div class="col-md-4">${imagepath}</div>`;
-						stations += `<div class="col-md-8">`;
-						stations += `<div class="card-body" style="margin-left: -1rem">`;
-						stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-						stations += `<p class="card-text">${objResp.data[objIter].serialNumber}<br /><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;<span id="state_${objResp.data[objIter].serialNumber}">${state}</span></span></p>`;
+						stations += `<h5 class="card-header">${objResp.data[station].name}</h5>`;
+
+                        stations += `<div class="row g-0">`;
+                        stations += `<div class="col-md-4 img-container">${imagepath}</div>`;
+                        stations += `<div class="col-md-8">`;
+
+                        stations += `<div class="card-body">`;
+                        stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
+                        stations += `<p class="card-text">${objResp.data[station].serialNumber}<br /><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;<span id="state_${objResp.data[station].serialNumber}">${state}</span></span></p>`;
+                        stations += `<div class="card-text d-grid gap-2">${buttons}</div>`;
 						stations += `</div>`;
-						stations += `</div>`;
-						stations += `</div>`;
-						//stations += `<div class="row no-gutters">`;
-						stations += `<div class="card-body">${buttons}</div>`;
-						//stations += `</div>`;
-						if(objResp.data[objIter].guardModeTime != "" && objResp.data[objIter].guardModeTime != "n/a" && objResp.data[objIter].guardModeTime != "n/d" && objResp.data[objIter].guardModeTime != "undefined")
+                        stations += `</div>`;
+                        stations += `</div>`;
+						if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
 						{
-							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[objIter].guardModeTime)));
-							if(parseInt(objResp.data[objIter].guardModeTime) > lastChangeTimeAll)
+							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
+							if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
 							{
-								lastChangeTimeAll = parseInt(objResp.data[objIter].guardModeTime);
+								lastChangeTimeAll = parseInt(objResp.data[station].guardModeTime);
 							}
 						}
-						else if(myObj.data[object].last_camera_image_time == "n/a")
+						else if(objResp.data[station].pictureTime == "n/a")
 						{
 							lastChangeTime = "letzter Statuswechsel unbekannt";
 						}
@@ -653,7 +1259,7 @@ function loadDataStatechange(showLoading)
 							lastChangeTime = "letzter Statuswechsel nicht verfügbar";
 						}
 
-                        stations += `<div class="card-footer"><small class="text-muted">Letzer Statuswechsel: ${lastChangeTime}</small></div>`;
+                        stations += `<div class="card-footer"><small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small></div>`;
 						stations += `</div>`;
 						stations += `</div>`;
                     }
@@ -671,7 +1277,7 @@ function loadDataStatechange(showLoading)
 				{
 					lastChangeTimeAll = makeDateTimeString(new Date(lastChangeTimeAll))
 				}
-				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: ${lastChangeTimeAll}</small>`;
+				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: ${lastChangeTimeAll}</small>`;
 				type = "";
 			}
 			else
@@ -680,7 +1286,7 @@ function loadDataStatechange(showLoading)
 				document.getElementById("btnHomeAll").setAttribute("disabled", true);
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
-				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: unbekannt</small>`;
+				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
 				document.getElementById("stations").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 			}
 		}
@@ -690,7 +1296,7 @@ function loadDataStatechange(showLoading)
 			document.getElementById("btnHomeAll").setAttribute("disabled", true);
 			document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 			document.getElementById("btnDisarmAll").setAttribute("disabled", true);
-			document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: unbekannt</small>`;
+			document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
 			document.getElementById("stations").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
 		}
 		else
@@ -701,7 +1307,7 @@ function loadDataStatechange(showLoading)
 				document.getElementById("btnHomeAll").setAttribute("disabled", true);
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
-				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">Letzer Statuswechsel: wird geladen...</small>`;
+				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: wird geladen...</small>`;
 				document.getElementById("stations").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Basisstationen...</strong></div>`;
 			}
 		}
@@ -1083,7 +1689,7 @@ function validateFormSettings()
 
 function loadStationsSettings()
 {
-    var xmlHttp, objResp, objIter, stations = "";
+    var xmlHttp, objResp, station, stations = "";
     var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
@@ -1096,10 +1702,10 @@ function loadStationsSettings()
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    for (objIter in objResp.data)
+                    for (station in objResp.data)
                     {
-                        stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[objIter].serialNumber}">UDP Port für Verbindung mit der Basisstation ${objResp.data[objIter].serialNumber} (${objResp.data[objIter].name}).</label>`;
-                        stations += `<input type="text" name="udpPortsStation${objResp.data[objIter].serialNumber}" id="txtUdpPortsStation${objResp.data[objIter].serialNumber}" class="form-control" placeholder="UDP Port ${objResp.data[objIter].serialNumber}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[objIter].serialNumber})" required>`;
+                        stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">UDP Port für Verbindung mit der Basisstation ${objResp.data[station].serialNumber} (${objResp.data[station].name}).</label>`;
+                        stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="UDP Port ${objResp.data[station].serialNumber}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
                         stations += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basisstation zugeordnet sein.</small>`;
                         stations += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basisstation zugeordnet sein.</div></div>`;
                     }
@@ -1140,7 +1746,7 @@ function loadStationsSettings()
 
 function loadDataSettings()
 {
-    var xmlHttp, objResp, objIter, username, password, accountcountry, accountlanguage, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apikeyhttps, apicerthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, apiusepushservice, apiloglevel;
+    var xmlHttp, objResp, configData, username, password, accountcountry, accountlanguage, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apikeyhttps, apicerthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, apiusepushservice, apiloglevel;
     var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
@@ -1153,32 +1759,32 @@ function loadDataSettings()
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    for (objIter in objResp.data)
+                    for (configData in objResp.data)
                     {
-                        username = objResp.data[objIter].username;
-                        password = objResp.data[objIter].password;
-                        accountcountry = objResp.data[objIter].country;
-                        accountlanguage = objResp.data[objIter].language;
-                        apiusehttp = objResp.data[objIter].api_http_active;
-                        apiporthttp = objResp.data[objIter].api_http_port;
-                        apiusehttps = objResp.data[objIter].api_https_active;
-                        apiporthttps = objResp.data[objIter].api_https_port;
-                        apikeyhttps = objResp.data[objIter].api_https_key_file;
-                        apicerthttps = objResp.data[objIter].api_https_cert_file;
-                        apiconnectiontype = objResp.data[objIter].api_connection_type;
-                        apiuseudplocalstaticports = objResp.data[objIter].api_udp_local_static_ports_active;
-                        apiudpports = objResp.data[objIter].api_udp_local_static_ports;
-                        apiusesystemvariables = objResp.data[objIter].api_use_system_variables;
-                        apicameradefaultimage = objResp.data[objIter].api_camera_default_image;
-                        apicameradefaultvideo = objResp.data[objIter].api_camera_default_video;
-                        apiuseupdatestateevent = objResp.data[objIter].api_use_update_state_event;
-                        apiuseupdatestateintervall = objResp.data[objIter].api_use_update_state_intervall;
-                        apiupdatestatetimespan = objResp.data[objIter].api_update_state_timespan;
-                        apiuseupdatelinks = objResp.data[objIter].api_use_update_links;
-                        apiuseupdatelinksonlywhenactive =objResp.data[objIter].api_use_update_links_only_when_active;
-                        apiupdatelinkstimespan = objResp.data[objIter].api_update_links_timespan;
-                        apiusepushservice = objResp.data[objIter].api_use_pushservice;
-                        apiloglevel = objResp.data[objIter].api_log_level;
+                        username = objResp.data[configData].username;
+                        password = objResp.data[configData].password;
+                        accountcountry = objResp.data[configData].country;
+                        accountlanguage = objResp.data[configData].language;
+                        apiusehttp = objResp.data[configData].api_http_active;
+                        apiporthttp = objResp.data[configData].api_http_port;
+                        apiusehttps = objResp.data[configData].api_https_active;
+                        apiporthttps = objResp.data[configData].api_https_port;
+                        apikeyhttps = objResp.data[configData].api_https_key_file;
+                        apicerthttps = objResp.data[configData].api_https_cert_file;
+                        apiconnectiontype = objResp.data[configData].api_connection_type;
+                        apiuseudplocalstaticports = objResp.data[configData].api_udp_local_static_ports_active;
+                        apiudpports = objResp.data[configData].api_udp_local_static_ports;
+                        apiusesystemvariables = objResp.data[configData].api_use_system_variables;
+                        apicameradefaultimage = objResp.data[configData].api_camera_default_image;
+                        apicameradefaultvideo = objResp.data[configData].api_camera_default_video;
+                        apiuseupdatestateevent = objResp.data[configData].api_use_update_state_event;
+                        apiuseupdatestateintervall = objResp.data[configData].api_use_update_state_intervall;
+                        apiupdatestatetimespan = objResp.data[configData].api_update_state_timespan;
+                        apiuseupdatelinks = objResp.data[configData].api_use_update_links;
+                        apiuseupdatelinksonlywhenactive =objResp.data[configData].api_use_update_links_only_when_active;
+                        apiupdatelinkstimespan = objResp.data[configData].api_update_links_timespan;
+                        apiusepushservice = objResp.data[configData].api_use_pushservice;
+                        apiloglevel = objResp.data[configData].api_log_level;
                     }
                     var text = document.getElementById('txtUsername');
                     text.value = username;
@@ -1253,7 +1859,7 @@ function loadDataSettings()
                         if(element[i].name.startsWith("udpPortsStation"))
                         {
                             var tempSerial = element[i].name.replace("udpPortsStation", "");
-                            var tempPorts = objResp.data[objIter]["api_udp_local_static_ports_" + tempSerial];
+                            var tempPorts = objResp.data[configData]["api_udp_local_static_ports_" + tempSerial];
                             text = document.getElementById('txtUdpPortsStation' + tempSerial);
                             if(tempPorts == undefined || tempPorts == "undefined")
                             {
@@ -1351,7 +1957,7 @@ function loadDataSettings()
 
 function loadSystemVariables()
 {
-    var xmlHttp, objResp, objIter, sysVarName, sysVarInfo, sysVarAvailable, sysVarHint, sysVarTable = "";
+    var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarHint, sysVarTable = "";
     var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
@@ -1369,11 +1975,11 @@ function loadSystemVariables()
                     sysVarHint += `</div>`;
                     document.getElementById("divSystemVariablesHint").innerHTML = sysVarHint;
                     sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
-                    for (objIter in objResp.data)
+                    for (systemVariable in objResp.data)
                     {
-                        sysVarName = objResp.data[objIter].sysVar_name;
-                        sysVarInfo = objResp.data[objIter].sysVar_info;
-                        sysVarAvailable = objResp.data[objIter].sysVar_available;
+                        sysVarName = objResp.data[systemVariable].sysVar_name;
+                        sysVarInfo = objResp.data[systemVariable].sysVar_info;
+                        sysVarAvailable = objResp.data[systemVariable].sysVar_available;
                         if(sysVarAvailable==true)
                         {
                             sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle">angelegt</th>`;
@@ -1922,7 +2528,7 @@ function loadLogfile(logfiletype, showLoading)
 
 function emptyLogfile(logfiletype)
 {
-    var xmlhttp, myObj;
+    var xmlhttp, objResp;
     var url;
     switch(logfiletype)
     {
@@ -1939,8 +2545,8 @@ function emptyLogfile(logfiletype)
     {
         if (this.readyState == 4 && this.status == 200)
         {
-            myObj = JSON.parse(this.responseText);
-            if(myObj.success == true)
+            objResp = JSON.parse(this.responseText);
+            if(objResp.success == true)
             {
                 switch(logfiletype)
                 {
@@ -1988,7 +2594,7 @@ function loadDataInfo(showLoading)
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
             {
-                info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.2`;
+                info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.3`;
                 document.getElementById("versionInfo").innerHTML = info;
             }
             else
