@@ -142,8 +142,8 @@
 		<div class="modal fade" id="modalStationSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalStationSettings" aria-hidden="true">
 			<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 				<div class="modal-content">
-					<div class="modal-header text-bg-primary placeholder-glow" id="lblModalStationSettingsTitle">
-						<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-2"></span>
+					<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">
+						<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>
 					</div>
 					<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 						<div class="" id="lblModalStationSettingsInfo">
@@ -155,7 +155,7 @@
 						</div>
 						<div class="row text-center mb-3">
 							<div class="col"><span id="lblStationSerial"><span class="placeholder col-8 placeholder-lg"></span></span></div>
-							<div class="col"><span id="lblStationFirmware"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span></span></div>
+							<div class="col"><span id="lblStationFirmware"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span></span></div>
 						</div>
 						<div class="card mb-3 collapse" id="cardStationStorageSettings">
 							<h5 class="card-header">Speicher</h5>
@@ -209,7 +209,7 @@
 						</div>
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-						<button type="button" id="btnOKModalStationSettings" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+						<button type="button" id="btnOKModalStationSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
 					</div>
 				</div>
 			</div>
@@ -218,8 +218,8 @@
 		<div class="modal fade" id="modalDeviceSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalDeviceSettings" aria-hidden="true">
 			<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 				<div class="modal-content">
-					<div class="modal-header text-bg-primary placeholder-glow" id="lblModalDeviceSettingsTitle">
-						<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-2"></span>
+					<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
+						<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>
 					</div>
 					<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 						<div class="" id="lblModalDeviceSettingsInfo">
@@ -231,7 +231,7 @@
 						</div>
 						<div class="row text-center mb-3">
 							<div class="col"><span id="lblDeviceSerial"><span class="placeholder col-8 placeholder-lg"></span></span></div>
-							<div class="col"><span id="lblDeviceInfo"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span></span></span></div>
+							<div class="col"><span id="lblDeviceInfo"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span></span></span></div>
 						</div>
 						<div class="card mb-3 collapse" id="cardDeviceCommonSettings">
 							<h5 class="card-header">Allgemeines</h5>
@@ -307,7 +307,7 @@
 								<h5>Nachtsicht</h5>
 								<div class="form-check form-switch" id="divDeviceAutoNightvision">
 									<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceAutoNightvision">
-									<label class="form-check-label" for="chkDeviceAutoNightvision">automatische Nachrsicht aktivieren</label>
+									<label class="form-check-label" for="chkDeviceAutoNightvision">automatische Nachtsicht aktivieren</label>
 								</div>
 								<div id="divDeviceNightvision">
 									<label class="mb-2" for="cbDeviceNightvision">Logo und Wasserzeichen</label>
@@ -337,8 +337,10 @@
 									<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceSpeakerEnable">
 									<label class="form-check-label" for="chkDeviceSpeakerEnable">Lautsprecher aktivieren</label>
 								</div>
-								<label for="rgDeviceSpeakerVolume" class="form-label" id="lblDeviceSpeakerVolume">Lautstärke:</label>
-								<input type="range" class="form-range" min="1" max="3" id="rgDeviceSpeakerVolume" disabled>
+								<div id="divDeviceSpeakerVolume">
+									<label for="rgDeviceSpeakerVolume" class="form-label" id="lblDeviceSpeakerVolume">Lautstärke:</label>
+									<input type="range" class="form-range" min="1" max="3" id="rgDeviceSpeakerVolume">
+								</div>
 							</div>
 						</div>
 						<div class="card collapse" id="cardDeviceNotificationSettings">
@@ -361,7 +363,7 @@
 						</div>
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-						<button type="button" id="btnOKModalDeviceSettings" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+						<button type="button" id="btnOKModalDeviceSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
 					</div>
 				</div>
 			</div>

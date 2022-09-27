@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * v1.2 - 20220925
+ * v1.3 - 20220927
  */
 port = "";
 redirectTarget = "";
@@ -251,6 +251,25 @@ function getDeviceName(model)
         case "T8424":
             return "FloodlightCam 2k";
         //Lock
+        case "T8500":
+            return "Smart Lock Front Door";
+        case "T8501":
+            return "Solo Smart Lock D20";
+        case "T8503":
+            return "Smart Lock R10";
+        case "T8503":
+            return "Smart Lock R20";
+        case "T8519":
+            return "Smart Lock Touch";
+        case "T8520":
+            return "Smart Lock Touch und Wi-Fi";
+        case "T8530":
+            return "Video Smart Lock"
+        //Bridges
+        case "T8021":
+            return "Wi-Fi Bridge und Doorbell Chime";
+        case "T8592":
+            return "Keypad";
         //Keypad
         case "T8960":
             return "Keypad";
@@ -341,7 +360,8 @@ function getWifiSignalLevelIcon(wifiSignalLevel)
                             stations += `<div class="col-md-8">`;
                             stations += `<div class="card-body">`;
                             stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            stations += `<p class="card-text">${objResp.data[station].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[station].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></p>`;
+                            stations += `<p class="card-text mb-1">${objResp.data[station].serialNumber}</p>`;
+                            stations += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[station].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></div></div>`;
                             stations += `</div>`;
                             stations += `</div>`;
                             stations += `</div>`;
@@ -442,7 +462,8 @@ function loadDevices()
 
                             cams += `<div class="card-body">`;
                             cams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            cams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></p>`;
+                            cams += `<p class="card-text mb-1">${objResp.data[device].serialNumber}</p>`;
+                            cams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
                             cams += `</div>`;
                             cams += `</div>`;
                             cams += `</div>`;
@@ -479,7 +500,8 @@ function loadDevices()
 
                             indoorcams += `<div class="card-body">`;
                             indoorcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            indoorcams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            indoorcams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
+                            indoorcams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
                             indoorcams += `</div>`;
@@ -516,7 +538,8 @@ function loadDevices()
 
                             solocams += `<div class="card-body">`;
                             solocams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            solocams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            solocams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
+                            solocams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
                             solocams += `</div>`;
                             solocams += `</div>`;
                             solocams += `</div>`;
@@ -553,7 +576,8 @@ function loadDevices()
 
                             doorbellcams += `<div class="card-body">`;
                             doorbellcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            doorbellcams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            doorbellcams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
+                            doorbellcams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
                             doorbellcams += `</div>`;
                             doorbellcams += `</div>`;
                             doorbellcams += `</div>`;
@@ -590,7 +614,8 @@ function loadDevices()
 
                             floodlightcams += `<div class="card-body">`;
                             floodlightcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            floodlightcams += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            floodlightcams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
+                            floodlightcams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
                             floodlightcams += `</div>`;
@@ -602,13 +627,7 @@ function loadDevices()
                         }
                         else if(objResp.data[device].deviceType == "lock")
                         {
-                            //T8500 > Smart Lock Front Door
-                            //T8501 > Solo Smart Lock D20
-                            //T8503 > Smart Lock R10
-                            //T8503 > Smart Lock R20   T8592 > Keypad
-                            //T8519 > Smart Lock Touch
-                            //T8520 > Smart Lock Touch und Wi-Fi
-                            //T8530 > Video Smart Lock   T8021 > Wi-Fi Bridge und Doorbell Chime
+                            //locks =??
                         }
                         else if(objResp.data[device].deviceType == "keypad")
                         {
@@ -624,7 +643,8 @@ function loadDevices()
 
                             keypads += `<div class="card-body">`;
                             keypads += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            keypads += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            keypads += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
+                            keypads += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
                             keypads += `</div>`;
                             keypads += `</div>`;
                             keypads += `</div>`;
@@ -648,7 +668,8 @@ function loadDevices()
 
                             sensors += `<div class="card-body">`;
                             sensors += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            sensors += `<p class="card-text">${objResp.data[device].serialNumber}<br /><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></p>`;
+                            sensors += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
+                            sensors += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
                             sensors += `</div>`;
                             sensors += `</div>`;
                             sensors += `</div>`;
@@ -726,12 +747,12 @@ function showDeviceSettings(deviceId)
     //document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
     const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
     
-    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-2"></span>`;
+    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
     document.getElementById("lblModalDeviceSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
     document.getElementById("lblDeviceModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblDeviceName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblDeviceSerial").innerHTML = `<span class="placeholder col-8 placeholder-lg"></span>`;
-    document.getElementById("lblDeviceInfo").innerHTML= `<i class="bi-gear" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>`;
+    document.getElementById("lblDeviceInfo").innerHTML= `<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>`;
     document.getElementById("chkDeviceEnabled").removeAttribute("checked");
     document.getElementById("chkDeviceAntitheftDetection").removeAttribute("checked");
     document.getElementById("chkDeviceStatusLed").removeAttribute("checked");
@@ -745,7 +766,6 @@ function showDeviceSettings(deviceId)
     document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
     document.getElementById("chkDeviceAudioRecording").setAttribute("disabled", true);
     document.getElementById("chkDeviceSpeakerEnable").removeAttribute("checked");
-    document.getElementById("rgDeviceSpeakerVolume").setAttribute("disabled", true);
     document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
     document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
     document.getElementById("rbDeviceNTFullEffect").removeAttribute("checked");
@@ -771,14 +791,12 @@ function showDeviceSettings(deviceId)
             {
                 if(objResp.data.length = 1)
                 {
-                    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `Einstellungen "${objResp.data[0].name}" (${deviceId})</h5>`;
-
-                    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${deviceId})</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(objResp.data[0].wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data[0].wifiRssi}dB"></i></div>`;
+                    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${deviceId})</h5></div><div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(objResp.data[0].wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data[0].wifiRssi}dB"></i></span></h5></div>`;
 
                     document.getElementById("lblDeviceModel").innerHTML = `<h5 class="card-subtitle mb-2">${getDeviceName(objResp.data[0].model)} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
                     document.getElementById("lblDeviceName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h5>`;
-                    document.getElementById("lblDeviceSerial").innerHTML = `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[0].serialNumber}</h6>`;
-                    document.getElementById("lblDeviceInfo").innerHTML = `<h6 class="card-subtitle mb-2 text-muted"><span class="text-nowrap"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}&nbsp;&nbsp;&nbsp;&nbsp;<i class="${objResp.data[0].battery == 1 ? "bi-battery-charging" : objResp.data[0].battery < 5 ? "bi-battery" : objResp.data[0].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[0].battery < 5 ? "text-danger" : objResp.data[0].battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[0].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[0].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[0].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[0].batteryTemperature}&deg;C</span></h6>`;
+                    document.getElementById("lblDeviceSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data[0].serialNumber}</h6>`;
+                    document.getElementById("lblDeviceInfo").innerHTML = `<h6 class="card-subtitle text-muted"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}&nbsp;&nbsp;&nbsp;&nbsp;<i class="${objResp.data[0].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[0].battery < 5 ? "bi-battery" : objResp.data[0].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[0].battery < 5 ? "text-danger" : objResp.data[0].battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[0].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[0].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[0].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[0].batteryTemperature}&deg;C</span></h6>`;
 
                     if(objResp.data[0].enabled == "true")
                     {
@@ -842,10 +860,10 @@ function showDeviceSettings(deviceId)
                     switch (objResp.data[0].powerSource)
                     {
                         case "0":
-                            document.getElementById("lblDevicePowerSource").innerHTML = `Batterie`;
+                            document.getElementById("lblDevicePowerSource").innerHTML = `Batterie ${objResp.data[0].chargingStatus == 1 ? " (ladend)" : objResp.data[0].chargingStatus == 2 ? " (nicht angeschlossen)" : objResp.data[0].chargingStatus == 3 ? " (angeschlossen)" : ""}`;
                             break;
                         case "1":
-                            document.getElementById("lblDevicePowerSource").innerHTML = `Solar`;
+                            document.getElementById("lblDevicePowerSource").innerHTML = `Solar ${objResp.data[0].chargingStatus == 1 ? " (ladend)" : ""}`;
                             break;
                         default:
                             document.getElementById("lblDevicePowerSource").innerHTML = `unbekannt`;
@@ -941,17 +959,13 @@ function showDeviceSettings(deviceId)
                     {
                         if(objResp.data[0].speaker == "true")
                         {
-                            document.getElementById("lblDeviceSpeakerVolume").classList.add("collapse", true);
-                            document.getElementById("rgDeviceSpeakerVolume").classList.add("collapse", true);
+                            document.getElementById("divDeviceSpeakerVolume").classList.remove("collapse");
                         }
                         else
                         {
-                            document.getElementById("lblDeviceSpeakerVolume").classList.remove("collapse");
-                            document.getElementById("rgDeviceSpeakerVolume").classList.remove("collapse");
+                            document.getElementById("divDeviceSpeakerVolume").classList.add("collapse", true);
                         }
                         document.getElementById("rgDeviceSpeakerVolume").removeAttribute("disabled");
-                        document.getElementById("lblDeviceSpeakerVolume").classList.remove("collapse");
-                        document.getElementById("rgDeviceSpeakerVolume").classList.remove("collapse");
                         switch (objResp.data[0].speakerVolume)
                         {
                             case "90":
@@ -969,8 +983,7 @@ function showDeviceSettings(deviceId)
                     }
                     else
                     {
-                        document.getElementById("lblDeviceSpeakerVolume").classList.add("collapse", true);
-                        document.getElementById("rgDeviceSpeakerVolume").classList.add("collapse", true);
+                        document.getElementById("divDeviceSpeakerVolume").classList.add("collapse", true);
                     }
                     switch (objResp.data[0].notificationType)
                     {
@@ -998,7 +1011,7 @@ function showDeviceSettings(deviceId)
                     document.getElementById("lblModalDeviceSettingsInfo").innerHTML = ``;
                     if(objResp.data[0].model != "T8112" && objResp.data[0].model != "T8113" && objResp.data[0].model != "T8114")
                     {
-                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
+                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
                     }
                     document.getElementById("lblModalDeviceSettingsInfo").innerHTML += `<div class="alert alert-primary" role="alert">Das Speichern der Einstellungen ist zur Zeit nicht möglich.</div>`;
                     document.getElementById("cardDeviceCommonSettings").classList.remove("collapse");
@@ -1036,12 +1049,12 @@ function showStationSettings(stationId)
     //document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");
     //document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
     const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
-    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-2"></span>`;
+    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
     document.getElementById("lblModalStationSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
     document.getElementById("lblStationModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblStationName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblStationSerial").innerHTML = `<span class="placeholder col-8 placeholder-lg"></span>`;
-    document.getElementById("lblStationFirmware").innerHTML= `<i class="bi-gear" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span>`;
+    document.getElementById("lblStationFirmware").innerHTML= `<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span>`;
     document.getElementById("cbStationAlarmTone").selectedIndex = 0;
     document.getElementById("rgStationAlarmVolume").value = 1;
     document.getElementById("rgStationPromtVolume").value = 0;
@@ -1070,11 +1083,11 @@ function showStationSettings(stationId)
             {
                 if(objResp.data.length = 1)
                 {
-                    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">Einstellungen "${objResp.data[0].name}" (${stationId})</h5></div>`;
+                    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${stationId})</h5></div>`;
                     document.getElementById("lblStationModel").innerHTML = `<h5 class="card-subtitle mb-2">${getStationName(objResp.data[0].model)} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
                     document.getElementById("lblStationName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h6>`;
-                    document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[0].serialNumber}</h6>`;
-                    document.getElementById("lblStationFirmware").innerHTML = `<h6 class="card-subtitle mb-2 text-muted"><i class="bi-gear" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}</h6>`;
+                    document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data[0].serialNumber}</h6>`;
+                    document.getElementById("lblStationFirmware").innerHTML = `<h6 class="card-subtitle text-muted"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}</h6>`;
 
                     if(objResp.data[0].model == "T8002")
                     {
@@ -1134,7 +1147,7 @@ function showStationSettings(stationId)
                     document.getElementById("lblModalStationSettingsInfo").innerHTML = ``;
                     if(objResp.data[0].model != "T8002" && objResp.data[0].model != "T8010")
                     {
-                        document.getElementById("lblModalStationSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
+                        document.getElementById("lblModalStationSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
                     }
                     document.getElementById("lblModalStationSettingsInfo").innerHTML += `<div class="alert alert-primary" role="alert">Das Speichern der Einstellungen ist zur Zeit nicht möglich.</div>`;
                     //document.getElementById("cardStationStorageSettings").classList.remove("collapse");
