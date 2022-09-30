@@ -62,7 +62,7 @@ function getAPIPort(page)
     xmlHttp.overrideMimeType('text/plain');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
@@ -88,20 +88,12 @@ function getAPIPort(page)
             }
             catch (e)
             {
-                var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-                loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
-                loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
-                loadSettingsError += `</div>`;
-                document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
+                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`);
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            var loadSettingsError = `<div class="alert alert-warning alert-dismissible fade show" role="alert">`;
-            loadSettingsError += `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br />`;
-            loadSettingsError += `<small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`;
-            loadSettingsError += `</div>`;
-            document.getElementById("loadApiSettingsError").innerHTML = loadSettingsError;
+            document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`);
         }
     };
     xmlHttp.open("GET", url, true);
@@ -146,7 +138,7 @@ function downloadFile(filetype)
             url = `${location.protocol}//${location.hostname}:${port}/downloadLogFile`;
             break;
         case "err":
-            url=`${location.protocol}//${location.hostname}:${port}/downloadErrFile`;
+            url = `${location.protocol}//${location.hostname}:${port}/downloadErrFile`;
             break;
         case "conf":
             url = `${location.protocol}//${location.hostname}:${port}/downloadConfig`;
@@ -158,129 +150,6 @@ function downloadFile(filetype)
 function makeDateTimeString(dateTime)
 {
 	return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}:${dateTime.getSeconds().toString().padStart(2,'0')}`);
-}
-
-function getStationName(model)
-{
-    switch (model)
-    {
-        case "T8001":
-            return "HomeBase";
-        case "T8002":
-            return "HomeBase E";
-        case "T8010":
-            return "HomeBase 2";
-        case "T8030":
-            return "HomeBase 3";
-        default:
-            return "unbekannte HomeBase";
-        }
-}
-
-function getDeviceName(model)
-{
-    switch (model)
-    {
-        //eufyCams
-        case "T8111":
-            return "eufyCam";
-        case "T8112":
-            return "eufyCam E";
-        case "T8113":
-            return "eufyCam 2C";
-        case "T8114":
-            return "eufyCam 2";
-        case "T8140":
-            return "eufyCam 2 Pro";
-        case "T8142":
-            return "eufyCam 2C Pro";
-        case "T8160":
-            return "eufyCam 3";
-        case "T8161":
-            return "eufyCam 3C";
-        //IndoorCams
-        case "T8400":
-            return "IndoorCam C24";
-        case "T8401":
-            return "IndoorCam C22";
-        case "T8410":
-            return "IndoorCam P24";
-        case "T8411":
-            return "IndoorCam P22";
-        case "T8414":
-            return "IndoorCam Mini 2k";
-        //SoloCams
-        case "T8122":
-            return "SoloCam L20";
-        case "T8123":
-            return "SoloCam L40";
-        case "T8424":
-            return "SoloCam S40";
-        case "T8130":
-            return "SoloCam E20";
-        case "T8131":
-            return "SoloCam E40";
-        case "T8150":
-            return "4G Starlight Camera";
-        //Doorbels
-        case "T8200":
-            return "Video Doorbell 2K (wired)";
-        case "T8201":
-            return "Video Doorbell 1080p (wired)";
-        case "T8202":
-            return "Video Doorbell 2K Pro (wired)";
-        case "T8203":
-            return "Video Doorbell Dual 2K (wired)";
-        case "T8210":
-            return "Video Doorbell 2K (battery)";
-        case "T8213":
-            return "Video Doorbell Dual 2K (battery)";
-        case "T8220":
-            return "Video Doorbell Slim";
-        case "T8221":
-            return "Video Doorbell 2E";
-        case "T8222":
-            return "Video Doorbell 1080p (battery)";
-        //Floodlight
-        case "T8420":
-            return "FloodlightCam 1080p";
-        case "T8422":
-            return "FloodlightCam E 2k";
-        case "T8423":
-            return "FloodlightCam 2 Pro";
-        case "T8424":
-            return "FloodlightCam 2k";
-        //Lock
-        case "T8500":
-            return "Smart Lock Front Door";
-        case "T8501":
-            return "Solo Smart Lock D20";
-        case "T8503":
-            return "Smart Lock R10";
-        case "T8503":
-            return "Smart Lock R20";
-        case "T8519":
-            return "Smart Lock Touch";
-        case "T8520":
-            return "Smart Lock Touch und Wi-Fi";
-        case "T8530":
-            return "Video Smart Lock"
-        //Bridges
-        case "T8021":
-            return "Wi-Fi Bridge und Doorbell Chime";
-        case "T8592":
-            return "Keypad";
-        //Keypad
-        case "T8960":
-            return "Keypad";
-        //Sensor
-        case "T8900":
-            return "Entry Sensor";
-        case "T8910":
-            return "Motion Sensor";
-        default:
-            return "unbekanntes Gerät";
-    }
 }
 
 function getGuardModeAsString(guardMode)
@@ -314,6 +183,49 @@ function getWifiSignalLevelIcon(wifiSignalLevel)
 {
     return wifiSignalLevel == 0 ? "bi-reception-0" : wifiSignalLevel == 1 ? "bi-reception-1" : wifiSignalLevel == 2 ? "bi-reception-2" : wifiSignalLevel == 3 ? "bi-reception-3" : wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off";
 }
+
+function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterText)
+{
+    var card = "";
+
+    card += `<div class="col"><div class="card mb-3">`;
+    card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
+    card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="bi-gear" title="Einstellungen" onclick="showStationSettings('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
+    card += `</div>`;
+    
+    card += `<div class="card-body p-0"><div class="row g-0">`;
+    card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${station.modelName} (${station.model})</div></div>`;
+    card += `<div class="col-md-8 p-3">`;
+    card += `${cardBodyText}</div>`;
+    card += `</div></div>`;
+    
+    card += `<div class="card-footer">${cardFooterText}</div>`;
+    card += `</div></div>`;
+
+    return card;
+}
+
+function createStationTypeCardsContainer(firendlyTypeName, cards)
+{
+    if(cards != "")
+    {
+        return `<h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3">${cards}</div>`;
+    }
+    else
+    {
+        return "";
+    }
+}
+
+function createWaitMessage(messageText)
+{
+    return `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${messageText}</strong></div>`;
+}
+
+function createMessageContainer(classText, messageText)
+{
+    return `<div class="${classText}" role="alert">${messageText}</div>`;
+}
 //#endregion
 
 /**
@@ -323,77 +235,46 @@ function getWifiSignalLevelIcon(wifiSignalLevel)
  function loadStations()
  {
     document.getElementById("stations").innerHTML = `<p id="stations"></p>`;
-    var xmlhttp, objResp, station, stations = "";
-    var imagepath = "";
-    var type = "";
-    var state = "";
+    var xmlhttp, objResp, text = "", station = "", stations = "";
     var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.overrideMimeType('application/json');
     xmlhttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
             {
                 if(objResp.data.length > 0)
                 {
-                    stations += `<h4>Basisstationen</h4>`;
-                    stations += `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
-                    for (station in objResp.data)
+                    for(station in objResp.data)
                     {
                         if(objResp.data[station].deviceType == "station")
                         {
-                            type = getStationName(objResp.data[station].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[station].model})</div>`;
-                            state = getGuardModeAsString(objResp.data[station].guardMode);
-                            stations += `<div class="col">`;
-                            stations += `<div class="card mb-3">`;
-                            stations += `<div class="card-header">`;
-                            stations += `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[station].name}</h5></div>`;
-                            stations += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="text-muted bi-gear" title="Einstellungen" onclick="showStationSettings('${objResp.data[station].serialNumber}')"></i></h5></span></div>`;
-                            stations += `</div>`;
-
-                            stations += `<div class="row g-0">`;
-                            stations += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            stations += `<div class="col-md-8">`;
-                            stations += `<div class="card-body">`;
-                            stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            stations += `<p class="card-text mb-1">${objResp.data[station].serialNumber}</p>`;
-                            stations += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[station].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${state}</span></div></div>`;
-                            stations += `</div>`;
-                            stations += `</div>`;
-                            stations += `</div>`;
-
-                            stations += `<div class="card-footer">`;
-                            stations += `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small>`;
-                            stations += `</div>`;
-                            stations += `</div>`;
-                            stations += `</div>`;
+                            stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[station].softwareVersion}</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}</span></div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
                         }
                     }
-                    stations += `</div>`;
                 }
                 else
                 {
-                    stations += `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Es wurden keine Basisstationen gefunden.</div>`;
+                    stations += createMessageContainer("alert alert-danger", "Es wurden keine Stationen gefunden.");
                 }
-                document.getElementById("stations").innerHTML = stations;
-                type = "";
+                text += createStationTypeCardsContainer("Stationen", stations);
+                document.getElementById("stations").innerHTML =  text;
             }
             else
             {
-                document.getElementById("stations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+                document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.")}`;
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("stations").innerHTML = `<h4>Basisstationen</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+            document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.")}`;
         }
         else
         {
-            document.getElementById("stations").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Basisstationen...</strong></div>`;
+            document.getElementById("stations").innerHTML = createWaitMessage("Lade verfügbare Stationen...");
         }
     };
     xmlhttp.open("GET", url, true);
@@ -403,348 +284,132 @@ function getWifiSignalLevelIcon(wifiSignalLevel)
 function loadDevices()
 {
     var xmlhttp, objResp, device;
-    var text = "";
-    var cams = "";
-    var indoorcams = "";
-    var solocams = "";
-    var doorbellcams = "";
-    var floodlightcams = "";
-    var keypads = "";
-    var sensors = "";
-    var imagepath = "";
-    var type = "";
-    var lastVideo = "keine Aufnahme";
+    var text = "", cams = "", indoorcams = "", solocams = "", doorbellcams = "", floodlightcams = "", keypads = "", sensors = "";
     var url = `${location.protocol}//${location.hostname}:${port}/getDevices`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.overrideMimeType('application/json');
     xmlhttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
             {
                 if(objResp.data.length > 0)
                 {
-                    for (device in objResp.data)
+                    for(device in objResp.data)
                     {
-                        if(objResp.data[device].deviceType == "camera")
+                        switch(objResp.data[device].deviceType)
                         {
-                            type = getDeviceName(objResp.data[device].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
-                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
-                            {
-                                lastVideo = `letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)))}`;
-                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
-                            }
-                            else if(objResp.data[device].pictureTime == "n/a")
-                            {
-                                lastVideo = "keine Aufnahme";
-                            }
-                            else
-                            {
-                                lastVideo = "letzte Aufnahme nicht verfügbar";
-                            }
-                            cams += `<div class="col mb-3">`;
-                            cams += `<div class="card">`;
-                            cams += `<div class="card-header">`;
-                            cams += `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[device].name}</h5></div>`;
-                            cams += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">`;
-                            cams += `<i class="${getWifiSignalLevelIcon(objResp.data[device].wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data[device].wifiRssi}dB"></i>`;
-                            cams += `&nbsp;&nbsp;`;
-                            cams += `<i class="text-muted bi-gear" title="Einstellungen" onclick="showDeviceSettings('${objResp.data[device].serialNumber}')"></i>`;
-                            cams += `</h5></span></div>`;
-                            cams += `</div>`;
-
-                            cams += `<div class="row g-0">`;
-                            cams += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            cams += `<div class="col-md-8">`;
-
-                            cams += `<div class="card-body">`;
-                            cams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            cams += `<p class="card-text mb-1">${objResp.data[device].serialNumber}</p>`;
-                            cams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
-                            cams += `</div>`;
-                            cams += `</div>`;
-                            cams += `</div>`;
-                            cams += `<div class="card-footer">`;
-                            cams += `<small class="text-muted">${lastVideo}</small>`;
-                            cams += `</div>`;
-                            cams += `</div>`;
-                            cams += `</div>`;
-                        }
-                        else if(objResp.data[device].deviceType == "indoorcamera")
-                        {
-                            type = getDeviceName(objResp.data[device].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
-                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
-                            {
-                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
-                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
-                            }
-                            else if(objResp.data[device].pictureTime == "n/a")
-                            {
-                                lastVideo = "keine Aufnahme";
-                            }
-                            else
-                            {
-                                lastVideo = "letzte Aufnahme nicht verfügbar";
-                            }
-                            indoorcams += `<div class="col mb-3">`;
-                            indoorcams += `<div class="card">`;
-                            indoorcams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
-
-                            indoorcams += `<div class="row g-0">`;
-                            indoorcams += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            indoorcams += `<div class="col-md-8">`;
-
-                            indoorcams += `<div class="card-body">`;
-                            indoorcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            indoorcams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
-                            indoorcams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
-                            indoorcams += `</div>`;
-                            indoorcams += `</div>`;
-                            indoorcams += `</div>`;
-                            indoorcams += `<div class="card-footer">`;
-                            indoorcams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
-                            indoorcams += `</div>`;
-                            indoorcams += `</div>`;
-                            indoorcams += `</div>`;
-                        }
-                        else if(objResp.data[device].deviceType == "solocamera")
-                        {
-                            type = getDeviceName(objResp.data[device].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
-                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
-                            {
-                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
-                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
-                            }
-                            else if(objResp.data[device].pictureTime == "n/a")
-                            {
-                                lastVideo = "keine Aufnahme";
-                            }
-                            else
-                            {
-                                lastVideo = "letzte Aufnahme nicht verfügbar";
-                            }
-                            solocams += `<div class="col mb-3">`;
-                            solocams += `<div class="card">`;
-                            solocams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
-
-                            solocams += `<div class="row g-0">`;
-                            solocams += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            solocams += `<div class="col-md-8">`;
-
-                            solocams += `<div class="card-body">`;
-                            solocams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            solocams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
-                            solocams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
-                            solocams += `</div>`;
-                            solocams += `</div>`;
-                            solocams += `</div>`;
-                            solocams += `<div class="card-footer">`;
-                            solocams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
-                            solocams += `</div>`;
-                            solocams += `</div>`;
-                            solocams += `</div>`;
-                        }
-                        else if(objResp.data[device].deviceType == "doorbell")
-                        {
-                            type = getDeviceName(objResp.data[device].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="122" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
-                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
-                            {
-                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
-                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
-                            }
-                            else if(objResp.data[device].pictureTime == "n/a")
-                            {
-                                lastVideo = "keine Aufnahme";
-                            }
-                            else
-                            {
-                                lastVideo = "letzte Aufnahme nicht verfügbar";
-                            }
-                            doorbellcams += `<div class="col mb-3">`;
-                            doorbellcams += `<div class="card">`;
-                            doorbellcams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
-
-                            doorbellcams += `<div class="row g-0">`;
-                            doorbellcams += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            doorbellcams += `<div class="col-md-8">`;
-
-                            doorbellcams += `<div class="card-body">`;
-                            doorbellcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            doorbellcams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
-                            doorbellcams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
-                            doorbellcams += `</div>`;
-                            doorbellcams += `</div>`;
-                            doorbellcams += `</div>`;
-                            doorbellcams += `<div class="card-footer">`;
-                            doorbellcams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
-                            doorbellcams += `</div>`;
-                            doorbellcams += `</div>`;
-                            doorbellcams += `</div>`;
-                        }
-                        else if(objResp.data[device].deviceType == "floodlight")
-                        {
-                            type = getDeviceName(objResp.data[device].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
-                            if(objResp.data[device].pictureTime != "" && objResp.data[device].pictureTime != "n/a" && objResp.data[device].pictureTime != "n/d" && objResp.data[device].pictureTime != "0")
-                            {
-                                lastVideo = makeDateTimeString(new Date(parseInt(objResp.data[device].pictureTime)));
-                                lastVideo += ` | <a href="${objResp.data[device].pictureUrl}">Standbild</a>`;
-                            }
-                            else if(objResp.data[device].pictureTime == "n/a")
-                            {
-                                lastVideo = "keine Aufnahme";
-                            }
-                            else
-                            {
-                                lastVideo = "letzte Aufnahme nicht verfügbar";
-                            }
-                            floodlightcams += `<div class="col mb-3">`;
-                            floodlightcams += `<div class="card">`;
-                            floodlightcams += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
-
-                            floodlightcams += `<div class="row g-0">`;
-                            floodlightcams += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            floodlightcams += `<div class="col-md-8">`;
-
-                            floodlightcams += `<div class="card-body">`;
-                            floodlightcams += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            floodlightcams += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
-                            floodlightcams += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
-                            floodlightcams += `</div>`;
-                            floodlightcams += `</div>`;
-                            floodlightcams += `</div>`;
-                            floodlightcams += `<div class="card-footer">`;
-                            floodlightcams += `<small class="text-muted">letzte Aufnahme: ${lastVideo}</small>`;
-                            floodlightcams += `</div>`;
-                            floodlightcams += `</div>`;
-                            floodlightcams += `</div>`;
-                        }
-                        else if(objResp.data[device].deviceType == "lock")
-                        {
-                            //locks =??
-                        }
-                        else if(objResp.data[device].deviceType == "keypad")
-                        {
-                            type = getDeviceName(objResp.data[device].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
-                            keypads += `<div class="col mb-3">`;
-                            keypads += `<div class="card">`;
-                            keypads += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
-
-                            keypads += `<div class="row g-0">`;
-                            keypads += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            keypads += `<div class="col-md-8">`;
-
-                            keypads += `<div class="card-body">`;
-                            keypads += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            keypads += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
-                            keypads += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
-                            keypads += `</div>`;
-                            keypads += `</div>`;
-                            keypads += `</div>`;
-                            keypads += `<div class="card-footer">`;
-                            keypads += `<small class="text-muted"></small>`;
-                            keypads += `</div>`;
-                            keypads += `</div>`;
-                            keypads += `</div>`;
-                        }
-                        else if(objResp.data[device].deviceType == "sensor")
-                        {
-                            type = getDeviceName(objResp.data[device].model);
-                            imagepath = `<svg class="bd-placeholder-img" width="100%" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[device].model})</div>`;
-                            sensors += `<div class="col mb-3">`;
-                            sensors += `<div class="card">`;
-                            sensors += `<h5 class="card-header">${objResp.data[device].name}</h5>`;
-
-                            sensors += `<div class="row g-0">`;
-                            sensors += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                            sensors += `<div class="col-md-8">`;
-
-                            sensors += `<div class="card-body">`;
-                            sensors += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                            sensors += `<p class="card-text">${objResp.data[device].serialNumber}</p>`;
-                            sensors += `<div class="row g-0"><div class="col pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[device].softwareVersion}</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[device].battery < 16 ? "bi-battery" : objResp.data[device].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[device].battery < 6 ? "text-danger" : objResp.data[device].battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[device].battery}%</span></div><div class="col pe-1"><span class="text-nowrap"><i class="${objResp.data[device].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[device].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[device].batteryTemperature}&deg;C</span></div></div>`;
-                            sensors += `</div>`;
-                            sensors += `</div>`;
-                            sensors += `</div>`;
-                            sensors += `<div class="card-footer">`;
-                            sensors += `<small class="text-muted"></small>`;
-                            sensors += `</div>`;
-                            sensors += `</div>`;
-                            sensors += `</div>`;
+                            case "camera":
+                                cams += createCardDevice(objResp.data[device]);
+                                break;
+                            case "indoorcamera":
+                                indoorcams += createCardDevice(objResp.data[device]);
+                                break;
+                            case "solocamera":
+                                solocams += createCardDevice(objResp.data[device]);
+                                break;
+                            case "doorbell":
+                                doorbellcams += createCardDevice(objResp.data[device]);
+                                break;
+                            case "floodlight":
+                                floodlightcams += createCardDevice(objResp.data[device]);
+                                break;
+                            case "lock":
+                                //locks =??
+                                break;
+                            case "keypad":
+                                keypads += createCardDevice(objResp.data[device]);
+                                break;
+                            case "sensor":
+                                sensors += createCardDevice(objResp.data[device]);
+                                break;
                         }
                     }
-                    if(cams != "")
-                    {
-                        text += `<p id="cameras"><h4>Kameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${cams}</div></p>`;
-                        type = "";
-                    }
-                    if(indoorcams != "")
-                    {
-                        text += `<p id="indoorcameras"><h4>Innenkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${indoorcams}</div></p>`;
-                        type="";
-                    }
-                    if(solocams != "")
-                    {
-                        text += `<p id="solocameras"><h4>Solokameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${solocams}</div></p>`;
-                        type="";
-                    }
-                    if(doorbellcams != "")
-                    {
-                        text += `<p id="doorbellcameras"><h4>Videotürklingeln</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${doorbellcams}</div></p>`;
-                        type="";
-                    }
-                    if(floodlightcams != "")
-                    {
-                        text += `<p id="floodlightcameras"><h4>Flutlichtkameras</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${floodlightcams}</div></p>`;
-                        type = "";
-                    }
-                    if(keypads != "")
-                    {
-                        text += `<p id="keypads"><h4>Keypads</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${keypads}</div></p>`;
-                        type = "";
-                    }
-                    if(sensors != "")
-                    {
-                        text += `<p id="sensors"><h4>Sensoren</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">${sensors}</div></p>`;
-                        type = "";
-                    }
+                    text += createDeviceTypeCardsContainer("cameras", "Kameras", cams);
+                    text += createDeviceTypeCardsContainer("indoorcameras", "Innenkameras", indoorcams);
+                    text += createDeviceTypeCardsContainer("solocameras", "Solokameras", solocams);
+                    text += createDeviceTypeCardsContainer("doorbellcameras", "Videotürklingelkameras", doorbellcams);
+                    text += createDeviceTypeCardsContainer("floodlightcameras", "Flutlichtkameras", floodlightcams);
+                    text += createDeviceTypeCardsContainer("keypads", "Keypads", keypads);
+                    text += createDeviceTypeCardsContainer("sensors", "Sensoren", sensors);
                     document.getElementById("devices").innerHTML =  text;
                 }
                 else
                 {
-                    document.getElementById("devices").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Es wurden keine Geräte gefunden.</div>`;
+                    document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Es wurden keine Geräte gefunden.")}`;
                 }
             }
             else
             {
-                document.getElementById("devices").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Geräte.</div>`;
+                document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.")}`;
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("devices").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden der Geräte.</div>`;
+            document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.")}`;
         }
         else
         {
-            document.getElementById("devices").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Geräte...</strong></div>`;
+            document.getElementById("devices").innerHTML = createWaitMessage("Lade verfügbare Geräte...");
         }
     };
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
 }
 
+function createCardDevice(device)
+{
+    var card = "";
+
+    card += `<div class="col"><div class="card">`;
+    card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;<i class="bi-gear" title="Einstellungen" onclick="showDeviceSettings('${device.serialNumber}')"></i></h5></span></div></div>`;
+
+    card += `<div class="card-body p-0"><div class="row g-0">`;
+    card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
+    card += `<div class="col-md-8 p-3">`;
+
+    card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
+    card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
+    card += `<div class="row g-0"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${device.softwareVersion}</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.chargingStatus == 1 ? "bi-battery-charging" : device.battery < 16 ? "bi-battery" : device.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${device.battery < 6 ? "text-danger" : device.battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${device.battery}%</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.batteryTemperature < 0 ? "bi-thermometer-low" : device.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${device.batteryTemperature}&deg;C</span></div></div>`;
+    card += `</div></div></div>`;
+    card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device.pictureTime, device.pictureUrl)}</small></div>`;
+    card += `</div></div>`;
+
+    return card;
+}
+
+function createDeviceTypeCardsContainer(typeName, firendlyTypeName, cards)
+{
+    if(cards != "")
+    {
+        return `<p id="${typeName}"><h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3">${cards}</div></p>`;
+    }
+    else
+    {
+        return "";
+    }
+}
+
+function getDeviceLastEventTime(time, url)
+{
+    if(time != "" && time != "n/a" && time != "n/d" && time != "0")
+    {
+        return `letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(time)))} | <a href="${url}">Standbild</a>`;
+    }
+    else if(time == "n/a")
+    {
+        return "keine Aufnahme";
+    }
+    else
+    {
+        return "letzte Aufnahme nicht verfügbar";
+    }
+}
+
 function showDeviceSettings(deviceId)
 {
-    //const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
-    //document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");
-    //document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
     const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
     
     document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
@@ -784,7 +449,7 @@ function showDeviceSettings(deviceId)
     xmlhttp.overrideMimeType('application/json');
     xmlhttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
@@ -793,7 +458,7 @@ function showDeviceSettings(deviceId)
                 {
                     document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${deviceId})</h5></div><div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(objResp.data[0].wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data[0].wifiRssi}dB"></i></span></h5></div>`;
 
-                    document.getElementById("lblDeviceModel").innerHTML = `<h5 class="card-subtitle mb-2">${getDeviceName(objResp.data[0].model)} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
+                    document.getElementById("lblDeviceModel").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].modelName} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
                     document.getElementById("lblDeviceName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h5>`;
                     document.getElementById("lblDeviceSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data[0].serialNumber}</h6>`;
                     document.getElementById("lblDeviceInfo").innerHTML = `<h6 class="card-subtitle text-muted"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}&nbsp;&nbsp;&nbsp;&nbsp;<i class="${objResp.data[0].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[0].battery < 5 ? "bi-battery" : objResp.data[0].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[0].battery < 5 ? "text-danger" : objResp.data[0].battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[0].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[0].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[0].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[0].batteryTemperature}&deg;C</span></h6>`;
@@ -1009,11 +674,11 @@ function showDeviceSettings(deviceId)
                     }
 
                     document.getElementById("lblModalDeviceSettingsInfo").innerHTML = ``;
-                    if(objResp.data[0].model != "T8112" && objResp.data[0].model != "T8113" && objResp.data[0].model != "T8114")
+                    if(objResp.data[0].model != "T8112x" && objResp.data[0].model != "T8113x" && objResp.data[0].model != "T8114x")
                     {
-                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
+                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
                     }
-                    document.getElementById("lblModalDeviceSettingsInfo").innerHTML += `<div class="alert alert-primary" role="alert">Das Speichern der Einstellungen ist zur Zeit nicht möglich.</div>`;
+                    document.getElementById("lblModalDeviceSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.");
                     document.getElementById("cardDeviceCommonSettings").classList.remove("collapse");
                     document.getElementById("cardDevicePowerManagerSettings").classList.remove("collapse");
                     document.getElementById("cardDeviceVideoSettings").classList.remove("collapse");
@@ -1022,21 +687,21 @@ function showDeviceSettings(deviceId)
                 }
                 else
                 {
-                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Es wurden keine Geräte gefunden.</div>`;
+                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Es wurden keine Geräte gefunden.")}`;
                 }
             }
             else
             {
-                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.")}`;
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.")}`;
         }
         else
         {
-            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Einstellungen des Geräts...</strong></div>`;
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
         }
     };
     xmlhttp.open("GET", url, true);
@@ -1045,9 +710,6 @@ function showDeviceSettings(deviceId)
 
 function showStationSettings(stationId)
 {
-    //const myModal = new bootstrap.Modal(document.getElementById('modalNotImplemented'));
-    //document.getElementById("btnOKModalNotImplemented").removeAttribute("onClick");
-    //document.getElementById("btnOKModalNotImplemented").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
     const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
     document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
     document.getElementById("lblModalStationSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
@@ -1076,7 +738,7 @@ function showStationSettings(stationId)
     xmlhttp.overrideMimeType('application/json');
     xmlhttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
@@ -1084,7 +746,7 @@ function showStationSettings(stationId)
                 if(objResp.data.length = 1)
                 {
                     document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${stationId})</h5></div>`;
-                    document.getElementById("lblStationModel").innerHTML = `<h5 class="card-subtitle mb-2">${getStationName(objResp.data[0].model)} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
+                    document.getElementById("lblStationModel").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].modelName} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
                     document.getElementById("lblStationName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h6>`;
                     document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data[0].serialNumber}</h6>`;
                     document.getElementById("lblStationFirmware").innerHTML = `<h6 class="card-subtitle text-muted"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}</h6>`;
@@ -1145,32 +807,32 @@ function showStationSettings(stationId)
                     }
 
                     document.getElementById("lblModalStationSettingsInfo").innerHTML = ``;
-                    if(objResp.data[0].model != "T8002" && objResp.data[0].model != "T8010")
+                    if(objResp.data[0].model != "T8002x" && objResp.data[0].model != "T8010x")
                     {
-                        document.getElementById("lblModalStationSettingsInfo").innerHTML = `<div class="alert alert-warning" role="alert">Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</div>`;
+                        document.getElementById("lblModalStationSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
                     }
-                    document.getElementById("lblModalStationSettingsInfo").innerHTML += `<div class="alert alert-primary" role="alert">Das Speichern der Einstellungen ist zur Zeit nicht möglich.</div>`;
+                    document.getElementById("lblModalStationSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.");
                     //document.getElementById("cardStationStorageSettings").classList.remove("collapse");
                     document.getElementById("cardStationAudioSettings").classList.remove("collapse");
                     document.getElementById("cardStationNofificationSettings").classList.remove("collapse");
                 }
                 else
                 {
-                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Es wurden keine Geräte gefunden.</div>`;
+                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Es wurden keine Geräte gefunden.")}`;
                 }
             }
             else
             {
-                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.")}`;
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4><div class="alert alert-danger" role="alert">Fehler beim Laden des Geräts.</div>`;
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer(alert alert-danger", "Fehler beim Laden der Station.")}`;
         }
         else
         {
-            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Einstellungen des Geräts...</strong></div>`;
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen der Station...");
         }
     };
     xmlhttp.open("GET", url, true);
@@ -1184,78 +846,57 @@ function showStationSettings(stationId)
 //#region statechange.html
 function loadDataStatechange(showLoading)
 {
-	var xmlHttp, objResp, station, stations = "", lastChangeTime;
+	var xmlHttp, objResp, station = "", stations = "", buttons = "", text = "", lastChangeTime;
 	var lastChangeTimeAll = -1;
-	var imagepath = "";
-	var type = "";
-	var state = "";
-	var buttons = "";
 	var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
 	xmlHttp.onreadystatechange = function()
 	{
-		if (this.readyState == 4 && this.status == 200)
+		if(this.readyState == 4 && this.status == 200)
 		{
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				stations = `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5">`;
-				for (station in objResp.data)
+				for(station in objResp.data)
 				{
 					if(objResp.data[station].deviceType == "station")
 					{
-						type = getStationName(objResp.data[station].model);
-                        imagepath = `<svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Image for ${type}" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#dee2e6"></rect></svg><div class="img-overlay-text-centered fs-6 text-muted">${type} (${objResp.data[station].model})</div>`;
-                        switch (objResp.data[station].guardMode)
+						switch (objResp.data[station].guardMode)
 						{
                             case "0":
 								state = "abwesend";
 								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "1":
 								state = "zu Hause";
 								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "2":
 								state = "Zeitsteuerung";
 								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>Zeit&shy;steu&shy;e&shy;rung</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "63":
 								state = "deaktiviert";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].statserialNumberion_id}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steue&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							default:
 								state = "unbekannt";
 						}
-						stations += `<div class="col">`;
-						stations += `<div class="card mb-3">`;
-						stations += `<h5 class="card-header">${objResp.data[station].name}</h5>`;
-
-                        stations += `<div class="row g-0">`;
-                        stations += `<div class="col-md-4 img-container">${imagepath}</div>`;
-                        stations += `<div class="col-md-8">`;
-
-                        stations += `<div class="card-body">`;
-                        stations += `<h6 class="card-subtitle mb-2 text-muted">${type}</h6>`;
-                        stations += `<p class="card-text">${objResp.data[station].serialNumber}<br /><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;<span id="state_${objResp.data[station].serialNumber}">${state}</span></span></p>`;
-                        stations += `<div class="card-text d-grid gap-2">${buttons}</div>`;
-						stations += `</div>`;
-                        stations += `</div>`;
-                        stations += `</div>`;
-						if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
+						
+                        if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
 						{
 							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
 							if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
@@ -1271,17 +912,15 @@ function loadDataStatechange(showLoading)
 						{
 							lastChangeTime = "letzter Statuswechsel nicht verfügbar";
 						}
-
-                        stations += `<div class="card-footer"><small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small></div>`;
-						stations += `</div>`;
-						stations += `</div>`;
+                        stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
                     }
 				}
+                text += createStationTypeCardsContainer("Stationen", stations);
 				document.getElementById("btnArmAll").removeAttribute("disabled");
 				document.getElementById("btnHomeAll").removeAttribute("disabled");
 				document.getElementById("btnScheduleAll").removeAttribute("disabled");
 				document.getElementById("btnDisarmAll").removeAttribute("disabled");
-				document.getElementById("stations").innerHTML = stations;
+                document.getElementById("stations").innerHTML =  text;
 				if(lastChangeTimeAll == -1)
 				{
 					lastChangeTimeAll = "unbekannt";
@@ -1291,7 +930,6 @@ function loadDataStatechange(showLoading)
 					lastChangeTimeAll = makeDateTimeString(new Date(lastChangeTimeAll))
 				}
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: ${lastChangeTimeAll}</small>`;
-				type = "";
 			}
 			else
 			{
@@ -1300,17 +938,17 @@ function loadDataStatechange(showLoading)
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
-				document.getElementById("stations").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.");
 			}
 		}
-		else if (this.readyState == 4)
+		else if(this.readyState == 4)
 		{
 			document.getElementById("btnArmAll").setAttribute("disabled", true);
 			document.getElementById("btnHomeAll").setAttribute("disabled", true);
 			document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 			document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 			document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
-			document.getElementById("stations").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Basisstationen.</div>`;
+			document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.");
 		}
 		else
 		{
@@ -1321,7 +959,7 @@ function loadDataStatechange(showLoading)
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: wird geladen...</small>`;
-				document.getElementById("stations").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Basisstationen...</strong></div>`;
+				document.getElementById("stations").innerHTML = createWaitMessage("Lade verfügbare Stationen...");
 			}
 		}
 	};
@@ -1340,7 +978,7 @@ function setArm(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-			if (this.readyState == 4 && this.status == 200)
+			if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1357,7 +995,7 @@ function setArm(stationserial)
 				}
 				document.getElementById("btnArmAll").innerHTML = "abwesend";
 			}
-			else if (this.readyState == 4)
+			else if(this.readyState == 4)
 			{
 
             }
@@ -1378,7 +1016,7 @@ function setArm(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-			if (this.readyState == 4 && this.status == 200)
+			if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1394,7 +1032,7 @@ function setArm(stationserial)
 					loadDataStatechange(false);
 				}
 			}
-			else if (this.readyState == 4)
+			else if(this.readyState == 4)
 			{
 
             }
@@ -1419,7 +1057,7 @@ function setHome(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-			if (this.readyState == 4 && this.status == 200)
+			if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1436,7 +1074,7 @@ function setHome(stationserial)
 				}
 				document.getElementById("btnHomeAll").innerHTML = "zu Hause";
 			}
-			else if (this.readyState == 4)
+			else if(this.readyState == 4)
 			{
 
             }
@@ -1457,7 +1095,7 @@ function setHome(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-			if (this.readyState == 4 && this.status == 200)
+			if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1473,7 +1111,7 @@ function setHome(stationserial)
 					loadDataStatechange(false);
 				}
 			}
-			else if (this.readyState == 4)
+			else if(this.readyState == 4)
 			{
 
             }
@@ -1498,7 +1136,7 @@ function setSchedule(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-            if (this.readyState == 4 && this.status == 200)
+            if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1515,7 +1153,7 @@ function setSchedule(stationserial)
 				}
 				document.getElementById("btnScheduleAll").innerHTML = "Zeitsteuerung";
 			}
-			else if (this.readyState == 4)
+			else if(this.readyState == 4)
 			{
 
             }
@@ -1536,7 +1174,7 @@ function setSchedule(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-			if (this.readyState == 4 && this.status == 200)
+			if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1552,7 +1190,7 @@ function setSchedule(stationserial)
 					loadDataStatechange(false);
 				}
 			}
-			else if (this.readyState == 4)
+			else if(this.readyState == 4)
 			{
 
             }
@@ -1577,7 +1215,7 @@ function setDisarm(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-			if (this.readyState == 4 && this.status == 200)
+			if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1594,7 +1232,7 @@ function setDisarm(stationserial)
 				}
 				document.getElementById("btnDisarmAll").innerHTML = "deaktiviert";
 			}
-			else if (this.readyState != 4)
+			else if(this.readyState != 4)
 			{
 
             }
@@ -1615,7 +1253,7 @@ function setDisarm(stationserial)
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
 		{
-			if (this.readyState == 4 && this.status == 200)
+			if(this.readyState == 4 && this.status == 200)
 			{
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
@@ -1631,7 +1269,7 @@ function setDisarm(stationserial)
 					loadDataStatechange(false);
 				}
 			}
-			else if (this.readyState != 4)
+			else if(this.readyState != 4)
 			{
 
             }
@@ -1689,7 +1327,7 @@ function validateFormSettings()
     var form = document.getElementById("configform");
     form.addEventListener('submit', function(event)
     {
-        if (form.checkValidity() === false)
+        if(form.checkValidity() === false)
         {
             event.preventDefault();
             event.stopPropagation();
@@ -1708,14 +1346,14 @@ function loadStationsSettings()
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    for (station in objResp.data)
+                    for(station in objResp.data)
                     {
                         stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">UDP Port für Verbindung mit der Basisstation ${objResp.data[station].serialNumber} (${objResp.data[station].name}).</label>`;
                         stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="UDP Port ${objResp.data[station].serialNumber}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
@@ -1728,28 +1366,28 @@ function loadStationsSettings()
                 }
                 else
                 {
-                    document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+                    document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.");
                     document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
                     loadDataSettings();
                 }
             }
             catch (e)
             {
-                document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+                document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.");
                 document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
                 loadDataSettings();
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="alert alert-danger mt-2" role="alert">Fehler bei der Ermittlung der Basisstationen.</div>`;
+            document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.");
             document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
             loadDataSettings();
         }
         else
         {
-            document.getElementById("resultLoading").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Einstellungen...</strong></div>`;
-            document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Basisstationen...</strong></div>`;
+            document.getElementById("resultLoading").innerHTML = createWaitMessage("Laden der Einstellungen...");
+            document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Stationen...</strong></div>`;
             document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
         }
     };
@@ -1765,14 +1403,14 @@ function loadDataSettings()
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    for (configData in objResp.data)
+                    for(configData in objResp.data)
                     {
                         username = objResp.data[configData].username;
                         password = objResp.data[configData].password;
@@ -1867,7 +1505,8 @@ function loadDataSettings()
                     }
 
                     var element = document.getElementsByTagName("INPUT");
-                    for (var i=0, m=element.length; i<m; i++)
+                    var max = element.length;
+                    for(var i=0; i<max; i++)
                     {
                         if(element[i].name.startsWith("udpPortsStation"))
                         {
@@ -1947,21 +1586,21 @@ function loadDataSettings()
                 }
                 else
                 {
-                    document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'success' ist 'false'.</small></div>`;
+                    document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'success' ist 'false'.</small>`);
                 }
             }
             catch (e)
             {
-                document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">${e}</small></div>`;
+                document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">${e}</small>`);
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("resultLoading").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small></div>`;
+            document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small>`);
         }
         else
         {
-            document.getElementById("resultLoading").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Einstellungen...</strong></div>`;
+            document.getElementById("resultLoading").innerHTML = createWaitMessage("Laden der Einstellungen...");
         }
     };
     xmlHttp.open("GET", url, true);
@@ -1970,25 +1609,22 @@ function loadDataSettings()
 
 function loadSystemVariables()
 {
-    var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarHint, sysVarTable = "";
+    var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "";
     var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    sysVarHint  = `<div class="alert alert-primary fade show" role="alert">Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br />`;
-                    sysVarHint += `<small class="form-text text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>`;
-                    sysVarHint += `</div>`;
-                    document.getElementById("divSystemVariablesHint").innerHTML = sysVarHint;
+                    document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", `Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br /><small class="form-text text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>`);
                     sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
-                    for (systemVariable in objResp.data)
+                    for(systemVariable in objResp.data)
                     {
                         sysVarName = objResp.data[systemVariable].sysVar_name;
                         sysVarInfo = objResp.data[systemVariable].sysVar_info;
@@ -2020,28 +1656,28 @@ function loadSystemVariables()
                     if(objResp.reason == "System variables in config disabled.")
                     {
                         document.getElementById("divSystemVariablesHint").innerHTML = "";
-                        document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-info mb-0" role="alert">Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.</div>`;
+                        document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", "Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.");
                     }
                     else
                     {
                         document.getElementById("divSystemVariablesHint").innerHTML = "";
-                        document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.<br /><small class="form-text text-muted">Es ist folgender Fehler ist aufgetreten: '${objResp.reason}'</small></div>`;
+                        document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", `Fehler bei der Ermittlung der Systemvariablen.<br /><small class="form-text text-muted">Es ist folgender Fehler ist aufgetreten: '${objResp.reason}'</small>`);
                     }
                 }
             }
             catch (e)
             {
                 document.getElementById("divSystemVariablesHint").innerHTML = "";
-                document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
+                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.");
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger mb-0" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
+            document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.");
         }
         else
         {
-            document.getElementById("divSystemVariables").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Systemvariablen...</strong></div>`;
+            document.getElementById("divSystemVariables").innerHTML = createWaitMessage("Laden der Systemvariablen...");
         }
     };
     xmlHttp.open("GET", url, true);
@@ -2066,7 +1702,7 @@ function saveConfig()
     });
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
@@ -2099,16 +1735,16 @@ function saveConfig()
             }
             catch (e)
             {
-                document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">${e}</small></div>`;
+                document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">${e}</small>`);
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("resultMessage").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small></div>`;
+            document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small>`);
         }
         else
         {
-            document.getElementById("resultMessage").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Einstellungen werden gespeichert...</strong></div>`;
+            document.getElementById("resultMessage").innerHTML = createWaitMessage("Einstellungen werden gespeichert...");
         }
     };
     xmlHttp.open("POST", url);
@@ -2117,14 +1753,14 @@ function saveConfig()
 
 function createSysVar(varName, varInfo)
 {
-    var xmlHttp, objResp, text = "";
+    var xmlHttp, objResp;
     var url = `${location.protocol}//${location.hostname}:${port}/createSystemVariable/${varName}/${varInfo}`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
     text = `<table class="table"><thead><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
@@ -2135,21 +1771,21 @@ function createSysVar(varName, varInfo)
                 }
                 else
                 {
-                    document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
+                    document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.");
                 }
             }
             catch (e)
             {
-                document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
+                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.");
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("divSystemVariables").innerHTML = `<div class="alert alert-danger" role="alert">Fehler bei der Ermittlung der Systemvariablen.</div>`;
+            document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.");
         }
         else
         {
-            document.getElementById("divSystemVariables").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Systemvariablen...</strong></div>`;
+            document.getElementById("divSystemVariables").innerHTML = createWaitMessage("Laden der Systemvariablen...");
         }
     };
     xmlHttp.open("GET", url, true);
@@ -2164,7 +1800,7 @@ function removeTokenData()
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
@@ -2188,7 +1824,7 @@ function removeTokenData()
                 toast.show();
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {}
         else
         {}
@@ -2205,7 +1841,7 @@ function restartService()
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
@@ -2229,7 +1865,7 @@ function restartService()
                 toast.show();
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {}
         else
         {}
@@ -2314,7 +1950,8 @@ function changeValue(element)
             if(element.checked == true)
             {
                 var element = document.getElementsByTagName("INPUT");
-                for (var i=0, m=element.length; i<m; i++)
+                var max = element.length;
+                for(var i=0; i<max; i++)
                 {
                     if(element[i].name.startsWith("udpPortsStation"))
                     {
@@ -2326,7 +1963,8 @@ function changeValue(element)
             else
             {
                 var element = document.getElementsByTagName("INPUT");
-                for (var i=0, m=element.length; i<m; i++)
+                var max = element.length;
+                for(var i=0; i<max; i++)
                 {
                     if(element[i].name.startsWith("udpPortsStation"))
                     {
@@ -2407,7 +2045,8 @@ function checkUDPPorts(elementName)
     var error = false;
     var errorMessage = "";
     var regex = new RegExp("^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$");
-    for (var i=0, m=element.length; i<m; i++)
+    var max = element.length;
+    for(var i=0; i<max; i++)
     {
         if(element[i].name.startsWith("udpPortsStation"))
         {
@@ -2425,7 +2064,8 @@ function checkUDPPorts(elementName)
     }
     if(error == false && cnt > 1)
     {
-        for(var i=0, m=element.length; i<m; i++)
+        max = element.length;
+        for(var i=0; i<max; i++)
         {
             if(element[i].name.startsWith("udpPortsStation"))
             {
@@ -2474,8 +2114,7 @@ function clearInputField(elementName)
 //#region logfiles.html
 function loadLogfile(logfiletype, showLoading)
 {
-    var xmlHttp;
-    var url;
+    var xmlHttp, url;
     switch(logfiletype)
     {
         case "index":
@@ -2491,7 +2130,7 @@ function loadLogfile(logfiletype, showLoading)
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             var log = this.responseText;
             log = log.replace(/  /g, " &nbsp;");
@@ -2507,15 +2146,15 @@ function loadLogfile(logfiletype, showLoading)
                     break;
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
             switch(logfiletype)
             {
                 case "log":
-                    document.getElementById("log").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Protokolldatei.</div>`;
+                    document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Protokolldatei.");
                     break;
                 case "err":
-                    document.getElementById("err").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Fehlerprotokolldatei.</div>`;
+                    document.getElementById("err").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Fehlerprotokolldatei.");
                     break;
             }
         }
@@ -2526,10 +2165,10 @@ function loadLogfile(logfiletype, showLoading)
                 switch(logfiletype)
                 {
                     case "log":
-                        document.getElementById("log").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Protokolldatei...</strong></div>`;
+                        document.getElementById("log").innerHTML = createWaitMessage("Lade Protokolldatei...");
                         break;
                     case "err":
-                        document.getElementById("err").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade Fehlerprotokolldatei...</strong></div>`;
+                        document.getElementById("err").innerHTML = createWaitMessage("Lade Fehlerprotokolldatei...");
                         break;
                 }
             }
@@ -2541,8 +2180,7 @@ function loadLogfile(logfiletype, showLoading)
 
 function emptyLogfile(logfiletype)
 {
-    var xmlhttp, objResp;
-    var url;
+    var xmlhttp, objResp, url;
     switch(logfiletype)
     {
         case "log":
@@ -2556,7 +2194,7 @@ function emptyLogfile(logfiletype)
     xmlhttp.overrideMimeType('application/json');
     xmlhttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
@@ -2576,7 +2214,7 @@ function emptyLogfile(logfiletype)
 
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
 
         }
@@ -2602,7 +2240,7 @@ function loadDataInfo(showLoading)
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
@@ -2612,18 +2250,18 @@ function loadDataInfo(showLoading)
             }
             else
             {
-                document.getElementById("versionInfo").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Versionsinformationen.</div>`;
+                document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Versionsinformationen.");
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            document.getElementById("versionInfo").innerHTML = `<div class="alert alert-danger" role="alert">Fehler beim Laden der Versionsinformationen.</div>`;
+            document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Versionsinformationen.");
         }
         else
         {
             if(showLoading == true)
             {
-                document.getElementById("versionInfo").innerHTML = `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Lade verfügbare Versionsinformationen...</strong></div>`;
+                document.getElementById("versionInfo").innerHTML = createWaitMessage("Lade verfügbare Versionsinformationen...");
             }
         }
     };
@@ -2652,14 +2290,13 @@ async function checkServiceState(cntStart, cntInit, postInit)
     xmlHttp.overrideMimeType('application/json');
     xmlHttp.onreadystatechange = async function()
     {
-        if (this.readyState == 4 && this.status == 200)
+        if(this.readyState == 4 && this.status == 200)
         {
             try
             {
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    //console.log(`Resp: ${objResp.message} | cntStart: ${cntStart} | cntInit: ${cntInit} | postInit: ${postInit}`);
                     if(objResp.message == "init")
                     {
                         if(cntInit == 0)
@@ -2674,7 +2311,6 @@ async function checkServiceState(cntStart, cntInit, postInit)
                             cntInit = cntInit + 1;
                             await delay(1000);
                             checkServiceState(cntStart, cntInit, postInit);
-                            //return;
                         }
                         else
                         {
@@ -2695,7 +2331,6 @@ async function checkServiceState(cntStart, cntInit, postInit)
                             postInit = postInit + 1;
                             await delay(1000);
                             checkServiceState(cntStart, cntInit, postInit);
-                            //return;
                         }
                         else
                         {
@@ -2714,7 +2349,6 @@ async function checkServiceState(cntStart, cntInit, postInit)
                         postInit = 0;
                         await delay(5000);
                         checkServiceState(cntStart, cntInit, postInit);
-                        //return;
                     }
                     else
                     {
@@ -2733,13 +2367,11 @@ async function checkServiceState(cntStart, cntInit, postInit)
                 }
                 else
                 {
-                    //console.log(`Resp: ${objResp.message} | cntStart: ${cntStart} | cntInit: ${cntInit} | postInit: ${postInit}`);
                     if(cntStart < 20)
                     {
                         cntStart = cntStart + 1;
                         await delay(1000);
                         checkServiceState(cntStart, cntInit, postInit);
-                        //return;
                     }
                     else
                     {
@@ -2755,7 +2387,6 @@ async function checkServiceState(cntStart, cntInit, postInit)
                     cntStart = cntStart + 1;
                     await delay(1000);
                     checkServiceState(cntStart, cntInit, postInit);
-                    //return;
                 }
                 else
                 {
@@ -2763,15 +2394,13 @@ async function checkServiceState(cntStart, cntInit, postInit)
                 }
             }
         }
-        else if (this.readyState == 4)
+        else if(this.readyState == 4)
         {
-            //console.log(`ReadyState: ${this.readyState} | status: ${this.status} | cntStart: ${cntStart} | cntInit: ${cntInit} | postInit: ${postInit}`);
             if(cntStart < 20)
             {
                 cntStart = cntStart + 1;
                 await delay(2000);
                 checkServiceState(cntStart, cntInit, postInit);
-                //return;
             }
         }
         else

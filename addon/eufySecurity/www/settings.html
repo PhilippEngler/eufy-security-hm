@@ -218,20 +218,20 @@
 												<small class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
 											</div>
 											<hr>
-											<h5>Einstellungen für die Verbindung zu den Basisstationen</h5>
+											<h5>Einstellungen für die Verbindung zu den Stationen</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="cbConnectionType">Herstellen der Verbindung zu den Basisstationen.</label>
+												<label class="mb-2" for="cbConnectionType">Herstellen der Verbindung zu den Stationen.</label>
 												<select name="connectionType" id="cbConnectionType" class="form-select" required>
 													<option disabled selected value style="display: none;">Bitte auswählen...</option>
 													<option value="0">bevorzuge lokale Verbindung</option>
 													<option value="1">nur lokale Verbindung</option>
 													<option value="2">schnellste Verbindung</option>
 												</select>
-												<small class="form-text text-muted mb-2">Diese Einstellung gilt nur für die Basisstation 'HomeBase', 'HomeBase E' und 'HomeBase 2'.</small>
+												<small class="form-text text-muted mb-2">Diese Einstellung gilt nur für die Station 'HomeBase', 'HomeBase E' und 'HomeBase 2'.</small>
 											</div>
 											<div class="form-check form-switch mt-2 mb-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUdpStaticPorts" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
-												<label class="form-check-label" for="chkUseUdpStaticPorts">Verbindung zu den Basisstation über feste Ports aufbauen</label>
+												<label class="form-check-label" for="chkUseUdpStaticPorts">Verbindung zu den Station über feste Ports aufbauen</label>
 											</div>
 											<div id="useUDPStaticPortsStations">
 												
@@ -260,8 +260,8 @@
 											<h5>Einstellungen für regelmäßige Aktualisierung des Modus</h5>
 											<div class="form-check form-switch">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateEvent" id="chkUpdateStateEvent" onchange="changeValue(useUpdateStateEvent)">
-												<label class="form-check-label" for="chkUpdateStateEvent">Modus automatisch durch von der Basisstation gesendete Ereignisse aktualisieren</label>
-												<!--<small class="form-text text-muted">Statusänderungen werden von der Basisstation direkt nach einer externen Änderung gemeldet und aktualisiert.</small>-->
+												<label class="form-check-label" for="chkUpdateStateEvent">Modus automatisch durch von der Station gesendete Ereignisse aktualisieren</label>
+												<!--<small class="form-text text-muted">Statusänderungen werden von der Station direkt nach einer externen Änderung gemeldet und aktualisiert.</small>-->
 											</div>
 											<div class="form-check form-switch mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateIntervall" id="chkUpdateStateIntervall" onchange="changeValue(useUpdateStateIntervall)">
@@ -492,7 +492,7 @@
 						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
 					</div>
 					<div class="modal-body">
-						Es kann nicht gleichzeitig die Option "Modus automatisch durch von der Basisstation gesendete Ereignisse aktualisieren" und die Option "Modus regelmäßig intervallbasierend aktualisieren" aktiviert werden.<br /><br />
+						Es kann nicht gleichzeitig die Option "Modus automatisch durch von der Station gesendete Ereignisse aktualisieren" und die Option "Modus regelmäßig intervallbasierend aktualisieren" aktiviert werden.<br /><br />
 						Mit 'OK' wird die zuletzt aktivierte Option deaktiviert.
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">

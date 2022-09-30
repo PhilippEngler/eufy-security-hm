@@ -549,10 +549,10 @@ export class EufySecurityApi
     private makeJsonForDevice(device : Device) : string
     {
         var properties = device.getProperties();
-        var propertyMetadata : PropertyMetadataAny;
         var json = `{"eufyDeviceId":"${device.getId()}"`;
         json += `,"deviceType":"${this.devices.getDeviceTypeAsString(device)}"`;
         json += `,"model":"${device.getModel()}"`;
+        json += `,"modelName":"${this.devices.getDeviceModelName(device)}"`;
         json += `,"name":"${device.getName()}"`;
         json += `,"hardwareVersion":"${device.getHardwareVersion()}"`;
         json += `,"softwareVersion":"${device.getSoftwareVersion()}"`;
@@ -725,6 +725,10 @@ export class EufySecurityApi
         {
             switch (property)
             {
+                case PropertyName.Model:
+                    json += `,"${property}":"${properties[property]}"`;
+                    json += `,"modelName":"${this.stations.getStationModelName(station)}"`;
+                    break;
                 case PropertyName.StationGuardMode:
                     json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
                     json += `,"guardModeTime":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}"`;

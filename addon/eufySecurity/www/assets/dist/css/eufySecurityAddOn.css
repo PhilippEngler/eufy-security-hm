@@ -100,14 +100,13 @@ code {
 }
 
 .img-container {
-  position: relative;
-  text-align: center;
+  background: #dee2e6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .img-overlay-text-centered {
-  position: absolute;
-  top: 50%;
-  left: 0%;
-  overflow-wrap: anywhere;
-  transform: translate(0%, -50%);
+  text-align: center;
+  flex: 0 0 80%;
 }

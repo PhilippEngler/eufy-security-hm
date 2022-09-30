@@ -115,13 +115,12 @@
 				<h4>Hinweise zur Nutzung</h4>
 				<p>Die API stellt derzeit folgende Funktionen bereit:</p>
 				<ul>
-					<li><code>/getStations</code>: Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
-					<li><code>/getBases</code> (nicht mehr nutzen, wird ersetzt durch <code>/getStations</code>): Liefert alle Basisstation des Accounts als JSON-String zurück.</li>
+					<li><code>/getStations</code>: Liefert alle Stationen des Accounts als JSON-String zurück.</li>
 					<li><code>/getDevices</code>: Liefert alle Geräte des Accounts als JSON-String zurück.</li>
 					<li><code>/getHouses</code>: Liefert alle Hausobjekte des Accounts als JSON-String zurück.</li>
-					<li><code>/getMode</code>: Liefert den Status aller Basisstationen als JSON-String zurück.</li>
-					<li><code>/getMode/<i>BASE_SERIAL</i></code>: Liefert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> als JSON-String zurück.</li>
-					<li><code>/setMode/<i>MODE</i></code>: Ändert den Status aller Basisstationen auf <i>MODE</i>. <i>MODE</i> kann einer der folgenden Werte sein. Die Antwort ist ein JSON-String.</li>
+					<li><code>/getMode</code>: Liefert den Status aller Stationen als JSON-String zurück.</li>
+					<li><code>/getMode/<i>STATION_SERIAL</i></code>: Liefert den Status der Station mit der Seriennummer <i>STATION_SERIAL</i> als JSON-String zurück.</li>
+					<li><code>/setMode/<i>MODE</i></code>: Ändert den Status aller Stationen auf <i>MODE</i>. <i>MODE</i> kann einer der folgenden Werte sein. Die Antwort ist ein JSON-String.</li>
 					<ul>
 						<li><code>away</code>: abwesend</li>
 						<li><code>custom1</code>: Benutzerdefiniert 1</li>
@@ -135,7 +134,7 @@
 						<li><code>privacyOn</code>: Indoorcam ausschalten</li>
 						<li><code>privacyOff</code>: Indoorcam einschalten</li>
 					</ul>
-					<li><code>/setMode/<i>BASE_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Basisstation mit der Seriennummer <i>BASE_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
+					<li><code>/setMode/<i>STATION_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Station mit der Seriennummer <i>STATION_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
 					<li><code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.</li>
 				</ul>
 				<p>Bitte beachten Sie, dass einige Modi nur mit bestimmten Gerätetypen genutzt werden könnnen. Sollten Sie einen vom Gerät nicht unterstützen Modus setzten wollen, erhalten Sie eine entsprechende Meldung.</p>
@@ -146,12 +145,13 @@
 				</ul>
 				<p>Bei beiden Varianten werden die entsprechenden Systemvariablen automatisch gesetzt, wenn in den Einstellungen die Option "Systemvariablen bei API Aktionen automatisch aktualisieren" aktiviert wurde.</p>
 				<p>Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.</p>
+				<p>Die Angabe <code>max-time 20</code> bedeutet, dass die Ausführung nach 20 Sekunden abgebrochen wird. Die API-Funktion <code>/setMode</code> kann je Station eine maximale Laufzeit von ca. 10 Sekunden haben. Aus diesem Grund muss der Wert für <code>max-time</code> bei der API-Funktion <code>/setMode</code> entsprechend der Anzahl der Stationen angepasst werden.</p>
 				<p>Die Zeitstempel der letzten Ereinisse werden nur in folgenden Fällen gesetzt und aktualisiert:</p>
 				<ul>
-					<li>Zeitpunkt der Änderung des Modus bei Basisstationen: die Einstellung "Modus automatisch durch von der Basisstation gesendete Ereignisse aktualisieren" muss aktiviert sein</li>
+					<li>Zeitpunkt der Änderung des Modus bei Stationen: die Einstellung "Modus automatisch durch von der Station gesendete Ereignisse aktualisieren" muss aktiviert sein</li>
 					<li>Zeitpunkt des letzten Videoevents bei Kameras: die Einstellung "Pushbenachrichtigungen aktivieren" muss aktiviert sein</li>
 				</ul>
-				<p>Ist die entsprechende Einstellung nicht aktiviert, wird bei Basisstationen "letzter Statuswechsel: unbekannt" und bei Kameras "letzte Aufnahme nicht verfügbar" angezeigt.</p>
+				<p>Ist die entsprechende Einstellung nicht aktiviert, wird bei Stationen "letzter Statuswechsel: unbekannt" und bei Kameras "letzte Aufnahme nicht verfügbar" angezeigt.</p>
 				<h4>Informationen zum Projekt</h4>
 				<p>Alle Informationen und Dateien zu diesem AddOn finden Sie auf der <a href="https://github.com/PhilippEngler/eufy-security-hm" target="_blank">GitHub-Seite des AddOns</a>.</p>
 				<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>

@@ -553,6 +553,79 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         });
     }
 
+    getStationModelName(station : Station) : string
+    {
+    switch (station.getModel())
+    {
+        //HomeBases
+        case "T8001":
+            return "HomeBase";
+        case "T8002":
+            return "HomeBase E";
+        case "T8010":
+            return "HomeBase 2";
+        case "T8030":
+            return "HomeBase 3";
+        //SoloDevices
+        //IndoorCams
+        case "T8400":
+            return "IndoorCam C24";
+        case "T8401":
+            return "IndoorCam C22";
+        case "T8410":
+            return "IndoorCam P24";
+        case "T8411":
+            return "IndoorCam P22";
+        case "T8414":
+            return "IndoorCam Mini 2k";
+        //SoloCams
+        case "T8122":
+            return "SoloCam L20";
+        case "T8123":
+            return "SoloCam L40";
+        case "T8424":
+            return "SoloCam S40";
+        case "T8130":
+            return "SoloCam E20";
+        case "T8131":
+            return "SoloCam E40";
+        case "T8150":
+            return "4G Starlight Camera";
+        //Doorbels
+        //Floodlight
+        case "T8420":
+            return "FloodlightCam 1080p";
+        case "T8422":
+            return "FloodlightCam E 2k";
+        case "T8423":
+            return "FloodlightCam 2 Pro";
+        case "T8424":
+            return "FloodlightCam 2k";
+        //Lock
+        case "T8500":
+            return "Smart Lock Front Door";
+        case "T8501":
+            return "Solo Smart Lock D20";
+        case "T8503":
+            return "Smart Lock R10";
+        case "T8503":
+            return "Smart Lock R20";
+        case "T8519":
+            return "Smart Lock Touch";
+        case "T8520":
+            return "Smart Lock Touch und Wi-Fi";
+        case "T8530":
+            return "Video Smart Lock"
+        //Bridges
+        case "T8021":
+            return "Wi-Fi Bridge und Doorbell Chime";
+        case "T8592":
+            return "Keypad";
+        default:
+            return "unbekannte Station";
+        }
+}
+
     /**
      * Add a given event listener for a given station.
      * @param station The station as Station object.
