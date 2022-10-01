@@ -140,10 +140,11 @@
 		</div>
 
 		<div class="modal fade" id="modalStationSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalStationSettings" aria-hidden="true">
-			<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+			<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 				<div class="modal-content">
 					<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">
 						<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
 					</div>
 					<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 						<div class="" id="lblModalStationSettingsInfo">
@@ -155,7 +156,7 @@
 						</div>
 						<div class="row text-center mb-3">
 							<div class="col"><span id="lblStationSerial"><span class="placeholder col-8 placeholder-lg"></span></span></div>
-							<div class="col"><span id="lblStationFirmware"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span></span></div>
+							<div class="col"><span id="lblStationFirmware"><i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span></span></div>
 						</div>
 						<div class="card mb-3 collapse" id="cardStationStorageSettings">
 							<h5 class="card-header">Speicher</h5>
@@ -167,18 +168,24 @@
 							<h5 class="card-header">Audioeinstellungen</h5>
 							<div class="card-body">
 								<h5>Alarmton</h5>
-								<label class="mb-2" for="cbStationAlarmTone">Alarmton auswählen</label>
-								<select class="form-select mb-2" id="cbStationAlarmTone" aria-label="Alarmton">
-									<option value=0 selected>Alarmton auswählen</option>
-									<option value=1>Alarmton 1</option>
-									<option value=2>Alarmton 2</option>
-								</select>
-								<label for="rgStationAlarmVolume" class="form-label">Lautstärke Alarmton:</label>
-								<input type="range" class="form-range" min="1" max="26" id="rgStationAlarmVolume">
+								<div>
+									<label class="mb-2" for="cbStationAlarmTone">Alarmton auswählen</label>
+									<select class="form-select mb-2" id="cbStationAlarmTone" aria-label="Alarmton">
+										<option value=0 selected>Alarmton auswählen</option>
+										<option value=1>Alarmton 1</option>
+										<option value=2>Alarmton 2</option>
+									</select>
+								</div>
+								<div>
+									<label for="rgStationAlarmVolume" class="form-label">Lautstärke Alarmton:</label>
+									<input type="range" class="form-range" min="1" max="26" id="rgStationAlarmVolume">
+								</div>
 								<hr>
 								<h5>Eingabeaufforderung</h5>
-								<label for="rgStationPromtVolume" class="form-label">Lautstärke Eingabeaufforderung:</label>
-								<input type="range" class="form-range" min="0" max="5" id="rgStationPromtVolume">
+								<div>
+									<label for="rgStationPromtVolume" class="form-label">Lautstärke Eingabeaufforderung:</label>
+									<input type="range" class="form-range" min="0" max="5" id="rgStationPromtVolume">
+								</div>
 							</div>
 						</div>
 						<div class="card collapse" id="cardStationNofificationSettings">
@@ -216,7 +223,7 @@
 		</div>
 
 		<div class="modal fade" id="modalDeviceSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalDeviceSettings" aria-hidden="true">
-			<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+			<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 				<div class="modal-content">
 					<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
 						<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>
@@ -231,7 +238,7 @@
 						</div>
 						<div class="row text-center mb-3">
 							<div class="col"><span id="lblDeviceSerial"><span class="placeholder col-8 placeholder-lg"></span></span></div>
-							<div class="col"><span id="lblDeviceInfo"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span></span></span></div>
+							<div class="col"><span id="lblDeviceInfo"><i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery text-muted" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low text-muted" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span></span></span></div>
 						</div>
 						<div class="card mb-3 collapse" id="cardDeviceCommonSettings">
 							<h5 class="card-header">Allgemeines</h5>
@@ -279,10 +286,14 @@
 								<div id="divDeviceCustomRecordingSettings">
 									<hr />
 									<h5>Benutzerdefinierte Einstellungen</h5>
-									<label for="rgDeviceCustomRecordingSettingsClipLength" class="form-label" id="lblDeviceCustomRecordingSettingsClipLength">Cliplänge</label>
-									<input type="range" class="form-range" min="5" max="120" id="rgDeviceCustomRecordingSettingsClipLength">
-									<label for="rgDeviceCustomRecordingSettingsRetriggerIntervall" class="form-label" id="lblDeviceCustomRecordingSettingsRetriggerIntervall">Intervall für erneutes Auslösen</label>
-									<input type="range" class="form-range" min="5" max="60" id="rgDeviceCustomRecordingSettingsRetriggerIntervall">
+									<div>
+										<label for="rgDeviceCustomRecordingSettingsClipLength" class="form-label" id="lblDeviceCustomRecordingSettingsClipLength">Cliplänge</label>
+										<input type="range" class="form-range" min="5" max="120" id="rgDeviceCustomRecordingSettingsClipLength">
+									</div>
+									<div>
+										<label for="rgDeviceCustomRecordingSettingsRetriggerIntervall" class="form-label" id="lblDeviceCustomRecordingSettingsRetriggerIntervall">Intervall für erneutes Auslösen</label>
+										<input type="range" class="form-range" min="5" max="60" id="rgDeviceCustomRecordingSettingsRetriggerIntervall">
+									</div>
 									<div class="form-check form-switch">
 										<input class="form-check-input" type="checkbox" role="switch" name="grpDeviceCustomRecordingSettingsStoppWhenMotionEnds" id="chkDeviceCustomRecordingSettingsStoppWhenMotionEnds">
 										<label class="form-check-label" for="chkDeviceCustomRecordingSettingsStoppWhenMotionEnds">Clip frühzeitiger beenden wenn Bewegung stoppt</label>

@@ -417,7 +417,7 @@ function showDeviceSettings(deviceId)
     document.getElementById("lblDeviceModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblDeviceName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblDeviceSerial").innerHTML = `<span class="placeholder col-8 placeholder-lg"></span>`;
-    document.getElementById("lblDeviceInfo").innerHTML= `<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>`;
+    document.getElementById("lblDeviceInfo").innerHTML= `<i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery text-muted" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low text-muted" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>`;
     document.getElementById("chkDeviceEnabled").removeAttribute("checked");
     document.getElementById("chkDeviceAntitheftDetection").removeAttribute("checked");
     document.getElementById("chkDeviceStatusLed").removeAttribute("checked");
@@ -425,8 +425,6 @@ function showDeviceSettings(deviceId)
     document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
     document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
     document.getElementById("lblDevicePowerSource").innerHTML = ``;
-
-
 
     document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
     document.getElementById("chkDeviceAudioRecording").setAttribute("disabled", true);
@@ -587,6 +585,7 @@ function showDeviceSettings(deviceId)
                     else
                     {
                         document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
+                        document.getElementById("chkDeviceAudioRecording").classList.add("collapse", true);
                     }
                     if(objResp.data[0].audioRecording == "true")
                     {
@@ -711,12 +710,12 @@ function showDeviceSettings(deviceId)
 function showStationSettings(stationId)
 {
     const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
-    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
+    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>`;
     document.getElementById("lblModalStationSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
     document.getElementById("lblStationModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblStationName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblStationSerial").innerHTML = `<span class="placeholder col-8 placeholder-lg"></span>`;
-    document.getElementById("lblStationFirmware").innerHTML= `<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span>`;
+    document.getElementById("lblStationFirmware").innerHTML= `<i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span>`;
     document.getElementById("cbStationAlarmTone").selectedIndex = 0;
     document.getElementById("rgStationAlarmVolume").value = 1;
     document.getElementById("rgStationPromtVolume").value = 0;
@@ -745,7 +744,7 @@ function showStationSettings(stationId)
             {
                 if(objResp.data.length = 1)
                 {
-                    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${stationId})</h5></div>`;
+                    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${stationId})</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>`;
                     document.getElementById("lblStationModel").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].modelName} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
                     document.getElementById("lblStationName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h6>`;
                     document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data[0].serialNumber}</h6>`;
@@ -837,6 +836,11 @@ function showStationSettings(stationId)
     };
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
+}
+
+function setDeviceSetting(deviceSerial, settingName, settingValue)
+{
+
 }
 //#endregion
 

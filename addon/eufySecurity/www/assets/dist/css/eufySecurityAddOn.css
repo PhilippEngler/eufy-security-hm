@@ -15,6 +15,7 @@ small,
   color: #6c757d;
 }
 
+/* change the color for code-tagged text */
 code {
   font-size: 80%;
   color: #3ea4e8;
@@ -91,22 +92,44 @@ code {
   animation: .75s linear infinite spinner-grow;
 }
 
+/* background on navbar */
 .bg-dark {
   background-color: #343a40 !important;
 }
 
+/* background for jumbotron */
 .jumbotron-background {
   background-color: #e9ecef !important;
 }
 
-.img-container {
-  background: #dee2e6;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* show the border on the bootom for display size lower than md */
+@media (max-width:767px) {
+  .img-container {
+    background: #dee2e6;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-color: #d2d2d2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
+/* show the border on the right for display size md and up */
+@media (min-width:768px) {
+  .img-container {
+    background: #dee2e6;
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-color: #d2d2d2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+/* show the text centered */
 .img-overlay-text-centered {
   text-align: center;
-  flex: 0 0 80%;
+  flex: 0 0 88%;
 }
