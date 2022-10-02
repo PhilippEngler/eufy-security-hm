@@ -15,40 +15,7 @@
 		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
 		
 		<style>
-			.bd-placeholder-img {
-				font-size: 1.125rem;
-				text-anchor: middle;
-				-webkit-user-select: none;
-				-moz-user-select: none;
-				-ms-user-select: none;
-				user-select: none;
-			}
-			
-			@media (min-width: 768px) {
-				.bd-placeholder-img-lg {
-					font-size: 3.5rem;
-				}
-			}
-			
-			.b-example-divider {
-				height: 3rem;
-				background-color: rgba(0, 0, 0, .1);
-				border: solid rgba(0, 0, 0, .15);
-				border-width: 1px 0;
-				box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
-			}
-			
-			.b-example-vr {
-				flex-shrink: 0;
-				width: 1.5rem;
-				height: 100vh;
-			}
-			
-			.bi {
-				vertical-align: -.125em;
-				fill: currentColor;
-			}
-			
+			/* used for nav bar toggle */
 			.nav-scroller {
 				position: relative;
 				z-index: 2;
@@ -76,8 +43,8 @@
 		<header>
 			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
 				<div class="container-fluid">
-					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security AddOn für HomeMatic</a>
-					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security für HomeMatic</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Seitennavigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					<div class="collapse navbar-collapse" id="navbarCollapse">
@@ -123,7 +90,7 @@
 				
 					<div class="row">
 						<div class="col">
-							<div class="card mb-3">
+							<div class="card mb-3 collapse" id="cardEufySecurityAccountData">
 								<h5 class="card-header"><i class="bi-person-circle"></i>&nbsp;&nbsp;eufy Security Account</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
@@ -175,7 +142,7 @@
 								</div>
 							</div>
 
-							<div class="card mb-3">
+							<div class="card mb-3 collapse" id="cardEufySecurityConfig">
 								<h5 class="card-header"><i class="bi-sliders"></i>&nbsp;&nbsp;Konfiguration des AddOns</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
@@ -324,11 +291,11 @@
 								</div>
 							</div>
 
-							<div class="mb-3">
+							<div class="mb-3 collapse" id="containerBtnSave">
 								<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
 							</div>
 
-							<div class="card mb-3">
+							<div class="card mb-3 collapse" id="cardSystemVariables">
 								<h5 class="card-header"><i class="bi-table"></i>&nbsp;&nbsp;Systemvariablen</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
@@ -348,29 +315,29 @@
 									<div class="col-md-12">
 										<div class="card-body" >
 											<div class="alert alert-warning fade show" role="alert">
-												<div class="row row-cols-12 row-cols-sm-12 row-cols-md-12 row-cols-lg-12 row-cols-xl-12 align-items-center">
-													<div class="col-5 col-sm-4 col-md-3 col-lg-2 col-xl-2">
-														<div id="enableTS"><button id="btnEnableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">Fehlerbehebung aktivieren</button></div>
+												<div class="row align-items-center">
+													<div class="col-xs-12 col-sm-4 col-md-3 col-lg-2 col-xl-2">
+														<div id="enableTS" class="d-grid"><button id="btnEnableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">Fehlerbehebung aktivieren</button></div>
 													</div>
-													<div class="col-7 col-sm-8 col-md-9 col-lg-10 col-xl-10">
+													<div class="col-xs-12 col-sm-8 col-md-9 col-lg-10 col-xl-10">
 														Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des AddOns wiederherzustellen. Um ungewollte Änderungen zu vermeiden, müssen Sie die Bearbeitung für einige Aufgaben zuerst freischalten.<br />
 														<small class="form-text text-muted">Bitte beachten Sie, dass Sie mit diesen Funktionen unter Umständen Daten und Einstellungen löschen oder verändern.</small>
 													</div>
 												</div>
 											</div>
 											<div class="form-label-group" class="container-fluid">
-												<label for="btnDownloadConfigFile">Sie haben die Möglichkeit, Ihre aktuelle Konfiguration herunterzuladen.<br /><small class="form-text text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
+												<label for="btnDownloadConfigFile" class="mb-2">Konfiguration herunterzuladen<br /><small class="form-text text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
 												<button id="btnDownloadConfigFile" onclick="downloadFile('conf')" type="button" class="btn btn-outline-primary">Konfiguration herunterladen</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
-												<label id="lblDeleteTokenData" for="btnDeleteTokenData" class="text-muted">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</label><br />
-												<button id="btnDeleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-outline-primary" disabled>Token löschen</button>
+												<label id="lblDeleteTokenData" for="btnDeleteTokenData" class="text-muted">Token löschen<br /><small class="form-text text-muted">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</small></label><br />
+												<button id="btnDeleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-outline-primary mt-2" disabled>Token löschen</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
-												<label id="lblRestartService" for="btnRestartService" class="text-muted">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</label><br />
-												<button id="btnRestartService" onclick="restartService()" type="button" class="btn btn-outline-primary" disabled>Service neu starten</button>
+												<label id="lblRestartService" for="btnRestartService" class="text-muted">Service neu starten<br /><small class="form-text text-muted">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</small></label><br />
+												<button id="btnRestartService" onclick="restartService()" type="button" class="btn btn-outline-primary mt-2" disabled>Service neu starten</button>
 											</div>
 										</div>
 									</div>

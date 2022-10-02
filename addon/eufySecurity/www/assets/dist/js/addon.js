@@ -673,9 +673,9 @@ function showDeviceSettings(deviceId)
                     }
 
                     document.getElementById("lblModalDeviceSettingsInfo").innerHTML = ``;
-                    if(objResp.data[0].model != "T8112x" && objResp.data[0].model != "T8113x" && objResp.data[0].model != "T8114x")
+                    if(objResp.data[0].model != "T8112" && objResp.data[0].model != "T8113" && objResp.data[0].model != "T8114")
                     {
-                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
+                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Dieses Gerät wird nicht vollständig unterstützt.<br /><small class="text-muted">Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</small>`);
                     }
                     document.getElementById("lblModalDeviceSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.");
                     document.getElementById("cardDeviceCommonSettings").classList.remove("collapse");
@@ -806,9 +806,9 @@ function showStationSettings(stationId)
                     }
 
                     document.getElementById("lblModalStationSettingsInfo").innerHTML = ``;
-                    if(objResp.data[0].model != "T8002x" && objResp.data[0].model != "T8010x")
+                    if(objResp.data[0].model != "T8002" && objResp.data[0].model != "T8010")
                     {
-                        document.getElementById("lblModalStationSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Dieses Gerät wird nicht vollständig unterstützt. Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
+                        document.getElementById("lblModalStationSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Diese Station wird nicht vollständig unterstützt.<br /><small class="text-muted">Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</small>`);
                     }
                     document.getElementById("lblModalStationSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.");
                     //document.getElementById("cardStationStorageSettings").classList.remove("collapse");
@@ -870,31 +870,31 @@ function loadDataStatechange(showLoading)
 						{
                             case "0":
 								state = "abwesend";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "1":
 								state = "zu Hause";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "2":
 								state = "Zeitsteuerung";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>Zeit&shy;steu&shy;e&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							case "63":
 								state = "deaktiviert";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-sm btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" type="button" class="btn btn-sm btn-primary col-12 h-100" disabled>de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
+								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
 							default:
 								state = "unbekannt";
@@ -1313,6 +1313,14 @@ function disableUIElements()
     document.getElementById("cbLogLevel").setAttribute("disabled", true);
 }
 
+function activateUIElements()
+{
+    document.getElementById("cardEufySecurityAccountData").classList.remove("collapse");
+    document.getElementById("cardEufySecurityConfig").classList.remove("collapse");
+    document.getElementById("containerBtnSave").classList.remove("collapse");
+    document.getElementById("cardSystemVariables").classList.remove("collapse");
+}
+
 function enableUIElements()
 {
     document.getElementById("txtUsername").removeAttribute("disabled");
@@ -1586,6 +1594,7 @@ function loadDataSettings()
                     }
                     checkLogLevel(apiloglevel);
                     document.getElementById("resultLoading").innerHTML = "";
+                    activateUIElements();
                     enableUIElements();
                 }
                 else
@@ -1627,7 +1636,7 @@ function loadSystemVariables()
                 if(objResp.success == true)
                 {
                     document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", `Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br /><small class="form-text text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>`);
-                    sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
+                    sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 84%;">Name der Systemvariable</th><th scope="col" style="width: 12%;"></th></tr></thead><tbody class="table-group-divider">`;
                     for(systemVariable in objResp.data)
                     {
                         sysVarName = objResp.data[systemVariable].sysVar_name;
@@ -1635,20 +1644,20 @@ function loadSystemVariables()
                         sysVarAvailable = objResp.data[systemVariable].sysVar_available;
                         if(sysVarAvailable==true)
                         {
-                            sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle">angelegt</th>`;
+                            sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="angelegt"></i></th>`;
                         }
                         else
                         {
-                            sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle">nicht angelegt</th>`;
+                            sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="nicht angelegt"></i></th>`;
                         }
                         sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
                         if(sysVarAvailable==true)
                         {
-                            sysVarTable += `<td class="align-middle"><button id="btn${sysVarName}" type="button" class="btn btn-primary mb-1" disabled>Systemvariable anlegen</button></td>`;
+                            sysVarTable += `<td class="align-middle text-center"><button id="btn${sysVarName}" type="button" class="btn btn-primary mb-1" disabled>System&shy;variable anlegen</button></td>`;
                         }
                         else
                         {
-                            sysVarTable += `<td class="align-middle"><button id="btn${sysVarName}" onclick="createSysVar('${sysVarName}', '${sysVarInfo}')" type="button" class="btn btn-primary mb-1">Systemvariable anlegen</button></td>`;
+                            sysVarTable += `<td class="align-middle text-center"><button id="btn${sysVarName}" onclick="createSysVar('${sysVarName}', '${sysVarInfo}')" type="button" class="btn btn-primary mb-1">System&shy;variable anlegen</button></td>`;
                         }
                         sysVarTable += `</tr>`;
                     }
