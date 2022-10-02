@@ -2258,7 +2258,7 @@ function loadDataInfo(showLoading)
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
             {
-                info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.3`;
+                info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.4`;
                 document.getElementById("versionInfo").innerHTML = info;
             }
             else

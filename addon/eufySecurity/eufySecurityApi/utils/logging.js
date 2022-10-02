@@ -14,14 +14,6 @@ class Logger {
         console.info(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
     }
     /**
-     * Write the given message(s) to the errorlogfile regardless the actual loglevel.
-     * @param message The message to be added.
-     * @param additionalMessages Additional message(s) to be added.
-     */
-    logErrorBasis(message, ...additionalMessages) {
-        console.error(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
-    }
-    /**
      * Write the given message(s) to the logfile if the loglevel is set to log info.
      * @param logLevel The current loglevel.
      * @param message The message to be added.
@@ -41,6 +33,14 @@ class Logger {
         if (this.api.getApiLogLevel() >= 1) {
             console.info(`${this.makeNowDateTimeString()} - INFO: ${message}`, ...additionalMessages);
         }
+    }
+    /**
+     * Write the given message(s) to the errorlogfile regardless the actual loglevel.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    logErrorBasis(message, ...additionalMessages) {
+        console.error(`${this.makeNowDateTimeString()} - ${message}`, ...additionalMessages);
     }
     /**
      * Write the given message(s) to the errorlogfile. Additional the errors are written to the logile if the loglevel is set to log errors.
@@ -86,14 +86,46 @@ class Logger {
             console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
         }
     }
-    trace(message, ...additionalMessages) {
-        if (this.api.getApiLogLevel() >= 3) {
-            console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
+    /**
+     * Write the given message(s) to the logfile if the loglevel is set to log debug messages.
+     * @param logLevel The current loglevel.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    logTrace(logLevel, message, ...additionalMessages) {
+        if (logLevel >= 3) {
+            console.trace(`${this.makeNowDateTimeString()} - TRACE: ${message}`, ...additionalMessages);
         }
     }
-    warn(message, ...additionalMessages) {
+    /**
+     * Write the given message(s) to the logfile if the loglevel is set to log debug messages.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    trace(message, ...additionalMessages) {
         if (this.api.getApiLogLevel() >= 3) {
-            console.debug(`${this.makeNowDateTimeString()} - DEBUG: ${message}`, ...additionalMessages);
+            console.trace(`${this.makeNowDateTimeString()} - TRACE: ${message}`, ...additionalMessages);
+        }
+    }
+    /**
+     * Write the given message(s) to the logfile if the loglevel is set to log info messages.
+     * @param logLevel The current loglevel.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    logWarn(logLevel, message, ...additionalMessages) {
+        if (logLevel >= 1) {
+            console.warn(`${this.makeNowDateTimeString()} - WARN: ${message}`, ...additionalMessages);
+        }
+    }
+    /**
+     * Write the given message(s) to the logfile if the loglevel is set to log warn messages.
+     * @param message The message to be added.
+     * @param additionalMessages Additional message(s) to be added.
+     */
+    warn(message, ...additionalMessages) {
+        if (this.api.getApiLogLevel() >= 1) {
+            console.warn(`${this.makeNowDateTimeString()} - WARN: ${message}`, ...additionalMessages);
         }
     }
     /**

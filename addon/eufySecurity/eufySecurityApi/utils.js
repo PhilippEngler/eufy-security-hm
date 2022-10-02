@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -19,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validValue = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
+exports.mergeDeep = exports.validValue = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const removeLastChar = function (text, char) {
@@ -41,7 +45,6 @@ exports.md5 = md5;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleUpdate = function (config, log, oldVersion) {
     if (oldVersion <= 1.24) {
-        //config.api_base = "";
         config.setToken("");
         config.setTokenExpire("0");
     }
@@ -141,5 +144,32 @@ const validValue = function (metadata, value) {
             throw new error_1.InvalidPropertyValueError(`Value "${numericValue}" isn't a valid value for property "${numberMetadata.name}"`);
         }
     }
+    else if (metadata.type === "string") {
+        const stringMetadata = metadata;
+        const stringValue = value;
+        if ((stringMetadata.format !== undefined && stringValue.match(stringMetadata.format) === null) || (stringMetadata.minLength !== undefined && stringMetadata.minLength > stringValue.length) || (stringMetadata.maxLength !== undefined && stringMetadata.maxLength < stringValue.length)) {
+            throw new error_1.InvalidPropertyValueError(`Value "${stringValue}" isn't a valid value for property "${stringMetadata.name}"`);
+        }
+    }
 };
 exports.validValue = validValue;
+const mergeDeep = function (target, source) {
+    target = target || {};
+    for (const [key, value] of Object.entries(source)) {
+        if (!(key in target)) {
+            target[key] = value;
+        }
+        else {
+            if (typeof value === "object") {
+                // merge objects
+                target[key] = (0, exports.mergeDeep)(target[key], value);
+            }
+            else if (typeof target[key] === "undefined") {
+                // don't override single keys
+                target[key] = value;
+            }
+        }
+    }
+    return target;
+};
+exports.mergeDeep = mergeDeep;

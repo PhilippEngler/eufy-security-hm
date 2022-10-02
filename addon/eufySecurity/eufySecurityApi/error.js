@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.RTSPPropertyNotEnabled = exports.WrongStationError = exports.NotSupportedError = exports.DuplicateDeviceError = exports.DeviceNotFoundError = exports.DuplicateStationError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
+exports.StationConnectTimeoutError = exports.TalkbackError = exports.LivestreamError = exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.RTSPPropertyNotEnabledError = exports.WrongStationError = exports.NotSupportedError = exports.DeviceNotFoundError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
 class InvalidCountryCodeError extends Error {
     constructor(message) {
         super(message);
@@ -25,14 +25,6 @@ class StationNotFoundError extends Error {
     }
 }
 exports.StationNotFoundError = StationNotFoundError;
-class DuplicateStationError extends Error {
-    constructor(message) {
-        super(message);
-        Object.setPrototypeOf(this, new.target.prototype);
-        this.name = DuplicateStationError.name;
-    }
-}
-exports.DuplicateStationError = DuplicateStationError;
 class DeviceNotFoundError extends Error {
     constructor(message) {
         super(message);
@@ -41,14 +33,6 @@ class DeviceNotFoundError extends Error {
     }
 }
 exports.DeviceNotFoundError = DeviceNotFoundError;
-class DuplicateDeviceError extends Error {
-    constructor(message) {
-        super(message);
-        Object.setPrototypeOf(this, new.target.prototype);
-        this.name = DuplicateDeviceError.name;
-    }
-}
-exports.DuplicateDeviceError = DuplicateDeviceError;
 class NotSupportedError extends Error {
     constructor(message) {
         super(message);
@@ -65,14 +49,14 @@ class WrongStationError extends Error {
     }
 }
 exports.WrongStationError = WrongStationError;
-class RTSPPropertyNotEnabled extends Error {
+class RTSPPropertyNotEnabledError extends Error {
     constructor(message) {
         super(message);
         Object.setPrototypeOf(this, new.target.prototype);
-        this.name = RTSPPropertyNotEnabled.name;
+        this.name = RTSPPropertyNotEnabledError.name;
     }
 }
-exports.RTSPPropertyNotEnabled = RTSPPropertyNotEnabled;
+exports.RTSPPropertyNotEnabledError = RTSPPropertyNotEnabledError;
 class InvalidPropertyValueError extends Error {
     constructor(message) {
         super(message);
@@ -97,3 +81,27 @@ class ReadOnlyPropertyError extends Error {
     }
 }
 exports.ReadOnlyPropertyError = ReadOnlyPropertyError;
+class LivestreamError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = LivestreamError.name;
+    }
+}
+exports.LivestreamError = LivestreamError;
+class TalkbackError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = TalkbackError.name;
+    }
+}
+exports.TalkbackError = TalkbackError;
+class StationConnectTimeoutError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = StationConnectTimeoutError.name;
+    }
+}
+exports.StationConnectTimeoutError = StationConnectTimeoutError;

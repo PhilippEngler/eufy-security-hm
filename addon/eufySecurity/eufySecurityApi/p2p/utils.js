@@ -1,22 +1,38 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isP2PQueueMessage = exports.buildPingCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateLockBasicPublicKeyAESKey = exports.generateLockBasicSequence = exports.encryptLockBasicPublicKey = exports.generateLockBasicAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.generateLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const crypto_js_1 = __importDefault(require("crypto-js"));
 const crypto_1 = require("crypto");
+const os = __importStar(require("os"));
 const types_1 = require("./types");
+const device_1 = require("../http/device");
 exports.MAGIC_WORD = "XZYH";
 const isPrivateIp = (ip) => /^(::f{4}:)?10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
     /^(::f{4}:)?192\.168\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
@@ -28,11 +44,28 @@ const isPrivateIp = (ip) => /^(::f{4}:)?10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1
     /^::1$/.test(ip) ||
     /^::$/.test(ip);
 exports.isPrivateIp = isPrivateIp;
-const stringWithLength = (input, targetByteLength = 128) => {
+const stringWithLength = (input, chunkLength = 128) => {
     const stringAsBuffer = Buffer.from(input);
-    const postZeros = Buffer.alloc(targetByteLength - stringAsBuffer.byteLength);
-    return Buffer.concat([stringAsBuffer, postZeros]);
+    const bufferSize = stringAsBuffer.byteLength < chunkLength ? chunkLength : Math.ceil(stringAsBuffer.byteLength / chunkLength) * chunkLength;
+    const result = Buffer.alloc(bufferSize);
+    stringAsBuffer.copy(result);
+    return result;
 };
+const getLocalIpAddress = (init = "") => {
+    const ifaces = os.networkInterfaces();
+    let localAddress = init;
+    for (const name in ifaces) {
+        const iface = ifaces[name].filter(function (details) {
+            return details.family === "IPv4" && details.internal === false;
+        });
+        if (iface.length > 0) {
+            localAddress = iface[0].address;
+            break;
+        }
+    }
+    return localAddress;
+};
+exports.getLocalIpAddress = getLocalIpAddress;
 const p2pDidToBuffer = (p2pDid) => {
     const p2pArray = p2pDid.split("-");
     const buf1 = stringWithLength(p2pArray[0], 8);
@@ -43,10 +76,12 @@ const p2pDidToBuffer = (p2pDid) => {
 };
 const buildLookupWithKeyPayload = (socket, p2pDid, dskKey) => {
     const p2pDidBuffer = p2pDidToBuffer(p2pDid);
-    const port = socket.address().port;
+    const addressInfo = socket.address();
+    const port = addressInfo.port;
     const portAsBuffer = Buffer.allocUnsafe(2);
     portAsBuffer.writeUInt16LE(port, 0);
-    const ip = socket.address().address;
+    //const ip = socket.address().address;
+    const ip = (0, exports.getLocalIpAddress)(addressInfo.address);
     const temp_buff = [];
     ip.split(".").reverse().forEach(element => {
         temp_buff.push(Number.parseInt(element));
@@ -158,7 +193,7 @@ const buildIntStringCommandPayload = (value, valueSub = 0, strValue = "", strVal
     ]);
 };
 exports.buildIntStringCommandPayload = buildIntStringCommandPayload;
-const sendMessage = (socket, address, msgID, payload) => __awaiter(void 0, void 0, void 0, function* () {
+const sendMessage = async (socket, address, msgID, payload) => {
     if (!payload)
         payload = Buffer.from([]);
     const payloadLen = Buffer.allocUnsafe(2);
@@ -169,7 +204,7 @@ const sendMessage = (socket, address, msgID, payload) => __awaiter(void 0, void 
             return err ? reject(err) : resolve(bytes);
         });
     });
-});
+};
 exports.sendMessage = sendMessage;
 const hasHeader = (msg, searchedType) => {
     const header = Buffer.allocUnsafe(2);
@@ -177,8 +212,15 @@ const hasHeader = (msg, searchedType) => {
     return Buffer.compare(header, searchedType) === 0;
 };
 exports.hasHeader = hasHeader;
-const buildCommandHeader = (seqNumber, commandType) => {
-    const dataTypeBuffer = types_1.P2PDataTypeHeader.DATA;
+const buildCommandHeader = (seqNumber, commandType, p2pDataTypeHeader = null) => {
+    let dataTypeBuffer = types_1.P2PDataTypeHeader.DATA;
+    if (p2pDataTypeHeader !== null &&
+        (Buffer.compare(p2pDataTypeHeader, types_1.P2PDataTypeHeader.DATA) === 0 ||
+            Buffer.compare(p2pDataTypeHeader, types_1.P2PDataTypeHeader.BINARY) === 0 ||
+            Buffer.compare(p2pDataTypeHeader, types_1.P2PDataTypeHeader.CONTROL) === 0 ||
+            Buffer.compare(p2pDataTypeHeader, types_1.P2PDataTypeHeader.VIDEO) === 0)) {
+        dataTypeBuffer = p2pDataTypeHeader;
+    }
     const seqAsBuffer = Buffer.allocUnsafe(2);
     seqAsBuffer.writeUInt16BE(seqNumber, 0);
     const magicString = Buffer.from(exports.MAGIC_WORD);
@@ -301,7 +343,7 @@ const encryptLockAESData = (key, iv, data) => {
     return Buffer.from(crypto_js_1.default.enc.Hex.stringify(encrypted.ciphertext), "hex");
 };
 exports.encryptLockAESData = encryptLockAESData;
-const generateLockAESKey = (adminID, stationSN) => {
+const generateBasicLockAESKey = (adminID, stationSN) => {
     const encoder = new TextEncoder();
     const encOwnerID = encoder.encode(adminID);
     const encStationSerial = encoder.encode(stationSN);
@@ -311,8 +353,10 @@ const generateLockAESKey = (adminID, stationSN) => {
     }
     return Buffer.from(array).toString("hex");
 };
-exports.generateLockAESKey = generateLockAESKey;
-const generateLockSequence = () => {
+exports.generateBasicLockAESKey = generateBasicLockAESKey;
+const generateLockSequence = (deviceType) => {
+    if (device_1.Device.isLockWifi(deviceType) || device_1.Device.isLockWifiNoFinger(deviceType))
+        return Math.trunc(Math.random() * 1000);
     return Math.trunc(new Date().getTime() / 1000); //ESLBridgeSeqNumManager
 };
 exports.generateLockSequence = generateLockSequence;
@@ -358,7 +402,7 @@ const eslTimestamp = function (timestamp_in_sec = new Date().getTime() / 1000) {
     return array;
 };
 exports.eslTimestamp = eslTimestamp;
-const generateLockBasicAESKey = () => {
+const generateAdvancedLockAESKey = () => {
     const randomBytesArray = [...(0, crypto_1.randomBytes)(16)];
     let result = "";
     for (let pos = 0; pos < randomBytesArray.length; pos++) {
@@ -367,36 +411,7 @@ const generateLockBasicAESKey = () => {
     }
     return result;
 };
-exports.generateLockBasicAESKey = generateLockBasicAESKey;
-const encryptLockBasicPublicKey = (key, data) => {
-    const ekey = crypto_js_1.default.enc.Hex.parse(key);
-    const encrypted = crypto_js_1.default.AES.encrypt(crypto_js_1.default.enc.Hex.parse(data.toString("hex")), ekey, {
-        mode: crypto_js_1.default.mode.ECB,
-        padding: crypto_js_1.default.pad.NoPadding
-    });
-    return Buffer.from(crypto_js_1.default.enc.Hex.stringify(encrypted.ciphertext), "hex");
-};
-exports.encryptLockBasicPublicKey = encryptLockBasicPublicKey;
-const generateLockBasicSequence = () => {
-    return Math.trunc(Math.random() * 1000);
-};
-exports.generateLockBasicSequence = generateLockBasicSequence;
-const generateLockBasicPublicKeyAESKey = (userID) => {
-    if (userID === undefined || userID === "") {
-        return "00000000000000000000000000000000";
-    }
-    if (userID.length > 32) {
-        return userID.substring(0, 32);
-    }
-    if (userID.length === 32) {
-        return userID;
-    }
-    for (let length = userID.length; length < 32; length++) {
-        userID += "0";
-    }
-    return userID;
-};
-exports.generateLockBasicPublicKeyAESKey = generateLockBasicPublicKeyAESKey;
+exports.generateAdvancedLockAESKey = generateAdvancedLockAESKey;
 const getVideoCodec = (data) => {
     if (data !== undefined && data.length > 0) {
         if (data.length >= 5) {
@@ -423,7 +438,7 @@ const checkT8420 = (serialNumber) => {
     return true;
 };
 exports.checkT8420 = checkT8420;
-const buildPingCommandPayload = (channel = 255) => {
+const buildVoidCommandPayload = (channel = 255) => {
     const headerBuffer = Buffer.from([0x00, 0x00]);
     const emptyBuffer = Buffer.from([0x00, 0x00]);
     const magicBuffer = Buffer.from([0x01, 0x00]);
@@ -436,8 +451,98 @@ const buildPingCommandPayload = (channel = 255) => {
         emptyBuffer
     ]);
 };
-exports.buildPingCommandPayload = buildPingCommandPayload;
+exports.buildVoidCommandPayload = buildVoidCommandPayload;
 function isP2PQueueMessage(type) {
     return type.payload !== undefined;
 }
 exports.isP2PQueueMessage = isP2PQueueMessage;
+const encryptPayloadData = (data, key, iv) => {
+    const cipher = (0, crypto_1.createCipheriv)("aes-128-cbc", key, iv);
+    return Buffer.concat([
+        cipher.update(data),
+        cipher.final()
+    ]);
+};
+exports.encryptPayloadData = encryptPayloadData;
+const decryptPayloadData = (data, key, iv) => {
+    const cipher = (0, crypto_1.createDecipheriv)("aes-128-cbc", key, iv);
+    return Buffer.concat([
+        cipher.update(data),
+        cipher.final()
+    ]);
+};
+exports.decryptPayloadData = decryptPayloadData;
+const eufyKDF = (key) => {
+    const hash_length = 32;
+    const digest_length = 48;
+    const staticBuffer = Buffer.from("ECIES");
+    const steps = Math.ceil(digest_length / hash_length);
+    const buffer = Buffer.alloc(hash_length * steps);
+    let tmpBuffer = staticBuffer;
+    for (let step = 0; step < steps; ++step) {
+        tmpBuffer = (0, crypto_1.createHmac)("sha256", key).update(tmpBuffer).digest();
+        const digest = (0, crypto_1.createHmac)("sha256", key).update(Buffer.concat([tmpBuffer, staticBuffer])).digest();
+        digest.copy(buffer, hash_length * step);
+    }
+    return buffer.slice(0, digest_length);
+};
+exports.eufyKDF = eufyKDF;
+const getAdvancedLockKey = (key, publicKey) => {
+    const ecdh = (0, crypto_1.createECDH)("prime256v1");
+    ecdh.generateKeys();
+    const secret = ecdh.computeSecret(Buffer.concat([Buffer.from("04", "hex"), Buffer.from(publicKey, "hex")]));
+    const randomValue = (0, crypto_1.randomBytes)(16);
+    const derivedKey = (0, exports.eufyKDF)(secret);
+    const encryptedData = (0, exports.encryptPayloadData)(key, derivedKey.slice(0, 16), randomValue);
+    const hmac = (0, crypto_1.createHmac)("sha256", derivedKey.slice(16));
+    hmac.update(randomValue);
+    hmac.update(encryptedData);
+    const hmacDigest = hmac.digest();
+    return Buffer.concat([Buffer.from(ecdh.getPublicKey("hex", "compressed"), "hex"), randomValue, encryptedData, hmacDigest]).toString("hex");
+};
+exports.getAdvancedLockKey = getAdvancedLockKey;
+const buildTalkbackAudioFrameHeader = (audioData, channel = 0) => {
+    const audioDataLength = Buffer.allocUnsafe(4);
+    audioDataLength.writeUInt32LE(audioData.length);
+    const unknown1 = Buffer.alloc(1);
+    const audioType = Buffer.alloc(1);
+    const audioSeq = Buffer.alloc(2);
+    const audioTimestamp = Buffer.alloc(8);
+    const audioDataHeader = Buffer.concat([audioDataLength, unknown1, audioType, audioSeq, audioTimestamp]);
+    const bytesToRead = Buffer.allocUnsafe(4);
+    bytesToRead.writeUInt32LE(audioData.length + audioDataHeader.length);
+    const magicBuffer = Buffer.from([0x01, 0x00]);
+    const channelBuffer = Buffer.from([channel, 0x00]);
+    const emptyBuffer = Buffer.from([0x00, 0x00]);
+    return Buffer.concat([
+        bytesToRead,
+        magicBuffer,
+        channelBuffer,
+        emptyBuffer,
+        audioDataHeader
+    ]);
+};
+exports.buildTalkbackAudioFrameHeader = buildTalkbackAudioFrameHeader;
+const decodeP2PCloudIPs = (data) => {
+    const lookupTable = Buffer.from("4959433db5bf6da347534f6165e371e9677f02030badb3892b2f35c16b8b959711e5a70deff1050783fb9d3bc5c713171d1f2529d3df", "hex");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [encoded, name = "name not included"] = data.split(":");
+    const output = Buffer.alloc(encoded.length / 2);
+    for (let i = 0; i <= data.length / 2; i++) {
+        let z = 0x39; // 57 // '9'
+        for (let j = 0; j < i; j++) {
+            z = z ^ output[j];
+        }
+        const x = (data.charCodeAt(i * 2 + 1) - "A".charCodeAt(0));
+        const y = (data.charCodeAt(i * 2) - "A".charCodeAt(0)) * 0x10;
+        output[i] = z ^ lookupTable[i % lookupTable.length] ^ x + y;
+    }
+    const result = [];
+    output.toString("utf8").split(",").forEach((ip) => {
+        if (ip !== "") {
+            result.push({ host: ip, port: 32100 });
+        }
+    });
+    return result;
+};
+exports.decodeP2PCloudIPs = decodeP2PCloudIPs;

@@ -17,7 +17,7 @@ class Config {
      * @returns The expected version of the config file.
      */
     getConfigFileTemplateVersion() {
-        return 8;
+        return 11;
     }
     /**
      * Load Config from file.
@@ -216,17 +216,86 @@ class Config {
             this.logger.logInfoBasic("...Stage2 update to version 7 finished.");
         }
         if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 8) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 8...");
-            if (this.filecontent.indexOf("location") == -1) {
+            /*this.logger.logInfoBasic("Configfile needs Stage2 update to version 8...");
+            if(this.filecontent.indexOf("location") == -1)
+            {
                 this.logger.logInfoBasic(" adding 'location'.");
                 this.filecontent = this.filecontent.replace(`password=${this.getPassword()}`, `password=${this.getPassword()}\r\nlocation="1"`);
+                this.config = parse(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...Stage2 update to version 8 finished.");*/
+        }
+        if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 9) {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 9...");
+            if (this.filecontent.indexOf("country") == -1) {
+                this.logger.logInfoBasic(" adding 'country' and 'language'.");
+                this.filecontent = this.filecontent.replace(`password=${this.getPassword()}`, `password=${this.getPassword()}\r\ncountry=DE\r\nlanguage=de\r\n\r\n`);
+                this.config = (0, ini_1.parse)(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if (this.filecontent.indexOf("[EufyAPIPushData]") == -1) {
+                this.logger.logInfoBasic(" adding '[EufyAPIPushData]'.");
+                this.filecontent = this.filecontent.replace(`language=${this.getLanguage()}`, `language=${this.getLanguage()}\r\n\r\n[EufyAPIPushData]\r\ntrusted_device_name=eufyclient\r\nserial_number=\r\nevent_duration_seconds=10\r\naccept_invitations=false\r\nopen_udid=\r\nfid_response_name=\r\nfid_response_fid=\r\nfid_response_refresh_token=\r\nfid_response_auth_token_token=\r\nfid_response_auth_token_expires_in=\r\nfid_response_auth_token_expires_at=\r\ncheckin_response_stats_ok=\r\ncheckin_response_time_ms=\r\ncheckin_response_android_id=\r\ncheckin_response_security_token=\r\ncheckin_response_version_info=\r\ncheckin_response_device_data_version_info=\r\ngcm_response_token=\r\npersistent_ids=\r\n\r\n`);
                 this.config = (0, ini_1.parse)(this.filecontent);
                 updated = true;
                 this.hasChanged = true;
             }
             updated = true;
             this.hasChanged = true;
-            this.logger.logInfoBasic("...Stage2 update to version 8 finished.");
+            this.logger.logInfoBasic("...Stage2 update to version 9 finished.");
+        }
+        if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) < 10) {
+            this.logger.logInfoBasic("Configfile needs Stage2 update to version 10...");
+            if (this.filecontent.indexOf("api_use_pushservice") == -1) {
+                this.logger.logInfoBasic(" adding 'api_use_pushservice'.");
+                this.filecontent = this.filecontent.replace(`api_log_level=${this.getApiLogLevel()}`, `api_use_pushservice=false\r\napi_log_level=${this.getApiLogLevel()}\r\n\r\n`);
+                this.config = (0, ini_1.parse)(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...Stage2 update to version 11 finished.");
+        }
+        if (Number.parseInt(this.config['ConfigFileInfo']['config_file_version']) == 10) {
+            this.logger.logInfoBasic("Configfile needs country and language check...");
+            if (this.getCountry() == "") {
+                this.logger.logInfoBasic(" setting 'country' to standard value.");
+                this.filecontent = this.filecontent.replace(`country=`, `country=DE`);
+                this.config = (0, ini_1.parse)(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if (this.getCountry() == "undefined") {
+                this.logger.logInfoBasic(" setting 'country' to standard value.");
+                this.filecontent = this.filecontent.replace(`country="undefined"`, `country=DE`);
+                this.config = (0, ini_1.parse)(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if (this.getLanguage() == "") {
+                this.logger.logInfoBasic(" setting 'language' to standard value.");
+                this.filecontent = this.filecontent.replace(`language=`, `language=de`);
+                this.config = (0, ini_1.parse)(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            if (this.getLanguage() == "undefined") {
+                this.logger.logInfoBasic(" setting 'language' to standard value.");
+                this.filecontent = this.filecontent.replace(`language=undefined`, `language=de`);
+                this.config = (0, ini_1.parse)(this.filecontent);
+                updated = true;
+                this.hasChanged = true;
+            }
+            updated = true;
+            this.hasChanged = true;
+            this.logger.logInfoBasic("...country and language check finished.");
+            this.logger.logInfoBasic("...Stage2 update to version 11 finished.");
         }
         if (updated) {
             this.config = (0, ini_1.parse)(this.filecontent);
@@ -244,7 +313,7 @@ class Config {
                 this.hasChanged = false;
                 return "saved";
             }
-            catch (_a) {
+            catch {
                 return "failed";
             }
         }
@@ -261,7 +330,28 @@ class Config {
         fc += "[EufyAPILoginData]\r\n";
         fc += "email=\r\n";
         fc += "password=\r\n";
-        fc += "location=1\r\n\r\n";
+        fc += "country=DE\r\n";
+        fc += "language=de\r\n\r\n";
+        fc += "[EufyAPIPushData]\r\n";
+        fc += "trusted_device_name=eufyclient\r\n";
+        fc += "serial_number=\r\n";
+        fc += "event_duration_seconds=10\r\n";
+        fc += "accept_invitations=false\r\n";
+        fc += "open_udid=\r\n";
+        fc += "fid_response_name=\r\n";
+        fc += "fid_response_fid=\r\n";
+        fc += "fid_response_refresh_token=\r\n";
+        fc += "fid_response_auth_token_token=\r\n";
+        fc += "fid_response_auth_token_expires_in=\r\n";
+        fc += "fid_response_auth_token_expires_at=\r\n";
+        fc += "checkin_response_stats_ok=\r\n";
+        fc += "checkin_response_time_ms=\r\n";
+        fc += "checkin_response_android_id=\r\n";
+        fc += "checkin_response_security_token=\r\n";
+        fc += "checkin_response_version_info=\r\n";
+        fc += "checkin_response_device_data_version_info=\r\n";
+        fc += "gcm_response_token=\r\n";
+        fc += "persistent_ids=\r\n\r\n";
         fc += "[EufyTokenData]\r\n";
         fc += "token=\r\n";
         fc += "tokenexpires=0\r\n\r\n";
@@ -276,7 +366,6 @@ class Config {
         fc += "api_https_pkey_string=\r\n";
         fc += "api_connection_type=1\r\n";
         fc += "api_udp_local_static_ports_active=false\r\n";
-        //fc += "api_udp_local_static_ports=52789,52790";
         fc += "api_use_system_variables=false\r\n";
         fc += "api_camera_default_image=\r\n";
         fc += "api_camera_default_video=\r\n";
@@ -286,36 +375,43 @@ class Config {
         fc += "api_update_links24_active=false\r\n";
         fc += "api_update_links_active=true\r\n";
         fc += "api_update_links_timespan=15\r\n";
-        fc += "api_log_level=0\r\n";
+        fc += "api_use_pushservice=false\r\n";
+        fc += "api_log_level=0\r\n\r\n";
         (0, fs_1.writeFileSync)('./config.ini', fc);
         this.loadConfig();
         return true;
     }
     /**
-     * Add section for a new Base.
-     * @param baseSerial Serialnumber of the new Base.
+     * Add section for a new station.
+     * @param stationSerial Serialnumber of the new station.
      */
-    updateWithNewBase(baseSerial) {
-        this.writeConfig();
-        var fc = (0, fs_1.readFileSync)('./config.ini', 'utf-8');
-        fc += "\r\n[EufyP2PData_" + baseSerial + "]\r\n";
-        fc += "p2p_did=\r\n";
-        fc += "dsk_key=\r\n";
-        fc += "dsk_key_creation=\r\n";
-        fc += "actor_id=\r\n";
-        fc += "base_ip_address=\r\n";
-        fc += "base_port=\r\n";
-        fc += "udp_ports=\r\n";
-        (0, fs_1.writeFileSync)('./config.ini', fc);
-        this.loadConfig();
-        return true;
+    updateWithNewStation(stationSerial) {
+        var res = this.writeConfig();
+        if (res == "ok" || res == "saved") {
+            this.logger.logInfoBasic(`Adding frame for station ${stationSerial}.`);
+            var fc = (0, fs_1.readFileSync)('./config.ini', 'utf-8');
+            fc += "\r\n[EufyP2PData_" + stationSerial + "]\r\n";
+            fc += "p2p_did=\r\n";
+            fc += "dsk_key=\r\n";
+            fc += "dsk_key_creation=\r\n";
+            fc += "actor_id=\r\n";
+            fc += "base_ip_address=\r\n";
+            fc += "base_port=\r\n";
+            fc += "udp_ports=\r\n";
+            (0, fs_1.writeFileSync)('./config.ini', fc);
+            this.loadConfig();
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     /**
-     * Checks if the Base given by serialnumber is in the config.
-     * @param baseSerial The serial of the Base to check.
+     * Checks if the station given by serialnumber is in the config.
+     * @param stationSerial The serial of the station to check.
      */
-    isBaseInConfig(baseSerial) {
-        if (this.filecontent.indexOf("EufyP2PData_" + baseSerial) < 0) {
+    isStationInConfig(stationSerial) {
+        if (this.filecontent.indexOf("EufyP2PData_" + stationSerial) < 0) {
             return false;
         }
         else {
@@ -330,7 +426,7 @@ class Config {
         try {
             return this.config['ConfigFileInfo']['config_file_version'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -341,7 +437,7 @@ class Config {
         try {
             return this.config['EufyAPILoginData']['email'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -363,7 +459,7 @@ class Config {
         try {
             return this.config['EufyAPILoginData']['password'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -378,34 +474,13 @@ class Config {
         }
     }
     /**
-     * Set the location for the eufy security account.
-     * @param location The location to set.
-     */
-    setLocation(location) {
-        if (this.config['EufyAPILoginData']['location'] != location) {
-            this.config['EufyAPILoginData']['location'] = location;
-            this.hasChanged = true;
-        }
-    }
-    /**
-     * Get the location for the eufy security account.
-     */
-    getLocation() {
-        try {
-            return this.config['EufyAPILoginData']['location'];
-        }
-        catch (_a) {
-            return "";
-        }
-    }
-    /**
-     * Returns true if the connection type for connecting with HomeBases.
+     * Returns true if the connection type for connecting with station.
      */
     getConnectionType() {
         try {
             return this.config['EufyAPIServiceData']['api_connection_type'];
         }
-        catch (_a) {
+        catch {
             return "-1";
         }
     }
@@ -426,7 +501,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_udp_local_static_ports_active'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -449,7 +524,7 @@ class Config {
         if (ports) {
             var array;
             for (array of ports) {
-                if (this.setUdpLocalPortPerBase(array[0], array[1]) == false) {
+                if (this.setUdpLocalPortPerStation(array[0], array[1]) == false) {
                     err = true;
                 }
             }
@@ -468,7 +543,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_use_system_variables'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -489,7 +564,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_http_active'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -510,7 +585,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_http_port'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -531,7 +606,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_https_active'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -552,7 +627,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_https_port'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -573,7 +648,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_https_method'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -594,7 +669,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_https_pkey_file'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -615,7 +690,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_https_cert_file'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -636,7 +711,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_https_pkey_string'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -657,7 +732,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_camera_default_image'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -678,7 +753,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_camera_default_video'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -699,7 +774,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_update_state_event_active'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -720,7 +795,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_update_state_intervall_active'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -741,7 +816,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_update_state_timespan'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -762,7 +837,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_update_links_active'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -783,7 +858,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_update_links_timespan'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -804,7 +879,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_update_links_only_when_active'];
         }
-        catch (_a) {
+        catch {
             return false;
         }
     }
@@ -825,7 +900,7 @@ class Config {
         try {
             return this.config['EufyAPIServiceData']['api_log_level'];
         }
-        catch (_a) {
+        catch {
             return 0;
         }
     }
@@ -846,7 +921,7 @@ class Config {
         try {
             return this.config['EufyTokenData']['token'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -867,7 +942,7 @@ class Config {
         try {
             return this.config['EufyTokenData']['tokenexpires'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
@@ -882,201 +957,513 @@ class Config {
         }
     }
     /**
-     * Get the P2P_DID for the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the P2P_DID for the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    getP2PData_p2p_did(baseSerial) {
+    getP2PData_p2p_did(stationSerial) {
         try {
-            return this.config['EufyP2PData_' + baseSerial]['p2p_did'];
+            return this.config['EufyP2PData_' + stationSerial]['p2p_did'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
     /**
-     * Set the P2P_DID for the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Set the P2P_DID for the given station.
+     * @param stationSerial The serialnumber of the station.
      * @param p2p_did The P2P_DID to set.
      */
-    setP2PData_p2p_did(baseSerial, p2p_did) {
-        if (this.config['EufyP2PData_' + baseSerial]['p2p_did'] != p2p_did) {
-            this.config['EufyP2PData_' + baseSerial]['p2p_did'] = p2p_did;
+    setP2PData_p2p_did(stationSerial, p2p_did) {
+        if (this.config['EufyP2PData_' + stationSerial]['p2p_did'] != p2p_did) {
+            this.config['EufyP2PData_' + stationSerial]['p2p_did'] = p2p_did;
             this.hasChanged = true;
         }
     }
     /**
-     * Get the DSK_KEY for the given base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the DSK_KEY for the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    getP2PData_dsk_key(baseSerial) {
+    getP2PData_dsk_key(stationSerial) {
         try {
-            return this.config['EufyP2PData_' + baseSerial]['dsk_key'];
+            return this.config['EufyP2PData_' + stationSerial]['dsk_key'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
     /**
-     * Set the DSK_KEY for the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Set the DSK_KEY for the given station.
+     * @param stationSerial The serialnumber of the station.
      * @param dsk_key The DSK_KEY to set.
      */
-    setP2PData_dsk_key(baseSerial, dsk_key) {
-        if (this.config['EufyP2PData_' + baseSerial]['dsk_key'] != dsk_key) {
-            this.config['EufyP2PData_' + baseSerial]['dsk_key'] = dsk_key;
+    setP2PData_dsk_key(stationSerial, dsk_key) {
+        if (this.config['EufyP2PData_' + stationSerial]['dsk_key'] != dsk_key) {
+            this.config['EufyP2PData_' + stationSerial]['dsk_key'] = dsk_key;
             this.hasChanged = true;
         }
     }
     /**
      * Get the timestamp the DSK_KEY is to expire.
-     * @param baseSerial The serialnumber of the Base.
+     * @param stationSerial The serialnumber of the station.
      */
-    getP2PData_dsk_key_creation(baseSerial) {
+    getP2PData_dsk_key_creation(stationSerial) {
         try {
-            return this.config['EufyP2PData_' + baseSerial]['dsk_key_creation'];
+            return this.config['EufyP2PData_' + stationSerial]['dsk_key_creation'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
     /**
      * Set the timestamp the DSK_KEY is to expire.
-     * @param baseSerial The serialnumber of the Base.
+     * @param stationSerial The serialnumber of the station.
      * @param dsk_key_creation The timestamp of the expire.
      */
-    setP2PData_dsk_key_creation(baseSerial, dsk_key_creation) {
-        if (this.config['EufyP2PData_' + baseSerial]['dsk_key_creation'] != dsk_key_creation) {
-            this.config['EufyP2PData_' + baseSerial]['dsk_key_creation'] = dsk_key_creation;
+    setP2PData_dsk_key_creation(stationSerial, dsk_key_creation) {
+        if (this.config['EufyP2PData_' + stationSerial]['dsk_key_creation'] != dsk_key_creation) {
+            this.config['EufyP2PData_' + stationSerial]['dsk_key_creation'] = dsk_key_creation;
             this.hasChanged = true;
         }
     }
     /**
-     * Get the actor id of the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the actor id of the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    getP2PData_actor_id(baseSerial) {
+    getP2PData_actor_id(stationSerial) {
         try {
-            return this.config['EufyP2PData_' + baseSerial]['actor_id'];
+            return this.config['EufyP2PData_' + stationSerial]['actor_id'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
     /**
-     * Set the actor id of the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Set the actor id of the given station.
+     * @param stationSerial The serialnumber of the station.
      * @param actor_id The actor id to set.
      */
-    setP2PData_actor_id(baseSerial, actor_id) {
-        if (this.config['EufyP2PData_' + baseSerial]['actor_id'] != actor_id) {
-            this.config['EufyP2PData_' + baseSerial]['actor_id'] = actor_id;
+    setP2PData_actor_id(stationSerial, actor_id) {
+        if (this.config['EufyP2PData_' + stationSerial]['actor_id'] != actor_id) {
+            this.config['EufyP2PData_' + stationSerial]['actor_id'] = actor_id;
             this.hasChanged = true;
         }
     }
     /**
-     * Get the local ip address of the Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the local ip address of the station.
+     * @param stationSerial The serialnumber of the station.
      */
-    getP2PData_base_ip_address(baseSerial) {
+    getP2PData_station_ip_address(stationSerial) {
         try {
-            return this.config['EufyP2PData_' + baseSerial]['base_ip_address'];
+            return this.config['EufyP2PData_' + stationSerial]['base_ip_address'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
     /**
-     * Set the local ip address of the given Base.
-     * @param baseSerial The serialnumber of the Base.
-     * @param base_ip_address The local ip address.
+     * Set the local ip address of the given station.
+     * @param stationSerial The serialnumber of the station.
+     * @param station_ip_address The local ip address.
      */
-    setP2PData_base_ip_address(baseSerial, base_ip_address) {
-        if (this.config['EufyP2PData_' + baseSerial]['base_ip_address'] != base_ip_address) {
-            this.config['EufyP2PData_' + baseSerial]['base_ip_address'] = base_ip_address;
+    setP2PData_station_ip_address(stationSerial, station_ip_address) {
+        if (this.config['EufyP2PData_' + stationSerial]['base_ip_address'] != station_ip_address) {
+            this.config['EufyP2PData_' + stationSerial]['base_ip_address'] = station_ip_address;
             this.hasChanged = true;
         }
     }
     /**
-     * Get the last used port for P2P connunication with the given Base.
-     * @param baseSerial The serialnumber of the Base.
+     * Get the last used port for P2P connunication with the given station.
+     * @param stationSerial The serialnumber of the station.
      */
-    getP2PData_base_port(baseSerial) {
+    getP2PData_station_port(stationSerial) {
         try {
-            return this.config['EufyP2PData_' + baseSerial]['base_port'];
+            return this.config['EufyP2PData_' + stationSerial]['base_port'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
     /**
-     * Set the port used for 2P communication with the given Base.
-     * @param baseSerial The serialnumber of the Base.
-     * @param base_port The port to set.
+     * Set the port used for 2P communication with the given station.
+     * @param stationSerial The serialnumber of the station.
+     * @param station_port The port to set.
      */
-    setP2PData_base_port(baseSerial, base_port) {
-        if (this.config['EufyP2PData_' + baseSerial]['base_port'] != base_port) {
-            this.config['EufyP2PData_' + baseSerial]['base_port'] = base_port;
+    setP2PData_station_port(stationSerial, station_port) {
+        if (this.config['EufyP2PData_' + stationSerial]['base_port'] != station_port) {
+            this.config['EufyP2PData_' + stationSerial]['base_port'] = station_port;
             this.hasChanged = true;
         }
     }
     /**
-     * Returns the UDP port for the HomeBase.
-     * @param baseSerial The serial of the HomeBase.
-     * @returns Zhe UDP port for the HomeBase.
+     * Returns the UDP port for the station.
+     * @param stationSerial The serial of the station.
+     * @returns The UDP port for the station.
      */
-    getUdpLocalPortsPerBase(baseSerial) {
+    getUdpLocalPortsPerStation(stationSerial) {
         try {
-            return this.config['EufyP2PData_' + baseSerial]['udp_ports'];
+            return this.config['EufyP2PData_' + stationSerial]['udp_ports'];
         }
-        catch (_a) {
+        catch {
             return "";
         }
     }
     /**
-     * Set the UDP port for a HomeBase.
-     * @param baseSerial The serial for the HomeBase.
+     * Set the UDP port for a station.
+     * @param stationSerial The serial for the station.
      * @param udp_ports The UDP port.
      * @returns True on success otherwise false.
      */
-    setUdpLocalPortPerBase(baseSerial, udp_ports) {
-        if (baseSerial != undefined && udp_ports != undefined) {
-            if (this.config['EufyP2PData_' + baseSerial]['udp_ports'] != udp_ports) {
-                this.config['EufyP2PData_' + baseSerial]['udp_ports'] = udp_ports;
-                this.hasChanged = true;
-                return true;
-            }
-        }
-        return false;
-    }
-    /**
-     * Saves the P2P releated data for a given base. If the base is currently not in config, it will be created before the config data is populated.
-     * The config data will be saved and the config is reloaded.
-     *
-     * @param baseSerial The serialnumber of the base
-     * @param p2p_did The P2P_DID for the P2P connection
-     * @param dsk_key The DSK_KEY for the P2P connection
-     * @param dsk_key_creation The timestamp the DSK_KEY will be unusable
-     * @param actor_id The actor id for P2P communication
-     * @param base_ip_address The local ip address of the base
-     * @param base_port The port the P2P communication with the base is done
-     */
-    setP2PData(baseSerial, p2p_did, dsk_key, dsk_key_creation, actor_id, base_ip_address, base_port) {
+    setUdpLocalPortPerStation(stationSerial, udp_ports) {
         var res;
-        if (this.isBaseInConfig(baseSerial) == false) {
-            res = this.updateWithNewBase(baseSerial);
+        if (this.isStationInConfig(stationSerial) == false) {
+            this.logger.logInfo(1, `Station ${stationSerial} not in config.`);
+            res = this.updateWithNewStation(stationSerial);
         }
         else {
             res = true;
         }
         if (res) {
-            this.setP2PData_p2p_did(baseSerial, p2p_did);
-            this.setP2PData_dsk_key(baseSerial, dsk_key);
-            this.setP2PData_dsk_key_creation(baseSerial, dsk_key_creation);
-            this.setP2PData_actor_id(baseSerial, actor_id);
-            this.setP2PData_base_ip_address(baseSerial, base_ip_address);
-            this.setP2PData_base_port(baseSerial, base_port);
+            if (stationSerial != undefined && udp_ports != undefined) {
+                if (this.config['EufyP2PData_' + stationSerial]['udp_ports'] != udp_ports) {
+                    this.config['EufyP2PData_' + stationSerial]['udp_ports'] = udp_ports;
+                    this.hasChanged = true;
+                    res = true;
+                }
+            }
+            res = false;
+        }
+        return res;
+    }
+    /**
+     * Saves the P2P releated data for a given station. If the station is currently not in config, it will be created before the config data is populated.
+     * The config data will be saved and the config is reloaded.
+     *
+     * @param stationSerial The serialnumber of the station
+     * @param p2p_did The P2P_DID for the P2P connection
+     * @param dsk_key The DSK_KEY for the P2P connection
+     * @param dsk_key_creation The timestamp the DSK_KEY will be unusable
+     * @param actor_id The actor id for P2P communication
+     * @param station_ip_address The local ip address of the station
+     * @param station_port The port the P2P communication with the station is done
+     */
+    setP2PData(stationSerial, p2p_did, dsk_key, dsk_key_creation, actor_id, station_ip_address, station_port) {
+        var res;
+        if (this.isStationInConfig(stationSerial) == false) {
+            res = this.updateWithNewStation(stationSerial);
+        }
+        else {
+            res = true;
+        }
+        if (res) {
+            this.setP2PData_p2p_did(stationSerial, p2p_did);
+            this.setP2PData_dsk_key(stationSerial, dsk_key);
+            this.setP2PData_dsk_key_creation(stationSerial, dsk_key_creation);
+            this.setP2PData_actor_id(stationSerial, actor_id);
+            this.setP2PData_station_ip_address(stationSerial, station_ip_address);
+            this.setP2PData_station_port(stationSerial, station_port);
             this.writeConfig();
             this.loadConfig();
+        }
+    }
+    /**
+     * Get the value for enableing or diableing push service.
+     * @returns Boolean for enableing or diableing.
+     */
+    getApiUsePushService() {
+        try {
+            return this.config['EufyAPIServiceData']['api_use_pushservice'];
+        }
+        catch {
+            return false;
+        }
+    }
+    /**
+     * Set if push service is used.
+     * @param usePushService The value if push service is used.
+     */
+    setApiUsePushService(usePushService) {
+        if (this.config['EufyAPIServiceData']['api_use_pushservice'] != usePushService) {
+            this.config['EufyAPIServiceData']['api_use_pushservice'] = usePushService;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the trusted device name for push connection.
+     * @returns The trusted device name.
+     */
+    getTrustedDeviceName() {
+        try {
+            return this.config['EufyAPIPushData']['trusted_device_name'];
+        }
+        catch {
+            return "";
+        }
+    }
+    /**
+     * Set the trusted device name for push connection.
+     * @param trustedDeviceName The trusted device name
+     */
+    setTrustedDeviceName(trustedDeviceName) {
+        if (this.config['EufyAPIPushData']['trusted_device_name'] != trustedDeviceName) {
+            this.config['EufyAPIPushData']['trusted_device_name'] = trustedDeviceName;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the string of seconds as string how long the event shoud remain in state true.
+     * @returns A String value contaiong the seconds
+     */
+    getEventDurationSeconds() {
+        try {
+            return this.config['EufyAPIPushData']['event_duration_seconds'];
+        }
+        catch {
+            return "";
+        }
+    }
+    /**
+     * Get the number of seconds as string how long the event shoud remain in state true.
+     * @returns A number value contaiong the seconds
+     */
+    getEventDurationSecondsAsNumber() {
+        try {
+            return this.config['EufyAPIPushData']['event_duration_seconds'];
+        }
+        catch {
+            return -1;
+        }
+    }
+    /**
+     * Set the number of seconds as string how long the event shoud remain in state true.
+     * @param eventDurationSeconds A String value contaiong the seconds
+     */
+    setEventDurationSeconds(eventDurationSeconds) {
+        if (this.config['EufyAPIPushData']['event_duration_seconds'] != eventDurationSeconds) {
+            this.config['EufyAPIPushData']['event_duration_seconds'] = eventDurationSeconds;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the boolean value if invitations should be accepted.
+     * @returns A boolean value
+     */
+    getAcceptInvitations() {
+        try {
+            return this.config['EufyAPIPushData']['accept_invitations'];
+        }
+        catch {
+            return false;
+        }
+    }
+    /**
+     * Set the boolean value if invitations should be accepted.
+     * @param acceptInvitations A boolean value
+     */
+    setAcceptInvitations(acceptInvitations) {
+        if (this.config['EufyAPIPushData']['accept_invitations'] != acceptInvitations) {
+            this.config['EufyAPIPushData']['accept_invitations'] = acceptInvitations;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the openudid for push connections.
+     * @returns The openudid
+     */
+    getOpenudid() {
+        try {
+            return this.config['EufyAPIPushData']['open_udid'];
+        }
+        catch {
+            return "";
+        }
+    }
+    /**
+     * Set the openudid for push connections.
+     * @param openudid The openudid to set
+     */
+    setOpenudid(openudid) {
+        if (this.config['EufyAPIPushData']['open_udid'] != openudid) {
+            this.config['EufyAPIPushData']['open_udid'] = openudid;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the serial number for push connections.
+     * @returns The serial number
+     */
+    getSerialNumber() {
+        try {
+            return this.config['EufyAPIPushData']['serial_number'];
+        }
+        catch {
+            return "";
+        }
+    }
+    /**
+     * Set the serial number for push connections.
+     * @param serialNumber The serial number to set
+     */
+    setSerialNumber(serialNumber) {
+        if (this.config['EufyAPIPushData']['serial_number'] != serialNumber) {
+            this.config['EufyAPIPushData']['serial_number'] = serialNumber;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Checks if the push credentals are stored in config.
+     * @returns true if the credentals are set, otherwise false.
+     */
+    hasPushCredentials() {
+        if (this.getCredentialsCheckinResponse() != null && this.getCredentialsFidResponse() != null && this.getCredentialsGcmResponse() != null) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    /**
+     * Get the fid response credentials for push connections.
+     * @returns The fid response credentials.
+     */
+    getCredentialsFidResponse() {
+        try {
+            var res = { name: this.config['EufyAPIPushData']['fid_response_name'], fid: this.config['EufyAPIPushData']['fid_response_fid'], refreshToken: this.config['EufyAPIPushData']['fid_response_refresh_Token'], authToken: { token: this.config['EufyAPIPushData']['fid_response_auth_token_token'], expiresIn: this.config['EufyAPIPushData']['fid_response_auth_token_expires_in'], expiresAt: this.config['EufyAPIPushData']['fid_response_auth_token_expires_at'] } };
+            return res;
+        }
+        catch {
+            return null;
+        }
+    }
+    /**
+     * Set the fid response credentials for push connections.
+     * @param fidResponse
+     */
+    setCredentialsFidResponse(fidResponse) {
+        if (this.config['EufyAPIPushData']['fid_response_name'] != fidResponse.name || this.config['EufyAPIPushData']['fid_response_fid'] != fidResponse.fid || this.config['EufyAPIPushData']['fid_response_refresh_Token'] != fidResponse.refreshToken || this.config['EufyAPIPushData']['fid_response_auth_token_token'] != fidResponse.authToken.token || this.config['EufyAPIPushData']['fid_response_auth_token_expires_in'] != fidResponse.authToken.expiresIn || this.config['EufyAPIPushData']['fid_response_auth_token_expires_at'] != fidResponse.authToken.expiresAt) {
+            this.config['EufyAPIPushData']['fid_response_name'] = fidResponse.name;
+            this.config['EufyAPIPushData']['fid_response_fid'] = fidResponse.fid;
+            this.config['EufyAPIPushData']['fid_response_refresh_Token'] = fidResponse.refreshToken;
+            this.config['EufyAPIPushData']['fid_response_auth_token_token'] = fidResponse.authToken.token;
+            this.config['EufyAPIPushData']['fid_response_auth_token_expires_in'] = fidResponse.authToken.expiresIn;
+            this.config['EufyAPIPushData']['fid_response_auth_token_expires_at'] = fidResponse.authToken.expiresAt;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the checkin response credentials for push connections.
+     * @returns The checkin response credentials
+     */
+    getCredentialsCheckinResponse() {
+        try {
+            var res = { statsOk: this.config['EufyAPIPushData']['checkin_response_stats_ok'], timeMs: this.config['EufyAPIPushData']['checkin_response_time_ms'], androidId: this.config['EufyAPIPushData']['checkin_response_android_id'], securityToken: this.config['EufyAPIPushData']['checkin_response_security_token'], versionInfo: this.config['EufyAPIPushData']['checkin_response_version_info'], deviceDataVersionInfo: this.config['EufyAPIPushData']['checkin_response_device_data_version_info'] };
+            return res;
+        }
+        catch {
+            return null;
+        }
+    }
+    /**
+     * Set the checkin response credentials for push connections.
+     * @param checkinResponse The checkin response credentials
+     */
+    setCredentialsCheckinResponse(checkinResponse) {
+        if (this.config['EufyAPIPushData']['checkin_response_stats_ok'] != checkinResponse.statsOk || this.config['EufyAPIPushData']['checkin_response_time_ms'] != checkinResponse.timeMs || this.config['EufyAPIPushData']['checkin_response_android_id'] != checkinResponse.androidId || this.config['EufyAPIPushData']['checkin_response_security_token'] != checkinResponse.securityToken || this.config['EufyAPIPushData']['checkin_response_version_info'] != checkinResponse.versionInfo || this.config['EufyAPIPushData']['checkin_response_device_data_version_info'] != checkinResponse.deviceDataVersionInfo) {
+            this.config['EufyAPIPushData']['checkin_response_stats_ok'] = checkinResponse.statsOk;
+            this.config['EufyAPIPushData']['checkin_response_time_ms'] = checkinResponse.timeMs;
+            this.config['EufyAPIPushData']['checkin_response_android_id'] = checkinResponse.androidId;
+            this.config['EufyAPIPushData']['checkin_response_security_token'] = checkinResponse.securityToken;
+            this.config['EufyAPIPushData']['checkin_response_version_info'] = checkinResponse.versionInfo;
+            this.config['EufyAPIPushData']['checkin_response_device_data_version_info'] = checkinResponse.deviceDataVersionInfo;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the gcm response credentials for push connections.
+     * @returns The gcm response credentials
+     */
+    getCredentialsGcmResponse() {
+        try {
+            var res = { token: this.config['EufyAPIPushData']['gcm_response_token'] };
+            return res;
+        }
+        catch {
+            return null;
+        }
+    }
+    /**
+     * Set the gcm response credentials for push connections.
+     * @param gcmResponse the gcm response credentials
+     */
+    setCredentialsGcmResponse(gcmResponse) {
+        if (this.config['EufyAPIPushData']['gcm_response_token'] != gcmResponse.token) {
+            this.config['EufyAPIPushData']['gcm_response_token'] = gcmResponse.token;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the persistent id credentials for push connections.
+     * @returns The persistent id credentials
+     */
+    getCredentialsPersistentIds() {
+        try {
+            return this.config['EufyAPIPushData']['persistent_ids'];
+        }
+        catch {
+            return [];
+        }
+    }
+    /**
+     * Set the persistent id credentials for push connections.
+     * @param persistentIds The persistent id credentials
+     */
+    setCredentialsPersistentIds(persistentIds) {
+        if (this.config['EufyAPIPushData']['persistent_ids'] != persistentIds) {
+            this.config['EufyAPIPushData']['persistent_ids'] = persistentIds;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the country code.
+     * @returns The country code
+     */
+    getCountry() {
+        try {
+            return this.config['EufyAPILoginData']['country'];
+        }
+        catch {
+            return "DE";
+        }
+    }
+    /**
+     * Set the country code.
+     * @param country The country code.
+     */
+    setCountry(country) {
+        if (this.config['EufyAPILoginData']['country'] != country) {
+            this.config['EufyAPILoginData']['country'] = country;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the language code.
+     * @returns The language code
+     */
+    getLanguage() {
+        try {
+            return this.config['EufyAPILoginData']['language'];
+        }
+        catch {
+            return "en";
+        }
+    }
+    /**
+     * Set the language code.
+     * @param language The language code
+     */
+    setLanguage(language) {
+        if (this.config['EufyAPILoginData']['language'] != language) {
+            this.config['EufyAPILoginData']['language'] = language;
+            this.hasChanged = true;
         }
     }
 }

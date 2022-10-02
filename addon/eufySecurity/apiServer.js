@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = require("http");
 const https_1 = require("https");
@@ -41,407 +32,477 @@ class ApiServer {
      * @param certHttps The cert for https.
      * @param logger The logger component.
      */
-    startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
-        return __awaiter(this, void 0, void 0, function* () {
-            logger.logInfoBasic(`eufy_security_hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
-            logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
-            logger.logInfoBasic(`  Node: ${process.version}`);
-            if (httpActive == true) {
-                logger.logInfoBasic("Starting http server...");
-                serverHttp.on("error", this.errorListener);
-                serverHttp.on("request", this.requestListener);
-                serverHttp.listen(portHttp);
-                logger.logInfoBasic(`...started. http listening on port '${portHttp}'`);
+    async startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
+        logger.logInfoBasic(`eufy_security_hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
+        logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
+        logger.logInfoBasic(`  Node: ${process.version}`);
+        if (httpActive == true) {
+            logger.logInfoBasic("Starting http server...");
+            serverHttp.on("error", this.errorListener);
+            serverHttp.on("request", this.requestListener);
+            serverHttp.listen(portHttp);
+            logger.logInfoBasic(`...started. http listening on port '${portHttp}'`);
+        }
+        if (httpsActive == true) {
+            logger.logInfoBasic("Starting https server...");
+            if ((0, fs_1.existsSync)(keyHttps) && (0, fs_1.existsSync)(certHttps)) {
+                const options = {
+                    key: (0, fs_1.readFileSync)(keyHttps),
+                    cert: (0, fs_1.readFileSync)(certHttps)
+                };
+                serverHttps.setSecureContext(options);
+                serverHttps.on("error", this.errorListener);
+                serverHttps.on("request", this.requestListener);
+                serverHttps.listen(portHttps);
+                logger.logInfoBasic(`...started. https listening on port '${portHttps}'`);
             }
-            if (httpsActive == true) {
-                logger.logInfoBasic("Starting https server...");
-                if ((0, fs_1.existsSync)(keyHttps) && (0, fs_1.existsSync)(certHttps)) {
-                    const options = {
-                        key: (0, fs_1.readFileSync)(keyHttps),
-                        cert: (0, fs_1.readFileSync)(certHttps)
-                    };
-                    serverHttps.setSecureContext(options);
-                    serverHttps.on("error", this.errorListener);
-                    serverHttps.on("request", this.requestListener);
-                    serverHttps.listen(portHttps);
-                    logger.logInfoBasic(`...started. https listening on port '${portHttps}'`);
-                }
-                else {
-                    logger.logErrorBasis("FAILED TO START SERVER (HTTPS): key or cert file not found.");
-                }
+            else {
+                logger.logErrorBasis("FAILED TO START SERVER (HTTPS): key or cert file not found.");
             }
-        });
+        }
     }
     /**
      * The error listener for the api.
      * @param error The error object.
      */
-    errorListener(error) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (error.code == "EADDRINUSE") {
-                logger.logErrorBasis(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
-            }
-            else {
-                logger.logErrorBasis(`Errorcode: ${error.code}: ${error.message}`);
-            }
-        });
+    async errorListener(error) {
+        if (error.code == "EADDRINUSE") {
+            logger.logErrorBasis(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
+        }
+        else {
+            logger.logErrorBasis(`Errorcode: ${error.code}: ${error.message}`);
+        }
     }
     /**
      * The request listener for the api.
      * @param request The request object.
      * @param response The response object.
      */
-    requestListener(request, response) {
+    async requestListener(request, response) {
         var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            var responseString = "";
-            var contentType = "application/json";
-            var fileName = "";
-            var url = (_a = request.url) === null || _a === void 0 ? void 0 : _a.split("/");
-            if (url == undefined) {
-                url = [];
-            }
-            // We use 'GET' for nearly all function of the api, exept updateing the config
-            if (request.method == "GET") {
-                if (url.length > 1) {
-                    switch (url[1]) {
-                        case "getServiceState":
-                            responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
-                            break;
-                        case "getDevices":
-                            responseString = yield api.getDevices();
-                            break;
-                        case "getDevice":
-                            if (url.length == 3) {
-                                responseString = yield api.getDevice(url[2]);
+        var responseString = "";
+        var contentType = "application/json";
+        var fileName = "";
+        var url = (_a = request.url) === null || _a === void 0 ? void 0 : _a.split("/");
+        if (url == undefined) {
+            url = [];
+        }
+        // We use 'GET' for nearly all function of the api, exept updateing the config
+        if (request.method == "GET") {
+            if (url.length > 1) {
+                switch (url[1]) {
+                    case "getServiceState":
+                        responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
+                        break;
+                    case "getAccountInfo":
+                        responseString = `{"success":true,"message":${await api.getAccountInfo()}}`;
+                        break;
+                    case "getDevices":
+                        responseString = await api.getDevicesAsJSON();
+                        break;
+                    case "getDevice":
+                        if (url.length == 3) {
+                            responseString = await api.getDeviceAsJSON(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getDevicePropertiesMetadata":
+                        if (url.length == 3) {
+                            responseString = await api.getDevicePropertiesMetadataAsJSON(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getDeviceProperties":
+                        if (url.length == 3) {
+                            responseString = await api.getDevicePropertiesAsJSON(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStations":
+                    case "getBases":
+                        responseString = await api.getStationsAsJSON();
+                        break;
+                    case "getStation":
+                    case "getBase":
+                        if (url.length == 3) {
+                            responseString = await api.getStationAsJSON(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationPropertiesMetadata":
+                        if (url.length == 3) {
+                            responseString = await api.getStationPropertiesMetadataAsJSON(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationProperties":
+                        if (url.length == 3) {
+                            responseString = await api.getStationPropertiesAsJSON(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getHouses":
+                        responseString = await api.getHousesAsJSON();
+                        break;
+                    case "getHouse":
+                        if (url.length == 3) {
+                            responseString = await api.getHouseAsJSON(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getMode":
+                        if (url.length == 2) {
+                            responseString = await api.getGuardMode();
+                        }
+                        else if (url.length == 3) {
+                            responseString = await api.getGuardModeStation(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getConfig":
+                        responseString = api.getAPIConfig();
+                        break;
+                    case "getApiInfo":
+                        responseString = api.getApiVersion();
+                        break;
+                    case "setMode":
+                        if (url.length == 3) {
+                            switch (url[2]) {
+                                case "away":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.AWAY);
+                                    break;
+                                case "custom1":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.CUSTOM1);
+                                    break;
+                                case "custom2":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.CUSTOM2);
+                                    break;
+                                case "custom3":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.CUSTOM3);
+                                    break;
+                                case "disarmed":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.DISARMED);
+                                    break;
+                                case "geo":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.GEO);
+                                    break;
+                                case "home":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.HOME);
+                                    break;
+                                case "off":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.OFF);
+                                    break;
+                                case "schedule":
+                                    responseString = await api.setGuardMode(http_2.GuardMode.SCHEDULE);
+                                    break;
+                                case "privacyOn":
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations."}`;
+                                    break;
+                                case "privacyOff":
+                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations."}`;
+                                    break;
+                                default:
+                                    responseString = `{"success":false,"message":"Unknown mode to set."}`;
                             }
-                            break;
-                        case "getBases":
-                            responseString = yield api.getBases();
-                            break;
-                        case "getMode":
-                            if (url.length == 2) {
-                                responseString = yield api.getGuardMode();
+                        }
+                        else if (url.length == 4) {
+                            switch (url[3]) {
+                                case "away":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.AWAY);
+                                    break;
+                                case "custom1":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM1);
+                                    break;
+                                case "custom2":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM2);
+                                    break;
+                                case "custom3":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM3);
+                                    break;
+                                case "disarmed":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.DISARMED);
+                                    break;
+                                case "geo":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.GEO);
+                                    break;
+                                case "home":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.HOME);
+                                    break;
+                                case "off":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.OFF);
+                                    break;
+                                case "schedule":
+                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.SCHEDULE);
+                                    break;
+                                case "privacyOn":
+                                    responseString = await api.setPrivacyMode(url[2], false);
+                                    break;
+                                case "privacyOff":
+                                    responseString = await api.setPrivacyMode(url[2], true);
+                                    break;
+                                default:
+                                    responseString = `{"success":false,"message":"Unknown mode to set."}`;
                             }
-                            else if (url.length == 3) {
-                                responseString = yield api.getGuardModeBase(url[2]);
-                            }
-                            break;
-                        case "getConfig":
-                            responseString = api.getConfig();
-                            break;
-                        case "getApiInfo":
-                            responseString = api.getApiVersion();
-                            break;
-                        case "setMode":
-                            if (url.length == 3) {
-                                switch (url[2]) {
-                                    case "away":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.AWAY);
-                                        break;
-                                    case "custom1":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.CUSTOM1);
-                                        break;
-                                    case "custom2":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.CUSTOM2);
-                                        break;
-                                    case "custom3":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.CUSTOM3);
-                                        break;
-                                    case "disarmed":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.DISARMED);
-                                        break;
-                                    case "geo":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.GEO);
-                                        break;
-                                    case "home":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.HOME);
-                                        break;
-                                    case "off":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.OFF);
-                                        break;
-                                    case "schedule":
-                                        responseString = yield api.setGuardMode(http_2.GuardMode.SCHEDULE);
-                                        break;
-                                    default:
-                                        responseString = `{"success":false,"message":"Unknown mode to set."}`;
-                                }
-                            }
-                            else if (url.length == 4) {
-                                switch (url[3]) {
-                                    case "away":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.AWAY);
-                                        break;
-                                    case "custom1":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.CUSTOM1);
-                                        break;
-                                    case "custom2":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.CUSTOM2);
-                                        break;
-                                    case "custom3":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.CUSTOM3);
-                                        break;
-                                    case "disarmed":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.DISARMED);
-                                        break;
-                                    case "geo":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.GEO);
-                                        break;
-                                    case "home":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.HOME);
-                                        break;
-                                    case "off":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.OFF);
-                                        break;
-                                    case "schedule":
-                                        responseString = yield api.setGuardModeBase(url[2], http_2.GuardMode.SCHEDULE);
-                                        break;
-                                    default:
-                                        responseString = `{"success":false,"message":"Unknown mode to set."}`;
-                                }
-                            }
-                            else {
-                                responseString = `{"success":false,"message":"Number of arguments not supported."}`;
-                            }
-                            break;
-                        case "checkSystemVariables":
-                            responseString = yield api.checkSystemVariables();
-                            break;
-                        case "createSystemVariable":
-                            if (url.length == 3) {
-                                responseString = yield api.createSystemVariable(url[2], "");
-                            }
-                            else if (url.length == 4) {
-                                responseString = yield api.createSystemVariable(url[2], decodeURIComponent(url[3]));
-                            }
-                            else {
-                                responseString = `{"success":false,"message":"Number of arguments not supported."}`;
-                            }
-                            break;
-                        case "getLibrary":
-                            if (url.length == 2) {
-                                responseString = yield api.getLibrary();
-                            }
-                            else {
-                                responseString = `{"success":false,"message":"Number of arguments not supported."}`;
-                            }
-                            break;
-                        case "getLogFileContent":
-                            responseString = yield api.getLogFileContent();
-                            break;
-                        case "getErrorFileContent":
-                            responseString = yield api.getErrorFileContent();
-                            break;
-                        case "removeTokenData":
-                            responseString = api.setTokenData("", "0");
-                            break;
-                        case "clearLogFile":
-                            emptyLogFile();
-                            responseString = `{"success":true}`;
-                            break;
-                        case "clearErrFile":
-                            emptyErrFile();
-                            responseString = `{"success":true}`;
-                            break;
-                        case "restartService":
-                            restartServer();
-                            responseString = `{"success":true}`;
-                            break;
-                        case "downloadConfig":
-                            api.writeConfig();
-                            responseString = (0, fs_1.readFileSync)('config.ini', 'utf-8');
-                            contentType = "text/plain";
-                            var dateTime = new Date();
-                            fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".ini";
-                            break;
-                        case "downloadLogFile":
-                            responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
-                            contentType = "text/plain";
-                            fileName = "eufySecurity.log";
-                            break;
-                        case "downloadErrFile":
-                            responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
-                            contentType = "text/plain";
-                            fileName = "eufySecurity.err";
-                            break;
-                        default:
-                            responseString = `{"success":false,"message":"Unknown command."}`;
-                    }
-                    response.setHeader('Access-Control-Allow-Origin', '*');
-                    response.setHeader('Content-Type', contentType + '; charset=UTF-8');
-                    if (contentType == "application/json") {
-                        response.writeHead(200);
-                        response.end(responseString);
-                    }
-                    else {
-                        response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
-                        response.end(responseString);
-                    }
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "checkSystemVariables":
+                        responseString = await api.checkSystemVariables();
+                        break;
+                    case "createSystemVariable":
+                        if (url.length == 3) {
+                            responseString = await api.createSystemVariable(url[2], "");
+                        }
+                        else if (url.length == 4) {
+                            responseString = await api.createSystemVariable(url[2], decodeURIComponent(url[3]));
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getLibrary":
+                        if (url.length == 2) {
+                            responseString = await api.getLibrary();
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getLogFileContent":
+                        responseString = await api.getLogFileContent();
+                        break;
+                    case "getErrorFileContent":
+                        responseString = await api.getErrorFileContent();
+                        break;
+                    case "removeTokenData":
+                        responseString = api.setTokenData("", "0");
+                        break;
+                    case "clearLogFile":
+                        emptyLogFile();
+                        responseString = `{"success":true}`;
+                        break;
+                    case "clearErrFile":
+                        emptyErrFile();
+                        responseString = `{"success":true}`;
+                        break;
+                    case "restartService":
+                        restartServer();
+                        responseString = `{"success":true}`;
+                        break;
+                    case "downloadConfig":
+                        api.writeConfig();
+                        responseString = (0, fs_1.readFileSync)('config.ini', 'utf-8');
+                        contentType = "text/plain";
+                        var dateTime = new Date();
+                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".ini";
+                        break;
+                    case "downloadLogFile":
+                        responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
+                        contentType = "text/plain";
+                        fileName = "eufySecurity.log";
+                        break;
+                    case "downloadErrFile":
+                        responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
+                        contentType = "text/plain";
+                        fileName = "eufySecurity.err";
+                        break;
+                    default:
+                        responseString = `{"success":false,"message":"Unknown command."}`;
                 }
-                else {
-                    responseString = `{"success":false,"message":"Unknown command."}`;
-                    response.setHeader('Access-Control-Allow-Origin', '*');
-                    response.setHeader('Content-Type', '; charset=UTF-8');
+                response.setHeader('Access-Control-Allow-Origin', '*');
+                response.setHeader('Content-Type', contentType + '; charset=UTF-8');
+                if (contentType == "application/json") {
                     response.writeHead(200);
                     response.end(responseString);
                 }
+                else {
+                    response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+                    response.end(responseString);
+                }
             }
-            // We must handele the change config throught POST based on the form data we receive...
-            else if (request.method == "POST") {
-                if (url.length > 1) {
-                    if (url[1] == "setConfig") {
-                        var postData = "";
-                        var isDataOK = true;
-                        request.on("data", function (chunk) {
-                            postData += chunk.toString();
-                        });
-                        request.on("end", function () {
-                            var username = "";
-                            if (postData.indexOf("username") >= 0) {
-                                username = getDataFromPOSTData(postData, "username", "string");
-                            }
-                            var password = "";
-                            if (postData.indexOf("password") >= 0) {
-                                password = getDataFromPOSTData(postData, "password", "string");
-                            }
-                            var location = "";
-                            if (postData.indexOf("location") >= 0) {
-                                location = getDataFromPOSTData(postData, "location", "string");
-                            }
-                            var useHttp = false;
-                            if (postData.indexOf("useHttp") >= 0) {
-                                useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
-                            }
-                            var apiporthttp = "52789";
-                            if (postData.indexOf("httpPort") >= 0) {
-                                apiporthttp = getDataFromPOSTData(postData, "httpPort", "string");
-                            }
-                            var useHttps = false;
-                            if (postData.indexOf("useHttps") >= 0) {
-                                useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
-                            }
-                            if (useHttp == false && useHttps == false) {
+            else {
+                responseString = `{"success":false,"message":"Unknown command."}`;
+                response.setHeader('Access-Control-Allow-Origin', '*');
+                response.setHeader('Content-Type', '; charset=UTF-8');
+                response.writeHead(200);
+                response.end(responseString);
+            }
+        }
+        // We must handele the change config throught POST based on the form data we receive...
+        else if (request.method == "POST") {
+            if (url.length > 1) {
+                if (url[1] == "setConfig") {
+                    var postData = "";
+                    var isDataOK = true;
+                    request.on("data", function (chunk) {
+                        postData += chunk.toString();
+                    });
+                    request.on("end", function () {
+                        var username = "";
+                        if (postData.indexOf("username") >= 0) {
+                            username = getDataFromPOSTData(postData, "username", "string");
+                        }
+                        var password = "";
+                        if (postData.indexOf("password") >= 0) {
+                            password = getDataFromPOSTData(postData, "password", "string");
+                        }
+                        var country = "";
+                        if (postData.indexOf("country") >= 0) {
+                            country = getDataFromPOSTData(postData, "country", "string");
+                        }
+                        var language = "";
+                        if (postData.indexOf("language") >= 0) {
+                            language = getDataFromPOSTData(postData, "language", "string");
+                        }
+                        var useHttp = false;
+                        if (postData.indexOf("useHttp") >= 0) {
+                            useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
+                        }
+                        var apiporthttp = "52789";
+                        if (postData.indexOf("httpPort") >= 0) {
+                            apiporthttp = getDataFromPOSTData(postData, "httpPort", "string");
+                        }
+                        var useHttps = false;
+                        if (postData.indexOf("useHttps") >= 0) {
+                            useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
+                        }
+                        if (useHttp == false && useHttps == false) {
+                            isDataOK = false;
+                        }
+                        var apiporthttps = "52790";
+                        if (postData.indexOf("httpsPort") >= 0) {
+                            apiporthttps = getDataFromPOSTData(postData, "httpsPort", "string");
+                        }
+                        var apikeyfile = "/usr/local/etc/config/server.pem";
+                        if (postData.indexOf("httpsKeyFile") >= 0) {
+                            apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
+                        }
+                        var apicertfile = "/usr/local/etc/config/server.pem";
+                        if (postData.indexOf("httpsCertFile") >= 0) {
+                            apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
+                        }
+                        var apiconnectiontype = "1";
+                        if (postData.indexOf("connectionType") >= 0) {
+                            apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "string");
+                        }
+                        var apiuseudpstaticports = false;
+                        if (postData.indexOf("useUdpStaticPorts") >= 0) {
+                            apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                        }
+                        var apiudpports = [[], []];
+                        if (postData.indexOf("udpPortsStation") >= 0) {
+                            apiudpports = getAllUdpPortsForStations(postData);
+                        }
+                        var useSystemVariables = false;
+                        if (postData.indexOf("useSystemVariables") >= 0) {
+                            useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
+                        }
+                        var apicameradefaultimage = "";
+                        if (postData.indexOf("defaultImagePath") >= 0) {
+                            apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
+                        }
+                        var apicameradefaultvideo = "";
+                        if (postData.indexOf("defaultVideoPath") >= 0) {
+                            apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
+                        }
+                        var useupdatestateevent = false;
+                        if (postData.indexOf("useUpdateStateEvent") >= 0) {
+                            useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
+                        }
+                        var useupdatestateintervall = false;
+                        if (postData.indexOf("useUpdateStateIntervall") >= 0) {
+                            useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
+                        }
+                        var updatestatetimespan = "15";
+                        if (postData.indexOf("updateStateIntervallTimespan") >= 0) {
+                            updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "string");
+                        }
+                        var useupdatelinks = false;
+                        if (postData.indexOf("useUpdateLinksIntervall") >= 0) {
+                            useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
+                        }
+                        var useupdatelinksonlywhenactive = false;
+                        if (postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0) {
+                            useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
+                        }
+                        var updatelinkstimespan = "15";
+                        if (postData.indexOf("updateLinksIntervallTimespan") >= 0) {
+                            updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "string");
+                        }
+                        var usepushservice = false;
+                        if (postData.indexOf("usePushService") >= 0) {
+                            usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
+                            logger.logInfoBasic(`set pushservice: ${usepushservice}`);
+                        }
+                        var apiloglevel = "0";
+                        if (postData.indexOf("logLevel") >= 0) {
+                            apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
+                        }
+                        if (checkNumberValue(apiporthttp, 1, 53535) == false) {
+                            isDataOK = false;
+                        }
+                        if (checkNumberValue(apiporthttps, 1, 53535) == false) {
+                            isDataOK = false;
+                        }
+                        if (apiuseudpstaticports == true) {
+                            /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                            {
                                 isDataOK = false;
-                            }
-                            var apiporthttps = "52790";
-                            if (postData.indexOf("httpsPort") >= 0) {
-                                apiporthttps = getDataFromPOSTData(postData, "httpsPort", "string");
-                            }
-                            var apikeyfile = "/usr/local/etc/config/server.pem";
-                            if (postData.indexOf("httpsKeyFile") >= 0) {
-                                apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
-                            }
-                            var apicertfile = "/usr/local/etc/config/server.pem";
-                            if (postData.indexOf("httpsCertFile") >= 0) {
-                                apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
-                            }
-                            var apiconnectiontype = "1";
-                            if (postData.indexOf("connectionType") >= 0) {
-                                apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "string");
-                            }
-                            var apiuseudpstaticports = false;
-                            if (postData.indexOf("useUdpStaticPorts") >= 0) {
-                                apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
-                            }
-                            var apiudpports = [[], []];
-                            if (postData.indexOf("udpPortsBase") >= 0) {
-                                apiudpports = getAllUdpPortsForBases(postData);
-                            }
-                            var useSystemVariables = false;
-                            if (postData.indexOf("useSystemVariables") >= 0) {
-                                useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
-                            }
-                            var apicameradefaultimage = "";
-                            if (postData.indexOf("defaultImagePath") >= 0) {
-                                apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
-                            }
-                            var apicameradefaultvideo = "";
-                            if (postData.indexOf("defaultVideoPath") >= 0) {
-                                apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
-                            }
-                            var useupdatestateevent = false;
-                            if (postData.indexOf("useUpdateStateEvent") >= 0) {
-                                useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
-                            }
-                            var useupdatestateintervall = false;
-                            if (postData.indexOf("useUpdateStateIntervall") >= 0) {
-                                useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
-                            }
-                            var updatestatetimespan = "15";
-                            if (postData.indexOf("updateStateIntervallTimespan") >= 0) {
-                                updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "string");
-                            }
-                            var useupdatelinks = false;
-                            if (postData.indexOf("useUpdateLinksIntervall") >= 0) {
-                                useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
-                            }
-                            var useupdatelinksonlywhenactive = false;
-                            if (postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0) {
-                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
-                            }
-                            var updatelinkstimespan = "15";
-                            if (postData.indexOf("updateLinksIntervallTimespan") >= 0) {
-                                updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "string");
-                            }
-                            var apiloglevel = "0";
-                            if (postData.indexOf("logLevel") >= 0) {
-                                apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
-                            }
-                            if (checkNumberValue(location, -1, 1) == false) {
-                                isDataOK = false;
-                            }
-                            if (checkNumberValue(apiporthttp, 1, 53535) == false) {
-                                isDataOK = false;
-                            }
-                            if (checkNumberValue(apiporthttps, 1, 53535) == false) {
-                                isDataOK = false;
-                            }
-                            if (apiuseudpstaticports == true) {
-                                /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
-                                {
-                                    isDataOK = false;
-                                }*/
-                            }
-                            if (useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == "")) {
-                                isDataOK = false;
-                            }
-                            if (checkNumberValue(apiloglevel, 0, 3) == false) {
-                                isDataOK = false;
-                            }
-                            if (checkNumberValue(updatestatetimespan, 15, 240) == false) {
-                                isDataOK = false;
-                            }
-                            if (checkNumberValue(updatelinkstimespan, 15, 240) == false) {
-                                isDataOK = false;
-                            }
-                            if (isDataOK == true) {
-                                apiPortFile(Number(apiporthttp), Number(apiporthttps));
-                                responseString = api.setConfig(username, password, location, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, apiloglevel);
-                            }
-                            else {
-                                responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
-                            }
-                            var resJSON = JSON.parse(responseString);
-                            response.setHeader('Access-Control-Allow-Origin', '*');
-                            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-                            response.writeHead(200);
-                            response.end(responseString);
-                            if (resJSON.serviceRestart == true) {
-                                logger.logInfoBasic("Settings saved. Restarting apiServer.");
-                                restartServer();
-                            }
-                            else {
-                                logger.logInfoBasic("Settings saved.");
-                            }
-                        });
-                    }
-                    else {
-                        responseString = `{"success":false,"message":"Unknown command."}`;
+                            }*/
+                        }
+                        if (useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == "")) {
+                            isDataOK = false;
+                        }
+                        if (checkNumberValue(apiloglevel, 0, 3) == false) {
+                            isDataOK = false;
+                        }
+                        if (checkNumberValue(updatestatetimespan, 15, 240) == false) {
+                            isDataOK = false;
+                        }
+                        if (checkNumberValue(updatelinkstimespan, 15, 240) == false) {
+                            isDataOK = false;
+                        }
+                        if (isDataOK == true) {
+                            apiPortFile(Number(apiporthttp), Number(apiporthttps));
+                            responseString = api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                        }
+                        else {
+                            responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
+                        }
+                        var resJSON = JSON.parse(responseString);
                         response.setHeader('Access-Control-Allow-Origin', '*');
                         response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                         response.writeHead(200);
                         response.end(responseString);
-                    }
+                        if (resJSON.success == true && resJSON.serviceRestart == true) {
+                            logger.logInfoBasic("Settings saved. Restarting apiServer.");
+                            restartServer();
+                        }
+                        else if (resJSON.success == true && resJSON.serviceRestart == false) {
+                            logger.logInfoBasic("Settings saved.");
+                        }
+                        else {
+                            logger.logInfoBasic("Error during saving settings.");
+                        }
+                    });
                 }
                 else {
                     responseString = `{"success":false,"message":"Unknown command."}`;
@@ -451,7 +512,6 @@ class ApiServer {
                     response.end(responseString);
                 }
             }
-            // Be polite and give a answer even we know that there is noting to answer...
             else {
                 responseString = `{"success":false,"message":"Unknown command."}`;
                 response.setHeader('Access-Control-Allow-Origin', '*');
@@ -459,7 +519,15 @@ class ApiServer {
                 response.writeHead(200);
                 response.end(responseString);
             }
-        });
+        }
+        // Be polite and give a answer even we know that there is noting to answer...
+        else {
+            responseString = `{"success":false,"message":"Unknown command."}`;
+            response.setHeader('Access-Control-Allow-Origin', '*');
+            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            response.writeHead(200);
+            response.end(responseString);
+        }
     }
 }
 /**
@@ -503,7 +571,7 @@ function checkNumberValue(value, lowestValue, highestValue) {
             return false;
         }
     }
-    catch (_a) {
+    catch {
         return false;
     }
 }
@@ -538,12 +606,12 @@ function getDataFromPOSTData(postData, target, dataType) {
     if (dataType == "string") {
         var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n", "");
-        temp = temp.substr(2, temp.indexOf("----") - 4);
+        temp = temp.substring(2, temp.indexOf("----") - 2);
         return temp;
     }
     else if (dataType == "boolean") {
         var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
-        temp = temp.substr(2, temp.indexOf("----") - 4);
+        temp = temp.substring(2, temp.indexOf("----") - 2);
         if (temp.trim() == "on") {
             return true;
         }
@@ -554,22 +622,22 @@ function getDataFromPOSTData(postData, target, dataType) {
     return null;
 }
 /**
- * Helperfunction for extracting the UDP ports for each base from the post event.
+ * Helperfunction for extracting the UDP ports for each setGuardModeStation from the post event.
  * @param postData The data from the post event.
- * @returns The array with the baseserials and the port number.
+ * @returns The array with the setGuardModeStationserials and the port number.
  */
-function getAllUdpPortsForBases(postData) {
-    var pos = postData.indexOf("udpPortsBase");
+function getAllUdpPortsForStations(postData) {
+    var pos = postData.indexOf("udpPortsStation");
     var res = [[], []];
     var i = 0;
     while (pos > 0) {
         var temp = postData.substring(pos + 29);
-        var basesn = postData.substring(pos + 12, pos + 28);
+        var stationSerial = postData.substring(pos + 15, pos + 31);
         temp = temp.replace("\r\n", "");
-        temp = temp.substring(2, temp.indexOf("----") - 2);
-        res[i][0] = basesn;
+        temp = temp.substring(5, temp.indexOf("----") - 2);
+        res[i][0] = stationSerial;
         res[i][1] = temp;
-        pos = postData.indexOf("udpPortsBase", pos + 16);
+        pos = postData.indexOf("udpPortsStation", pos + 19);
         i++;
     }
     return res;
@@ -577,27 +645,25 @@ function getAllUdpPortsForBases(postData) {
 /**
  * Will write config, stop the server and exit.
  */
-function stopServer() {
-    return __awaiter(this, void 0, void 0, function* () {
-        logger.logInfoBasic("Stopping P2P-Connections...");
-        yield api.closeP2PConnections();
-        logger.logInfoBasic("Stopping scheduled tasks...");
-        api.clearScheduledTasks();
-        logger.logInfoBasic("Write config...");
-        api.writeConfig();
-        logger.logInfoBasic("Stopping...");
-        serverHttp.close();
-        logger.logInfoBasic("Stopped...");
-    });
+async function stopServer() {
+    logger.logInfoBasic("Set service state to shutdown...");
+    api.setServiceState("shutdown");
+    logger.logInfoBasic("Stopping scheduled tasks...");
+    api.clearScheduledTasks();
+    logger.logInfoBasic("Stopping EufySecurityApi...");
+    await api.close();
+    logger.logInfoBasic("Write config...");
+    api.writeConfig();
+    logger.logInfoBasic("Stopping...");
+    serverHttp.close();
+    logger.logInfoBasic("Stopped...");
 }
 /**
  * Will write config and restart the server.
  */
-function restartServer() {
-    return __awaiter(this, void 0, void 0, function* () {
-        logger.logInfoBasic("Going to restart with apiServerRestarter...");
-        (0, child_process_1.exec)("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
-    });
+async function restartServer() {
+    logger.logInfoBasic("Going to restart with apiServerRestarter...");
+    (0, child_process_1.exec)("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
 }
 /**
  * Clear the logfile
@@ -621,16 +687,16 @@ function wait10Seconds() {
         }, 10000);
     });
 }
-process.on('SIGTERM', () => __awaiter(void 0, void 0, void 0, function* () {
+process.on('SIGTERM', async () => {
     logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
-    yield stopServer();
+    await stopServer();
     logger.logInfoBasic("...done. Exiting");
     (0, process_1.exit)(0);
-}));
-process.on('SIGINT', () => __awaiter(void 0, void 0, void 0, function* () {
+});
+process.on('SIGINT', async () => {
     logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
-    yield stopServer();
+    await stopServer();
     logger.logInfoBasic("...done. Exiting");
     (0, process_1.exit)(0);
-}));
+});
 main();

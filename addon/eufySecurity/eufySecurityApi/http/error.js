@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PropertyNotSupportedError = exports.LivestreamNotRunningError = exports.LivestreamAlreadyRunningError = exports.InvalidPropertyError = void 0;
+exports.ApiBaseLoadError = exports.PropertyNotSupportedError = exports.LivestreamNotRunningError = exports.LivestreamAlreadyRunningError = exports.InvalidPropertyError = void 0;
 class InvalidPropertyError extends Error {
     constructor(message) {
         super(message);
@@ -33,3 +33,12 @@ class PropertyNotSupportedError extends Error {
     }
 }
 exports.PropertyNotSupportedError = PropertyNotSupportedError;
+class ApiBaseLoadError extends Error {
+    constructor(code, message) {
+        super(message);
+        this.code = code;
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = ApiBaseLoadError.name;
+    }
+}
+exports.ApiBaseLoadError = ApiBaseLoadError;

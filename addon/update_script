@@ -294,6 +294,16 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map ]; then
     rm ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map
   fi
+  # remove renamed / deleted addon files
+  if [ -e ${ADDON_DIR}/eufySecurityApi/bases.js ]; then
+    rm ${ADDON_DIR}/eufySecurityApi/bases.js
+  fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/eufysecurity.js ]; then
+    rm ${ADDON_DIR}/eufySecurityApi/eufysecurity.js
+  fi
+  if [ -e ${ADDON_DIR}/www/assets/devices ]; then
+    rm -r ${ADDON_DIR}/www/assets/devices
+  fi
 fi
 
 # create necessary directories
