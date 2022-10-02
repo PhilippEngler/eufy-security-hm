@@ -975,7 +975,7 @@ function setArm(stationserial)
 {
 	if(stationserial == "")
 	{
-		document.getElementById("btnArmAll").innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;abwesend`;
+		document.getElementById("btnArmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;abwesend`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/away`;
 		xmlHttp = new XMLHttpRequest();
@@ -1013,7 +1013,7 @@ function setArm(stationserial)
 	}
 	else
 	{
-		document.getElementById("btnArm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;abwesend`;
+		document.getElementById("btnArm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;abwesend`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/away`;
 		xmlHttp = new XMLHttpRequest();
@@ -1054,7 +1054,7 @@ function setHome(stationserial)
 {
 	if(stationserial=="")
 	{
-		document.getElementById("btnHomeAll").innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;zu Hause`;
+		document.getElementById("btnHomeAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;zu Hause`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/home`;
 		xmlHttp = new XMLHttpRequest();
@@ -1092,7 +1092,7 @@ function setHome(stationserial)
 	}
 	else
 	{
-		document.getElementById("btnHome" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;zu Hause`;
+		document.getElementById("btnHome" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;zu Hause`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/home`;
 		xmlHttp = new XMLHttpRequest();
@@ -1133,7 +1133,7 @@ function setSchedule(stationserial)
 {
 	if(stationserial=="")
 	{
-		document.getElementById("btnScheduleAll").innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;Zeitsteuerung`;
+		document.getElementById("btnScheduleAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;Zeitsteuerung`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/schedule`;
 		xmlHttp = new XMLHttpRequest();
@@ -1171,7 +1171,7 @@ function setSchedule(stationserial)
 	}
 	else
 	{
-		document.getElementById("btnSchedule" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;Zeitsteuerung`;
+		document.getElementById("btnSchedule" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;Zeitsteuerung`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/schedule`;
 		xmlHttp = new XMLHttpRequest();
@@ -1212,7 +1212,7 @@ function setDisarm(stationserial)
 {
 	if(stationserial=="")
 	{
-		document.getElementById("btnDisarmAll").innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;deaktiviert`;
+		document.getElementById("btnDisarmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;deaktiviert`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/disarmed`;
 		xmlHttp = new XMLHttpRequest();
@@ -1250,7 +1250,7 @@ function setDisarm(stationserial)
 	}
 	else
 	{
-		document.getElementById("btnDisarm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;deaktiviert`;
+		document.getElementById("btnDisarm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;deaktiviert`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/disarmed`;
 		xmlHttp = new XMLHttpRequest();
