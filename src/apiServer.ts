@@ -1,6 +1,6 @@
 import { createServer as createServerHttp, IncomingMessage, ServerResponse } from 'http';
 import { createServer as createServerHttps } from 'https';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
 import { GuardMode } from './eufySecurityApi/http';
@@ -21,7 +21,7 @@ class ApiServer
      */
     constructor()
     {
-        apiPortFile(api.getApiServerPortHttp(), api.getApiServerPortHttps());
+        apiPortFile(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps());
         this.startServer(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps(), api.getApiServerKeyHttps(), api.getApiServerCertHttps(), logger);
     }
 
@@ -598,7 +598,7 @@ class ApiServer
                         
                         if(isDataOK == true)
                         {
-                            apiPortFile(Number(apiporthttp), Number(apiporthttps));
+                            apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
                             responseString = api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                         }
@@ -676,20 +676,25 @@ function main()
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */
-function apiPortFile(httpPort : number, httpsPort : number)
+function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, httpsPort : number)
 {
     try
     {
         if(existsSync("www/apiPorts.txt"))
         {
+            unlinkSync("www/apiPorts.txt");
+        }
+
+        if(existsSync("www/apiPorts.json"))
+        {
             if(api.getApiServerPortHttp() != httpPort || api.getApiServerPortHttps() != httpsPort)
             {
-                writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+                writeFileSync('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
             }
         }
         else
         {
-            writeFileSync('www/apiPorts.txt', httpPort + "," + httpsPort);
+            writeFileSync('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
         }
     }
     catch (ENOENT)

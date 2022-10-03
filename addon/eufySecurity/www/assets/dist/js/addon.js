@@ -56,44 +56,45 @@ function addSidToLinks(sessionID)
 
 function getAPIPort(page)
 {
-    var apiPorts;
-    var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.txt`;
+    var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.json`;
     xmlHttp = new XMLHttpRequest();
-    xmlHttp.overrideMimeType('text/plain');
     xmlHttp.onreadystatechange = function()
     {
         if(this.readyState == 4 && this.status == 200)
         {
             try
             {
-                apiPorts = this.responseText;
-                apiPorts = apiPorts.split(",");
-                if(apiPorts.length == 2)
+                objResp = JSON.parse(this.responseText);
+                if(location.protocol == "http:")
                 {
-                    port = apiPorts[0];
-                    if(location.protocol == "https:")
+                    if(objResp.useHttp == "true" && objResp.httpPort !== undefined)
                     {
-                        port = apiPorts[1];
+                        port = objResp.httpPort;
+                        document.getElementById("loadApiSettingsError").innerHTML = "";
+                        initContent(page);
+                        return;
                     }
                 }
                 else
                 {
-                    port = "52789";
-                    if(location.protocol == "https:")
+                    if(objResp.useHttps == "true" && objResp.httpsPort !== undefined)
                     {
-                        port = "52790";
+                        port = objResp.httpsPort;
+                        document.getElementById("loadApiSettingsError").innerHTML = "";
+                        initContent(page);
+                        return;
                     }
                 }
-                initContent(page);
+                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Der Aufruf der API über ${location.protocol.replace(":", "")} ist deaktiviert.<br /><small class="text-muted">Bitte nutzen Sie zum Aufruf der Addon-Webseite eine ${location.protocol == "http:" ? "https-" : "http-"}Verbindung.</small>`);
             }
             catch (e)
             {
-                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`);
+                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.</small>`);
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.txt im Webseitenverzeichnisses dieses AddOns.</small>`);
+            document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.</small>`);
         }
     };
     xmlHttp.open("GET", url, true);
