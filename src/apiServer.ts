@@ -680,14 +680,16 @@ function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, h
 {
     try
     {
-        if(existsSync("www/apiPorts.txt"))
+        if(existsSync('www/apiPorts.txt'))
         {
-            unlinkSync("www/apiPorts.txt");
+            unlinkSync('www/apiPorts.txt');
         }
 
-        if(existsSync("www/apiPorts.json"))
+        if(existsSync('www/apiPorts.json'))
         {
-            if(api.getApiServerPortHttp() != httpPort || api.getApiServerPortHttps() != httpsPort)
+            var resJSON = JSON.parse(readFileSync('www/apiPorts.json', 'utf-8'));
+
+            if(api.getApiUseHttp().toString() != resJSON.useHttp.toString() || api.getApiServerPortHttp().toString() != resJSON.httpPort.toString() || api.getApiUseHttps().toString() != resJSON.useHttps.toString() || api.getApiServerPortHttps().toString() != resJSON.httpsPort.toString())
             {
                 writeFileSync('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
             }
