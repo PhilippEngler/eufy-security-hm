@@ -189,8 +189,11 @@ export class EufySecurityApi
     private async closeStation() : Promise<void>
     {
         this.logInfoBasic("Closing connections to all stations...");
-        this.devices.close();
-        if(this.stations != null)
+        if(this.devices != null || this.devices != undefined)
+        {
+            this.devices.close();
+        }
+        if(this.stations != null || this.devices != undefined)
         {
             await this.stations.closeP2PConnections();
         }
@@ -202,7 +205,7 @@ export class EufySecurityApi
     private async closeDevice() : Promise<void>
     {
         this.logInfoBasic("Closing connections to all devices...");
-        if(this.devices != null)
+        if(this.devices != null || this.devices != undefined)
         {
             this.devices.closeDevices();
         }
@@ -581,11 +584,11 @@ export class EufySecurityApi
     {
         try
         {
-            await this.httpService.refreshStationData();
-            await this.httpService.refreshDeviceData();
-
             if(this.devices)
             {
+                await this.httpService.refreshStationData();
+                await this.httpService.refreshDeviceData();
+
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
