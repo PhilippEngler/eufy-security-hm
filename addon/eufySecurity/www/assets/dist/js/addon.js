@@ -1367,10 +1367,10 @@ function loadStationsSettings()
                 {
                     for(station in objResp.data)
                     {
-                        stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">UDP Port für Verbindung mit der Basisstation ${objResp.data[station].serialNumber} (${objResp.data[station].name}).</label>`;
+                        stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">UDP Port für Verbindung mit der Station ${objResp.data[station].serialNumber} (${objResp.data[station].name}).</label>`;
                         stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="UDP Port ${objResp.data[station].serialNumber}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
-                        stations += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Basisstation zugeordnet sein.</small>`;
-                        stations += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Basisstation zugeordnet sein.</div></div>`;
+                        stations += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Station zugeordnet sein.</small>`;
+                        stations += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Station zugeordnet sein.</div></div>`;
                     }
                     document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
                     document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
@@ -2088,7 +2088,7 @@ function checkUDPPorts(elementName)
                     if(document.getElementById('txtUdpPortsStation' + element[i].name.replace("udpPortsStation", "")).value == elementName.value)
                     {
                         error = true;
-                        errorMessage = "Sie haben einen Port eingegeben, der bereits für eine andere Basisstation oder ein anderes Gerät eingegeben wurde.<br /><br />Die Eingabe wird nun gelöscht.";
+                        errorMessage = "Sie haben einen Port eingegeben, der bereits für eine andere Station oder ein anderes Gerät eingegeben wurde.<br /><br />Die Eingabe wird nun gelöscht.";
                         break;
                     }
                 }
