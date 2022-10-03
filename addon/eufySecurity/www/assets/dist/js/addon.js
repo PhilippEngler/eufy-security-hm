@@ -205,11 +205,11 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
     return card;
 }
 
-function createStationTypeCardsContainer(firendlyTypeName, cards)
+function createStationTypeCardsContainer(firendlyTypeName, rowConfig, cards)
 {
     if(cards != "")
     {
-        return `<h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3">${cards}</div>`;
+        return `<h4>${firendlyTypeName}</h4><div class="${rowConfig}">${cards}</div>`;
     }
     else
     {
@@ -260,7 +260,7 @@ function createMessageContainer(classText, messageText)
                 {
                     stations += createMessageContainer("alert alert-danger", "Es wurden keine Stationen gefunden.");
                 }
-                text += createStationTypeCardsContainer("Stationen", stations);
+                text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
                 document.getElementById("stations").innerHTML =  text;
             }
             else
@@ -919,7 +919,7 @@ function loadDataStatechange(showLoading)
                         stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
                     }
 				}
-                text += createStationTypeCardsContainer("Stationen", stations);
+                text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-3", stations);
 				document.getElementById("btnArmAll").removeAttribute("disabled");
 				document.getElementById("btnHomeAll").removeAttribute("disabled");
 				document.getElementById("btnScheduleAll").removeAttribute("disabled");
