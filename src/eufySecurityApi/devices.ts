@@ -422,6 +422,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * Retrieve the model name of a given device.
+     * @param device The device object.
+     * @returns A string with the model name of the device.
+     */
     getDeviceModelName(device : Device) : string
     {
         switch (device.getModel())
