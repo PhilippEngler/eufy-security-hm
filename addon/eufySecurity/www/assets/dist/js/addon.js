@@ -1637,7 +1637,7 @@ function loadSystemVariables()
                 if(objResp.success == true)
                 {
                     document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", `Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br /><small class="form-text text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>`);
-                    sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 84%;">Name der Systemvariable</th><th scope="col" style="width: 12%;"></th></tr></thead><tbody class="table-group-divider">`;
+                    sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
                     for(systemVariable in objResp.data)
                     {
                         sysVarName = objResp.data[systemVariable].sysVar_name;
@@ -1654,11 +1654,11 @@ function loadSystemVariables()
                         sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
                         if(sysVarAvailable==true)
                         {
-                            sysVarTable += `<td class="align-middle text-center"><button id="btn${sysVarName}" type="button" class="btn btn-primary mb-1" disabled>System&shy;variable anlegen</button></td>`;
+                            sysVarTable += `<td class="align-middle text-center"><div class="d-grid"><button id="btn${sysVarName}" type="button" class="btn btn-primary mb-1" disabled>System&shy;variable anlegen</button></div></td>`;
                         }
                         else
                         {
-                            sysVarTable += `<td class="align-middle text-center"><button id="btn${sysVarName}" onclick="createSysVar('${sysVarName}', '${sysVarInfo}')" type="button" class="btn btn-primary mb-1">System&shy;variable anlegen</button></td>`;
+                            sysVarTable += `<td class="align-middle text-center"><div class="d-grid"><button id="btn${sysVarName}" onclick="createSysVar('${sysVarName}', '${sysVarInfo}')" type="button" class="btn btn-primary mb-1">System&shy;variable anlegen</button></div></td>`;
                         }
                         sysVarTable += `</tr>`;
                     }
