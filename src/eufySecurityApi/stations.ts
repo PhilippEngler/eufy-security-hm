@@ -586,7 +586,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     getStationModelName(station : Station) : string
     {
-        switch (station.getModel())
+        switch (station.getModel().substring(0,5))
         {
             //HomeBases
             case "T8001":

@@ -429,7 +429,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     getDeviceModelName(device : Device) : string
     {
-        switch (device.getModel())
+        switch (device.getModel().substring(0,5))
         {
             //eufyCams
             case "T8111":
