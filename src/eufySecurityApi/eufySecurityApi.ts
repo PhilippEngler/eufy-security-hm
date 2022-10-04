@@ -564,6 +564,12 @@ export class EufySecurityApi
         {
             switch (property)
             {
+                case PropertyName.Model:
+                case PropertyName.Name:
+                case PropertyName.HardwareVersion:
+                case PropertyName.SoftwareVersion:
+                case PropertyName.DeviceStationSN:
+                    break;
                 case PropertyName.DevicePictureUrl:
                     json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
                     json += `,"pictureTime":"${this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()))}"`;
@@ -657,7 +663,7 @@ export class EufySecurityApi
         var json : string = "";
         try
         {
-            json = `{"success":true,"data":[${this.makeJsonForDevice(devices[deviceSerial])}]}`;
+            json = `{"success":true,"data":${this.makeJsonForDevice(devices[deviceSerial])}}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -679,7 +685,7 @@ export class EufySecurityApi
         var json : string = "";
         try
         {
-            json = `{"success":true,"type":"${devices[deviceSerial].getModel()}","data":[${JSON.stringify(devices[deviceSerial].getPropertiesMetadata())}]}`;
+            json = `{"success":true,"type":"${devices[deviceSerial].getModel()}","data":${JSON.stringify(devices[deviceSerial].getPropertiesMetadata())}}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -702,7 +708,7 @@ export class EufySecurityApi
         var json : string = "";
         try
         {
-            json = `{"success":true,"type":"${devices[deviceSerial].getModel()}","data":[${JSON.stringify(devices[deviceSerial].getProperties())}]}`;
+            json = `{"success":true,"type":"${devices[deviceSerial].getModel()}","data":${JSON.stringify(devices[deviceSerial].getProperties())}}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -824,7 +830,7 @@ export class EufySecurityApi
         var json : string = "";
         try
         {
-            json = `{"success":true,"type":"${stations[stationSerial].getModel()}","data":[${JSON.stringify(stations[stationSerial].getPropertiesMetadata())}]}`;
+            json = `{"success":true,"type":"${stations[stationSerial].getModel()}","data":${JSON.stringify(stations[stationSerial].getPropertiesMetadata())}}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -847,7 +853,7 @@ export class EufySecurityApi
         var json : string = "";
         try
         {
-            json = `{"success":true,"type":"${stations[stationSerial].getModel()}","data":[${JSON.stringify(stations[stationSerial].getProperties())}]}`;
+            json = `{"success":true,"type":"${stations[stationSerial].getModel()}","data":${JSON.stringify(stations[stationSerial].getProperties())}}`;
             this.setLastConnectionInfo(true);
         }
         catch
@@ -872,7 +878,7 @@ export class EufySecurityApi
         var json : string = "";
         try
         {
-            json = `{"success":true,"data":[${this.makeJsonForStation(station[stationSerial])}]}`;
+            json = `{"success":true,"data":${this.makeJsonForStation(station[stationSerial])}}`;
             this.setLastConnectionInfo(true);
         }
         catch
