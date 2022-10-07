@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
-import { DeviceNotFoundError } from "./error";
+import { DeviceNotFoundError, ReadOnlyPropertyError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe, InvalidPropertyError } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue } from "./utils";
@@ -1480,11 +1480,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
                 {
-                    return;
-                    //throw new ReadOnlyPropertyError(`Property ${name} is read only`);
+                    throw new ReadOnlyPropertyError(`Property ${name} is read only`);
                 }
-                return;
-                //throw new InvalidPropertyError(`Device ${deviceSerial} has no writable property named ${name}`);
+                throw new InvalidPropertyError(`Device ${deviceSerial} has no writable property named ${name}`);
         }
     }
 }

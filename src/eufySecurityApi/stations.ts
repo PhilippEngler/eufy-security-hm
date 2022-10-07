@@ -1,11 +1,11 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError } from './http';
 import { sleep } from './push/utils';
-import { CommandResult, DeviceNotFoundError, NotSupportedError, StationNotFoundError, StreamMetadata } from ".";
+import { DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError } from "./error";
 import internal from "stream";
-import { AlarmEvent, ChargingType, CommandType, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue } from "./utils";
 
@@ -489,6 +489,24 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             return this.stations[stationSerial];
         }
         throw new StationNotFoundError(`No station with serial number: ${stationSerial}!`);
+    }
+
+    /**
+     * Checks if a station with the given serial exists.
+     * @param stationSerial The stationSerial of the station to check.
+     * @returns True if station exists, otherwise false.
+     */
+    public existStation(stationSerial : string) : boolean
+    {
+        var res = this.stations[stationSerial];
+        if(res)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     /**
@@ -1811,11 +1829,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
                 {
-                    return;
-                    //throw new ReadOnlyPropertyError(`Property ${name} is read only`);
+                    throw new ReadOnlyPropertyError(`Property ${name} is read only`);
                 }
-                return;
-                //throw new InvalidPropertyError(`Station ${stationSerial} has no writable property named ${name}`);
+                throw new InvalidPropertyError(`Station ${stationSerial} has no writable property named ${name}`);
         }
     }
 }

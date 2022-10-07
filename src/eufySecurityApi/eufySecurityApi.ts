@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -11,6 +11,7 @@ import { Stations } from './stations';
 import { P2PConnectionType } from './p2p';
 import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
+import { ReadOnlyPropertyError } from './error';
 
 export class EufySecurityApi
 {
@@ -668,7 +669,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No devices found."}`;
+            json = `{"success":false,"reason":"No device found."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -690,7 +691,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No devices found."}`;
+            json = `{"success":false,"reason":"No device found."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -713,10 +714,45 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No devices found."}`;
+            json = `{"success":false,"reason":"No device found."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
+    }
+
+    /**
+     * Set a given value to a given property for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param propertyName The name of the property.
+     * @param propertyValue The value of the property.
+     * @returns A JSON-String.
+     */
+    public async setDeviceProperty(deviceSerial : string, propertyName : string, propertyValue : unknown) : Promise<string>
+    {
+        if(!this.devices.existDevice(deviceSerial))
+        {
+            return `{"success":false,"reason":"The device with the serial ${deviceSerial} does not exists."}`;
+        }
+        try
+        {
+            await this.devices.setDeviceProperty(deviceSerial, propertyName, propertyValue);
+            return `{"success":true,"reason":"The property ${propertyName} for device ${deviceSerial} has been processed."}`;
+        }
+        catch (e)
+        {
+            if (e instanceof InvalidPropertyError)
+            {
+                return `{"success":false,"reason":"The device ${deviceSerial} does not support the property ${propertyName}."}`;
+            }
+            else if (e instanceof ReadOnlyPropertyError)
+            {
+                return `{"success":false,"reason":"The property ${propertyName} is read only."}`;
+            }
+            else
+            {
+                return `{"success":false,"reason":"Other error occured."}`;
+            }
+        }
     }
 
     /**
@@ -835,7 +871,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No devices found."}`;
+            json = `{"success":false,"reason":"No station found."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -858,10 +894,45 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No devices found."}`;
+            json = `{"success":false,"reason":"No station found."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
+    }
+
+    /**
+     * Set a given value to a given property for a given station.
+     * @param stationSerial The serial of the station.
+     * @param propertyName The name of the property.
+     * @param propertyValue The value of the property.
+     * @returns A JSON-String.
+     */
+    public async setStationProperty(stationSerial : string, propertyName : string, propertyValue : unknown) : Promise<string>
+    {
+        if(!this.stations.existStation(stationSerial))
+        {
+            return `{"success":false,"reason":"The station with the serial ${stationSerial} does not exists."}`;
+        }
+        try
+        {
+            await this.stations.setStationProperty(stationSerial, propertyName, propertyValue);
+            return `{"success":true,"reason":"The property ${propertyName} for station ${stationSerial} has been processed."}`;
+        }
+        catch (e)
+        {
+            if (e instanceof InvalidPropertyError)
+            {
+                return `{"success":false,"reason":"The station ${stationSerial} does not support the property ${propertyName}."}`;
+            }
+            else if (e instanceof ReadOnlyPropertyError)
+            {
+                return `{"success":false,"reason":"The property ${propertyName} is read only."}`;
+            }
+            else
+            {
+                return `{"success":false,"reason":"Other error occured."}`;
+            }
+        }
     }
 
     /**
@@ -883,7 +954,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No devices found."}`;
+            json = `{"success":false,"reason":"No station found."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -2395,7 +2466,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.0";
+        return "1.6.1";
     }
 
     /**
