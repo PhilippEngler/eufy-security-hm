@@ -85,16 +85,16 @@ function getAPIPort(page)
                         return;
                     }
                 }
-                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Der Aufruf der API über ${location.protocol.replace(":", "")} ist deaktiviert.<br /><small class="text-muted">Bitte nutzen Sie zum Aufruf der Addon-Webseite eine ${location.protocol == "http:" ? "https-" : "http-"}Verbindung.</small>`);
+                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Der Aufruf der API über ${location.protocol.replace(":", "")} ist deaktiviert`, "", `Bitte nutzen Sie zum Aufruf der Addon-Webseite eine ${location.protocol == "http:" ? "https-" : "http-"}Verbindung.`);
             }
             catch (e)
             {
-                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.</small>`);
+                document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.", "Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.", `Fehler: ${e}`);
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", `Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.<br /><small class="text-muted">Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.</small>`);
+            document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.", "Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
         }
     };
     xmlHttp.open("GET", url, true);
@@ -223,9 +223,9 @@ function createWaitMessage(messageText)
     return `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${messageText}</strong></div>`;
 }
 
-function createMessageContainer(classText, messageText)
+function createMessageContainer(classText, messageHeader, messageText, messageSubText)
 {
-    return `<div class="${classText}" role="alert">${messageText}</div>`;
+    return `<div class="${classText}" role="alert"><h6 class="mb-0 alert-heading">${messageHeader}</h6>${messageText != "" ? `<span class="${messageSubText != "" ? `mb-0` : ""}">${messageText}</span>` : ""}${messageSubText != "" ? `<hr><small class="mt-0 form-text text-muted">${messageSubText}</small>` : ""}</div>`;
 }
 //#endregion
 
@@ -259,19 +259,19 @@ function createMessageContainer(classText, messageText)
                 }
                 else
                 {
-                    stations += createMessageContainer("alert alert-danger", "Es wurden keine Stationen gefunden.");
+                    stations += createMessageContainer("alert alert-primary", "Es wurden keine Stationen gefunden.", "", "");
                 }
                 text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
                 document.getElementById("stations").innerHTML =  text;
             }
             else
             {
-                document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.")}`;
+                document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", "")}`;
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.")}`;
+            document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
         }
         else
         {
@@ -339,17 +339,17 @@ function loadDevices()
                 }
                 else
                 {
-                    document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Es wurden keine Geräte gefunden.")}`;
+                    document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-primary", "Es wurden keine Geräte gefunden.", "", "")}`;
                 }
             }
             else
             {
-                document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.")}`;
+                document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.", "", "")}`;
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.")}`;
+            document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
         }
         else
         {
@@ -455,14 +455,14 @@ function showDeviceSettings(deviceId)
             {
                 if(objResp.data.length = 1)
                 {
-                    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${deviceId})</h5></div><div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(objResp.data[0].wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data[0].wifiRssi}dB"></i></span></h5></div>`;
+                    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data.name} (${deviceId})</h5></div><div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(objResp.data.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${objResp.data.wifiRssi}dB"></i></span></h5></div>`;
 
-                    document.getElementById("lblDeviceModel").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].modelName} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
-                    document.getElementById("lblDeviceName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h5>`;
-                    document.getElementById("lblDeviceSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data[0].serialNumber}</h6>`;
-                    document.getElementById("lblDeviceInfo").innerHTML = `<h6 class="card-subtitle text-muted"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}&nbsp;&nbsp;&nbsp;&nbsp;<i class="${objResp.data[0].chargingStatus == 1 ? "bi-battery-charging" : objResp.data[0].battery < 5 ? "bi-battery" : objResp.data[0].battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data[0].battery < 5 ? "text-danger" : objResp.data[0].battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data[0].battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data[0].batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data[0].batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data[0].batteryTemperature}&deg;C</span></h6>`;
+                    document.getElementById("lblDeviceModel").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data.modelName} <span class="text-muted">(${objResp.data.model})</span></h5>`;
+                    document.getElementById("lblDeviceName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data.name}</h5>`;
+                    document.getElementById("lblDeviceSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data.serialNumber}</h6>`;
+                    document.getElementById("lblDeviceInfo").innerHTML = `<h6 class="card-subtitle text-muted"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data.softwareVersion}&nbsp;&nbsp;&nbsp;&nbsp;<i class="${objResp.data.chargingStatus == 1 ? "bi-battery-charging" : objResp.data.battery < 5 ? "bi-battery" : objResp.data.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data.battery < 5 ? "text-danger" : objResp.data.battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data.battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data.batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data.batteryTemperature}&deg;C</span></h6>`;
 
-                    if(objResp.data[0].enabled == "true")
+                    if(objResp.data.enabled == "true")
                     {
                         document.getElementById("chkDeviceEnabled").setAttribute("checked", true);
                     }
@@ -470,7 +470,7 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceEnabled").removeAttribute("checked");
                     }
-                    if(objResp.data[0].antitheftDetection == "true")
+                    if(objResp.data.antitheftDetection == "true")
                     {
                         document.getElementById("chkDeviceAntitheftDetection").setAttribute("checked", true);
                     }
@@ -478,7 +478,7 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceAntitheftDetection").removeAttribute("checked");
                     }
-                    if(objResp.data[0].statusLed == "true")
+                    if(objResp.data.statusLed == "true")
                     {
                         document.getElementById("chkDeviceStatusLed").setAttribute("checked", true);
                     }
@@ -486,7 +486,7 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceStatusLed").removeAttribute("checked");
                     }
-                    switch (objResp.data[0].powerWorkingMode)
+                    switch (objResp.data.powerWorkingMode)
                     {
                         case "0":
                             document.getElementById("rbDeviceWMOptimalAccu").setAttribute("checked", true);
@@ -511,9 +511,9 @@ function showDeviceSettings(deviceId)
                             document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
                             document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
                     }
-                    document.getElementById("rgDeviceCustomRecordingSettingsClipLength").value = Number.parseInt(objResp.data[0].recordingClipLength);
-                    document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").value = Number.parseInt(objResp.data[0].recordingRetriggerInterval);
-                    if(objResp.data[0].recordingEndClipMotionStops == true)
+                    document.getElementById("rgDeviceCustomRecordingSettingsClipLength").value = Number.parseInt(objResp.data.recordingClipLength);
+                    document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").value = Number.parseInt(objResp.data.recordingRetriggerInterval);
+                    if(objResp.data.recordingEndClipMotionStops == true)
                     {
                         document.getElementById("chkDeviceCustomRecordingSettingsStoppWhenMotionEnds").setAttribute("checked", true);
                     }
@@ -521,46 +521,46 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceCustomRecordingSettingsStoppWhenMotionEnds").removeAttribute("checked");
                     }
-                    switch (objResp.data[0].powerSource)
+                    switch (objResp.data.powerSource)
                     {
                         case "0":
-                            document.getElementById("lblDevicePowerSource").innerHTML = `Batterie ${objResp.data[0].chargingStatus == 1 ? " (ladend)" : objResp.data[0].chargingStatus == 2 ? " (nicht angeschlossen)" : objResp.data[0].chargingStatus == 3 ? " (angeschlossen)" : ""}`;
+                            document.getElementById("lblDevicePowerSource").innerHTML = `Batterie ${objResp.data.chargingStatus == 1 ? " (ladend)" : objResp.data.chargingStatus == 2 ? " (nicht angeschlossen)" : objResp.data.chargingStatus == 3 ? " (angeschlossen)" : ""}`;
                             break;
                         case "1":
-                            document.getElementById("lblDevicePowerSource").innerHTML = `Solar ${objResp.data[0].chargingStatus == 1 ? " (ladend)" : ""}`;
+                            document.getElementById("lblDevicePowerSource").innerHTML = `Solar ${objResp.data.chargingStatus == 1 ? " (ladend)" : ""}`;
                             break;
                         default:
                             document.getElementById("lblDevicePowerSource").innerHTML = `unbekannt`;
                     }
-                    switch (objResp.data[0].watermark)
+                    switch (objResp.data.watermark)
                     {
                         case "0":
-                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data[0].watermark) + 1);
+                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
                             break;
                         case "1":
-                            if(objResp.data[0].model == "T8112")
+                            if(objResp.data.model == "T8112")
                             {
                                 document.getElementById("cbDeviceWatermark").selectedIndex = 0;
                             }
                             else
                             {
-                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data[0].watermark) + 1);
+                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
                             }
                             break;
                         case "2":
-                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data[0].watermark) + 1);
+                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
                             break;
                         default:
                             document.getElementById("cbDeviceWatermark").selectedIndex = 0
                     }
-                    if(objResp.data[0].autoNightvision == undefined)
+                    if(objResp.data.autoNightvision == undefined)
                     {
                         document.getElementById("divDeviceAutoNightvision").classList.add("collapse", true);
                     }
                     else
                     {
                         document.getElementById("divDeviceAutoNightvision").classList.remove("collapse");
-                        if(objResp.data[0].autoNightvision == "true")
+                        if(objResp.data.autoNightvision == "true")
                         {
                             document.getElementById("chkDeviceAutoNightvision").setAttribute("checked", true);
                         }
@@ -569,16 +569,16 @@ function showDeviceSettings(deviceId)
                             document.getElementById("chkDeviceAutoNightvision").removeAttribute("checked");
                         }
                     }
-                    if(objResp.data[0].nightvision == undefined)
+                    if(objResp.data.nightvision == undefined)
                     {
                         document.getElementById("divDeviceNightvision").classList.add("collapse", true);
                     }
                     else
                     {
                         document.getElementById("divDeviceNightvision").classList.remove("collapse");
-                        document.getElementById("cbDeviceNightvision").selectedIndex = (Number.parseInt(objResp.data[0].nightvision));
+                        document.getElementById("cbDeviceNightvision").selectedIndex = (Number.parseInt(objResp.data.nightvision));
                     }
-                    if(objResp.data[0].microphone == "true")
+                    if(objResp.data.microphone == "true")
                     {
                         document.getElementById("chkDeviceMicrophoneEnable").setAttribute("checked", true);
                         document.getElementById("chkDeviceAudioRecording").removeAttribute("disabled");
@@ -588,9 +588,9 @@ function showDeviceSettings(deviceId)
                         document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
                         document.getElementById("chkDeviceAudioRecording").classList.add("collapse", true);
                     }
-                    if(objResp.data[0].audioRecording == "true")
+                    if(objResp.data.audioRecording == "true")
                     {
-                        if(objResp.data[0].microphone == "true")
+                        if(objResp.data.microphone == "true")
                         {
                             document.getElementById("divDeviceAudioRecording").classList.remove("collapse");
                         }
@@ -602,7 +602,7 @@ function showDeviceSettings(deviceId)
                     }
                     else
                     {
-                        if(objResp.data[0].microphone == "true")
+                        if(objResp.data.microphone == "true")
                         {
                             document.getElementById("divDeviceAudioRecording").classList.add("collapse", true);
                         }
@@ -612,7 +612,7 @@ function showDeviceSettings(deviceId)
                         }
                         document.getElementById("chkDeviceAudioRecording").removeAttribute("checked");
                     }
-                    if(objResp.data[0].speaker == "true")
+                    if(objResp.data.speaker == "true")
                     {
                         document.getElementById("chkDeviceSpeakerEnable").setAttribute("checked", true);
                     }
@@ -620,9 +620,9 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceSpeakerEnable").removeAttribute("checked");
                     }
-                    if(objResp.data[0].speakerVolume != undefined)
+                    if(objResp.data.speakerVolume != undefined)
                     {
-                        if(objResp.data[0].speaker == "true")
+                        if(objResp.data.speaker == "true")
                         {
                             document.getElementById("divDeviceSpeakerVolume").classList.remove("collapse");
                         }
@@ -631,7 +631,7 @@ function showDeviceSettings(deviceId)
                             document.getElementById("divDeviceSpeakerVolume").classList.add("collapse", true);
                         }
                         document.getElementById("rgDeviceSpeakerVolume").removeAttribute("disabled");
-                        switch (objResp.data[0].speakerVolume)
+                        switch (objResp.data.speakerVolume)
                         {
                             case "90":
                                 document.getElementById("rgDeviceSpeakerVolume").value = 1;
@@ -650,7 +650,7 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("divDeviceSpeakerVolume").classList.add("collapse", true);
                     }
-                    switch (objResp.data[0].notificationType)
+                    switch (objResp.data.notificationType)
                     {
                         case "1":
                             document.getElementById("rbDeviceNTMostEfficient").setAttribute("checked", true);
@@ -674,11 +674,11 @@ function showDeviceSettings(deviceId)
                     }
 
                     document.getElementById("lblModalDeviceSettingsInfo").innerHTML = ``;
-                    if(objResp.data[0].model != "T8112" && objResp.data[0].model != "T8113" && objResp.data[0].model != "T8114")
+                    if(objResp.data.model != "T8112" && objResp.data.model != "T8113" && objResp.data.model != "T8114")
                     {
-                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Dieses Gerät wird nicht vollständig unterstützt.<br /><small class="text-muted">Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</small>`);
+                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", "Dieses Gerät wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
                     }
-                    document.getElementById("lblModalDeviceSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.");
+                    document.getElementById("lblModalDeviceSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "");
                     document.getElementById("cardDeviceCommonSettings").classList.remove("collapse");
                     document.getElementById("cardDevicePowerManagerSettings").classList.remove("collapse");
                     document.getElementById("cardDeviceVideoSettings").classList.remove("collapse");
@@ -687,17 +687,17 @@ function showDeviceSettings(deviceId)
                 }
                 else
                 {
-                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Es wurden keine Geräte gefunden.")}`;
+                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-primary", "Es wurden keine Geräte gefunden.", "", "")}`;
                 }
             }
             else
             {
-                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.")}`;
+                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.", "", "")}`;
             }
         }
         else if(this.readyState == 4)
         {
-            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.")}`;
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.", "", "")}`;
         }
         else
         {
@@ -711,7 +711,7 @@ function showDeviceSettings(deviceId)
 function showStationSettings(stationId)
 {
     const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
-    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>`;
+    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
     document.getElementById("lblModalStationSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
     document.getElementById("lblStationModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblStationName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
@@ -745,27 +745,27 @@ function showStationSettings(stationId)
             {
                 if(objResp.data.length = 1)
                 {
-                    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data[0].name} (${stationId})</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>`;
-                    document.getElementById("lblStationModel").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].modelName} <span class="text-muted">(${objResp.data[0].model})</span></h5>`;
-                    document.getElementById("lblStationName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data[0].name}</h6>`;
-                    document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data[0].serialNumber}</h6>`;
-                    document.getElementById("lblStationFirmware").innerHTML = `<h6 class="card-subtitle text-muted"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[0].softwareVersion}</h6>`;
+                    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${objResp.data.name} (${stationId})</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>`;
+                    document.getElementById("lblStationModel").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data.modelName} <span class="text-muted">(${objResp.data.model})</span></h5>`;
+                    document.getElementById("lblStationName").innerHTML = `<h5 class="card-subtitle mb-2">${objResp.data.name}</h6>`;
+                    document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data.serialNumber}</h6>`;
+                    document.getElementById("lblStationFirmware").innerHTML = `<h6 class="card-subtitle text-muted"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data.softwareVersion}</h6>`;
 
-                    if(objResp.data[0].model == "T8002")
+                    if(objResp.data.model == "T8002")
                     {
-                        if(objResp.data[0].alarmTone == "255")
+                        if(objResp.data.alarmTone == "255")
                         {
                             document.getElementById("cbStationAlarmTone").selectedIndex = 1;
                         }
                     }
                     else
                     {
-                        document.getElementById("cbStationAlarmTone").selectedIndex = (Number.parseInt(objResp.data[0].alarmTone) + 1);
+                        document.getElementById("cbStationAlarmTone").selectedIndex = (Number.parseInt(objResp.data.alarmTone) + 1);
                     }
-                    document.getElementById("rgStationAlarmVolume").value = objResp.data[0].alarmVolume;
-                    document.getElementById("rgStationPromtVolume").value = objResp.data[0].promtVolume;
+                    document.getElementById("rgStationAlarmVolume").value = objResp.data.alarmVolume;
+                    document.getElementById("rgStationPromtVolume").value = objResp.data.promtVolume;
 
-                    if(objResp.data[0].notificationSwitchModeSchedule == "true")
+                    if(objResp.data.notificationSwitchModeSchedule == "true")
                     {
                         document.getElementById("chkStationSwitchToSchedule").setAttribute("checked", true);
                     }
@@ -773,7 +773,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchToSchedule").removeAttribute("checked");
                     }
-                    if(objResp.data[0].notificationSwitchModeGeofence == "true")
+                    if(objResp.data.notificationSwitchModeGeofence == "true")
                     {
                         document.getElementById("chkStationSwitchToGeofencing").setAttribute("checked", true);
                     }
@@ -781,7 +781,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchToGeofencing").removeAttribute("checked");
                     }
-                    if(objResp.data[0].notificationSwitchModeApp == "true")
+                    if(objResp.data.notificationSwitchModeApp == "true")
                     {
                         document.getElementById("chkStationSwitchByApp").setAttribute("checked", true);
                     }
@@ -789,7 +789,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchByApp").removeAttribute("checked");
                     }
-                    if(objResp.data[0].notificationSwitchModeKeypad == "true")
+                    if(objResp.data.notificationSwitchModeKeypad == "true")
                     {
                         document.getElementById("chkStationSwitchByKeypad").setAttribute("checked", true);
                     }
@@ -797,7 +797,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchByKeypad").removeAttribute("checked");
                     }
-                    if(objResp.data[0].notificationStartAlarmDelay == "true")
+                    if(objResp.data.notificationStartAlarmDelay == "true")
                     {
                         document.getElementById("chkStationStartAlarmDelay").setAttribute("checked", true);
                     }
@@ -807,28 +807,28 @@ function showStationSettings(stationId)
                     }
 
                     document.getElementById("lblModalStationSettingsInfo").innerHTML = ``;
-                    if(objResp.data[0].model != "T8002" && objResp.data[0].model != "T8010")
+                    if(objResp.data.model != "T8002" && objResp.data.model != "T8010")
                     {
-                        document.getElementById("lblModalStationSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", `Diese Station wird nicht vollständig unterstützt.<br /><small class="text-muted">Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.</small>`);
+                        document.getElementById("lblModalStationSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", "Diese Station wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
                     }
-                    document.getElementById("lblModalStationSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.");
+                    document.getElementById("lblModalStationSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "");
                     //document.getElementById("cardStationStorageSettings").classList.remove("collapse");
                     document.getElementById("cardStationAudioSettings").classList.remove("collapse");
                     document.getElementById("cardStationNofificationSettings").classList.remove("collapse");
                 }
                 else
                 {
-                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Es wurden keine Geräte gefunden.")}`;
+                    //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-primary", "Es wurden keine Geräte gefunden.", "", "")}`;
                 }
             }
             else
             {
-                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.")}`;
+                //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", "")}`;
             }
         }
         else if(this.readyState == 4)
         {
-            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer(alert alert-danger", "Fehler beim Laden der Station.")}`;
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Stationen</h4>${createMessageContainer(alert alert-danger", "Fehler beim Laden der Station.", "", "")}`;
         }
         else
         {
@@ -837,11 +837,6 @@ function showStationSettings(stationId)
     };
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
-}
-
-function setDeviceSetting(deviceSerial, settingName, settingValue)
-{
-
 }
 //#endregion
 
@@ -943,7 +938,7 @@ function loadDataStatechange(showLoading)
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
-				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.");
+				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.", "", "");
 			}
 		}
 		else if(this.readyState == 4)
@@ -953,7 +948,7 @@ function loadDataStatechange(showLoading)
 			document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 			document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 			document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
-			document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.");
+			document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
 		}
 		else
 		{
@@ -1379,21 +1374,21 @@ function loadStationsSettings()
                 }
                 else
                 {
-                    document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.");
+                    document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", "");
                     document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
                     loadDataSettings();
                 }
             }
             catch (e)
             {
-                document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.");
+                document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Fehler: ${e}`);
                 document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
                 loadDataSettings();
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.");
+            document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
             document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
             loadDataSettings();
         }
@@ -1600,17 +1595,17 @@ function loadDataSettings()
                 }
                 else
                 {
-                    document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'success' ist 'false'.</small>`);
+                    document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Einstellungen.", "", `Rückgabewert 'success' ist 'false'.`);
                 }
             }
             catch (e)
             {
-                document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">${e}</small>`);
+                document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Einstellungen.", "", `Fehler: ${e}`);
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei der Ermittlung der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small>`);
+            document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Einstellungen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
         }
         else
         {
@@ -1636,7 +1631,7 @@ function loadSystemVariables()
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", `Die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert. Somit aktualisiert das AddOn die entsprechenden Systemvariablen. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.<br /><small class="form-text text-muted">Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.</small>`);
+                    document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.", "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.", "Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren`");
                     sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
                     for(systemVariable in objResp.data)
                     {
@@ -1670,24 +1665,24 @@ function loadSystemVariables()
                     if(objResp.reason == "System variables in config disabled.")
                     {
                         document.getElementById("divSystemVariablesHint").innerHTML = "";
-                        document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", "Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.");
+                        document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", "Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.", "", "");
                     }
                     else
                     {
                         document.getElementById("divSystemVariablesHint").innerHTML = "";
-                        document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", `Fehler bei der Ermittlung der Systemvariablen.<br /><small class="form-text text-muted">Es ist folgender Fehler ist aufgetreten: '${objResp.reason}'</small>`);
+                        document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: '${objResp.reason}'.`);
                     }
                 }
             }
             catch (e)
             {
                 document.getElementById("divSystemVariablesHint").innerHTML = "";
-                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.");
+                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", `Fehler: ${e}.`);
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.");
+            document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
         }
         else
         {
@@ -1749,12 +1744,12 @@ function saveConfig()
             }
             catch (e)
             {
-                document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">${e}</small>`);
+                document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Fehler: ${e}.`);
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", `Fehler bei dem Speichern der Einstellungen.<br /><small class="form-text text-muted">Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.</small>`);
+            document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
         }
         else
         {
@@ -1785,17 +1780,17 @@ function createSysVar(varName, varInfo)
                 }
                 else
                 {
-                    document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.");
+                    document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", "");
                 }
             }
             catch (e)
             {
-                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.");
+                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Fehler: ${e}.`);
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.");
+            document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
         }
         else
         {
@@ -2165,10 +2160,10 @@ function loadLogfile(logfiletype, showLoading)
             switch(logfiletype)
             {
                 case "log":
-                    document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Protokolldatei.");
+                    document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Protokolldatei.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
                     break;
                 case "err":
-                    document.getElementById("err").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Fehlerprotokolldatei.");
+                    document.getElementById("err").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Fehlerprotokolldatei.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
                     break;
             }
         }
@@ -2264,12 +2259,12 @@ function loadDataInfo(showLoading)
             }
             else
             {
-                document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Versionsinformationen.");
+                document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Versionsinformationen.", "", "");
             }
         }
         else if(this.readyState == 4)
         {
-            document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Versionsinformationen.");
+            document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Versionsinformationen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
         }
         else
         {
