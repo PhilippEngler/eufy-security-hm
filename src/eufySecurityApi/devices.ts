@@ -427,7 +427,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device object.
      * @returns A string with the model name of the device.
      */
-    getDeviceModelName(device : Device) : string
+    public getDeviceModelName(device : Device) : string
     {
         switch (device.getModel().substring(0,5))
         {
@@ -893,7 +893,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageDelivered(device : Device, state : boolean) : void {
+    private onDevicePackageDelivered(device : Device, state : boolean) : void
+    {
         this.emit("device package delivered", device, state);
     }
 
@@ -902,7 +903,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageStranded(device : Device, state : boolean) : void {
+    private onDevicePackageStranded(device : Device, state : boolean) : void
+    {
         this.emit("device package stranded", device, state);
     }
 
@@ -911,7 +913,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageTaken(device : Device, state : boolean) : void {
+    private onDevicePackageTaken(device : Device, state : boolean) : void
+    {
         this.emit("device package taken", device, state);
     }
 
@@ -920,7 +923,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceSomeoneLoitering(device : Device, state : boolean) : void {
+    private onDeviceSomeoneLoitering(device : Device, state : boolean) : void
+    {
         this.emit("device someone loitering", device, state);
     }
 
@@ -929,7 +933,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceRadarMotionDetected(device : Device, state : boolean) : void {
+    private onDeviceRadarMotionDetected(device : Device, state : boolean) : void
+    {
         this.emit("device radar motion detected", device, state);
     }
 
@@ -939,7 +944,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The state.
      * @param detail The detail.
      */
-    private onDevice911Alarm(device : Device, state : boolean, detail : SmartSafeAlarm911Event) : void {
+    private onDevice911Alarm(device : Device, state : boolean, detail : SmartSafeAlarm911Event) : void
+    {
         this.emit("device 911 alarm", device, state, detail);
     }
 
@@ -949,7 +955,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The state.
      * @param detail The detail.
      */
-    private onDeviceShakeAlarm(device : Device, state : boolean, detail : SmartSafeShakeAlarmEvent) : void {
+    private onDeviceShakeAlarm(device : Device, state : boolean, detail : SmartSafeShakeAlarmEvent) : void
+    {
         this.emit("device shake alarm", device, state, detail);
     }
 
@@ -958,7 +965,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceWrongTryProtectAlarm(device : Device, state : boolean) : void {
+    private onDeviceWrongTryProtectAlarm(device : Device, state : boolean) : void
+    {
         this.emit("device wrong try-protect alarm", device, state);
     }
 
@@ -967,7 +975,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceLongTimeNotClose(device : Device, state : boolean) : void {
+    private onDeviceLongTimeNotClose(device : Device, state : boolean) : void
+    {
         this.emit("device long time not close", device, state);
     }
 
@@ -976,7 +985,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceLowBattery(device : Device, state : boolean) : void {
+    private onDeviceLowBattery(device : Device, state : boolean) : void
+    {
         this.emit("device low battery", device, state);
     }
 
@@ -985,7 +995,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceJammed(device : Device, state : boolean) : void {
+    private onDeviceJammed(device : Device, state : boolean) : void
+    {
         this.emit("device jammed", device, state);
     }
 

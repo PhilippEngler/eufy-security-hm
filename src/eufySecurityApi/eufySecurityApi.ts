@@ -525,7 +525,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given house.
      */
-     public async getHouseAsJSON(houseId : string) : Promise<string>
+    public async getHouseAsJSON(houseId : string) : Promise<string>
     {
         await this.httpService.refreshHouseData();
         //await this.httpService.refreshStationData();
@@ -540,7 +540,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No houses found."}`;
+            json = `{"success":false,"reason":"The house with id ${houseId} does not exists."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -669,7 +669,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No device found."}`;
+            json = `{"success":false,"reason":"The device with serial ${deviceSerial} does not exists."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -691,7 +691,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No device found."}`;
+            json = `{"success":false,"reason":"The device with serial ${deviceSerial} does not exists."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -714,7 +714,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No device found."}`;
+            json = `{"success":false,"reason":"The device with serial ${deviceSerial} does not exists."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -731,7 +731,7 @@ export class EufySecurityApi
     {
         if(!this.devices.existDevice(deviceSerial))
         {
-            return `{"success":false,"reason":"The device with the serial ${deviceSerial} does not exists."}`;
+            return `{"success":false,"reason":"The device with serial ${deviceSerial} does not exists."}`;
         }
         try
         {
@@ -871,7 +871,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No station found."}`;
+            json = `{"success":false,"reason":"The station with serial ${stationSerial} does not exists."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -894,7 +894,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No station found."}`;
+            json = `{"success":false,"reason":"The station with serial ${stationSerial} does not exists."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -911,7 +911,7 @@ export class EufySecurityApi
     {
         if(!this.stations.existStation(stationSerial))
         {
-            return `{"success":false,"reason":"The station with the serial ${stationSerial} does not exists."}`;
+            return `{"success":false,"reason":"The station with serial ${stationSerial} does not exists."}`;
         }
         try
         {
@@ -954,7 +954,7 @@ export class EufySecurityApi
         }
         catch
         {
-            json = `{"success":false,"reason":"No station found."}`;
+            json = `{"success":false,"reason":"No station with serial ${stationSerial} found."}`;
             this.setLastConnectionInfo(false);
         }
         return json;
@@ -1173,7 +1173,7 @@ export class EufySecurityApi
                 }
                 else
                 {
-                    json = `{"success":false,"reason":"No such station found."}`;
+                    json = `{"success":false,"reason":"The station with serial ${stationSerial} does not exists."}`;
                     this.setLastConnectionInfo(false);
                 }
             }
@@ -1401,8 +1401,8 @@ export class EufySecurityApi
         if(this.devices.existDevice(deviceSerial) == true)
         {
             const device : Device = await this.getDevices()[deviceSerial];
-            //if(device.isIndoorCamera())
-            //{
+            if(device.isIndoorCamera())
+            {
                 if(device.isEnabled() == value)
                 {
                     return `{"success":true,"info":"The value for privacy mode on device ${deviceSerial} already set."}`;
@@ -1424,11 +1424,11 @@ export class EufySecurityApi
                         return `{"success":false,"enabled":${!(value as boolean)}}`;
                     }
                 }
-            /*}
+            }
             else
             {
                 return `{"success":false,"reason":"Device ${deviceSerial} does not support privacy mode."}`;
-            }*/
+            }
         }
         else
         {

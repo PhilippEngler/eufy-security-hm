@@ -433,7 +433,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Stop the livestream from cloud for a given device.
      * @param deviceSerial The serial of the device.
      */
-    public async stopCloudLivestream(deviceSerial: string): Promise<void> {
+    public async stopCloudLivestream(deviceSerial: string): Promise<void>
+    {
         const device = await this.api.getDevice(deviceSerial);
         const station = this.getStation(device.getStationSerial());
 
@@ -602,7 +603,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station object.
      * @returns A string with the model name of the device.
      */
-    getStationModelName(station : Station) : string
+    public getStationModelName(station : Station) : string
     {
         switch (station.getModel().substring(0,5))
         {
