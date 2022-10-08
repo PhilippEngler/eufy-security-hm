@@ -225,7 +225,7 @@ function createWaitMessage(messageText)
 
 function createMessageContainer(classText, messageHeader, messageText, messageSubText)
 {
-    return `<div class="${classText}" role="alert"><h6 class="mb-0 alert-heading">${messageHeader}</h6>${messageText != "" ? `<span class="${messageSubText != "" ? `mb-0` : ""}">${messageText}</span>` : ""}${messageSubText != "" ? `<hr><small class="mt-0 form-text text-muted">${messageSubText}</small>` : ""}</div>`;
+    return `<div class="${classText}" role="alert"><h6 class="mb-1 alert-heading">${messageHeader}</h6>${messageText != "" ? `<span class="${messageSubText != "" ? `mb-0` : ""}">${messageText}</span>` : ""}${messageSubText != "" ? `<hr><small class="mt-0 form-text text-muted">${messageSubText}</small>` : ""}</div>`;
 }
 //#endregion
 
