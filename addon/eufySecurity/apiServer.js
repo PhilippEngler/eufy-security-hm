@@ -19,7 +19,7 @@ class ApiServer {
      * Create the ApiServer-Object.
      */
     constructor() {
-        apiPortFile(api.getApiServerPortHttp(), api.getApiServerPortHttps());
+        apiPortFile(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps());
         this.startServer(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps(), api.getApiServerKeyHttps(), api.getApiServerCertHttps(), logger);
     }
     /**
@@ -481,7 +481,7 @@ class ApiServer {
                             isDataOK = false;
                         }
                         if (isDataOK == true) {
-                            apiPortFile(Number(apiporthttp), Number(apiporthttps));
+                            apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
                             responseString = api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                         }
                         else {
@@ -541,15 +541,19 @@ function main() {
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */
-function apiPortFile(httpPort, httpsPort) {
+function apiPortFile(useHttp, httpPort, useHttps, httpsPort) {
     try {
-        if ((0, fs_1.existsSync)("www/apiPorts.txt")) {
-            if (api.getApiServerPortHttp() != httpPort || api.getApiServerPortHttps() != httpsPort) {
-                (0, fs_1.writeFileSync)('www/apiPorts.txt', httpPort + "," + httpsPort);
+        if ((0, fs_1.existsSync)('www/apiPorts.txt')) {
+            (0, fs_1.unlinkSync)('www/apiPorts.txt');
+        }
+        if ((0, fs_1.existsSync)('www/apiPorts.json')) {
+            var resJSON = JSON.parse((0, fs_1.readFileSync)('www/apiPorts.json', 'utf-8'));
+            if (api.getApiUseHttp().toString() != resJSON.useHttp.toString() || api.getApiServerPortHttp().toString() != resJSON.httpPort.toString() || api.getApiUseHttps().toString() != resJSON.useHttps.toString() || api.getApiServerPortHttps().toString() != resJSON.httpsPort.toString()) {
+                (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
             }
         }
         else {
-            (0, fs_1.writeFileSync)('www/apiPorts.txt', httpPort + "," + httpsPort);
+            (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
         }
     }
     catch (ENOENT) {

@@ -325,8 +325,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             return `unknown(${device.getRawDevice().device_type})`;
         }
     }
+    /**
+     * Retrieve the model name of a given device.
+     * @param device The device object.
+     * @returns A string with the model name of the device.
+     */
     getDeviceModelName(device) {
-        switch (device.getModel()) {
+        switch (device.getModel().substring(0, 5)) {
             //eufyCams
             case "T8111":
                 return "eufyCam";
@@ -844,7 +849,12 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param values The raw values.
      */
     updateDeviceProperties(deviceSerial, values) {
-        this.devices[deviceSerial].updateRawProperties(values);
+        if (this.devices[deviceSerial] != undefined) {
+            this.devices[deviceSerial].updateRawProperties(values);
+        }
+        else {
+            this.api.logError(`Error on update device properties. Device ${deviceSerial} does not exists.`);
+        }
     }
     /**
      * Retrieves the last video event for the given device.
@@ -1306,11 +1316,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             default:
                 if (!Object.values(http_1.PropertyName).includes(name)) {
-                    return;
-                    //throw new ReadOnlyPropertyError(`Property ${name} is read only`);
+                    throw new error_1.ReadOnlyPropertyError(`Property ${name} is read only`);
                 }
-                return;
-            //throw new InvalidPropertyError(`Device ${deviceSerial} has no writable property named ${name}`);
+                throw new http_1.InvalidPropertyError(`Device ${deviceSerial} has no writable property named ${name}`);
         }
     }
 }

@@ -4,7 +4,7 @@ exports.Stations = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const http_1 = require("./http");
 const utils_1 = require("./push/utils");
-const _1 = require(".");
+const error_1 = require("./error");
 const p2p_1 = require("./p2p");
 const utils_2 = require("./utils");
 /**
@@ -172,6 +172,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             throw new Error(e);
         }
     }
+    /**
+     * Close all Livestreams.
+     */
     async close() {
         for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
             this.stopStationLivestream(device_sn);
@@ -244,77 +247,100 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             }
         });
     }
+    /**
+     * Set the maximum livestream duration.
+     * @param seconds The maximum duration in secons.
+     */
     setCameraMaxLivestreamDuration(seconds) {
         this.cameraMaxLivestreamSeconds = seconds;
     }
+    /**
+     * Get the maximum livestream duration.
+     */
     getCameraMaxLivestreamDuration() {
         return this.cameraMaxLivestreamSeconds;
     }
-    async startStationLivestream(deviceSN) {
-        const device = await this.api.getDevice(deviceSN);
+    /**
+     * Start the livestream from station for a given device.
+     * @param deviceSerial The serial of the device.
+     */
+    async startStationLivestream(deviceSerial) {
+        const device = await this.api.getDevice(deviceSerial);
         const station = this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStartLivestream)) {
-            throw new _1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
         const camera = device;
         if (!station.isLiveStreaming(camera)) {
             station.startLivestream(camera);
-            this.cameraStationLivestreamTimeout.set(deviceSN, setTimeout(() => {
-                this.api.logInfo(`Stopping the station stream for the device ${deviceSN}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                this.stopStationLivestream(deviceSN);
+            this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
+                this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                this.stopStationLivestream(deviceSerial);
             }, this.cameraMaxLivestreamSeconds * 1000));
         }
         else {
-            this.api.logWarn(`The station stream for the device ${deviceSN} cannot be started, because it is already streaming!`);
+            this.api.logWarn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
         }
     }
-    async startCloudLivestream(deviceSN) {
-        const device = await this.api.getDevice(deviceSN);
+    /**
+     * Start the livestream from cloud for a given device.
+     * @param deviceSerial The serial of the device.
+     */
+    async startCloudLivestream(deviceSerial) {
+        const device = await this.api.getDevice(deviceSerial);
         const station = this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStartLivestream)) {
-            throw new _1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
         const camera = device;
         if (!camera.isStreaming()) {
             const url = await camera.startStream();
             if (url !== "") {
-                this.cameraCloudLivestreamTimeout.set(deviceSN, setTimeout(() => {
-                    this.api.logInfo(`Stopping the station stream for the device ${deviceSN}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                    this.stopCloudLivestream(deviceSN);
+                this.cameraCloudLivestreamTimeout.set(deviceSerial, setTimeout(() => {
+                    this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                    this.stopCloudLivestream(deviceSerial);
                 }, this.cameraMaxLivestreamSeconds * 1000));
                 this.emit("cloud livestream start", station, camera, url);
             }
             else {
-                this.api.logError(`Failed to start cloud stream for the device ${deviceSN}`);
+                this.api.logError(`Failed to start cloud stream for the device ${deviceSerial}`);
             }
         }
         else {
-            this.api.logWarn(`The cloud stream for the device ${deviceSN} cannot be started, because it is already streaming!`);
+            this.api.logWarn(`The cloud stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
         }
     }
-    async stopStationLivestream(deviceSN) {
-        const device = await this.api.getDevice(deviceSN);
+    /**
+     * Stop the livestream from station for a given device.
+     * @param deviceSerial The serial of the device.
+     */
+    async stopStationLivestream(deviceSerial) {
+        const device = await this.api.getDevice(deviceSerial);
         const station = this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStopLivestream)) {
-            throw new _1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
         if (station.isConnected() && station.isLiveStreaming(device)) {
             await station.stopLivestream(device);
         }
         else {
-            this.api.logWarn(`The station stream for the device ${deviceSN} cannot be stopped, because it isn't streaming!`);
+            this.api.logWarn(`The station stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
         }
-        const timeout = this.cameraStationLivestreamTimeout.get(deviceSN);
+        const timeout = this.cameraStationLivestreamTimeout.get(deviceSerial);
         if (timeout) {
             clearTimeout(timeout);
-            this.cameraStationLivestreamTimeout.delete(deviceSN);
+            this.cameraStationLivestreamTimeout.delete(deviceSerial);
         }
     }
-    async stopCloudLivestream(deviceSN) {
-        const device = await this.api.getDevice(deviceSN);
+    /**
+     * Stop the livestream from cloud for a given device.
+     * @param deviceSerial The serial of the device.
+     */
+    async stopCloudLivestream(deviceSerial) {
+        const device = await this.api.getDevice(deviceSerial);
         const station = this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStopLivestream)) {
-            throw new _1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
         const camera = device;
         if (camera.isStreaming()) {
@@ -322,12 +348,12 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("cloud livestream stop", station, camera);
         }
         else {
-            this.api.logWarn(`The cloud stream for the device ${deviceSN} cannot be stopped, because it isn't streaming!`);
+            this.api.logWarn(`The cloud stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
         }
-        const timeout = this.cameraCloudLivestreamTimeout.get(deviceSN);
+        const timeout = this.cameraCloudLivestreamTimeout.get(deviceSerial);
         if (timeout) {
             clearTimeout(timeout);
-            this.cameraCloudLivestreamTimeout.delete(deviceSN);
+            this.cameraCloudLivestreamTimeout.delete(deviceSerial);
         }
     }
     /**
@@ -351,7 +377,21 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         if (Object.keys(this.stations).includes(stationSerial)) {
             return this.stations[stationSerial];
         }
-        throw new _1.StationNotFoundError(`No station with serial number: ${stationSerial}!`);
+        throw new error_1.StationNotFoundError(`No station with serial number: ${stationSerial}!`);
+    }
+    /**
+     * Checks if a station with the given serial exists.
+     * @param stationSerial The stationSerial of the station to check.
+     * @returns True if station exists, otherwise false.
+     */
+    existStation(stationSerial) {
+        var res = this.stations[stationSerial];
+        if (res) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     /**
      * Get the guard mode for all stations.
@@ -424,8 +464,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             await this.setStationProperty(station.getSerial(), http_1.PropertyName.StationGuardMode, guardMode);
         });
     }
+    /**
+     * Retrieve the model name of a given station.
+     * @param station The station object.
+     * @returns A string with the model name of the device.
+     */
     getStationModelName(station) {
-        switch (station.getModel()) {
+        switch (station.getModel().substring(0, 5)) {
             //HomeBases
             case "T8001":
                 return "HomeBase";
@@ -1007,7 +1052,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     /**
      * The action to be done when event StationCommandResult is fired.
      * @param station The station as Station object.
-     * @param command The result.
+     * @param result The result.
      */
     async onStationCommandResult(station, result) {
         this.api.logDebug(`Event "CommandResult": station: ${station.getSerial()} | result: ${result}`);
@@ -1044,7 +1089,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     });
                 }
             }).catch((error) => {
-                if (error instanceof _1.DeviceNotFoundError) {
+                if (error instanceof error_1.DeviceNotFoundError) {
                     if (result.customData !== undefined && result.customData.property !== undefined) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
@@ -1077,7 +1122,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
             }).catch((error) => {
-                if (error instanceof _1.DeviceNotFoundError) {
+                if (error instanceof error_1.DeviceNotFoundError) {
                     if (result.customData !== undefined && result.customData.property !== undefined) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
@@ -1512,11 +1557,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             default:
                 if (!Object.values(http_1.PropertyName).includes(name)) {
-                    return;
-                    //throw new ReadOnlyPropertyError(`Property ${name} is read only`);
+                    throw new error_1.ReadOnlyPropertyError(`Property ${name} is read only`);
                 }
-                return;
-            //throw new InvalidPropertyError(`Station ${stationSerial} has no writable property named ${name}`);
+                throw new http_1.InvalidPropertyError(`Station ${stationSerial} has no writable property named ${name}`);
         }
     }
 }
