@@ -316,6 +316,9 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/www/assets/devices ]; then
     rm -r ${ADDON_DIR}/www/assets/devices
   fi
+  if [ -e ${ADDON_DIR}/www/apiPorts.txt ]; then
+    rm ${ADDON_DIR}/www/apiPorts.txt
+  fi
 fi
 
 # create necessary directories
