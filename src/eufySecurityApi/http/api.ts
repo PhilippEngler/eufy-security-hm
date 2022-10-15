@@ -303,7 +303,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                             this.serverPublicKey = dataresult.server_secret_info.public_key;*/
                         this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
 
-                        this.api.setTokenData(this.token as string, this.tokenExpiration.getTime().toString());
+                        this.api.setTokenData(this.token as string, this.tokenExpiration.getTime());
                         if (!this.connected)
                             this.emit("connect");
                         this.connected = true;
@@ -317,7 +317,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
                         this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
 
-                        this.api.setTokenData(this.token as string, this.tokenExpiration.getTime().toString());
+                        this.api.setTokenData(this.token as string, this.tokenExpiration.getTime());
                         await this.sendVerifyCode(VerfyCodeTypes.TYPE_EMAIL);
                         this.emit("tfa request");
                     } else if (result.code == ResponseErrorCode.LOGIN_NEED_CAPTCHA || result.code == ResponseErrorCode.LOGIN_CAPTCHA_ERROR) {

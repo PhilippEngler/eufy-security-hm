@@ -26,7 +26,7 @@ export const md5 = (contents: string): string => crypto.createHash("md5").update
 export const handleUpdate = function(config: Config, log: Logger, oldVersion: number): void {
     if (oldVersion <= 1.24) {
         config.setToken("");
-        config.setTokenExpire("0");
+        config.setTokenExpire(0);
     }
     return;
 };

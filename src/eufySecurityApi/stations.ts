@@ -467,13 +467,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     public async saveStationsSettings() : Promise<void>
     {
-        await this.api.saveStationsSettings(this.stations, this.serialNumbers);
+        await this.api.saveStationsSettings(this.stations);
     }
 
     /**
      * Returns a Array of all stations.
      */
-    public getStations() : { [stationSerial : string] : Station}
+    public getStations() : { [stationSerial : string] : Station }
     {
         return this.stations;
     }
@@ -1631,7 +1631,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "DeviceShakeAlarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
-                (device as SmartSafe).shakeEvent(event, this.api.getConfig().getEventDurationSecondsAsNumber());
+                (device as SmartSafe).shakeEvent(event, this.api.getConfig().getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationShakeAlarm device ${deviceSerial} error`, error);
         });
@@ -1647,7 +1647,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "Device911Alarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
-                (device as SmartSafe).alarm911Event(event, this.api.getConfig().getEventDurationSecondsAsNumber());
+                (device as SmartSafe).alarm911Event(event, this.api.getConfig().getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStation911Alarm device ${deviceSerial} error`, error);
         });
@@ -1662,7 +1662,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "DeviceJammed": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
-                (device as SmartSafe).jammedEvent(this.api.getConfig().getEventDurationSecondsAsNumber());
+                (device as SmartSafe).jammedEvent(this.api.getConfig().getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationDeviceJammed device ${deviceSerial} error`, error);
         });
@@ -1677,7 +1677,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logInfo(`Event "DeviceLowBattery": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
-                (device as SmartSafe).lowBatteryEvent(this.api.getConfig().getEventDurationSecondsAsNumber());
+                (device as SmartSafe).lowBatteryEvent(this.api.getConfig().getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationDeviceLowBattery device ${deviceSerial} error`, error);
         });
@@ -1692,7 +1692,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
-                (device as SmartSafe).wrongTryProtectAlarmEvent(this.api.getConfig().getEventDurationSecondsAsNumber());
+                (device as SmartSafe).wrongTryProtectAlarmEvent(this.api.getConfig().getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationDeviceWrongTryProtectAlarm device ${deviceSerial} error`, error);
         });

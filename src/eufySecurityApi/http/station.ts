@@ -428,11 +428,6 @@ export class Station extends TypedEmitter<StationEvents> {
         }
     }
 
-    public getActorId() : string
-    {
-        return this.rawStation.member.action_user_id;
-    }
-
     public getSoftwareVersion(): string {
         return this.rawStation.main_sw_version;
     }

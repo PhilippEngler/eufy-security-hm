@@ -69,7 +69,7 @@ export class EufySecurityApi
             this.httpService.on("connect", () => this.onAPIConnect());
 
             this.httpService.setToken(this.getToken());
-            this.httpService.setTokenExpiration(new Date(Number.parseInt(this.getTokenExpire())*1000));
+            this.httpService.setTokenExpiration(new Date(this.getTokenExpire()*1000));
             
             if (this.config.getOpenudid() == "")
             {
@@ -410,7 +410,7 @@ export class EufySecurityApi
         {
             this.logger.debug("Save cloud token and token expiration", { token: token, tokenExpiration: token_expiration });
             this.config.setToken(token);
-            this.config.setTokenExpire((token_expiration.getTime() / 1000).toString());
+            this.config.setTokenExpire(token_expiration.getTime() / 1000);
         }
     }
 
@@ -983,9 +983,8 @@ export class EufySecurityApi
     /**
      * Retrieves all config-relevat data for each station and update the config.
      * @param stations All stations in the account.
-     * @param serialNumbers The serial numbers of all stations in the account.
      */
-    public async saveStationsSettings(stations : { [stationSerial : string] : Station}, stationSerials : string[]) : Promise<void>
+    public async saveStationsSettings(stations : { [stationSerial : string] : Station }) : Promise<void>
     {
         if(this.stations)
         {
@@ -993,29 +992,19 @@ export class EufySecurityApi
             {
                 var station = stations[stationSerial];
 
-                var p2p_did = this.config.getP2PData_p2p_did(stationSerial);
-                var dsk_key = this.config.getP2PData_dsk_key(stationSerial);
-                var dsk_key_creation = this.config.getP2PData_dsk_key_creation(stationSerial);
-                var actor_id = this.config.getP2PData_actor_id(stationSerial);
-                var station_ip_address = this.config.getP2PData_station_ip_address(stationSerial);
+                var p2p_did = this.config.getP2PDataP2pDid(stationSerial);
+                var station_ip_address = this.config.getP2PDataStationIpAddress(stationSerial);
 
                 var updateNeed = false;
 
-                //if(p2p_did != station.getP2pDid() || dsk_key != await station.getDSKKey() || actor_id != station.getActorId() || station_ip_address != station.getLANIPAddress().value)
-                if(p2p_did != station.getP2pDid() || actor_id != station.getActorId() || station_ip_address != station.getLANIPAddress())
+                if(p2p_did != station.getP2pDid() || station_ip_address != station.getLANIPAddress())
                 {
                     updateNeed = true;
                 }
 
-                /*if(dsk_key_creation != station.getDskKeyExpiration().toString())
-                {
-                    updateNeed = true;
-                }*/
-
                 if(updateNeed == true)
                 {
-                    //this.config.setP2PData(stationSerial, station.getP2pDid(), await station.getDSKKey(), station.getDSKKeyExpiration().toString(), station.getActorId(), String(station.getLANIPAddress().value), "");
-                    this.config.setP2PData(stationSerial, station.getP2pDid(), "", "", station.getActorId(), String(station.getLANIPAddress()), "");
+                    this.config.setP2PData(stationSerial, station.getP2pDid(), (station.getLANIPAddress()).toString());
                 }
             }
         }
@@ -1590,7 +1579,7 @@ export class EufySecurityApi
     /**
      * Get the time of expire for the token from the config.
      */
-    public getTokenExpire() : string
+    public getTokenExpire() : number
     {
         return this.config.getTokenExpire();
     }
@@ -1600,7 +1589,7 @@ export class EufySecurityApi
      * @param token The token.
      * @param tokenExpire The time the token exprire.
      */
-    public setTokenData(token : string, tokenExpire : string) : string
+    public setTokenData(token : string, tokenExpire : number) : string
     {
         var res;
         var json = "";
@@ -1631,7 +1620,7 @@ export class EufySecurityApi
      */
     public getApiServerPortHttp() : number
     {
-        return Number.parseInt(this.config.getApiPortHttp());
+        return this.config.getApiPortHttp();
     }
 
     /**
@@ -1647,7 +1636,7 @@ export class EufySecurityApi
      */
     public getApiServerPortHttps() : number
     {
-        return Number.parseInt(this.config.getApiPortHttps());
+        return this.config.getApiPortHttps();
     }
 
     /**
@@ -1707,7 +1696,7 @@ export class EufySecurityApi
         {
             try
             {
-                return Number.parseInt(this.config.getUdpLocalPortsPerStation(stationSerial));
+                return this.config.getUdpLocalPortsPerStation(stationSerial);
             }
             catch
             {
@@ -1729,7 +1718,7 @@ export class EufySecurityApi
     {
         try
         {
-            return this.config.getP2PData_station_ip_address(stationSerial);
+            return this.config.getP2PDataStationIpAddress(stationSerial);
         }
         catch
         {
@@ -1777,7 +1766,7 @@ export class EufySecurityApi
         json += `"api_use_update_state_intervall":"${this.config.getApiUseUpdateStateIntervall()}",`;
         json += `"api_update_state_timespan":"${this.config.getApiUpdateStateTimespan()}",`;
         json += `"api_use_update_links":"${this.config.getApiUseUpdateLinks()}",`;
-        json += `"api_use_update_links_only_when_active":"${this.config.getApiUpdateLinksOnlyWhenActive()}",`;
+        json += `"api_use_update_links_only_when_active":"${this.config.getApiUpdateLinksOnlyWhenArmed()}",`;
         json += `"api_update_links_timespan":"${this.config.getApiUpdateLinksTimespan()}",`;
         json += `"api_use_pushservice":"${this.config.getApiUsePushService()}",`;
         json += `"api_log_level":"${this.config.getApiLogLevel()}"}]}`;
@@ -1812,7 +1801,7 @@ export class EufySecurityApi
      * @param api_log_level The log level.
      * @returns 
      */
-    public setConfig(username : string, password : string, country : string, language : string, api_use_http : boolean, api_port_http : string, api_use_https : boolean, api_port_https : string, api_key_https : string, api_cert_https : string, api_connection_type : string, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state_event : boolean, api_use_update_state_intervall : boolean, api_update_state_timespan : string, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : string, api_use_pushservice : boolean, api_log_level : string) : string
+    public setConfig(username : string, password : string, country : string, language : string, api_use_http : boolean, api_port_http : number, api_use_https : boolean, api_port_https : number, api_key_https : string, api_cert_https : string, api_connection_type : number, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state_event : boolean, api_use_update_state_intervall : boolean, api_update_state_timespan : number, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : number, api_use_pushservice : boolean, api_log_level : number) : string
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
@@ -1824,7 +1813,7 @@ export class EufySecurityApi
 
         if(this.config.getEmailAddress() != username)
         {
-            this.setTokenData("","0");
+            this.setTokenData("", 0);
         }
         this.config.setEmailAddress(username);
         this.config.setPassword(password);
@@ -1847,7 +1836,7 @@ export class EufySecurityApi
                 {
                     for (var stationSerial in stations)
                     {
-                        if(this.config.setUdpLocalPortPerStation(stationSerial, "") == true)
+                        if(this.config.setUdpLocalPortPerStation(stationSerial, 0) == true)
                         {
                             serviceRestart = true;
                         }
@@ -1889,7 +1878,7 @@ export class EufySecurityApi
             taskSetupLinksNeeded = true;
         }
         this.config.setApiUseUpdateLinks(api_use_update_links);
-        this.config.setApiUpdateLinksOnlyWhenActive(api_use_update_links_only_when_active);
+        this.config.setApiUpdateLinksOnlyWhenArmed(api_use_update_links_only_when_active);
         if(this.config.getApiUpdateLinksTimespan() != api_update_links_timespan)
         {
             taskSetupLinksNeeded = true;
@@ -2228,7 +2217,7 @@ export class EufySecurityApi
     {
         try
         {
-            var res = Number.parseInt(this.config.getConnectionType());
+            var res = this.config.getConnectionType();
             switch (res)
             {
                 case 1:
@@ -2333,7 +2322,7 @@ export class EufySecurityApi
                 this.logger.logInfoBasic(`  getState already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateState);
             }
-            this.taskUpdateState = setInterval(async() => { await this.setScheduleState(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            this.taskUpdateState = setInterval(async() => { await this.setScheduleState(); }, (this.config.getApiUpdateStateTimespan() * 60 * 1000));
             this.logger.logInfoBasic(`  getState scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
         }
         else
@@ -2348,8 +2337,8 @@ export class EufySecurityApi
                 this.logger.logInfoBasic(`  getLibrary already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateLinks);
             }
-            this.taskUpdateLinks = setInterval(async() => { await this.setScheuduleLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
-            this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${this.config.getApiUpdateLinksOnlyWhenActive() == true ? " when system is active" : ""}).`);
+            this.taskUpdateLinks = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getApiUpdateLinksTimespan() * 60 * 1000));
+            this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${this.config.getApiUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
         }
         else
         {
@@ -2400,13 +2389,13 @@ export class EufySecurityApi
         }
         else if(name == "getState")
         {
-            task = setInterval(async() => { await this.setScheduleState(); }, (Number.parseInt(this.config.getApiUpdateStateTimespan()) * 60 * 1000));
+            task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getApiUpdateStateTimespan() * 60 * 1000));
             this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
         }
         else if(name == "getLibrary")
         {
-            task = setInterval(async() => { await this.setScheuduleLibrary(); }, (Number.parseInt(this.config.getApiUpdateLinksTimespan()) * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${this.config.getApiUpdateLinksOnlyWhenActive() == true ? " when system is active" : ""}).`);
+            task = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getApiUpdateLinksTimespan() * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${this.config.getApiUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
         }
     }
 
@@ -2438,7 +2427,7 @@ export class EufySecurityApi
     private async setScheuduleLibrary() : Promise<void>
     {
         var mode = await this.getGuardModeAsGuardMode();
-        if(this.config.getApiUpdateLinksOnlyWhenActive() == false || ((this.config.getApiUpdateLinksOnlyWhenActive() == true && mode != GuardMode.DISARMED) && (this.config.getApiUpdateLinksOnlyWhenActive() == true && mode != GuardMode.OFF)))
+        if(this.config.getApiUpdateLinksOnlyWhenArmed() == false || ((this.config.getApiUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.DISARMED) && (this.config.getApiUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.OFF)))
         {
             await this.getLibrary();
         }

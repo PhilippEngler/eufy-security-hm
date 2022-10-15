@@ -1,6 +1,6 @@
 import { createServer as createServerHttp, IncomingMessage, ServerResponse } from 'http';
 import { createServer as createServerHttps } from 'https';
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
 import { GuardMode } from './eufySecurityApi/http';
@@ -37,7 +37,7 @@ class ApiServer
      */
     public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string, logger : Logger)
     {
-        logger.logInfoBasic(`eufy_security_hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
+        logger.logInfoBasic(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
         logger.logInfoBasic(`  Node: ${process.version}`);
         if(httpActive == true)
@@ -151,6 +151,16 @@ class ApiServer
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "setDeviceProperty":
+                        if(url.length == 5)
+                        {
+                            responseString = await api.setDeviceProperty(url[2], url[3], url[4]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getStations":
                     case "getBases":
                         responseString = await api.getStationsAsJSON();
@@ -180,6 +190,16 @@ class ApiServer
                         if(url.length == 3)
                         {
                             responseString = await api.getStationPropertiesAsJSON(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "setStationProperty":
+                        if(url.length == 5)
+                        {
+                            responseString = await api.setStationProperty(url[2], url[3], url[4]);
                         }
                         else
                         {
@@ -341,7 +361,7 @@ class ApiServer
                         responseString = await api.getErrorFileContent();
                         break;
                     case "removeTokenData":
-                        responseString = api.setTokenData("", "0");
+                        responseString = api.setTokenData("", 0);
                         break;
                     case "clearLogFile":
                         emptyLogFile();
@@ -357,10 +377,10 @@ class ApiServer
                         break;
                     case "downloadConfig":
                         api.writeConfig();
-                        responseString = readFileSync('config.ini', 'utf-8');
-                        contentType = "text/plain";
+                        responseString = readFileSync('config.json', 'utf-8');
+                        contentType = "text/json";
                         var dateTime = new Date();
-                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth()+1).toString ().padStart(2, '0') + dateTime.getDate().toString ().padStart(2, '0') + "-" + dateTime.getHours().toString ().padStart(2, '0') + dateTime.getMinutes().toString ().padStart(2, '0') + dateTime.getSeconds().toString ().padStart(2, '0') + ".ini";
+                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth()+1).toString ().padStart(2, '0') + dateTime.getDate().toString ().padStart(2, '0') + "-" + dateTime.getHours().toString ().padStart(2, '0') + dateTime.getMinutes().toString ().padStart(2, '0') + dateTime.getSeconds().toString ().padStart(2, '0') + ".json";
                         break;
                     case "downloadLogFile":
                         responseString = readFileSync('/var/log/eufySecurity.log', 'utf-8');
@@ -445,10 +465,10 @@ class ApiServer
                             useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
                         }
                         
-                        var apiporthttp = "52789";
+                        var apiporthttp = 52789;
                         if(postData.indexOf("httpPort") >= 0)
                         {
-                            apiporthttp = getDataFromPOSTData(postData, "httpPort", "string");
+                            apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
                         }
                         
                         var useHttps = false;
@@ -461,10 +481,10 @@ class ApiServer
                             isDataOK = false;
                         }
 
-                        var apiporthttps = "52790";
+                        var apiporthttps = 52790;
                         if(postData.indexOf("httpsPort") >= 0)
                         {
-                            apiporthttps = getDataFromPOSTData(postData, "httpsPort", "string");
+                            apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
                         }
 
                         var apikeyfile = "/usr/local/etc/config/server.pem";
@@ -479,10 +499,10 @@ class ApiServer
                             apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                         }
 
-                        var apiconnectiontype = "1";
+                        var apiconnectiontype = 1;
                         if(postData.indexOf("connectionType") >= 0)
                         {
-                            apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "string");
+                            apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
                         }
 
                         var apiuseudpstaticports = false;
@@ -527,10 +547,10 @@ class ApiServer
                             useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
                         }
 
-                        var updatestatetimespan ="15";
+                        var updatestatetimespan = 15;
                         if(postData.indexOf("updateStateIntervallTimespan") >= 0)
                         {
-                            updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "string");
+                            updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
                         }
 
                         var useupdatelinks = false;
@@ -545,23 +565,22 @@ class ApiServer
                             useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
                         }
 
-                        var updatelinkstimespan ="15";
+                        var updatelinkstimespan = 15;
                         if(postData.indexOf("updateLinksIntervallTimespan") >= 0)
                         {
-                            updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "string");
+                            updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "number");
                         }
 
                         var usepushservice = false;
                         if(postData.indexOf("usePushService") >= 0)
                         {
                             usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
-                            logger.logInfoBasic(`set pushservice: ${usepushservice}`);
                         }
 
-                        var apiloglevel = "0";
+                        var apiloglevel = 0;
                         if(postData.indexOf("logLevel") >= 0)
                         {
-                            apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
+                            apiloglevel = getDataFromPOSTData(postData, "logLevel", "number");
                         }
 
                         if(checkNumberValue(apiporthttp, 1, 53535) == false)
@@ -579,7 +598,7 @@ class ApiServer
                                 isDataOK = false;
                             }*/
                         }
-                        if(useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == ""))
+                        if(useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == ""))
                         {
                             isDataOK = false;
                         }
@@ -680,11 +699,6 @@ function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, h
 {
     try
     {
-        if(existsSync('www/apiPorts.txt'))
-        {
-            unlinkSync('www/apiPorts.txt');
-        }
-
         if(existsSync('www/apiPorts.json'))
         {
             var resJSON = JSON.parse(readFileSync('www/apiPorts.json', 'utf-8'));
@@ -711,11 +725,11 @@ function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, h
  * @param lowestValue The lowest value allowd.
  * @param highestValue The highest value allowed.
  */
-function checkNumberValue(value : string, lowestValue : number, highestValue : number) : boolean
+function checkNumberValue(value : number, lowestValue : number, highestValue : number) : boolean
 {
     try
     {
-        var val = Number.parseInt(value);
+        var val = value;
         if(val >= lowestValue && val <= highestValue)
         {
             return true;
@@ -749,7 +763,7 @@ function checkNumbersValue(values : string, lowestValue : number, highestValue :
     {
         for (var val of vals)
         {
-            if(checkNumberValue(val.toString(), lowestValue, highestValue) == false)
+            if(checkNumberValue(val, lowestValue, highestValue) == false)
             {
                 return false;
             }
@@ -773,6 +787,13 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
         temp = temp.replace("\r\n","");
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return temp;
+    }
+    else if(dataType == "number")
+    {
+        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        temp = temp.replace("\r\n","");
+        temp = temp.substring(2, temp.indexOf("----") - 2);
+        return Number.parseInt(temp);
     }
     else if(dataType == "boolean")
     {

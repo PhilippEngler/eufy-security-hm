@@ -16,7 +16,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     private mqttService!: MQTTService;
 
     /**
-     * Create the PushService object.
+     * Create the MqttService object.
      * @param api The EufySecurityApi.
      * @param config The Config.
      * @param logger The Logger.
@@ -47,7 +47,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
         });
         this.mqttService.on("lock message", (message) => {
             this.api.getDevice(message.data.data.deviceSn).then((device: Device) => {
-                (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSecondsAsNumber());
+                (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
             }).catch((error) => {
                 if (error instanceof DeviceNotFoundError) {
                 } else {
