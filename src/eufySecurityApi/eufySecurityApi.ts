@@ -54,7 +54,7 @@ export class EufySecurityApi
     {
         if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
         {
-            this.logError("Please check your settings in the 'config.ini' file.\r\nIf there was no 'config.ini', it should now be there.\r\nYou need to set at least email and password to run this addon.");
+            this.logError("Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email and password to run this addon.");
         
             this.serviceState = "ok";
         }
@@ -2456,7 +2456,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.6.1";
+        return "1.7.0-rc1";
     }
 
     /**
