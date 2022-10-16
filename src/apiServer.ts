@@ -21,8 +21,8 @@ class ApiServer
      */
     constructor()
     {
-        apiPortFile(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps());
-        this.startServer(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps(), api.getApiServerKeyHttps(), api.getApiServerCertHttps(), logger);
+        apiPortFile(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort());
+        this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile(), logger);
     }
 
     /**
@@ -703,7 +703,7 @@ function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, h
         {
             var resJSON = JSON.parse(readFileSync('www/apiPorts.json', 'utf-8'));
 
-            if(api.getApiUseHttp().toString() != resJSON.useHttp.toString() || api.getApiServerPortHttp().toString() != resJSON.httpPort.toString() || api.getApiUseHttps().toString() != resJSON.useHttps.toString() || api.getApiServerPortHttps().toString() != resJSON.httpsPort.toString())
+            if(api.getHttpActive().toString() != resJSON.useHttp.toString() || api.getHttpPort().toString() != resJSON.httpPort.toString() || api.getHttpsActive().toString() != resJSON.useHttps.toString() || api.getHttpsPort().toString() != resJSON.httpsPort.toString())
             {
                 writeFileSync('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
             }

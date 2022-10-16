@@ -85,7 +85,7 @@ export class EufySecurityApi
             }
             this.httpService.setSerialNumber(this.config.getSerialNumber());
 
-            if(this.config.getApiUsePushService() == true)
+            if(this.config.getPushServiceActive() == true)
             {
                 this.logger.logInfoBasic("Started initializing push notification connection.");
                 try
@@ -776,7 +776,7 @@ export class EufySecurityApi
                     break;
                 case PropertyName.StationGuardMode:
                     json += `,"${property}":"${properties[property] == undefined ? "n/a" : properties[property]}"`;
-                    json += `,"guardModeTime":"${this.getApiUseUpdateStateEvent() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}"`;
+                    json += `,"guardModeTime":"${this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()))}"`;
                     break;
                 case PropertyName.StationHomeSecuritySettings:
                 case PropertyName.StationAwaySecuritySettings:
@@ -992,12 +992,12 @@ export class EufySecurityApi
             {
                 var station = stations[stationSerial];
 
-                var p2p_did = this.config.getP2PDataP2pDid(stationSerial);
-                var station_ip_address = this.config.getP2PDataStationIpAddress(stationSerial);
+                var p2pDid = this.config.getP2PDataP2pDid(stationSerial);
+                var stationIpAddress = this.config.getP2PDataStationIpAddress(stationSerial);
 
                 var updateNeed = false;
 
-                if(p2p_did != station.getP2pDid() || station_ip_address != station.getLANIPAddress())
+                if(p2pDid != station.getP2pDid() || stationIpAddress != station.getLANIPAddress())
                 {
                     updateNeed = true;
                 }
@@ -1239,17 +1239,17 @@ export class EufySecurityApi
                         
                         if(guardMode == station.getGuardMode())
                         {
-                            json += `{"station_id":"${station.getSerial()}",`;
+                            json += `{"stationSerial":"${station.getSerial()}",`;
                             json += `"result":"success",`;
-                            json += `"guard_mode":"${station.getGuardMode()}"}`;
+                            json += `"guardMode":"${station.getGuardMode()}"}`;
                             this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                         }
                         else
                         {
                             err = err + 1;
-                            json += `{"station_id":"${station.getSerial()}",`;
+                            json += `{"stationSerial":"${station.getSerial()}",`;
                             json += `"result":"failure",`;
-                            json += `"guard_mode":"${station.getGuardMode()}"}`;
+                            json += `"guardMode":"${station.getGuardMode()}"}`;
                             this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                             this.logError(`Error occured at setGuardMode: Failed to switch mode for station ${station.getSerial()}.`);
                         }
@@ -1325,9 +1325,9 @@ export class EufySecurityApi
                 if(res)
                 {
                     json = `{"success":true,"data":[`;
-                    json += `{"station_id":"${station.getSerial()}",`;
+                    json += `{"stationSerial":"${station.getSerial()}",`;
                     json += `"result":"success",`;
-                    json += `"guard_mode":"${station.getGuardMode()}"}`;
+                    json += `"guardMode":"${station.getGuardMode()}"}`;
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
                     if(this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined)
@@ -1342,9 +1342,9 @@ export class EufySecurityApi
                 else
                 {
                     json = `{"success":false,"data":[`;
-                    json += `{"station_id":"${station.getSerial()}",`;
+                    json += `{"stationSerial":"${station.getSerial()}",`;
                     json += `"result":"failure",`;
-                    json += `"guard_mode":"${station.getGuardMode()}"}`;
+                    json += `"guardMode":"${station.getGuardMode()}"}`;
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(false);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
@@ -1456,12 +1456,12 @@ export class EufySecurityApi
                             {
                                 json += ",";
                             }
-                            json += `{"device_id":"${deviceSerial}",`;
+                            json += `{"deviceSerial":"${deviceSerial}",`;
                             json += `"pictureUrl":"${(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL() : ""}",`;
                             json += `"pictureTime":"${this.devices.getLastVideoTime(deviceSerial) == undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial)}",`;
                             if(device.getLastCameraVideoURL() == "")
                             {
-                                json += `"videoUrl":"${this.config.getApiCameraDefaultVideo()}"`;
+                                json += `"videoUrl":"${this.config.getCameraDefaultVideo()}"`;
                             }
                             else
                             {
@@ -1470,7 +1470,7 @@ export class EufySecurityApi
                             json += "}";
                             if(device.getLastCameraImageURL() == undefined)
                             {
-                                this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getApiCameraDefaultImage());
+                                this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
                             }
                             else
                             {
@@ -1478,7 +1478,7 @@ export class EufySecurityApi
                             }
                             if(device.getLastCameraVideoURL() == "")
                             {
-                                this.setSystemVariableString("eufyCameraVideoURL" + deviceSerial, this.config.getApiCameraDefaultVideo());
+                                this.setSystemVariableString("eufyCameraVideoURL" + deviceSerial, this.config.getCameraDefaultVideo());
                             }
                             else
                             {
@@ -1518,7 +1518,7 @@ export class EufySecurityApi
      */
     public updateStationGuardModeChangeTimeSystemVariable(stationSerial : string, timestamp : number | undefined)
     {
-        if(this.getApiUseUpdateStateEvent() == true && timestamp != undefined)
+        if(this.getStateUpdateEventActive() == true && timestamp != undefined)
         {
             this.setSystemVariableTime("eufyLastModeChangeTime" + stationSerial, new Date(timestamp));
         }
@@ -1610,63 +1610,63 @@ export class EufySecurityApi
     /**
      * Returns if the api use HTTP
      */
-    public getApiUseHttp() : boolean
+    public getHttpActive() : boolean
     {
-        return this.config.getApiUseHttp();
+        return this.config.getHttpActive();
     }
 
     /**
      * Get the port (HTTP) used for the api.
      */
-    public getApiServerPortHttp() : number
+    public getHttpPort() : number
     {
-        return this.config.getApiPortHttp();
+        return this.config.getHttpPort();
     }
 
     /**
      * Return if the api use HTTPS
      */
-    public getApiUseHttps() : boolean
+    public getHttpsActive() : boolean
     {
-        return this.config.getApiUseHttps();
+        return this.config.getHttpsActive();
     }
 
     /**
      * Get the port (HTTPS) used for the api.
      */
-    public getApiServerPortHttps() : number
+    public getHttpsPort() : number
     {
-        return this.config.getApiPortHttps();
+        return this.config.getHttpsPort();
     }
 
     /**
      * Returns the key for the HTTPS connection.
      */
-    public getApiServerKeyHttps() : string
+    public getHttpsPKeyFile() : string
     {
-        return this.config.getApiKeyFileHttps();
+        return this.config.getHttpsPKeyFile();
     }
 
     /**
      * Returns the cert file for https connection.
      */
-    public getApiServerCertHttps() : string
+    public getHttpsCertFile() : string
     {
-        return this.config.getApiCertFileHttps();
+        return this.config.getHttpsCertFile();
     }
 
     /**
      * Returns true if static udp ports should be used otherwise false.
      */
-    public getUseUdpLocalPorts() : boolean
+    public getLocalStaticUdpPortsActive() : boolean
     {
-        return this.config.getUseUdpLocalPorts();
+        return this.config.getLocalStaticUdpPortsActive();
     }
 
     /**
      * Returns the ports should be used for communication with stations.
      */
-    public getUDPLocalPorts() : string
+    public getLocalStaticUdpPorts() : string
     {
         var json = "";
         if(this.stations)
@@ -1677,8 +1677,8 @@ export class EufySecurityApi
             {
                 for (var stationSerial in stations)
                 {
-                    var temp = this.config.getUdpLocalPortsPerStation(stationSerial);
-                    json += `"api_udp_local_static_ports_${stationSerial}":"${temp}",`;
+                    var temp = this.config.getLocalStaticUdpPortPerStation(stationSerial);
+                    json += `"localStaticUdpPort${stationSerial}":${temp},`;
                 }
             }
         }
@@ -1690,22 +1690,22 @@ export class EufySecurityApi
      * @param stationSerial The serial for the station.
      * @returns The UDP port for the connection to the station.
      */
-    public getUDPLocalPortForStation(stationSerial : string) : number
+    public getLocalStaticUdpPortForStation(stationSerial : string) : number | null
     {
-        if(this.getUseUdpLocalPorts() == true)
+        if(this.getLocalStaticUdpPortsActive() == true)
         {
             try
             {
-                return this.config.getUdpLocalPortsPerStation(stationSerial);
+                return this.config.getLocalStaticUdpPortPerStation(stationSerial);
             }
             catch
             {
-                return 0;
+                return null;
             }
         }
         else
         {
-            return 0;
+            return null;
         }
     }
 
@@ -1729,9 +1729,9 @@ export class EufySecurityApi
     /**
      * Determines if the updated state runs by event.
      */
-    public getApiUseUpdateStateEvent() : boolean
+    public getStateUpdateEventActive() : boolean
     {
-        return this.config.getApiUseUpdateStateEvent();
+        return this.config.getStateUpdateEventActive();
     }
 
     public getConfig() : Config
@@ -1744,90 +1744,91 @@ export class EufySecurityApi
      */
     public getAPIConfig() : string
     {
-        var json = `{"success":true,"data":[{`;
-        json += `"configfile_version":"${this.config.getConfigFileVersion()}",`;
-        json += `"username":"${this.config.getEmailAddress()}",`;
+        var json = `{"success":true,"data":{`;
+        json += `"configVersion":"${this.config.getConfigFileVersion()}",`;
+        json += `"eMail":"${this.config.getEmailAddress()}",`;
         json += `"password":"${this.config.getPassword()}",`;
         json += `"country":"${this.config.getCountry()}",`;
         json += `"language":"${this.config.getLanguage()}",`;
-        json += `"api_http_active":"${this.config.getApiUseHttp()}",`;
-        json += `"api_http_port":"${this.config.getApiPortHttp()}",`;
-        json += `"api_https_active":"${this.config.getApiUseHttps()}",`;
-        json += `"api_https_port":"${this.config.getApiPortHttps()}",`;
-        json += `"api_https_key_file":"${this.config.getApiKeyFileHttps()}",`;
-        json += `"api_https_cert_file":"${this.config.getApiCertFileHttps()}",`;
-        json += `"api_connection_type":"${this.config.getConnectionType()}",`;
-        json += `"api_udp_local_static_ports_active":"${this.config.getUseUdpLocalPorts()}",`;
-        json += this.getUDPLocalPorts();
-        json += `"api_use_system_variables":"${this.config.getApiUseSystemVariables()}",`;
-        json += `"api_camera_default_image":"${this.config.getApiCameraDefaultImage()}",`;
-        json += `"api_camera_default_video":"${this.config.getApiCameraDefaultVideo()}",`;
-        json += `"api_use_update_state_event":"${this.config.getApiUseUpdateStateEvent()}",`;
-        json += `"api_use_update_state_intervall":"${this.config.getApiUseUpdateStateIntervall()}",`;
-        json += `"api_update_state_timespan":"${this.config.getApiUpdateStateTimespan()}",`;
-        json += `"api_use_update_links":"${this.config.getApiUseUpdateLinks()}",`;
-        json += `"api_use_update_links_only_when_active":"${this.config.getApiUpdateLinksOnlyWhenArmed()}",`;
-        json += `"api_update_links_timespan":"${this.config.getApiUpdateLinksTimespan()}",`;
-        json += `"api_use_pushservice":"${this.config.getApiUsePushService()}",`;
-        json += `"api_log_level":"${this.config.getApiLogLevel()}"}]}`;
+        json += `"httpActive":"${this.config.getHttpActive()}",`;
+        json += `"httpPort":"${this.config.getHttpPort()}",`;
+        json += `"httpsActive":"${this.config.getHttpsActive()}",`;
+        json += `"httpsPort":"${this.config.getHttpsPort()}",`;
+        json += `"httpsPKeyFile":"${this.config.getHttpsPKeyFile()}",`;
+        json += `"httpsCertFile":"${this.config.getHttpsCertFile()}",`;
+        json += `"connectionTypeP2p":"${this.config.getConnectionType()}",`;
+        json += `"localStaticUdpPortsActive":"${this.config.getLocalStaticUdpPortsActive()}",`;
+        json += this.getLocalStaticUdpPorts();
+        json += `"systemVariableActive":"${this.config.getSystemVariableActive()}",`;
+        json += `"cameraDefaultImage":"${this.config.getCameraDefaultImage()}",`;
+        json += `"cameraDefaultVideo":"${this.config.getCameraDefaultVideo()}",`;
+        json += `"stateUpdateEventActive":"${this.config.getStateUpdateEventActive()}",`;
+        json += `"stateUpdateIntervallActive":"${this.config.getStateUpdateIntervallActive()}",`;
+        json += `"stateUpdateIntervallTimespan":"${this.config.getStateUpdateIntervallTimespan()}",`;
+        json += `"updateLinksActive":"${this.config.getUpdateLinksActive()}",`;
+        json += `"updateLinksOnlyWhenArmed":"${this.config.getUpdateLinksOnlyWhenArmed()}",`;
+        json += `"updateLinksTimespan":"${this.config.getUpdateLinksTimespan()}",`;
+        json += `"pushServiceActive":"${this.config.getPushServiceActive()}",`;
+        json += `"logLevel":"${this.config.getLogLevel()}"}}`;
     
         return json;
     }
 
     /**
      * Save the config got from webui.
-     * @param username The username for the eufy security account.
+     * @param eMail The eMail address for the eufy security account.
      * @param password The password for the eufy security account.
      * @param country The country the eufy account is created for.
      * @param language The language the eufy account is using.
-     * @param api_use_http Should the api use http.
-     * @param api_port_http The http port for the api.
-     * @param api_use_https Should the api use https.
-     * @param api_port_https The https port for the api.
-     * @param api_key_https The key for https.
-     * @param api_cert_https The cert for https.
-     * @param api_connection_type The connection type for connecting with station.
-     * @param api_use_udp_local_static_ports Should the api use static ports to connect with station.
-     * @param api_udp_local_static_ports The local ports for connection with station.
-     * @param api_use_system_variables Should the api update related systemvariables.
-     * @param api_camera_default_image The path to the default image.
-     * @param api_camera_default_video The path to the default video.
-     * @param api_use_update_state_event Should the api use station events for updateing the state.
-     * @param api_use_update_state_intervall Should the api schedule a task for updateing the state.
-     * @param api_update_state_timespan The time between two scheduled runs of update state.
-     * @param api_use_update_links Should the api schedule a task for updateing the links.
-     * @param api_use_update_links_only_when_active Should the api only refreah links when state is active
-     * @param api_update_links_timespan The time between two scheduled runs of update links.
-     * @param api_log_level The log level.
+     * @param httpActive Should the api use http.
+     * @param httpPort The http port for the api.
+     * @param httpsActive Should the api use https.
+     * @param httpsPort The https port for the api.
+     * @param httpsKeyFile The key for https.
+     * @param httpsCertFile The cert for https.
+     * @param connectionTypeP2p The connection type for connecting with station.
+     * @param localStaticUdpPortsActive Should the api use static ports to connect with station.
+     * @param localStaticUdpPorts The local ports for connection with station.
+     * @param systemVariableActive Should the api update related systemvariables.
+     * @param cameraDefaultImage The path to the default image.
+     * @param cameraDefaultVideo The path to the default video.
+     * @param stateUpdateEventActive Should the api use station events for updateing the state.
+     * @param stateUpdateIntervallActive Should the api schedule a task for updateing the state.
+     * @param stateUpdateIntervallTimespan The time between two scheduled runs of update state.
+     * @param updateLinksActive Should the api schedule a task for updateing the links.
+     * @param updateLinksOnlyWhenArmed Should the api only refreah links when state is active
+     * @param updateLinksTimespan The time between two scheduled runs of update links.
+     * @param pushServiceActive Should the api use push service.
+     * @param logLevel The log level.
      * @returns 
      */
-    public setConfig(username : string, password : string, country : string, language : string, api_use_http : boolean, api_port_http : number, api_use_https : boolean, api_port_https : number, api_key_https : string, api_cert_https : string, api_connection_type : number, api_use_udp_local_static_ports : boolean, api_udp_local_static_ports : string[][], api_use_system_variables : boolean, api_camera_default_image : string, api_camera_default_video : string, api_use_update_state_event : boolean, api_use_update_state_intervall : boolean, api_update_state_timespan : number, api_use_update_links : boolean, api_use_update_links_only_when_active : boolean, api_update_links_timespan : number, api_use_pushservice : boolean, api_log_level : number) : string
+    public setConfig(eMail : string, password : string, country : string, language : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : string[][], systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : string
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
         var taskSetupLinksNeeded = false;
-        if(this.config.getEmailAddress() != username || this.config.getPassword() != password || this.config.getApiUseHttp() != api_use_http || this.config.getApiPortHttp() != api_port_http || this.config.getApiUseHttps() != api_use_https || this.config.getApiPortHttps() != api_port_https || this.config.getApiKeyFileHttps() != api_key_https || this.config.getApiCertFileHttps() != api_cert_https || this.config.getConnectionType() != api_connection_type || this.config.getUseUdpLocalPorts() != api_use_udp_local_static_ports || this.config.getApiUseUpdateStateEvent() != api_use_update_state_event)
+        if(this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive)
         {
             serviceRestart = true;
         }
 
-        if(this.config.getEmailAddress() != username)
+        if(this.config.getEmailAddress() != eMail)
         {
             this.setTokenData("", 0);
         }
-        this.config.setEmailAddress(username);
+        this.config.setEmailAddress(eMail);
         this.config.setPassword(password);
         this.config.setCountry(country);
         this.config.setLanguage(language);
-        this.config.setApiUseHttp(api_use_http);
-        this.config.setApiPortHttp(api_port_http);
-        this.config.setApiUseHttps(api_use_https);
-        this.config.setApiPortHttps(api_port_https);
-        this.config.setApiKeyFileHttps(api_key_https);
-        this.config.setApiCertFileHttps(api_cert_https);
-        this.config.setConnectionType(api_connection_type);
-        this.config.setUseUdpLocalPorts(api_use_udp_local_static_ports);
-        if(api_udp_local_static_ports[0][0] == undefined)
+        this.config.setHttpActive(httpActive);
+        this.config.setHttpPort(httpPort);
+        this.config.setHttpsActive(httpsActive);
+        this.config.setHttpsPort(httpsPort);
+        this.config.setHttpsPKeyFile(httpsKeyFile);
+        this.config.setHttpsCertFile(httpsCertFile);
+        this.config.setConnectionType(connectionTypeP2p);
+        this.config.setLocalStaticUdpPortsActive(localStaticUdpPortsActive);
+        if(localStaticUdpPorts[0][0] == undefined || localStaticUdpPortsActive == false)
         {
             if(this.stations)
             {
@@ -1836,7 +1837,7 @@ export class EufySecurityApi
                 {
                     for (var stationSerial in stations)
                     {
-                        if(this.config.setUdpLocalPortPerStation(stationSerial, 0) == true)
+                        if(this.config.setLocalStaticUdpPortPerStation(stationSerial, null) == true)
                         {
                             serviceRestart = true;
                         }
@@ -1846,44 +1847,44 @@ export class EufySecurityApi
         }
         else
         {
-            if(this.config.setUdpLocalPorts(api_udp_local_static_ports) == true)
+            if(this.config.setLocalStaticUdpPorts(localStaticUdpPorts) == true)
             {
                 serviceRestart = true;
             }
         }
-        this.config.setApiUseSystemVariables(api_use_system_variables);
-        this.config.setApiCameraDefaultImage(api_camera_default_image);
-        this.config.setApiCameraDefaultVideo(api_camera_default_video);
-        this.config.setApiUseUpdateStateEvent(api_use_update_state_event);
-        if(this.config.getApiUseUpdateStateIntervall() == true && api_use_update_state_intervall == false)
+        this.config.setSystemVariableActive(systemVariableActive);
+        this.config.setCameraDefaultImage(cameraDefaultImage);
+        this.config.setCameraDefaultVideo(cameraDefaultVideo);
+        this.config.setStateUpdateEventActive(stateUpdateEventActive);
+        if(this.config.getStateUpdateIntervallActive() == true && stateUpdateIntervallActive == false)
         {
             this.clearScheduledTask(this.taskUpdateState, "getState");
         }
-        else if(this.config.getApiUseUpdateStateIntervall() != api_use_update_state_intervall)
+        else if(this.config.getStateUpdateIntervallActive() != stateUpdateIntervallActive)
         {
             taskSetupStateNeeded = true;
         }
-        this.config.setApiUseUpdateStateIntervall(api_use_update_state_intervall);
-        if(this.config.getApiUpdateStateTimespan() != api_update_state_timespan)
+        this.config.setStateUpdateIntervallActive(stateUpdateIntervallActive);
+        if(this.config.getStateUpdateIntervallTimespan() != stateUpdateIntervallTimespan)
         {
             taskSetupStateNeeded = true;
         }
-        this.config.setApiUpdateStateTimespan(api_update_state_timespan);
-        if(this.config.getApiUseUpdateLinks() == true && api_use_update_links == false)
+        this.config.setStateUpdateIntervallTimespan(stateUpdateIntervallTimespan);
+        if(this.config.getUpdateLinksActive() == true && updateLinksActive == false)
         {
             this.clearScheduledTask(this.taskUpdateLinks, "getLibrary");
         }
-        else if(this.config.getApiUseUpdateLinks() != api_use_update_links)
+        else if(this.config.getUpdateLinksActive() != updateLinksActive)
         {
             taskSetupLinksNeeded = true;
         }
-        this.config.setApiUseUpdateLinks(api_use_update_links);
-        this.config.setApiUpdateLinksOnlyWhenArmed(api_use_update_links_only_when_active);
-        if(this.config.getApiUpdateLinksTimespan() != api_update_links_timespan)
+        this.config.setUpdateLinksActive(updateLinksActive);
+        this.config.setUpdateLinksOnlyWhenArmed(updateLinksOnlyWhenArmed);
+        if(this.config.getUpdateLinksTimespan() != updateLinksTimespan)
         {
             taskSetupLinksNeeded = true;
         }
-        this.config.setApiUpdateLinksTimespan(api_update_links_timespan);
+        this.config.setUpdateLinksTimespan(updateLinksTimespan);
         if(taskSetupStateNeeded == true)
         {
             this.setupScheduledTask(this.taskUpdateState, "getState");
@@ -1892,8 +1893,8 @@ export class EufySecurityApi
         {
             this.setupScheduledTask(this.taskUpdateLinks, "getLibrary");
         }
-        this.config.setApiUsePushService(api_use_pushservice);
-        this.config.setApiLogLevel(api_log_level);
+        this.config.setPushServiceActive(pushServiceActive);
+        this.config.setLogLevel(logLevel);
 
         var res = this.config.writeConfig();
         if(res == "saved")
@@ -1937,7 +1938,7 @@ export class EufySecurityApi
     {
         try
         {
-            if(this.config.getApiUseSystemVariables() == true)
+            if(this.config.getSystemVariableActive() == true)
             {
                 if(this.stations && this.devices)
                 {
@@ -1956,15 +1957,15 @@ export class EufySecurityApi
 
                     for (var sv of commonSystemVariablesName)
                     {
-                        json += `{"sysVar_name":"${sv}",`;
-                        json += `"sysVar_info":"${commonSystemVariablesInfo[i]}",`;
+                        json += `{"sysVarName":"${sv}",`;
+                        json += `"sysVarInfo":"${commonSystemVariablesInfo[i]}",`;
                         if(await this.homematicApi.isSystemVariableAvailable(sv) == true)
                         {
-                            json += `"sysVar_available":true`;
+                            json += `"sysVarAvailable":true`;
                         }
                         else
                         {
-                            json += `"sysVar_available":false`;
+                            json += `"sysVarAvailable":false`;
                         }
                         json += "},";
                         i = i + 1;
@@ -1978,30 +1979,30 @@ export class EufySecurityApi
                         }
                         station = stations[stationSerial];
                         
-                        json += `{"sysVar_name":"eufyCentralState${station.getSerial()}",`;
-                        json += `"sysVar_info":"aktueller Status der Basis ${station.getSerial()}",`;
+                        json += `{"sysVarName":"eufyCentralState${station.getSerial()}",`;
+                        json += `"sysVarInfo":"aktueller Status der Basis ${station.getSerial()}",`;
                         
                         if(await this.homematicApi.isSystemVariableAvailable("eufyCentralState" + station.getSerial()) == true)
                         {
-                            json += `"sysVar_available":true`;
+                            json += `"sysVarAvailable":true`;
                         }
                         else
                         {
-                            json += `"sysVar_available":false`;
+                            json += `"sysVarAvailable":false`;
                         }
 
                         json += "}";
                         
-                        json += `,{"sysVar_name":"eufyLastModeChangeTime${station.getSerial()}",`;
-                        json += `"sysVar_info":"Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}",`;
+                        json += `,{"sysVarName":"eufyLastModeChangeTime${station.getSerial()}",`;
+                        json += `"sysVarInfo":"Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}",`;
                         
                         if(await this.homematicApi.isSystemVariableAvailable("eufyLastModeChangeTime" + station.getSerial()) == true)
                         {
-                            json += `"sysVar_available":true`;
+                            json += `"sysVarAvailable":true`;
                         }
                         else
                         {
-                            json += `"sysVar_available":false`;
+                            json += `"sysVarAvailable":false`;
                         }
 
                         json += "}";
@@ -2015,15 +2016,15 @@ export class EufySecurityApi
                         }
                         device = devices[deviceSerial];
                         
-                        json += `{"sysVar_name":"eufyCameraImageURL${device.getSerial()}",`;
-                        json += `"sysVar_info":"Standbild der Kamera ${device.getSerial()}",`;
+                        json += `{"sysVarName":"eufyCameraImageURL${device.getSerial()}",`;
+                        json += `"sysVarInfo":"Standbild der Kamera ${device.getSerial()}",`;
                         if(await this.homematicApi.isSystemVariableAvailable("eufyCameraImageURL" + device.getSerial()) == true)
                         {
-                            json += `"sysVar_available":true`;
+                            json += `"sysVarAvailable":true`;
                         }
                         else
                         {
-                            json += `"sysVar_available":false`;
+                            json += `"sysVarAvailable":false`;
                         }
                         json += "}";
 
@@ -2032,15 +2033,15 @@ export class EufySecurityApi
                             json += ",";
                         }
                         
-                        json += `{"sysVar_name":"eufyCameraVideoTime${device.getSerial()}",`;
-                        json += `"sysVar_info":"Zeitpunkt des letzten Videos der Kamera ${device.getSerial()}",`;
+                        json += `{"sysVarName":"eufyCameraVideoTime${device.getSerial()}",`;
+                        json += `"sysVarInfo":"Zeitpunkt des letzten Videos der Kamera ${device.getSerial()}",`;
                         if(await this.homematicApi.isSystemVariableAvailable("eufyCameraVideoTime" + device.getSerial()) == true)
                         {
-                            json += `"sysVar_available":true`;
+                            json += `"sysVarAvailable":true`;
                         }
                         else
                         {
-                            json += `"sysVar_available":false`;
+                            json += `"sysVarAvailable":false`;
                         }
                         json += "}";
 
@@ -2049,15 +2050,15 @@ export class EufySecurityApi
                             json += ",";
                         }
                         
-                        json += `{"sysVar_name":"eufyCameraVideoURL${device.getSerial()}",`;
-                        json += `"sysVar_info":"letztes Video der Kamera ${device.getSerial()}",`;
+                        json += `{"sysVarName":"eufyCameraVideoURL${device.getSerial()}",`;
+                        json += `"sysVarInfo":"letztes Video der Kamera ${device.getSerial()}",`;
                         if(await this.homematicApi.isSystemVariableAvailable("eufyCameraVideoURL" + device.getSerial()) == true)
                         {
-                            json += `"sysVar_available":true`;
+                            json += `"sysVarAvailable":true`;
                         }
                         else
                         {
-                            json += `"sysVar_available":false`;
+                            json += `"sysVarAvailable":false`;
                         }
                         json += "}";
                     }
@@ -2141,7 +2142,7 @@ export class EufySecurityApi
      */
     private setSystemVariableString(systemVariable : string, newValue : string)
     {
-        if(this.config.getApiUseSystemVariables() == true)
+        if(this.config.getSystemVariableActive() == true)
         {
             this.homematicApi.setSystemVariable(systemVariable, newValue);
         }
@@ -2251,7 +2252,7 @@ export class EufySecurityApi
      */
     public logInfo(message : string, ...additionalMessages : any) : void
     {
-        this.logger.logInfo(this.config.getApiLogLevel(), message, ...additionalMessages);
+        this.logger.logInfo(this.config.getLogLevel(), message, ...additionalMessages);
     }
 
     /** Add a given message to the errorfile and to the logfile if loglevel is set to error.
@@ -2260,7 +2261,7 @@ export class EufySecurityApi
      */
     public logError(message : string, ...additionalMessages : any) : void
     {
-        this.logger.logError(this.config.getApiLogLevel(), message, ...additionalMessages);
+        this.logger.logError(this.config.getLogLevel(), message, ...additionalMessages);
     }
 
     /**
@@ -2270,7 +2271,7 @@ export class EufySecurityApi
      */
     public logDebug(message : string, ...additionalMessages : any) : void
     {
-        this.logger.logDebug(this.config.getApiLogLevel(), message, ...additionalMessages);
+        this.logger.logDebug(this.config.getLogLevel(), message, ...additionalMessages);
     }
 
     /**
@@ -2280,7 +2281,7 @@ export class EufySecurityApi
      */
     public logWarn(message : string, ...additionalMessages : any) : void
     {
-        this.logger.logWarn(this.config.getApiLogLevel(), message, ...additionalMessages);
+        this.logger.logWarn(this.config.getLogLevel(), message, ...additionalMessages);
     }
 
     /**
@@ -2289,7 +2290,7 @@ export class EufySecurityApi
      */
     public getApiLogLevel() : number
     {
-        return this.config.getApiLogLevel();
+        return this.config.getLogLevel();
     }
 
     /**
@@ -2298,7 +2299,7 @@ export class EufySecurityApi
      */
     public getApiUsePushService() : boolean
     {
-        return this.config.getApiUsePushService();
+        return this.config.getPushServiceActive();
     }
 
     /**
@@ -2315,30 +2316,30 @@ export class EufySecurityApi
         this.taskUpdateDeviceInfo = setInterval(async() => { await this.updateDeviceData(); }, (5 * 60 * 1000));
         this.logger.logInfoBasic(`  updateDeviceData scheduled (runs every 5 minutes).`);
 
-        if(this.config.getApiUseUpdateStateIntervall())
+        if(this.config.getStateUpdateIntervallActive())
         {
             if(this.taskUpdateState)
             {
                 this.logger.logInfoBasic(`  getState already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateState);
             }
-            this.taskUpdateState = setInterval(async() => { await this.setScheduleState(); }, (this.config.getApiUpdateStateTimespan() * 60 * 1000));
-            this.logger.logInfoBasic(`  getState scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+            this.taskUpdateState = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
+            this.logger.logInfoBasic(`  getState scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
         }
         else
         {
-            this.logger.logInfoBasic(`  scheduling getState disabled in settings${this.config.getApiUseUpdateStateEvent() == true ? " (state changes will be received by event)" : ""}.`)
+            this.logger.logInfoBasic(`  scheduling getState disabled in settings${this.config.getStateUpdateEventActive() == true ? " (state changes will be received by event)" : ""}.`)
         }
 
-        if(this.config.getApiUseUpdateLinks())
+        if(this.config.getUpdateLinksActive())
         {
             if(this.taskUpdateLinks)
             {
                 this.logger.logInfoBasic(`  getLibrary already scheduled, remove scheduling...`);
                 clearInterval(this.taskUpdateLinks);
             }
-            this.taskUpdateLinks = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getApiUpdateLinksTimespan() * 60 * 1000));
-            this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${this.config.getApiUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
+            this.taskUpdateLinks = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getUpdateLinksTimespan() * 60 * 1000));
+            this.logger.logInfoBasic(`  getLibrary scheduled (runs every ${this.config.getUpdateLinksTimespan()} minutes${this.config.getUpdateLinksOnlyWhenArmed() == true ? " when system is armed" : ""}).`);
         }
         else
         {
@@ -2385,17 +2386,17 @@ export class EufySecurityApi
         {
             task = setInterval(async() => { await this.updateDeviceData(); }, (5 * 60 * 1000));
             //task = setInterval(async() => { await this.httpService.refreshStationData(); await this.httpService.refreshDeviceData(); }, (5 * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
         }
         else if(name == "getState")
         {
-            task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getApiUpdateStateTimespan() * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateStateTimespan()} minutes).`);
+            task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
         }
         else if(name == "getLibrary")
         {
-            task = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getApiUpdateLinksTimespan() * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getApiUpdateLinksTimespan()} minutes${this.config.getApiUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
+            task = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getUpdateLinksTimespan() * 60 * 1000));
+            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getUpdateLinksTimespan()} minutes${this.config.getUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
         }
     }
 
@@ -2427,7 +2428,7 @@ export class EufySecurityApi
     private async setScheuduleLibrary() : Promise<void>
     {
         var mode = await this.getGuardModeAsGuardMode();
-        if(this.config.getApiUpdateLinksOnlyWhenArmed() == false || ((this.config.getApiUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.DISARMED) && (this.config.getApiUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.OFF)))
+        if(this.config.getUpdateLinksOnlyWhenArmed() == false || ((this.config.getUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.DISARMED) && (this.config.getUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.OFF)))
         {
             await this.getLibrary();
         }
@@ -2446,7 +2447,7 @@ export class EufySecurityApi
      */
     public getApiVersion() : string
     {
-        return `{"success":true,"platform":"${process.platform}","node_version":"${process.version}","node_arch":"${process.arch}","api_version":"${this.getEufySecurityApiVersion()}","homematic_api_version":"${this.homematicApi.getHomematicApiVersion()}","eufy_security_client_version":"${this.getEufySecurityClientVersion()}"}`;
+        return `{"success":true,"platform":"${process.platform}","nodeVersion":"${process.version}","nodeArch":"${process.arch}","apiVersion":"${this.getEufySecurityApiVersion()}","homematicApiVersion":"${this.homematicApi.getHomematicApiVersion()}","eufySecurityClientVersion":"${this.getEufySecurityClientVersion()}"}`;
     }
 
     /**

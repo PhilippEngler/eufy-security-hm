@@ -56,7 +56,7 @@ export class Station extends TypedEmitter<StationEvents> {
 
     connectToP2P()
     {
-        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress() as string, this.eufySecurityApi.getUDPLocalPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api);
+        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress() as string, this.eufySecurityApi.getLocalStaticUdpPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api);
         this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
         this.p2pSession.on("timeout", () => this.onTimeout());

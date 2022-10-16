@@ -124,21 +124,21 @@ export class Config
             if(filecontent.indexOf("api_use_system_variables") == -1)
             {
                 this.logger.logInfoBasic("  adding 'api_use_system_variables'.");
-                filecontent = filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_use_system_variables=false");
+                filecontent = filecontent.replace("api_https_pkey_string=" + this.getHttpsPkeyString(), "api_https_pkey_string=" + this.getHttpsPkeyString() + "\r\napi_use_system_variables=false");
                 config = parse(filecontent);
                 updated = true;
             }
             if(filecontent.indexOf("api_camera_default_image") == -1)
             {
                 this.logger.logInfoBasic("  adding 'api_camera_default_image'.");
-                filecontent = filecontent.replace("api_use_system_variables=" + this.getApiUseSystemVariables(), "api_use_system_variables=" + this.getApiUseSystemVariables() + "\r\napi_camera_default_image=");
+                filecontent = filecontent.replace("api_use_system_variables=" + this.getSystemVariableActive(), "api_use_system_variables=" + this.getSystemVariableActive() + "\r\napi_camera_default_image=");
                 config = parse(filecontent);
                 updated = true;
             }
             if(filecontent.indexOf("api_camera_default_video") == -1)
             {
                 this.logger.logInfoBasic("  adding 'api_camera_default_video'.");
-                filecontent = filecontent.replace("api_camera_default_image=" + this.getApiCameraDefaultImage(), "api_camera_default_image=" + this.getApiCameraDefaultImage() + "\r\napi_camera_default_video=");
+                filecontent = filecontent.replace("api_camera_default_image=" + this.getCameraDefaultImage(), "api_camera_default_image=" + this.getCameraDefaultImage() + "\r\napi_camera_default_video=");
                 config = parse(filecontent);
                 updated = true;
             }
@@ -148,17 +148,10 @@ export class Config
         if(Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 2)
         {
             this.logger.logInfoBasic("Configfile needs Stage2 update to version 2...");
-            /*if(this.filecontent.indexOf("api_udp_local_static_ports") == -1)
-            {
-                this.logger.logInfoBasic(" adding 'api_udp_local_static_ports'.");
-                this.filecontent = this.filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\napi_udp_local_static_ports=52789,52790");
-                this.config = parse(this.filecontent);
-                updated = true;
-            }*/
             if(filecontent.indexOf("api_udp_local_static_ports_active") == -1)
             {
                 this.logger.logInfoBasic("  adding 'api_udp_local_static_ports_active'.");
-                filecontent = filecontent.replace("api_https_pkey_string=" + this.getApiKeyAsString(), "api_https_pkey_string=" + this.getApiKeyAsString() + "\r\api_udp_local_static_ports_active=false");
+                filecontent = filecontent.replace("api_https_pkey_string=" + this.getHttpsPkeyString(), "api_https_pkey_string=" + this.getHttpsPkeyString() + "\r\api_udp_local_static_ports_active=false");
                 config = parse(filecontent);
                 updated = true;
             }
@@ -171,7 +164,7 @@ export class Config
             if(filecontent.indexOf("api_log_level") == -1)
             {
                 this.logger.logInfoBasic(" adding 'api_log_level'.");
-                filecontent = filecontent.replace("api_camera_default_video=" + this.getApiCameraDefaultVideo(), "api_camera_default_video=" + this.getApiCameraDefaultVideo() + "\r\napi_log_level=0");
+                filecontent = filecontent.replace("api_camera_default_video=" + this.getCameraDefaultVideo(), "api_camera_default_video=" + this.getCameraDefaultVideo() + "\r\napi_log_level=0");
                 config = parse(filecontent);
                 updated = true;
             }
@@ -319,7 +312,7 @@ export class Config
             if(filecontent.indexOf("api_use_pushservice") == -1)
             {
                 this.logger.logInfoBasic(" adding 'api_use_pushservice'.");
-                filecontent = filecontent.replace(`api_log_level=${this.getApiLogLevel()}`, `api_use_pushservice=false\r\napi_log_level=${this.getApiLogLevel()}\r\n\r\n`);
+                filecontent = filecontent.replace(`api_log_level=${this.getLogLevel()}`, `api_use_pushservice=false\r\napi_log_level=${this.getLogLevel()}\r\n\r\n`);
                 config = parse(filecontent);
                 updated = true;
             }
@@ -408,7 +401,7 @@ export class Config
         var pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        var apiConfig = {"apiHttpActive": true, "apiHttpPort": 52789, "apiHttpsActive": true, "apiHttpsPort": 52790, "apiHttpsMethod": "", "apiHttpsPkeyFile": "/usr/local/etc/config/server.pem", "apiHttpsCertFile": "/usr/local/etc/config/server.pem", "apiHttpsPkeyString": "", "apiConnectionType": 1, "apiUdpLocalStaticPortsActive": false, "apiUseSystemVariables": false, "apiCameraDefaultImage": "", "apiCameraDefaultVideo": "", "apiUpdateStateEventActive": false, "apiUpdateStateIntervallActive": false, "apiUpdateStateTimespan": 15, "apiUpdateLinksActive": true, "apiUpdateLinksOnlyWhenArmed": false, "apiUpdateLinks24Active": false, "apiUpdateLinksTimespan": 15, "apiUsePush": false, "apiLogLevel": 0};
+        var apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false, "logLevel": 0};
         config.apiConfig = apiConfig;
 
         var stations : [] = [];
@@ -450,30 +443,30 @@ export class Config
             this.configJson.pushData.persistentIds = configIni['EufyAPIPushData']['persistent_ids'];
         }
 
-        this.configJson.apiConfig.apiHttpActive = configIni['EufyAPIServiceData']['api_http_active'];
-        this.configJson.apiConfig.apiHttpPort = Number.parseInt(configIni['EufyAPIServiceData']['api_http_port']);
-        this.configJson.apiConfig.apiHttpsActive = configIni['EufyAPIServiceData']['api_https_active'];
-        this.configJson.apiConfig.apiHttpsPort = Number.parseInt(configIni['EufyAPIServiceData']['api_https_port']);
-        this.configJson.apiConfig.apiHttpsMethod = configIni['EufyAPIServiceData']['api_https_method'];
-        this.configJson.apiConfig.apiHttpsPkeyFile = configIni['EufyAPIServiceData']['api_https_pkey_file'];
-        this.configJson.apiConfig.apiHttpsCertFile = configIni['EufyAPIServiceData']['api_https_cert_file'];
-        this.configJson.apiConfig.apiHttpsPkeyString = configIni['EufyAPIServiceData']['api_https_pkey_string'];
-        this.configJson.apiConfig.apiConnectionType = Number.parseInt(configIni['EufyAPIServiceData']['api_connection_type']);
-        this.configJson.apiConfig.apiUdpLocalStaticPortsActive = configIni['EufyAPIServiceData']['api_udp_local_static_ports_active'];
-        this.configJson.apiConfig.apiUseSystemVariables = configIni['EufyAPIServiceData']['api_use_system_variables'];
-        this.configJson.apiConfig.apiCameraDefaultImage = configIni['EufyAPIServiceData']['api_camera_default_image'];
-        this.configJson.apiConfig.apiCameraDefaultVideo = configIni['EufyAPIServiceData']['api_camera_default_video'];
-        this.configJson.apiConfig.apiUpdateStateEventActive = configIni['EufyAPIServiceData']['api_update_state_event_active'];
-        this.configJson.apiConfig.apiUpdateStateIntervallActive = configIni['EufyAPIServiceData']['api_update_state_intervall_active'];
-        this.configJson.apiConfig.apiUpdateStateTimespan = Number.parseInt(configIni['EufyAPIServiceData']['api_update_state_timespan']);
-        this.configJson.apiConfig.apiUpdateLinksActive = configIni['EufyAPIServiceData']['api_update_links_active'];
-        this.configJson.apiConfig.apiUpdateLinksOnlyWhenArmed = configIni['EufyAPIServiceData']['api_update_links_only_when_active'];
-        this.configJson.apiConfig.apiUpdateLinksTimespan = Number.parseInt(configIni['EufyAPIServiceData']['api_update_links_timespan']);
+        this.configJson.apiConfig.httpActive = configIni['EufyAPIServiceData']['api_http_active'];
+        this.configJson.apiConfig.httpPort = Number.parseInt(configIni['EufyAPIServiceData']['api_http_port']);
+        this.configJson.apiConfig.httpsActive = configIni['EufyAPIServiceData']['api_https_active'];
+        this.configJson.apiConfig.httpsPort = Number.parseInt(configIni['EufyAPIServiceData']['api_https_port']);
+        this.configJson.apiConfig.httpsMethod = configIni['EufyAPIServiceData']['api_https_method'];
+        this.configJson.apiConfig.httpsPkeyFile = configIni['EufyAPIServiceData']['api_https_pkey_file'];
+        this.configJson.apiConfig.httpsCertFile = configIni['EufyAPIServiceData']['api_https_cert_file'];
+        this.configJson.apiConfig.httpsPkeyString = configIni['EufyAPIServiceData']['api_https_pkey_string'];
+        this.configJson.apiConfig.connectionTypeP2p = Number.parseInt(configIni['EufyAPIServiceData']['api_connection_type']);
+        this.configJson.apiConfig.localStaticUdpPortsActive = configIni['EufyAPIServiceData']['api_udp_local_static_ports_active'];
+        this.configJson.apiConfig.systemVariableActive = configIni['EufyAPIServiceData']['api_use_system_variables'];
+        this.configJson.apiConfig.cameraDefaultImage = configIni['EufyAPIServiceData']['api_camera_default_image'];
+        this.configJson.apiConfig.cameraDefaultVideo = configIni['EufyAPIServiceData']['api_camera_default_video'];
+        this.configJson.apiConfig.stateUpdateEventActive = configIni['EufyAPIServiceData']['api_update_state_event_active'];
+        this.configJson.apiConfig.stateUpdateIntervallActive = configIni['EufyAPIServiceData']['api_update_state_intervall_active'];
+        this.configJson.apiConfig.stateUpdateIntervallTimespan = Number.parseInt(configIni['EufyAPIServiceData']['api_update_state_timespan']);
+        this.configJson.apiConfig.updateLinksActive = configIni['EufyAPIServiceData']['api_update_links_active'];
+        this.configJson.apiConfig.updateLinksOnlyWhenArmed = configIni['EufyAPIServiceData']['api_update_links_only_when_active'];
+        this.configJson.apiConfig.updateLinksTimespan = Number.parseInt(configIni['EufyAPIServiceData']['api_update_links_timespan']);
         if(configIni['EufyAPIServiceData']['api_use_pushservice'] != undefined)
         {
-            this.configJson.apiConfig.apiUsePush = configIni['EufyAPIServiceData']['api_use_pushservice'];
+            this.configJson.apiConfig.pushServiceActive = configIni['EufyAPIServiceData']['api_use_pushservice'];
         }
-        this.configJson.apiConfig.apiLogLevel = Number.parseInt(configIni['EufyAPIServiceData']['api_log_level']);
+        this.configJson.apiConfig.logLevel = Number.parseInt(configIni['EufyAPIServiceData']['api_log_level']);
 
         this.hasChanged = true;
         this.writeConfig();
@@ -618,7 +611,7 @@ export class Config
     }
 
     /**
-     * Get the Username/Email-Address of the eufy security account.
+     * Get the eMail address of the eufy security account.
      */
     public getEmailAddress() : string
     {
@@ -633,14 +626,14 @@ export class Config
     }
 
     /**
-     * Set the Username/Email-Address for the eufy security account.
-     * @param email The Username/Email to set.
+     * Set the eMail address for the eufy security account.
+     * @param email The eMail address to set.
      */
-    public setEmailAddress(email : string) : void
+    public setEmailAddress(eMail : string) : void
     {
-        if(this.configJson.accountData.eMail != email)
+        if(this.configJson.accountData.eMail != eMail)
         {
-            this.configJson.accountData.eMail = email;
+            this.configJson.accountData.eMail = eMail;
             this.setToken("");
             this.hasChanged = true;
         }
@@ -679,9 +672,9 @@ export class Config
      */
     public getConnectionType() : number
     {
-        if(this.configJson.apiConfig.apiConnectionType != undefined)
+        if(this.configJson.apiConfig.connectionTypeP2p != undefined)
         {
-            return this.configJson.apiConfig.apiConnectionType;
+            return this.configJson.apiConfig.connectionTypeP2p;
         }
         else
         {
@@ -691,13 +684,13 @@ export class Config
  
     /**
      * Sets true, if static udp ports should be used otherwise false.
-     * @param connectionType Boolean value.
+     * @param connectionTypeP2p Boolean value.
      */
-    public setConnectionType(connectionType : number) : void
+    public setConnectionType(connectionTypeP2p : number) : void
     {
-        if(this.configJson.apiConfig.apiConnectionType != connectionType)
+        if(this.configJson.apiConfig.connectionTypeP2p != connectionTypeP2p)
         {
-            this.configJson.apiConfig.apiConnectionType = connectionType;
+            this.configJson.apiConfig.connectionTypeP2p = connectionTypeP2p;
             this.hasChanged = true;
         }
     }
@@ -705,11 +698,11 @@ export class Config
     /**
      * Returns true if the static udp ports should be used otherwise false.
      */
-    public getUseUdpLocalPorts() : boolean
+    public getLocalStaticUdpPortsActive() : boolean
     {
-        if(this.configJson.apiConfig.apiUdpLocalStaticPortsActive != undefined)
+        if(this.configJson.apiConfig.localStaticUdpPortsActive != undefined)
         {
-            return this.configJson.apiConfig.apiUdpLocalStaticPortsActive;
+            return this.configJson.apiConfig.localStaticUdpPortsActive;
         }
         else
         {
@@ -719,13 +712,13 @@ export class Config
 
     /**
      * Sets true, if static udp ports should be used otherwise false.
-     * @param useUdpLocalStaticPorts Boolean value.
+     * @param localStaticUdpPortsActive Boolean value.
      */
-    public setUseUdpLocalPorts(useUdpLocalStaticPorts : boolean) : void
+    public setLocalStaticUdpPortsActive(localStaticUdpPortsActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiUdpLocalStaticPortsActive != useUdpLocalStaticPorts)
+        if(this.configJson.apiConfig.localStaticUdpPortsActive != localStaticUdpPortsActive)
         {
-            this.configJson.apiConfig.apiUdpLocalStaticPortsActive = useUdpLocalStaticPorts;
+            this.configJson.apiConfig.localStaticUdpPortsActive = localStaticUdpPortsActive;
             this.hasChanged = true;
         }
     }
@@ -734,7 +727,7 @@ export class Config
      * Set the udp static ports for local communication.
      * @param ports A string with the ports splitted by a comma.
      */
-    public setUdpLocalPorts(ports : string[][]) : boolean
+    public setLocalStaticUdpPorts(ports : string[][]) : boolean
     {
         var err : boolean = false;
         if(ports)
@@ -742,7 +735,16 @@ export class Config
             var array : string[];
             for (array of ports)
             {
-                if(this.setUdpLocalPortPerStation(array[0], Number.parseInt(array[1])) == false)
+                var portNumber;
+                if(array[1] == null)
+                {
+                    portNumber = null;
+                }
+                else
+                {
+                    portNumber = Number.parseInt(array[1]);
+                }
+                if(this.setLocalStaticUdpPortPerStation(array[0], portNumber) == false)
                 {
                     err = true;
                 }
@@ -761,11 +763,11 @@ export class Config
     /**
      * Get a boolean value if the api shoud set system variables on the CCU.
      */
-    public getApiUseSystemVariables() : boolean
+    public getSystemVariableActive() : boolean
     {
-        if(this.configJson.apiConfig.apiUseSystemVariables != undefined)
+        if(this.configJson.apiConfig.systemVariableActive != undefined)
         {
-            return this.configJson.apiConfig.apiUseSystemVariables;
+            return this.configJson.apiConfig.systemVariableActive;
         }
         else
         {
@@ -775,13 +777,13 @@ export class Config
 
     /**
      * Set a boolean value if the api shoud set system variables on the CCU.
-     * @param apiusesystemvariables Set system variables on the CCU.
+     * @param systemVariableActive Set system variables on the CCU.
      */
-    public setApiUseSystemVariables(apiusesystemvariables : boolean) : void
+    public setSystemVariableActive(systemVariableActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiUseSystemVariables != apiusesystemvariables)
+        if(this.configJson.apiConfig.systemVariableActive != systemVariableActive)
         {
-            this.configJson.apiConfig.apiUseSystemVariables = apiusesystemvariables;
+            this.configJson.apiConfig.systemVariableActive = systemVariableActive;
             this.hasChanged = true;
         }
     }
@@ -789,11 +791,11 @@ export class Config
     /**
      * Get weather http should be used for api.
      */
-    public getApiUseHttp() : boolean
+    public getHttpActive() : boolean
     {
-        if(this.configJson.apiConfig.apiHttpActive != undefined)
+        if(this.configJson.apiConfig.httpActive != undefined)
         {
-            return this.configJson.apiConfig.apiHttpActive;
+            return this.configJson.apiConfig.httpActive;
         }
         else
         {
@@ -803,13 +805,13 @@ export class Config
 
     /**
      * Set weather http sould be used for api.
-     * @param apiusehttp Use http for the api.
+     * @param httpActive Use http for the api.
      */
-    public setApiUseHttp(apiusehttp : boolean) : void
+    public setHttpActive(httpActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiHttpActive != apiusehttp)
+        if(this.configJson.apiConfig.httpActive != httpActive)
         {
-            this.configJson.apiConfig.apiHttpActive = apiusehttp;
+            this.configJson.apiConfig.httpActive = httpActive;
             this.hasChanged = true;
         }
     }
@@ -817,11 +819,11 @@ export class Config
     /**
      * Get the port for the webserver (HTTP) for the api.
      */
-    public getApiPortHttp() : number
+    public getHttpPort() : number
     {
-        if(this.configJson.apiConfig.apiHttpPort != undefined)
+        if(this.configJson.apiConfig.httpPort != undefined)
         {
-            return this.configJson.apiConfig.apiHttpPort;
+            return this.configJson.apiConfig.httpPort;
         }
         else
         {
@@ -831,13 +833,13 @@ export class Config
 
     /**
      * Set the port for the webserver (HTTP) for the api.
-     * @param apiport The port the api should be accessable.
+     * @param httpPort The port the api should be accessable.
      */
-    public setApiPortHttp(apiport : number) : void
+    public setHttpPort(httpPort : number) : void
     {
-        if(this.configJson.apiConfig.apiHttpPort != apiport)
+        if(this.configJson.apiConfig.httpPort != httpPort)
         {
-            this.configJson.apiConfig.apiHttpPort = apiport;
+            this.configJson.apiConfig.httpPort = httpPort;
             this.hasChanged = true;
         }
     }
@@ -845,11 +847,11 @@ export class Config
     /**
      * Get weather https should be used for api.
      */
-    public getApiUseHttps() : boolean
+    public getHttpsActive() : boolean
     {
-        if(this.configJson.apiConfig.apiHttpsActive != undefined)
+        if(this.configJson.apiConfig.httpsActive != undefined)
         {
-            return this.configJson.apiConfig.apiHttpsActive;
+            return this.configJson.apiConfig.httpsActive;
         }
         else
         {
@@ -859,13 +861,13 @@ export class Config
 
     /**
      * Set weather https sould be used for api.
-     * @param apiport Use https for the api.
+     * @param httpsActive Use https for the api.
      */
-    public setApiUseHttps(apiusehttps : boolean) : void
+    public setHttpsActive(httpsActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiHttpsActive != apiusehttps)
+        if(this.configJson.apiConfig.httpsActive != httpsActive)
         {
-            this.configJson.apiConfig.apiHttpsActive = apiusehttps;
+            this.configJson.apiConfig.httpsActive = httpsActive;
             this.hasChanged = true;
         }
     }
@@ -873,11 +875,11 @@ export class Config
     /**
      * Get the port for the webserver (HTTPS) for the api.
      */
-    public getApiPortHttps() : number
+    public getHttpsPort() : number
     {
-        if(this.configJson.apiConfig.apiHttpsPort != undefined)
+        if(this.configJson.apiConfig.httpsPort != undefined)
         {
-            return this.configJson.apiConfig.apiHttpsPort;
+            return this.configJson.apiConfig.httpsPort;
         }
         else
         {
@@ -887,13 +889,13 @@ export class Config
 
     /**
      * Set the port for the webserver (HTTPS) for the api.
-     * @param apiport The port the api should be accessable.
+     * @param httpsPort The port the api should be accessable.
      */
-    public setApiPortHttps(apiport : number) : void
+    public setHttpsPort(httpsPort : number) : void
     {
-        if(this.configJson.apiConfig.apiHttpsPort != apiport)
+        if(this.configJson.apiConfig.httpsPort != httpsPort)
         {
-            this.configJson.apiConfig.apiHttpsPort = apiport;
+            this.configJson.apiConfig.httpsPort = httpsPort;
             this.hasChanged = true;
         }
     }
@@ -901,11 +903,11 @@ export class Config
     /**
      * Returns the method used for https.
      */
-    public getApiMethodHttps() : string
+    public getHttpsMethod() : string
     {
-        if(this.configJson.apiConfig.apiHttpsMethod != undefined)
+        if(this.configJson.apiConfig.httpsMethod != undefined)
         {
-            return this.configJson.apiConfig.apiHttpsMethod;
+            return this.configJson.apiConfig.httpsMethod;
         }
         else
         {
@@ -915,13 +917,13 @@ export class Config
 
     /**
      * Set the method used for https.
-     * @param apimethod The method for https.
+     * @param httpsMethod The method for https.
      */
-    public setApiMethodHttps(apimethod : string) : void
+    public setHttpsMethod(httpsMethod : string) : void
     {
-        if(this.configJson.apiConfig.apiHttpsMethod != apimethod)
+        if(this.configJson.apiConfig.httpsMethod != httpsMethod)
         {
-            this.configJson.apiConfig.apiHttpsMethod = apimethod;
+            this.configJson.apiConfig.httpsMethod = httpsMethod;
             this.hasChanged = true;
         }
     }
@@ -929,11 +931,11 @@ export class Config
     /**
      * Get the key for https.
      */
-    public getApiKeyFileHttps() : string
+    public getHttpsPKeyFile() : string
     {
-        if(this.configJson.apiConfig.apiHttpsPkeyFile != undefined)
+        if(this.configJson.apiConfig.httpsPkeyFile != undefined)
         {
-            return this.configJson.apiConfig.apiHttpsPkeyFile;
+            return this.configJson.apiConfig.httpsPkeyFile;
         }
         else
         {
@@ -943,13 +945,13 @@ export class Config
 
     /**
      * Set the key for https.
-     * @param apipkey The path to the key file for https.
+     * @param httpsPkeyFile The path to the key file for https.
      */
-    public setApiKeyFileHttps(apipkey : string) : void
+    public setHttpsPKeyFile(httpsPkeyFile : string) : void
     {
-        if(this.configJson.apiConfig.apiHttpsPkeyFile != apipkey)
+        if(this.configJson.apiConfig.httpsPKeyFile != httpsPkeyFile)
         {
-            this.configJson.apiConfig.apiHttpsPkeyFile = apipkey;
+            this.configJson.apiConfig.httpsPKeyFile = httpsPkeyFile;
             this.hasChanged = true;
         }
     }
@@ -957,11 +959,11 @@ export class Config
     /**
      * Returns the cert file for https.
      */
-    public getApiCertFileHttps() : string
+    public getHttpsCertFile() : string
     {
-        if(this.configJson.apiConfig.apiHttpsCertFile != undefined)
+        if(this.configJson.apiConfig.httpsCertFile != undefined)
         {
-            return this.configJson.apiConfig.apiHttpsCertFile;
+            return this.configJson.apiConfig.httpsCertFile;
         }
         else
         {
@@ -971,13 +973,13 @@ export class Config
 
     /**
      * Set the cert for https.
-     * @param apicert The cert file for https.
+     * @param httpsCertFile The cert file for https.
      */
-    public setApiCertFileHttps(apicert : string) : void
+    public setHttpsCertFile(httpsCertFile : string) : void
     {
-        if(this.configJson.apiConfig.apiHttpsCertFile != apicert)
+        if(this.configJson.apiConfig.httpsCertFile != httpsCertFile)
         {
-            this.configJson.apiConfig.apiHttpsCertFile = apicert;
+            this.configJson.apiConfig.httpsCertFile = httpsCertFile;
             this.hasChanged = true;
         }
     }
@@ -985,11 +987,11 @@ export class Config
     /**
      * Get the key as string for https.
      */
-    public getApiKeyAsString() : string
+    public getHttpsPkeyString() : string
     {
-        if(this.configJson.apiConfig.apiHttpsPkeyString != undefined)
+        if(this.configJson.apiConfig.httpsPkeyString != undefined)
         {
-            return this.configJson.apiConfig.apiHttpsPkeyString;
+            return this.configJson.apiConfig.httpsPkeyString;
         }
         else
         {
@@ -999,13 +1001,13 @@ export class Config
 
     /**
      * Set the key as string for https.
-     * @param apikeyasstring The key for https as string.
+     * @param httpsPkeyString The key for https as string.
      */
-    public setApiKeyAsString(apikeyasstring : string) : void
+    public setHttpsPkeyString(httpsPkeyString : string) : void
     {
-        if(this.configJson.apiConfig.apiHttpsPkeyString != apikeyasstring)
+        if(this.configJson.apiConfig.httpsPkeyString != httpsPkeyString)
         {
-            this.configJson.apiConfig.apiHttpsPkeyString = apikeyasstring;
+            this.configJson.apiConfig.httpsPkeyString = httpsPkeyString;
             this.hasChanged = true;
         }
     }
@@ -1013,11 +1015,11 @@ export class Config
     /**
      * Get the default image for cameras.
      */
-    public getApiCameraDefaultImage() : string
+    public getCameraDefaultImage() : string
     {
-        if(this.configJson.apiConfig.apiCameraDefaultImage != undefined)
+        if(this.configJson.apiConfig.cameraDefaultImage != undefined)
         {
-            return this.configJson.apiConfig.apiCameraDefaultImage;
+            return this.configJson.apiConfig.cameraDefaultImage;
         }
         else
         {
@@ -1027,13 +1029,13 @@ export class Config
 
     /**
      * Set the default image for cameras.
-     * @param apicameradefaultimage The path to the default camera image.
+     * @param cameraDefaultImage The path to the default camera image.
      */
-    public setApiCameraDefaultImage(apicameradefaultimage : string) : void
+    public setCameraDefaultImage(cameraDefaultImage : string) : void
     {
-        if(this.configJson.apiConfig.apiCameraDefaultImage != apicameradefaultimage)
+        if(this.configJson.apiConfig.cameraDefaultImage != cameraDefaultImage)
         {
-            this.configJson.apiConfig.apiCameraDefaultImage = apicameradefaultimage;
+            this.configJson.apiConfig.cameraDefaultImage = cameraDefaultImage;
             this.hasChanged = true;
         }
     }
@@ -1041,11 +1043,11 @@ export class Config
     /**
      * Get the default video for cameras.
      */
-    public getApiCameraDefaultVideo() : string
+    public getCameraDefaultVideo() : string
     {
-        if(this.configJson.apiConfig.apiCameraDefaultImage != undefined)
+        if(this.configJson.apiConfig.cameraDefaultVideo != undefined)
         {
-            return this.configJson.apiConfig.apiCameraDefaultVideo;
+            return this.configJson.apiConfig.cameraDefaultVideo;
         }
         else
         {
@@ -1055,13 +1057,13 @@ export class Config
 
     /**
      * Set the default video for cameras.
-     * @param apicameradefaultvideo The path to the default camera video.
+     * @param cameraDefaultVideo The path to the default camera video.
      */
-    public setApiCameraDefaultVideo(apicameradefaultvideo : string) : void
+    public setCameraDefaultVideo(cameraDefaultVideo : string) : void
     {
-        if(this.configJson.apiConfig.apiCameraDefaultVideo != apicameradefaultvideo)
+        if(this.configJson.apiConfig.cameraDefaultVideo != cameraDefaultVideo)
         {
-            this.configJson.apiConfig.apiCameraDefaultVideo = apicameradefaultvideo;
+            this.configJson.apiConfig.cameraDefaultVideo = cameraDefaultVideo;
             this.hasChanged = true;
         }
     }
@@ -1069,11 +1071,11 @@ export class Config
     /**
      * Determines if the updated state runs by event.
      */
-    public getApiUseUpdateStateEvent() : boolean
+    public getStateUpdateEventActive() : boolean
     {
-        if(this.configJson.apiConfig.apiUpdateStateEventActive != undefined)
+        if(this.configJson.apiConfig.stateUpdateEventActive != undefined)
         {
-            return this.configJson.apiConfig.apiUpdateStateEventActive;
+            return this.configJson.apiConfig.stateUpdateEventActive;
         }
         else
         {
@@ -1083,13 +1085,13 @@ export class Config
 
     /**
      * Set the value for update state eventbased.
-     * @param apiuseupdatestateevent The value if the state should updated eventbased.
+     * @param stateUpdateEventActive The value if the state should updated eventbased.
      */
-    public setApiUseUpdateStateEvent(apiuseupdatestateevent : boolean) : void
+    public setStateUpdateEventActive(stateUpdateEventActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiUpdateStateEventActive != apiuseupdatestateevent)
+        if(this.configJson.apiConfig.stateUpdateEventActive != stateUpdateEventActive)
         {
-            this.configJson.apiConfig.apiUpdateStateEventActive = apiuseupdatestateevent;
+            this.configJson.apiConfig.stateUpdateEventActive = stateUpdateEventActive;
             this.hasChanged = true;
         }
     }
@@ -1097,11 +1099,11 @@ export class Config
     /**
      * Determines if the updated state runs scheduled.
      */
-    public getApiUseUpdateStateIntervall() : boolean
+    public getStateUpdateIntervallActive() : boolean
     {
-        if(this.configJson.apiConfig.apiUpdateStateIntervallActive != undefined)
+        if(this.configJson.apiConfig.stateUpdateIntervallActive != undefined)
         {
-            return this.configJson.apiConfig.apiUpdateStateIntervallActive;
+            return this.configJson.apiConfig.stateUpdateIntervallActive;
         }
         else
         {
@@ -1111,13 +1113,13 @@ export class Config
 
     /**
      * Set the value for update state scheduled.
-     * @param apiuseupdatestate The value if the state should updated scheduled.
+     * @param stateUpdateIntervallActive The value if the state should updated scheduled.
      */
-    public setApiUseUpdateStateIntervall(apiuseupdatestateintervall : boolean) : void
+    public setStateUpdateIntervallActive(stateUpdateIntervallActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiUpdateStateIntervallActive != apiuseupdatestateintervall)
+        if(this.configJson.apiConfig.stateUpdateIntervallActive != stateUpdateIntervallActive)
         {
-            this.configJson.apiConfig.apiUpdateStateIntervallActive = apiuseupdatestateintervall;
+            this.configJson.apiConfig.stateUpdateIntervallActive = stateUpdateIntervallActive;
             this.hasChanged = true;
         }
     }
@@ -1125,11 +1127,11 @@ export class Config
     /**
      * Returns the time between runs of two scheduled tasks for update state.
      */
-    public getApiUpdateStateTimespan() : number
+    public getStateUpdateIntervallTimespan() : number
     {
-        if(this.configJson.apiConfig.apiUpdateStateTimespan != undefined)
+        if(this.configJson.apiConfig.stateUpdateIntervallTimespan != undefined)
         {
-            return this.configJson.apiConfig.apiUpdateStateTimespan;
+            return this.configJson.apiConfig.stateUpdateIntervallTimespan;
         }
         else
         {
@@ -1139,13 +1141,13 @@ export class Config
 
     /**
      * Set the value for the time between runs of two scheduled tasks for update state. 
-     * @param apiupdatestatetimespan The time in minutes.
+     * @param stateUpdateIntervallTimespan The time in minutes.
      */
-    public setApiUpdateStateTimespan(apiupdatestatetimespan : number) : void
+    public setStateUpdateIntervallTimespan(stateUpdateIntervallTimespan : number) : void
     {
-        if(this.configJson.apiConfig.apiUpdateStateTimespan != apiupdatestatetimespan)
+        if(this.configJson.apiConfig.stateUpdateIntervallTimespan != stateUpdateIntervallTimespan)
         {
-            this.configJson.apiConfig.apiUpdateStateTimespan = apiupdatestatetimespan;
+            this.configJson.apiConfig.stateUpdateIntervallTimespan = stateUpdateIntervallTimespan;
             this.hasChanged = true;
         }
     }
@@ -1153,11 +1155,11 @@ export class Config
     /**
      * Determines if the updated links runs scheduled.
      */
-    public getApiUseUpdateLinks() : boolean
+    public getUpdateLinksActive() : boolean
     {
-        if(this.configJson.apiConfig.apiUpdateLinksActive != undefined)
+        if(this.configJson.apiConfig.updateLinksActive != undefined)
         {
-            return this.configJson.apiConfig.apiUpdateLinksActive;
+            return this.configJson.apiConfig.updateLinksActive;
         }
         else
         {
@@ -1167,13 +1169,13 @@ export class Config
 
     /**
      * Set the value for update links scheduled.
-     * @param apiuseupdatestate The value if the links should updated scheduled.
+     * @param updateLinksActive The value if the links should updated scheduled.
      */
-    public setApiUseUpdateLinks(apiuseupdatelinks : boolean) : void
+    public setUpdateLinksActive(updateLinksActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiUpdateLinksActive != apiuseupdatelinks)
+        if(this.configJson.apiConfig.updateLinksActive != updateLinksActive)
         {
-            this.configJson.apiConfig.apiUpdateLinksActive = apiuseupdatelinks;
+            this.configJson.apiConfig.updateLinksActive = updateLinksActive;
             this.hasChanged = true;
         }
     }
@@ -1181,11 +1183,11 @@ export class Config
     /**
      * Returns the time between runs of two scheduled tasks for update state.
      */
-    public getApiUpdateLinksTimespan() : number
+    public getUpdateLinksTimespan() : number
     {
-        if(this.configJson.apiConfig.apiUpdateLinksTimespan != undefined)
+        if(this.configJson.apiConfig.updateLinksTimespan != undefined)
         {
-            return this.configJson.apiConfig.apiUpdateLinksTimespan;
+            return this.configJson.apiConfig.updateLinksTimespan;
         }
         else
         {
@@ -1195,13 +1197,13 @@ export class Config
 
     /**
      * Set the value for the time between runs of two scheduled tasks for update links.
-     * @param apiupdatestatetimespan The time in minutes.
+     * @param updateLinksTimespan The time in minutes.
      */
-    public setApiUpdateLinksTimespan(apiupdatelinkstimespan : number) : void
+    public setUpdateLinksTimespan(updateLinksTimespan : number) : void
     {
-        if(this.configJson.apiConfig.apiUpdateLinksTimespan != apiupdatelinkstimespan)
+        if(this.configJson.apiConfig.updateLinksTimespan != updateLinksTimespan)
         {
-            this.configJson.apiConfig.apiUpdateLinksTimespan = apiupdatelinkstimespan;
+            this.configJson.apiConfig.updateLinksTimespan = updateLinksTimespan;
             this.hasChanged = true;
         }
     }
@@ -1209,11 +1211,11 @@ export class Config
     /**
      * Return weather the api should only refresh links when eufy state is other than off or deactivated.
      */
-    public getApiUpdateLinksOnlyWhenArmed() : boolean
+    public getUpdateLinksOnlyWhenArmed() : boolean
     {
-        if(this.configJson.apiConfig.apiUpdateLinksOnlyWhenArmed != undefined)
+        if(this.configJson.apiConfig.updateLinksOnlyWhenArmed != undefined)
         {
-            return this.configJson.apiConfig.apiUpdateLinksOnlyWhenArmed;
+            return this.configJson.apiConfig.updateLinksOnlyWhenArmed;
         }
         else
         {
@@ -1223,13 +1225,13 @@ export class Config
 
     /**
      * Set the value the api should only refresh links when eufy state is other than off or deactivated
-     * @param apiupdatelinksonlywhenactive true for not refreshing links during off or deactivated, otherwise false.
+     * @param updateLinksOnlyWhenArmed true for not refreshing links during off or deactivated, otherwise false.
      */
-    public setApiUpdateLinksOnlyWhenArmed(apiupdatelinksonlywhenactive : boolean)
+    public setUpdateLinksOnlyWhenArmed(updateLinksOnlyWhenArmed : boolean)
     {
-        if(this.configJson.apiConfig.apiUpdateLinksOnlyWhenArmed != apiupdatelinksonlywhenactive)
+        if(this.configJson.apiConfig.updateLinksOnlyWhenArmed != updateLinksOnlyWhenArmed)
         {
-            this.configJson.apiConfig.apiUpdateLinksOnlyWhenArmed = apiupdatelinksonlywhenactive;
+            this.configJson.apiConfig.updateLinksOnlyWhenArmed = updateLinksOnlyWhenArmed;
             this.hasChanged = true;
         }
     }
@@ -1237,11 +1239,11 @@ export class Config
     /**
      * Returns the log level.
      */
-    public getApiLogLevel() : number
+    public getLogLevel() : number
     {
-        if(this.configJson.apiConfig.apiLogLevel != undefined)
+        if(this.configJson.apiConfig.logLevel != undefined)
         {
-            return this.configJson.apiConfig.apiLogLevel;
+            return this.configJson.apiConfig.logLevel;
         }
         else
         {
@@ -1251,13 +1253,13 @@ export class Config
 
     /**
      * Set the log level.
-     * @param apiloglevel The log level as number to set
+     * @param logLevel The log level as number to set
      */
-    public setApiLogLevel(apiloglevel : number) : void
+    public setLogLevel(logLevel : number) : void
     {
-        if(this.configJson.apiConfig.apiLogLevel != apiloglevel)
+        if(this.configJson.apiConfig.logLevel != logLevel)
         {
-            this.configJson.apiConfig.apiLogLevel = apiloglevel;
+            this.configJson.apiConfig.logLevel = logLevel;
             this.hasChanged = true;
         }
     }
@@ -1393,16 +1395,16 @@ export class Config
      * @param stationSerial The serial of the station.
      * @returns The UDP port for the station.
      */
-    public getUdpLocalPortsPerStation(stationSerial : string) : number
+    public getLocalStaticUdpPortPerStation(stationSerial : string) : number | null
     {
         var station = this.getStationIterator(stationSerial);
-        if(station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].udpPort != undefined)
+        if(station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].udpPort != undefined && this.configJson.stations[station].udpPort != null)
         {
             return this.configJson.stations[station].udpPort;
         }
         else
         {
-            return 0;
+            return null;
         }
     }
 
@@ -1412,7 +1414,7 @@ export class Config
      * @param udpPort The UDP port.
      * @returns True on success otherwise false.
      */
-    public setUdpLocalPortPerStation(stationSerial: string, udpPort : number) : boolean
+    public setLocalStaticUdpPortPerStation(stationSerial: string, udpPort : number | null) : boolean
     {
         if(stationSerial != undefined)
         {
@@ -1480,11 +1482,11 @@ export class Config
      * Get the value for enableing or diableing push service.
      * @returns Boolean for enableing or diableing.
      */
-    public getApiUsePushService() : boolean
+    public getPushServiceActive() : boolean
     {
-        if(this.configJson.apiConfig.apiUsePush != undefined)
+        if(this.configJson.apiConfig.pushServiceActive != undefined)
         {
-            return this.configJson.apiConfig.apiUsePush;
+            return this.configJson.apiConfig.pushServiceActive;
         }
         else
         {
@@ -1494,13 +1496,13 @@ export class Config
 
     /**
      * Set if push service is used.
-     * @param usePushService The value if push service is used.
+     * @param pushServiceActive The value if push service is used.
      */
-    public setApiUsePushService(usePushService : boolean) : void
+    public setPushServiceActive(pushServiceActive : boolean) : void
     {
-        if(this.configJson.apiConfig.apiUsePush != usePushService)
+        if(this.configJson.apiConfig.pushServiceActive != pushServiceActive)
         {
-            this.configJson.apiConfig.apiUsePush = usePushService;
+            this.configJson.apiConfig.pushServiceActive = pushServiceActive;
             this.hasChanged = true;
         }
     }

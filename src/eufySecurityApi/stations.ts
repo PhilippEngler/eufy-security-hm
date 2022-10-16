@@ -43,7 +43,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.httpService = httpService;
         this.serialNumbers = [];
 
-        if(this.api.getApiUseUpdateStateEvent() == false)
+        if(this.api.getStateUpdateEventActive() == false)
         {
             this.api.logInfoBasic("Retrieving last guard mode change times disabled in settings.");
         }
@@ -86,7 +86,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }
                 station.connect();
 
-                if(this.api.getApiUseUpdateStateEvent())
+                if(this.api.getStateUpdateEventActive())
                 {
                     this.addEventListener(station, "GuardModeChanged", false);
                     this.addEventListener(station, "CurrentMode", false);
