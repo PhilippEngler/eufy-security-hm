@@ -1745,31 +1745,31 @@ export class EufySecurityApi
     public getAPIConfig() : string
     {
         var json = `{"success":true,"data":{`;
-        json += `"configVersion":"${this.config.getConfigFileVersion()}",`;
+        json += `"configVersion":${this.config.getConfigFileVersion()},`;
         json += `"eMail":"${this.config.getEmailAddress()}",`;
         json += `"password":"${this.config.getPassword()}",`;
         json += `"country":"${this.config.getCountry()}",`;
         json += `"language":"${this.config.getLanguage()}",`;
-        json += `"httpActive":"${this.config.getHttpActive()}",`;
-        json += `"httpPort":"${this.config.getHttpPort()}",`;
-        json += `"httpsActive":"${this.config.getHttpsActive()}",`;
-        json += `"httpsPort":"${this.config.getHttpsPort()}",`;
+        json += `"httpActive":${this.config.getHttpActive()},`;
+        json += `"httpPort":${this.config.getHttpPort()},`;
+        json += `"httpsActive":${this.config.getHttpsActive()},`;
+        json += `"httpsPort":${this.config.getHttpsPort()},`;
         json += `"httpsPKeyFile":"${this.config.getHttpsPKeyFile()}",`;
         json += `"httpsCertFile":"${this.config.getHttpsCertFile()}",`;
-        json += `"connectionTypeP2p":"${this.config.getConnectionType()}",`;
-        json += `"localStaticUdpPortsActive":"${this.config.getLocalStaticUdpPortsActive()}",`;
+        json += `"connectionTypeP2p":${this.config.getConnectionType()},`;
+        json += `"localStaticUdpPortsActive":${this.config.getLocalStaticUdpPortsActive()},`;
         json += this.getLocalStaticUdpPorts();
-        json += `"systemVariableActive":"${this.config.getSystemVariableActive()}",`;
+        json += `"systemVariableActive":${this.config.getSystemVariableActive()},`;
         json += `"cameraDefaultImage":"${this.config.getCameraDefaultImage()}",`;
         json += `"cameraDefaultVideo":"${this.config.getCameraDefaultVideo()}",`;
-        json += `"stateUpdateEventActive":"${this.config.getStateUpdateEventActive()}",`;
-        json += `"stateUpdateIntervallActive":"${this.config.getStateUpdateIntervallActive()}",`;
-        json += `"stateUpdateIntervallTimespan":"${this.config.getStateUpdateIntervallTimespan()}",`;
-        json += `"updateLinksActive":"${this.config.getUpdateLinksActive()}",`;
-        json += `"updateLinksOnlyWhenArmed":"${this.config.getUpdateLinksOnlyWhenArmed()}",`;
-        json += `"updateLinksTimespan":"${this.config.getUpdateLinksTimespan()}",`;
-        json += `"pushServiceActive":"${this.config.getPushServiceActive()}",`;
-        json += `"logLevel":"${this.config.getLogLevel()}"}}`;
+        json += `"stateUpdateEventActive":${this.config.getStateUpdateEventActive()},`;
+        json += `"stateUpdateIntervallActive":${this.config.getStateUpdateIntervallActive()},`;
+        json += `"stateUpdateIntervallTimespan":${this.config.getStateUpdateIntervallTimespan()},`;
+        json += `"updateLinksActive":${this.config.getUpdateLinksActive()},`;
+        json += `"updateLinksOnlyWhenArmed":${this.config.getUpdateLinksOnlyWhenArmed()},`;
+        json += `"updateLinksTimespan":${this.config.getUpdateLinksTimespan()},`;
+        json += `"pushServiceActive":${this.config.getPushServiceActive()},`;
+        json += `"logLevel":${this.config.getLogLevel()}}}`;
     
         return json;
     }

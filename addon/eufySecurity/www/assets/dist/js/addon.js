@@ -1628,7 +1628,7 @@ function loadStationsSettings()
 
 function loadDataSettings()
 {
-    var xmlHttp, objResp, configData, username, password, country, language, usehttp, porthttp, usehttps, porthttps, keyhttps, certhttps, connectiontype, useudplocalstaticports, usesystemvariables, cameradefaultimage, cameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevel;
+    var xmlHttp, objResp, username, password, country, language, usehttp, porthttp, usehttps, porthttps, keyhttps, certhttps, connectiontype, useudplocalstaticports, usesystemvariables, cameradefaultimage, cameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevel;
     var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
@@ -1685,7 +1685,7 @@ function loadDataSettings()
                     {
                         document.getElementById("cbLanguage").value = language;
                     }
-                    if(usehttp == "true")
+                    if(usehttp == true)
                     {
                         document.getElementById("chkUseHttp").setAttribute("checked", true);
                         document.getElementById("txtPortHttp").removeAttribute("disabled");
@@ -1696,7 +1696,7 @@ function loadDataSettings()
                     }
                     text = document.getElementById('txtPortHttp');
                     text.value = porthttp;
-                    if(usehttps == "true")
+                    if(usehttps == true)
                     {
                         document.getElementById("chkUseHttps").setAttribute("checked", true);
                         document.getElementById("txtPortHttps").removeAttribute("disabled");
@@ -1723,11 +1723,11 @@ function loadDataSettings()
                     {
                         document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(connectiontype)) + 1;
                     }
-                    if(usesystemvariables == "true")
+                    if(usesystemvariables == true)
                     {
                         document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
                     }
-                    if(useudplocalstaticports == "true")
+                    if(useudplocalstaticports == true)
                     {
                         document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
                     }
@@ -1750,7 +1750,7 @@ function loadDataSettings()
                                 text.value = tempPorts;
                             }
                             changeValue("useUdpStaticPorts");
-                            if(useudplocalstaticports == "false")
+                            if(useudplocalstaticports == false)
                             {
                                 document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
                             }
@@ -1760,7 +1760,7 @@ function loadDataSettings()
                     text.value = cameradefaultimage;
                     text = document.getElementById('txtDefaultVideoPath');
                     text.value = cameradefaultvideo;
-                    if(useupdatestateevent == "true")
+                    if(useupdatestateevent == true)
                     {
                         document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);
                     }
@@ -1768,7 +1768,7 @@ function loadDataSettings()
                     {
                         document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
                     }
-                    if(useupdatestateintervall == "true")
+                    if(useupdatestateintervall == true)
                     {
                         document.getElementById("chkUpdateStateIntervall").setAttribute("checked", true);
                         document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
@@ -1779,7 +1779,7 @@ function loadDataSettings()
                     }
                     text = document.getElementById('txtUpdateStateIntervallTimespan');
                     text.value=updatestatetimespan;
-                    if(useupdatelinks == "true")
+                    if(useupdatelinks == true)
                     {
                         document.getElementById("chkUseUpdateLinksIntervall").setAttribute("checked", true);
                         document.getElementById("chkUpdateLinksOnlyWhenActive").removeAttribute("disabled");
@@ -1790,13 +1790,13 @@ function loadDataSettings()
                         document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
                         document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
                     }
-                    if(useupdatelinksonlywhenactive == "true")
+                    if(useupdatelinksonlywhenactive == true)
                     {
                         document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("checked", true);
                     }
                     text = document.getElementById('txtUpdateLinksIntervallTimespan');
                     text.value=updatelinkstimespan;
-                    if(usepushservice == "true")
+                    if(usepushservice == true)
                     {
                         document.getElementById("chkUsePushService").setAttribute("checked", true);
                     }

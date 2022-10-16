@@ -508,9 +508,9 @@ export class Config
             {
                 stationIpAddress = this.oldConfig['EufyP2PData_' + stationSerial]['base_ip_address'];
             }
-            if(this.oldConfig['EufyP2PData_' + stationSerial]['udp_ports'] === undefined)
+            if(this.oldConfig['EufyP2PData_' + stationSerial]['udp_ports'] === undefined || this.oldConfig['EufyP2PData_' + stationSerial]['udp_ports'] == "")
             {
-                udpPort = 0;
+                udpPort = null;
             }
             else
             {
