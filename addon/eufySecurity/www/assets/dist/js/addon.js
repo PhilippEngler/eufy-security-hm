@@ -191,7 +191,7 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 
     card += `<div class="col"><div class="card mb-3">`;
     card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
-    card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="bi-gear" title="Einstellungen" onclick="showStationSettings('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
+    card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="bi-gear" title="Einstellungen" onclick="creatStationSettingsModal('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
     card += `</div>`;
     
     card += `<div class="card-body p-0"><div class="row g-0">`;
@@ -365,7 +365,7 @@ function createCardDevice(device)
     var card = "";
 
     card += `<div class="col"><div class="card">`;
-    card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;<i class="bi-gear" title="Einstellungen" onclick="showDeviceSettings('${device.serialNumber}')"></i></h5></span></div></div>`;
+    card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;<i class="bi-gear" title="Einstellungen" onclick="generateDeviceSettingsModal('${device.serialNumber}')"></i></h5></span></div></div>`;
 
     card += `<div class="card-body p-0"><div class="row g-0">`;
     card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
@@ -407,6 +407,149 @@ function getDeviceLastEventTime(time, url)
     {
         return "letzte Aufnahme nicht verfügbar";
     }
+}
+
+function generateDeviceSettingsModal(deviceId)
+{
+    var deviceModal = ``;
+    deviceModal += `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">`;
+    deviceModal += `<div class="modal-content">`;
+    deviceModal += `<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">`;
+    deviceModal += `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">`;
+    deviceModal += `<div class="" id="lblModalDeviceSettingsInfo">`;
+    deviceModal += `<span class="placeholder col-12 placeholder-lg"></span>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="row text-center">`;
+    deviceModal += `<div class="col"><span id="lblDeviceModel"><span class="placeholder col-6 placeholder-lg"></span></span></div>`;
+    deviceModal += `<div class="col"><span id="lblDeviceName"><span class="placeholder col-6 placeholder-lg"></span></span></div>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="row text-center mb-3">`;
+    deviceModal += `<div class="col"><span id="lblDeviceSerial"><span class="placeholder col-8 placeholder-lg"></span></span></div>`;
+    deviceModal += `<div class="col"><span id="lblDeviceInfo"><i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-battery text-muted" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="bi-thermometer-low text-muted" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span></span></span></div>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="card mb-3 collapse" id="cardDeviceCommonSettings">`;
+    deviceModal += `<h5 class="card-header">Allgemeines</h5>`;
+    deviceModal += `<div class="card-body">`;
+    deviceModal += `<div class="row">`;
+    deviceModal += `<div class="col col-6">`;
+    deviceModal += `<h5>Gerät aktiviert</h5>`;
+    deviceModal += `<div class="form-check form-switch">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceEnabled">`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceEnabled">Gerät aktiviert</label>`;
+    deviceModal += `</div></div>`;
+    deviceModal += `<div class="col col-6">`;
+    deviceModal += `<h5>Diebstahlerkennung</h5>`;
+    deviceModal += `<div class="form-check form-switch">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceAntitheftDetection">`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceAntitheftDetection">Diebstahlerkennung aktiviert</label>`;
+    deviceModal += `</div></div></div><hr />`;
+    deviceModal += `<h5>Status LED</h5>`;
+    deviceModal += `<div class="form-check form-switch">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceStatusLed">`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceStatusLed">Status LED aktiviert</label>`;
+    deviceModal += `</div></div></div>`;
+    deviceModal += `<div class="card mb-3 collapse" id="cardDevicePowerManagerSettings">`;
+    deviceModal += `<h5 class="card-header">Power Manager</h5>`;
+    deviceModal += `<div class="card-body">`;
+    deviceModal += `<h5>Arbeitsmodus</h5>`;
+    deviceModal += `<div class="form-check">`;
+    deviceModal += `<input class="form-check-input" type="radio" name="grpWorkingMode" id="rbDeviceWMOptimalAccu">`;
+    deviceModal += `<label class="form-check-label" for="rbDeviceWMOptimalAccu">optimale Akkulebensdauer</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="form-check">`;
+    deviceModal += `<input class="form-check-input" type="radio" name="grpWorkingMode" id="rbDeviceWMOptimalSurv">`;
+    deviceModal += `<label class="form-check-label" for="rbDeviceWMOptimalSurv">optimale Überwachung</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="form-check">`;
+    deviceModal += `<input class="form-check-input" type="radio" name="grpWorkingMode" id="rbDeviceWMCustom">`;
+    deviceModal += `<label class="form-check-label" for="rbDeviceWMCustom">Aufzeichnung anpassen</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div id="divDeviceCustomRecordingSettings">`;
+    deviceModal += `<hr />`;
+    deviceModal += `<h5>Benutzerdefinierte Einstellungen</h5>`;
+    deviceModal += `<div>`;
+    deviceModal += `<label for="rgDeviceCustomRecordingSettingsClipLength" class="form-label" id="lblDeviceCustomRecordingSettingsClipLength">Cliplänge</label>`;
+    deviceModal += `<input type="range" class="form-range" min="5" max="120" id="rgDeviceCustomRecordingSettingsClipLength">`;
+    deviceModal += `</div>`;
+    deviceModal += `<div>`;
+    deviceModal += `<label for="rgDeviceCustomRecordingSettingsRetriggerIntervall" class="form-label" id="lblDeviceCustomRecordingSettingsRetriggerIntervall">Intervall für erneutes Auslösen</label>`;
+    deviceModal += `<input type="range" class="form-range" min="5" max="60" id="rgDeviceCustomRecordingSettingsRetriggerIntervall">`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="form-check form-switch">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" name="grpDeviceCustomRecordingSettingsStoppWhenMotionEnds" id="chkDeviceCustomRecordingSettingsStoppWhenMotionEnds">`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceCustomRecordingSettingsStoppWhenMotionEnds">Clip frühzeitiger beenden wenn Bewegung stoppt</label>`;
+    deviceModal += `</div></div><hr />`;
+    deviceModal += `<h5>Energiequelle</h5>`;
+    deviceModal += `<label>zur Zeit genutzte Energiequelle: <span id="lblDevicePowerSource"></span></label>`;
+    deviceModal += `</div></div>`;
+    deviceModal += `<div class="card mb-3 collapse" id="cardDeviceVideoSettings">`;
+    deviceModal += `<h5 class="card-header">Videoeinstellungen</h5>`;
+    deviceModal += `<div class="card-body">`;
+    deviceModal += `<h5>Wasserzeichen</h5>`;
+    deviceModal += `<label class="mb-2" for="cbDeviceWatermark">Logo und Wasserzeichen</label>`;
+    deviceModal += `<select class="form-select mb-2" id="cbDeviceWatermark" aria-label="LogoWasserzeichen">`;
+    deviceModal += `<option value=0 selected>kein Wasserzeichen anzeigen</option>`;
+    deviceModal += `<option value=1>Zeitstempel anzeigen</option>`;
+    deviceModal += `<option value=2>Zeitstempel und Logo anzeigen</option>`;
+    deviceModal += `</select>`;
+    deviceModal += `<hr />`;
+    deviceModal += `<h5>Nachtsicht</h5>`;
+    deviceModal += `<div class="form-check form-switch" id="divDeviceAutoNightvision">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceAutoNightvision">`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceAutoNightvision">automatische Nachtsicht aktivieren</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div id="divDeviceNightvision">`;
+    deviceModal += `<label class="mb-2" for="cbDeviceNightvision">Logo und Wasserzeichen</label>`;
+    deviceModal += `<select class="form-select mb-2" id="cbDeviceNightvision" aria-label="Nachtsicht">`;
+    deviceModal += `<option value=0 selected>keine Nachtsicht</option>`;
+    deviceModal += `<option value=1>schwarz/weiß Nachtsicht</option>`;
+    deviceModal += `<option value=2>farbige Nachtsicht</option>`;
+    deviceModal += `</select>`;
+    deviceModal += `</div></div></div>`;
+    deviceModal += `<div class="card mb-3 collapse" id="cardDeviceAudioSettings">`;
+    deviceModal += `<h5 class="card-header">Audioeinstellungen</h5>`;
+    deviceModal += `<div class="card-body">`;
+    deviceModal += `<h5>Mikrofon</h5>`;
+    deviceModal += `<div class="form-check form-switch">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceMicrophoneEnable">`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceMicrophoneEnable">Mikrofon aktivieren</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="form-check form-switch" id="divDeviceAudioRecording">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceAudioRecording" disabled>`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceAudioRecording">Audioaufzeichnung aktivieren</label>`;
+    deviceModal += `</div><hr />`;
+    deviceModal += `<h5>Lautsprecher</h5>`;
+    deviceModal += `<div class="form-check form-switch">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceSpeakerEnable">`;
+    deviceModal += `<label class="form-check-label" for="chkDeviceSpeakerEnable">Lautsprecher aktivieren</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div id="divDeviceSpeakerVolume">`;
+    deviceModal += `<label for="rgDeviceSpeakerVolume" class="form-label" id="lblDeviceSpeakerVolume">Lautstärke:</label>`;
+    deviceModal += `<input type="range" class="form-range" min="1" max="3" id="rgDeviceSpeakerVolume">`;
+    deviceModal += `</div></div></div>`;
+    deviceModal += `<div class="card collapse" id="cardDeviceNotificationSettings">`;
+    deviceModal += `<h5 class="card-header">Benachrichtigungen</h5>`;
+    deviceModal += `<div class="card-body">`;
+    deviceModal += `<h5>Art der Benachrichtigung</h5>`;
+    deviceModal += `<div class="form-check">`;
+    deviceModal += `<input class="form-check-input" type="radio" name="grpNotificationType" id="rbDeviceNTMostEfficient">`;
+    deviceModal += `<label class="form-check-label" for="rbDeviceNTMostEfficient">am effizientesten</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="form-check">`;
+    deviceModal += `<input class="form-check-input" type="radio" name="grpNotificationType" id="rbDeviceNTIncludeThumbnail" checked>`;
+    deviceModal += `<label class="form-check-label" for="rbDeviceNTIncludeThumbnail">mit Miniaturansicht</label>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="form-check">`;
+    deviceModal += `<input class="form-check-input" type="radio" name="grpNotificationType" id="rbDeviceNTFullEffect" checked>`;
+    deviceModal += `<label class="form-check-label" for="rbDeviceNTFullEffect">Komplett</label>`;
+    deviceModal += `</div></div></div></div>`;
+    deviceModal += `<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">`;
+    deviceModal += `<button type="button" id="btnCloseModalDeviceSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>`;
+    deviceModal += `</div></div></div>`;
+    document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
+    showDeviceSettings(deviceId);
 }
 
 function showDeviceSettings(deviceId)
@@ -706,6 +849,86 @@ function showDeviceSettings(deviceId)
     };
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
+}
+
+function creatStationSettingsModal(stationId)
+{
+    var stationModal = ``;
+    stationModal += `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">`;
+	stationModal += `<div class="modal-content">`;
+	stationModal += `<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">`;
+	stationModal += `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
+	stationModal += `<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">`;
+	stationModal += `<div class="" id="lblModalStationSettingsInfo">`;
+	stationModal += `<span class="placeholder col-12 placeholder-lg"></span>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="row text-center">`;
+	stationModal += `<div class="col"><span id="lblStationModel"><span class="placeholder col-6 placeholder-lg"></span></span></div>`;
+	stationModal += `<div class="col"><span id="lblStationName"><span class="placeholder col-6 placeholder-lg"></span></span></div>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="row text-center mb-3">`;
+	stationModal += `<div class="col"><span id="lblStationSerial"><span class="placeholder col-8 placeholder-lg"></span></span></div>`;
+	stationModal += `<div class="col"><span id="lblStationFirmware"><i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span></span></div>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="card mb-3 collapse" id="cardStationStorageSettings">`;
+	stationModal += `<h5 class="card-header">Speicher</h5>`;
+	stationModal += `<div class="card-body">`;
+	stationModal += `<label>Speicherbelegung:</label>`;
+	stationModal += `</div></div>`;
+	stationModal += `<div class="card mb-3 collapse" id="cardStationAudioSettings">`;
+	stationModal += `<h5 class="card-header">Audioeinstellungen</h5>`;
+	stationModal += `<div class="card-body">`;
+	stationModal += `<h5>Alarmton</h5>`;
+	stationModal += `<div>`;
+	stationModal += `<label class="mb-2" for="cbStationAlarmTone">Alarmton auswählen</label>`;
+	stationModal += `<select class="form-select mb-2" id="cbStationAlarmTone" aria-label="Alarmton">`;
+	stationModal += `<option value=0 selected>Alarmton auswählen</option>`;
+	stationModal += `<option value=1>Alarmton 1</option>`;
+	stationModal += `<option value=2>Alarmton 2</option>`;
+	stationModal += `</select>`;
+	stationModal += `</div>`;
+	stationModal += `<div>`;
+	stationModal += `<label for="rgStationAlarmVolume" class="form-label">Lautstärke Alarmton:</label>`;
+	stationModal += `<input type="range" class="form-range" min="1" max="26" id="rgStationAlarmVolume">`;
+	stationModal += `</div>`;
+	stationModal += `<hr>`;
+	stationModal += `<h5>Eingabeaufforderung</h5>`;
+	stationModal += `<div>`;
+	stationModal += `<label for="rgStationPromtVolume" class="form-label">Lautstärke Eingabeaufforderung:</label>`;
+	stationModal += `<input type="range" class="form-range" min="0" max="5" id="rgStationPromtVolume">`;
+	stationModal += `</div></div></div>`;
+	stationModal += `<div class="card collapse" id="cardStationNofificationSettings">`;
+	stationModal += `<h5 class="card-header">Benachrichtigungen</h5>`;
+	stationModal += `<div class="card-body">`;
+	stationModal += `<h5>Pushbenachrichtigungen</h5>`;
+	stationModal += `<label class="mb-2" for="chkStationSwitchToSchedule">Pushbenachrichtigungen senden, bei:</label>`;
+	stationModal += `<div class="form-check form-switch">`;
+	stationModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkStationSwitchToSchedule">`;
+	stationModal += `<label class="form-check-label" for="chkStationSwitchToSchedule">Moduswechsel in Modus Zeitplan</label>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="form-check form-switch">`;
+	stationModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkStationSwitchToGeofencing">`;
+	stationModal += `<label class="form-check-label" for="chkStationSwitchToGeofencing">Moduswechsel in Geofencing</label>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="form-check form-switch">`;
+	stationModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkStationSwitchByApp">`;
+	stationModal += `<label class="form-check-label" for="chkStationSwitchByApp">Moduswechsel durch die App</label>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="form-check form-switch">`;
+	stationModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkStationSwitchByKeypad">`;
+	stationModal += `<label class="form-check-label" for="chkStationSwitchByKeypad">Moduswechsel durch das Keypad</label>`;
+	stationModal += `</div>`;
+	stationModal += `<div class="form-check form-switch">`;
+	stationModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkStationStartAlarmDelay">`;
+	stationModal += `<label class="form-check-label" for="chkStationStartAlarmDelay">Starten der Alarmverzögerung</label>`;
+	stationModal += `</div></div></div></div>`;
+	stationModal += `<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">`;
+	stationModal += `<button type="button" id="btnCloseModalStationSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>`;
+	stationModal += `</div></div></div>`;
+    document.getElementById("modalStationSettings").innerHTML = stationModal;
+    showStationSettings(stationId);
 }
 
 function showStationSettings(stationId)
@@ -1405,7 +1628,7 @@ function loadStationsSettings()
 
 function loadDataSettings()
 {
-    var xmlHttp, objResp, configData, username, password, accountcountry, accountlanguage, apiusehttp, apiporthttp, apiusehttps, apiporthttps, apikeyhttps, apicerthttps, apiconnectiontype, apiuseudplocalstaticports, apiudpports, apiusesystemvariables, apicameradefaultimage, apicameradefaultvideo, apiuseupdatestateevent, apiuseupdatestateintervall, apiupdatestatetimespan, apiuseupdatelinks, apiuseupdatelinksonlywhenactive, apiupdatelinkstimespan, apiusepushservice, apiloglevel;
+    var xmlHttp, objResp, configData, username, password, country, language, usehttp, porthttp, usehttps, porthttps, keyhttps, certhttps, connectiontype, useudplocalstaticports, usesystemvariables, cameradefaultimage, cameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevel;
     var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.overrideMimeType('application/json');
@@ -1418,54 +1641,51 @@ function loadDataSettings()
                 objResp = JSON.parse(this.responseText);
                 if(objResp.success == true)
                 {
-                    for(configData in objResp.data)
-                    {
-                        username = objResp.data[configData].username;
-                        password = objResp.data[configData].password;
-                        accountcountry = objResp.data[configData].country;
-                        accountlanguage = objResp.data[configData].language;
-                        apiusehttp = objResp.data[configData].api_http_active;
-                        apiporthttp = objResp.data[configData].api_http_port;
-                        apiusehttps = objResp.data[configData].api_https_active;
-                        apiporthttps = objResp.data[configData].api_https_port;
-                        apikeyhttps = objResp.data[configData].api_https_key_file;
-                        apicerthttps = objResp.data[configData].api_https_cert_file;
-                        apiconnectiontype = objResp.data[configData].api_connection_type;
-                        apiuseudplocalstaticports = objResp.data[configData].api_udp_local_static_ports_active;
-                        apiudpports = objResp.data[configData].api_udp_local_static_ports;
-                        apiusesystemvariables = objResp.data[configData].api_use_system_variables;
-                        apicameradefaultimage = objResp.data[configData].api_camera_default_image;
-                        apicameradefaultvideo = objResp.data[configData].api_camera_default_video;
-                        apiuseupdatestateevent = objResp.data[configData].api_use_update_state_event;
-                        apiuseupdatestateintervall = objResp.data[configData].api_use_update_state_intervall;
-                        apiupdatestatetimespan = objResp.data[configData].api_update_state_timespan;
-                        apiuseupdatelinks = objResp.data[configData].api_use_update_links;
-                        apiuseupdatelinksonlywhenactive =objResp.data[configData].api_use_update_links_only_when_active;
-                        apiupdatelinkstimespan = objResp.data[configData].api_update_links_timespan;
-                        apiusepushservice = objResp.data[configData].api_use_pushservice;
-                        apiloglevel = objResp.data[configData].api_log_level;
-                    }
+                    username = objResp.data.eMail;
+                    password = objResp.data.password;
+                    country = objResp.data.country;
+                    language = objResp.data.language;
+                    usehttp = objResp.data.httpActive;
+                    porthttp = objResp.data.httpPort;
+                    usehttps = objResp.data.httpsActive;
+                    porthttps = objResp.data.httpsPort;
+                    keyhttps = objResp.data.httpsPKeyFile;
+                    certhttps = objResp.data.httpsCertFile;
+                    connectiontype = objResp.data.connectionTypeP2p;
+                    useudplocalstaticports = objResp.data.localStaticUdpPortsActive;
+                    usesystemvariables = objResp.data.systemVariableActive;
+                    cameradefaultimage = objResp.data.cameraDefaultImage;
+                    cameradefaultvideo = objResp.data.cameraDefaultVideo;
+                    useupdatestateevent = objResp.data.stateUpdateEventActive;
+                    useupdatestateintervall = objResp.data.stateUpdateIntervallActive;
+                    updatestatetimespan = objResp.data.stateUpdateIntervallTimespan;
+                    useupdatelinks = objResp.data.updateLinksActive;
+                    useupdatelinksonlywhenactive =objResp.data.updateLinksOnlyWhenArmed;
+                    updatelinkstimespan = objResp.data.updateLinksTimespan;
+                    usepushservice = objResp.data.pushServiceActive;
+                    loglevel = objResp.data.logLevel;
+                    
                     var text = document.getElementById('txtUsername');
                     text.value = username;
                     text = document.getElementById('txtPassword');
                     text.value = password;
-                    if(accountcountry == undefined || accountcountry == "" )
+                    if(country == undefined || country == "" )
                     {
                         document.getElementById("cbCountry").selectedIndex = "";
                     }
                     else
                     {
-                        document.getElementById("cbCountry").value = accountcountry;
+                        document.getElementById("cbCountry").value = country;
                     }
-                    if(accountlanguage == undefined || accountlanguage == "" )
+                    if(language == undefined || language == "" )
                     {
                         document.getElementById("cbLanguage").selectedIndex = "";
                     }
                     else
                     {
-                        document.getElementById("cbLanguage").value = accountlanguage;
+                        document.getElementById("cbLanguage").value = language;
                     }
-                    if(apiusehttp == "true")
+                    if(usehttp == "true")
                     {
                         document.getElementById("chkUseHttp").setAttribute("checked", true);
                         document.getElementById("txtPortHttp").removeAttribute("disabled");
@@ -1475,8 +1695,8 @@ function loadDataSettings()
                         document.getElementById("txtPortHttp").setAttribute("disabled", true);
                     }
                     text = document.getElementById('txtPortHttp');
-                    text.value = apiporthttp;
-                    if(apiusehttps == "true")
+                    text.value = porthttp;
+                    if(usehttps == "true")
                     {
                         document.getElementById("chkUseHttps").setAttribute("checked", true);
                         document.getElementById("txtPortHttps").removeAttribute("disabled");
@@ -1490,24 +1710,24 @@ function loadDataSettings()
                         document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
                     }
                     text = document.getElementById('txtPortHttps');
-                    text.value = apiporthttps;
+                    text.value = porthttps;
                     text = document.getElementById('txtHttpsKeyFile');
-                    text.value = apikeyhttps;
+                    text.value = keyhttps;
                     text = document.getElementById('txtHttpsCertFile');
-                    text.value = apicerthttps;
-                    if(apiconnectiontype == undefined || (apiconnectiontype != "0" && apiconnectiontype != "1" && apiconnectiontype != "2"))
+                    text.value = certhttps;
+                    if(connectiontype == undefined || (connectiontype != "0" && connectiontype != "1" && connectiontype != "2"))
                     {
                         document.getElementById("cbConnectionType").selectedIndex = "";
                     }
                     else
                     {
-                        document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(apiconnectiontype)) + 1;
+                        document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(connectiontype)) + 1;
                     }
-                    if(apiusesystemvariables == "true")
+                    if(usesystemvariables == "true")
                     {
                         document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
                     }
-                    if(apiuseudplocalstaticports == "true")
+                    if(useudplocalstaticports == "true")
                     {
                         document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
                     }
@@ -1519,9 +1739,9 @@ function loadDataSettings()
                         if(element[i].name.startsWith("udpPortsStation"))
                         {
                             var tempSerial = element[i].name.replace("udpPortsStation", "");
-                            var tempPorts = objResp.data[configData]["api_udp_local_static_ports_" + tempSerial];
+                            var tempPorts = objResp.data["localStaticUdpPort" + tempSerial];
                             text = document.getElementById('txtUdpPortsStation' + tempSerial);
-                            if(tempPorts == undefined || tempPorts == "undefined")
+                            if(tempPorts == undefined || tempPorts == null || tempPorts == "undefined")
                             {
                                 text.value = "";
                             }
@@ -1530,17 +1750,17 @@ function loadDataSettings()
                                 text.value = tempPorts;
                             }
                             changeValue("useUdpStaticPorts");
-                            if(apiuseudplocalstaticports == "false")
+                            if(useudplocalstaticports == "false")
                             {
                                 document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
                             }
                         }
                     }
                     text = document.getElementById('txtDefaultImagePath');
-                    text.value = apicameradefaultimage;
+                    text.value = cameradefaultimage;
                     text = document.getElementById('txtDefaultVideoPath');
-                    text.value = apicameradefaultvideo;
-                    if(apiuseupdatestateevent == "true")
+                    text.value = cameradefaultvideo;
+                    if(useupdatestateevent == "true")
                     {
                         document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);
                     }
@@ -1548,7 +1768,7 @@ function loadDataSettings()
                     {
                         document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
                     }
-                    if(apiuseupdatestateintervall == "true")
+                    if(useupdatestateintervall == "true")
                     {
                         document.getElementById("chkUpdateStateIntervall").setAttribute("checked", true);
                         document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
@@ -1558,8 +1778,8 @@ function loadDataSettings()
                         document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
                     }
                     text = document.getElementById('txtUpdateStateIntervallTimespan');
-                    text.value=apiupdatestatetimespan;
-                    if(apiuseupdatelinks == "true")
+                    text.value=updatestatetimespan;
+                    if(useupdatelinks == "true")
                     {
                         document.getElementById("chkUseUpdateLinksIntervall").setAttribute("checked", true);
                         document.getElementById("chkUpdateLinksOnlyWhenActive").removeAttribute("disabled");
@@ -1570,25 +1790,25 @@ function loadDataSettings()
                         document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
                         document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
                     }
-                    if(apiuseupdatelinksonlywhenactive == "true")
+                    if(useupdatelinksonlywhenactive == "true")
                     {
                         document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("checked", true);
                     }
                     text = document.getElementById('txtUpdateLinksIntervallTimespan');
-                    text.value=apiupdatelinkstimespan;
-                    if(apiusepushservice == "true")
+                    text.value=updatelinkstimespan;
+                    if(usepushservice == "true")
                     {
                         document.getElementById("chkUsePushService").setAttribute("checked", true);
                     }
-                    if(apiloglevel == undefined || !(apiloglevel == "0" || apiloglevel == "1" || apiloglevel == "2" || apiloglevel == "3"))
+                    if(loglevel == undefined || !(loglevel == "0" || loglevel == "1" || loglevel == "2" || loglevel == "3"))
                     {
                         document.getElementById("cbLogLevel").selectedIndex = "";
                     }
                     else
                     {
-                        document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(apiloglevel)) + 1;
+                        document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(loglevel)) + 1;
                     }
-                    checkLogLevel(apiloglevel);
+                    checkLogLevel(loglevel);
                     document.getElementById("resultLoading").innerHTML = "";
                     activateUIElements();
                     enableUIElements();
@@ -1635,9 +1855,9 @@ function loadSystemVariables()
                     sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
                     for(systemVariable in objResp.data)
                     {
-                        sysVarName = objResp.data[systemVariable].sysVar_name;
-                        sysVarInfo = objResp.data[systemVariable].sysVar_info;
-                        sysVarAvailable = objResp.data[systemVariable].sysVar_available;
+                        sysVarName = objResp.data[systemVariable].sysVarName;
+                        sysVarInfo = objResp.data[systemVariable].sysVarInfo;
+                        sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
                         if(sysVarAvailable==true)
                         {
                             sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="angelegt"></i></th>`;
@@ -2254,7 +2474,7 @@ function loadDataInfo(showLoading)
             objResp = JSON.parse(this.responseText);
             if(objResp.success == true)
             {
-                info = `eufy Security AddOn: ${objResp.api_version}<br />eufy Security Client: ${objResp.eufy_security_client_version}<br />HomeMatic API: ${objResp.homematic_api_version}<br />Webseite: 1.6.4`;
+                info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 1.6.4`;
                 document.getElementById("versionInfo").innerHTML = info;
             }
             else
