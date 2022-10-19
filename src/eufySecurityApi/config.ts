@@ -31,8 +31,13 @@ export class Config
             }
         }
         this.loadConfigJson();
+        this.updateConfig();
     }
 
+    /**
+     * Checks if config must be migrated to json.
+     * @returns true if migration to json is needed, otherwise false.
+     */
     private isMigrationNeeded() : boolean
     {
         if(!existsSync('./config.json') && existsSync('./config.ini'))
@@ -45,6 +50,10 @@ export class Config
         }
     }
 
+    /**
+     * Checks if config.json is available.
+     * @returns true if config.json is available, otherwise false.
+     */
     private isConfigFileAvailable() : boolean
     {
         if(existsSync('./config.json'))
@@ -60,7 +69,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 11;
+        return 12;
     }
 
     /**
@@ -83,6 +92,9 @@ export class Config
         }
     }
 
+    /**
+     * Loads the config from the json-file.
+     */
     private loadConfigJson() : void
     {
         try
@@ -387,6 +399,10 @@ export class Config
         }
     }
 
+    /**
+     * Create a empty config object with some default settings.
+     * @returns The config object.
+     */
     private createEmptyConfigJson() : any
     {
         var config = JSON.parse(`{}`);
@@ -401,7 +417,7 @@ export class Config
         var pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        var apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false, "logLevel": 0};
+        var apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false, "logLevel": 0};
         config.apiConfig = apiConfig;
 
         var stations : [] = [];
@@ -410,6 +426,9 @@ export class Config
         return config;
     }
 
+    /**
+     * Migrates the old config.ini to the new config.json and deletes the config.ini on exit.
+     */
     private migrateConfigToJson() : void
     {
         this.logger.logInfoBasic("Migrating settings to json...")
@@ -456,6 +475,8 @@ export class Config
         this.configJson.apiConfig.systemVariableActive = configIni['EufyAPIServiceData']['api_use_system_variables'];
         this.configJson.apiConfig.cameraDefaultImage = configIni['EufyAPIServiceData']['api_camera_default_image'];
         this.configJson.apiConfig.cameraDefaultVideo = configIni['EufyAPIServiceData']['api_camera_default_video'];
+        this.configJson.apiConfig.updateCloudInfoIntervall = 10;
+        this.configJson.apiConfig.updateDeviceDataIntervall = 10;
         this.configJson.apiConfig.stateUpdateEventActive = configIni['EufyAPIServiceData']['api_update_state_event_active'];
         this.configJson.apiConfig.stateUpdateIntervallActive = configIni['EufyAPIServiceData']['api_update_state_intervall_active'];
         this.configJson.apiConfig.stateUpdateIntervallTimespan = Number.parseInt(configIni['EufyAPIServiceData']['api_update_state_timespan']);
@@ -475,6 +496,50 @@ export class Config
         this.oldConfig = configIni;
     }
 
+    /**
+     * Update the config.json file to the most recent version.
+     * @returns true, if the config was updated, otherwise false.
+     */
+    private updateConfig() : boolean
+    {
+        if(this.configJson.configVersion < this.getConfigFileTemplateVersion())
+        {
+            var updated = false;
+            if(this.configJson.configVersion == 11)
+            {
+                this.logger.logInfoBasic("Configfile needs Stage2 update to version 12...");
+                if(this.configJson.apiConfig.updateCloudInfoIntervall == undefined)
+                {
+                    this.logger.logInfoBasic(" adding 'updateCloudInfoIntervall'.");
+                    this.configJson.apiConfig.updateCloudInfoIntervall = 10;
+                    updated = true;
+                }
+                if(this.configJson.apiConfig.updateDeviceDataIntervall == undefined)
+                {
+                    this.logger.logInfoBasic(" adding 'updateDeviceDataIntervall'.");
+                    this.configJson.apiConfig.updateDeviceDataIntervall = 10;
+                    updated = true;
+                }
+            }
+            if(updated == true)
+            {
+                this.configJson.configVersion = this.getConfigFileTemplateVersion();
+                this.hasChanged = true;
+                this.writeConfig();
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if the old config.ini contains settings for a given station.
+     * @param stationSerial The serial of the station the check is to perform.
+     * @returns true, if migrarion is needed, otherwise no.
+     */
     private checkStationMigrationToJsonIsNeeded(stationSerial : string) : boolean
     {
         if(this.oldConfig === undefined || this.oldConfig['EufyP2PData_' + stationSerial] === undefined)
@@ -487,6 +552,11 @@ export class Config
         }
     }
 
+    /**
+     * Migrate a given station from the old config.ini to the new config.json.
+     * @param stationSerial The serial of the station the migration is to perform.
+     * @returns 
+     */
     private migrateStationToJson(stationSerial : string) : any
     {
         if(this.oldConfig !== undefined)
@@ -1064,6 +1134,64 @@ export class Config
         if(this.configJson.apiConfig.cameraDefaultVideo != cameraDefaultVideo)
         {
             this.configJson.apiConfig.cameraDefaultVideo = cameraDefaultVideo;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the timespan intervall for retrieving data from the cloud.
+     * @returns The timespan duration as number.
+     */
+    public getUpdateCloudInfoIntervall() : number
+    {
+        if(this.configJson.apiConfig.updateCloudInfoIntervall != undefined)
+        {
+            return this.configJson.apiConfig.updateCloudInfoIntervall;
+        }
+        else
+        {
+            return 10;
+        }
+    }
+
+    /**
+     * Set the timespan intervall for retrieving data from the cloud.
+     * @param updateCloudInfoIntervall The timespan duration as number.
+     */
+    public setUpdateCloudInfoIntervall(updateCloudInfoIntervall : number) : void
+    {
+        if(this.configJson.apiConfig.updateCloudInfoIntervall != updateCloudInfoIntervall)
+        {
+            this.configJson.apiConfig.updateCloudInfoIntervall = updateCloudInfoIntervall;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the timespan intervall for retrieving device data.
+     * @returns The timespan duration as number.
+     */
+    public getUpdateDeviceDataIntervall() : number
+    {
+        if(this.configJson.apiConfig.updateDeviceDataIntervall != undefined)
+        {
+            return this.configJson.apiConfig.updateDeviceDataIntervall;
+        }
+        else
+        {
+            return 10;
+        }
+    }
+
+    /**
+     * Set the timespan intervall for retrieving device data.
+     * @param updateDeviceDataIntervall The timespan duration as number.
+     */
+    public setUpdateDeviceDataIntervall(updateDeviceDataIntervall : number) : void
+    {
+        if(this.configJson.apiConfig.updateDeviceDataIntervall != updateDeviceDataIntervall)
+        {
+            this.configJson.apiConfig.updateDeviceDataIntervall = updateDeviceDataIntervall;
             this.hasChanged = true;
         }
     }
