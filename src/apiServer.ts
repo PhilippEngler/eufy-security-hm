@@ -703,14 +703,14 @@ function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, h
         {
             var resJSON = JSON.parse(readFileSync('www/apiPorts.json', 'utf-8'));
 
-            if(api.getHttpActive().toString() != resJSON.useHttp.toString() || api.getHttpPort().toString() != resJSON.httpPort.toString() || api.getHttpsActive().toString() != resJSON.useHttps.toString() || api.getHttpsPort().toString() != resJSON.httpsPort.toString())
+            if(useHttp !== resJSON.useHttp as boolean || httpPort !== Number.parseInt(resJSON.httpPort) || useHttps !== resJSON.useHttps as boolean || httpsPort !== Number.parseInt(resJSON.httpsPort))
             {
-                writeFileSync('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
+                writeFileSync('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
             }
         }
         else
         {
-            writeFileSync('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
+            writeFileSync('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
         }
     }
     catch (ENOENT)
