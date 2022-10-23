@@ -507,7 +507,7 @@ function generateDeviceSettingsModal(deviceId)
     deviceModal += `<label class="form-check-label" for="chkDeviceAutoNightvision">automatische Nachtsicht aktivieren</label>`;
     deviceModal += `</div>`;
     deviceModal += `<div id="divDeviceNightvision">`;
-    deviceModal += `<label class="mb-2" for="cbDeviceNightvision">Logo und Wasserzeichen</label>`;
+    deviceModal += `<label class="mb-2" for="cbDeviceNightvision">Art der Nachtsicht</label>`;
     deviceModal += `<select class="form-select mb-2" id="cbDeviceNightvision" aria-label="Nachtsicht">`;
     deviceModal += `<option value=0 selected>keine Nachtsicht</option>`;
     deviceModal += `<option value=1>schwarz/weiß Nachtsicht</option>`;
@@ -715,13 +715,13 @@ function showDeviceSettingsModal(deviceId)
                         switch (objResp.data.watermark)
                         {
                             case 0:
-                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
+                                document.getElementById("cbDeviceWatermark").selectedIndex = Number.parseInt(objResp.data.watermark);
                                 break;
                             case 1:
-                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
+                                document.getElementById("cbDeviceWatermark").selectedIndex = Number.parseInt(objResp.data.watermark);
                                 break;
                             case 2:
-                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
+                                document.getElementById("cbDeviceWatermark").selectedIndex = Number.parseInt(objResp.data.watermark);
                                 break;
                             default:
                                 document.getElementById("cbDeviceWatermark").selectedIndex = 0
@@ -894,7 +894,6 @@ function showDeviceSettingsModal(deviceId)
 
 function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 {
-    alert(`${location.protocol}//${location.hostname}:${port}/setDeviceProperty/${deviceId}/${propertyName}/${propertyValue}`);
     var xmlhttp, objResp;
     var url = `${location.protocol}//${location.hostname}:${port}/setDeviceProperty/${deviceId}/${propertyName}/${propertyValue}`;
     xmlhttp = new XMLHttpRequest();
@@ -1100,10 +1099,10 @@ function showStationSettingsModal(stationId)
                     {
                         document.getElementById("cbStationAlarmTone").selectedIndex = (Number.parseInt(objResp.data.alarmTone) + 1);
                     }
-                    document.getElementById("rgStationAlarmVolume").value = objResp.data.alarmVolume;
+                    document.getElementById("rgStationAlarmVolume").value = Number.parseInt(objResp.data.alarmVolume);
                     updateSliderValue("lblStationAlarmVolume", document.getElementById("rgStationAlarmVolume").value);
                     document.getElementById("rgStationAlarmVolume").oninput = function(){ updateSliderValue("lblStationAlarmVolume", document.getElementById("rgStationAlarmVolume").value); };
-                    document.getElementById("rgStationPromtVolume").value = objResp.data.promptVolume;
+                    document.getElementById("rgStationPromtVolume").value = Number.parseInt(objResp.data.promptVolume);
                     updateSliderValue("lblStationPromtVolume", document.getElementById("rgStationPromtVolume").value);
                     document.getElementById("rgStationPromtVolume").oninput = function(){ updateSliderValue("lblStationPromtVolume", document.getElementById("rgStationPromtVolume").value); };
 
@@ -1194,8 +1193,7 @@ function showStationSettingsModal(stationId)
 
 function changeStationProperty(stationId, stationName, propertyName, propertyValue)
 {
-    alert(`${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}/${propertyValue}`);
-    /*var xmlhttp, objResp;
+    var xmlhttp, objResp;
     var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}/${propertyValue}`;
     xmlhttp = new XMLHttpRequest();
     xmlhttp.overrideMimeType('application/json');
@@ -1226,7 +1224,7 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
         }
     };
     xmlhttp.open("GET", url, true);
-    xmlhttp.send();*/
+    xmlhttp.send();
 }
 //#endregion
 
