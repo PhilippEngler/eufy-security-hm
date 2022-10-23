@@ -67,7 +67,7 @@ function getAPIPort(page)
                 objResp = JSON.parse(this.responseText);
                 if(location.protocol == "http:")
                 {
-                    if(objResp.useHttp == "true" && objResp.httpPort !== undefined)
+                    if(objResp.useHttp == true && objResp.httpPort !== undefined)
                     {
                         port = objResp.httpPort;
                         document.getElementById("loadApiSettingsError").innerHTML = "";
@@ -77,7 +77,7 @@ function getAPIPort(page)
                 }
                 else
                 {
-                    if(objResp.useHttps == "true" && objResp.httpsPort !== undefined)
+                    if(objResp.useHttps == true && objResp.httpsPort !== undefined)
                     {
                         port = objResp.httpsPort;
                         document.getElementById("loadApiSettingsError").innerHTML = "";
@@ -157,23 +157,23 @@ function getGuardModeAsString(guardMode)
 {
     switch (guardMode)
     {
-        case "0":
+        case 0:
             return "abwesend";
-        case "1":
+        case 1:
             return "zu Hause";
-        case "2":
+        case 2:
             return "Zeitplan";
-        case "3":
+        case 3:
             return "Benutzerdefiniert 1";
-        case "4":
+        case 4:
             return "Benutzerdefiniert 2";
-        case "5":
+        case 5:
             return "Benutzerdefiniert 3";
-        case "6":
+        case 6:
             return "ausgeschaltet";
-        case "47":
+        case 47:
             return "Geofencing";
-        case "63":
+        case 63:
             return "deaktiviert";
         default:
             return "unbekannt";
@@ -470,14 +470,14 @@ function generateDeviceSettingsModal(deviceId)
     deviceModal += `<hr />`;
     deviceModal += `<h5>Benutzerdefinierte Einstellungen</h5>`;
     deviceModal += `<div>`;
-    deviceModal += `<label for="rgDeviceCustomRecordingSettingsClipLength" class="form-label" id="lblDeviceCustomRecordingSettingsClipLength">Cliplänge</label>`;
-    deviceModal += `<input type="range" class="form-range" min="5" max="120" id="rgDeviceCustomRecordingSettingsClipLength">`;
+    deviceModal += `<label for="rgDeviceCustomRecordingSettingsClipLength" class="form-label mb-0" id="lblDeviceCustomRecordingSettingsClipLength">Cliplänge:</label>`;
+    deviceModal += `<input type="range" class="form-range mt-0" min="5" max="120" id="rgDeviceCustomRecordingSettingsClipLength">`;
     deviceModal += `</div>`;
     deviceModal += `<div>`;
-    deviceModal += `<label for="rgDeviceCustomRecordingSettingsRetriggerIntervall" class="form-label" id="lblDeviceCustomRecordingSettingsRetriggerIntervall">Intervall für erneutes Auslösen</label>`;
-    deviceModal += `<input type="range" class="form-range" min="5" max="60" id="rgDeviceCustomRecordingSettingsRetriggerIntervall">`;
+    deviceModal += `<label for="rgDeviceCustomRecordingSettingsRetriggerIntervall" class="form-label mb-0" id="lblDeviceCustomRecordingSettingsRetriggerIntervall">Intervall für erneutes Auslösen:</label>`;
+    deviceModal += `<input type="range" class="form-range mt-0" min="5" max="60" id="rgDeviceCustomRecordingSettingsRetriggerIntervall">`;
     deviceModal += `</div>`;
-    deviceModal += `<div class="form-check form-switch">`;
+    deviceModal += `<div class="form-check form-switch mt-2">`;
     deviceModal += `<input class="form-check-input" type="checkbox" role="switch" name="grpDeviceCustomRecordingSettingsStoppWhenMotionEnds" id="chkDeviceCustomRecordingSettingsStoppWhenMotionEnds">`;
     deviceModal += `<label class="form-check-label" for="chkDeviceCustomRecordingSettingsStoppWhenMotionEnds">Clip frühzeitiger beenden wenn Bewegung stoppt</label>`;
     deviceModal += `</div></div><hr />`;
@@ -488,12 +488,18 @@ function generateDeviceSettingsModal(deviceId)
     deviceModal += `<h5 class="card-header">Videoeinstellungen</h5>`;
     deviceModal += `<div class="card-body">`;
     deviceModal += `<h5>Wasserzeichen</h5>`;
+    deviceModal += `<div class="collapse" id="divDeviceWatermarkSelect">`;
     deviceModal += `<label class="mb-2" for="cbDeviceWatermark">Logo und Wasserzeichen</label>`;
     deviceModal += `<select class="form-select mb-2" id="cbDeviceWatermark" aria-label="LogoWasserzeichen">`;
     deviceModal += `<option value=0 selected>kein Wasserzeichen anzeigen</option>`;
     deviceModal += `<option value=1>Zeitstempel anzeigen</option>`;
     deviceModal += `<option value=2>Zeitstempel und Logo anzeigen</option>`;
     deviceModal += `</select>`;
+    deviceModal += `</div>`;
+    deviceModal += `<div class="form-check form-switch collapse" id="divDeviceWatermarkCheck">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceWatermark">`;
+    deviceModal += `<label class="form-check-label" for="chkWatermark">Logo und Wasserzeichen</label>`;
+    deviceModal += `</div>`;
     deviceModal += `<hr />`;
     deviceModal += `<h5>Nachtsicht</h5>`;
     deviceModal += `<div class="form-check form-switch" id="divDeviceAutoNightvision">`;
@@ -516,8 +522,8 @@ function generateDeviceSettingsModal(deviceId)
     deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceMicrophoneEnable">`;
     deviceModal += `<label class="form-check-label" for="chkDeviceMicrophoneEnable">Mikrofon aktivieren</label>`;
     deviceModal += `</div>`;
-    deviceModal += `<div class="form-check form-switch" id="divDeviceAudioRecording">`;
-    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceAudioRecording" disabled>`;
+    deviceModal += `<div class="form-check form-switch collapse" id="divDeviceAudioRecording">`;
+    deviceModal += `<input class="form-check-input" type="checkbox" role="switch" id="chkDeviceAudioRecording">`;
     deviceModal += `<label class="form-check-label" for="chkDeviceAudioRecording">Audioaufzeichnung aktivieren</label>`;
     deviceModal += `</div><hr />`;
     deviceModal += `<h5>Lautsprecher</h5>`;
@@ -526,8 +532,8 @@ function generateDeviceSettingsModal(deviceId)
     deviceModal += `<label class="form-check-label" for="chkDeviceSpeakerEnable">Lautsprecher aktivieren</label>`;
     deviceModal += `</div>`;
     deviceModal += `<div id="divDeviceSpeakerVolume">`;
-    deviceModal += `<label for="rgDeviceSpeakerVolume" class="form-label" id="lblDeviceSpeakerVolume">Lautstärke:</label>`;
-    deviceModal += `<input type="range" class="form-range" min="1" max="3" id="rgDeviceSpeakerVolume">`;
+    deviceModal += `<label for="rgDeviceSpeakerVolume" class="form-label mt-1" id="lblDeviceSpeakerVolume">Lautstärke:</label>`;
+    deviceModal += `<input type="range" class="form-range mt-0" min="1" max="3" id="rgDeviceSpeakerVolume">`;
     deviceModal += `</div></div></div>`;
     deviceModal += `<div class="card collapse" id="cardDeviceNotificationSettings">`;
     deviceModal += `<h5 class="card-header">Benachrichtigungen</h5>`;
@@ -549,14 +555,23 @@ function generateDeviceSettingsModal(deviceId)
     deviceModal += `<button type="button" id="btnCloseModalDeviceSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>`;
     deviceModal += `</div></div></div>`;
     document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
-    showDeviceSettings(deviceId);
+
+    const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
+    myModal.show();
+    
+    showLoadingAnimationDeviceModal(deviceId);
 }
 
-function showDeviceSettings(deviceId)
+function showLoadingAnimationDeviceModal(deviceId, deviceName)
 {
-    const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
-    
-    document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
+    if(deviceName === undefined)
+    {
+        document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-md mt-1 mb-1"></span>`;
+    }
+    else
+    {
+        document.getElementById("lblModalDeviceSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceName} (${deviceId})</h5></div>`;
+    }
     document.getElementById("lblModalDeviceSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
     document.getElementById("lblDeviceModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblDeviceName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
@@ -571,7 +586,7 @@ function showDeviceSettings(deviceId)
     document.getElementById("lblDevicePowerSource").innerHTML = ``;
 
     document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
-    document.getElementById("chkDeviceAudioRecording").setAttribute("disabled", true);
+    document.getElementById("divDeviceAudioRecording").classList.add("collapse", true);
     document.getElementById("chkDeviceSpeakerEnable").removeAttribute("checked");
     document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
     document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
@@ -583,8 +598,11 @@ function showDeviceSettings(deviceId)
     document.getElementById("cardDeviceAudioSettings").classList.add("collapse", true);
     document.getElementById("cardDeviceNotificationSettings").classList.add("collapse", true);
 
-    myModal.show();
+    showDeviceSettingsModal(deviceId);
+}
 
+function showDeviceSettingsModal(deviceId)
+{
     var xmlhttp, objResp;
     var url = `${location.protocol}//${location.hostname}:${port}/getDevice/${deviceId}`;
     xmlhttp = new XMLHttpRequest();
@@ -605,7 +623,7 @@ function showDeviceSettings(deviceId)
                     document.getElementById("lblDeviceSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data.serialNumber}</h6>`;
                     document.getElementById("lblDeviceInfo").innerHTML = `<h6 class="card-subtitle text-muted"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data.softwareVersion}&nbsp;&nbsp;&nbsp;&nbsp;<i class="${objResp.data.chargingStatus == 1 ? "bi-battery-charging" : objResp.data.battery < 5 ? "bi-battery" : objResp.data.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${objResp.data.battery < 5 ? "text-danger" : objResp.data.battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${objResp.data.battery}%</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-nowrap"><i class="${objResp.data.batteryTemperature < 0 ? "bi-thermometer-low" : objResp.data.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${objResp.data.batteryTemperature}&deg;C</span></h6>`;
 
-                    if(objResp.data.enabled == "true")
+                    if(objResp.data.enabled == true)
                     {
                         document.getElementById("chkDeviceEnabled").setAttribute("checked", true);
                     }
@@ -613,7 +631,7 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceEnabled").removeAttribute("checked");
                     }
-                    if(objResp.data.antitheftDetection == "true")
+                    if(objResp.data.antitheftDetection == true)
                     {
                         document.getElementById("chkDeviceAntitheftDetection").setAttribute("checked", true);
                     }
@@ -621,7 +639,7 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceAntitheftDetection").removeAttribute("checked");
                     }
-                    if(objResp.data.statusLed == "true")
+                    if(objResp.data.statusLed == true)
                     {
                         document.getElementById("chkDeviceStatusLed").setAttribute("checked", true);
                     }
@@ -631,19 +649,19 @@ function showDeviceSettings(deviceId)
                     }
                     switch (objResp.data.powerWorkingMode)
                     {
-                        case "0":
+                        case 0:
                             document.getElementById("rbDeviceWMOptimalAccu").setAttribute("checked", true);
                             document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
                             document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
                             document.getElementById("divDeviceCustomRecordingSettings").classList.add("collapse", true);
                             break;
-                        case "1":
+                        case 1:
                             document.getElementById("rbDeviceWMOptimalAccu").removeAttribute("checked");
                             document.getElementById("rbDeviceWMOptimalSurv").setAttribute("checked", true);
                             document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
                             document.getElementById("divDeviceCustomRecordingSettings").classList.add("collapse", true);
                             break;
-                        case "2":
+                        case 2:
                             document.getElementById("rbDeviceWMOptimalAccu").removeAttribute("checked");
                             document.getElementById("rbDeviceWMOptimalSurv").removeAttribute("checked");
                             document.getElementById("rbDeviceWMCustom").setAttribute("checked", true);
@@ -655,7 +673,11 @@ function showDeviceSettings(deviceId)
                             document.getElementById("rbDeviceWMCustom").removeAttribute("checked");
                     }
                     document.getElementById("rgDeviceCustomRecordingSettingsClipLength").value = Number.parseInt(objResp.data.recordingClipLength);
+                    updateSliderValue("lblDeviceCustomRecordingSettingsClipLength", Number.parseInt(objResp.data.recordingClipLength));
+                    document.getElementById("rgDeviceCustomRecordingSettingsClipLength").oninput = function(){ updateSliderValue("lblDeviceCustomRecordingSettingsClipLength", document.getElementById("rgDeviceCustomRecordingSettingsClipLength").value); };
                     document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").value = Number.parseInt(objResp.data.recordingRetriggerInterval);
+                    updateSliderValue("lblDeviceCustomRecordingSettingsRetriggerIntervall", Number.parseInt(objResp.data.recordingRetriggerInterval));
+                    document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").oninput = function(){ updateSliderValue("lblDeviceCustomRecordingSettingsRetriggerIntervall", document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").value); };
                     if(objResp.data.recordingEndClipMotionStops == true)
                     {
                         document.getElementById("chkDeviceCustomRecordingSettingsStoppWhenMotionEnds").setAttribute("checked", true);
@@ -666,44 +688,53 @@ function showDeviceSettings(deviceId)
                     }
                     switch (objResp.data.powerSource)
                     {
-                        case "0":
+                        case 0:
                             document.getElementById("lblDevicePowerSource").innerHTML = `Batterie ${objResp.data.chargingStatus == 1 ? " (ladend)" : objResp.data.chargingStatus == 2 ? " (nicht angeschlossen)" : objResp.data.chargingStatus == 3 ? " (angeschlossen)" : ""}`;
                             break;
-                        case "1":
+                        case 1:
                             document.getElementById("lblDevicePowerSource").innerHTML = `Solar ${objResp.data.chargingStatus == 1 ? " (ladend)" : ""}`;
                             break;
                         default:
                             document.getElementById("lblDevicePowerSource").innerHTML = `unbekannt`;
                     }
-                    switch (objResp.data.watermark)
+                    if(objResp.data.model.startsWith("T8112"))
                     {
-                        case "0":
-                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
-                            break;
-                        case "1":
-                            if(objResp.data.model == "T8112")
-                            {
-                                document.getElementById("cbDeviceWatermark").selectedIndex = 0;
-                            }
-                            else
-                            {
-                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
-                            }
-                            break;
-                        case "2":
-                            document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
-                            break;
-                        default:
-                            document.getElementById("cbDeviceWatermark").selectedIndex = 0
+                        document.getElementById("divDeviceWatermarkCheck").classList.remove("collapse");
+                        if(objResp.data.watermark == 1)
+                        {
+                            document.getElementById("chkDeviceWatermark").setAttribute("checked", true);
+                        }
+                        else
+                        {
+                            document.getElementById("chkDeviceWatermark").removeAttribute("checked");
+                        }
                     }
-                    if(objResp.data.autoNightvision == undefined)
+                    else
+                    {
+                        document.getElementById("divDeviceWatermarkSelect").classList.remove("collapse");
+                        switch (objResp.data.watermark)
+                        {
+                            case 0:
+                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
+                                break;
+                            case 1:
+                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
+                                break;
+                            case 2:
+                                document.getElementById("cbDeviceWatermark").selectedIndex = (Number.parseInt(objResp.data.watermark) + 1);
+                                break;
+                            default:
+                                document.getElementById("cbDeviceWatermark").selectedIndex = 0
+                        }
+                    }
+                    if(objResp.data.autoNightvision === undefined)
                     {
                         document.getElementById("divDeviceAutoNightvision").classList.add("collapse", true);
                     }
                     else
                     {
                         document.getElementById("divDeviceAutoNightvision").classList.remove("collapse");
-                        if(objResp.data.autoNightvision == "true")
+                        if(objResp.data.autoNightvision == true)
                         {
                             document.getElementById("chkDeviceAutoNightvision").setAttribute("checked", true);
                         }
@@ -712,7 +743,7 @@ function showDeviceSettings(deviceId)
                             document.getElementById("chkDeviceAutoNightvision").removeAttribute("checked");
                         }
                     }
-                    if(objResp.data.nightvision == undefined)
+                    if(objResp.data.nightvision === undefined)
                     {
                         document.getElementById("divDeviceNightvision").classList.add("collapse", true);
                     }
@@ -721,41 +752,26 @@ function showDeviceSettings(deviceId)
                         document.getElementById("divDeviceNightvision").classList.remove("collapse");
                         document.getElementById("cbDeviceNightvision").selectedIndex = (Number.parseInt(objResp.data.nightvision));
                     }
-                    if(objResp.data.microphone == "true")
+                    if(objResp.data.microphone == true)
                     {
                         document.getElementById("chkDeviceMicrophoneEnable").setAttribute("checked", true);
-                        document.getElementById("chkDeviceAudioRecording").removeAttribute("disabled");
+                        document.getElementById("divDeviceAudioRecording").classList.remove("collapse");
+                        if(objResp.data.audioRecording == true)
+                        {
+                            document.getElementById("chkDeviceAudioRecording").setAttribute("checked", true);
+                        }
+                        else
+                        {
+                            document.getElementById("chkDeviceAudioRecording").removeAttribute("checked");
+                        }
                     }
                     else
                     {
                         document.getElementById("chkDeviceMicrophoneEnable").removeAttribute("checked");
-                        document.getElementById("chkDeviceAudioRecording").classList.add("collapse", true);
+                        document.getElementById("divDeviceAudioRecording").classList.add("collapse", true);
                     }
-                    if(objResp.data.audioRecording == "true")
-                    {
-                        if(objResp.data.microphone == "true")
-                        {
-                            document.getElementById("divDeviceAudioRecording").classList.remove("collapse");
-                        }
-                        else
-                        {
-                            document.getElementById("divDeviceAudioRecording").classList.add("collapse", true);
-                        }
-                        document.getElementById("chkDeviceAudioRecording").setAttribute("checked", true);
-                    }
-                    else
-                    {
-                        if(objResp.data.microphone == "true")
-                        {
-                            document.getElementById("divDeviceAudioRecording").classList.add("collapse", true);
-                        }
-                        else
-                        {
-                            document.getElementById("divDeviceAudioRecording").classList.remove("collapse");
-                        }
-                        document.getElementById("chkDeviceAudioRecording").removeAttribute("checked");
-                    }
-                    if(objResp.data.speaker == "true")
+                    
+                    if(objResp.data.speaker == true)
                     {
                         document.getElementById("chkDeviceSpeakerEnable").setAttribute("checked", true);
                     }
@@ -763,9 +779,9 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("chkDeviceSpeakerEnable").removeAttribute("checked");
                     }
-                    if(objResp.data.speakerVolume != undefined)
+                    if(objResp.data.speakerVolume !== undefined)
                     {
-                        if(objResp.data.speaker == "true")
+                        if(objResp.data.speaker == true)
                         {
                             document.getElementById("divDeviceSpeakerVolume").classList.remove("collapse");
                         }
@@ -776,13 +792,13 @@ function showDeviceSettings(deviceId)
                         document.getElementById("rgDeviceSpeakerVolume").removeAttribute("disabled");
                         switch (objResp.data.speakerVolume)
                         {
-                            case "90":
+                            case 90:
                                 document.getElementById("rgDeviceSpeakerVolume").value = 1;
                                 break;
-                            case "92":
+                            case 92:
                                 document.getElementById("rgDeviceSpeakerVolume").value = 2;
                                 break;
-                            case "93":
+                            case 93:
                                 document.getElementById("rgDeviceSpeakerVolume").value = 3;
                                 break;
                             default:
@@ -793,19 +809,21 @@ function showDeviceSettings(deviceId)
                     {
                         document.getElementById("divDeviceSpeakerVolume").classList.add("collapse", true);
                     }
+                    updateSliderValue("lblDeviceSpeakerVolume", document.getElementById("rgDeviceSpeakerVolume").value == 1 ? "leise" : document.getElementById("rgDeviceSpeakerVolume").value == 2 ? "normal" : "laut");
+                    document.getElementById("rgDeviceSpeakerVolume").oninput = function(){ updateSliderValue("lblDeviceSpeakerVolume", document.getElementById("rgDeviceSpeakerVolume").value == 1 ? "leise" : document.getElementById("rgDeviceSpeakerVolume").value == 2 ? "normal" : "laut"); };
                     switch (objResp.data.notificationType)
                     {
-                        case "1":
+                        case 1:
                             document.getElementById("rbDeviceNTMostEfficient").setAttribute("checked", true);
                             document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
                             document.getElementById("rbDeviceNTFullEffect").removeAttribute("checked");
                             break;
-                        case "2":
+                        case 2:
                             document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
                             document.getElementById("rbDeviceNTIncludeThumbnail").setAttribute("checked", true);
                             document.getElementById("rbDeviceNTFullEffect").removeAttribute("checked");
                             break;
-                        case "3":
+                        case 3:
                             document.getElementById("rbDeviceNTMostEfficient").removeAttribute("checked");
                             document.getElementById("rbDeviceNTIncludeThumbnail").removeAttribute("checked");
                             document.getElementById("rbDeviceNTFullEffect").setAttribute("checked", true);
@@ -817,11 +835,34 @@ function showDeviceSettings(deviceId)
                     }
 
                     document.getElementById("lblModalDeviceSettingsInfo").innerHTML = ``;
-                    if(objResp.data.model != "T8112" && objResp.data.model != "T8113" && objResp.data.model != "T8114")
+                    if(!(objResp.data.model.startsWith("T8112") || objResp.data.model.startsWith("T8113") || objResp.data.model.startsWith("T8114")))
                     {
-                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", "Dieses Gerät wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
+                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", "Dieses Gerät wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "");
+                        document.getElementById("lblModalDeviceSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "");    
                     }
-                    document.getElementById("lblModalDeviceSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "");
+                    else
+                    {
+                        document.getElementById("chkDeviceEnabled").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "enabled", document.getElementById("chkDeviceEnabled").checked); };
+                        document.getElementById("chkDeviceAntitheftDetection").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "antitheftDetection", document.getElementById("chkDeviceAntitheftDetection").checked); };
+                        document.getElementById("chkDeviceStatusLed").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "statusLed", document.getElementById("chkDeviceStatusLed").checked); };
+                        document.getElementById("rbDeviceWMOptimalAccu").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "powerWorkingMode", 0); };
+                        document.getElementById("rbDeviceWMOptimalSurv").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "powerWorkingMode", 1); };
+                        document.getElementById("rbDeviceWMCustom").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "powerWorkingMode", 2); };
+                        document.getElementById("rgDeviceCustomRecordingSettingsClipLength").onchange = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "recordingClipLength", document.getElementById("rgDeviceCustomRecordingSettingsClipLength").value); };
+                        document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").onchange = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "recordingRetriggerInterval", document.getElementById("rgDeviceCustomRecordingSettingsRetriggerIntervall").value); };
+                        document.getElementById("chkDeviceCustomRecordingSettingsStoppWhenMotionEnds").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "recordingEndClipMotionStops", document.getElementById("chkDeviceCustomRecordingSettingsStoppWhenMotionEnds").checked); };
+                        document.getElementById("chkDeviceWatermark").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "watermark", document.getElementById("chkDeviceWatermark").checked ? 1 : 2); };    
+                        document.getElementById("cbDeviceWatermark").onchange = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "watermark", document.getElementById("cbDeviceWatermark").selectedIndex); };
+                        document.getElementById("chkDeviceAutoNightvision").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "autoNightvision", document.getElementById("chkDeviceAutoNightvision").checked); };
+                        document.getElementById("cbDeviceNightvision").onchange = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "nightvision", document.getElementById("cbDeviceNightvision").selectedIndex); };
+                        document.getElementById("chkDeviceMicrophoneEnable").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "microphone", document.getElementById("chkDeviceMicrophoneEnable").checked); };
+                        document.getElementById("chkDeviceAudioRecording").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "audioRecording", document.getElementById("chkDeviceAudioRecording").checked); };
+                        document.getElementById("chkDeviceSpeakerEnable").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "speaker", document.getElementById("chkDeviceSpeakerEnable").checked); };
+                        document.getElementById("rgDeviceSpeakerVolume").onchange = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "recordingClipLength", document.getElementById("rgDeviceSpeakerVolume").value); };
+                        document.getElementById("rbDeviceNTMostEfficient").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "notificationType", 1); };
+                        document.getElementById("rbDeviceNTIncludeThumbnail").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "notificationType", 2); };
+                        document.getElementById("rbDeviceNTFullEffect").onclick = function(){ changeDeviceProperty(objResp.data.serialNumber, objResp.data.name, "notificationType", 3); };    
+                    }
                     document.getElementById("cardDeviceCommonSettings").classList.remove("collapse");
                     document.getElementById("cardDevicePowerManagerSettings").classList.remove("collapse");
                     document.getElementById("cardDeviceVideoSettings").classList.remove("collapse");
@@ -849,6 +890,67 @@ function showDeviceSettings(deviceId)
     };
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
+}
+
+function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
+{
+    alert(`${location.protocol}//${location.hostname}:${port}/setDeviceProperty/${deviceId}/${propertyName}/${propertyValue}`);
+    var xmlhttp, objResp;
+    var url = `${location.protocol}//${location.hostname}:${port}/setDeviceProperty/${deviceId}/${propertyName}/${propertyValue}`;
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.overrideMimeType('application/json');
+    xmlhttp.onreadystatechange = function()
+    {
+        if(this.readyState == 4 && this.status == 200)
+        {
+            objResp = JSON.parse(this.responseText);
+            if(objResp.success == true)
+            {
+                const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+                toast.show();
+                showLoadingAnimationDeviceModal(deviceId, deviceName)
+            }
+            else
+            {
+                const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+                toast.show();
+            }
+        }
+        else if(this.readyState == 4)
+        {
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.", "", "")}`;
+        }
+        else
+        {
+            //document.getElementById("divModalDeviceSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
+        }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
+}
+
+function updateSliderValue(element, value)
+{
+    var displayText = "";
+    switch (element)
+    {
+        case "lblDeviceCustomRecordingSettingsClipLength":
+            displayText = `Cliplänge: ${value}s`;
+            break;
+        case "lblDeviceCustomRecordingSettingsRetriggerIntervall":
+            displayText = `Intervall für erneutes Auslösen: ${value}s`;
+            break;
+        case "lblDeviceSpeakerVolume":
+            displayText = `Lautstärke: ${value}`;
+            break;
+        case "lblStationAlarmVolume":
+            displayText = `Lautstärke Alarmton: ${value}`;
+            break;
+        case "lblStationPromtVolume":
+            displayText = `Lautstärke Eingabeaufforderung: ${value}`;
+            break;
+    }
+    document.getElementById(element).innerHTML = displayText;
 }
 
 function creatStationSettingsModal(stationId)
@@ -890,14 +992,14 @@ function creatStationSettingsModal(stationId)
 	stationModal += `</select>`;
 	stationModal += `</div>`;
 	stationModal += `<div>`;
-	stationModal += `<label for="rgStationAlarmVolume" class="form-label">Lautstärke Alarmton:</label>`;
-	stationModal += `<input type="range" class="form-range" min="1" max="26" id="rgStationAlarmVolume">`;
+	stationModal += `<label for="rgStationAlarmVolume" class="form-label mt-1" id="lblStationAlarmVolume">Lautstärke Alarmton:</label>`;
+	stationModal += `<input type="range" class="form-range mt-0" min="1" max="26" id="rgStationAlarmVolume">`;
 	stationModal += `</div>`;
 	stationModal += `<hr>`;
 	stationModal += `<h5>Eingabeaufforderung</h5>`;
 	stationModal += `<div>`;
-	stationModal += `<label for="rgStationPromtVolume" class="form-label">Lautstärke Eingabeaufforderung:</label>`;
-	stationModal += `<input type="range" class="form-range" min="0" max="5" id="rgStationPromtVolume">`;
+	stationModal += `<label for="rgStationPromtVolume" class="form-label" id="lblStationPromtVolume">Lautstärke Eingabeaufforderung:</label>`;
+	stationModal += `<input type="range" class="form-range mt-0" min="0" max="26" id="rgStationPromtVolume">`;
 	stationModal += `</div></div></div>`;
 	stationModal += `<div class="card collapse" id="cardStationNofificationSettings">`;
 	stationModal += `<h5 class="card-header">Benachrichtigungen</h5>`;
@@ -928,13 +1030,23 @@ function creatStationSettingsModal(stationId)
 	stationModal += `<button type="button" id="btnCloseModalStationSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>`;
 	stationModal += `</div></div></div>`;
     document.getElementById("modalStationSettings").innerHTML = stationModal;
-    showStationSettings(stationId);
+    
+    const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
+    myModal.show();
+    
+    showLoadingAnimationStationModal(stationId);
 }
 
-function showStationSettings(stationId)
+function showLoadingAnimationStationModal(stationId, stationName)
 {
-    const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
-    document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
+    if(stationName === undefined)
+    {
+        document.getElementById("lblModalStationSettingsTitle").innerHTML = `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>`;
+    }
+    else
+    {
+        document.getElementById("lblModalStationSettingsTitle").innerHTML = `<div style="text-align:left; float:left;"><h5 class="mb-0">${stationName} (${stationId})</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>`;
+    }
     document.getElementById("lblModalStationSettingsInfo").innerHTML = `<span class="placeholder col-12 placeholder-lg"></span>`;
     document.getElementById("lblStationModel").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
     document.getElementById("lblStationName").innerHTML = `<span class="placeholder col-6 placeholder-lg"></span>`;
@@ -953,8 +1065,11 @@ function showStationSettings(stationId)
     document.getElementById("cardStationAudioSettings").classList.add("collapse", true);
     document.getElementById("cardStationNofificationSettings").classList.add("collapse", true);
 
-    myModal.show();
+    showStationSettingsModal(stationId);
+}
 
+function showStationSettingsModal(stationId)
+{
     var xmlhttp, objResp;
     var url = `${location.protocol}//${location.hostname}:${port}/getStation/${stationId}`;
     xmlhttp = new XMLHttpRequest();
@@ -974,9 +1089,9 @@ function showStationSettings(stationId)
                     document.getElementById("lblStationSerial").innerHTML = `<h6 class="card-subtitle text-muted">${objResp.data.serialNumber}</h6>`;
                     document.getElementById("lblStationFirmware").innerHTML = `<h6 class="card-subtitle text-muted"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data.softwareVersion}</h6>`;
 
-                    if(objResp.data.model == "T8002")
+                    if(objResp.data.model.startsWith("T8002"))
                     {
-                        if(objResp.data.alarmTone == "255")
+                        if(objResp.data.alarmTone == 255)
                         {
                             document.getElementById("cbStationAlarmTone").selectedIndex = 1;
                         }
@@ -986,9 +1101,13 @@ function showStationSettings(stationId)
                         document.getElementById("cbStationAlarmTone").selectedIndex = (Number.parseInt(objResp.data.alarmTone) + 1);
                     }
                     document.getElementById("rgStationAlarmVolume").value = objResp.data.alarmVolume;
-                    document.getElementById("rgStationPromtVolume").value = objResp.data.promtVolume;
+                    updateSliderValue("lblStationAlarmVolume", document.getElementById("rgStationAlarmVolume").value);
+                    document.getElementById("rgStationAlarmVolume").oninput = function(){ updateSliderValue("lblStationAlarmVolume", document.getElementById("rgStationAlarmVolume").value); };
+                    document.getElementById("rgStationPromtVolume").value = objResp.data.promptVolume;
+                    updateSliderValue("lblStationPromtVolume", document.getElementById("rgStationPromtVolume").value);
+                    document.getElementById("rgStationPromtVolume").oninput = function(){ updateSliderValue("lblStationPromtVolume", document.getElementById("rgStationPromtVolume").value); };
 
-                    if(objResp.data.notificationSwitchModeSchedule == "true")
+                    if(objResp.data.notificationSwitchModeSchedule == true)
                     {
                         document.getElementById("chkStationSwitchToSchedule").setAttribute("checked", true);
                     }
@@ -996,7 +1115,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchToSchedule").removeAttribute("checked");
                     }
-                    if(objResp.data.notificationSwitchModeGeofence == "true")
+                    if(objResp.data.notificationSwitchModeGeofence == true)
                     {
                         document.getElementById("chkStationSwitchToGeofencing").setAttribute("checked", true);
                     }
@@ -1004,7 +1123,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchToGeofencing").removeAttribute("checked");
                     }
-                    if(objResp.data.notificationSwitchModeApp == "true")
+                    if(objResp.data.notificationSwitchModeApp == true)
                     {
                         document.getElementById("chkStationSwitchByApp").setAttribute("checked", true);
                     }
@@ -1012,7 +1131,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchByApp").removeAttribute("checked");
                     }
-                    if(objResp.data.notificationSwitchModeKeypad == "true")
+                    if(objResp.data.notificationSwitchModeKeypad == true)
                     {
                         document.getElementById("chkStationSwitchByKeypad").setAttribute("checked", true);
                     }
@@ -1020,7 +1139,7 @@ function showStationSettings(stationId)
                     {
                         document.getElementById("chkStationSwitchByKeypad").removeAttribute("checked");
                     }
-                    if(objResp.data.notificationStartAlarmDelay == "true")
+                    if(objResp.data.notificationStartAlarmDelay == true)
                     {
                         document.getElementById("chkStationStartAlarmDelay").setAttribute("checked", true);
                     }
@@ -1030,11 +1149,22 @@ function showStationSettings(stationId)
                     }
 
                     document.getElementById("lblModalStationSettingsInfo").innerHTML = ``;
-                    if(objResp.data.model != "T8002" && objResp.data.model != "T8010")
+                    if(!(objResp.data.model.startsWith("T8002") || objResp.data.model.startsWith("T8010")))
                     {
-                        document.getElementById("lblModalStationSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", "Diese Station wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`);
+                        document.getElementById("lblModalStationSettingsInfo").innerHTML = createMessageContainer("alert alert-warning", "Diese Station wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "");
+                        document.getElementById("lblModalStationSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "");
                     }
-                    document.getElementById("lblModalStationSettingsInfo").innerHTML += createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "");
+                    else
+                    {
+                        document.getElementById("cbStationAlarmTone").onchange = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "alarmTone", document.getElementById("cbStationAlarmTone").selectedIndex); };
+                        document.getElementById("rgStationAlarmVolume").onchange = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "alarmVolume", document.getElementById("rgStationAlarmVolume").value); };
+                        document.getElementById("rgStationPromtVolume").onchange = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "promptVolume", document.getElementById("rgStationPromtVolume").value); };
+                        document.getElementById("chkStationSwitchToSchedule").onclick = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "notificationSwitchModeSchedule", document.getElementById("chkStationSwitchToSchedule").checked); };
+                        document.getElementById("chkStationSwitchToGeofencing").onclick = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "notificationSwitchModeGeofence", document.getElementById("chkStationSwitchToGeofencing").checked); };
+                        document.getElementById("chkStationSwitchByApp").onclick = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "notificationSwitchModeApp", document.getElementById("chkStationSwitchByApp").checked); };
+                        document.getElementById("chkStationSwitchByKeypad").onclick = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "notificationSwitchModeKeypad", document.getElementById("chkStationSwitchByKeypad").checked); };
+                        document.getElementById("chkStationStartAlarmDelay").onclick = function(){ changeStationProperty(objResp.data.serialNumber, objResp.data.name, "notificationStartAlarmDelay", document.getElementById("chkStationStartAlarmDelay").checked); };    
+                    }
                     //document.getElementById("cardStationStorageSettings").classList.remove("collapse");
                     document.getElementById("cardStationAudioSettings").classList.remove("collapse");
                     document.getElementById("cardStationNofificationSettings").classList.remove("collapse");
@@ -1061,6 +1191,43 @@ function showStationSettings(stationId)
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
 }
+
+function changeStationProperty(stationId, stationName, propertyName, propertyValue)
+{
+    alert(`${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}/${propertyValue}`);
+    /*var xmlhttp, objResp;
+    var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}/${propertyValue}`;
+    xmlhttp = new XMLHttpRequest();
+    xmlhttp.overrideMimeType('application/json');
+    xmlhttp.onreadystatechange = function()
+    {
+        if(this.readyState == 4 && this.status == 200)
+        {
+            objResp = JSON.parse(this.responseText);
+            if(objResp.success == true)
+            {
+                const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+                toast.show();
+                showLoadingAnimationStationModal(stationId, stationName)
+            }
+            else
+            {
+                const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+                toast.show();
+            }
+        }
+        else if(this.readyState == 4)
+        {
+            //document.getElementById("divModalStationSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.", "", "")}`;
+        }
+        else
+        {
+            //document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
+        }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();*/
+}
 //#endregion
 
 /**
@@ -1069,7 +1236,7 @@ function showStationSettings(stationId)
 //#region statechange.html
 function loadDataStatechange(showLoading)
 {
-	var xmlHttp, objResp, station = "", stations = "", buttons = "", text = "", lastChangeTime;
+	var xmlHttp, objResp, station = "", stations = "", buttons = "", text = "", state, lastChangeTime;
 	var lastChangeTimeAll = -1;
 	var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
 	xmlHttp = new XMLHttpRequest();
@@ -1087,28 +1254,28 @@ function loadDataStatechange(showLoading)
 					{
 						switch (objResp.data[station].guardMode)
 						{
-                            case "0":
+                            case 0:
 								state = "abwesend";
 								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
-							case "1":
+							case 1:
 								state = "zu Hause";
 								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>zu Hause</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
-							case "2":
+							case 2:
 								state = "Zeitsteuerung";
 								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>Zeit&shy;steu&shy;e&shy;rung</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
 								break;
-							case "63":
+							case 63:
 								state = "deaktiviert";
 								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
 								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
@@ -1739,7 +1906,16 @@ function loadDataSettings()
                         if(element[i].name.startsWith("udpPortsStation"))
                         {
                             var tempSerial = element[i].name.replace("udpPortsStation", "");
-                            var tempPorts = objResp.data["localStaticUdpPort" + tempSerial];
+                            var tempPorts;
+                            var portItem;
+                            for(var portItem in objResp.data.localStaticUdpPorts)
+                            {
+                                if(objResp.data.localStaticUdpPorts[portItem].stationSerial == tempSerial)
+                                {
+                                    tempPorts = objResp.data.localStaticUdpPorts[portItem].port;
+                                    break;
+                                }
+                            }
                             text = document.getElementById('txtUdpPortsStation' + tempSerial);
                             if(tempPorts == undefined || tempPorts == null || tempPorts == "undefined")
                             {
@@ -1897,7 +2073,7 @@ function loadSystemVariables()
             catch (e)
             {
                 document.getElementById("divSystemVariablesHint").innerHTML = "";
-                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", `Fehler: ${e}.`);
+                document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Fehler: ${e}.`);
             }
         }
         else if(this.readyState == 4)
