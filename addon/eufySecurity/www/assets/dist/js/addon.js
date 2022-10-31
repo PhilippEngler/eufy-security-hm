@@ -411,7 +411,21 @@ function getDeviceLastEventTime(time, url)
 
 function generateDeviceSettingsModal(deviceId, deviceName)
 {
-	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
+	generateContentDeviceSettingsModal(deviceId, deviceName);
+
+	if(deviceName === undefined)
+	{
+		const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
+		myModal.show();
+	}
+
+	getDevicePropertiesMetadata(deviceId);
+}
+
+function generateContentDeviceSettingsModal(deviceId, deviceName)
+{
+	var deviceModal = `
+					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
 								${deviceName === undefined ? `<span class="placeholder col-6 bg-light placeholder-md mt-1 mb-1"></span>` : `<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceName} (${deviceId})</h5></div>`}
@@ -440,9 +454,24 @@ function generateDeviceSettingsModal(deviceId, deviceName)
 									</div>
 									<div class="col">
 										<span id="lblDeviceInfo">
-											<i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;
-											<i class="bi-battery text-muted" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>&nbsp;&nbsp;&nbsp;&nbsp;
-											<i class="bi-thermometer-low text-muted" title="Temperatur"></i>&nbsp;<span class="placeholder col-2 placeholder-lg"></span>
+											<h6 class="card-subtitle text-muted">
+											<div class="row">
+												<div class="col">
+													<span class="text-nowrap">
+														<i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
+													</span>
+												</div>
+												<div class="col">
+													<span class="text-nowrap">
+														<i class="bi-battery text-muted" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
+													</span>
+												</div>
+												<div class="col">
+													<span class="text-nowrap">
+														<i class="bi-thermometer-low text-muted" title="Temperatur"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
+													</span>
+												</div>
+											</div>
 										</span>
 									</div>
 								</div>
@@ -454,14 +483,6 @@ function generateDeviceSettingsModal(deviceId, deviceName)
 					</div>`;
 	
 	document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
-
-	if(deviceName === undefined)
-	{
-		const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
-		myModal.show();
-	}
-
-	getDevicePropertiesMetadata(deviceId);
 }
 
 function getDevicePropertiesMetadata(deviceId)
@@ -569,7 +590,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
-							<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div><div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${deviceProperties.wifiRssi}dB"></i></span></h5></div>
+								<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div><div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${deviceProperties.wifiRssi}dB"></i></span></h5></div>
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
@@ -603,29 +624,34 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	{
 		deviceModal += `
 										<span id="lblDeviceInfo">
-											<h6 class="card-subtitle text-muted">`;
+											<h6 class="card-subtitle text-muted">
+											<div class="row">`;
 		if(deviceProperties.softwareVersion !== undefined)
 		{
 			deviceModal += `
+												<div class="col">
 													<span class="text-nowrap">
 														<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${deviceProperties.softwareVersion}
-														&nbsp;&nbsp;&nbsp;&nbsp;
-													</span>`;
+													</span>
+												</div>`;
 		}
 		if(deviceProperties.battery !== undefined)
 		{
 			deviceModal += `
+												<div class="col">
 													<span class="text-nowrap">
 														<i class="${deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : deviceProperties.battery < 5 ? "bi-battery" : deviceProperties.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${deviceProperties.battery < 5 ? "text-danger" : deviceProperties.battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${deviceProperties.battery}%</span>
-														&nbsp;&nbsp;&nbsp;&nbsp;
-													</span>`;
+													</span>
+												</div>`;
 		}
 		if(deviceProperties.batteryTemperature !== undefined)
 		{
 			deviceModal += `
+												<div class="col">
 													<span class="text-nowrap">
-															<i class="${deviceProperties.batteryTemperature < 0 ? "bi-thermometer-low" : deviceProperties.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${deviceProperties.batteryTemperature}&deg;C
-													</span>`;
+														<i class="${deviceProperties.batteryTemperature < 0 ? "bi-thermometer-low" : deviceProperties.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${deviceProperties.batteryTemperature}&deg;C
+													</span>
+												</div>`;
 		}
 		deviceModal +=     `
 											</h6>
@@ -640,11 +666,11 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 								<div class="card mb-3" id="cardDeviceCommonSettings">
 									<h5 class="card-header">Allgemeines</h5>
 									<div class="card-body">
-										<div class="row">`;
+										<div class="row gap-3">`;
 		if(deviceProperties.enabled !== undefined)
 		{
 			deviceModal += `
-											<div class="col col-6">
+											<div class="col">
 												<h5>Gerät aktiviert</h5>
 												${generateElementSwitch("Device", devicePropertiesMetadata.enabled.name, deviceProperties.enabled, deviceProperties.serialNumber, deviceProperties.name)}
 											</div>`;
@@ -652,7 +678,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.antitheftDetection !== undefined)
 		{
 			deviceModal += `
-											<div class="col col-6">
+											<div class="col">
 												<h5>Diebstahlerkennung</h5>
 												${generateElementSwitch("Device", devicePropertiesMetadata.antitheftDetection.name, deviceProperties.antitheftDetection, deviceProperties.serialNumber, deviceProperties.name)}
 											</div>`;
@@ -660,7 +686,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.statusLed !== undefined)
 		{
 			deviceModal += `
-											<div class="col col-6">
+											<div class="col">
 												<h5>Status LED</h5>
 												${generateElementSwitch("Device", devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed, deviceProperties.serialNumber, deviceProperties.name)}
 											</div>`;
@@ -747,12 +773,27 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										${deviceProperties.powerWorkingMode !== undefined || deviceProperties.powerSource !== undefined ? `<hr />` : ``}
-										<h5>Erkennungsstatisik</h5>
-										<label>Seit dem letzten Ladevorgang:</label><br />
-										<label>vergangene Tage: ${deviceProperties.lastChargingDays}</label><br />
-										<label>erkannte Ereignisse: ${deviceProperties.lastChargingTotalEvents}</label><br />
-										<label>gefilterte, falsche Ereignisse: ${deviceProperties.lastChargingFalseEvents}</label><br />
-										<label>aufgezeichnete Ereignisse: ${deviceProperties.lastChargingRecordedEvents}</label>`;
+										<h5>Erkennungsstatisik</h5>`;
+			if(deviceProperties.lastChargingDays !== undefined)
+			{
+				deviceModal += `
+										<label>letzter Ladevorgang vor ${deviceProperties.lastChargingDays} Tag${deviceProperties.lastChargingDays == 1 ?"" : "en"}</label><br />`;
+			}
+			if(deviceProperties.lastChargingTotalEvents !== undefined)
+			{
+				deviceModal += `
+										<label>${deviceProperties.lastChargingDays !== undefined ? "seitdem " : ""}erkannte Ereignisse: ${deviceProperties.lastChargingTotalEvents}</label><br />`;
+			}
+			if(deviceProperties.lastChargingFalseEvents !== undefined)
+			{
+				deviceModal += `
+										<label> - davon gefilterte, falsche Ereignisse: ${deviceProperties.lastChargingFalseEvents}</label><br />`;
+			}
+			if(deviceProperties.lastChargingRecordedEvents !== undefined)
+			{
+				deviceModal += `
+										<label> - davon aufgezeichnete Ereignisse: ${deviceProperties.lastChargingRecordedEvents}</label>`;
+			}
 		}
 		deviceModal += `
 									</div>
@@ -794,8 +835,12 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										<h5>Mikrofon</h5>
-										${devicePropertiesMetadata.microphone === undefined ? "" : generateElementSwitch("Device", devicePropertiesMetadata.microphone.name, deviceProperties.microphone, deviceProperties.serialNumber, deviceProperties.name)}
-										${devicePropertiesMetadata.audioRecording === undefined ? "" : generateElementSwitch("Device", devicePropertiesMetadata.audioRecording.name, deviceProperties.audioRecording, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementSwitch("Device", devicePropertiesMetadata.microphone.name, deviceProperties.microphone, deviceProperties.serialNumber, deviceProperties.name)}`;
+			if(deviceProperties.audioRecording !== undefined && deviceProperties.microphone !== undefined && deviceProperties.microphone == true)
+			{
+				deviceModal += `
+										${generateElementSwitch("Device", devicePropertiesMetadata.audioRecording.name, deviceProperties.audioRecording, deviceProperties.serialNumber, deviceProperties.name)}`;
+			}
 		}
 		if(deviceProperties.speaker !== undefined || deviceProperties.speakerVolume !== undefined)
 		{
@@ -1036,7 +1081,7 @@ function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 		}
 		else
 		{
-			//document.getElementById("divModalDeviceSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
+			generateContentDeviceSettingsModal(deviceId, deviceName);
 		}
 	};
 	xmlhttp.open("GET", url, true);
@@ -1065,6 +1110,19 @@ function updateSliderValue(element, value)
 }
 
 function creatStationSettingsModal(stationId, stationName)
+{
+	generateContentStationSettingsModal(stationId, stationName);
+
+	if(stationName === undefined)
+	{
+		const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
+		myModal.show();
+	}
+
+	getStationPropertiesMetadata(stationId);
+}
+
+function generateContentStationSettingsModal(stationId, stationName)
 {
 	var stationModal =  `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
@@ -1110,14 +1168,6 @@ function creatStationSettingsModal(stationId, stationName)
 					</div>`;
 	
 	document.getElementById("modalStationSettings").innerHTML = stationModal;
-
-	if(stationName === undefined)
-	{
-		const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
-		myModal.show();
-	}
-
-	getStationPropertiesMetadata(stationId);
 }
 
 function getStationPropertiesMetadata(stationId)
@@ -1348,43 +1398,7 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 		}
 		else
 		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
-}
-
-function changeStationProperty(stationId, stationName, propertyName, propertyValue)
-{
-	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}/${propertyValue}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
-				toast.show();
-				showLoadingAnimationStationModal(stationId, stationName)
-			}
-			else
-			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				toast.show();
-			}
-		}
-		else if(this.readyState == 4)
-		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.", "", "")}`;
-		}
-		else
-		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
+			generateContentStationSettingsModal(stationId, stationName);
 		}
 	};
 	xmlhttp.open("GET", url, true);
