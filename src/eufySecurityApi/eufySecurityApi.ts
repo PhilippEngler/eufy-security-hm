@@ -676,7 +676,7 @@ export class EufySecurityApi
         {
             try
             {
-                json = {"success":true, "type":device.getModel(), "data":device.getPropertiesMetadata()};
+                json = {"success":true, "model":device.getModel(), "modelName":this.devices.getDeviceModelName(device), "data":device.getPropertiesMetadata()};
                 this.setLastConnectionInfo(true);
             }
             catch (e : any)
@@ -708,7 +708,7 @@ export class EufySecurityApi
         {
             try
             {
-                json = {"success":true, "type":device.getModel(), "data":device.getProperties()};
+                json = {"success":true, "model":device.getModel(), "modelName":this.devices.getDeviceModelName(device), "data":device.getProperties()};
                 this.setLastConnectionInfo(true);
             }
             catch (e : any)
@@ -742,6 +742,7 @@ export class EufySecurityApi
         try
         {
             await this.devices.setDeviceProperty(deviceSerial, propertyName, propertyValue);
+            await sleep(5000);
             return `{"success":true,"reason":"The property ${propertyName} for device ${deviceSerial} has been processed."}`;
         }
         catch (e)
@@ -868,7 +869,7 @@ export class EufySecurityApi
         {
             try
             {
-                json = {"success":true, "type":station.getModel(), "data":station.getPropertiesMetadata()};
+                json = {"success":true, "type":station.getModel(), "modelName":this.stations.getStationModelName(station), "data":station.getPropertiesMetadata()};
                 this.setLastConnectionInfo(true);
             }
             catch (e : any)
@@ -899,7 +900,7 @@ export class EufySecurityApi
         {
             try
             {
-                json = {"success":true, "type":station.getModel(), "data":station.getProperties()};
+                json = {"success":true, "type":station.getModel(), "modelName":this.stations.getStationModelName(station), "data":station.getProperties()};
                 this.setLastConnectionInfo(true);
             }
             catch (e : any)
@@ -932,6 +933,7 @@ export class EufySecurityApi
         try
         {
             await this.stations.setStationProperty(stationSerial, propertyName, propertyValue);
+            await sleep(5000);
             return `{"success":true,"reason":"The property ${propertyName} for station ${stationSerial} has been processed."}`;
         }
         catch (e)
