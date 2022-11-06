@@ -2339,6 +2339,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.2.1-rc1";
+        return "2.2.1";
     }
 }

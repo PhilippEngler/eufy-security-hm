@@ -668,8 +668,12 @@ export class Station extends TypedEmitter<StationEvents> {
 
         if (propertyName !== undefined && this.hasPropertyValue(propertyName) && this.getPropertyValue(propertyName) !== "") {
             const settings: StationSecuritySettings = (this.getPropertyValue(propertyName) as any) as StationSecuritySettings;
-            if (settings.count_down_arm.channel_list.length > 0 && settings.count_down_arm.delay_time > 0) {
-                return settings.count_down_arm.delay_time;
+            try {
+                if (settings.count_down_arm?.channel_list?.length > 0 && settings.count_down_arm?.delay_time > 0) {
+                    return settings.count_down_arm.delay_time;
+                }
+            } catch (error) {
+                this.log.debug(`Station ${this.getSerial()} - getArmDelay - Error`, { error: error, mode: mode, propertyName: propertyName, settings: settings });
             }
         }
         return 0;
@@ -814,6 +818,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending status led command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isCamera2Product() || device.isCamera3Product() || device.getDeviceType() === DeviceType.CAMERA || device.getDeviceType() === DeviceType.CAMERA_E) {
             await this.p2pSession.sendCommandWithIntString({
@@ -834,7 +841,7 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 property: propertyData
             });
-        } else if (device.getDeviceType() === DeviceType.FLOODLIGHT_CAMERA_8423 || device.getDeviceType() === DeviceType.FLOODLIGHT) {
+        } else if (device.getDeviceType() === DeviceType.FLOODLIGHT_CAMERA_8423 || (device.getDeviceType() === DeviceType.FLOODLIGHT && !device.isFloodLightT8420X())) {
             await this.p2pSession.sendCommandWithIntString({
                 commandType: CommandType.CMD_DEV_LED_SWITCH,
                 value: value === true ? 1 : 0,
@@ -953,6 +960,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending autonightvision command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_IRCUT_SWITCH,
@@ -975,6 +985,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending nightvision command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload({
             commandType: CommandType.CMD_SET_PAYLOAD,
@@ -1004,8 +1017,11 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending motion detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
-        if (device.isIndoorCamera() || (device.isFloodLight() && device.getDeviceType() !== DeviceType.FLOODLIGHT)) {
+        if (device.isIndoorCamera() || (device.isFloodLight() && device.getDeviceType() !== DeviceType.FLOODLIGHT) || device.isFloodLightT8420X()) {
             await this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1081,6 +1097,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending sound detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload({
             commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
@@ -1183,6 +1202,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending pet detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload({
             commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
@@ -1264,6 +1286,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending switch light command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight() || device.isSoloCameraSpotlight1080() || device.isSoloCameraSpotlight2k() ||
             device.isSoloCameraSpotlightSolar() || device.isCamera2C() || device.isCamera2CPro() ||
@@ -1297,7 +1322,7 @@ export class Station extends TypedEmitter<StationEvents> {
         validValue(property, value);
 
         this.log.debug(`Sending motion detection sensitivity command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
-        if ((device.isFloodLight() && device.getDeviceType() !== DeviceType.FLOODLIGHT) || device.isIndoorCamera() ) {
+        if ((device.isFloodLight() && device.getDeviceType() !== DeviceType.FLOODLIGHT) || device.isIndoorCamera() || device.isFloodLightT8420X()) {
             await this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1557,8 +1582,10 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
-        this.log.debug(`Sending motion zone command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
 
+        this.log.debug(`Sending motion zone command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload({
             commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
             value: JSON.stringify({
@@ -1582,6 +1609,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending motion tracking command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithStringPayload({
             commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
@@ -1651,6 +1681,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending mic mute command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_SET_DEV_MIC_MUTE,
@@ -1674,6 +1707,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending audio recording command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.getDeviceType() === DeviceType.FLOODLIGHT_CAMERA_8423) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -1698,7 +1734,7 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 property: propertyData
             });
-        } else if (device.getDeviceType() === DeviceType.FLOODLIGHT) {
+        } else if (device.getDeviceType() === DeviceType.FLOODLIGHT && !device.isFloodLightT8420X()) {
             await this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1777,6 +1813,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending enable speaker command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_SET_DEV_SPEAKER_MUTE,
@@ -1869,6 +1908,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending enable indoor chime command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell()) {
             await this.p2pSession.sendCommandWithIntString({
@@ -1909,6 +1951,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending enable homebase chime command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell()) {
             await this.p2pSession.sendCommandWithIntString({
@@ -2091,6 +2136,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification person command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -2128,6 +2176,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification pet command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -2165,6 +2216,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification all other motion command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -2202,6 +2256,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification all sound command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -2239,6 +2296,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification crying command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isIndoorCamera()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -2276,6 +2336,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification ring command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isWiredDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -2323,6 +2386,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification motion command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbell() || device.isWiredDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -2477,6 +2543,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending recording end clip motion stops command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithInt({
             commandType: CommandType.CMD_DEV_RECORD_AUTOSTOP,
@@ -2590,6 +2659,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending wdr command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_BAT_DOORBELL_WDR_SWITCH,
@@ -2613,6 +2685,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending floodlight light settings enable command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_SET_FLOODLIGHT_TOTAL_SWITCH,
@@ -2728,6 +2803,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending floodlight light settings motion triggered command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isFloodLight()) {
             await this.p2pSession.sendCommandWithIntString({
@@ -2978,6 +3056,9 @@ export class Station extends TypedEmitter<StationEvents> {
             name: mode === NotificationSwitchMode.APP ? PropertyName.StationNotificationSwitchModeApp : mode === NotificationSwitchMode.GEOFENCE ? PropertyName.StationNotificationSwitchModeGeofence : mode === NotificationSwitchMode.KEYPAD ? PropertyName.StationNotificationSwitchModeKeypad : mode === NotificationSwitchMode.SCHEDULE ? PropertyName.StationNotificationSwitchModeSchedule : "" as PropertyName,
             value: value
         };
+        const property = this.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending station notification switch mode command to station ${this.getSerial()} with value: ${value}`);
         if (isGreaterEqualMinVersion("2.1.1.6", this.getSoftwareVersion())) {
             let oldvalue = 0;
@@ -3041,6 +3122,9 @@ export class Station extends TypedEmitter<StationEvents> {
             } catch(error) {
             }
         }
+        const property = this.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending station notification start alarm delay command to station ${this.getSerial()} with value: ${value}`);
         if (isGreaterEqualMinVersion("2.1.1.6", this.getSoftwareVersion())) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -3112,6 +3196,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending rtsp stream command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_NAS_SWITCH,
@@ -3135,6 +3222,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending antitheft detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_EAS_SWITCH,
@@ -3237,8 +3327,11 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         let param_value = value === true ? 0 : 1;
-        if ((device.isIndoorCamera() && !device.isIndoorCamMini()) || device.isWiredDoorbell() || device.getDeviceType() === DeviceType.FLOODLIGHT_CAMERA_8422 || device.getDeviceType() === DeviceType.FLOODLIGHT_CAMERA_8424)
+        if ((device.isIndoorCamera() && !device.isIndoorCamMini()) || device.isWiredDoorbell() || device.getDeviceType() === DeviceType.FLOODLIGHT_CAMERA_8422 || device.getDeviceType() === DeviceType.FLOODLIGHT_CAMERA_8424 || device.isFloodLightT8420X())
             param_value = value === true ? 1 : 0;
 
         this.log.debug(`Sending enable device command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
@@ -3596,6 +3689,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending hdr command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isWiredDoorbell()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -3626,6 +3722,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending distortion correction command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isWiredDoorbell()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -3689,6 +3788,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending lock device command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isLockBleNoFinger() || device.isLockBle()) {
             const key = generateBasicLockAESKey(this.rawStation.member.admin_user_id, this.getSerial());
@@ -3768,6 +3870,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
+        const property = this.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending station switch mode with access code command to station ${this.getSerial()} with value: ${value}`);
         if (this.isStation()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -3797,6 +3902,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
+        const property = this.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending station auto end alarm command to station ${this.getSerial()} with value: ${value}`);
         if (this.isStation()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -3826,6 +3934,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!this.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
+        const property = this.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending station turn off alarm with button command to station ${this.getSerial()} with value: ${value}`);
         if (this.isStation()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -4652,6 +4763,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending loitering detection command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -5053,6 +5167,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending delivery guard command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbellDual() || device.isWiredDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -5087,6 +5204,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending delivery guard package guarding command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbellDual() || device.isWiredDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -5218,6 +5338,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending delivery guard uncollected package alert command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbellDual() || device.isWiredDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -5288,6 +5411,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending delivery guard package live check assistance command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbellDual() || device.isWiredDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
@@ -5482,6 +5608,9 @@ export class Station extends TypedEmitter<StationEvents> {
         if (!device.hasProperty(propertyData.name)) {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
         }
+        const property = device.getPropertyMetadata(propertyData.name);
+        validValue(property, value);
+
         this.log.debug(`Sending notification radar detector command to station ${this.getSerial()} for device ${device.getSerial()} with value: ${value}`);
         if (device.isBatteryDoorbellDual()) {
             await this.p2pSession.sendCommandWithStringPayload({
