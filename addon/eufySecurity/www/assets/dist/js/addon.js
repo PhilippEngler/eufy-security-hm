@@ -2378,6 +2378,13 @@ function selectedFile(filetype)
 		case "conf":
 			if(document.getElementById("btnSelectConfigFile").value === undefined || document.getElementById("btnSelectConfigFile").value !== "")
 			{
+				if(document.getElementById("btnSelectConfigFile").files[0].size > 500000)
+				{
+					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-warning", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die ausgewählte Datei ist zu groß.", "");
+					document.getElementById("btnSelectConfigFile").value = "";
+					return;
+				}
+				document.getElementById("resultUploadMessage").innerHTML = "";
 				document.getElementById("btnUploadConfigFile").removeAttribute("disabled");
 			}
 			break;
@@ -2419,20 +2426,28 @@ async function uploadFile(filetype)
 					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die Konfigurationsdatei ist fehlerhaft.", `Fehler: ${objResp.message}`);
 					const toast = new bootstrap.Toast(toastUploadConfigFailed);
 					toast.show();
+					document.getElementById("btnSelectConfigFile").value = "";
+					document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 				}
 			}
 			catch (e)
 			{
 				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Fehler: ${e}.`);
+				document.getElementById("btnSelectConfigFile").value = "";
+				document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 			}
 		}
 		else if(this.readyState == 4)
 		{
 			document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+			document.getElementById("btnSelectConfigFile").value = "";
+			document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 		}
 		else
 		{
 			document.getElementById("resultUploadMessage").innerHTML = createWaitMessage("Datei wird hochgeladen und überprüft...");
+			document.getElementById("btnSelectConfigFile").value = "";
+			document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 		}
 	};
 	xmlHttp.open("POST", url);
