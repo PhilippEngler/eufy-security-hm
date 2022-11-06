@@ -898,6 +898,41 @@ function checkUploadedFileMetadata(postData : string) : boolean
     {
         return false;
     }
+    pos = postData.indexOf(`"accountData":`);
+    if(pos < 0)
+    {
+        return false;
+    }
+    pos = postData.indexOf(`"eMail":`);
+    if(pos < 0)
+    {
+        return false;
+    }
+    pos = postData.indexOf(`"password":`);
+    if(pos < 0)
+    {
+        return false;
+    }
+    pos = postData.indexOf(`"httpActive":`);
+    if(pos < 0)
+    {
+        return false;
+    }
+    pos = postData.indexOf(`"httpPort":`);
+    if(pos < 0)
+    {
+        return false;
+    }
+    pos = postData.indexOf(`"httpsActive":`);
+    if(pos < 0)
+    {
+        return false;
+    }
+    pos = postData.indexOf(`"httpsPort":`);
+    if(pos < 0)
+    {
+        return false;
+    }
     return true;
 }
 

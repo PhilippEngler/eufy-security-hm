@@ -47,14 +47,42 @@ export class Config
                     unlinkSync('./config.json.upload');
                 }
                 this.logger.logInfoBasic("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
-                this.configJson = this.loadConfigJson("./config.json");
+                if(this.isConfigFileAvailable() == false)
+                {
+                    this.configJson = this.createEmptyConfigJson();
+                    this.writeConfig();
+                }
+                else
+                {
+                    this.configJson = this.loadConfigJson("./config.json");
+                }
             }
         }
         else
         {
-            this.configJson = this.loadConfigJson("./config.json");
+            if(this.isConfigFileAvailable() == false)
+            {
+                this.configJson = this.createEmptyConfigJson();
+                this.writeConfig();
+            }
+            else
+            {
+                this.configJson = this.loadConfigJson("./config.json");
+            }
         }
         this.updateConfig();
+    }
+
+    /**
+     * Remove the scheduling for saveConfig12h
+     */
+    public close()
+    {
+        if(this.taskSaveConfig12h)
+        {
+            this.logger.logInfoBasic(`Remove scheduling for saveConfig12h.`);
+            clearInterval(this.taskSaveConfig12h);
+        }
     }
 
     /**
@@ -140,7 +168,7 @@ export class Config
         }
         catch (ENOENT)
         {
-            this.logger.logErrorBasis("No 'config.json' available.");
+            this.logger.logErrorBasis(`No '${filePath}' available.`);
         }
         return resConfigJson;
     }

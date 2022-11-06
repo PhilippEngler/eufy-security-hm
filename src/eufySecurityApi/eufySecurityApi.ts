@@ -2242,6 +2242,7 @@ export class EufySecurityApi
             this.logger.logInfoBasic(`Remove scheduling for getLibrary.`);
             clearInterval(this.taskUpdateLinks);
         }
+        this.config.close();
     }
 
     /**
