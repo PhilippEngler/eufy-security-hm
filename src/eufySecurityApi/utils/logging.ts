@@ -8,7 +8,7 @@ export class Logger
     {
         this.api = api;
     }
-    
+
     /**
      * Write the given message(s) to the logfile regardless the actual loglevel.
      * @param message The message to be added.

@@ -1954,7 +1954,7 @@ export class EufySecurityApi
         {
             this.logError("Error occured at checkSystemVariables().");
             this.setLastConnectionInfo(false);
-            json = {"success":false, "reason":"${e.message}"};
+            json = {"success":false, "reason":`"${e.message}"`};
         }
 
         return JSON.stringify(json);
