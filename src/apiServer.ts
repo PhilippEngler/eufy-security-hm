@@ -234,7 +234,7 @@ class ApiServer
                         }
                         break;
                     case "getConfig":
-                        responseString = api.getAPIConfig();
+                        responseString = await api.getAPIConfig();
                         break;
                     case "getApiInfo":
                         responseString = api.getApiVersion();
@@ -426,242 +426,292 @@ class ApiServer
         {
             if(url.length > 1)
             {
-                if (url[1] == "setConfig")
+                switch (url[1])
                 {
-                    var postData = "";
-                    var isDataOK = true;
-                    request.on("data", function (chunk) {
-                        postData += chunk.toString();
-                    });
+                    case "setConfig":
+                        var postData = "";
+                        var isDataOK = true;
+                        request.on("data", function (chunk) {
+                            postData += chunk.toString();
+                        });
 
-                    request.on("end", function(){
-                        var username = "";
-                        if(postData.indexOf("username") >= 0)
-                        {
-                            username = getDataFromPOSTData(postData, "username", "string");
-                        }
-                        
-                        var password = "";
-                        if(postData.indexOf("password") >= 0)
-                        {
-                            password = getDataFromPOSTData(postData, "password", "string");
-                        }
+                        request.on("end", async function(){
+                            var username = "";
+                            if(postData.indexOf("username") >= 0)
+                            {
+                                username = getDataFromPOSTData(postData, "username", "string");
+                            }
 
-                        var country = "";
-                        if(postData.indexOf("country") >= 0)
-                        {
-                            country = getDataFromPOSTData(postData, "country", "string");
-                        }
+                            var password = "";
+                            if(postData.indexOf("password") >= 0)
+                            {
+                                password = getDataFromPOSTData(postData, "password", "string");
+                            }
 
-                        var language = "";
-                        if(postData.indexOf("language") >= 0)
-                        {
-                            language = getDataFromPOSTData(postData, "language", "string");
-                        }
+                            var country = "";
+                            if(postData.indexOf("country") >= 0)
+                            {
+                                country = getDataFromPOSTData(postData, "country", "string");
+                            }
 
-                        var useHttp = false;
-                        if(postData.indexOf("useHttp") >= 0)
-                        {
-                            useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
-                        }
-                        
-                        var apiporthttp = 52789;
-                        if(postData.indexOf("httpPort") >= 0)
-                        {
-                            apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
-                        }
-                        
-                        var useHttps = false;
-                        if(postData.indexOf("useHttps") >= 0)
-                        {
-                            useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
-                        }
-                        if(useHttp == false && useHttps == false)
-                        {
-                            isDataOK = false;
-                        }
+                            var language = "";
+                            if(postData.indexOf("language") >= 0)
+                            {
+                                language = getDataFromPOSTData(postData, "language", "string");
+                            }
 
-                        var apiporthttps = 52790;
-                        if(postData.indexOf("httpsPort") >= 0)
-                        {
-                            apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
-                        }
+                            var useHttp = false;
+                            if(postData.indexOf("useHttp") >= 0)
+                            {
+                                useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
+                            }
 
-                        var apikeyfile = "/usr/local/etc/config/server.pem";
-                        if(postData.indexOf("httpsKeyFile") >= 0)
-                        {
-                            apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
-                        }
+                            var apiporthttp = 52789;
+                            if(postData.indexOf("httpPort") >= 0)
+                            {
+                                apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
+                            }
 
-                        var apicertfile = "/usr/local/etc/config/server.pem";
-                        if(postData.indexOf("httpsCertFile") >= 0)
-                        {
-                            apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
-                        }
-
-                        var apiconnectiontype = 1;
-                        if(postData.indexOf("connectionType") >= 0)
-                        {
-                            apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
-                        }
-
-                        var apiuseudpstaticports = false;
-                        if(postData.indexOf("useUdpStaticPorts") >= 0)
-                        {
-                            apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
-                        }
-
-                        var apiudpports : string[][] = [[],[]];
-                        if(postData.indexOf("udpPortsStation") >= 0)
-                        {
-                            apiudpports = getAllUdpPortsForStations(postData);
-                        }
-
-                        var useSystemVariables = false;
-                        if(postData.indexOf("useSystemVariables") >= 0)
-                        {
-                            useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
-                        }
-
-                        var apicameradefaultimage = "";
-                        if(postData.indexOf("defaultImagePath") >= 0)
-                        {
-                            apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
-                        }
-
-                        var apicameradefaultvideo = "";
-                        if(postData.indexOf("defaultVideoPath") >= 0)
-                        {
-                            apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
-                        }
-
-                        var useupdatestateevent = false;
-                        if(postData.indexOf("useUpdateStateEvent") >= 0)
-                        {
-                            useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
-                        }
-
-                        var useupdatestateintervall = false;
-                        if(postData.indexOf("useUpdateStateIntervall") >= 0)
-                        {
-                            useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
-                        }
-
-                        var updatestatetimespan = 15;
-                        if(postData.indexOf("updateStateIntervallTimespan") >= 0)
-                        {
-                            updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
-                        }
-
-                        var useupdatelinks = false;
-                        if(postData.indexOf("useUpdateLinksIntervall") >= 0)
-                        {
-                            useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
-                        }
-
-                        var useupdatelinksonlywhenactive = false;
-                        if(postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0)
-                        {
-                            useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
-                        }
-
-                        var updatelinkstimespan = 15;
-                        if(postData.indexOf("updateLinksIntervallTimespan") >= 0)
-                        {
-                            updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "number");
-                        }
-
-                        var usepushservice = false;
-                        if(postData.indexOf("usePushService") >= 0)
-                        {
-                            usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
-                        }
-
-                        var apiloglevel = 0;
-                        if(postData.indexOf("logLevel") >= 0)
-                        {
-                            apiloglevel = getDataFromPOSTData(postData, "logLevel", "number");
-                        }
-
-                        if(checkNumberValue(apiporthttp, 1, 53535) == false)
-                        {
-                            isDataOK = false;
-                        }
-                        if(checkNumberValue(apiporthttps, 1, 53535) == false)
-                        {
-                            isDataOK = false;
-                        }
-                        if(apiuseudpstaticports == true)
-                        {
-                            /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                            var useHttps = false;
+                            if(postData.indexOf("useHttps") >= 0)
+                            {
+                                useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
+                            }
+                            if(useHttp == false && useHttps == false)
                             {
                                 isDataOK = false;
-                            }*/
-                        }
-                        if(useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == ""))
-                        {
-                            isDataOK = false;
-                        }
-                        if(checkNumberValue(apiloglevel, 0, 3) == false)
-                        {
-                            isDataOK = false;
-                        }
-                        if(checkNumberValue(updatestatetimespan, 15, 240) == false)
-                        {
-                            isDataOK = false;
-                        }
-                        if(checkNumberValue(updatelinkstimespan, 15, 240) == false)
-                        {
-                            isDataOK = false;
-                        }
-                        
-                        if(isDataOK == true)
-                        {
-                            apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
+                            }
 
-                            responseString = api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
-                        }
-                        else
-                        {
-                            responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
-                        }
+                            var apiporthttps = 52790;
+                            if(postData.indexOf("httpsPort") >= 0)
+                            {
+                                apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
+                            }
 
-                        var resJSON = JSON.parse(responseString);
-                                                
+                            var apikeyfile = "/usr/local/etc/config/server.pem";
+                            if(postData.indexOf("httpsKeyFile") >= 0)
+                            {
+                                apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
+                            }
+
+                            var apicertfile = "/usr/local/etc/config/server.pem";
+                            if(postData.indexOf("httpsCertFile") >= 0)
+                            {
+                                apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
+                            }
+
+                            var apiconnectiontype = 1;
+                            if(postData.indexOf("connectionType") >= 0)
+                            {
+                                apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
+                            }
+
+                            var apiuseudpstaticports = false;
+                            if(postData.indexOf("useUdpStaticPorts") >= 0)
+                            {
+                                apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                            }
+
+                            var apiudpports : string[][] = [[],[]];
+                            if(postData.indexOf("udpPortsStation") >= 0)
+                            {
+                                apiudpports = getAllUdpPortsForStations(postData);
+                            }
+
+                            var useSystemVariables = false;
+                            if(postData.indexOf("useSystemVariables") >= 0)
+                            {
+                                useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
+                            }
+
+                            var apicameradefaultimage = "";
+                            if(postData.indexOf("defaultImagePath") >= 0)
+                            {
+                                apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
+                            }
+
+                            var apicameradefaultvideo = "";
+                            if(postData.indexOf("defaultVideoPath") >= 0)
+                            {
+                                apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
+                            }
+
+                            var useupdatestateevent = false;
+                            if(postData.indexOf("useUpdateStateEvent") >= 0)
+                            {
+                                useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
+                            }
+
+                            var useupdatestateintervall = false;
+                            if(postData.indexOf("useUpdateStateIntervall") >= 0)
+                            {
+                                useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
+                            }
+
+                            var updatestatetimespan = 15;
+                            if(postData.indexOf("updateStateIntervallTimespan") >= 0)
+                            {
+                                updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
+                            }
+
+                            var useupdatelinks = false;
+                            if(postData.indexOf("useUpdateLinksIntervall") >= 0)
+                            {
+                                useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
+                            }
+
+                            var useupdatelinksonlywhenactive = false;
+                            if(postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0)
+                            {
+                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
+                            }
+
+                            var updatelinkstimespan = 15;
+                            if(postData.indexOf("updateLinksIntervallTimespan") >= 0)
+                            {
+                                updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "number");
+                            }
+
+                            var usepushservice = false;
+                            if(postData.indexOf("usePushService") >= 0)
+                            {
+                                usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
+                            }
+
+                            var apiloglevel = 0;
+                            if(postData.indexOf("logLevel") >= 0)
+                            {
+                                apiloglevel = getDataFromPOSTData(postData, "logLevel", "number");
+                            }
+
+                            if(checkNumberValue(apiporthttp, 1, 53535) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(apiporthttps, 1, 53535) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(apiuseudpstaticports == true)
+                            {
+                                /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                                {
+                                    isDataOK = false;
+                                }*/
+                            }
+                            if(useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == ""))
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(apiloglevel, 0, 3) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(updatestatetimespan, 15, 240) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(updatelinkstimespan, 15, 240) == false)
+                            {
+                                isDataOK = false;
+                            }
+
+                            if(isDataOK == true)
+                            {
+                                apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
+
+                                responseString = await api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                            }
+                            else
+                            {
+                                responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
+                            }
+
+                            var resJSON = JSON.parse(responseString);
+
+                            response.setHeader('Access-Control-Allow-Origin', '*');
+                            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+
+                            response.writeHead(200);
+                            response.end(responseString);
+
+                            if(resJSON.success == true && resJSON.serviceRestart == true)
+                            {
+                                logger.logInfoBasic("Settings saved. Restarting apiServer.");
+                                restartServer();
+                            }
+                            else if(resJSON.success == true && resJSON.serviceRestart == false)
+                            {
+                                logger.logInfoBasic("Settings saved.");
+                            }
+                            else
+                            {
+                                logger.logInfoBasic("Error during saving settings.");
+                            }
+                        });
+                        break;
+                    case "uploadConfig":
+                        var postData = "";
+                        var isDataOK = true;
+                        request.on("data", function (chunk) {
+                            postData += chunk.toString();
+                        });
+
+                        request.on("end", function() {
+                            responseString = "";
+                            if(checkUploadedFileMetadata(postData) == false)
+                            {
+                                responseString = `{"success":false,"serviceRestart":true,"message":"File metadata are unsopported or missing."}`;
+                            }
+                            var fileContent = getUploadFileContent(postData);
+                            if(fileContent === undefined)
+                            {
+                                if(responseString == "")
+                                {
+                                    responseString = `{"success":false,"serviceRestart":true,"message":"File content could not be determined."}`;
+                                }
+                                else
+                                {
+                                    responseString = `{"success":false,"serviceRestart":true,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
+                                }
+                            }
+                            else
+                            {
+                                writeFileSync("config.json.upload", fileContent, 'utf-8');
+                                responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
+                            }
+
+                            var resJSON = JSON.parse(responseString);
+
+                            response.setHeader('Access-Control-Allow-Origin', '*');
+                            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+
+                            response.writeHead(200);
+                            response.end(responseString);
+
+                            if(resJSON.success == true && resJSON.serviceRestart == true)
+                            {
+                                logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
+                                restartServer();
+                            }
+                            else
+                            {
+                                logger.logInfoBasic("Error during upload and saving config file.");
+                            }
+                        });
+                        break;
+                    default:
+                        responseString = `{"success":false,"message":"Unknown command."}`;
                         response.setHeader('Access-Control-Allow-Origin', '*');
                         response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-                        
+
                         response.writeHead(200);
                         response.end(responseString);
-
-                        if(resJSON.success == true && resJSON.serviceRestart == true)
-                        {
-                            logger.logInfoBasic("Settings saved. Restarting apiServer.");
-                            restartServer();
-                        }
-                        else if(resJSON.success == true && resJSON.serviceRestart == false)
-                        {
-                            logger.logInfoBasic("Settings saved.");
-                        }
-                        else
-                        {
-                            logger.logInfoBasic("Error during saving settings.");
-                        }
-                    });
-                }
-                else
-                {
-                    responseString = `{"success":false,"message":"Unknown command."}`;
-                    response.setHeader('Access-Control-Allow-Origin', '*');
-                    response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-
-                    response.writeHead(200);
-                    response.end(responseString);
                 }
             }
             else
             {
-                responseString = `{"success":false,"message":"Unknown command."}`;
+                responseString = `{"success":false,"message":"Wrong amount of arguments."}`;
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', 'application/json; charset=UTF-8');
 
@@ -834,6 +884,36 @@ function getAllUdpPortsForStations(postData : string) : string[][]
         i++;
     }
     return res;
+}
+
+function checkUploadedFileMetadata(postData : string) : boolean
+{
+    var pos = postData.indexOf("Content-Disposition: form-data;");
+    if(pos < 0)
+    {
+        return false;
+    }
+    pos = postData.indexOf("Content-Type: application/json");
+    if(pos < 0)
+    {
+        return false;
+    }
+    return true;
+}
+
+function getUploadFileContent(postData : string) : string | undefined
+{
+    var start = postData.indexOf("{");
+    if(start < 0)
+    {
+        return undefined;
+    }
+    var end = postData.lastIndexOf("}");
+    if(end < 0)
+    {
+        return undefined;
+    }
+    return postData.substring(start, end+1);
 }
 
 /**

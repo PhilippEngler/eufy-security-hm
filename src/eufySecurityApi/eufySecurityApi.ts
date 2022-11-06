@@ -149,7 +149,9 @@ export class EufySecurityApi
         }*/
 
         if (this.refreshEufySecurityCloudTimeout !== undefined)
+        {
             clearTimeout(this.refreshEufySecurityCloudTimeout);
+        }
 
         this.closePushService();
         this.closeMqttService();
@@ -334,9 +336,9 @@ export class EufySecurityApi
      * Returns the all stations as array.
      * @returns The array with all stations.
      */
-    public getStations() : { [stationSerial : string] : Station }
+    public async getStations() : Promise<{ [stationSerial : string ] : Station }>
     {
-        return this.stations.getStations();
+        return await this.stations.getStations();
     }
 
     /**
@@ -344,9 +346,9 @@ export class EufySecurityApi
      * @param stationSerial The serial of the station to retrive.
      * @returns The station as object.
      */
-    public getStation(stationSerial : string) : Station
+    public async getStation(stationSerial : string) : Promise<Station>
     {
-        return this.stations.getStation(stationSerial);
+        return await this.stations.getStation(stationSerial);
     }
 
     /**
@@ -811,7 +813,7 @@ export class EufySecurityApi
 
                 await this.stations.loadStations();
 
-                var stations = this.getStations();
+                var stations = await this.getStations();
 
                 if(stations)
                 {
@@ -863,7 +865,7 @@ export class EufySecurityApi
      */
     public async getStationPropertiesMetadataAsJSON(stationSerial : string) : Promise<string>
     {
-        var station = this.getStations()[stationSerial];
+        var station = await this.getStation(stationSerial);
         var json : any = {};
         if(station)
         {
@@ -894,7 +896,7 @@ export class EufySecurityApi
      */
     public async getStationPropertiesAsJSON(stationSerial : string) : Promise<string>
     {
-        var station = this.getStations()[stationSerial];
+        var station = await this.getStation(stationSerial);
         var json : any = {};
         if(station)
         {
@@ -962,7 +964,7 @@ export class EufySecurityApi
 
         await this.stations.loadStations();
 
-        var station = this.getStations()[stationSerial];
+        var station = await this.getStation(stationSerial);
         var json : any = {};
         if(station)
         {
@@ -1052,7 +1054,7 @@ export class EufySecurityApi
                 await this.stations.loadStations();
 
                 var mode = -1;
-                var stations = this.getStations();
+                var stations = await this.getStations();
 
                 if(stations)
                 {
@@ -1119,7 +1121,7 @@ export class EufySecurityApi
             {
                 await this.stations.loadStations();
 
-                var stations = this.getStations();
+                var stations = await this.getStations();
                 var station : Station;
 
                 if(stations)
@@ -1161,7 +1163,7 @@ export class EufySecurityApi
 
         await this.stations.loadStations();
 
-        var station = this.getStations()[stationSerial];
+        var station = await this.getStation(stationSerial);
         var json : any = {};
         if(station)
         {
@@ -1238,7 +1240,7 @@ export class EufySecurityApi
 
                 if(res == true)
                 {
-                    var stations = this.getStations();
+                    var stations = await this.getStations();
                     var station : Station;
 
                     json = {"success":true, "data":[]};
@@ -1320,10 +1322,9 @@ export class EufySecurityApi
 
                 var res = await this.stations.setGuardModeStation(stationSerial, guardMode);
 
-                var stations = this.getStations();
+                //var stations = await this.getStations();
                 
-                var station : Station;
-                station = stations[stationSerial];
+                var station = await this.getStation(stationSerial);
 
                 if(res)
                 {
@@ -1515,16 +1516,16 @@ export class EufySecurityApi
     /**
      * Update the global station guard mode change time systemvariable.
      */
-    public updateGlobalStationGuardModeChangeTimeSystemVariable()
+    public async updateGlobalStationGuardModeChangeTimeSystemVariable()
     {
-        var stations = this.getStations();
+        var stations = await this.getStations();
         var station;
         var tempModeChange;
         var lastModeChange = new Date(1970, 1, 1);
 
         for (var stationSerial in stations)
         {
-            station = stations[stationSerial];
+            station = stations[stationSerial]
             tempModeChange = new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0)
             if(lastModeChange < tempModeChange)
             {
@@ -1649,12 +1650,12 @@ export class EufySecurityApi
     /**
      * Returns the ports should be used for communication with stations.
      */
-    public getLocalStaticUdpPorts() : any[]
+    public async getLocalStaticUdpPorts() : Promise<any[]>
     {
         var json : any = [];
         if(this.stations)
         {
-            var stations = this.getStations();
+            var stations = await this.getStations();
 
             if(stations)
             {
@@ -1724,13 +1725,13 @@ export class EufySecurityApi
     /**
      * Get all config data needed for the webui.
      */
-    public getAPIConfig() : string
+    public async getAPIConfig() : Promise<string>
     {
         var json : any = {};
         
         json = {"success":true, "data":{}};
         json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "cameraDefaultImage":this.config.getCameraDefaultImage(), "cameraDefaultVideo":this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevel":this.config.getLogLevel()};
-        json.data.localStaticUdpPorts = this.getLocalStaticUdpPorts();
+        json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
 
@@ -1762,7 +1763,7 @@ export class EufySecurityApi
      * @param logLevel The log level.
      * @returns 
      */
-    public setConfig(eMail : string, password : string, country : string, language : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : string[][], systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : string
+    public async setConfig(eMail : string, password : string, country : string, language : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : string[][], systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : Promise<string>
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
@@ -1792,7 +1793,7 @@ export class EufySecurityApi
         {
             if(this.stations)
             {
-                var stations = this.getStations();
+                var stations = await this.getStations();
                 if(stations)
                 {
                     for (var stationSerial in stations)
@@ -1907,7 +1908,7 @@ export class EufySecurityApi
 
                     var station : Station;
                     var device : Device;
-                    var stations = this.getStations();
+                    var stations = await this.getStations();
                     var devices = this.getDevices();
 
                     var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime","eufyLastModeChangeTime"];
@@ -2337,6 +2338,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.2.0-rc2";
+        return "2.2.1-rc1";
     }
 }

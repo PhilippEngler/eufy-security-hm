@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { DeviceNotFoundError, ReadOnlyPropertyError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe, InvalidPropertyError } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue } from "./utils";
@@ -48,6 +48,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
         const deviceSNs: string[] = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
+        const promises: Array<Promise<Device>> = [];
         
         var deviceSerial : string;
         var device : Device;
@@ -63,81 +64,108 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
                 else
                 {
+                    let new_device : Promise<Device>;
+
                     if(Device.isIndoorCamera(resDevices[deviceSerial].device_type))
                     {
-                        device = await IndoorCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = IndoorCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isSoloCameras(resDevices[deviceSerial].device_type))
                     {
-                        device = await SoloCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = SoloCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isBatteryDoorbell(resDevices[deviceSerial].device_type))
                     {
-                        device = await BatteryDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = BatteryDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type))
                     {
-                        device = await WiredDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = WiredDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     } 
                     else if(Device.isFloodLight(resDevices[deviceSerial].device_type))
                     {
-                        device = await FloodlightCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = FloodlightCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }                        
                     else if(Device.isCamera(resDevices[deviceSerial].device_type))
                     {
-                        device = await Camera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = Camera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isLock(resDevices[deviceSerial].device_type))
                     {
-                        device = await Lock.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = Lock.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isMotionSensor(resDevices[deviceSerial].device_type))
                     {
-                        device = await MotionSensor.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = MotionSensor.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isEntrySensor(resDevices[deviceSerial].device_type))
                     {
-                        device = await EntrySensor.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = EntrySensor.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isKeyPad(resDevices[deviceSerial].device_type))
                     {
-                        device = await Keypad.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = Keypad.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (Device.isSmartSafe(resDevices[deviceSerial].device_type))
                     {
-                        device = await SmartSafe.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = SmartSafe.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else
                     {
-                        device = await UnknownDevice.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = UnknownDevice.initialize(this.httpService, resDevices[deviceSerial]);
                     }                        
 
-                    this.addEventListener(device, "PropertyChanged");
-                    this.addEventListener(device, "RawPropertyChanged");
-                    this.addEventListener(device, "CryingDetected");
-                    this.addEventListener(device, "SoundDetected");
-                    this.addEventListener(device, "PetDetected");
-                    this.addEventListener(device, "MotionDetected");
-                    this.addEventListener(device, "PersonDetected");
-                    this.addEventListener(device, "Rings");
-                    this.addEventListener(device, "Locked");
-                    this.addEventListener(device, "Open");
-                    this.addEventListener(device, "Ready");
-                    this.addEventListener(device, "PackageDelivered");
-                    this.addEventListener(device, "PackageStranded");
-                    this.addEventListener(device, "PackageTaken");
-                    this.addEventListener(device, "SomeoneLoitering");
-                    this.addEventListener(device, "RadarMotionDetected");
-                    this.addEventListener(device, "911Alarm");
-                    this.addEventListener(device, "ShakeAlarm");
-                    this.addEventListener(device, "WrongTryProtectAlarm");
-                    this.addEventListener(device, "LongTimeNotClose");
-                    this.addEventListener(device, "LowBattery");
-                    this.addEventListener(device, "Jammed");
+                    promises.push(new_device.then((device: Device) => {
+                        try
+                        {
+                            this.addEventListener(device, "PropertyChanged");
+                            this.addEventListener(device, "RawPropertyChanged");
+                            this.addEventListener(device, "CryingDetected");
+                            this.addEventListener(device, "SoundDetected");
+                            this.addEventListener(device, "PetDetected");
+                            this.addEventListener(device, "MotionDetected");
+                            this.addEventListener(device, "PersonDetected");
+                            this.addEventListener(device, "Rings");
+                            this.addEventListener(device, "Locked");
+                            this.addEventListener(device, "Open");
+                            this.addEventListener(device, "Ready");
+                            this.addEventListener(device, "PackageDelivered");
+                            this.addEventListener(device, "PackageStranded");
+                            this.addEventListener(device, "PackageTaken");
+                            this.addEventListener(device, "SomeoneLoitering");
+                            this.addEventListener(device, "RadarMotionDetected");
+                            this.addEventListener(device, "911Alarm");
+                            this.addEventListener(device, "ShakeAlarm");
+                            this.addEventListener(device, "WrongTryProtectAlarm");
+                            this.addEventListener(device, "LongTimeNotClose");
+                            this.addEventListener(device, "LowBattery");
+                            this.addEventListener(device, "Jammed");
 
-                    this.addDevice(device);
+                            this.addDevice(device);
+                        }
+                        catch (error)
+                        {
+                            this.api.logError("Error", error);
+                        }
+                        return device;
+                    }));
                 }
             }
+
+            this.loadingDevices = Promise.all(promises).then((devices) => {
+                devices.forEach((device) => {
+                    this.api.getStation(device.getStationSerial()).then((station: Station) => {
+                        if (!station.isConnected())
+                        {
+                            station.setConnectionType(this.api.getConfig().getConnectionType());
+                            station.connect();
+                        }
+                    }).catch((error) => {
+                        this.api.logError("Error trying to connect to station afte device loaded", error);
+                    });
+                });
+                this.loadingDevices = undefined;
+            });
 
             for (const deviceSN of deviceSNs)
             {
@@ -206,26 +234,30 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async updateDevice(device : DeviceListResponse) : Promise<void>
     {
-        var bases = this.api.getStations();
-        for (var baseSerial in bases)
+        var stations = await this.api.getStations();
+        for (var stationSerial in stations)
         {
-            if (!bases[baseSerial].isConnected())
+            if (!stations[stationSerial].isConnected())
             {
-                if(bases[baseSerial].getDeviceType() == DeviceType.STATION)
+                if(stations[stationSerial].getDeviceType() == DeviceType.STATION)
                 {
-                    bases[baseSerial].setConnectionType(this.api.getP2PConnectionType());
+                    stations[stationSerial].setConnectionType(this.api.getP2PConnectionType());
                 }
                 else
                 {
-                    bases[baseSerial].setConnectionType(P2PConnectionType.QUICKEST);
+                    stations[stationSerial].setConnectionType(P2PConnectionType.QUICKEST);
                 }
-                bases[baseSerial].connect();
+                stations[stationSerial].connect();
             }
         }
 
+        if (this.loadingDevices !== undefined)
+        {
+            await this.loadingDevices;
+        }
         if (Object.keys(this.devices).includes(device.device_sn))
         {
-            this.devices[device.device_sn].update(device, bases[device.station_sn] !== undefined && !bases[device.station_sn].isIntegratedDevice() && bases[device.station_sn].isConnected())
+            this.devices[device.device_sn].update(device, stations[device.station_sn] !== undefined && !stations[device.station_sn].isIntegratedDevice() && stations[device.station_sn].isConnected())
         }
         else
         {
@@ -756,7 +788,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             this.emit("device property changed", device, name, value);
             if (name === PropertyName.DeviceRTSPStream && (value as boolean) === true && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) === undefined || (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) as string) === "")))
             {
-                this.api.getStation(device.getStationSerial()).setRTSPStream(device, true);
+                this.api.getStation(device.getStationSerial()).then((station: Station) => {
+                    station.setRTSPStream(device, true);
+                }).catch((error) => {
+                    this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                });
             }
             else if (name === PropertyName.DeviceRTSPStream && (value as boolean) === false)
             {
@@ -879,7 +915,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             if (device.getPropertyValue(PropertyName.DeviceRTSPStream) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStream) as boolean) === true)
             {
-                this.api.getStation(device.getStationSerial()).setRTSPStream(device, true);
+                this.api.getStation(device.getStationSerial()).then((station: Station) => {
+                    station.setRTSPStream(device, true);
+                }).catch((error) => {
+                    this.api.logError(`Device ready error (device: ${device.getSerial()}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                });
             }
         }
         catch (error)
@@ -1101,13 +1141,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     public async setDeviceProperty(deviceSerial : string, name : string, value : unknown) : Promise<void>
     {
         const device = await this.devices[deviceSerial];
-        const station = this.api.getStation(device.getStationSerial());
+        const station = await this.api.getStation(device.getStationSerial());
         const metadata = device.getPropertyMetadata(name);
 
         value = parseValue(metadata, value);
 
-        switch (name)
-        {
+        switch (name) {
             case PropertyName.DeviceEnabled:
                 await station.enableDevice(device, value as boolean);
                 break;
@@ -1319,22 +1358,34 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 await station.setAutoCalibration(device, value as boolean);
                 break;
             case PropertyName.DeviceAutoLock:
+                await station.setAutoLock(device, value as boolean);
+                break
             case PropertyName.DeviceAutoLockSchedule:
+                await station.setAutoLockSchedule(device, value as boolean);
+                break
             case PropertyName.DeviceAutoLockScheduleStartTime:
+                await station.setAutoLockScheduleStartTime(device, value as string);
+                break
             case PropertyName.DeviceAutoLockScheduleEndTime:
+                await station.setAutoLockScheduleEndTime(device, value as string);
+                break
             case PropertyName.DeviceAutoLockTimer:
+                await station.setAutoLockTimer(device, value as number);
+                break
             case PropertyName.DeviceOneTouchLocking:
+                await station.setOneTouchLocking(device, value as boolean);
+                break
             case PropertyName.DeviceSound:
-                await station.setAdvancedLockParams(device, name, value as PropertyValue);
+                await station.setSound(device, value as number);
                 break;
             case PropertyName.DeviceNotification:
-                await station.setAdvancedLockParams(device, PropertyName.DeviceNotification, value as PropertyValue);
+                await station.setNotification(device, value as boolean);
                 break;
             case PropertyName.DeviceNotificationLocked:
-                await station.setAdvancedLockParams(device, PropertyName.DeviceNotificationLocked, value as PropertyValue);
+                await station.setNotificationLocked(device, value as boolean);
                 break;
             case PropertyName.DeviceNotificationUnlocked:
-                await station.setAdvancedLockParams(device, PropertyName.DeviceNotificationUnlocked, value as PropertyValue);
+                await station.setNotificationUnlocked(device, value as boolean);
                 break;
             case PropertyName.DeviceScramblePasscode:
                 await station.setScramblePasscode(device,value as boolean);
@@ -1494,6 +1545,21 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 break;
             case PropertyName.DeviceVideoTypeStoreToNAS:
                 await station.setVideoTypeStoreToNAS(device, value as number);
+                break;
+            case PropertyName.DeviceMotionDetectionTypeHumanRecognition:
+                await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.HUMAN_RECOGNITION, value as boolean);
+                break;
+            case PropertyName.DeviceMotionDetectionTypeHuman:
+                await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.HUMAN_DETECTION, value as boolean);
+                break;
+            case PropertyName.DeviceMotionDetectionTypePet:
+                await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.PET_DETECTION, value as boolean);
+                break;
+            case PropertyName.DeviceMotionDetectionTypeVehicle:
+                await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.VEHICLE_DETECTION, value as boolean);
+                break;
+            case PropertyName.DeviceMotionDetectionTypeAllOtherMotions:
+                await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))

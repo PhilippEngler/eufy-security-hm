@@ -1,11 +1,11 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError, Schedule } from './http';
 import { sleep } from './push/utils';
-import { DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError } from "./error";
+import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError } from "./error";
 import internal from "stream";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata } from "./p2p";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue } from "./utils";
 
@@ -20,6 +20,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private stations : { [stationSerial : string ] : Station } = {};
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
     private lastGuardModeChangeTimeForStations : { [stationSerial : string] : any } = {};
+    private loadingStations?: Promise<unknown>;
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
 
@@ -55,35 +56,29 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Put all stations and their settings in format so that we can work with them.
      * @param hubs The object containing the stations.
      */
-    private handleHubs(hubs: Hubs) : void
+    private async handleHubs(hubs: Hubs) : Promise<void>
     {
         this.api.logDebug("Got hubs:", hubs);
         const resStations = hubs;
 
         var station : Station;
         const stationsSNs : string[] = Object.keys(this.stations);
+        const promises: Array<Promise<Station>> = [];
         const newStationsSNs = Object.keys(hubs);
 
         for (var stationSerial in resStations)
         {
             if(this.stations[stationSerial])
             {
-                this.updateStation(resStations[stationSerial]);
+                await this.updateStation(resStations[stationSerial]);
             }
             else
             {
-                station = new Station(this.api, this.httpService, resStations[stationSerial]);
+                station = await Station.initialize(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                if(station.getDeviceType() == DeviceType.STATION)
-                {
-                    station.setConnectionType(this.api.getP2PConnectionType());
-                }
-                else
-                {
-                    station.setConnectionType(P2PConnectionType.QUICKEST);
-                }
+                station.setConnectionType(this.api.getP2PConnectionType());
                 station.connect();
 
                 if(this.api.getStateUpdateEventActive())
@@ -125,16 +120,25 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(station, "DeviceJammed", false);
                 this.addEventListener(station, "DeviceLowBattery", false);
                 this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
+                this.addEventListener(station, "DevicePinVerified", false);
 
                 this.addStation(station);
             }
         }
-        
+
+        this.loadingStations = Promise.all(promises).then(() => {
+            this.loadingStations = undefined;
+        });
+
         for (const stationSN of stationsSNs)
         {
             if (!newStationsSNs.includes(stationSN))
             {
-                this.removeStation(this.getStation(stationSN));
+                this.getStation(stationSN).then((station: Station) => {
+                    this.removeStation(station);
+                }).catch((error: any) => {
+                    this.api.logError("Error removing station", error);
+                });
             }
         }
 
@@ -186,21 +190,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Update the station information.
      * @param hub The object containg the specific hub.
      */
-    private updateStation(hub : StationListResponse) : void
+    private async updateStation(hub : StationListResponse) : Promise<void>
     {
+        if (this.loadingStations !== undefined)
+        {
+            await this.loadingStations;
+        }
         if (Object.keys(this.stations).includes(hub.station_sn))
         {
-            this.stations[hub.station_sn].update(hub, this.stations[hub.station_sn] !== undefined && this.stations[hub.station_sn].isConnected());
+            this.stations[hub.station_sn].update(hub, this.stations[hub.station_sn] !== undefined && !this.stations[hub.station_sn].isIntegratedDevice() && this.stations[hub.station_sn].isConnected());
             if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice())
             {
-                if(this.stations[hub.station_sn].getDeviceType() == DeviceType.STATION)
-                {
-                    this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
-                }
-                else
-                {
-                    this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
-                }
+                this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 this.stations[hub.station_sn].connect();
             }
         }
@@ -217,7 +218,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         try
         {
-            this.handleHubs(this.httpService.getHubs());
+            await this.handleHubs(this.httpService.getHubs());
         }
         catch (e : any)
         {
@@ -290,6 +291,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.stations[stationSerial], "DeviceJammed");
                     this.removeEventListener(this.stations[stationSerial], "DeviceLowBattery");
                     this.removeEventListener(this.stations[stationSerial], "DeviceWrongTryProtectAlarm");
+                    this.removeEventListener(this.stations[stationSerial], "DevicePinVerified");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
@@ -340,7 +342,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     public async startStationLivestream(deviceSerial : string) : Promise<void>
     {
         const device = await this.api.getDevice(deviceSerial);
-        const station = this.getStation(device.getStationSerial());
+        const station = await this.getStation(device.getStationSerial());
 
         if(!device.hasCommand(CommandName.DeviceStartLivestream))
         {
@@ -370,7 +372,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     public async startCloudLivestream(deviceSerial : string) : Promise<void>
     {
         const device = await this.api.getDevice(deviceSerial);
-        const station = this.getStation(device.getStationSerial());
+        const station = await this.getStation(device.getStationSerial());
 
         if(!device.hasCommand(CommandName.DeviceStartLivestream))
         {
@@ -406,7 +408,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     public async stopStationLivestream(deviceSerial : string) : Promise<void>
     {
         const device = await this.api.getDevice(deviceSerial);
-        const station = this.getStation(device.getStationSerial());
+        const station = await this.getStation(device.getStationSerial());
 
         if(!device.hasCommand(CommandName.DeviceStopLivestream))
         {
@@ -436,7 +438,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     public async stopCloudLivestream(deviceSerial: string): Promise<void>
     {
         const device = await this.api.getDevice(deviceSerial);
-        const station = this.getStation(device.getStationSerial());
+        const station = await this.getStation(device.getStationSerial());
 
         if(!device.hasCommand(CommandName.DeviceStopLivestream))
         {
@@ -473,8 +475,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Returns a Array of all stations.
      */
-    public getStations() : { [stationSerial : string] : Station }
+    public async getStations() : Promise<{ [stationSerial : string ] : Station }>
     {
+        if (this.loadingStations !== undefined)
+        {
+            await this.loadingStations;
+        }
         return this.stations;
     }
 
@@ -483,13 +489,17 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The serial of the station to retrive.
      * @returns The station object.
      */
-    public getStation(stationSerial : string) : Station
+    public async getStation(stationSN: string): Promise<Station>
     {
-        if (Object.keys(this.stations).includes(stationSerial))
+        if (this.loadingStations !== undefined)
         {
-            return this.stations[stationSerial];
+            await this.loadingStations;
         }
-        throw new StationNotFoundError(`No station with serial number: ${stationSerial}!`);
+        if (Object.keys(this.stations).includes(stationSN))
+        {
+            return this.stations[stationSN];
+        }
+        throw new StationNotFoundError(`No station with serial number: ${stationSN}!`);
     }
 
     /**
@@ -513,9 +523,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Get the guard mode for all stations.
      */
-    public getGuardMode() : { [stationSerial : string ] : Station}
+    public getGuardMode() : { [stationSerial : string ] : GuardMode}
     {
-        return this.getStations();
+        var res : { [stationSerial : string ] : GuardMode} = {};
+        for (var stationSerial in this.stations)
+        {
+            res[stationSerial] = this.stations[stationSerial].getGuardMode() as GuardMode;
+        }
+        return res;
     }
 
     /**
@@ -825,6 +840,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.on("device wrong try-protect alarm", (deviceSerial: string) => this.onStationDeviceWrongTryProtectAlarm(deviceSerial));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
                 break;
+            case "DevicePinVerified":
+                station.on("device pin verified", (deviceSN: string, successfull: boolean) => this.onStationDevicePinVerified(deviceSN, successfull));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device pin verified")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
                 break;
@@ -976,6 +995,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeAllListeners("device wrong try-protect alarm");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
                 break;
+            case "DevicePinVerified":
+                station.removeAllListeners("device pin verified");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device pin verified")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
                 break;
@@ -1059,6 +1082,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 return station.listenerCount("device low battery");
             case "DeviceWrongTryProtectAlarm":
                 return station.listenerCount("device wrong try-protect alarm");
+            case "DevicePinVerified":
+                return station.listenerCount("device pin verified");
         }
         return -1;
     }
@@ -1227,28 +1252,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param result The result.
      */
-    private async onStationCommandResult(station : Station, result : CommandResult) : Promise<void>
-    {
-        this.api.logDebug(`Event "CommandResult": station: ${station.getSerial()} | result: ${result}`);
+    private onStationCommandResult(station: Station, result: CommandResult): void {
+        this.emit("station command result", station, result);
         if (result.return_code === 0) {
             this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
-                //TODO: Finish SmartSafe implementation - check better the if below
-                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLock()) || (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS))
-                {
-                    if (device.hasProperty(result.customData.property.name))
-                    {
+                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLockWifiR10() && !device.isLockWifiR20() && !device.isLockWifiVideo() && !device.isSmartSafe()) ||
+                    (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS)) {
+                    if (device.hasProperty(result.customData.property.name)) {
                         device.updateProperty(result.customData.property.name, result.customData.property.value);
-                    }
-                    else if (station.hasProperty(result.customData.property.name))
-                    {
+                    } else if (station.hasProperty(result.customData.property.name)) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
-                }
-                else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === CommandName.DeviceSnooze)
-                {
+                } else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === CommandName.DeviceSnooze) {
                     const snoozeTime = result.customData.command.value !== undefined && result.customData.command.value.snooze_time !== undefined ? result.customData.command.value.snooze_time as number : 0;
-                    if (snoozeTime > 0)
-                    {
+                    if (snoozeTime > 0) {
                         device.updateProperty(PropertyName.DeviceSnooze, true);
                         device.updateProperty(PropertyName.DeviceSnoozeTime, snoozeTime);
                     }
@@ -1256,12 +1273,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         const snoozeStartTime = device.getPropertyValue(PropertyName.DeviceHiddenSnoozeStartTime) as number;
                         const currentTime = Math.trunc(new Date().getTime() / 1000);
                         let timeoutMS;
-                        if (snoozeStartTime !== undefined && snoozeStartTime !== 0)
-                        {
+                        if (snoozeStartTime !== undefined && snoozeStartTime !== 0) {
                             timeoutMS = (snoozeStartTime + snoozeTime - currentTime) * 1000;
-                        }
-                        else
-                        {
+                        } else {
                             timeoutMS = snoozeTime * 1000;
                         }
                         this.api.setDeviceSnooze(device, timeoutMS);
@@ -1270,22 +1284,79 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     });
                 }
             }).catch((error) => {
-                if (error instanceof DeviceNotFoundError)
-                {
-                    if (result.customData !== undefined && result.customData.property !== undefined)
-                    {
+                if (error instanceof DeviceNotFoundError) {
+                    if (result.customData !== undefined && result.customData.property !== undefined) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
-                }
-                else
-                {
+                } else {
                     this.api.logError(`Station command result error (station: ${station.getSerial()})`, error);
                 }
             });
-            if (station.isIntegratedDevice() && result.command_type === CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
-            {
-                this.api.logInfo(`Event "CommandResult": station: ${station.getSerial()} | result.customData: ${result.customData}`);
+            if (station.isIntegratedDevice() && result.command_type === CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL) {
                 station.getCameraInfo();
+            }
+        }
+        if (result.customData !== undefined && result.customData.command !== undefined) {
+            const customValue = result.customData.command.value;
+            switch (result.customData.command.name) {
+                case CommandName.DeviceAddUser:
+                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                        switch (result.return_code) {
+                            case 0:
+                                this.emit("user added", device, customValue.username, customValue.schedule);
+                                break;
+                            case 4:
+                                this.emit("user error", device, customValue.username, new AddUserError("Passcode already used by another user, please choose a different one"));
+                                break;
+                            default:
+                                this.emit("user error", device, customValue.username, new AddUserError(`Error creating user with return code ${result.return_code}`));
+                                break;
+                        }
+                    });
+                    break;
+                case CommandName.DeviceDeleteUser:
+                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                        switch (result.return_code) {
+                            case 0:
+                                this.httpService.deleteUser(device.getSerial(), customValue.short_user_id, device.getStationSerial()).then((result) => {
+                                    if (result) {
+                                        this.emit("user deleted", device, customValue.username);
+                                    } else {
+                                        this.emit("user error", device, customValue.username, new DeleteUserError(`Error in deleting user "${customValue.username}" with id "${customValue.short_user_id}" through cloud api call`));
+                                    }
+                                });
+
+                                break;
+                            default:
+                                this.emit("user error", device, customValue.username, new Error(`Error deleting user with return code ${result.return_code}`));
+                                break;
+                        }
+                    });
+                    break;
+                case CommandName.DeviceUpdateUserPasscode:
+                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                        switch (result.return_code) {
+                            case 0:
+                                this.emit("user passcode updated", device, customValue.username);
+                                break;
+                            default:
+                                this.emit("user error", device, customValue.username, new UpdateUserPasscodeError(`Error updating user passcode with return code ${result.return_code}`));
+                                break;
+                        }
+                    });
+                    break;
+                case CommandName.DeviceUpdateUserSchedule:
+                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                        switch (result.return_code) {
+                            case 0:
+                                this.emit("user schedule updated", device, customValue.username, customValue.schedule);
+                                break;
+                            default:
+                                this.emit("user error", device, customValue.username, new UpdateUserScheduleError(`Error updating user schedule with return code ${result.return_code}`));
+                                break;
+                        }
+                    });
+                    break;
             }
         }
     }
@@ -1699,6 +1770,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * The action to be performed when event pin verfifcation is fired.
+     * @param deviceSerial The device serial.
+     * @param successfull Result of pin verification.
+     */
+    private onStationDevicePinVerified(deviceSerial : string, successfull : boolean): void {
+        this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
+        this.api.getDevice(deviceSerial).then((device: Device) => {
+            this.emit("device pin verified", device, successfull);
+        }).catch((error) => {
+            this.api.logError(`onStationDevicePinVerified device ${deviceSerial} error`, error);
+        });
+    }
+
+    /**
      * Retrieves the last guard mode change event for the given station.
      * @param stationSerial The serial of the station.
      * @returns The time as timestamp or undefined.
@@ -1833,6 +1918,238 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     throw new ReadOnlyPropertyError(`Property ${name} is read only`);
                 }
                 throw new InvalidPropertyError(`Station ${stationSerial} has no writable property named ${name}`);
+        }
+    }
+
+    /**
+     * Add a user to a device.
+     * @param deviceSN The serial of the device.
+     * @param username The username.
+     * @param passcode The passcode.
+     * @param schedule The schedule.
+     */
+    public async addUser(deviceSN: string, username: string, passcode: string, schedule?: Schedule): Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+        const station = await this.getStation(device.getStationSerial());
+
+        try
+        {
+            if (!device.hasCommand(CommandName.DeviceAddUser))
+            {
+                throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            }
+
+            const addUserResponse = await this.httpService.addUser(deviceSN, username, device.getStationSerial());
+            if (addUserResponse !== null)
+            {
+                await station.addUser(device, username, addUserResponse.short_user_id, passcode, schedule);
+            }
+            else
+            {
+                this.emit("user error", device, username, new AddUserError("Error on creating user through cloud api call"));
+            }
+        }
+        catch (error)
+        {
+            this.api.logError(`addUser device ${deviceSN} error`, error);
+            this.emit("user error", device, username, new AddUserError(`Got exception: ${error}`));
+        }
+    }
+
+    /**
+     * Remove a user to a device.
+     * @param deviceSN The serial of the device.
+     * @param username The username.
+     */
+    public async deleteUser(deviceSN: string, username: string): Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+        const station = await this.getStation(device.getStationSerial());
+
+        if (!device.hasCommand(CommandName.DeviceDeleteUser))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        try
+        {
+            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+            if (users !== null)
+            {
+                let found = false;
+                for (const user of users)
+                {
+                    if (user.user_name === username)
+                    {
+                        await station.deleteUser(device, user. user_name, user.short_user_id);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    this.emit("user error", device, username, new DeleteUserError(`User with username "${username}" not found`));
+                }
+            }
+            else
+            {
+                this.emit("user error", device, username, new DeleteUserError("Error on getting user list through cloud api call"));
+            }
+        }
+        catch (error)
+        {
+            this.api.logError(`deleteUser device ${deviceSN} error`, error);
+            this.emit("user error", device, username, new DeleteUserError(`Got exception: ${error}`));
+        }
+    }
+
+    /**
+     * Update user information for a device.
+     * @param deviceSN The serial of the device.
+     * @param username The current username.
+     * @param newUsername The new username.
+     */
+    public async updateUser(deviceSN: string, username: string, newUsername: string): Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+
+        if (!device.hasCommand(CommandName.DeviceUpdateUsername))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        try
+        {
+            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+            if (users !== null)
+            {
+                let found = false;
+                for (const user of users)
+                {
+                    if (user.user_name === username)
+                    {
+                        const result = await this.httpService.updateUser(deviceSN, device.getStationSerial(), user.short_user_id, newUsername);
+                        if (result)
+                        {
+                            this.emit("user username updated", device, username);
+                        }
+                        else
+                        {
+                            this.emit("user error", device, username, new UpdateUserUsernameError(`Error in changing username "${username}" to "${newUsername}" through cloud api call`));
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    this.emit("user error", device, username, new UpdateUserUsernameError(`Error in changing username "${username}" to "${newUsername}" through cloud api call`));
+                }
+            }
+            else
+            {
+                this.emit("user error", device, username, new UpdateUserUsernameError("Error on getting user list through cloud api call"));
+            }
+        }
+        catch (error)
+        {
+            this.api.logError(`updateUser device ${deviceSN} error`, error);
+            this.emit("user error", device, username, new UpdateUserUsernameError(`Got exception: ${error}`));
+        }
+    }
+
+    /**
+     * Update a user passcode.
+     * @param deviceSN The device serial.
+     * @param username The username.
+     * @param passcode The new passcode.
+     */
+    public async updateUserPasscode(deviceSN: string, username: string, passcode: string): Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+        const station = await this.getStation(device.getStationSerial());
+
+        if (!device.hasCommand(CommandName.DeviceUpdateUserPasscode))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        try
+        {
+            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+            if (users !== null)
+            {
+                let found = false;
+                for (const user of users)
+                {
+                    if (user.user_name === username)
+                    {
+                        await station.updateUserPasscode(device, user.user_name, user.short_user_id, passcode);
+                        found = true;
+                    }
+                }
+                if (!found)
+                {
+                    this.emit("user error", device, username, new UpdateUserPasscodeError(`User with username "${username}" not found`));
+                }
+            }
+            else
+            {
+                this.emit("user error", device, username, new UpdateUserPasscodeError("Error on getting user list through cloud api call"));
+            }
+        }
+        catch (error)
+        {
+            this.api.logError(`updateUserPasscode device ${deviceSN} error`, error);
+            this.emit("user error", device, username, new UpdateUserPasscodeError(`Got exception: ${error}`));
+        }
+    }
+
+    /**
+     * Updates users schedule.
+     * @param deviceSN The device serial.
+     * @param username The username.
+     * @param schedule The new schedule.
+     */
+    public async updateUserSchedule(deviceSN: string, username: string, schedule: Schedule): Promise<void>
+    {
+        const device = await this.api.getDevice(deviceSN);
+        const station = await this.getStation(device.getStationSerial());
+
+        if (!device.hasCommand(CommandName.DeviceUpdateUserPasscode))
+        {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        }
+
+        try
+        {
+            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+            if (users !== null)
+            {
+                let found = false;
+                for (const user of users)
+                {
+                    if (user.user_name === username)
+                    {
+                        await station.updateUserSchedule(device, user.user_name, user.short_user_id, schedule);
+                        found = true;
+                    }
+                }
+                if (!found)
+                {
+                    this.emit("user error", device, username, new UpdateUserScheduleError(`User with username "${username}" not found`));
+                }
+            }
+            else
+            {
+                this.emit("user error", device, username, new UpdateUserScheduleError("Error on getting user list through cloud api call"));
+            }
+        }
+        catch (error)
+        {
+            this.api.logError(`updateUserSchedule device ${deviceSN} error`, error);
+            this.emit("user error", device, username, new UpdateUserScheduleError(`Got exception: ${error}`));
         }
     }
 }

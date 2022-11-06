@@ -171,7 +171,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                     this.processInvitations();
                 }
             }
-            catch (error)
+            catch(error)
             {
                 this.logger.error(`Error processing server push notification for device invitation`, error);
             }*/
@@ -182,39 +182,54 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                     this.api.refreshCloudData();
                 }
             }
-            catch (error)
+            catch(error)
             {
                 this.logger.error(`Error processing server push notification for device/station/house removal`, error);
             }
 
-            var rawStations = await this.api.getRawStations();
-            var stations = rawStations.getStations();
-            for(var stationSerial in stations)
+            try
             {
-                try
+                var rawStations = await this.api.getRawStations();
+                var stations = await rawStations.getStations();
+                for(var stationSerial in stations)
                 {
-                    stations[stationSerial].processPushNotification(message);
-                }
-                catch (error)
-                {
-                    this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
+                    try
+                    {
+                        stations[stationSerial].processPushNotification(message);
+                    }
+                    catch(error)
+                    {
+                        this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
+                    }
                 }
             }
-            var rawDevices = await this.api.getRawDevices();
-            var devices = rawDevices.getDevices();
-            for(var deviceSerial in devices)
+            catch(error)
             {
-                try
+                this.api.logError("Process push notification for stations", error);
+            }
+
+            try
+            {
+                var rawDevices = await this.api.getRawDevices();
+                var devices = rawDevices.getDevices();
+                for(var deviceSerial in devices)
                 {
-                    devices[deviceSerial].processPushNotification(message, this.config.getEventDurationSeconds());
+                    try
+                    {
+                        devices[deviceSerial].processPushNotification(message, this.config.getEventDurationSeconds());
+                    }
+                    catch(error)
+                    {
+                        this.logger.error(`Error processing push notification for device ${deviceSerial}`, error);
+                    }
                 }
-                catch (error)
-                {
-                    this.logger.error(`Error processing push notification for device ${deviceSerial}`, error);
-                }
+            }
+            catch(error)
+            {
+                this.api.logError("Process push notification for devices", error);
             }
         }
-        catch (error)
+        catch(error)
         {
             this.logger.error("Generic Error:", error);
         }
