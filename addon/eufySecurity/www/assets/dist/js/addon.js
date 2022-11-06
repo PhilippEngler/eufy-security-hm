@@ -2267,10 +2267,10 @@ function loadSystemVariables()
 
 function saveConfig()
 {
-	var xmlHttp, obfFD;
+	var xmlHttp, objFD, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/setConfig`;
 	xmlHttp = new XMLHttpRequest();
-	obfFD = new FormData(document.getElementById("configform"));
+	objFD = new FormData(document.getElementById("configform"));
 	xmlHttp.addEventListener("load", function(event)
 	{
 		//loadDataSettings();
@@ -2287,14 +2287,12 @@ function saveConfig()
 		{
 			try
 			{
-				obfFD = JSON.parse(this.responseText);
-				if(obfFD.success == true)
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
 				{
-					if(obfFD.serviceRestart == true)
+					if(objResp.serviceRestart == true)
 					{
 						document.getElementById("resultMessage").innerHTML = "";
-						//const toast = new bootstrap.Toast(toastSaveConfigOKRestart);
-						//toast.show();
 						window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
 						return;
 					}
@@ -2329,7 +2327,7 @@ function saveConfig()
 		}
 	};
 	xmlHttp.open("POST", url);
-	xmlHttp.send(obfFD);
+	xmlHttp.send(objFD);
 }
 
 function createSysVar(varName, varInfo)
@@ -2371,6 +2369,74 @@ function createSysVar(varName, varInfo)
 	};
 	xmlHttp.open("GET", url, true);
 	xmlHttp.send();
+}
+
+function selectedFile(filetype)
+{
+	switch(filetype)
+	{
+		case "conf":
+			if(document.getElementById("btnSelectConfigFile").value === undefined || document.getElementById("btnSelectConfigFile").value !== "")
+			{
+				document.getElementById("btnUploadConfigFile").removeAttribute("disabled");
+			}
+			break;
+	}
+}
+
+async function uploadFile(filetype)
+{
+	var xmlHttp, objFD, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/uploadConfig`;
+	xmlHttp = new XMLHttpRequest();
+	objFD = new FormData();
+	objFD.append("file", document.getElementById("btnSelectConfigFile").files[0]);
+	xmlHttp.addEventListener("load", function(event)
+	{
+		//
+	});
+	xmlHttp.addEventListener( "error", function(event)
+	{
+		document.getElementById("resultUploadMessage").innerHTML = "";
+		const toast = new bootstrap.Toast(toastSaveConfigFailed);
+		toast.show();
+	});
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true && objResp.serviceRestart == true)
+				{
+					document.getElementById("resultUploadMessage").innerHTML = "";
+					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+					return;
+				}
+				else
+				{
+					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die Konfigurationsdatei ist fehlerhaft.", `Fehler: ${objResp.message}`);
+					const toast = new bootstrap.Toast(toastUploadConfigFailed);
+					toast.show();
+				}
+			}
+			catch (e)
+			{
+				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Fehler: ${e}.`);
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+		}
+		else
+		{
+			document.getElementById("resultUploadMessage").innerHTML = createWaitMessage("Datei wird hochgeladen und überprüft...");
+		}
+	};
+	xmlHttp.open("POST", url);
+	xmlHttp.send(objFD);
 }
 
 function removeTokenData()

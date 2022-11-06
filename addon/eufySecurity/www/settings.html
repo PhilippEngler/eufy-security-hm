@@ -333,6 +333,15 @@
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
+												<label for="btnSelectConfigFile" class="form-label">Konfiguration hochladen<br /><small class="form-text text-muted">Die Datei wird vor dem Hochladen überprüft. Erst wenn diese Überprüfung erfolgreich ist, wird die Datei hochgeladen.</small></label><br />
+												<input class="form-control mb-2" type="file" id="btnSelectConfigFile" onchange="selectedFile('conf')">
+												<button id="btnUploadConfigFile" onclick="uploadFile('conf')" type="button" class="btn btn-outline-primary mt-2" disabled>Konfiguration hochladen</button>
+												<div class="mt-3" id="resultUploadMessage">
+
+												</div>
+											</div>
+											<hr />
+											<div class="form-label-group" class="container-fluid">
 												<label id="lblDeleteTokenData" for="btnDeleteTokenData" class="text-muted">Token löschen<br /><small class="form-text text-muted">Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</small></label><br />
 												<button id="btnDeleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-outline-primary mt-2" disabled>Token löschen</button>
 											</div>
@@ -376,16 +385,6 @@
 				Die Einstellungen wurden erfolgreich gespeichert.
 			</div>
 		</div>
-
-		<div id="toastSaveConfigOKRestart" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
-			<div class="toast-header">
-				<strong class="me-auto">Speicherung der Einstellungen.</strong>
-				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
-			</div>
-			<div class="toast-body text-white">
-				Die Einstellungen wurden erfolgreich gespeichert. Der Service wird neu gestartet.
-			</div>
-		</div>
 		
 		<div id="toastSaveConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
@@ -394,6 +393,16 @@
 			</div>
 			<div class="toast-body text-white">
 				Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
+			</div>
+		</div>
+
+		<div id="toastUploadConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
+			<div class="toast-header">
+				<strong class="me-auto">Upload der Konfigurationsdatei.</strong>
+				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
+			</div>
+			<div class="toast-body text-white">
+				Bei dem Hochladen der Konfigrationsdatei ist ein Fehler aufgetreten.
 			</div>
 		</div>
 		
