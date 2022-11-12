@@ -27,6 +27,7 @@ export class Config
             if(this.isConfigFileAvailable() == false)
             {
                 this.configJson = this.createEmptyConfigJson();
+                this.hasChanged = true;
                 this.writeConfig();
             }
         }
@@ -375,7 +376,7 @@ export class Config
             if(filecontent.indexOf("[EufyAPIPushData]") == -1)
             {
                 this.logger.logInfoBasic(" adding '[EufyAPIPushData]'.");
-                filecontent = filecontent.replace(`language=${this.getLanguage()}`, `language=${this.getLanguage()}\r\n\r\n[EufyAPIPushData]\r\ntrusted_device_name=eufyclient\r\nserial_number=\r\nevent_duration_seconds=10\r\naccept_invitations=false\r\nopen_udid=\r\nfid_response_name=\r\nfid_response_fid=\r\nfid_response_refresh_token=\r\nfid_response_auth_token_token=\r\nfid_response_auth_token_expires_in=\r\nfid_response_auth_token_expires_at=\r\ncheckin_response_stats_ok=\r\ncheckin_response_time_ms=\r\ncheckin_response_android_id=\r\ncheckin_response_security_token=\r\ncheckin_response_version_info=\r\ncheckin_response_device_data_version_info=\r\ngcm_response_token=\r\npersistent_ids=\r\n\r\n`);
+                filecontent = filecontent.replace(`language=${this.getLanguage()}`, `language=${this.getLanguage()}\r\n\r\n[EufyAPIPushData]\r\ntrusted_device_name=\r\nserial_number=\r\nevent_duration_seconds=10\r\naccept_invitations=false\r\nopen_udid=\r\nfid_response_name=\r\nfid_response_fid=\r\nfid_response_refresh_token=\r\nfid_response_auth_token_token=\r\nfid_response_auth_token_expires_in=\r\nfid_response_auth_token_expires_at=\r\ncheckin_response_stats_ok=\r\ncheckin_response_time_ms=\r\ncheckin_response_android_id=\r\ncheckin_response_security_token=\r\ncheckin_response_version_info=\r\ncheckin_response_device_data_version_info=\r\ngcm_response_token=\r\npersistent_ids=\r\n\r\n`);
                 config = parse(filecontent);
                 updated = true;
             }
@@ -513,7 +514,14 @@ export class Config
 
         if(configIni['EufyAPIPushData'] != undefined)
         {
-            this.configJson.pushData.trustedDeviceName = configIni['EufyAPIPushData']['trusted_device_name'];
+            if(configIni['EufyAPIPushData']['trusted_device_name'] == "eufyclient")
+            {
+                this.configJson.pushData.trustedDeviceName = "";
+            }
+            else
+            {
+                this.configJson.pushData.trustedDeviceName = configIni['EufyAPIPushData']['trusted_device_name'];
+            }
             this.configJson.pushData.serialNumber = configIni['EufyAPIPushData']['serial_number'];
             this.configJson.pushData.eventDurationSeconds = Number.parseInt(configIni['EufyAPIPushData']['event_duration_seconds']);
             this.configJson.pushData.acceptInvitations = configIni['EufyAPIPushData']['accept_invitations'];
@@ -1921,6 +1929,7 @@ export class Config
         if(this.configJson.pushData.trustedDeviceName != trustedDeviceName)
         {
             this.configJson.pushData.trustedDeviceName = trustedDeviceName;
+            this.setSerialNumber("");
             this.hasChanged = true;
         }
     }

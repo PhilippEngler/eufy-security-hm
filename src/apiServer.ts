@@ -119,12 +119,12 @@ class ApiServer
                         responseString = `{"success":true,"message":${await api.getAccountInfo()}}`;
                         break;
                     case "getDevices":
-                        responseString = await api.getDevicesAsJSON();
+                        responseString = await api.getDevicesAsJson();
                         break;
                     case "getDevice":
                         if(url.length == 3)
                         {
-                            responseString = await api.getDeviceAsJSON(url[2]);
+                            responseString = await api.getDeviceAsJson(url[2]);
                         }
                         else
                         {
@@ -134,7 +134,7 @@ class ApiServer
                     case "getDevicePropertiesMetadata":
                         if(url.length == 3)
                         {
-                            responseString = await api.getDevicePropertiesMetadataAsJSON(url[2]);
+                            responseString = await api.getDevicePropertiesMetadataAsJson(url[2]);
                         }
                         else
                         {
@@ -144,7 +144,21 @@ class ApiServer
                     case "getDeviceProperties":
                         if(url.length == 3)
                         {
-                            responseString = await api.getDevicePropertiesAsJSON(url[2]);
+                            responseString = await api.getDevicePropertiesAsJson(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getDevicePropertiesTruncated":
+                        if(url.length == 3)
+                        {
+                            var json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
+                            json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
+                            json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
+                            json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                            responseString = JSON.stringify(json);
                         }
                         else
                         {
@@ -163,13 +177,13 @@ class ApiServer
                         break;
                     case "getStations":
                     case "getBases":
-                        responseString = await api.getStationsAsJSON();
+                        responseString = await api.getStationsAsJson();
                         break;
                     case "getStation":
                     case "getBase":
                         if(url.length == 3)
                         {
-                            responseString = await api.getStationAsJSON(url[2]);
+                            responseString = await api.getStationAsJson(url[2]);
                         }
                         else
                         {
@@ -179,7 +193,7 @@ class ApiServer
                     case "getStationPropertiesMetadata":
                         if(url.length == 3)
                         {
-                            responseString = await api.getStationPropertiesMetadataAsJSON(url[2]);
+                            responseString = await api.getStationPropertiesMetadataAsJson(url[2]);
                         }
                         else
                         {
@@ -189,7 +203,21 @@ class ApiServer
                     case "getStationProperties":
                         if(url.length == 3)
                         {
-                            responseString = await api.getStationPropertiesAsJSON(url[2]);
+                            responseString = await api.getStationPropertiesAsJson(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationPropertiesTruncated":
+                        if(url.length == 3)
+                        {
+                            var json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
+                            json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
+                            json.data.macAddress = "XX:XX:XX:XX:XX:XX";
+                            json.data.lanIpAddress = "XXX.XXX.XXX.XXX";
+                            responseString = JSON.stringify(json);
                         }
                         else
                         {
@@ -207,12 +235,12 @@ class ApiServer
                         }
                         break;
                     case "getHouses":
-                        responseString = await api.getHousesAsJSON();
+                        responseString = await api.getHousesAsJson();
                         break;
                     case "getHouse":
                         if(url.length == 3)
                         {
-                            responseString = await api.getHouseAsJSON(url[2]);
+                            responseString = await api.getHouseAsJson(url[2]);
                         }
                         else
                         {
@@ -460,6 +488,12 @@ class ApiServer
                                 language = getDataFromPOSTData(postData, "language", "string");
                             }
 
+                            var trustedDeviceName = "";
+                            if(postData.indexOf("trustedDeviceName") >= 0)
+                            {
+                                trustedDeviceName = getDataFromPOSTData(postData, "trustedDeviceName", "string");
+                            }
+
                             var useHttp = false;
                             if(postData.indexOf("useHttp") >= 0)
                             {
@@ -620,14 +654,14 @@ class ApiServer
                             {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
-                                responseString = await api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                                responseString = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                             }
                             else
                             {
                                 responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
                             }
 
-                            var resJSON = JSON.parse(responseString);
+                            var resJson = JSON.parse(responseString);
 
                             response.setHeader('Access-Control-Allow-Origin', '*');
                             response.setHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -635,12 +669,12 @@ class ApiServer
                             response.writeHead(200);
                             response.end(responseString);
 
-                            if(resJSON.success == true && resJSON.serviceRestart == true)
+                            if(resJson.success == true && resJson.serviceRestart == true)
                             {
                                 logger.logInfoBasic("Settings saved. Restarting apiServer.");
                                 restartServer();
                             }
-                            else if(resJSON.success == true && resJSON.serviceRestart == false)
+                            else if(resJson.success == true && resJson.serviceRestart == false)
                             {
                                 logger.logInfoBasic("Settings saved.");
                             }
@@ -681,7 +715,7 @@ class ApiServer
                                 responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
                             }
 
-                            var resJSON = JSON.parse(responseString);
+                            var resJson = JSON.parse(responseString);
 
                             response.setHeader('Access-Control-Allow-Origin', '*');
                             response.setHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -689,7 +723,7 @@ class ApiServer
                             response.writeHead(200);
                             response.end(responseString);
 
-                            if(resJSON.success == true && resJSON.serviceRestart == true)
+                            if(resJson.success == true && resJson.serviceRestart == true)
                             {
                                 logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
                                 restartServer();
@@ -751,9 +785,9 @@ function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, h
     {
         if(existsSync('www/apiPorts.json'))
         {
-            var resJSON = JSON.parse(readFileSync('www/apiPorts.json', 'utf-8'));
+            var resJson = JSON.parse(readFileSync('www/apiPorts.json', 'utf-8'));
 
-            if(useHttp !== resJSON.useHttp as boolean || httpPort !== Number.parseInt(resJSON.httpPort) || useHttps !== resJSON.useHttps as boolean || httpsPort !== Number.parseInt(resJSON.httpsPort))
+            if(useHttp !== resJson.useHttp as boolean || httpPort !== Number.parseInt(resJson.httpPort) || useHttps !== resJson.useHttps as boolean || httpsPort !== Number.parseInt(resJson.httpsPort))
             {
                 writeFileSync('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
             }
@@ -1018,5 +1052,17 @@ process.on('SIGINT', async () => {
     logger.logInfoBasic("...done. Exiting");
     exit(0);
 });
+
+/**
+ * Returns a string with the first numberOfChars chars from input, all other chars will be replaced by X. replaceLastCars("ABCDEFGH", "X", 2) will return "ABXXXXXX".
+ * @param input The input string.
+ * @param char The char replaces each char after position numberOfChars.
+ * @param numberOfChars The number of chars which should not be replaced.
+ * @returns The result string.
+ */
+function replaceLastChars(input : string, char : string, numberOfChars : number)
+{
+    return input.slice(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
+}
 
 main();

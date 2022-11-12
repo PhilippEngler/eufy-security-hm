@@ -95,10 +95,10 @@
 										<div class="card-body" >
 											<h5>Zugangsdaten</h5>
 											<div class="alert alert-warning alert-dismissible fade show" role="alert">
-												<h6 class="mb-1 alert-heading">Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn.</h6>
-												<span class="mb-0">Zur problemlosen Nutzung dieses Addons erzeugen Sie einen neuen eufy Security Account in der App und geben Sie dessen Zugangsdaten hier ein.</span>
+												<h5 class="mb-1 alert-heading">Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn.</h5>
+												<p class="mb-0">Zur problemlosen Nutzung dieses Addons erzeugen Sie einen neuen eufy Security Account in der App und geben Sie dessen Zugangsdaten hier ein.</p>
 												<hr>
-												<small class="mt-0 form-text text-muted">Wenn Sie keinen eigenen Account für dieses AddOn anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</small>
+												<p class="my-0 form-text text-muted">Wenn Sie keinen eigenen Account für dieses AddOn anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</p>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label for="txtUsername">Benutzername des angelegten eufy Security Accounts.</label>
@@ -136,6 +136,14 @@
 													<option value="en">englisch</option>
 												</select>
 												<small class="form-text text-muted">Die Sprache, die für den eufy Security Account genutzt wird.</small>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-2" for="txtTrustedDeviceName">Name des Gerätes.</label>
+												<input type="text" name="trustedDeviceName" id="txtTrustedDeviceName" class="form-control" placeholder="Name des Gerätes" pattern="^((?!eufyclient).)*$" required>
+												<small class="form-text text-muted">Name des Gerätes. Nach Möglichkeit ein einmaliger Name.</small>
+												<div class="invalid-feedback">
+													Bitte geben Sie einen Gerätenamen ein. Die Zeichenkette 'eufyclient' darf nicht enthalten sein.
+												</div>
 											</div>
 										</div>
 									</div>
@@ -328,12 +336,12 @@
 												</div>
 											</div>
 											<div class="form-label-group" class="container-fluid">
-												<label for="btnDownloadConfigFile" class="mb-2">Konfiguration herunterzuladen<br /><small class="form-text text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
+												<label for="btnDownloadConfigFile" class="mb-2">Konfiguration sichern<br /><small class="form-text text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
 												<button id="btnDownloadConfigFile" onclick="downloadFile('conf')" type="button" class="btn btn-outline-primary">Konfiguration herunterladen</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
-												<label for="btnSelectConfigFile" class="form-label">Konfiguration hochladen<br /><small class="form-text text-muted">Die Datei wird nach dem Hochladen überprüft. Wenn die Überprüfung erfolgreich ist, wird das AddOn neu gestartet um die neuen Einstellungen übernommen.</small></label><br />
+												<label for="btnSelectConfigFile" class="form-label">Konfiguration wiederherstellen<br /><small class="form-text text-muted">Die Datei wird nach dem Hochladen überprüft. Wenn die Überprüfung erfolgreich ist, wird das AddOn neu gestartet um die neuen Einstellungen übernommen.</small></label><br />
 												<input class="form-control mb-2" type="file" id="btnSelectConfigFile" onchange="selectedFile('conf')">
 												<button id="btnUploadConfigFile" onclick="uploadFile('conf')" type="button" class="btn btn-outline-primary mt-2" disabled>Konfiguration hochladen</button>
 												<div class="mt-3" id="resultUploadMessage">

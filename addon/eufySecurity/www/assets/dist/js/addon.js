@@ -89,7 +89,7 @@ function getAPIPort(page)
 			}
 			catch (e)
 			{
-				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.", "Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.", `Fehler: ${e}`);
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.", "Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.", `Es ist folgender Fehler ist aufgetreten: ${e}`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -225,7 +225,7 @@ function createWaitMessage(messageText)
 
 function createMessageContainer(classText, messageHeader, messageText, messageSubText)
 {
-	return `<div class="${classText}" role="alert"><h6 class="mb-1 alert-heading">${messageHeader}</h6>${messageText != "" ? `<span class="${messageSubText != "" ? `mb-0` : ""}">${messageText}</span>` : ""}${messageSubText != "" ? `<hr><small class="mt-0 form-text text-muted">${messageSubText}</small>` : ""}</div>`;
+	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="${messageSubText != "" ? `mb-0` : ""}">${messageText}</p>` : ""}${messageSubText != "" ? `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>` : ""}</div>`;
 }
 //#endregion
 
@@ -266,7 +266,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 			}
 			else
 			{
-				document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", "")}`;
+				document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`)}`;
 			}
 		}
 		else if(this.readyState == 4)
@@ -344,7 +344,7 @@ function loadDevices()
 			}
 			else
 			{
-				document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.", "", "")}`;
+				document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`)}`;
 			}
 		}
 		else if(this.readyState == 4)
@@ -597,7 +597,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	if(!(deviceProperties.model.startsWith("T8112") || deviceProperties.model.startsWith("T8113") || deviceProperties.model.startsWith("T8114")))
 	{
 		deviceModal += `
-									${createMessageContainer("alert alert-warning", "Dieses Gerät wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}" target=”_blank” class="alert-link">DevicePropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "")} ${createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "")}`;
+									${createMessageContainer("alert alert-warning", "Dieses Gerät wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.")} ${createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "")}`;
 	}
 	deviceModal +=     `
 								</div>
@@ -1284,7 +1284,7 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 	if(!(stationProperties.model.startsWith("T8002") || stationProperties.model.startsWith("T8010")))
 	{
 		stationModal += `
-										${createMessageContainer("alert alert-warning", "Diese Station wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}" target=”_blank” class="alert-link">StationPropperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "")} ${createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "")}`;
+										${createMessageContainer("alert alert-warning", "Diese Station wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${stationId}" target=”_blank” class="alert-link">StationProperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.")} ${createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "")}`;
 	}
 	stationModal +=     `
 									</div>
@@ -1504,7 +1504,7 @@ function loadDataStatechange(showLoading)
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
-				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.", "", "");
+				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -1940,14 +1940,14 @@ function loadStationsSettings()
 				}
 				else
 				{
-					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", "");
+					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`);
 					document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 					loadDataSettings();
 				}
 			}
 			catch (e)
 			{
-				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Fehler: ${e}`);
+				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}`);
 				document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 				loadDataSettings();
 			}
@@ -1971,7 +1971,7 @@ function loadStationsSettings()
 
 function loadDataSettings()
 {
-	var xmlHttp, objResp, username, password, country, language, usehttp, porthttp, usehttps, porthttps, keyhttps, certhttps, connectiontype, useudplocalstaticports, usesystemvariables, cameradefaultimage, cameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevel;
+	var xmlHttp, objResp, username, password, country, language, trustedDeviceName, usehttp, porthttp, usehttps, porthttps, keyhttps, certhttps, connectiontype, useudplocalstaticports, usesystemvariables, cameradefaultimage, cameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevel;
 	var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
@@ -1988,6 +1988,7 @@ function loadDataSettings()
 					password = objResp.data.password;
 					country = objResp.data.country;
 					language = objResp.data.language;
+					trustedDeviceName = objResp.data.trustedDeviceName;
 					usehttp = objResp.data.httpActive;
 					porthttp = objResp.data.httpPort;
 					usehttps = objResp.data.httpsActive;
@@ -2028,6 +2029,8 @@ function loadDataSettings()
 					{
 						document.getElementById("cbLanguage").value = language;
 					}
+					text = document.getElementById('txtTrustedDeviceName');
+					text.value = trustedDeviceName;
 					if(usehttp == true)
 					{
 						document.getElementById("chkUseHttp").setAttribute("checked", true);
@@ -2172,7 +2175,7 @@ function loadDataSettings()
 			}
 			catch (e)
 			{
-				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Einstellungen.", "", `Fehler: ${e}`);
+				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Einstellungen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2249,7 +2252,7 @@ function loadSystemVariables()
 			catch (e)
 			{
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
-				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Fehler: ${e}.`);
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2314,7 +2317,7 @@ function saveConfig()
 			}
 			catch (e)
 			{
-				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Fehler: ${e}.`);
+				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2350,12 +2353,12 @@ function createSysVar(varName, varInfo)
 				}
 				else
 				{
-					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", "");
+					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`);
 				}
 			}
 			catch (e)
 			{
-				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Fehler: ${e}.`);
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2423,7 +2426,7 @@ async function uploadFile(filetype)
 				}
 				else
 				{
-					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die Konfigurationsdatei ist fehlerhaft.", `Fehler: ${objResp.message}`);
+					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die Konfigurationsdatei ist fehlerhaft.", `Es ist folgender Fehler ist aufgetreten: ${objResp.message}`);
 					const toast = new bootstrap.Toast(toastUploadConfigFailed);
 					toast.show();
 					document.getElementById("btnSelectConfigFile").value = "";
@@ -2432,7 +2435,7 @@ async function uploadFile(filetype)
 			}
 			catch (e)
 			{
-				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Fehler: ${e}.`);
+				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
 				document.getElementById("btnSelectConfigFile").value = "";
 				document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 			}

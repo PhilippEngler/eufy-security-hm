@@ -52,9 +52,37 @@ export class EufySecurityApi
      */
     private async initialize() : Promise<void>
     {
-        if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
+        if(this.config.getEmailAddress() == "" || this.config.getPassword() == "" || this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient")
         {
-            this.logError("Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email and password to run this addon.");
+            var missingSettings = "";
+            if(this.config.getEmailAddress() == "")
+            {
+                missingSettings = "email";
+            }
+            if(this.config.getPassword() == "")
+            {
+                if(missingSettings != "")
+                {
+                    missingSettings += ", ";
+                }
+                missingSettings += "password";
+            }
+            if(this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient")
+            {
+                if(missingSettings != "")
+                {
+                    missingSettings += ", ";
+                }
+                if(this.config.getTrustedDeviceName() == "eufyclient")
+                {
+                    missingSettings += "deviceName (other value than 'eufyclient')"
+                }
+                else
+                {
+                    missingSettings += "deviceName";
+                }
+            }
+            this.logError(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email, password and deviceName to run this addon (missing: ${missingSettings}).`);
         
             this.serviceState = "ok";
         }
@@ -466,7 +494,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of all houses.
      */
-    public async getHousesAsJSON() : Promise<string> 
+    public async getHousesAsJson() : Promise<string> 
     {
         var json : any = {};
 
@@ -509,7 +537,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given house.
      */
-    public async getHouseAsJSON(houseId : string) : Promise<string>
+    public async getHouseAsJson(houseId : string) : Promise<string>
     {
         var json : any = {};
         var house = this.getHouse(houseId);
@@ -565,20 +593,20 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of all devices.
      */
-    public async getDevicesAsJSON() : Promise<string> 
+    public async getDevicesAsJson() : Promise<string> 
     {
         var json : any = {};
         try
         {
-            //await this.httpService.refreshStationData();
-            await this.httpService.refreshDeviceData();
-            
-            await this.updateDeviceData();
-            await this.devices.loadDevices();
-            
-            var devices = this.getDevices();
             if(this.devices)
             {
+                //await this.httpService.refreshStationData();
+                await this.httpService.refreshDeviceData();
+
+                await this.updateDeviceData();
+                await this.devices.loadDevices();
+
+                var devices = this.getDevices();
                 if(devices)
                 {
                     json = {"success":true, "data":[]};
@@ -625,20 +653,20 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given devices.
      */
-    public async getDeviceAsJSON(deviceSerial : string) : Promise<string>
+    public async getDeviceAsJson(deviceSerial : string) : Promise<string>
     {
         var json : any = {};
         try
         {
-            //await this.httpService.refreshStationData();
-            await this.httpService.refreshDeviceData();
-            
-            await this.updateDeviceData();
-            await this.devices.loadDevices();
-            
-            var device = this.getDevices()[deviceSerial];
             if(this.devices)
             {
+                //await this.httpService.refreshStationData();
+                await this.httpService.refreshDeviceData();
+
+                await this.updateDeviceData();
+                await this.devices.loadDevices();
+
+                var device = this.getDevices()[deviceSerial];
                 if(device)
                 {
                     json = {"success":true, "data":this.makeJsonObjectForDevice(device)};
@@ -670,7 +698,7 @@ export class EufySecurityApi
      * @param deviceSerial The device serial for the device.
      * @returns JSON string with all properties metadata.
      */
-    public async getDevicePropertiesMetadataAsJSON(deviceSerial : string) : Promise<string>
+    public async getDevicePropertiesMetadataAsJson(deviceSerial : string) : Promise<string>
     {
         var device = this.getDevices()[deviceSerial];
         var json : any = {};
@@ -696,13 +724,12 @@ export class EufySecurityApi
         return JSON.stringify(json);
     }
 
-
     /**
      * Returns a JSON string with the device properties.
      * @param deviceSerial The device serial for the device.
      * @returns JSON string with all properties.
      */
-    public async getDevicePropertiesAsJSON(deviceSerial : string) : Promise<string>
+    public async getDevicePropertiesAsJson(deviceSerial : string) : Promise<string>
     {
         var device = this.getDevices()[deviceSerial];
         var json : any = {};
@@ -801,7 +828,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of all stations including the guard mode.
      */
-    public async getStationsAsJSON() : Promise<string>
+    public async getStationsAsJson() : Promise<string>
     {
         var json : any = {};
         try
@@ -863,7 +890,7 @@ export class EufySecurityApi
      * @param stationSerial The station serial for the station.
      * @returns JSON string with all properties metadata.
      */
-    public async getStationPropertiesMetadataAsJSON(stationSerial : string) : Promise<string>
+    public async getStationPropertiesMetadataAsJson(stationSerial : string) : Promise<string>
     {
         var station = await this.getStation(stationSerial);
         var json : any = {};
@@ -888,13 +915,12 @@ export class EufySecurityApi
         return JSON.stringify(json);
     }
 
-
     /**
-     * Returns a JSON string with the station properties metadata.
+     * Returns a JSON string with the station properties.
      * @param stationSerial The device serial for the station.
-     * @returns JSON string with all properties metadata.
+     * @returns JSON string with all properties.
      */
-    public async getStationPropertiesAsJSON(stationSerial : string) : Promise<string>
+    public async getStationPropertiesAsJson(stationSerial : string) : Promise<string>
     {
         var station = await this.getStation(stationSerial);
         var json : any = {};
@@ -958,7 +984,7 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of a given station.
      */
-    public async getStationAsJSON(stationSerial : string) : Promise<string>
+    public async getStationAsJson(stationSerial : string) : Promise<string>
     {
         await this.httpService.refreshStationData();
 
@@ -1730,7 +1756,7 @@ export class EufySecurityApi
         var json : any = {};
         
         json = {"success":true, "data":{}};
-        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "cameraDefaultImage":this.config.getCameraDefaultImage(), "cameraDefaultVideo":this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevel":this.config.getLogLevel()};
+        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "cameraDefaultImage":this.config.getCameraDefaultImage(), "cameraDefaultVideo":this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevel":this.config.getLogLevel()};
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -1741,6 +1767,7 @@ export class EufySecurityApi
      * @param password The password for the eufy security account.
      * @param country The country the eufy account is created for.
      * @param language The language the eufy account is using.
+     * @param trustedDeviceName The name of the device.
      * @param httpActive Should the api use http.
      * @param httpPort The http port for the api.
      * @param httpsActive Should the api use https.
@@ -1763,12 +1790,12 @@ export class EufySecurityApi
      * @param logLevel The log level.
      * @returns 
      */
-    public async setConfig(eMail : string, password : string, country : string, language : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : string[][], systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : Promise<string>
+    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : string[][], systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : Promise<string>
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
         var taskSetupLinksNeeded = false;
-        if(this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive)
+        if(this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive)
         {
             serviceRestart = true;
         }
@@ -1781,6 +1808,7 @@ export class EufySecurityApi
         this.config.setPassword(password);
         this.config.setCountry(country);
         this.config.setLanguage(language);
+        this.config.setTrustedDeviceName(trustedDeviceName);
         this.config.setHttpActive(httpActive);
         this.config.setHttpPort(httpPort);
         this.config.setHttpsActive(httpsActive);
@@ -1954,7 +1982,7 @@ export class EufySecurityApi
         {
             this.logError("Error occured at checkSystemVariables().");
             this.setLastConnectionInfo(false);
-            json = {"success":false, "reason":`"${e.message}"`};
+            json = {"success":false, "reason":e.message};
         }
 
         return JSON.stringify(json);
