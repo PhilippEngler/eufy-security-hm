@@ -2910,7 +2910,7 @@ function loadDataInfo(showLoading)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 1.6.4`;
+				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 1.7.0`;
 				document.getElementById("versionInfo").innerHTML = info;
 			}
 			else

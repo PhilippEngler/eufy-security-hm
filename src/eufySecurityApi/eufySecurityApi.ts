@@ -2216,7 +2216,7 @@ export class EufySecurityApi
             clearInterval(this.taskUpdateDeviceInfo);
         }
         this.taskUpdateDeviceInfo = setInterval(async() => { await this.updateDeviceData(); }, (this.config.getUpdateDeviceDataIntervall() * 60 * 1000));
-        this.logger.logInfoBasic(`  updateDeviceData scheduled (runs every 5 minutes).`);
+        this.logger.logInfoBasic(`  updateDeviceData scheduled (runs every ${this.config.getUpdateDeviceDataIntervall()} minutes).`);
 
         if(this.config.getStateUpdateIntervallActive())
         {
@@ -2367,6 +2367,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.2.1";
+        return "2.2.2";
     }
 }
