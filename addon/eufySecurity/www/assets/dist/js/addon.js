@@ -89,7 +89,7 @@ function getAPIPort(page)
 			}
 			catch (e)
 			{
-				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.", "Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.", `Es ist folgender Fehler ist aufgetreten: ${e}`);
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", "Bei der Ermittlung der API-Ports ist ein Fehler aufgetreten.", "Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.", `Es ist folgender Fehler aufgetreten: ${e}`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -225,7 +225,7 @@ function createWaitMessage(messageText)
 
 function createMessageContainer(classText, messageHeader, messageText, messageSubText)
 {
-	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="${messageSubText != "" ? `mb-0` : ""}">${messageText}</p>` : ""}${messageSubText != "" ? `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>` : ""}</div>`;
+	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="mb-0"}">${messageText}</p>` : ""}${messageSubText != "" ? `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>` : ""}</div>`;
 }
 //#endregion
 
@@ -266,7 +266,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 			}
 			else
 			{
-				document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`)}`;
+				document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
 			}
 		}
 		else if(this.readyState == 4)
@@ -285,7 +285,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 function loadDevices()
 {
 	var xmlhttp, objResp, device;
-	var text = "", cams = "", indoorcams = "", solocams = "", doorbellcams = "", floodlightcams = "", keypads = "", sensors = "";
+	var text = "", cams = "", indoorcams = "", solocams = "", doorbellcams = "", floodlightcams = "", locks = "", keypads = "", sensors = "", unknown = "";
 	var url = `${location.protocol}//${location.hostname}:${port}/getDevices`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
@@ -318,7 +318,7 @@ function loadDevices()
 								floodlightcams += createCardDevice(objResp.data[device]);
 								break;
 							case "lock":
-								//locks =??
+								locks += createCardDevice(objResp.data[device]);
 								break;
 							case "keypad":
 								keypads += createCardDevice(objResp.data[device]);
@@ -326,6 +326,8 @@ function loadDevices()
 							case "sensor":
 								sensors += createCardDevice(objResp.data[device]);
 								break;
+							default:
+								unknown += createCardDevice(objResp.data[device]);
 						}
 					}
 					text += createDeviceTypeCardsContainer("cameras", "Kameras", cams);
@@ -333,8 +335,10 @@ function loadDevices()
 					text += createDeviceTypeCardsContainer("solocameras", "Solokameras", solocams);
 					text += createDeviceTypeCardsContainer("doorbellcameras", "Videotürklingelkameras", doorbellcams);
 					text += createDeviceTypeCardsContainer("floodlightcameras", "Flutlichtkameras", floodlightcams);
+					text += createDeviceTypeCardsContainer("locks", "Locks", locks);
 					text += createDeviceTypeCardsContainer("keypads", "Keypads", keypads);
 					text += createDeviceTypeCardsContainer("sensors", "Sensoren", sensors);
+					text += createDeviceTypeCardsContainer("unknown", "unbekannte Geräte", unknown);
 					document.getElementById("devices").innerHTML =  text;
 				}
 				else
@@ -344,7 +348,7 @@ function loadDevices()
 			}
 			else
 			{
-				document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`)}`;
+				document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Geräte.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
 			}
 		}
 		else if(this.readyState == 4)
@@ -1504,7 +1508,7 @@ function loadDataStatechange(showLoading)
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">letzer Statuswechsel: unbekannt</small>`;
-				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`);
+				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Stationen.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -1940,14 +1944,14 @@ function loadStationsSettings()
 				}
 				else
 				{
-					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`);
+					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
 					document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 					loadDataSettings();
 				}
 			}
 			catch (e)
 			{
-				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}`);
+				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler aufgetreten: ${e}`);
 				document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 				loadDataSettings();
 			}
@@ -1971,7 +1975,7 @@ function loadStationsSettings()
 
 function loadDataSettings()
 {
-	var xmlHttp, objResp, username, password, country, language, trustedDeviceName, usehttp, porthttp, usehttps, porthttps, keyhttps, certhttps, connectiontype, useudplocalstaticports, usesystemvariables, cameradefaultimage, cameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevel;
+	var xmlHttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
@@ -1984,54 +1988,26 @@ function loadDataSettings()
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					username = objResp.data.eMail;
-					password = objResp.data.password;
-					country = objResp.data.country;
-					language = objResp.data.language;
-					trustedDeviceName = objResp.data.trustedDeviceName;
-					usehttp = objResp.data.httpActive;
-					porthttp = objResp.data.httpPort;
-					usehttps = objResp.data.httpsActive;
-					porthttps = objResp.data.httpsPort;
-					keyhttps = objResp.data.httpsPKeyFile;
-					certhttps = objResp.data.httpsCertFile;
-					connectiontype = objResp.data.connectionTypeP2p;
-					useudplocalstaticports = objResp.data.localStaticUdpPortsActive;
-					usesystemvariables = objResp.data.systemVariableActive;
-					cameradefaultimage = objResp.data.cameraDefaultImage;
-					cameradefaultvideo = objResp.data.cameraDefaultVideo;
-					useupdatestateevent = objResp.data.stateUpdateEventActive;
-					useupdatestateintervall = objResp.data.stateUpdateIntervallActive;
-					updatestatetimespan = objResp.data.stateUpdateIntervallTimespan;
-					useupdatelinks = objResp.data.updateLinksActive;
-					useupdatelinksonlywhenactive =objResp.data.updateLinksOnlyWhenArmed;
-					updatelinkstimespan = objResp.data.updateLinksTimespan;
-					usepushservice = objResp.data.pushServiceActive;
-					loglevel = objResp.data.logLevel;
-					
-					var text = document.getElementById('txtUsername');
-					text.value = username;
-					text = document.getElementById('txtPassword');
-					text.value = password;
-					if(country == undefined || country == "" )
+					document.getElementById('txtUsername').value = objResp.data.eMail;
+					document.getElementById('txtPassword').value = objResp.data.password;
+					if(objResp.data.country == undefined || objResp.data.country == "")
 					{
 						document.getElementById("cbCountry").selectedIndex = "";
 					}
 					else
 					{
-						document.getElementById("cbCountry").value = country;
+						document.getElementById("cbCountry").value = objResp.data.country;
 					}
-					if(language == undefined || language == "" )
+					if(objResp.data.language == undefined || objResp.data.language == "")
 					{
 						document.getElementById("cbLanguage").selectedIndex = "";
 					}
 					else
 					{
-						document.getElementById("cbLanguage").value = language;
+						document.getElementById("cbLanguage").value = objResp.data.language;
 					}
-					text = document.getElementById('txtTrustedDeviceName');
-					text.value = trustedDeviceName;
-					if(usehttp == true)
+					document.getElementById('txtTrustedDeviceName').value = objResp.data.trustedDeviceName;
+					if(objResp.data.httpActive == true)
 					{
 						document.getElementById("chkUseHttp").setAttribute("checked", true);
 						document.getElementById("txtPortHttp").removeAttribute("disabled");
@@ -2040,9 +2016,8 @@ function loadDataSettings()
 					{
 						document.getElementById("txtPortHttp").setAttribute("disabled", true);
 					}
-					text = document.getElementById('txtPortHttp');
-					text.value = porthttp;
-					if(usehttps == true)
+					document.getElementById('txtPortHttp').value = objResp.data.httpPort;
+					if(objResp.data.httpsActive == true)
 					{
 						document.getElementById("chkUseHttps").setAttribute("checked", true);
 						document.getElementById("txtPortHttps").removeAttribute("disabled");
@@ -2055,25 +2030,22 @@ function loadDataSettings()
 						document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
 						document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
 					}
-					text = document.getElementById('txtPortHttps');
-					text.value = porthttps;
-					text = document.getElementById('txtHttpsKeyFile');
-					text.value = keyhttps;
-					text = document.getElementById('txtHttpsCertFile');
-					text.value = certhttps;
-					if(connectiontype == undefined || (connectiontype != "0" && connectiontype != "1" && connectiontype != "2"))
+					document.getElementById('txtPortHttps').value = objResp.data.httpsPort;
+					document.getElementById('txtHttpsKeyFile').value = objResp.data.httpsPKeyFile;
+					document.getElementById('txtHttpsCertFile').value = objResp.data.httpsCertFile;
+					if(objResp.data.connectionTypeP2p == undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2"))
 					{
-						document.getElementById("cbConnectionType").selectedIndex = "";
+						document.getElementById("cbConnectionType").selectedIndex = 0;
 					}
 					else
 					{
-						document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(connectiontype)) + 1;
+						document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(objResp.data.connectionTypeP2p)) + 1;
 					}
-					if(usesystemvariables == true)
+					if(objResp.data.systemVariableActive == true)
 					{
 						document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
 					}
-					if(useudplocalstaticports == true)
+					if(objResp.data.localStaticUdpPortsActive == true)
 					{
 						document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
 					}
@@ -2095,27 +2067,24 @@ function loadDataSettings()
 									break;
 								}
 							}
-							text = document.getElementById('txtUdpPortsStation' + tempSerial);
 							if(tempPorts == undefined || tempPorts == null || tempPorts == "undefined")
 							{
-								text.value = "";
+								document.getElementById('txtUdpPortsStation' + tempSerial).value = "";
 							}
 							else
 							{
-								text.value = tempPorts;
+								document.getElementById('txtUdpPortsStation' + tempSerial).value = tempPorts;
 							}
 							changeValue("useUdpStaticPorts");
-							if(useudplocalstaticports == false)
+							if(objResp.data.localStaticUdpPortsActive == false)
 							{
 								document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
 							}
 						}
 					}
-					text = document.getElementById('txtDefaultImagePath');
-					text.value = cameradefaultimage;
-					text = document.getElementById('txtDefaultVideoPath');
-					text.value = cameradefaultvideo;
-					if(useupdatestateevent == true)
+					document.getElementById('txtDefaultImagePath').value = objResp.data.cameraDefaultImage;
+					document.getElementById('txtDefaultVideoPath').value = objResp.data.cameraDefaultVideo;
+					if(objResp.data.stateUpdateEventActive == true)
 					{
 						document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);
 					}
@@ -2123,7 +2092,7 @@ function loadDataSettings()
 					{
 						document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
 					}
-					if(useupdatestateintervall == true)
+					if(objResp.data.stateUpdateIntervallActive == true)
 					{
 						document.getElementById("chkUpdateStateIntervall").setAttribute("checked", true);
 						document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
@@ -2132,9 +2101,8 @@ function loadDataSettings()
 					{
 						document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
 					}
-					text = document.getElementById('txtUpdateStateIntervallTimespan');
-					text.value=updatestatetimespan;
-					if(useupdatelinks == true)
+					document.getElementById('txtUpdateStateIntervallTimespan').value=objResp.data.stateUpdateIntervallTimespan;
+					if(objResp.data.updateLinksActive == true)
 					{
 						document.getElementById("chkUseUpdateLinksIntervall").setAttribute("checked", true);
 						document.getElementById("chkUpdateLinksOnlyWhenActive").removeAttribute("disabled");
@@ -2145,25 +2113,24 @@ function loadDataSettings()
 						document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
 						document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
 					}
-					if(useupdatelinksonlywhenactive == true)
+					if(objResp.data.updateLinksOnlyWhenArmed == true)
 					{
 						document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("checked", true);
 					}
-					text = document.getElementById('txtUpdateLinksIntervallTimespan');
-					text.value=updatelinkstimespan;
-					if(usepushservice == true)
+					document.getElementById('txtUpdateLinksIntervallTimespan').value = objResp.data.updateLinksTimespan;
+					if(objResp.data.pushServiceActive == true)
 					{
 						document.getElementById("chkUsePushService").setAttribute("checked", true);
 					}
-					if(loglevel == undefined || !(loglevel == "0" || loglevel == "1" || loglevel == "2" || loglevel == "3"))
+					if(objResp.data.logLevel === undefined || !(objResp.data.logLevel == "0" || objResp.data.logLevel == "1" || objResp.data.logLevel == "2" || objResp.data.logLevel == "3"))
 					{
-						document.getElementById("cbLogLevel").selectedIndex = "";
+						document.getElementById("cbLogLevel").selectedIndex = 0;
 					}
 					else
 					{
-						document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(loglevel)) + 1;
+						document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(objResp.data.logLevel)) + 1;
 					}
-					checkLogLevel(loglevel);
+					checkLogLevel(objResp.data.logLevel);
 					document.getElementById("resultLoading").innerHTML = "";
 					activateUIElements();
 					enableUIElements();
@@ -2175,7 +2142,7 @@ function loadDataSettings()
 			}
 			catch (e)
 			{
-				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Einstellungen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}`);
+				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Einstellungen.", "", `Es ist folgender Fehler aufgetreten: ${e}`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2245,14 +2212,14 @@ function loadSystemVariables()
 					else
 					{
 						document.getElementById("divSystemVariablesHint").innerHTML = "";
-						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: '${objResp.reason}'.`);
+						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: '${objResp.reason}'.`);
 					}
 				}
 			}
 			catch (e)
 			{
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
-				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2317,7 +2284,7 @@ function saveConfig()
 			}
 			catch (e)
 			{
-				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
+				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2353,12 +2320,12 @@ function createSysVar(varName, varInfo)
 				}
 				else
 				{
-					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: ${objResp.reason}`);
+					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
 				}
 			}
 			catch (e)
 			{
-				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
 			}
 		}
 		else if(this.readyState == 4)
@@ -2383,7 +2350,7 @@ function selectedFile(filetype)
 			{
 				if(document.getElementById("btnSelectConfigFile").files[0].size > 500000)
 				{
-					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-warning", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die ausgewählte Datei ist zu groß.", "");
+					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die ausgewählte Datei ist zu groß.", "");
 					document.getElementById("btnSelectConfigFile").value = "";
 					return;
 				}
@@ -2426,7 +2393,7 @@ async function uploadFile(filetype)
 				}
 				else
 				{
-					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die Konfigurationsdatei ist fehlerhaft.", `Es ist folgender Fehler ist aufgetreten: ${objResp.message}`);
+					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Hochladen der Konfigurationsdatei.", "Die Konfigurationsdatei ist fehlerhaft.", `Es ist folgender Fehler aufgetreten: ${objResp.message}`);
 					const toast = new bootstrap.Toast(toastUploadConfigFailed);
 					toast.show();
 					document.getElementById("btnSelectConfigFile").value = "";
@@ -2435,7 +2402,7 @@ async function uploadFile(filetype)
 			}
 			catch (e)
 			{
-				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Es ist folgender Fehler ist aufgetreten: ${e}.`);
+				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei dem Speichern der Einstellungen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
 				document.getElementById("btnSelectConfigFile").value = "";
 				document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 			}

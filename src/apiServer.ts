@@ -695,24 +695,27 @@ class ApiServer
                             responseString = "";
                             if(checkUploadedFileMetadata(postData) == false)
                             {
-                                responseString = `{"success":false,"serviceRestart":true,"message":"File metadata are unsopported or missing."}`;
-                            }
-                            var fileContent = getUploadFileContent(postData);
-                            if(fileContent === undefined)
-                            {
-                                if(responseString == "")
-                                {
-                                    responseString = `{"success":false,"serviceRestart":true,"message":"File content could not be determined."}`;
-                                }
-                                else
-                                {
-                                    responseString = `{"success":false,"serviceRestart":true,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
-                                }
+                                responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
                             }
                             else
                             {
-                                writeFileSync("config.json.upload", fileContent, 'utf-8');
-                                responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
+                                var fileContent = getUploadFileContent(postData);
+                                if(fileContent === undefined)
+                                {
+                                    if(responseString == "")
+                                    {
+                                        responseString = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
+                                    }
+                                    else
+                                    {
+                                        responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
+                                    }
+                                }
+                                else
+                                {
+                                    writeFileSync("config.json.upload", fileContent, 'utf-8');
+                                    responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
+                                }
                             }
 
                             var resJson = JSON.parse(responseString);
@@ -920,6 +923,11 @@ function getAllUdpPortsForStations(postData : string) : string[][]
     return res;
 }
 
+/**
+ * Checks if the received post data could be a config.json.
+ * @param postData The postData to check.
+ * @returns A boolean value.
+ */
 function checkUploadedFileMetadata(postData : string) : boolean
 {
     var pos = postData.indexOf("Content-Disposition: form-data;");
@@ -970,6 +978,11 @@ function checkUploadedFileMetadata(postData : string) : boolean
     return true;
 }
 
+/**
+ * Retrieves the json-part containing the config.
+ * @param postData The postData to check.
+ * @returns A string value or undefined.
+ */
 function getUploadFileContent(postData : string) : string | undefined
 {
     var start = postData.indexOf("{");
