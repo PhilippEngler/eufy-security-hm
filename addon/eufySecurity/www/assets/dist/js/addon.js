@@ -45,7 +45,7 @@ function getParameterFromURLSearchParams(urlParams, parameterName)
 
 function addSidToLinks(sessionID)
 {
-	document.getElementById("lnkMain").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + `?sid=${sessionID}`);
+	document.getElementById("lnkMain").setAttribute("href", document.getElementById("lnkMain").getAttribute("href") + `?sid=${sessionID}`);
 	document.getElementById("lnkHome").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + `?sid=${sessionID}`);
 	document.getElementById("lnkDevices").setAttribute("href", document.getElementById("lnkDevices").getAttribute("href") + `?sid=${sessionID}`);
 	document.getElementById("lnkStatechange").setAttribute("href", document.getElementById("lnkStatechange").getAttribute("href") + `?sid=${sessionID}`);
@@ -155,7 +155,7 @@ function makeDateTimeString(dateTime)
 
 function getGuardModeAsString(guardMode)
 {
-	switch (guardMode)
+	switch(guardMode)
 	{
 		case 0:
 			return "abwesend";
@@ -598,7 +598,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
-	if(!(deviceProperties.model.startsWith("T8112") || deviceProperties.model.startsWith("T8113") || deviceProperties.model.startsWith("T8114")))
+	if(!(deviceProperties.model.startsWith("T8112") || deviceProperties.model.startsWith("T8113") || deviceProperties.model.startsWith("T8114") || deviceProperties.model.startsWith("T8142")))
 	{
 		deviceModal += `
 									${createMessageContainer("alert alert-warning", "Dieses Gerät wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.")} ${createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "")}`;
@@ -781,22 +781,22 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			if(deviceProperties.lastChargingDays !== undefined)
 			{
 				deviceModal += `
-										<label>letzter Ladevorgang vor ${deviceProperties.lastChargingDays} Tag${deviceProperties.lastChargingDays == 1 ?"" : "en"}</label><br />`;
+										<label>Letzter Ladevorgang war vor ${deviceProperties.lastChargingDays} Tag${deviceProperties.lastChargingDays == 1 ?"" : "en"}.</label><br />`;
 			}
 			if(deviceProperties.lastChargingTotalEvents !== undefined)
 			{
 				deviceModal += `
-										<label>${deviceProperties.lastChargingDays !== undefined ? "seitdem " : ""}erkannte Ereignisse: ${deviceProperties.lastChargingTotalEvents}</label><br />`;
+										<label>${deviceProperties.lastChargingDays !== undefined ? `Seitdem wurde${deviceProperties.lastChargingTotalEvents > 1 ? "n " : " "}` : `Es wurde${deviceProperties.lastChargingTotalEvents > 1 ? "n " : " "}`}${deviceProperties.lastChargingTotalEvents} Ereignisse erkannt.</label><br />`;
 			}
 			if(deviceProperties.lastChargingFalseEvents !== undefined)
 			{
 				deviceModal += `
-										<label> - davon gefilterte, falsche Ereignisse: ${deviceProperties.lastChargingFalseEvents}</label><br />`;
+										<label>Davon waren ${deviceProperties.lastChargingFalseEvents} gefilterte, falsche Ereignisse.</label><br />`;
 			}
 			if(deviceProperties.lastChargingRecordedEvents !== undefined)
 			{
 				deviceModal += `
-										<label> - davon aufgezeichnete Ereignisse: ${deviceProperties.lastChargingRecordedEvents}</label>`;
+										<label>Insgesamt wurden ${deviceProperties.lastChargingDays !== undefined ? "seitdem " : ""}${deviceProperties.lastChargingRecordedEvents} ausgezeichnet.</label>`;
 			}
 		}
 		deviceModal += `
@@ -815,10 +815,24 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>Wasserzeichen</h5>
 										${generateElementSelect("Device", devicePropertiesMetadata.watermark.name, devicePropertiesMetadata.watermark.states, deviceProperties.watermark, deviceProperties.serialNumber, deviceProperties.name)}`;
 		}
-		if(deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined)
+		if(deviceProperties.videoRecordingQuality !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.watermark !== undefined ? `<hr />` : ``}
+										<h5>Aufzeichnungsqualität</h5>
+										${generateElementSelect("Device", devicePropertiesMetadata.videoRecordingQuality.name, devicePropertiesMetadata.videoRecordingQuality.states, deviceProperties.videoRecordingQuality, deviceProperties.serialNumber, deviceProperties.name)}`;
+		}
+		if(deviceProperties.videoStreamingQuality !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.watermark !== undefined || deviceProperties.videoStreamingQuality !== undefined ? `<hr />` : ``}
+										<h5>Streamingqualität</h5>
+										${generateElementSelect("Device", devicePropertiesMetadata.videoStreamingQuality.name, devicePropertiesMetadata.videoStreamingQuality.states, deviceProperties.videoStreamingQuality, deviceProperties.serialNumber, deviceProperties.name)}`;
+		}
+		if(deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined ? `<hr />` : ``}
 										<h5>Nachtsicht</h5>
 										${devicePropertiesMetadata.autoNightvision === undefined ? "" : generateElementSwitch("Device", devicePropertiesMetadata.autoNightvision.name, deviceProperties.autoNightvision, deviceProperties.serialNumber, deviceProperties.name)}
 										${devicePropertiesMetadata.nightvision === undefined ? "" : generateElementSelect("Device", devicePropertiesMetadata.nightvision.name, devicePropertiesMetadata.nightvision.states, deviceProperties.nightvision, deviceProperties.serialNumber, deviceProperties.name)}
@@ -923,7 +937,7 @@ function generateSelectElement(propertyName, value, valueNumber, state)
 
 function getPropertyNameInGerman(propertyName)
 {
-	switch (propertyName)
+	switch(propertyName)
 	{
 		case "enabled":
 			return "Gerät aktiviert";
@@ -945,6 +959,10 @@ function getPropertyNameInGerman(propertyName)
 			return "Clip frühzeitiger beenden wenn Bewegung stoppt";
 		case "watermark":
 			return "Logo und Wasserzeichen";
+		case "videoRecordingQuality":
+			return "Aufzeichnungsqualität";
+		case "videoStreamingQuality":
+			return "Streamingqualität";
 		case "autoNightvision":
 			return "automatische Nachtsicht aktivieren";
 		case "nightvision":
@@ -982,7 +1000,7 @@ function getPropertyNameInGerman(propertyName)
 
 function getDeviceStateValueInGerman(state, propertyName, value)
 {
-	switch (state)
+	switch(state)
 	{
 		case "Humans only":
 		case "Person Alerts":
@@ -1023,8 +1041,9 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 					return "aus";
 				case "nightvision":
 					return "keine Nachtsicht";
+				default:
+					return state;
 			}
-			
 		case "On":
 			return "mit Logo";
 		case "Timestamp":
@@ -1036,11 +1055,36 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 		case "Spotlight Night Vision":
 			return "farbige Nachtsicht";
 		case "Low":
-			return "leise";
+			switch(propertyName)
+			{
+				case "speakerVolume":
+					return "leise";
+				case "videoStreamingQuality":
+					return "niedrig";
+				default:
+					return state;
+			}
 		case "Medium":
-			return "mittel";
+			switch(propertyName)
+			{
+				case "speakerVolume":
+				case "videoStreamingQuality":
+					return "mittel";
+				default:
+					return state;
+			}
 		case "High":
-			return "laut";
+			switch(propertyName)
+			{
+				case "speakerVolume":
+					return "laut";
+				case "videoStreamingQuality":
+					return "hoch";
+				default:
+					return state;
+			}
+		case "Auto":
+			return "automatisch";
 		case "Most Efficient":
 			return "am effizientesten";
 		case "Include Thumbnail":
@@ -1095,7 +1139,7 @@ function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 function updateSliderValue(element, value)
 {
 	var displayText = "";
-	switch (element)
+	switch(element)
 	{
 		case "spnRecordingClipLengthValue":
 			displayText = `${value}`;
@@ -1432,7 +1476,7 @@ function loadDataStatechange(showLoading)
 				{
 					if(objResp.data[station].deviceType == "station")
 					{
-						switch (objResp.data[station].guardMode)
+						switch(objResp.data[station].guardMode)
 						{
 							case 0:
 								state = "abwesend";
@@ -2532,7 +2576,7 @@ function enableButtons(enable)
 
 function changeValue(element)
 {
-	switch (element.name)
+	switch(element.name)
 	{
 		case "useHttp":
 			if(element.checked == true)
