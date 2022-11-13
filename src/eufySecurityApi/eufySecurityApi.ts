@@ -12,6 +12,8 @@ import { P2PConnectionType } from './p2p';
 import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
 import { ReadOnlyPropertyError } from './error';
+import { randomNumber } from './http/utils';
+import { PhoneModels } from './http/const';
 
 export class EufySecurityApi
 {
@@ -52,7 +54,7 @@ export class EufySecurityApi
      */
     private async initialize() : Promise<void>
     {
-        if(this.config.getEmailAddress() == "" || this.config.getPassword() == "" || this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient")
+        if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
         {
             var missingSettings = "";
             if(this.config.getEmailAddress() == "")
@@ -67,21 +69,7 @@ export class EufySecurityApi
                 }
                 missingSettings += "password";
             }
-            if(this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient")
-            {
-                if(missingSettings != "")
-                {
-                    missingSettings += ", ";
-                }
-                if(this.config.getTrustedDeviceName() == "eufyclient")
-                {
-                    missingSettings += "deviceName (other value than 'eufyclient')"
-                }
-                else
-                {
-                    missingSettings += "deviceName";
-                }
-            }
+
             this.logError(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email, password and deviceName to run this addon (missing: ${missingSettings}).`);
         
             this.serviceState = "ok";
@@ -91,10 +79,21 @@ export class EufySecurityApi
             this.httpService = await HTTPApi.initialize(this, this.config.getCountry(), this.config.getEmailAddress(), this.config.getPassword(), this.logger);
 
             this.httpService.setLanguage(this.config.getLanguage());
+
+            if (this.config.getTrustedDeviceName() === undefined || this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient")
+            {
+                this.config.setTrustedDeviceName(PhoneModels[randomNumber(0, PhoneModels.length)]);
+                this.config.writeConfig();
+            }
+
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
 
             this.httpService.on("close", () => this.onAPIClose());
             this.httpService.on("connect", () => this.onAPIConnect());
+            this.httpService.on("captcha request", (id: string, captcha: string) => this.onCaptchaRequest(id, captcha));
+            this.httpService.on("auth token invalidated", () => this.onAuthTokenInvalidated());
+            this.httpService.on("tfa request", () => this.onTfaRequest());
+            this.httpService.on("connection error", (error: Error) => this.onAPIConnectionError(error));
 
             this.httpService.setToken(this.getToken());
             this.httpService.setTokenExpiration(new Date(this.getTokenExpire()*1000));
@@ -360,6 +359,28 @@ export class EufySecurityApi
         this.serviceState = "ok";
     }
 
+    private onAPIConnectionError(error: Error): void
+    {
+        this.logError(`APIConnectionError: ${error}`);
+        //this.emit("connection error", error);
+    }
+
+    private onCaptchaRequest(id: string, captcha: string): void
+    {
+        //this.emit("captcha request", id, captcha);
+    }
+
+    private onAuthTokenInvalidated(): void
+    {
+        this.setTokenData(undefined, undefined);
+        this.config.writeConfig();
+    }
+
+    private onTfaRequest(): void
+    {
+        //this.emit("tfa request");
+    }
+
     /**
      * Returns the all stations as array.
      * @returns The array with all stations.
@@ -476,6 +497,18 @@ export class EufySecurityApi
         await this.httpService.refreshHouseData();
         await this.httpService.refreshStationData();
         await this.httpService.refreshDeviceData();
+    }
+
+    private generateNewTrustedDeviceName() : string
+    {
+        return PhoneModels[randomNumber(0, PhoneModels.length)];
+    }
+
+    public generateNewTrustedDeviceNameJson() : string
+    {
+        var json : any = {};
+        json = {"success":true, "trustedDeviceName":this.generateNewTrustedDeviceName()};
+        return JSON.stringify(json);
     }
     
     /**
@@ -1599,7 +1632,7 @@ export class EufySecurityApi
      * @param token The token.
      * @param tokenExpire The time the token exprire.
      */
-    public setTokenData(token : string, tokenExpire : number) : string
+    public setTokenData(token : string | undefined, tokenExpire : number | undefined) : string
     {
         var res;
         var json = "";
@@ -2358,7 +2391,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.7.0-rc1";
+        return "1.7.0-rc2";
     }
 
     /**
@@ -2367,6 +2400,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.2.2";
+        return "2.2.3";
     }
 }

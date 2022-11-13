@@ -1960,6 +1960,37 @@ function validateFormSettings()
 	}, false);
 }
 
+function generateNewTrustedDeviceName()
+{
+	var xmlHttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/generateNewTrustedDeviceName`;
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.overrideMimeType('application/json');
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					if(objResp.trustedDeviceName !== undefined)
+					{
+						document.getElementById('txtTrustedDeviceName').value = objResp.trustedDeviceName;
+					}
+				}
+			}
+			catch (e)
+			{
+
+			}
+		}
+	};
+	xmlHttp.open("GET", url, true);
+	xmlHttp.send();
+}
+
 function loadStationsSettings()
 {
 	var xmlHttp, objResp, station, stations = "";

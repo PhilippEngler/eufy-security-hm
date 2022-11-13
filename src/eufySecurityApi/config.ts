@@ -1680,10 +1680,14 @@ export class Config
      * Set the token for login to the eufy security account.
      * @param token The token for login.
      */
-    public setToken(token : string) : void
+    public setToken(token : string | undefined) : void
     {
         if(this.configJson.tokenData.token != token)
         {
+            if(token === undefined)
+            {
+                token = "";
+            }
             this.configJson.tokenData.token = token;
             this.hasChanged = true;
         }
@@ -1708,10 +1712,14 @@ export class Config
      * Set the timestamp the token expires.
      * @param tokenexpire The time the token expires.
      */
-    public setTokenExpire(tokenexpire : number) : void
+    public setTokenExpire(tokenexpire : number | undefined) : void
     {
         if(this.configJson.tokenData.tokenExpires != tokenexpire)
         {
+            if(tokenexpire === undefined)
+            {
+                tokenexpire = 0;
+            }
             this.configJson.tokenData.tokenExpires = tokenexpire;
             this.hasChanged = true;
         }

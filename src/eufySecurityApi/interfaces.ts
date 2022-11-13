@@ -34,6 +34,7 @@ export interface EufySecurityPersistentData {
     push_persistentIds: string[];
     version: string;
     httpApi?: HTTPApiPersistentData;
+    fallbackTrustedDeviceName?: string;
 }
 
 export interface EufySecurityEvents {
@@ -44,6 +45,7 @@ export interface EufySecurityEvents {
     "device crying detected": (device: Device, state: boolean) => void;
     "device sound detected": (device: Device, state: boolean) => void;
     "device pet detected": (device: Device, state: boolean) => void;
+    "device vehicle detected": (device: Device, state: boolean) => void;
     "device motion detected": (device: Device, state: boolean) => void;
     "device person detected": (device: Device, state: boolean, person: string) => void;
     "device rings": (device: Device, state: boolean) => void;
@@ -89,6 +91,7 @@ export interface EufySecurityEvents {
     "push message": (message: PushMessage) => void;
     "connect": () => void;
     "close": () => void;
+    "connection error": (error: Error) => void;
     "tfa request": () => void;
     "captcha request": (id: string, captcha: string) => void;
     "cloud livestream start": (station: Station, device: Device, url: string) => void;

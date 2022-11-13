@@ -123,6 +123,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                             this.addEventListener(device, "CryingDetected");
                             this.addEventListener(device, "SoundDetected");
                             this.addEventListener(device, "PetDetected");
+                            this.addEventListener(device, "VehicleDetected");
                             this.addEventListener(device, "MotionDetected");
                             this.addEventListener(device, "PersonDetected");
                             this.addEventListener(device, "Rings");
@@ -295,6 +296,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.removeEventListener(this.devices[deviceSerial], "CryingDetected");
                 this.removeEventListener(this.devices[deviceSerial], "SoundDetected");
                 this.removeEventListener(this.devices[deviceSerial], "PetDetected");
+                this.removeEventListener(this.devices[deviceSerial], "VehicleDetected");
                 this.removeEventListener(this.devices[deviceSerial], "MotionDetected");
                 this.removeEventListener(this.devices[deviceSerial], "PersonDetected");
                 this.removeEventListener(this.devices[deviceSerial], "Rings");
@@ -602,6 +604,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 device.on("pet detected", (device : Device, state : boolean) => this.onPetDetected(device, state));
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
+            case "VehicleDetected":
+                device.on("vehicle detected", (device : Device, state : boolean) => this.onVehicleDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("vehicle detected")} Listener.`);
+                break;
             case "MotionDetected":
                 device.on("motion detected", (device : Device, state : boolean) => this.onMotionDetected(device, state));
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
@@ -701,6 +707,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             case "PetDetected":
                 device.removeAllListeners("pet detected");
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pet detected")} Listener.`);
+                break;
+            case "VehicleDetected":
+                device.removeAllListeners("vehicle detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("vehicle detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.removeAllListeners("motion detected");
@@ -847,6 +857,17 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPetDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.setLastVideoTimeNow(device.getSerial());
+    }
+
+    /**
+     * The action to be one when event VehicleDetected is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    private onVehicleDetected(device: Device, state: boolean): void
+    {
+        this.api.logInfo(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
         this.setLastVideoTimeNow(device.getSerial());
     }
 

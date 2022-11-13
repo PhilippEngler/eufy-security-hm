@@ -391,6 +391,9 @@ class ApiServer
                     case "removeTokenData":
                         responseString = api.setTokenData("", 0);
                         break;
+                    case "generateNewTrustedDeviceName":
+                        responseString = api.generateNewTrustedDeviceNameJson();
+                        break;
                     case "clearLogFile":
                         emptyLogFile();
                         responseString = `{"success":true}`;
