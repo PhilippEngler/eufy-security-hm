@@ -116,7 +116,7 @@ class ApiServer
                         responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
                     case "getAccountInfo":
-                        responseString = `{"success":true,"message":${await api.getAccountInfo()}}`;
+                        responseString = await api.getAccountInfoJson();
                         break;
                     case "getDevices":
                         responseString = await api.getDevicesAsJson();
@@ -155,9 +155,12 @@ class ApiServer
                         if(url.length == 3)
                         {
                             var json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
-                            json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
-                            json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
-                            json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                            if(json.success == true)
+                            {
+                                json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
+                                json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
+                                json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                            }
                             responseString = JSON.stringify(json);
                         }
                         else
@@ -214,9 +217,12 @@ class ApiServer
                         if(url.length == 3)
                         {
                             var json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
-                            json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
-                            json.data.macAddress = "XX:XX:XX:XX:XX:XX";
-                            json.data.lanIpAddress = "XXX.XXX.XXX.XXX";
+                            if(json.success == true)
+                            {
+                                json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
+                                json.data.macAddress = "XX:XX:XX:XX:XX:XX";
+                                json.data.lanIpAddress = "XXX.XXX.XXX.XXX";
+                            }
                             responseString = JSON.stringify(json);
                         }
                         else
