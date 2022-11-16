@@ -191,7 +191,7 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 
 	card += `<div class="col"><div class="card mb-3">`;
 	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
-	card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="bi-gear" title="Einstellungen" onclick="creatStationSettingsModal('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
+	card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="bi-gear" title="Einstellungen" onclick="generateStationSettingsModal('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
 	card += `</div>`;
 	
 	card += `<div class="card-body p-0"><div class="row g-0">`;
@@ -916,7 +916,7 @@ function generateRadioGroup(type, propertyName, states, value, serialNumber, nam
 
 function generateElementRange(type, propertyName, min, max, defaultValue, value, unit, serialNumber, name)
 {
-	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value == undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label><input type="range" class="form-range mt-0" min="${min}" max="${max}" id="${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value == undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)"></div>`;
+	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value == undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value == undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">${defaultValue !== undefined ? `<div class="text-end">${generateButton("Station", propertyName, defaultValue, serialNumber, name, "btn btn-outline-secondary btn-sm", true)}</div>` : ""}</div>`;
 }
 
 function generateElementSelect(type, propertyName, states, value, serialNumber, name)
@@ -933,6 +933,11 @@ function generateElementSelect(type, propertyName, states, value, serialNumber, 
 function generateSelectElement(propertyName, value, valueNumber, state)
 {
 	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${getDeviceStateValueInGerman(state, propertyName, valueNumber)}</option>`;
+}
+
+function generateButton(type, propertyName, value, serialNumber, name, buttonClass, setToDefault)
+{
+	return `<div><button id="btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}" type="button" class="${buttonClass}" onclick="change${type}Property('${serialNumber}', '${name}', '${propertyName}')">${setToDefault == true ? `Standardwert setzen` : `${getPropertyNameInGerman(propertyName)}`}</button></div>`;
 }
 
 function getPropertyNameInGerman(propertyName)
@@ -993,6 +998,8 @@ function getPropertyNameInGerman(propertyName)
 			return "Moduswechsel in Modus durch das Keypad";
 		case "notificationStartAlarmDelay":
 			return "Starten der Alarmverzögerung";
+		case "rebootStation":
+			return "Station neu starten";
 		default:
 			return propertyName;
 	}
@@ -1157,7 +1164,7 @@ function updateSliderValue(element, value)
 	document.getElementById(element).innerHTML = displayText;
 }
 
-function creatStationSettingsModal(stationId, stationName)
+function generateStationSettingsModal(stationId, stationName)
 {
 	generateContentStationSettingsModal(stationId, stationName);
 
@@ -1393,7 +1400,7 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 	if(stationPropertiesMetadata.notificationSwitchModeSchedule !== undefined || stationPropertiesMetadata.notificationSwitchModeGeofence !== undefined || stationPropertiesMetadata.notificationSwitchModeApp !== undefined || stationPropertiesMetadata.notificationSwitchModeKeypad!== undefined || stationPropertiesMetadata.notificationStartAlarmDelay !== undefined)
 	{
 		stationModal +=  `
-									<div class="card" id="cardStationNofificationSettings">
+									<div class="card mb-3" id="cardStationNofificationSettings">
 										<h5 class="card-header">Benachrichtigungen</h5>
 										<div class="card-body">
 											<h5>Pushbenachrichtigungen</h5>
@@ -1406,6 +1413,8 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 										</div>
 									</div>`;
 	}
+	stationModal +=  `
+									${generateButton("Station", "rebootStation", "", stationProperties.serialNumber, stationProperties.name, "btn btn-outline-danger", false)}`;
 	stationModal +=  `
 								</div>
 								<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
@@ -1420,7 +1429,7 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 function changeStationProperty(stationId, stationName, propertyName, propertyValue)
 {
 	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}/${propertyValue}`;
+	var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}${propertyValue !== undefined ? `/${propertyValue}` : ``}`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
 	xmlhttp.onreadystatechange = function()

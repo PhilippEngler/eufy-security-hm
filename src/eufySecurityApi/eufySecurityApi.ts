@@ -11,7 +11,7 @@ import { Stations } from './stations';
 import { P2PConnectionType } from './p2p';
 import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
-import { ReadOnlyPropertyError } from './error';
+import { NotSupportedError, ReadOnlyPropertyError } from './error';
 import { randomNumber } from './http/utils';
 import { PhoneModels } from './http/const';
 
@@ -388,7 +388,7 @@ export class EufySecurityApi
 
     private onAPIConnectionError(error: Error): void
     {
-        this.logError(`APIConnectionError: ${error}`);
+        this.logError(`APIConnectionError occured. Error: ${error}`);
         //this.emit("connection error", error);
     }
 
@@ -1148,6 +1148,55 @@ export class EufySecurityApi
         catch (e : any)
         {
             this.logError(`Error occured at setStationProperty(). Error: ${e.message}`);
+            this.setLastConnectionInfo(false);
+            json = {"success":false, "reason":e.message};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Reboot a given station.
+     * @param stationSerial The serial of the station.
+     * @returns A JSON-String.
+     */
+    public async rebootStation(stationSerial : string) : Promise<string>
+    {
+        var json : any = {};
+        try
+        {
+            if(this.stations)
+            {
+                if(!this.stations.existStation(stationSerial))
+                {
+                    json = {"success":false,"reason":`The station with serial ${stationSerial} does not exists.`};
+                }
+                try
+                {
+                    await (await this.stations.getStation(stationSerial)).rebootHUB();
+                    await sleep(5000);
+                    json = {"success":true,"reason":`The station ${stationSerial} is restarting.`};
+                }
+                catch (e : any)
+                {
+                    if (e instanceof NotSupportedError)
+                    {
+                        json = {"success":false,"reason":`This functionality is not implemented or supported by ${stationSerial}`};
+                    }
+                    else
+                    {
+                        json = {"success":false,"reason":`Other error occured. Error: ${e.message}`};
+                    }
+                }
+            }
+            else
+            {
+                json = {"success":false, "reason":"No connection to eufy."};
+            }
+        }
+        catch (e : any)
+        {
+            this.logError(`Error occured at rebootStation(). Error: ${e.message}`);
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -2541,6 +2590,25 @@ export class EufySecurityApi
     public getApiVersion() : string
     {
         return `{"success":true,"platform":"${process.platform}","nodeVersion":"${process.version}","nodeArch":"${process.arch}","apiVersion":"${this.getEufySecurityApiVersion()}","homematicApiVersion":"${this.homematicApi.getHomematicApiVersion()}","eufySecurityClientVersion":"${this.getEufySecurityClientVersion()}"}`;
+    }
+
+    public async getApiState() : Promise<string>
+    {
+        var json : any = {};
+
+        json = {"success":true, "data":{"serviceState":this.getServiceState(),"isConnectedToEufy":this.isConnected(),"stations":[]}};
+
+        if(this.stations)
+        {
+            var stations = await this.getStations();
+            for(var stationSerial in stations)
+            {
+                var station = stations[stationSerial];
+                json.data.stations.push({"stationSerial":station.getSerial(),"stationName":station.getName(),"isP2pConnected":station.isConnected()});
+            }
+        }
+
+        return JSON.stringify(json);
     }
 
     /**

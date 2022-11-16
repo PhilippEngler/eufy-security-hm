@@ -235,6 +235,10 @@ class ApiServer
                         {
                             responseString = await api.setStationProperty(url[2], url[3], url[4]);
                         }
+                        else if(url[3] == "rebootStation" && url.length == 4)
+                        {
+                            responseString = await api.rebootStation(url[2]);
+                        }
                         else
                         {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -272,6 +276,9 @@ class ApiServer
                         break;
                     case "getApiInfo":
                         responseString = api.getApiVersion();
+                        break;
+                    case "getApiState":
+                        responseString = await api.getApiState();
                         break;
                     case "setMode":
                         if(url.length == 3)
