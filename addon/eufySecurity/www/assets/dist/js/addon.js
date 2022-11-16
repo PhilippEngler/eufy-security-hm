@@ -481,7 +481,7 @@ function generateContentDeviceSettingsModal(deviceId, deviceName)
 								</div>
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								<button type="button" id="btnCloseModalDeviceSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
+								${generateButton("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 							</div>
 						</div>
 					</div>`;
@@ -583,7 +583,7 @@ function generateDeviceModalErrorMessage(errorMessage)
 											</div>
 										</div>
 										<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-											<button type="button" id="btnCloseModalDeviceSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
+											${generateButton("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 										</div>
 									</div>
 								</div>`;
@@ -886,7 +886,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	deviceModal += `
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								<button type="button" id="btnCloseModalDeviceSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
+								${generateButton("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 							</div>
 						</div>
 					</div>`;
@@ -916,7 +916,7 @@ function generateRadioGroup(type, propertyName, states, value, serialNumber, nam
 
 function generateElementRange(type, propertyName, min, max, defaultValue, value, unit, serialNumber, name)
 {
-	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value == undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value == undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">${defaultValue !== undefined ? `<div class="text-end">${generateButton("Station", propertyName, defaultValue, serialNumber, name, "btn btn-outline-secondary btn-sm", true)}</div>` : ""}</div>`;
+	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value == undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value == undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">${defaultValue !== undefined ? `<div class="text-end">${generateElementButton("Station", propertyName, defaultValue, serialNumber, name, "btn btn-outline-secondary btn-sm", true)}</div>` : ""}</div>`;
 }
 
 function generateElementSelect(type, propertyName, states, value, serialNumber, name)
@@ -935,9 +935,14 @@ function generateSelectElement(propertyName, value, valueNumber, state)
 	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${getDeviceStateValueInGerman(state, propertyName, valueNumber)}</option>`;
 }
 
-function generateButton(type, propertyName, value, serialNumber, name, buttonClass, setToDefault)
+function generateElementButton(type, propertyName, value, serialNumber, name, buttonClass, setToDefault)
 {
-	return `<div><button id="btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}" type="button" class="${buttonClass}" onclick="change${type}Property('${serialNumber}', '${name}', '${propertyName}')">${setToDefault == true ? `Standardwert setzen` : `${getPropertyNameInGerman(propertyName)}`}</button></div>`;
+	return `<div>${generateButton(`btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}`, `${buttonClass}`, `change${type}Property('${serialNumber}', '${name}', '${propertyName}')`, `${setToDefault == true ? `Standardwert setzen` : `${getPropertyNameInGerman(propertyName)}`}`, true)}</div>`;
+}
+
+function generateButton(buttonId, buttonClass, buttonOnClick, description, enabled, dataBsDismiss, ariaLabel)
+{
+	return `<button id="${buttonId}" type="button" class="${buttonClass}"${buttonOnClick !== undefined ? ` onclick="${buttonOnClick}"` : ""}${enabled == false ? " disabled" : ""}${dataBsDismiss !== undefined ? ` data-bs-dismiss="${dataBsDismiss}"` : ""}${ariaLabel !== undefined ? ` aria-label="${ariaLabel}"` : ""}>${description}</button>`;
 }
 
 function getPropertyNameInGerman(propertyName)
@@ -1184,7 +1189,7 @@ function generateContentStationSettingsModal(stationId, stationName)
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">
 								${stationName === undefined ? `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>` : `<div style="text-align:left; float:left;"><h5 class="mb-0">${stationName} (${stationId})</h5></div>`}
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
+								${generateButton("btnStationSettingsModalCloseTop", "btn-close", undefined, "", true, "modal", "close")}
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 								<div class="" id="lblModalStationSettingsInfo">
@@ -1217,7 +1222,7 @@ function generateContentStationSettingsModal(stationId, stationName)
 								</div>
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								<button type="button" id="btnCloseModalStationSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
+								${generateButton("btnCloseModalStationSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 							</div>
 						</div>
 					</div>`;
@@ -1319,7 +1324,7 @@ function generateStationModalErrorMessage(errorMessage)
 											</div>
 										</div>
 										<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-											<button type="button" id="btnCloseModalStationSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
+											${generateButton("btnCloseModalStationSettingsBottom", "btn btn-primary", undefined, "Schließen", true, "modal", undefined)}
 										</div>
 									</div>
 								</div>`;
@@ -1332,7 +1337,7 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 							<div class="modal-content">
 								<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">
 									<div style="text-align:left; float:left;"><h5 class="mb-0">${stationProperties.name} (${stationId})</h5></div>
-									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
+									${generateButton("btnCloseModalStationSettingsTop", "btn-close", undefined, "", true, "modal", "close")}
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
@@ -1414,11 +1419,11 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 									</div>`;
 	}
 	stationModal +=  `
-									${generateButton("Station", "rebootStation", "", stationProperties.serialNumber, stationProperties.name, "btn btn-outline-danger", false)}`;
+									${generateButton("btnStationReboot", "btn btn-outline-danger", `changeStationProperty('${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, "Station neu starten", true)}`;
 	stationModal +=  `
 								</div>
 								<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-									<button type="button" id="btnCloseModalStationSettings" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Schließen</button>
+									${generateButton("btnCloseModalStationSettingsBottom", "btn btn-primary btn-sm", undefined, "Scließen", true, "modal")}
 								</div>
 							</div>
 						</div>`;
@@ -1489,31 +1494,39 @@ function loadDataStatechange(showLoading)
 						{
 							case 0:
 								state = "abwesend";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2">`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "ab&shy;we&shy;send", false)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setHome('${objResp.data[station].serialNumber}'`, "zu Hause", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setSchedule('${objResp.data[station].serialNumber}')`, "Zeit&shy;steu&shy;e&shy;rung", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setDisarm('${objResp.data[station].serialNumber}')`, "de&shy;ak&shy;ti&shy;viert", true)}</div>`;
+								buttons += `</div>`;
 								break;
 							case 1:
 								state = "zu Hause";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2">`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setArm('${objResp.data[station].serialNumber}')`, "ab&shy;we&shy;send", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "zu Hause", false)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setSchedule('${objResp.data[station].serialNumber}')`, "Zeit&shy;steu&shy;e&shy;rung", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setDisarm('${objResp.data[station].serialNumber}')`, "de&shy;ak&shy;ti&shy;viert", true)}</div>`;
+								buttons += `</div>`;
 								break;
 							case 2:
 								state = "Zeitsteuerung";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" onclick="setDisarm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2">`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setArm('${objResp.data[station].serialNumber}')`, "ab&shy;we&shy;send", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setHome('${objResp.data[station].serialNumber}'`, "zu Hause", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "Zeit&shy;steu&shy;e&shy;rung", false)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setDisarm('${objResp.data[station].serialNumber}')`, "de&shy;ak&shy;ti&shy;viert", true)}</div>`;
+								buttons += `</div>`;
 								break;
 							case 63:
 								state = "deaktiviert";
-								buttons =  `<div class="row g-2"><div class="col-sm-6"><button id="btnArm${objResp.data[station].serialNumber}" onclick="setArm('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">ab&shy;we&shy;send</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnHome${objResp.data[station].serialNumber}" onclick="setHome('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">zu Hause</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnSchedule${objResp.data[station].serialNumber}" onclick="setSchedule('${objResp.data[station].serialNumber}')" type="button" class="btn btn-primary col-12 h-100">Zeit&shy;steu&shy;e&shy;rung</button></div>`;
-								buttons += `<div class="col-sm-6"><button id="btnDisarm${objResp.data[station].serialNumber}" type="button" class="btn btn-primary col-12 h-100" disabled>de&shy;ak&shy;ti&shy;viert</button></div></div>`;
+								buttons =  `<div class="row g-2">`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setArm('${objResp.data[station].serialNumber}')`, "ab&shy;we&shy;send", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setHome('${objResp.data[station].serialNumber}'`, "zu Hause", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setSchedule('${objResp.data[station].serialNumber}')`, "Zeit&shy;steu&shy;e&shy;rung", true)}</div>`;
+								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "de&shy;ak&shy;ti&shy;viert", false)}</div>`;
+								buttons += `</div>`;
 								break;
 							default:
 								state = "unbekannt";
@@ -2275,11 +2288,11 @@ function loadSystemVariables()
 						sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
 						if(sysVarAvailable==true)
 						{
-							sysVarTable += `<td class="align-middle text-center"><div class="d-grid"><button id="btn${sysVarName}" type="button" class="btn btn-primary mb-1" disabled>System&shy;variable anlegen</button></div></td>`;
+							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${generateButton(`btn${sysVarName}`, "btn btn-primary mb-1", undefined, "System&shy;variable anlegen", false)}</div></td>`;
 						}
 						else
 						{
-							sysVarTable += `<td class="align-middle text-center"><div class="d-grid"><button id="btn${sysVarName}" onclick="createSysVar('${sysVarName}', '${sysVarInfo}')" type="button" class="btn btn-primary mb-1">System&shy;variable anlegen</button></div></td>`;
+							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${generateButton(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, "System&shy;variable anlegen")}</div></td>`;
 						}
 						sysVarTable += `</tr>`;
 					}
