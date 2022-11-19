@@ -924,7 +924,7 @@ export class Config
             var station;
             for (station in this.configJson.stations)
             {
-                if(this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial ==  stationSerial)
+                if(this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial == stationSerial)
                 {
                     return station;
                 }
@@ -1835,21 +1835,22 @@ export class Config
             }
             if(res)
             {
-                if(udpPort != undefined)
+                res = false;
+                var station = this.getStationIterator(stationSerial);
+                if(station !== undefined)
                 {
-                    var station = this.getStationIterator(stationSerial);
-                    if(station !== undefined)
+                    if(udpPort === undefined)
                     {
-                        if(this.configJson.stations[station].udpPort != udpPort)
-                        {
-                            this.configJson.stations[station].udpPort = udpPort;
-                            this.hasChanged = true;
-                            res = true;
-                        }
+                        udpPort = null;
                     }
-                    res = false;
+                    if(this.configJson.stations[station].udpPort != udpPort)
+                    {
+                        this.configJson.stations[station].udpPort = udpPort;
+                        this.hasChanged = true;
+                        return true;
+                    }
                 }
-                return res;
+                return false;
             }
         }
         return false;

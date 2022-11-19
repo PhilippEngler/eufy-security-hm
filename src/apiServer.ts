@@ -116,7 +116,7 @@ class ApiServer
                         responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
                     case "getAccountInfo":
-                        responseString = await api.getAccountInfoJson();
+                        responseString = await api.getAccountInfoAsJson();
                         break;
                     case "getDevices":
                         responseString = await api.getDevicesAsJson();
@@ -272,13 +272,13 @@ class ApiServer
                         }
                         break;
                     case "getConfig":
-                        responseString = await api.getAPIConfig();
+                        responseString = await api.getAPIConfigAsJson();
                         break;
                     case "getApiInfo":
-                        responseString = api.getApiVersion();
+                        responseString = api.getApiVersionAsJson();
                         break;
                     case "getApiState":
-                        responseString = await api.getApiState();
+                        responseString = await api.getApiStateAsJson();
                         break;
                     case "setMode":
                         if(url.length == 3)

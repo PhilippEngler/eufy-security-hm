@@ -172,7 +172,7 @@ export class EufySecurityApi
      * Returns the account info as JSON string.
      * @returns The account info as JSON string.
      */
-    public async getAccountInfoJson() : Promise<string>
+    public async getAccountInfoAsJson() : Promise<string>
     {
         var json : any = {};
 
@@ -1991,7 +1991,7 @@ export class EufySecurityApi
     /**
      * Get all config data needed for the webui.
      */
-    public async getAPIConfig() : Promise<string>
+    public async getAPIConfigAsJson() : Promise<string>
     {
         var json : any = {};
         
@@ -2585,14 +2585,18 @@ export class EufySecurityApi
     }
 
     /**
-     * Return the version of this API.
+     * Return the version of this API as Json string.
      */
-    public getApiVersion() : string
+    public getApiVersionAsJson() : string
     {
         return `{"success":true,"platform":"${process.platform}","nodeVersion":"${process.version}","nodeArch":"${process.arch}","apiVersion":"${this.getEufySecurityApiVersion()}","homematicApiVersion":"${this.homematicApi.getHomematicApiVersion()}","eufySecurityClientVersion":"${this.getEufySecurityClientVersion()}"}`;
     }
 
-    public async getApiState() : Promise<string>
+    /**
+     * Retrieves the state of api objects as Json string.
+     * @returns The state of different api elements as Json string.
+     */
+    public async getApiStateAsJson() : Promise<string>
     {
         var json : any = {};
 
