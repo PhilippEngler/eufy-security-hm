@@ -377,7 +377,7 @@ function createCardDevice(device)
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
-	card += `<div class="row g-0"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${device.softwareVersion}</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.chargingStatus == 1 ? "bi-battery-charging" : device.battery < 16 ? "bi-battery" : device.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${device.battery < 6 ? "text-danger" : device.battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${device.battery}%</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.batteryTemperature < 0 ? "bi-thermometer-low" : device.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${device.batteryTemperature}&deg;C</span></div></div>`;
+	card += `<div class="row g-0"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${device.softwareVersion}</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.chargingStatus == 1 ? "bi-battery-charging" : device.battery < 16 ? "bi-battery" : device.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${device.battery < 6 ? "text-danger" : device.battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${device.battery}%</span></div>${device.batteryTemperature > -99 && device.batteryTemperature < 99 ? `<div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.batteryTemperature < 0 ? "bi-thermometer-low" : device.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${device.batteryTemperature}&deg;C</span></div>` : ""}</div>`;
 	card += `</div></div></div>`;
 	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device.pictureTime, device.pictureUrl)}</small></div>`;
 	card += `</div></div>`;
@@ -453,29 +453,32 @@ function generateContentDeviceSettingsModal(deviceId, deviceName)
 								<div class="row text-center mb-3">
 									<div class="col">
 										<span id="lblDeviceSerial">
-											<span class="placeholder col-8 placeholder-lg"></span>
+											<h6 class="card-subtitle text-muted">
+												<span class="placeholder col-8 placeholder-lg"></span>
+											</h6>
 										</span>
 									</div>
 									<div class="col">
 										<span id="lblDeviceInfo">
 											<h6 class="card-subtitle text-muted">
-											<div class="row">
-												<div class="col">
-													<span class="text-nowrap">
-														<i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
-													</span>
+												<div class="row">
+													<div class="col">
+														<span class="text-nowrap">
+															<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
+														</span>
+													</div>
+													<div class="col">
+														<span class="text-nowrap">
+															<i class="bi-battery" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
+														</span>
+													</div>
+													<div class="col">
+														<span class="text-nowrap">
+															<i class="bi-thermometer-low" title="Temperatur"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
+														</span>
+													</div>
 												</div>
-												<div class="col">
-													<span class="text-nowrap">
-														<i class="bi-battery text-muted" title="Ladezustand des Akkus"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
-													</span>
-												</div>
-												<div class="col">
-													<span class="text-nowrap">
-														<i class="bi-thermometer-low text-muted" title="Temperatur"></i>&nbsp;<span class="placeholder col-6 placeholder-lg"></span>
-													</span>
-												</div>
-											</div>
+											</h6>
 										</span>
 									</div>
 								</div>
@@ -598,7 +601,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
-	if(!(deviceProperties.model.startsWith("T8112") || deviceProperties.model.startsWith("T8113") || deviceProperties.model.startsWith("T8114") || deviceProperties.model.startsWith("T8142")))
+	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,6)) == false)
 	{
 		deviceModal += `
 									${createMessageContainer("alert alert-warning", "Dieses Gerät wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.")} ${createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "")}`;
@@ -629,35 +632,36 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		deviceModal += `
 										<span id="lblDeviceInfo">
 											<h6 class="card-subtitle text-muted">
-											<div class="row">`;
+												<div class="row">`;
 		if(deviceProperties.softwareVersion !== undefined)
 		{
 			deviceModal += `
-												<div class="col">
-													<span class="text-nowrap">
-														<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${deviceProperties.softwareVersion}
-													</span>
-												</div>`;
+													<div class="col">
+														<span class="text-nowrap">
+															<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${deviceProperties.softwareVersion}
+														</span>
+													</div>`;
 		}
 		if(deviceProperties.battery !== undefined)
 		{
 			deviceModal += `
-												<div class="col">
-													<span class="text-nowrap">
-														<i class="${deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : deviceProperties.battery < 5 ? "bi-battery" : deviceProperties.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${deviceProperties.battery < 5 ? "text-danger" : deviceProperties.battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${deviceProperties.battery}%</span>
-													</span>
-												</div>`;
+													<div class="col">
+														<span class="text-nowrap">
+															<i class="${deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : deviceProperties.battery < 5 ? "bi-battery" : deviceProperties.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${deviceProperties.battery < 5 ? "text-danger" : deviceProperties.battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${deviceProperties.battery}%</span>
+														</span>
+													</div>`;
 		}
-		if(deviceProperties.batteryTemperature !== undefined)
+		if(deviceProperties.batteryTemperature !== undefined && deviceProperties.batteryTemperature > -99 && deviceProperties.batteryTemperature < 99)
 		{
 			deviceModal += `
-												<div class="col">
-													<span class="text-nowrap">
-														<i class="${deviceProperties.batteryTemperature < 0 ? "bi-thermometer-low" : deviceProperties.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${deviceProperties.batteryTemperature}&deg;C
-													</span>
-												</div>`;
+													<div class="col">
+														<span class="text-nowrap">
+															<i class="${deviceProperties.batteryTemperature < 0 ? "bi-thermometer-low" : deviceProperties.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${deviceProperties.batteryTemperature}&deg;C
+														</span>
+													</div>`;
 		}
 		deviceModal +=     `
+												</div>
 											</h6>
 										</span>`;
 	}
@@ -894,6 +898,24 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
 }
 
+function isStationOrDevicesKnown(modell)
+{
+	switch(modell)
+	{
+		//Stations
+		case "T8002":
+		case "T8010":
+		//Devices
+		case "T8112":
+		case "T8113":
+		case "T8114":
+		case "T8142":
+			return true;
+		default:
+			return false;
+	}
+}
+
 function generateElementSwitch(type, propertyName, value, serialNumber, name)
 {
 	return `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == true ? " checked" : ""} onclick="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.checked)"><label class="form-check-label" for="chk${propertyName}">${getPropertyNameInGerman(propertyName)}</label></div>`;
@@ -916,7 +938,7 @@ function generateRadioGroup(type, propertyName, states, value, serialNumber, nam
 
 function generateElementRange(type, propertyName, min, max, defaultValue, value, unit, serialNumber, name)
 {
-	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value == undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value == undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">${defaultValue !== undefined ? `<div class="text-end">${generateElementButton("Station", propertyName, defaultValue, serialNumber, name, "btn btn-outline-secondary btn-sm", true)}</div>` : ""}</div>`;
+	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value == undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value == undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">${defaultValue !== undefined ? `<div class="text-end">${generateElementButton("Station", propertyName, serialNumber, name, "btn btn-outline-secondary btn-sm", true, (defaultValue !== undefined && defaultValue != value))}</div>` : ""}</div>`;
 }
 
 function generateElementSelect(type, propertyName, states, value, serialNumber, name)
@@ -935,14 +957,14 @@ function generateSelectElement(propertyName, value, valueNumber, state)
 	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${getDeviceStateValueInGerman(state, propertyName, valueNumber)}</option>`;
 }
 
-function generateElementButton(type, propertyName, value, serialNumber, name, buttonClass, setToDefault)
+function generateElementButton(type, propertyName, serialNumber, name, buttonClass, setToDefault, enabled)
 {
-	return `<div>${generateButton(`btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}`, `${buttonClass}`, `change${type}Property('${serialNumber}', '${name}', '${propertyName}')`, `${setToDefault == true ? `Standardwert setzen` : `${getPropertyNameInGerman(propertyName)}`}`, true)}</div>`;
+	return `<div>${generateButton(`btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}`, `${buttonClass}`, `change${type}Property('${serialNumber}', '${name}', '${propertyName}')`, `${setToDefault == true ? `Standardwert setzen` : `${getPropertyNameInGerman(propertyName)}`}`, enabled, undefined, undefined)}</div>`;
 }
 
 function generateButton(buttonId, buttonClass, buttonOnClick, description, enabled, dataBsDismiss, ariaLabel)
 {
-	return `<button id="${buttonId}" type="button" class="${buttonClass}"${buttonOnClick !== undefined ? ` onclick="${buttonOnClick}"` : ""}${enabled == false ? " disabled" : ""}${dataBsDismiss !== undefined ? ` data-bs-dismiss="${dataBsDismiss}"` : ""}${ariaLabel !== undefined ? ` aria-label="${ariaLabel}"` : ""}>${description}</button>`;
+	return `<button id="${buttonId}" type="button" class="${buttonClass}"${buttonOnClick !== undefined ? ` onclick="${buttonOnClick}"` : ""}${dataBsDismiss !== undefined ? ` data-bs-dismiss="${dataBsDismiss}"` : ""}${ariaLabel !== undefined ? ` aria-label="${ariaLabel}"` : ""}${enabled == false ? " disabled" : ""}>${description}</button>`;
 }
 
 function getPropertyNameInGerman(propertyName)
@@ -1126,12 +1148,16 @@ function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 			if(objResp.success == true)
 			{
 				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+				document.getElementById("toastPropertyUpdateOKHeader").innerHTML = "Einstellungen speichern.";
+				document.getElementById("toastPropertyUpdateOKText").innerHTML = "Die Einstellungen wurden erfolgreich gespeichert.";
 				toast.show();
 				generateDeviceSettingsModal(deviceId, deviceName)
 			}
 			else
 			{
 				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Einstellungen speichern.";
+				document.getElementById("toastPropertyUpdateFailedText").innerHTML = "Die Einstellungen konnten nicht gespeichert werden.";
 				toast.show();
 			}
 		}
@@ -1210,13 +1236,16 @@ function generateContentStationSettingsModal(stationId, stationName)
 								<div class="row text-center mb-3">
 									<div class="col">
 										<span id="lblStationSerial">
-											<span class="placeholder col-8 placeholder-lg"></span>
+											<h6 class="card-subtitle text-muted">
+												<span class="placeholder col-8 placeholder-lg"></span>
+											</h6>
 										</span>
 									</div>
 									<div class="col">
 										<span id="lblStationFirmware">
-											<i class="bi-gear-wide-connected text-muted" title="Firmwareversion"></i>&nbsp;
-											<span class="placeholder col-4 placeholder-lg"></span>
+											<h6 class="card-subtitle text-muted">
+												<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;<span class="placeholder col-4 placeholder-lg"></span>
+											</h6>
 										</span>
 									</div>
 								</div>
@@ -1341,7 +1370,7 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
-	if(!(stationProperties.model.startsWith("T8002") || stationProperties.model.startsWith("T8010")))
+	if(isStationOrDevicesKnown(stationProperties.model.slice(0,6)) == false)
 	{
 		stationModal += `
 										${createMessageContainer("alert alert-warning", "Diese Station wird nicht vollständig unterstützt.", `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${stationId}" target=”_blank” class="alert-link">StationProperties</a>" und "<a href="${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`, "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.")} ${createMessageContainer("alert alert-primary", "Das Speichern der Einstellungen ist zur Zeit nicht möglich.", "", "")}`;
@@ -1445,12 +1474,32 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 			if(objResp.success == true)
 			{
 				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+				if(propertyName == "rebootStation")
+				{
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = "Station neu starten.";
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = "Die Station startet neu. Dies kann einige Minuten dauern.";
+				}
+				else
+				{
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = "Einstellungen speichern.";
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = "Die Einstellungen wurden erfolgreich gespeichert.";
+				}
 				toast.show();
 				generateStationSettingsModal(stationId, stationName)
 			}
 			else
 			{
 				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				if(propertyName == "rebootStation")
+				{
+					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Station neu starten.";
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = "Die Station konnte nicht neu gestartet werden.";
+				}
+				else
+				{
+					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Einstellungen speichern.";
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = "Die Einstellungen konnten nicht gespeichert werden.";
+				}
 				toast.show();
 			}
 		}
