@@ -112,7 +112,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     constructor(localIPAddressSettings: string, localUDPPort: number | null, connectionType: P2PConnectionType, rawStation: StationListResponse, api: HTTPApi, publicKey = "") {
         super();
         this.localIPAddressSettings = localIPAddressSettings;
-        if(localUDPPort == null)
+        if(localUDPPort === undefined || localUDPPort == null)
         {
             this.localUDPPort = 0;
         }
