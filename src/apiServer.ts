@@ -705,12 +705,22 @@ class ApiServer
                         var isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
+                            if(request.headers['content-length'] !== undefined && Number.parseInt(request.headers['content-length']?.toString()) > 500000)
+                            {
+                                logger.logInfoBasic("Error during upload and saving config file: File is to large.");
+                                request.destroy();
+                            }
+                        });
+
+                        request.on("destroy", function () {
+                            
                         });
 
                         request.on("end", function() {
                             responseString = "";
                             if(checkUploadedFileMetadata(postData) == false)
                             {
+                                logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing.");
                                 responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
                             }
                             else
@@ -720,10 +730,12 @@ class ApiServer
                                 {
                                     if(responseString == "")
                                     {
+                                        logger.logInfoBasic("Error during upload and saving config file: File content could not be determined.");
                                         responseString = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
                                     }
                                     else
                                     {
+                                        logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
                                         responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
                                     }
                                 }
@@ -749,7 +761,7 @@ class ApiServer
                             }
                             else
                             {
-                                logger.logInfoBasic("Error during upload and saving config file.");
+                                logger.logInfoBasic("Config file was not saved.");
                             }
                         });
                         break;
