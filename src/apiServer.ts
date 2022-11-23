@@ -708,60 +708,63 @@ class ApiServer
                             if(request.headers['content-length'] !== undefined && Number.parseInt(request.headers['content-length']?.toString()) > 500000)
                             {
                                 logger.logInfoBasic("Error during upload and saving config file: File is to large.");
-                                request.destroy();
+                                request.destroy(new Error("FileToLarge"));
                             }
-                        });
-
-                        request.on("destroy", function () {
-                            
                         });
 
                         request.on("end", function() {
-                            responseString = "";
-                            if(checkUploadedFileMetadata(postData) == false)
+                            try
                             {
-                                logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing.");
-                                responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
-                            }
-                            else
-                            {
-                                var fileContent = getUploadFileContent(postData);
-                                if(fileContent === undefined)
+                                responseString = "";
+                                if(checkUploadedFileMetadata(postData) == false)
                                 {
-                                    if(responseString == "")
-                                    {
-                                        logger.logInfoBasic("Error during upload and saving config file: File content could not be determined.");
-                                        responseString = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
-                                    }
-                                    else
-                                    {
-                                        logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
-                                        responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
-                                    }
+                                    logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing.");
+                                    responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
                                 }
                                 else
                                 {
-                                    writeFileSync("config.json.upload", fileContent, 'utf-8');
-                                    responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
+                                    var fileContent = getUploadFileContent(postData);
+                                    if(fileContent === undefined)
+                                    {
+                                        if(responseString == "")
+                                        {
+                                            logger.logInfoBasic("Error during upload and saving config file: File content could not be determined.");
+                                            responseString = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
+                                        }
+                                        else
+                                        {
+                                            logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
+                                            responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        writeFileSync("config.json.upload", fileContent, 'utf-8');
+                                        responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
+                                    }
+                                }
+
+                                var resJson = JSON.parse(responseString);
+
+                                response.setHeader('Access-Control-Allow-Origin', '*');
+                                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+
+                                response.writeHead(200);
+                                response.end(responseString);
+
+                                if(resJson.success == true && resJson.serviceRestart == true)
+                                {
+                                    logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
+                                    restartServer();
+                                }
+                                else
+                                {
+                                    logger.logInfoBasic("Config file was not saved.");
                                 }
                             }
-
-                            var resJson = JSON.parse(responseString);
-
-                            response.setHeader('Access-Control-Allow-Origin', '*');
-                            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-
-                            response.writeHead(200);
-                            response.end(responseString);
-
-                            if(resJson.success == true && resJson.serviceRestart == true)
+                            catch (e : any)
                             {
-                                logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
-                                restartServer();
-                            }
-                            else
-                            {
-                                logger.logInfoBasic("Config file was not saved.");
+                                
                             }
                         });
                         break;
