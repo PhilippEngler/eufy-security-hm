@@ -405,7 +405,7 @@ function getDeviceLastEventTime(time, url)
 	}
 	else if(time === undefined || time == "n/a")
 	{
-		return "keine Aufnahme";
+		return "keine Aufnahme verfügbar";
 	}
 	else
 	{
@@ -484,7 +484,7 @@ function generateContentDeviceSettingsModal(deviceId, deviceName)
 								</div>
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								${generateButton("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 							</div>
 						</div>
 					</div>`;
@@ -586,7 +586,7 @@ function generateDeviceModalErrorMessage(errorMessage)
 											</div>
 										</div>
 										<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-											${generateButton("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
+											${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 										</div>
 									</div>
 								</div>`;
@@ -680,7 +680,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 											<div class="col">
 												<h5>Gerät aktiviert</h5>
-												${generateElementSwitch("Device", devicePropertiesMetadata.enabled.name, deviceProperties.enabled, deviceProperties.serialNumber, deviceProperties.name)}
+												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.enabled.name, deviceProperties.enabled)}
 											</div>`;
 		}
 		if(deviceProperties.antitheftDetection !== undefined)
@@ -688,7 +688,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 											<div class="col">
 												<h5>Diebstahlerkennung</h5>
-												${generateElementSwitch("Device", devicePropertiesMetadata.antitheftDetection.name, deviceProperties.antitheftDetection, deviceProperties.serialNumber, deviceProperties.name)}
+												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.antitheftDetection.name, deviceProperties.antitheftDetection)}
 											</div>`;
 		}
 		if(deviceProperties.statusLed !== undefined)
@@ -696,7 +696,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 											<div class="col">
 												<h5>Status LED</h5>
-												${generateElementSwitch("Device", devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed, deviceProperties.serialNumber, deviceProperties.name)}
+												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed)}
 											</div>`;
 		}
 		deviceModal += `
@@ -714,25 +714,25 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										<h5>Bewegungserkennung</h5>
-										${generateElementSwitch("Device", devicePropertiesMetadata.motionDetection.name, deviceProperties.motionDetection, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetection.name, deviceProperties.motionDetection)}`;
 			if(deviceProperties.motionDetectionSensitivity !== undefined)
 			{
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined ? `<hr />`: ``}
 										<h5>Erkennungsempfindlichkeit</h5>
-										${generateElementRange("Device", devicePropertiesMetadata.motionDetectionSensitivity.name, devicePropertiesMetadata.motionDetectionSensitivity.min, devicePropertiesMetadata.motionDetectionSensitivity.max, devicePropertiesMetadata.motionDetectionSensitivity.defaut, deviceProperties.motionDetectionSensitivity, devicePropertiesMetadata.motionDetectionSensitivity.unit, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, devicePropertiesMetadata.motionDetectionSensitivity.unit, devicePropertiesMetadata.motionDetectionSensitivity.min, devicePropertiesMetadata.motionDetectionSensitivity.max, devicePropertiesMetadata.motionDetectionSensitivity.defaut)}`;
 			}
 			if(deviceProperties.motionDetectionType !== undefined || deviceProperties.motionDetectionTypeHuman !== undefined || deviceProperties.motionDetectionTypeHumanRecognition !== undefined || deviceProperties.motionDetectionTypePet !== undefined || deviceProperties.motionDetectionTypeVehicle !== undefined || deviceProperties.motionDetectionTypeAllOtherMotions !== undefined)
 			{
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity ? `<hr />`: ``}
 										<h5>Erkennungsart</h5>
-										${deviceProperties.motionDetectionType !== undefined ? `${generateElementSelect("Device", devicePropertiesMetadata.motionDetectionType.name, devicePropertiesMetadata.motionDetectionType.states, deviceProperties.motionDetectionType, deviceProperties.serialNumber, deviceProperties.name)}` : ""}
-										${deviceProperties.motionDetectionTypeHuman !== undefined ? `${generateElementSwitch("Device", devicePropertiesMetadata.motionDetectionTypeHuman.name, deviceProperties.motionDetectionTypeHuman, deviceProperties.serialNumber, deviceProperties.name)}` : ""}
-										${deviceProperties.motionDetectionTypeHumanRecognition !== undefined ? `${generateElementSwitch("Device", devicePropertiesMetadata.motionDetectionTypeHumanRecognition.name, deviceProperties.motionDetectionTypeHumanRecognition, deviceProperties.serialNumber, deviceProperties.name)}` : ""}
-										${deviceProperties.motionDetectionTypePet !== undefined ? `${generateElementSwitch("Device", devicePropertiesMetadata.motionDetectionTypePet.name, deviceProperties.motionDetectionTypePet, deviceProperties.serialNumber, deviceProperties.name)}` : ""}
-										${deviceProperties.motionDetectionTypeVehicle !== undefined ? `${generateElementSwitch("Device", devicePropertiesMetadata.motionDetectionTypeVehicle.name, deviceProperties.motionDetectionTypeVehicle, deviceProperties.serialNumber, deviceProperties.name)}` : ""}
-										${deviceProperties.motionDetectionTypeAllOtherMotions !== undefined ? `${generateElementSwitch("Device", devicePropertiesMetadata.motionDetectionTypeAllOtherMotions.name, deviceProperties.motionDetectionTypeAllOtherMotions, deviceProperties.serialNumber, deviceProperties.name)}` : ""}`;
+										${deviceProperties.motionDetectionType !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionType.name, deviceProperties.motionDetectionType, devicePropertiesMetadata.motionDetectionType.states)}` : ""}
+										${deviceProperties.motionDetectionTypeHuman !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionTypeHuman.name, deviceProperties.motionDetectionTypeHuman)}` : ""}
+										${deviceProperties.motionDetectionTypeHumanRecognition !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionTypeHumanRecognition.name, deviceProperties.motionDetectionTypeHumanRecognition)}` : ""}
+										${deviceProperties.motionDetectionTypePet !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionTypePet.name, deviceProperties.motionDetectionTypePet)}` : ""}
+										${deviceProperties.motionDetectionTypeVehicle !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionTypeVehicle.name, deviceProperties.motionDetectionTypeVehicle)}` : ""}
+										${deviceProperties.motionDetectionTypeAllOtherMotions !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionTypeAllOtherMotions.name, deviceProperties.motionDetectionTypeAllOtherMotions)}` : ""}`;
 			}
 		}
 		deviceModal += `
@@ -749,7 +749,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										<h5>Arbeitsmodus</h5>
-										${generateRadioGroup("Device", devicePropertiesMetadata.powerWorkingMode.name, devicePropertiesMetadata.powerWorkingMode.states, deviceProperties.powerWorkingMode, deviceProperties.serialNumber, deviceProperties.name)}
+										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.powerWorkingMode.name, deviceProperties.powerWorkingMode, devicePropertiesMetadata.powerWorkingMode.states)}
 										<div id="divDeviceCustomRecordingSettings" ${deviceProperties.powerWorkingMode == 2 ? "" : `class="collapse"`}>`;
 			if(deviceProperties.recordingClipLength !== undefined || deviceProperties.recordingRetriggerInterval !== undefined || deviceProperties.recordingEndClipMotionStops !== undefined)
 			{
@@ -759,17 +759,17 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 				if(deviceProperties.recordingClipLength !== undefined)
 				{
 					deviceModal += `
-											${generateElementRange("Device", devicePropertiesMetadata.recordingClipLength.name, devicePropertiesMetadata.recordingClipLength.min, devicePropertiesMetadata.recordingClipLength.max, devicePropertiesMetadata.recordingClipLength.defaut, deviceProperties.recordingClipLength, devicePropertiesMetadata.recordingClipLength.unit, deviceProperties.serialNumber, deviceProperties.name)}`;
+											${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.recordingClipLength.name, deviceProperties.recordingClipLength, devicePropertiesMetadata.recordingClipLength.unit, devicePropertiesMetadata.recordingClipLength.min, devicePropertiesMetadata.recordingClipLength.max, devicePropertiesMetadata.recordingClipLength.defaut)}`;
 				}
 				if(deviceProperties.recordingRetriggerInterval !== undefined)
 				{
 					deviceModal += `
-											${generateElementRange("Device", devicePropertiesMetadata.recordingRetriggerInterval.name, devicePropertiesMetadata.recordingRetriggerInterval.min, devicePropertiesMetadata.recordingRetriggerInterval.max, devicePropertiesMetadata.recordingRetriggerInterval.default, deviceProperties.recordingRetriggerInterval, devicePropertiesMetadata.recordingRetriggerInterval.unit, deviceProperties.serialNumber, deviceProperties.name)}`;
+											${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.recordingRetriggerInterval.name, deviceProperties.recordingRetriggerInterval, devicePropertiesMetadata.recordingRetriggerInterval.unit, devicePropertiesMetadata.recordingRetriggerInterval.min, devicePropertiesMetadata.recordingRetriggerInterval.max, devicePropertiesMetadata.recordingRetriggerInterval.default)}`;
 				}
 				if(deviceProperties.recordingEndClipMotionStops !== undefined)
 				{
 					deviceModal += `
-											${generateElementSwitch("Device", devicePropertiesMetadata.recordingEndClipMotionStops.name, deviceProperties.recordingEndClipMotionStops, deviceProperties.serialNumber, deviceProperties.name)}`;
+											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.recordingEndClipMotionStops.name, deviceProperties.recordingEndClipMotionStops)}`;
 				}
 				deviceModal += `
 										</div>`;
@@ -816,30 +816,30 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										<h5>Wasserzeichen</h5>
-										${generateElementSelect("Device", devicePropertiesMetadata.watermark.name, devicePropertiesMetadata.watermark.states, deviceProperties.watermark, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.watermark.name, deviceProperties.watermark, devicePropertiesMetadata.watermark.states)}`;
 		}
 		if(deviceProperties.videoRecordingQuality !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.watermark !== undefined ? `<hr />` : ``}
 										<h5>Aufzeichnungsqualität</h5>
-										${generateElementSelect("Device", devicePropertiesMetadata.videoRecordingQuality.name, devicePropertiesMetadata.videoRecordingQuality.states, deviceProperties.videoRecordingQuality, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.videoRecordingQuality.name, deviceProperties.videoRecordingQuality, devicePropertiesMetadata.videoRecordingQuality.states)}`;
 		}
 		if(deviceProperties.videoStreamingQuality !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.watermark !== undefined || deviceProperties.videoStreamingQuality !== undefined ? `<hr />` : ``}
 										<h5>Streamingqualität</h5>
-										${generateElementSelect("Device", devicePropertiesMetadata.videoStreamingQuality.name, devicePropertiesMetadata.videoStreamingQuality.states, deviceProperties.videoStreamingQuality, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.videoStreamingQuality.name, deviceProperties.videoStreamingQuality, devicePropertiesMetadata.videoStreamingQuality.states)}`;
 		}
 		if(deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined ? `<hr />` : ``}
 										<h5>Nachtsicht</h5>
-										${devicePropertiesMetadata.autoNightvision === undefined ? "" : generateElementSwitch("Device", devicePropertiesMetadata.autoNightvision.name, deviceProperties.autoNightvision, deviceProperties.serialNumber, deviceProperties.name)}
-										${devicePropertiesMetadata.nightvision === undefined ? "" : generateElementSelect("Device", devicePropertiesMetadata.nightvision.name, devicePropertiesMetadata.nightvision.states, deviceProperties.nightvision, deviceProperties.serialNumber, deviceProperties.name)}
-										${devicePropertiesMetadata.lightSettingsBrightnessManual === undefined ? "" : generateElementRange("Device", devicePropertiesMetadata.lightSettingsBrightnessManual.name, devicePropertiesMetadata.lightSettingsBrightnessManual.min, devicePropertiesMetadata.lightSettingsBrightnessManual.max, devicePropertiesMetadata.lightSettingsBrightnessManual.default, deviceProperties.lightSettingsBrightnessManual, devicePropertiesMetadata.lightSettingsBrightnessManual.unit, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${devicePropertiesMetadata.autoNightvision === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.autoNightvision.name, deviceProperties.autoNightvision)}
+										${devicePropertiesMetadata.nightvision === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.nightvision.name, deviceProperties.nightvision, devicePropertiesMetadata.nightvision.states)}
+										${devicePropertiesMetadata.lightSettingsBrightnessManual === undefined ? "" : generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessManual.name, deviceProperties.lightSettingsBrightnessManual, devicePropertiesMetadata.lightSettingsBrightnessManual.unit, devicePropertiesMetadata.lightSettingsBrightnessManual.min, devicePropertiesMetadata.lightSettingsBrightnessManual.max, devicePropertiesMetadata.lightSettingsBrightnessManual.default)}`;
 		}
 		deviceModal += `
 									</div>
@@ -855,11 +855,11 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										<h5>Mikrofon</h5>
-										${generateElementSwitch("Device", devicePropertiesMetadata.microphone.name, deviceProperties.microphone, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.microphone.name, deviceProperties.microphone)}`;
 			if(deviceProperties.audioRecording !== undefined && deviceProperties.microphone !== undefined && deviceProperties.microphone == true)
 			{
 				deviceModal += `
-										${generateElementSwitch("Device", devicePropertiesMetadata.audioRecording.name, deviceProperties.audioRecording, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.audioRecording.name, deviceProperties.audioRecording)}`;
 			}
 		}
 		if(deviceProperties.speaker !== undefined || deviceProperties.speakerVolume !== undefined)
@@ -867,8 +867,8 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 										${deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined ? `<hr />` : ``}
 										<h5>Lautsprecher</h5>
-										${devicePropertiesMetadata.speaker === undefined ? "" : generateElementSwitch("Device", devicePropertiesMetadata.speaker.name, deviceProperties.speaker, deviceProperties.serialNumber, deviceProperties.name)}
-										${devicePropertiesMetadata.speakerVolume === undefined ? "" : generateElementSelect("Device", devicePropertiesMetadata.speakerVolume.name, devicePropertiesMetadata.speakerVolume.states, deviceProperties.speakerVolume, deviceProperties.serialNumber, deviceProperties.name)}`;
+										${devicePropertiesMetadata.speaker === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.speaker.name, deviceProperties.speaker)}
+										${devicePropertiesMetadata.speakerVolume === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.speakerVolume.name, deviceProperties.speakerVolume, devicePropertiesMetadata.speakerVolume.states)}`;
 		}
 		deviceModal += `
 									</div>
@@ -881,14 +881,14 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									<h5 class="card-header">Benachrichtigungen</h5>
 									<div class="card-body">
 										<h5>Art der Benachrichtigung</h5>
-										${generateRadioGroup("Device", devicePropertiesMetadata.notificationType.name, devicePropertiesMetadata.notificationType.states, deviceProperties.notificationType, deviceProperties.serialNumber, deviceProperties.name)}
+										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationType.name, deviceProperties.notificationType, devicePropertiesMetadata.notificationType.states)}
 									</div>
 								</div>`;
 	}
 	deviceModal += `
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								${generateButton("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 							</div>
 						</div>
 					</div>`;
@@ -916,53 +916,53 @@ function isStationOrDevicesKnown(modell)
 	}
 }
 
-function generateElementSwitch(type, propertyName, value, serialNumber, name)
+function generateElementSwitch(type, serialNumber, name, propertyName, value)
 {
 	return `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == true ? " checked" : ""} onclick="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.checked)"><label class="form-check-label" for="chk${propertyName}">${getPropertyNameInGerman(propertyName)}</label></div>`;
 }
 
-function generateElementRadio(type, propertyName, value, state, stateValue, serialNumber, name)
-{
-	return `<div class="form-check"><input class="form-check-input" type="radio" name="grp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" id="rb${state.charAt(0).toUpperCase() + state.slice(1)}" ${value == true ? " checked" : ""} onclick="change${type}Property('${serialNumber}', '${name}', '${propertyName}', ${stateValue})"><label class="form-check-label" for="rb${state.charAt(0).toUpperCase() + state.slice(1)}">${getDeviceStateValueInGerman(state)}</label></div>`;
-}
-
-function generateRadioGroup(type, propertyName, states, value, serialNumber, name)
+function generateElementRadioGroup(type, serialNumber, name, propertyName, value, states)
 {
 	var radioGroup = ``;
 	for(var state in states)
 	{
-		radioGroup += generateElementRadio(type, propertyName, state == value ? true : false, states[state], state, serialNumber, name);
+		radioGroup += makeRadioElement(type, serialNumber, name, propertyName, state == value ? true : false, states[state], state);
 	}
 	return radioGroup;
 }
 
-function generateElementRange(type, propertyName, min, max, defaultValue, value, unit, serialNumber, name)
+function makeRadioElement(type, serialNumber, name, propertyName, value, state, stateValue)
 {
-	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value == undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value == undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">${defaultValue !== undefined ? `<div class="text-end">${generateElementButton("Station", propertyName, serialNumber, name, "btn btn-outline-secondary btn-sm", true, (defaultValue !== undefined && defaultValue != value))}</div>` : ""}</div>`;
+	return `<div class="form-check"><input class="form-check-input" type="radio" name="grp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" id="rb${state.charAt(0).toUpperCase() + state.slice(1)}" ${value == true ? " checked" : ""} onclick="change${type}Property('${serialNumber}', '${name}', '${propertyName}', ${stateValue})"><label class="form-check-label" for="rb${state.charAt(0).toUpperCase() + state.slice(1)}">${getDeviceStateValueInGerman(state)}</label></div>`;
 }
 
-function generateElementSelect(type, propertyName, states, value, serialNumber, name)
+function generateElementRange(type, serialNumber, name, propertyName, value, unit, min, max, defaultValue)
 {
-	var selectElement = `<label class="mb-2" for="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><select class="form-select mb-2" id="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">`;
+	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value === undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value === undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">${defaultValue !== undefined ? `<div class="text-end">${generateElementButton(type, serialNumber, name, propertyName, "btn btn-outline-secondary btn-sm", true, (defaultValue !== undefined && defaultValue != value))}</div>` : ""}</div>`;
+}
+
+function generateElementSelect(type, serialNumber, name, propertyName, value, states)
+{
+	var selectElement = `<div><label class="mb-2" for="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><select class="form-select mb-2" id="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)">`;
 	for(var state in states)
 	{
-		selectElement += generateSelectElement(propertyName, value, state, states[state])
+		selectElement += makeSelectElement(propertyName, value, state, states[state])
 	}
-	selectElement += `</select>`;
+	selectElement += `</select></div>`;
 	return selectElement;
 }
 
-function generateSelectElement(propertyName, value, valueNumber, state)
+function makeSelectElement(propertyName, value, valueNumber, state)
 {
 	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${getDeviceStateValueInGerman(state, propertyName, valueNumber)}</option>`;
 }
 
-function generateElementButton(type, propertyName, serialNumber, name, buttonClass, setToDefault, enabled)
+function generateElementButton(type, serialNumber, name, propertyName, buttonClass, setToDefault, enabled)
 {
-	return `<div>${generateButton(`btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}`, `${buttonClass}`, `change${type}Property('${serialNumber}', '${name}', '${propertyName}')`, `${setToDefault == true ? `Standardwert setzen` : `${getPropertyNameInGerman(propertyName)}`}`, enabled, undefined, undefined)}</div>`;
+	return `<div>${makeButtonElement(`btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}`, `${buttonClass}`, `change${type}Property('${serialNumber}', '${name}', '${propertyName}')`, `${setToDefault == true ? `Standardwert setzen` : `${getPropertyNameInGerman(propertyName)}`}`, enabled, undefined, undefined)}</div>`;
 }
 
-function generateButton(buttonId, buttonClass, buttonOnClick, description, enabled, dataBsDismiss, ariaLabel)
+function makeButtonElement(buttonId, buttonClass, buttonOnClick, description, enabled, dataBsDismiss, ariaLabel)
 {
 	return `<button id="${buttonId}" type="button" class="${buttonClass}"${buttonOnClick !== undefined ? ` onclick="${buttonOnClick}"` : ""}${dataBsDismiss !== undefined ? ` data-bs-dismiss="${dataBsDismiss}"` : ""}${ariaLabel !== undefined ? ` aria-label="${ariaLabel}"` : ""}${enabled == false ? " disabled" : ""}>${description}</button>`;
 }
@@ -1035,6 +1035,8 @@ function getPropertyNameInGerman(propertyName)
 			return "Moduswechsel in Modus durch das Keypad";
 		case "notificationStartAlarmDelay":
 			return "Starten der Alarmverzögerung";
+		case "timeFormat":
+			return "Zeitformat auswählen";
 		case "rebootStation":
 			return "Station neu starten";
 		default:
@@ -1231,7 +1233,7 @@ function generateContentStationSettingsModal(stationId, stationName)
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">
 								${stationName === undefined ? `<span class="placeholder col-6 bg-light placeholder-lg mt-1 mb-1"></span>` : `<div style="text-align:left; float:left;"><h5 class="mb-0">${stationName} (${stationId})</h5></div>`}
-								${generateButton("btnStationSettingsModalCloseTop", "btn-close", undefined, "", true, "modal", "close")}
+								${makeButtonElement("btnStationSettingsModalCloseTop", "btn-close", undefined, "", true, "modal", "close")}
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 								<div class="" id="lblModalStationSettingsInfo">
@@ -1267,7 +1269,7 @@ function generateContentStationSettingsModal(stationId, stationName)
 								</div>
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								${generateButton("btnCloseModalStationSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
+								${makeButtonElement("btnCloseModalStationSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined)}
 							</div>
 						</div>
 					</div>`;
@@ -1369,7 +1371,7 @@ function generateStationModalErrorMessage(errorMessage)
 											</div>
 										</div>
 										<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-											${generateButton("btnCloseModalStationSettingsBottom", "btn btn-primary", undefined, "Schließen", true, "modal", undefined)}
+											${makeButtonElement("btnCloseModalStationSettingsBottom", "btn btn-primary", undefined, "Schließen", true, "modal", undefined)}
 										</div>
 									</div>
 								</div>`;
@@ -1382,7 +1384,7 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 							<div class="modal-content">
 								<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">
 									<div style="text-align:left; float:left;"><h5 class="mb-0">${stationProperties.name} (${stationId})</h5></div>
-									${generateButton("btnCloseModalStationSettingsTop", "btn-close", undefined, "", true, "modal", "close")}
+									${makeButtonElement("btnCloseModalStationSettingsTop", "btn-close", undefined, "", true, "modal", "close")}
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
@@ -1433,15 +1435,15 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 		{
 			stationModal +=  `
 											<h5>Alarmton</h5>
-											${generateElementSelect("Station", stationPropertiesMetadata.alarmTone.name, stationPropertiesMetadata.alarmTone.states, stationProperties.alarmTone, stationProperties.serialNumber, stationProperties.name)}
-											${generateElementRange("Station", stationPropertiesMetadata.alarmVolume.name, stationPropertiesMetadata.alarmVolume.min, stationPropertiesMetadata.alarmVolume.max, stationPropertiesMetadata.alarmVolume.defaut, stationProperties.alarmVolume, stationPropertiesMetadata.alarmVolume.unit, stationProperties.serialNumber, stationProperties.name)}`;
+											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmTone.name, stationProperties.alarmTone, stationPropertiesMetadata.alarmTone.states)}
+											${generateElementRange("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmVolume.name, stationProperties.alarmVolume, stationPropertiesMetadata.alarmVolume.unit, stationPropertiesMetadata.alarmVolume.min, stationPropertiesMetadata.alarmVolume.max, stationPropertiesMetadata.alarmVolume.defaut)}`;
 		}
 		if(stationPropertiesMetadata.promptVolume !== undefined)
 		{
 			stationModal +=  `
 											${stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined ? `<hr />`: ``}
 											<h5>Eingabeaufforderung</h5>
-											${generateElementRange("Station", stationPropertiesMetadata.promptVolume.name, stationPropertiesMetadata.promptVolume.min, stationPropertiesMetadata.promptVolume.max, stationPropertiesMetadata.promptVolume.defaut, stationProperties.promptVolume, stationPropertiesMetadata.promptVolume.unit, stationProperties.serialNumber, stationProperties.name)}`;
+											${generateElementRange("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.promptVolume.name, stationProperties.promptVolume, stationPropertiesMetadata.promptVolume.unit, stationPropertiesMetadata.promptVolume.min, stationPropertiesMetadata.promptVolume.max, stationPropertiesMetadata.promptVolume.defaut)}`;
 		}
 		stationModal +=  `
 										</div>
@@ -1455,20 +1457,31 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 										<div class="card-body">
 											<h5>Pushbenachrichtigungen</h5>
 											<label class="mb-2" for="chkStationSwitchToSchedule">Pushbenachrichtigungen senden, bei:</label>
-											${stationPropertiesMetadata.notificationSwitchModeSchedule === undefined ? "" : generateElementSwitch("Station", stationPropertiesMetadata.notificationSwitchModeSchedule.name, stationPropertiesMetadata.notificationSwitchModeSchedule, stationProperties.serialNumber, stationProperties.name)}
-											${stationPropertiesMetadata.notificationSwitchModeGeofence === undefined ? "" : generateElementSwitch("Station", stationPropertiesMetadata.notificationSwitchModeGeofence.name, stationPropertiesMetadata.notificationSwitchModeGeofence, stationProperties.serialNumber, stationProperties.name)}
-											${stationPropertiesMetadata.notificationSwitchModeApp === undefined ? "" : generateElementSwitch("Station", stationPropertiesMetadata.notificationSwitchModeApp.name, stationPropertiesMetadata.notificationSwitchModeApp, stationProperties.serialNumber, stationProperties.name)}
-											${stationPropertiesMetadata.notificationSwitchModeKeypad === undefined ? "" : generateElementSwitch("Station", stationPropertiesMetadata.notificationSwitchModeKeypad.name, stationPropertiesMetadata.notificationSwitchModeKeypad, stationProperties.serialNumber, stationProperties.name)}
-											${stationPropertiesMetadata.notificationStartAlarmDelay === undefined ? "" : generateElementSwitch("Station", stationPropertiesMetadata.notificationStartAlarmDelay.name, stationPropertiesMetadata.notificationStartAlarmDelay, stationProperties.serialNumber, stationProperties.name)}
+											${stationPropertiesMetadata.notificationSwitchModeSchedule === undefined ? "" : generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.notificationSwitchModeSchedule.name, stationPropertiesMetadata.notificationSwitchModeSchedule)}
+											${stationPropertiesMetadata.notificationSwitchModeGeofence === undefined ? "" : generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.notificationSwitchModeGeofence.name, stationPropertiesMetadata.notificationSwitchModeGeofence)}
+											${stationPropertiesMetadata.notificationSwitchModeApp === undefined ? "" : generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.notificationSwitchModeApp.name, stationPropertiesMetadata.notificationSwitchModeApp)}
+											${stationPropertiesMetadata.notificationSwitchModeKeypad === undefined ? "" : generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.notificationSwitchModeKeypad.name, stationPropertiesMetadata.notificationSwitchModeKeypad)}
+											${stationPropertiesMetadata.notificationStartAlarmDelay === undefined ? "" : generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.notificationStartAlarmDelay.name, stationPropertiesMetadata.notificationStartAlarmDelay)}
+										</div>
+									</div>`;
+	}
+	if(stationPropertiesMetadata.timeFormat !== undefined)
+	{
+		stationModal +=  `
+									<div class="card mb-3" id="cardStationTimeSettings">
+										<h5 class="card-header">Zeiteinstellungen</h5>
+										<div class="card-body">
+											<h5>Zeitformat</h5>
+											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.timeFormat.name, stationProperties.timeFormat, stationPropertiesMetadata.timeFormat.states)}
 										</div>
 									</div>`;
 	}
 	stationModal +=  `
-									${generateButton("btnStationReboot", "btn btn-outline-danger", `changeStationProperty('${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, "Station neu starten", true)}`;
+									${makeButtonElement("btnStationReboot", "btn btn-outline-danger", `changeStationProperty('${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, "Station neu starten", true)}`;
 	stationModal +=  `
 								</div>
 								<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-									${generateButton("btnCloseModalStationSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal")}
+									${makeButtonElement("btnCloseModalStationSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal")}
 								</div>
 							</div>
 						</div>`;
@@ -1555,47 +1568,13 @@ function loadDataStatechange(showLoading)
 				{
 					if(objResp.data[station].deviceType == "station")
 					{
-						switch(objResp.data[station].guardMode)
-						{
-							case 0:
-								state = "abwesend";
-								buttons =  `<div class="row g-2">`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "ab&shy;we&shy;send", false)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setHome('${objResp.data[station].serialNumber}'`, "zu Hause", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setSchedule('${objResp.data[station].serialNumber}')`, "Zeit&shy;steu&shy;e&shy;rung", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setDisarm('${objResp.data[station].serialNumber}')`, "de&shy;ak&shy;ti&shy;viert", true)}</div>`;
-								buttons += `</div>`;
-								break;
-							case 1:
-								state = "zu Hause";
-								buttons =  `<div class="row g-2">`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setArm('${objResp.data[station].serialNumber}')`, "ab&shy;we&shy;send", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "zu Hause", false)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setSchedule('${objResp.data[station].serialNumber}')`, "Zeit&shy;steu&shy;e&shy;rung", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setDisarm('${objResp.data[station].serialNumber}')`, "de&shy;ak&shy;ti&shy;viert", true)}</div>`;
-								buttons += `</div>`;
-								break;
-							case 2:
-								state = "Zeitsteuerung";
-								buttons =  `<div class="row g-2">`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setArm('${objResp.data[station].serialNumber}')`, "ab&shy;we&shy;send", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setHome('${objResp.data[station].serialNumber}'`, "zu Hause", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "Zeit&shy;steu&shy;e&shy;rung", false)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setDisarm('${objResp.data[station].serialNumber}')`, "de&shy;ak&shy;ti&shy;viert", true)}</div>`;
-								buttons += `</div>`;
-								break;
-							case 63:
-								state = "deaktiviert";
-								buttons =  `<div class="row g-2">`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setArm('${objResp.data[station].serialNumber}')`, "ab&shy;we&shy;send", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setHome('${objResp.data[station].serialNumber}'`, "zu Hause", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setSchedule('${objResp.data[station].serialNumber}')`, "Zeit&shy;steu&shy;e&shy;rung", true)}</div>`;
-								buttons += `<div class="col-sm-6">${generateButton(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", undefined, "de&shy;ak&shy;ti&shy;viert", false)}</div>`;
-								buttons += `</div>`;
-								break;
-							default:
-								state = "unbekannt";
-						}
+						state = `${getGuardModeAsString(objResp.data[station].guardMode)}`;
+						buttons =  `<div class="row g-2">`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setArm('${objResp.data[station].serialNumber}')`}` , "ab&shy;we&shy;send", (objResp.data[station].guardMode != 0))}</div>`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}'`}`, "zu Hause", (objResp.data[station].guardMode != 1))}</div>`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, "Zeit&shy;steu&shy;e&shy;rung", (objResp.data[station].guardMode != 2))}</div>`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, "de&shy;ak&shy;ti&shy;viert", (objResp.data[station].guardMode != 63))}</div>`;
+						buttons += `</div>`;
 						
 						if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
 						{
@@ -2152,7 +2131,7 @@ function loadDataSettings()
 				{
 					document.getElementById('txtUsername').value = objResp.data.eMail;
 					document.getElementById('txtPassword').value = objResp.data.password;
-					if(objResp.data.country == undefined || objResp.data.country == "")
+					if(objResp.data.country === undefined || objResp.data.country == "")
 					{
 						document.getElementById("cbCountry").selectedIndex = "";
 					}
@@ -2160,7 +2139,7 @@ function loadDataSettings()
 					{
 						document.getElementById("cbCountry").value = objResp.data.country;
 					}
-					if(objResp.data.language == undefined || objResp.data.language == "")
+					if(objResp.data.language === undefined || objResp.data.language == "")
 					{
 						document.getElementById("cbLanguage").selectedIndex = "";
 					}
@@ -2195,7 +2174,7 @@ function loadDataSettings()
 					document.getElementById('txtPortHttps').value = objResp.data.httpsPort;
 					document.getElementById('txtHttpsKeyFile').value = objResp.data.httpsPKeyFile;
 					document.getElementById('txtHttpsCertFile').value = objResp.data.httpsCertFile;
-					if(objResp.data.connectionTypeP2p == undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2"))
+					if(objResp.data.connectionTypeP2p === undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2"))
 					{
 						document.getElementById("cbConnectionType").selectedIndex = 0;
 					}
@@ -2229,7 +2208,7 @@ function loadDataSettings()
 									break;
 								}
 							}
-							if(tempPorts == undefined || tempPorts == null || tempPorts == "undefined")
+							if(tempPorts === undefined || tempPorts == null || tempPorts == "undefined")
 							{
 								document.getElementById('txtUdpPortsStation' + tempSerial).value = "";
 							}
@@ -2353,11 +2332,11 @@ function loadSystemVariables()
 						sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
 						if(sysVarAvailable==true)
 						{
-							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${generateButton(`btn${sysVarName}`, "btn btn-primary mb-1", undefined, "System&shy;variable anlegen", false)}</div></td>`;
+							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", undefined, "System&shy;variable anlegen", false)}</div></td>`;
 						}
 						else
 						{
-							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${generateButton(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, "System&shy;variable anlegen")}</div></td>`;
+							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, "System&shy;variable anlegen")}</div></td>`;
 						}
 						sysVarTable += `</tr>`;
 					}
