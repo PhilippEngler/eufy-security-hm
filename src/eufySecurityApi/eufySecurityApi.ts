@@ -2030,7 +2030,7 @@ export class EufySecurityApi
      * @param logLevel The log level.
      * @returns 
      */
-    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : string[][], systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : Promise<string>
+    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : Promise<string>
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
@@ -2056,8 +2056,15 @@ export class EufySecurityApi
         this.config.setHttpsPKeyFile(httpsKeyFile);
         this.config.setHttpsCertFile(httpsCertFile);
         this.config.setConnectionType(connectionTypeP2p);
-        this.config.setLocalStaticUdpPortsActive(localStaticUdpPortsActive);
-        if(localStaticUdpPorts[0][0] == undefined || localStaticUdpPortsActive == false)
+        if(localStaticUdpPorts !== undefined)
+        {
+            this.config.setLocalStaticUdpPortsActive(localStaticUdpPortsActive);
+            if(this.config.setLocalStaticUdpPorts(localStaticUdpPorts) == true)
+            {
+                serviceRestart = true;
+            }
+        }
+        else
         {
             if(this.stations)
             {
@@ -2073,13 +2080,7 @@ export class EufySecurityApi
                     }
                 }
             }
-        }
-        else
-        {
-            if(this.config.setLocalStaticUdpPorts(localStaticUdpPorts) == true)
-            {
-                serviceRestart = true;
-            }
+            this.config.setLocalStaticUdpPortsActive(false);
         }
         this.config.setSystemVariableActive(systemVariableActive);
         this.config.setCameraDefaultImage(cameraDefaultImage);

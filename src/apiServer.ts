@@ -562,7 +562,7 @@ class ApiServer
                                 apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
                             }
 
-                            var apiudpports : string[][] = [[],[]];
+                            var apiudpports = undefined;
                             if(postData.indexOf("udpPortsStation") >= 0)
                             {
                                 apiudpports = getAllUdpPortsForStations(postData);
@@ -934,22 +934,22 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
  * @param postData The data from the post event.
  * @returns The array with the setGuardModeStationserials and the port number.
  */
-function getAllUdpPortsForStations(postData : string) : string[][]
+function getAllUdpPortsForStations(postData : string) : any[]
 {
     var pos = postData.indexOf("udpPortsStation");
-    var res : string[][] = [[],[]];
-    var i = 0;
+    var res = [];
     while (pos > 0)
     {
         var temp = postData.substring(pos + 29);
         var stationSerial = postData.substring(pos + 15, pos + 31);
         temp = temp.replace("\r\n","");
         temp = temp.substring(5, temp.indexOf("----") - 2);
-        res[i][0] = stationSerial;
-        res[i][1] = temp;
+        var line = [];
+        line[0] = stationSerial;
+        line[1] = temp;
+        res.push(line);
 
         pos = postData.indexOf("udpPortsStation", pos + 19);
-        i++;
     }
     return res;
 }

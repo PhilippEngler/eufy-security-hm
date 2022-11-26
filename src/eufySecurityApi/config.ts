@@ -71,6 +71,7 @@ export class Config
                 this.configJson = this.loadConfigJson("./config.json");
             }
         }
+        //this.checkConfigValues();
         this.updateConfig();
     }
 
@@ -804,6 +805,71 @@ export class Config
         return newConfigJson;
     }
 
+    private checkConfigValues() : boolean
+    {
+        var updated = false;
+        if(this.configJson.httpActive == true && (this.configJson.httpPort < 1 || this.configJson.httpPort > 65535))
+        {
+            this.logger.logInfo(1, `Set httpPort to default value "52789"`);
+            this.configJson.httpPort = 52789;
+            updated = true;
+        }
+        if(this.configJson.httpsActive == true && (this.configJson.httpsPort < 1 || this.configJson.httpsPort > 65535))
+        {
+            this.logger.logInfo(1, `Set httpsPort to default value "52790"`);
+            this.configJson.httpsPort = 52790;
+            updated = true;
+        }
+        if(this.configJson.httpActive == true && this.configJson.httpsActive == true && this.configJson.httpPort == this.configJson.httpsPort)
+        {
+            this.logger.logInfo(1, `Set httpPort to default value "52789" and httpsPort to default value "52790"`);
+            this.configJson.httpPort = 52789;
+            this.configJson.httpsPort = 52790;
+            updated = true;
+        }
+        if(this.configJson.localStaticUdpPortsActive == true)
+        {
+            var udpPorts = [];
+            var stations = this.configJson.stations;
+            if(stations.length > 2)
+            {
+                for(var station in stations)
+                {
+                    if(udpPorts[this.configJson.stations[station].udpPort] === undefined)
+                    {
+                        udpPorts[this.configJson.stations[station].udpPort] = this.configJson.stations[station].udpPort;
+                    }
+                    else
+                    {
+                        this.logger.logInfo(1, `Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
+                        this.configJson.localStaticUdpPortsActive = false;
+                        updated = true;
+                    }
+                }
+            }
+        }
+        
+        if(this.configJson.stateUpdateIntervallActive && (this.configJson.stateUpdateIntervallTimespan < 15 || this.configJson.stateUpdateIntervallTimespan > 240))
+        {
+            this.logger.logInfo(1, `Set stateUpdateIntervallTimespan to default value "10"`);
+            this.configJson.stateUpdateIntervallTimespan = 10;
+            updated = true;
+        }
+        if(this.configJson.updateLinksOnlyWhenArmed && (this.configJson.updateLinksTimespan < 15 || this.configJson.updateLinksTimespan > 240))
+        {
+            this.logger.logInfo(1, `Set updateLinksTimespan to default value "10"`);
+            this.configJson.updateLinksTimespan = 10;
+            updated = true;
+        }
+        if(this.configJson.logLevel < 0 || this.configJson.logLevel > 3)
+        {
+            this.logger.logInfo(1, `Set logLevel to default value "0"`);
+            this.configJson.logLevel = 0;
+            updated = true;
+        }
+        return updated;
+    }
+
     /**
      * Checks if the old config.ini contains settings for a given station.
      * @param stationSerial The serial of the station the check is to perform.
@@ -1066,13 +1132,12 @@ export class Config
      * Set the udp static ports for local communication.
      * @param ports A string with the ports splitted by a comma.
      */
-    public setLocalStaticUdpPorts(ports : string[][]) : boolean
+    public setLocalStaticUdpPorts(ports : string[]) : boolean
     {
-        var err : boolean = false;
+        var done = false;
         if(ports)
         {
-            var array : string[];
-            for (array of ports)
+            for (var array of ports)
             {
                 var portNumber;
                 if(array[1] == null)
@@ -1083,20 +1148,13 @@ export class Config
                 {
                     portNumber = Number.parseInt(array[1]);
                 }
-                if(this.setLocalStaticUdpPortPerStation(array[0], portNumber) == false)
+                if(this.setLocalStaticUdpPortPerStation(array[0], portNumber) == true)
                 {
-                    err = true;
+                    done = true;
                 }
             }
         }
-        if(err == false)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return done;
     }
 
     /**
@@ -1826,7 +1884,7 @@ export class Config
             var res;
             if(this.isStationInConfig(stationSerial) == false)
             {
-                this.logger.logInfo(1, `Station ${stationSerial} not in config.`);
+                this.logger.logInfo(1, `Station ${stationSerial} not in config. Try to create new station entry.`);
                 res = this.updateWithNewStation(stationSerial);
             }
             else
@@ -1850,9 +1908,11 @@ export class Config
                         return true;
                     }
                 }
+                this.logger.logInfo(1, `Station ${stationSerial} not in config.`);
                 return false;
             }
         }
+        this.logger.logInfo(1, `Station ${stationSerial} not in config.`);
         return false;
     }
 
