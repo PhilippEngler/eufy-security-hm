@@ -125,7 +125,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                     this.processInvitations();
                 }
             }
-            catch (error)
+            catch(error)
             {
                 this.logger.error(`Error processing server push notification for device invitation`, error);
             }*/
@@ -137,25 +137,35 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
             catch (error) {
                 this.logger.error(`Error processing server push notification for device/station/house removal`, error);
             }
-            var rawStations = await this.api.getRawStations();
-            var stations = rawStations.getStations();
-            for (var stationSerial in stations) {
-                try {
-                    stations[stationSerial].processPushNotification(message);
-                }
-                catch (error) {
-                    this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
+            try {
+                var rawStations = await this.api.getRawStations();
+                var stations = await rawStations.getStations();
+                for (var stationSerial in stations) {
+                    try {
+                        stations[stationSerial].processPushNotification(message);
+                    }
+                    catch (error) {
+                        this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
+                    }
                 }
             }
-            var rawDevices = await this.api.getRawDevices();
-            var devices = rawDevices.getDevices();
-            for (var deviceSerial in devices) {
-                try {
-                    devices[deviceSerial].processPushNotification(message, this.config.getEventDurationSeconds());
+            catch (error) {
+                this.api.logError("Process push notification for stations", error);
+            }
+            try {
+                var rawDevices = await this.api.getRawDevices();
+                var devices = rawDevices.getDevices();
+                for (var deviceSerial in devices) {
+                    try {
+                        devices[deviceSerial].processPushNotification(message, this.config.getEventDurationSeconds());
+                    }
+                    catch (error) {
+                        this.logger.error(`Error processing push notification for device ${deviceSerial}`, error);
+                    }
                 }
-                catch (error) {
-                    this.logger.error(`Error processing push notification for device ${deviceSerial}`, error);
-                }
+            }
+            catch (error) {
+                this.api.logError("Process push notification for devices", error);
             }
         }
         catch (error) {

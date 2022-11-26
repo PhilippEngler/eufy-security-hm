@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StationConnectTimeoutError = exports.TalkbackError = exports.LivestreamError = exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.RTSPPropertyNotEnabledError = exports.WrongStationError = exports.NotSupportedError = exports.DeviceNotFoundError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
+exports.PinNotVerifiedError = exports.UpdateUserPasscodeError = exports.UpdateUserScheduleError = exports.UpdateUserUsernameError = exports.DeleteUserError = exports.AddUserError = exports.StationConnectTimeoutError = exports.TalkbackError = exports.LivestreamError = exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.RTSPPropertyNotEnabledError = exports.WrongStationError = exports.NotSupportedError = exports.DeviceNotFoundError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = void 0;
 class InvalidCountryCodeError extends Error {
     constructor(message) {
         super(message);
@@ -105,3 +105,51 @@ class StationConnectTimeoutError extends Error {
     }
 }
 exports.StationConnectTimeoutError = StationConnectTimeoutError;
+class AddUserError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = AddUserError.name;
+    }
+}
+exports.AddUserError = AddUserError;
+class DeleteUserError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = DeleteUserError.name;
+    }
+}
+exports.DeleteUserError = DeleteUserError;
+class UpdateUserUsernameError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = UpdateUserUsernameError.name;
+    }
+}
+exports.UpdateUserUsernameError = UpdateUserUsernameError;
+class UpdateUserScheduleError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = UpdateUserScheduleError.name;
+    }
+}
+exports.UpdateUserScheduleError = UpdateUserScheduleError;
+class UpdateUserPasscodeError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = UpdateUserPasscodeError.name;
+    }
+}
+exports.UpdateUserPasscodeError = UpdateUserPasscodeError;
+class PinNotVerifiedError extends Error {
+    constructor(message) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = PinNotVerifiedError.name;
+    }
+}
+exports.PinNotVerifiedError = PinNotVerifiedError;

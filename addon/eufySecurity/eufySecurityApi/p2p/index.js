@@ -20,6 +20,8 @@ __exportStar(require("./models"), exports);
 __exportStar(require("./session"), exports);
 __exportStar(require("./types"), exports);
 __exportStar(require("./talkback"), exports);
+__exportStar(require("./ble"), exports);
+__exportStar(require("./error"), exports);
 var utils_1 = require("./utils");
 Object.defineProperty(exports, "isPrivateIp", { enumerable: true, get: function () { return utils_1.isPrivateIp; } });
 Object.defineProperty(exports, "getLocalIpAddress", { enumerable: true, get: function () { return utils_1.getLocalIpAddress; } });

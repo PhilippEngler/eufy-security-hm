@@ -34,6 +34,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         const resDevices = devices;
         const deviceSNs = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
+        const promises = [];
         var deviceSerial;
         var device;
         if (resDevices != null) {
@@ -43,67 +44,94 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     this.updateDevice(resDevices[deviceSerial]);
                 }
                 else {
+                    let new_device;
                     if (http_1.Device.isIndoorCamera(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.IndoorCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.IndoorCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isSoloCameras(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.SoloCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.SoloCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isBatteryDoorbell(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.BatteryDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.BatteryDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || http_1.Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.WiredDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.WiredDoorbellCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isFloodLight(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.FloodlightCamera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.FloodlightCamera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isCamera(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.Camera.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.Camera.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isLock(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.Lock.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.Lock.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isMotionSensor(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.MotionSensor.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.MotionSensor.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isEntrySensor(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.EntrySensor.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.EntrySensor.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isKeyPad(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.Keypad.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.Keypad.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isSmartSafe(resDevices[deviceSerial].device_type)) {
-                        device = await http_1.SmartSafe.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.SmartSafe.initialize(this.httpService, resDevices[deviceSerial]);
                     }
                     else {
-                        device = await http_1.UnknownDevice.initialize(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.UnknownDevice.initialize(this.httpService, resDevices[deviceSerial]);
                     }
-                    this.addEventListener(device, "PropertyChanged");
-                    this.addEventListener(device, "RawPropertyChanged");
-                    this.addEventListener(device, "CryingDetected");
-                    this.addEventListener(device, "SoundDetected");
-                    this.addEventListener(device, "PetDetected");
-                    this.addEventListener(device, "MotionDetected");
-                    this.addEventListener(device, "PersonDetected");
-                    this.addEventListener(device, "Rings");
-                    this.addEventListener(device, "Locked");
-                    this.addEventListener(device, "Open");
-                    this.addEventListener(device, "Ready");
-                    this.addEventListener(device, "PackageDelivered");
-                    this.addEventListener(device, "PackageStranded");
-                    this.addEventListener(device, "PackageTaken");
-                    this.addEventListener(device, "SomeoneLoitering");
-                    this.addEventListener(device, "RadarMotionDetected");
-                    this.addEventListener(device, "911Alarm");
-                    this.addEventListener(device, "ShakeAlarm");
-                    this.addEventListener(device, "WrongTryProtectAlarm");
-                    this.addEventListener(device, "LongTimeNotClose");
-                    this.addEventListener(device, "LowBattery");
-                    this.addEventListener(device, "Jammed");
-                    this.addDevice(device);
+                    promises.push(new_device.then((device) => {
+                        try {
+                            this.addEventListener(device, "PropertyChanged");
+                            this.addEventListener(device, "RawPropertyChanged");
+                            this.addEventListener(device, "CryingDetected");
+                            this.addEventListener(device, "SoundDetected");
+                            this.addEventListener(device, "PetDetected");
+                            this.addEventListener(device, "VehicleDetected");
+                            this.addEventListener(device, "MotionDetected");
+                            this.addEventListener(device, "PersonDetected");
+                            this.addEventListener(device, "Rings");
+                            this.addEventListener(device, "Locked");
+                            this.addEventListener(device, "Open");
+                            this.addEventListener(device, "Ready");
+                            this.addEventListener(device, "PackageDelivered");
+                            this.addEventListener(device, "PackageStranded");
+                            this.addEventListener(device, "PackageTaken");
+                            this.addEventListener(device, "SomeoneLoitering");
+                            this.addEventListener(device, "RadarMotionDetected");
+                            this.addEventListener(device, "911Alarm");
+                            this.addEventListener(device, "ShakeAlarm");
+                            this.addEventListener(device, "WrongTryProtectAlarm");
+                            this.addEventListener(device, "LongTimeNotClose");
+                            this.addEventListener(device, "LowBattery");
+                            this.addEventListener(device, "Jammed");
+                            this.addEventListener(device, "StrangerPersonDetected");
+                            this.addEventListener(device, "DogDetected");
+                            this.addEventListener(device, "DogLickDetected");
+                            this.addEventListener(device, "DogPoopDetected");
+                            this.addDevice(device);
+                        }
+                        catch (error) {
+                            this.api.logError("Error", error);
+                        }
+                        return device;
+                    }));
                 }
             }
+            this.loadingDevices = Promise.all(promises).then((devices) => {
+                devices.forEach((device) => {
+                    this.api.getStation(device.getStationSerial()).then((station) => {
+                        if (!station.isConnected()) {
+                            station.setConnectionType(this.api.getConfig().getConnectionType());
+                            station.connect();
+                        }
+                    }).catch((error) => {
+                        this.api.logError("Error trying to connect to station afte device loaded", error);
+                    });
+                });
+                this.loadingDevices = undefined;
+            });
             for (const deviceSN of deviceSNs) {
                 if (!newDeviceSNs.includes(deviceSN)) {
                     this.getDevice(deviceSN).then((device) => {
@@ -156,20 +184,23 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param device The device object to update.
      */
     async updateDevice(device) {
-        var bases = this.api.getStations();
-        for (var baseSerial in bases) {
-            if (!bases[baseSerial].isConnected()) {
-                if (bases[baseSerial].getDeviceType() == http_1.DeviceType.STATION) {
-                    bases[baseSerial].setConnectionType(this.api.getP2PConnectionType());
+        var stations = await this.api.getStations();
+        for (var stationSerial in stations) {
+            if (!stations[stationSerial].isConnected()) {
+                if (stations[stationSerial].getDeviceType() == http_1.DeviceType.STATION) {
+                    stations[stationSerial].setConnectionType(this.api.getP2PConnectionType());
                 }
                 else {
-                    bases[baseSerial].setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+                    stations[stationSerial].setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
                 }
-                bases[baseSerial].connect();
+                stations[stationSerial].connect();
             }
         }
+        if (this.loadingDevices !== undefined) {
+            await this.loadingDevices;
+        }
         if (Object.keys(this.devices).includes(device.device_sn)) {
-            this.devices[device.device_sn].update(device, bases[device.station_sn] !== undefined && !bases[device.station_sn].isIntegratedDevice() && bases[device.station_sn].isConnected());
+            this.devices[device.device_sn].update(device, stations[device.station_sn] !== undefined && !stations[device.station_sn].isIntegratedDevice() && stations[device.station_sn].isConnected());
         }
         else {
             throw new error_1.DeviceNotFoundError(`Device with this serial ${device.device_sn} doesn't exists and couldn't be updated!`);
@@ -198,6 +229,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 this.removeEventListener(this.devices[deviceSerial], "CryingDetected");
                 this.removeEventListener(this.devices[deviceSerial], "SoundDetected");
                 this.removeEventListener(this.devices[deviceSerial], "PetDetected");
+                this.removeEventListener(this.devices[deviceSerial], "VehicleDetected");
                 this.removeEventListener(this.devices[deviceSerial], "MotionDetected");
                 this.removeEventListener(this.devices[deviceSerial], "PersonDetected");
                 this.removeEventListener(this.devices[deviceSerial], "Rings");
@@ -215,6 +247,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 this.removeEventListener(this.devices[deviceSerial], "LongTimeNotClose");
                 this.removeEventListener(this.devices[deviceSerial], "LowBattery");
                 this.removeEventListener(this.devices[deviceSerial], "Jammed");
+                this.removeEventListener(this.devices[deviceSerial], "StrangerPersonDetected");
+                this.removeEventListener(this.devices[deviceSerial], "DogDetected");
+                this.removeEventListener(this.devices[deviceSerial], "DogLickDetected");
+                this.removeEventListener(this.devices[deviceSerial], "DogPoopDetected");
                 this.devices[deviceSerial].destroy();
             }
         }
@@ -288,6 +324,16 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
             device.updateProperty(http_1.PropertyName.DeviceSnooze, false);
             device.updateProperty(http_1.PropertyName.DeviceSnoozeTime, 0);
+            device.updateProperty(http_1.PropertyName.DeviceSnoozeStartTime, 0);
+            if (device.hasProperty(http_1.PropertyName.DeviceSnoozeHomebase)) {
+                device.updateProperty(http_1.PropertyName.DeviceSnoozeHomebase, false);
+            }
+            if (device.hasProperty(http_1.PropertyName.DeviceSnoozeMotion)) {
+                device.updateProperty(http_1.PropertyName.DeviceSnoozeMotion, false);
+            }
+            if (device.hasProperty(http_1.PropertyName.DeviceSnoozeChime)) {
+                device.updateProperty(http_1.PropertyName.DeviceSnoozeChime, false);
+            }
             delete this.deviceSnoozeTimeout[device.getSerial()];
         }, timeoutMS);
     }
@@ -297,7 +343,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @returns A string with the type of the device.
      */
     getDeviceTypeAsString(device) {
-        if (device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro()) {
+        if (device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro() || device.isCamera3() || device.isCamera3C()) {
             return "camera";
         }
         else if (device.isEntrySensor()) {
@@ -468,6 +514,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 device.on("pet detected", (device, state) => this.onPetDetected(device, state));
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
+            case "VehicleDetected":
+                device.on("vehicle detected", (device, state) => this.onVehicleDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("vehicle detected")} Listener.`);
+                break;
             case "MotionDetected":
                 device.on("motion detected", (device, state) => this.onMotionDetected(device, state));
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
@@ -536,6 +586,22 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 device.on("jammed", (device, state) => this.onDeviceJammed(device, state));
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("jammed")} Listener.`);
                 break;
+            case "StrangerPersonDetected":
+                device.on("stranger person detected", (device, state) => this.onDeviceStrangerPersonDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                break;
+            case "DogDetected":
+                device.on("dog detected", (device, state) => this.onDeviceDogDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog detected")} Listener.`);
+                break;
+            case "DogLickDetected":
+                device.on("dog lick detected", (device, state) => this.onDeviceDogLickDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                break;
+            case "DogPoopDetected":
+                device.on("dog poop detected", (device, state) => this.onDeviceDogPoopDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog poop detected")} Listener.`);
+                break;
         }
     }
     /**
@@ -564,6 +630,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             case "PetDetected":
                 device.removeAllListeners("pet detected");
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pet detected")} Listener.`);
+                break;
+            case "VehicleDetected":
+                device.removeAllListeners("vehicle detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("vehicle detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.removeAllListeners("motion detected");
@@ -633,6 +703,22 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 device.removeAllListeners("jammed");
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("jammed")} Listener.`);
                 break;
+            case "StrangerPersonDetected":
+                device.removeAllListeners("stranger person detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                break;
+            case "DogDetected":
+                device.removeAllListeners("dog detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog detected")} Listener.`);
+                break;
+            case "DogLickDetected":
+                device.removeAllListeners("dog lick detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                break;
+            case "DogPoopDetected":
+                device.removeAllListeners("dog poop detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog poop detected")} Listener.`);
+                break;
         }
     }
     /**
@@ -647,7 +733,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         try {
             this.emit("device property changed", device, name, value);
             if (name === http_1.PropertyName.DeviceRTSPStream && value === true && (device.getPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl) === undefined || (device.getPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl) !== undefined && device.getPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl) === ""))) {
-                this.api.getStation(device.getStationSerial()).setRTSPStream(device, true);
+                this.api.getStation(device.getStationSerial()).then((station) => {
+                    station.setRTSPStream(device, true);
+                }).catch((error) => {
+                    this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                });
             }
             else if (name === http_1.PropertyName.DeviceRTSPStream && value === false) {
                 device.setCustomPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl, "");
@@ -692,6 +782,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onPetDetected(device, state) {
         this.api.logInfo(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.setLastVideoTimeNow(device.getSerial());
+    }
+    /**
+     * The action to be one when event VehicleDetected is fired.
+     * @param device The device as Device object.
+     * @param state The new state.
+     */
+    onVehicleDetected(device, state) {
+        this.api.logInfo(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
         this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -746,7 +845,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug(`Event "Ready": device: ${device.getSerial()}`);
         try {
             if (device.getPropertyValue(http_1.PropertyName.DeviceRTSPStream) !== undefined && device.getPropertyValue(http_1.PropertyName.DeviceRTSPStream) === true) {
-                this.api.getStation(device.getStationSerial()).setRTSPStream(device, true);
+                this.api.getStation(device.getStationSerial()).then((station) => {
+                    station.setRTSPStream(device, true);
+                }).catch((error) => {
+                    this.api.logError(`Device ready error (device: ${device.getSerial()}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                });
             }
         }
         catch (error) {
@@ -844,6 +947,38 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("device jammed", device, state);
     }
     /**
+     * The action to be one when event DeviceStrangerPersonDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceStrangerPersonDetected(device, state) {
+        this.emit("device stranger person detected", device, state);
+    }
+    /**
+     * The action to be one when event DeviceDogDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceDogDetected(device, state) {
+        this.emit("device dog detected", device, state);
+    }
+    /**
+     * The action to be one when event DeviceDogLickDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceDogLickDetected(device, state) {
+        this.emit("device dog lick detected", device, state);
+    }
+    /**
+     * The action to be one when event DeviceDogPoopDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceDogPoopDetected(device, state) {
+        this.emit("device dog poop detected", device, state);
+    }
+    /**
      * Update the raw values for a given device.
      * @param deviceSerial The serial of the device.
      * @param values The raw values.
@@ -923,7 +1058,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async setDeviceProperty(deviceSerial, name, value) {
         const device = await this.devices[deviceSerial];
-        const station = this.api.getStation(device.getStationSerial());
+        const station = await this.api.getStation(device.getStationSerial());
         const metadata = device.getPropertyMetadata(name);
         value = (0, utils_1.parseValue)(metadata, value);
         switch (name) {
@@ -1138,22 +1273,34 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 await station.setAutoCalibration(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoLock:
+                await station.setAutoLock(device, value);
+                break;
             case http_1.PropertyName.DeviceAutoLockSchedule:
+                await station.setAutoLockSchedule(device, value);
+                break;
             case http_1.PropertyName.DeviceAutoLockScheduleStartTime:
+                await station.setAutoLockScheduleStartTime(device, value);
+                break;
             case http_1.PropertyName.DeviceAutoLockScheduleEndTime:
+                await station.setAutoLockScheduleEndTime(device, value);
+                break;
             case http_1.PropertyName.DeviceAutoLockTimer:
+                await station.setAutoLockTimer(device, value);
+                break;
             case http_1.PropertyName.DeviceOneTouchLocking:
+                await station.setOneTouchLocking(device, value);
+                break;
             case http_1.PropertyName.DeviceSound:
-                await station.setAdvancedLockParams(device, name, value);
+                await station.setSound(device, value);
                 break;
             case http_1.PropertyName.DeviceNotification:
-                await station.setAdvancedLockParams(device, http_1.PropertyName.DeviceNotification, value);
+                await station.setNotification(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationLocked:
-                await station.setAdvancedLockParams(device, http_1.PropertyName.DeviceNotificationLocked, value);
+                await station.setNotificationLocked(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationUnlocked:
-                await station.setAdvancedLockParams(device, http_1.PropertyName.DeviceNotificationUnlocked, value);
+                await station.setNotificationUnlocked(device, value);
                 break;
             case http_1.PropertyName.DeviceScramblePasscode:
                 await station.setScramblePasscode(device, value);
@@ -1313,6 +1460,21 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             case http_1.PropertyName.DeviceVideoTypeStoreToNAS:
                 await station.setVideoTypeStoreToNAS(device, value);
+                break;
+            case http_1.PropertyName.DeviceMotionDetectionTypeHumanRecognition:
+                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_RECOGNITION, value);
+                break;
+            case http_1.PropertyName.DeviceMotionDetectionTypeHuman:
+                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_DETECTION, value);
+                break;
+            case http_1.PropertyName.DeviceMotionDetectionTypePet:
+                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.PET_DETECTION, value);
+                break;
+            case http_1.PropertyName.DeviceMotionDetectionTypeVehicle:
+                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.VEHICLE_DETECTION, value);
+                break;
+            case http_1.PropertyName.DeviceMotionDetectionTypeAllOtherMotions:
+                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);
                 break;
             default:
                 if (!Object.values(http_1.PropertyName).includes(name)) {

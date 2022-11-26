@@ -90,7 +90,8 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
                 username: this.USERNAME_FORMAT.replace("<user_id>", clientID),
                 password: email,
                 ca: (0, fs_1.readFileSync)(path.join(__dirname, "./mqtt-eufy.crt")),
-                clientId: this.CLIENT_ID_FORMAT.replace("<user_id>", clientID).replace("<android_id>", androidID)
+                clientId: this.CLIENT_ID_FORMAT.replace("<user_id>", clientID).replace("<android_id>", androidID),
+                rejectUnauthorized: false // Some eufy mqtt servers have an expired certificate :(
             });
             this.client.on("connect", (_connack) => {
                 this.connected = true;

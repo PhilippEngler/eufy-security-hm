@@ -19,7 +19,6 @@ __exportStar(require("./http"), exports);
 __exportStar(require("./p2p"), exports);
 __exportStar(require("./push"), exports);
 __exportStar(require("./interfaces"), exports);
-//export * from "./eufysecurity";
 __exportStar(require("./error"), exports);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 exports.libVersion = require("../package.json").version;

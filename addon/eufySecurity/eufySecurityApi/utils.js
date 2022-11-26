@@ -46,7 +46,7 @@ exports.md5 = md5;
 const handleUpdate = function (config, log, oldVersion) {
     if (oldVersion <= 1.24) {
         config.setToken("");
-        config.setTokenExpire("0");
+        config.setTokenExpire(0);
     }
     return;
 };
@@ -139,16 +139,22 @@ exports.parseValue = parseValue;
 const validValue = function (metadata, value) {
     if (metadata.type === "number") {
         const numberMetadata = metadata;
-        const numericValue = value;
-        if ((numberMetadata.min !== undefined && numberMetadata.min > numericValue) || (numberMetadata.max !== undefined && numberMetadata.max < numericValue) || (numberMetadata.states !== undefined && numberMetadata.states[numericValue] === undefined)) {
+        const numericValue = Number(value);
+        if ((numberMetadata.min !== undefined && numberMetadata.min > numericValue) || (numberMetadata.max !== undefined && numberMetadata.max < numericValue) || (numberMetadata.states !== undefined && numberMetadata.states[numericValue] === undefined) || Number.isNaN(numericValue)) {
             throw new error_1.InvalidPropertyValueError(`Value "${numericValue}" isn't a valid value for property "${numberMetadata.name}"`);
         }
     }
     else if (metadata.type === "string") {
         const stringMetadata = metadata;
-        const stringValue = value;
+        const stringValue = String(value);
         if ((stringMetadata.format !== undefined && stringValue.match(stringMetadata.format) === null) || (stringMetadata.minLength !== undefined && stringMetadata.minLength > stringValue.length) || (stringMetadata.maxLength !== undefined && stringMetadata.maxLength < stringValue.length)) {
             throw new error_1.InvalidPropertyValueError(`Value "${stringValue}" isn't a valid value for property "${stringMetadata.name}"`);
+        }
+    }
+    else if (metadata.type === "boolean") {
+        const str = String(value).toLowerCase().trim();
+        if (str !== "true" && str !== "false") {
+            throw new error_1.InvalidPropertyValueError(`Value "${value}" isn't a valid value for property "${metadata.name}"`);
         }
     }
 };

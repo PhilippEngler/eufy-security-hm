@@ -26,13 +26,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.analyzeCodec = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const crypto_js_1 = __importDefault(require("crypto-js"));
 const crypto_1 = require("crypto");
 const os = __importStar(require("os"));
+const mediainfo_js_1 = __importDefault(require("mediainfo.js"));
 const types_1 = require("./types");
 const device_1 = require("../http/device");
+const ble_1 = require("./ble");
 exports.MAGIC_WORD = "XZYH";
 const isPrivateIp = (ip) => /^(::f{4}:)?10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
     /^(::f{4}:)?192\.168\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
@@ -354,10 +356,14 @@ const generateBasicLockAESKey = (adminID, stationSN) => {
     return Buffer.from(array).toString("hex");
 };
 exports.generateBasicLockAESKey = generateBasicLockAESKey;
+const getCurrentTimeInSeconds = function () {
+    return Math.trunc(new Date().getTime() / 1000);
+};
+exports.getCurrentTimeInSeconds = getCurrentTimeInSeconds;
 const generateLockSequence = (deviceType) => {
     if (device_1.Device.isLockWifi(deviceType) || device_1.Device.isLockWifiNoFinger(deviceType))
         return Math.trunc(Math.random() * 1000);
-    return Math.trunc(new Date().getTime() / 1000); //ESLBridgeSeqNumManager
+    return (0, exports.getCurrentTimeInSeconds)();
 };
 exports.generateLockSequence = generateLockSequence;
 const encodeLockPayload = (data) => {
@@ -424,13 +430,24 @@ const getVideoCodec = (data) => {
                 return types_1.VideoCodec.H264;
             }
         }
-        else {
-            return types_1.VideoCodec.H264;
-        }
+        return types_1.VideoCodec.H264;
     }
     return types_1.VideoCodec.UNKNOWN; // Maybe return h264 as Eufy does?
 };
 exports.getVideoCodec = getVideoCodec;
+const analyzeCodec = async (data) => {
+    if (data !== undefined && data.length > 0) {
+        const mediainfo = await (0, mediainfo_js_1.default)({ chunkSize: data.byteLength });
+        mediainfo.openBufferInit(data.byteLength, 0);
+        const result = mediainfo.openBufferContinue(data, data.byteLength);
+        mediainfo.openBufferFinalize();
+        if (result) {
+            return JSON.parse(mediainfo.inform());
+        }
+    }
+    return {};
+};
+exports.analyzeCodec = analyzeCodec;
 const checkT8420 = (serialNumber) => {
     if (!(serialNumber !== undefined && serialNumber !== null && serialNumber.length > 0 && serialNumber.startsWith("T8420")) || serialNumber.length <= 7 || serialNumber[6] != "6") {
         return false;
@@ -501,6 +518,20 @@ const getAdvancedLockKey = (key, publicKey) => {
     return Buffer.concat([Buffer.from(ecdh.getPublicKey("hex", "compressed"), "hex"), randomValue, encryptedData, hmacDigest]).toString("hex");
 };
 exports.getAdvancedLockKey = getAdvancedLockKey;
+const getLockV12Key = (key, publicKey) => {
+    const ecdh = (0, crypto_1.createECDH)("prime256v1");
+    ecdh.generateKeys();
+    const secret = ecdh.computeSecret(Buffer.concat([Buffer.from("04", "hex"), Buffer.from(publicKey, "hex")]));
+    const randomValue = (0, crypto_1.randomBytes)(16);
+    const derivedKey = (0, exports.eufyKDF)(secret);
+    const encryptedData = (0, exports.encryptPayloadData)(Buffer.from(key, "hex"), derivedKey.slice(0, 16), randomValue);
+    const hmac = (0, crypto_1.createHmac)("sha256", derivedKey.slice(16));
+    hmac.update(randomValue);
+    hmac.update(encryptedData);
+    const hmacDigest = hmac.digest();
+    return Buffer.concat([Buffer.from(ecdh.getPublicKey("hex", "compressed"), "hex"), randomValue, encryptedData, hmacDigest]).toString("hex");
+};
+exports.getLockV12Key = getLockV12Key;
 const buildTalkbackAudioFrameHeader = (audioData, channel = 0) => {
     const audioDataLength = Buffer.allocUnsafe(4);
     audioDataLength.writeUInt32LE(audioData.length);
@@ -546,3 +577,91 @@ const decodeP2PCloudIPs = (data) => {
     return result;
 };
 exports.decodeP2PCloudIPs = decodeP2PCloudIPs;
+const decodeSmartSafeData = function (deviceSN, data) {
+    const response = new ble_1.BleCommandFactory(data);
+    return {
+        versionCode: response.getVersionCode(),
+        dataType: response.getDataType(),
+        commandCode: response.getCommandCode(),
+        packageFlag: response.getPackageFlag(),
+        responseCode: response.getResponseCode(),
+        data: (0, exports.decryptPayloadData)(response.getData(), Buffer.from(deviceSN), Buffer.from(device_1.SmartSafe.IV, "hex"))
+    };
+};
+exports.decodeSmartSafeData = decodeSmartSafeData;
+const getSmartSafeP2PCommand = function (deviceSN, user_id, command, intCommand, channel, sequence, data) {
+    const encPayload = (0, exports.encryptPayloadData)(data, Buffer.from(deviceSN), Buffer.from(device_1.SmartSafe.IV, "hex"));
+    const bleCommand = new ble_1.BleCommandFactory()
+        .setVersionCode(device_1.SmartSafe.VERSION_CODE)
+        .setCommandCode(intCommand)
+        .setDataType(-1)
+        .setData(encPayload)
+        .getSmartSafeCommand();
+    return {
+        commandType: types_1.CommandType.CMD_SET_PAYLOAD,
+        value: JSON.stringify({
+            account_id: user_id,
+            cmd: command,
+            mChannel: channel,
+            mValue3: 0,
+            payload: {
+                data: bleCommand.toString("hex"),
+                prj_id: command,
+                seq_num: sequence,
+            }
+        }),
+        channel: channel
+    };
+};
+exports.getSmartSafeP2PCommand = getSmartSafeP2PCommand;
+const getLockP2PCommand = function (deviceSN, user_id, command, channel, lockPublicKey, payload) {
+    const key = (0, exports.generateAdvancedLockAESKey)();
+    const ecdhKey = (0, exports.getAdvancedLockKey)(key, lockPublicKey);
+    const iv = (0, exports.getLockVectorBytes)(deviceSN);
+    const encPayload = (0, exports.encryptLockAESData)(key, iv, Buffer.from(JSON.stringify(payload)));
+    return {
+        commandType: types_1.CommandType.CMD_SET_PAYLOAD,
+        value: JSON.stringify({
+            key: ecdhKey,
+            account_id: user_id,
+            cmd: command,
+            mChannel: channel,
+            mValue3: 0,
+            payload: encPayload.toString("base64")
+        }).replace(/=/g, "\\u003d"),
+        channel: channel,
+        aesKey: key
+    };
+};
+exports.getLockP2PCommand = getLockP2PCommand;
+const getLockV12P2PCommand = function (deviceSN, user_id, command, channel, lockPublicKey, sequence, data) {
+    const key = (0, exports.generateAdvancedLockAESKey)();
+    const encryptedAesKey = (0, exports.getLockV12Key)(key, lockPublicKey);
+    const iv = (0, exports.getLockVectorBytes)(deviceSN);
+    const encPayload = (0, exports.encryptPayloadData)(data, Buffer.from(key, "hex"), Buffer.from(iv, "hex"));
+    const bleCommand = new ble_1.BleCommandFactory()
+        .setVersionCode(device_1.Lock.VERSION_CODE_LOCKV12)
+        .setCommandCode(Number.parseInt(types_1.ESLBleCommand[types_1.ESLCommand[command]])) //TODO: Change internal command identification?
+        .setDataType(-1)
+        .setData(encPayload)
+        .setAdditionalData(Buffer.from(encryptedAesKey, "hex"));
+    return {
+        aesKey: key,
+        bleCommand: bleCommand.getCommandCode(),
+        payload: {
+            commandType: types_1.CommandType.CMD_SET_PAYLOAD,
+            value: JSON.stringify({
+                account_id: user_id,
+                cmd: types_1.CommandType.CMD_SET_PAYLOAD_LOCKV12,
+                mChannel: channel,
+                mValue3: 0,
+                payload: {
+                    apiCommand: command,
+                    lock_payload: bleCommand.getLockV12Command().toString("hex"),
+                    seq_num: sequence,
+                }
+            })
+        }
+    };
+};
+exports.getLockV12P2PCommand = getLockV12P2PCommand;

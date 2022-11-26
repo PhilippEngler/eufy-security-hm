@@ -19,8 +19,8 @@ class ApiServer {
      * Create the ApiServer-Object.
      */
     constructor() {
-        apiPortFile(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps());
-        this.startServer(api.getApiUseHttp(), api.getApiServerPortHttp(), api.getApiUseHttps(), api.getApiServerPortHttps(), api.getApiServerKeyHttps(), api.getApiServerCertHttps(), logger);
+        apiPortFile(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort());
+        this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile(), logger);
     }
     /**
      * Start the apiServer.
@@ -33,7 +33,7 @@ class ApiServer {
      * @param logger The logger component.
      */
     async startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
-        logger.logInfoBasic(`eufy_security_hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
+        logger.logInfoBasic(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
         logger.logInfoBasic(`  Node: ${process.version}`);
         if (httpActive == true) {
@@ -95,14 +95,14 @@ class ApiServer {
                         responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
                     case "getAccountInfo":
-                        responseString = `{"success":true,"message":${await api.getAccountInfo()}}`;
+                        responseString = await api.getAccountInfoAsJson();
                         break;
                     case "getDevices":
-                        responseString = await api.getDevicesAsJSON();
+                        responseString = await api.getDevicesAsJson();
                         break;
                     case "getDevice":
                         if (url.length == 3) {
-                            responseString = await api.getDeviceAsJSON(url[2]);
+                            responseString = await api.getDeviceAsJson(url[2]);
                         }
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -110,7 +110,7 @@ class ApiServer {
                         break;
                     case "getDevicePropertiesMetadata":
                         if (url.length == 3) {
-                            responseString = await api.getDevicePropertiesMetadataAsJSON(url[2]);
+                            responseString = await api.getDevicePropertiesMetadataAsJson(url[2]);
                         }
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -118,7 +118,29 @@ class ApiServer {
                         break;
                     case "getDeviceProperties":
                         if (url.length == 3) {
-                            responseString = await api.getDevicePropertiesAsJSON(url[2]);
+                            responseString = await api.getDevicePropertiesAsJson(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getDevicePropertiesTruncated":
+                        if (url.length == 3) {
+                            var json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
+                            if (json.success == true) {
+                                json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
+                                json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
+                                json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                            }
+                            responseString = JSON.stringify(json);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "setDeviceProperty":
+                        if (url.length == 5) {
+                            responseString = await api.setDeviceProperty(url[2], url[3], url[4]);
                         }
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -126,12 +148,12 @@ class ApiServer {
                         break;
                     case "getStations":
                     case "getBases":
-                        responseString = await api.getStationsAsJSON();
+                        responseString = await api.getStationsAsJson();
                         break;
                     case "getStation":
                     case "getBase":
                         if (url.length == 3) {
-                            responseString = await api.getStationAsJSON(url[2]);
+                            responseString = await api.getStationAsJson(url[2]);
                         }
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -139,7 +161,7 @@ class ApiServer {
                         break;
                     case "getStationPropertiesMetadata":
                         if (url.length == 3) {
-                            responseString = await api.getStationPropertiesMetadataAsJSON(url[2]);
+                            responseString = await api.getStationPropertiesMetadataAsJson(url[2]);
                         }
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -147,18 +169,43 @@ class ApiServer {
                         break;
                     case "getStationProperties":
                         if (url.length == 3) {
-                            responseString = await api.getStationPropertiesAsJSON(url[2]);
+                            responseString = await api.getStationPropertiesAsJson(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationPropertiesTruncated":
+                        if (url.length == 3) {
+                            var json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
+                            if (json.success == true) {
+                                json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
+                                json.data.macAddress = "XX:XX:XX:XX:XX:XX";
+                                json.data.lanIpAddress = "XXX.XXX.XXX.XXX";
+                            }
+                            responseString = JSON.stringify(json);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "setStationProperty":
+                        if (url.length == 5) {
+                            responseString = await api.setStationProperty(url[2], url[3], url[4]);
+                        }
+                        else if (url[3] == "rebootStation" && url.length == 4) {
+                            responseString = await api.rebootStation(url[2]);
                         }
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getHouses":
-                        responseString = await api.getHousesAsJSON();
+                        responseString = await api.getHousesAsJson();
                         break;
                     case "getHouse":
                         if (url.length == 3) {
-                            responseString = await api.getHouseAsJSON(url[2]);
+                            responseString = await api.getHouseAsJson(url[2]);
                         }
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -176,10 +223,13 @@ class ApiServer {
                         }
                         break;
                     case "getConfig":
-                        responseString = api.getAPIConfig();
+                        responseString = await api.getAPIConfigAsJson();
                         break;
                     case "getApiInfo":
-                        responseString = api.getApiVersion();
+                        responseString = api.getApiVersionAsJson();
+                        break;
+                    case "getApiState":
+                        responseString = await api.getApiStateAsJson();
                         break;
                     case "setMode":
                         if (url.length == 3) {
@@ -293,7 +343,10 @@ class ApiServer {
                         responseString = await api.getErrorFileContent();
                         break;
                     case "removeTokenData":
-                        responseString = api.setTokenData("", "0");
+                        responseString = api.setTokenData("", 0);
+                        break;
+                    case "generateNewTrustedDeviceName":
+                        responseString = api.generateNewTrustedDeviceNameJson();
                         break;
                     case "clearLogFile":
                         emptyLogFile();
@@ -309,10 +362,10 @@ class ApiServer {
                         break;
                     case "downloadConfig":
                         api.writeConfig();
-                        responseString = (0, fs_1.readFileSync)('config.ini', 'utf-8');
-                        contentType = "text/plain";
+                        responseString = (0, fs_1.readFileSync)('config.json', 'utf-8');
+                        contentType = "text/json";
                         var dateTime = new Date();
-                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".ini";
+                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".json";
                         break;
                     case "downloadLogFile":
                         responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
@@ -349,171 +402,227 @@ class ApiServer {
         // We must handele the change config throught POST based on the form data we receive...
         else if (request.method == "POST") {
             if (url.length > 1) {
-                if (url[1] == "setConfig") {
-                    var postData = "";
-                    var isDataOK = true;
-                    request.on("data", function (chunk) {
-                        postData += chunk.toString();
-                    });
-                    request.on("end", function () {
-                        var username = "";
-                        if (postData.indexOf("username") >= 0) {
-                            username = getDataFromPOSTData(postData, "username", "string");
-                        }
-                        var password = "";
-                        if (postData.indexOf("password") >= 0) {
-                            password = getDataFromPOSTData(postData, "password", "string");
-                        }
-                        var country = "";
-                        if (postData.indexOf("country") >= 0) {
-                            country = getDataFromPOSTData(postData, "country", "string");
-                        }
-                        var language = "";
-                        if (postData.indexOf("language") >= 0) {
-                            language = getDataFromPOSTData(postData, "language", "string");
-                        }
-                        var useHttp = false;
-                        if (postData.indexOf("useHttp") >= 0) {
-                            useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
-                        }
-                        var apiporthttp = "52789";
-                        if (postData.indexOf("httpPort") >= 0) {
-                            apiporthttp = getDataFromPOSTData(postData, "httpPort", "string");
-                        }
-                        var useHttps = false;
-                        if (postData.indexOf("useHttps") >= 0) {
-                            useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
-                        }
-                        if (useHttp == false && useHttps == false) {
-                            isDataOK = false;
-                        }
-                        var apiporthttps = "52790";
-                        if (postData.indexOf("httpsPort") >= 0) {
-                            apiporthttps = getDataFromPOSTData(postData, "httpsPort", "string");
-                        }
-                        var apikeyfile = "/usr/local/etc/config/server.pem";
-                        if (postData.indexOf("httpsKeyFile") >= 0) {
-                            apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
-                        }
-                        var apicertfile = "/usr/local/etc/config/server.pem";
-                        if (postData.indexOf("httpsCertFile") >= 0) {
-                            apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
-                        }
-                        var apiconnectiontype = "1";
-                        if (postData.indexOf("connectionType") >= 0) {
-                            apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "string");
-                        }
-                        var apiuseudpstaticports = false;
-                        if (postData.indexOf("useUdpStaticPorts") >= 0) {
-                            apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
-                        }
-                        var apiudpports = [[], []];
-                        if (postData.indexOf("udpPortsStation") >= 0) {
-                            apiudpports = getAllUdpPortsForStations(postData);
-                        }
-                        var useSystemVariables = false;
-                        if (postData.indexOf("useSystemVariables") >= 0) {
-                            useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
-                        }
-                        var apicameradefaultimage = "";
-                        if (postData.indexOf("defaultImagePath") >= 0) {
-                            apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
-                        }
-                        var apicameradefaultvideo = "";
-                        if (postData.indexOf("defaultVideoPath") >= 0) {
-                            apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
-                        }
-                        var useupdatestateevent = false;
-                        if (postData.indexOf("useUpdateStateEvent") >= 0) {
-                            useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
-                        }
-                        var useupdatestateintervall = false;
-                        if (postData.indexOf("useUpdateStateIntervall") >= 0) {
-                            useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
-                        }
-                        var updatestatetimespan = "15";
-                        if (postData.indexOf("updateStateIntervallTimespan") >= 0) {
-                            updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "string");
-                        }
-                        var useupdatelinks = false;
-                        if (postData.indexOf("useUpdateLinksIntervall") >= 0) {
-                            useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
-                        }
-                        var useupdatelinksonlywhenactive = false;
-                        if (postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0) {
-                            useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
-                        }
-                        var updatelinkstimespan = "15";
-                        if (postData.indexOf("updateLinksIntervallTimespan") >= 0) {
-                            updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "string");
-                        }
-                        var usepushservice = false;
-                        if (postData.indexOf("usePushService") >= 0) {
-                            usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
-                            logger.logInfoBasic(`set pushservice: ${usepushservice}`);
-                        }
-                        var apiloglevel = "0";
-                        if (postData.indexOf("logLevel") >= 0) {
-                            apiloglevel = getDataFromPOSTData(postData, "logLevel", "string");
-                        }
-                        if (checkNumberValue(apiporthttp, 1, 53535) == false) {
-                            isDataOK = false;
-                        }
-                        if (checkNumberValue(apiporthttps, 1, 53535) == false) {
-                            isDataOK = false;
-                        }
-                        if (apiuseudpstaticports == true) {
-                            /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
-                            {
+                switch (url[1]) {
+                    case "setConfig":
+                        var postData = "";
+                        var isDataOK = true;
+                        request.on("data", function (chunk) {
+                            postData += chunk.toString();
+                        });
+                        request.on("end", async function () {
+                            var username = "";
+                            if (postData.indexOf("username") >= 0) {
+                                username = getDataFromPOSTData(postData, "username", "string");
+                            }
+                            var password = "";
+                            if (postData.indexOf("password") >= 0) {
+                                password = getDataFromPOSTData(postData, "password", "string");
+                            }
+                            var country = "";
+                            if (postData.indexOf("country") >= 0) {
+                                country = getDataFromPOSTData(postData, "country", "string");
+                            }
+                            var language = "";
+                            if (postData.indexOf("language") >= 0) {
+                                language = getDataFromPOSTData(postData, "language", "string");
+                            }
+                            var trustedDeviceName = "";
+                            if (postData.indexOf("trustedDeviceName") >= 0) {
+                                trustedDeviceName = getDataFromPOSTData(postData, "trustedDeviceName", "string");
+                            }
+                            var useHttp = false;
+                            if (postData.indexOf("useHttp") >= 0) {
+                                useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
+                            }
+                            var apiporthttp = 52789;
+                            if (postData.indexOf("httpPort") >= 0) {
+                                apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
+                            }
+                            var useHttps = false;
+                            if (postData.indexOf("useHttps") >= 0) {
+                                useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
+                            }
+                            if (useHttp == false && useHttps == false) {
                                 isDataOK = false;
-                            }*/
-                        }
-                        if (useHttps == true && (apiporthttps == "" || apikeyfile == "" || apicertfile == "")) {
-                            isDataOK = false;
-                        }
-                        if (checkNumberValue(apiloglevel, 0, 3) == false) {
-                            isDataOK = false;
-                        }
-                        if (checkNumberValue(updatestatetimespan, 15, 240) == false) {
-                            isDataOK = false;
-                        }
-                        if (checkNumberValue(updatelinkstimespan, 15, 240) == false) {
-                            isDataOK = false;
-                        }
-                        if (isDataOK == true) {
-                            apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
-                            responseString = api.setConfig(username, password, country, language, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
-                        }
-                        else {
-                            responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
-                        }
-                        var resJSON = JSON.parse(responseString);
+                            }
+                            var apiporthttps = 52790;
+                            if (postData.indexOf("httpsPort") >= 0) {
+                                apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
+                            }
+                            var apikeyfile = "/usr/local/etc/config/server.pem";
+                            if (postData.indexOf("httpsKeyFile") >= 0) {
+                                apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
+                            }
+                            var apicertfile = "/usr/local/etc/config/server.pem";
+                            if (postData.indexOf("httpsCertFile") >= 0) {
+                                apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
+                            }
+                            var apiconnectiontype = 1;
+                            if (postData.indexOf("connectionType") >= 0) {
+                                apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
+                            }
+                            var apiuseudpstaticports = false;
+                            if (postData.indexOf("useUdpStaticPorts") >= 0) {
+                                apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                            }
+                            var apiudpports = undefined;
+                            if (postData.indexOf("udpPortsStation") >= 0) {
+                                apiudpports = getAllUdpPortsForStations(postData);
+                            }
+                            var useSystemVariables = false;
+                            if (postData.indexOf("useSystemVariables") >= 0) {
+                                useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
+                            }
+                            var apicameradefaultimage = "";
+                            if (postData.indexOf("defaultImagePath") >= 0) {
+                                apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
+                            }
+                            var apicameradefaultvideo = "";
+                            if (postData.indexOf("defaultVideoPath") >= 0) {
+                                apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
+                            }
+                            var useupdatestateevent = false;
+                            if (postData.indexOf("useUpdateStateEvent") >= 0) {
+                                useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
+                            }
+                            var useupdatestateintervall = false;
+                            if (postData.indexOf("useUpdateStateIntervall") >= 0) {
+                                useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
+                            }
+                            var updatestatetimespan = 15;
+                            if (postData.indexOf("updateStateIntervallTimespan") >= 0) {
+                                updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
+                            }
+                            var useupdatelinks = false;
+                            if (postData.indexOf("useUpdateLinksIntervall") >= 0) {
+                                useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
+                            }
+                            var useupdatelinksonlywhenactive = false;
+                            if (postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0) {
+                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
+                            }
+                            var updatelinkstimespan = 15;
+                            if (postData.indexOf("updateLinksIntervallTimespan") >= 0) {
+                                updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "number");
+                            }
+                            var usepushservice = false;
+                            if (postData.indexOf("usePushService") >= 0) {
+                                usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
+                            }
+                            var apiloglevel = 0;
+                            if (postData.indexOf("logLevel") >= 0) {
+                                apiloglevel = getDataFromPOSTData(postData, "logLevel", "number");
+                            }
+                            if (checkNumberValue(apiporthttp, 1, 53535) == false) {
+                                isDataOK = false;
+                            }
+                            if (checkNumberValue(apiporthttps, 1, 53535) == false) {
+                                isDataOK = false;
+                            }
+                            if (apiuseudpstaticports == true) {
+                                /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                                {
+                                    isDataOK = false;
+                                }*/
+                            }
+                            if (useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == "")) {
+                                isDataOK = false;
+                            }
+                            if (checkNumberValue(apiloglevel, 0, 3) == false) {
+                                isDataOK = false;
+                            }
+                            if (checkNumberValue(updatestatetimespan, 15, 240) == false) {
+                                isDataOK = false;
+                            }
+                            if (checkNumberValue(updatelinkstimespan, 15, 240) == false) {
+                                isDataOK = false;
+                            }
+                            if (isDataOK == true) {
+                                apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
+                                responseString = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                            }
+                            else {
+                                responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
+                            }
+                            var resJson = JSON.parse(responseString);
+                            response.setHeader('Access-Control-Allow-Origin', '*');
+                            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                            response.writeHead(200);
+                            response.end(responseString);
+                            if (resJson.success == true && resJson.serviceRestart == true) {
+                                logger.logInfoBasic("Settings saved. Restarting apiServer.");
+                                restartServer();
+                            }
+                            else if (resJson.success == true && resJson.serviceRestart == false) {
+                                logger.logInfoBasic("Settings saved.");
+                            }
+                            else {
+                                logger.logInfoBasic("Error during saving settings.");
+                            }
+                        });
+                        break;
+                    case "uploadConfig":
+                        var postData = "";
+                        var isDataOK = true;
+                        request.on("data", function (chunk) {
+                            var _a;
+                            postData += chunk.toString();
+                            if (request.headers['content-length'] !== undefined && Number.parseInt((_a = request.headers['content-length']) === null || _a === void 0 ? void 0 : _a.toString()) > 500000) {
+                                logger.logInfoBasic("Error during upload and saving config file: File is to large.");
+                                request.destroy(new Error("FileToLarge"));
+                            }
+                        });
+                        request.on("end", function () {
+                            try {
+                                responseString = "";
+                                if (checkUploadedFileMetadata(postData) == false) {
+                                    logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing.");
+                                    responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
+                                }
+                                else {
+                                    var fileContent = getUploadFileContent(postData);
+                                    if (fileContent === undefined) {
+                                        if (responseString == "") {
+                                            logger.logInfoBasic("Error during upload and saving config file: File content could not be determined.");
+                                            responseString = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
+                                        }
+                                        else {
+                                            logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
+                                            responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
+                                        }
+                                    }
+                                    else {
+                                        (0, fs_1.writeFileSync)("config.json.upload", fileContent, 'utf-8');
+                                        responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
+                                    }
+                                }
+                                var resJson = JSON.parse(responseString);
+                                response.setHeader('Access-Control-Allow-Origin', '*');
+                                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                                response.writeHead(200);
+                                response.end(responseString);
+                                if (resJson.success == true && resJson.serviceRestart == true) {
+                                    logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
+                                    restartServer();
+                                }
+                                else {
+                                    logger.logInfoBasic("Config file was not saved.");
+                                }
+                            }
+                            catch (e) {
+                            }
+                        });
+                        break;
+                    default:
+                        responseString = `{"success":false,"message":"Unknown command."}`;
                         response.setHeader('Access-Control-Allow-Origin', '*');
                         response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                         response.writeHead(200);
                         response.end(responseString);
-                        if (resJSON.success == true && resJSON.serviceRestart == true) {
-                            logger.logInfoBasic("Settings saved. Restarting apiServer.");
-                            restartServer();
-                        }
-                        else if (resJSON.success == true && resJSON.serviceRestart == false) {
-                            logger.logInfoBasic("Settings saved.");
-                        }
-                        else {
-                            logger.logInfoBasic("Error during saving settings.");
-                        }
-                    });
-                }
-                else {
-                    responseString = `{"success":false,"message":"Unknown command."}`;
-                    response.setHeader('Access-Control-Allow-Origin', '*');
-                    response.setHeader('Content-Type', 'application/json; charset=UTF-8');
-                    response.writeHead(200);
-                    response.end(responseString);
                 }
             }
             else {
-                responseString = `{"success":false,"message":"Unknown command."}`;
+                responseString = `{"success":false,"message":"Wrong amount of arguments."}`;
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                 response.writeHead(200);
@@ -543,17 +652,14 @@ function main() {
  */
 function apiPortFile(useHttp, httpPort, useHttps, httpsPort) {
     try {
-        if ((0, fs_1.existsSync)('www/apiPorts.txt')) {
-            (0, fs_1.unlinkSync)('www/apiPorts.txt');
-        }
         if ((0, fs_1.existsSync)('www/apiPorts.json')) {
-            var resJSON = JSON.parse((0, fs_1.readFileSync)('www/apiPorts.json', 'utf-8'));
-            if (api.getApiUseHttp().toString() != resJSON.useHttp.toString() || api.getApiServerPortHttp().toString() != resJSON.httpPort.toString() || api.getApiUseHttps().toString() != resJSON.useHttps.toString() || api.getApiServerPortHttps().toString() != resJSON.httpsPort.toString()) {
-                (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
+            var resJson = JSON.parse((0, fs_1.readFileSync)('www/apiPorts.json', 'utf-8'));
+            if (useHttp !== resJson.useHttp || httpPort !== Number.parseInt(resJson.httpPort) || useHttps !== resJson.useHttps || httpsPort !== Number.parseInt(resJson.httpsPort)) {
+                (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
             }
         }
         else {
-            (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":"${useHttp}","httpPort":"${httpPort}","useHttps":"${useHttps}","httpsPort":"${httpsPort}"}`);
+            (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
         }
     }
     catch (ENOENT) {
@@ -567,7 +673,7 @@ function apiPortFile(useHttp, httpPort, useHttps, httpsPort) {
  */
 function checkNumberValue(value, lowestValue, highestValue) {
     try {
-        var val = Number.parseInt(value);
+        var val = value;
         if (val >= lowestValue && val <= highestValue) {
             return true;
         }
@@ -592,7 +698,7 @@ function checkNumbersValue(values, lowestValue, highestValue) {
     var vals = (values.split(",")).map((i) => Number(i));
     if (vals.length > 0) {
         for (var val of vals) {
-            if (checkNumberValue(val.toString(), lowestValue, highestValue) == false) {
+            if (checkNumberValue(val, lowestValue, highestValue) == false) {
                 return false;
             }
         }
@@ -613,6 +719,12 @@ function getDataFromPOSTData(postData, target, dataType) {
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return temp;
     }
+    else if (dataType == "number") {
+        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        temp = temp.replace("\r\n", "");
+        temp = temp.substring(2, temp.indexOf("----") - 2);
+        return Number.parseInt(temp);
+    }
     else if (dataType == "boolean") {
         var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.substring(2, temp.indexOf("----") - 2);
@@ -632,19 +744,79 @@ function getDataFromPOSTData(postData, target, dataType) {
  */
 function getAllUdpPortsForStations(postData) {
     var pos = postData.indexOf("udpPortsStation");
-    var res = [[], []];
-    var i = 0;
+    var res = [];
     while (pos > 0) {
         var temp = postData.substring(pos + 29);
         var stationSerial = postData.substring(pos + 15, pos + 31);
         temp = temp.replace("\r\n", "");
         temp = temp.substring(5, temp.indexOf("----") - 2);
-        res[i][0] = stationSerial;
-        res[i][1] = temp;
+        var line = [];
+        line[0] = stationSerial;
+        line[1] = temp;
+        res.push(line);
         pos = postData.indexOf("udpPortsStation", pos + 19);
-        i++;
     }
     return res;
+}
+/**
+ * Checks if the received post data could be a config.json.
+ * @param postData The postData to check.
+ * @returns A boolean value.
+ */
+function checkUploadedFileMetadata(postData) {
+    var pos = postData.indexOf("Content-Disposition: form-data;");
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf("Content-Type: application/json");
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf(`"accountData":`);
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf(`"eMail":`);
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf(`"password":`);
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf(`"httpActive":`);
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf(`"httpPort":`);
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf(`"httpsActive":`);
+    if (pos < 0) {
+        return false;
+    }
+    pos = postData.indexOf(`"httpsPort":`);
+    if (pos < 0) {
+        return false;
+    }
+    return true;
+}
+/**
+ * Retrieves the json-part containing the config.
+ * @param postData The postData to check.
+ * @returns A string value or undefined.
+ */
+function getUploadFileContent(postData) {
+    var start = postData.indexOf("{");
+    if (start < 0) {
+        return undefined;
+    }
+    var end = postData.lastIndexOf("}");
+    if (end < 0) {
+        return undefined;
+    }
+    return postData.substring(start, end + 1);
 }
 /**
  * Will write config, stop the server and exit.
@@ -703,4 +875,14 @@ process.on('SIGINT', async () => {
     logger.logInfoBasic("...done. Exiting");
     (0, process_1.exit)(0);
 });
+/**
+ * Returns a string with the first numberOfChars chars from input, all other chars will be replaced by X. replaceLastCars("ABCDEFGH", "X", 2) will return "ABXXXXXX".
+ * @param input The input string.
+ * @param char The char replaces each char after position numberOfChars.
+ * @param numberOfChars The number of chars which should not be replaced.
+ * @returns The result string.
+ */
+function replaceLastChars(input, char, numberOfChars) {
+    return input.slice(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
+}
 main();

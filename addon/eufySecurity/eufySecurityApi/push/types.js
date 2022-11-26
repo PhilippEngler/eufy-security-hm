@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NotificationStyle = exports.IndoorPushMessageType = exports.SmartSafeEvent = exports.IndoorPushEvent = exports.LockPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
+exports.NotificationStyle = exports.IndoorPushMessageType = exports.HB3HDDType = exports.HB3PairedDeviceMessageType = exports.HB3PairedDevicePushEvent = exports.SmartSafeEvent = exports.IndoorPushEvent = exports.LockPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
 var CusPushEvent;
 (function (CusPushEvent) {
     CusPushEvent[CusPushEvent["SECURITY"] = 1] = "SECURITY";
@@ -125,6 +125,60 @@ var SmartSafeEvent;
     SmartSafeEvent[SmartSafeEvent["INPUT_ERR_MAX"] = 1946161159] = "INPUT_ERR_MAX";
     SmartSafeEvent[SmartSafeEvent["SHUTDOWN"] = 1946161160] = "SHUTDOWN";
 })(SmartSafeEvent = exports.SmartSafeEvent || (exports.SmartSafeEvent = {}));
+var HB3PairedDevicePushEvent;
+(function (HB3PairedDevicePushEvent) {
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["MOTION_DETECTION"] = 3101] = "MOTION_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["FACE_DETECTION"] = 3102] = "FACE_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["CRYING_DETECTION"] = 3104] = "CRYING_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["SOUND_DETECTION"] = 3105] = "SOUND_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["PET_DETECTION"] = 3106] = "PET_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["VEHICLE_DETECTION"] = 3107] = "VEHICLE_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["DOG_DETECTION"] = 3108] = "DOG_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["DOG_LICK_DETECTION"] = 3109] = "DOG_LICK_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["DOG_POOP_DETECTION"] = 3110] = "DOG_POOP_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["IDENTITY_PERSON_DETECTION"] = 3111] = "IDENTITY_PERSON_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["STRANGER_PERSON_DETECTION"] = 3112] = "STRANGER_PERSON_DETECTION";
+})(HB3PairedDevicePushEvent = exports.HB3PairedDevicePushEvent || (exports.HB3PairedDevicePushEvent = {}));
+var HB3PairedDeviceMessageType;
+(function (HB3PairedDeviceMessageType) {
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["SECURITY_EVT"] = 1] = "SECURITY_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["TFCARD_EVT"] = 2] = "TFCARD_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["DOOR_SENSOR_EVT"] = 3] = "DOOR_SENSOR_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["CAM_STATE_EVT"] = 4] = "CAM_STATE_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["GSENSOR_EVT"] = 5] = "GSENSOR_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["BATTERY_LOW_EVT"] = 6] = "BATTERY_LOW_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["BATTERY_HOT_EVT"] = 7] = "BATTERY_HOT_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["LIGHT_STATE_EVT"] = 8] = "LIGHT_STATE_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["ARMING_EVT"] = 9] = "ARMING_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["ALARM_EVT"] = 10] = "ALARM_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["BATTERY_FULL_EVT"] = 11] = "BATTERY_FULL_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["REPEATER_RSSI_WEAK_EVT"] = 12] = "REPEATER_RSSI_WEAK_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["UPGRADE_STATUS"] = 13] = "UPGRADE_STATUS";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["MOTION_SENSOR_EVT"] = 14] = "MOTION_SENSOR_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["BAT_DOORBELL_EVT"] = 15] = "BAT_DOORBELL_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["ALARM_DELAY_EVT"] = 16] = "ALARM_DELAY_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["HUB_BATT_POWERED_EVT"] = 17] = "HUB_BATT_POWERED_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["INDOOR_EVT"] = 18] = "INDOOR_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["SMARTLOCK_EVT"] = 19] = "SMARTLOCK_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["LOCK_EVT"] = 20] = "LOCK_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["BBM_SOCK_EVT"] = 21] = "BBM_SOCK_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["DOOR_STATUS_EVT"] = 22] = "DOOR_STATUS_EVT";
+    HB3PairedDeviceMessageType[HB3PairedDeviceMessageType["HHD_EVT"] = 23] = "HHD_EVT";
+})(HB3PairedDeviceMessageType = exports.HB3PairedDeviceMessageType || (exports.HB3PairedDeviceMessageType = {}));
+var HB3HDDType;
+(function (HB3HDDType) {
+    HB3HDDType[HB3HDDType["NODISK"] = 0] = "NODISK";
+    HB3HDDType[HB3HDDType["READY"] = 1] = "READY";
+    HB3HDDType[HB3HDDType["PROCESSING"] = 2] = "PROCESSING";
+    HB3HDDType[HB3HDDType["NO_PARTED"] = 3] = "NO_PARTED";
+    HB3HDDType[HB3HDDType["NO_ANKER_DISK"] = 4] = "NO_ANKER_DISK";
+    HB3HDDType[HB3HDDType["NOT_FORMAT"] = 5] = "NOT_FORMAT";
+    HB3HDDType[HB3HDDType["OTHER_USER_DISK"] = 6] = "OTHER_USER_DISK";
+    HB3HDDType[HB3HDDType["BAD"] = 7] = "BAD";
+    HB3HDDType[HB3HDDType["WAIT_NETWOR"] = 8] = "WAIT_NETWOR";
+    HB3HDDType[HB3HDDType["PARTED_DONE"] = 9] = "PARTED_DONE";
+    HB3HDDType[HB3HDDType["FULL"] = 32] = "FULL";
+})(HB3HDDType = exports.HB3HDDType || (exports.HB3HDDType = {}));
 var IndoorPushMessageType;
 (function (IndoorPushMessageType) {
     IndoorPushMessageType[IndoorPushMessageType["INDOOR"] = 18] = "INDOOR";

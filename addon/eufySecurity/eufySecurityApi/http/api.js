@@ -62,20 +62,20 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             device_public_keys: {}
         };
         this.headers = {
-            app_version: "v4.2.1_1280",
-            os_type: "android",
-            os_version: "31",
-            phone_model: "ONEPLUS A3003",
-            country: "DE",
-            language: "en",
-            openudid: "5e4621b0152c0d00",
-            uid: "",
-            net_type: "wifi",
-            mnc: "02",
-            mcc: "262",
-            sn: "75814221ee75",
+            App_version: "v4.4.3_1447",
+            Os_type: "android",
+            Os_version: "31",
+            Phone_model: "ONEPLUS A3003",
+            Country: "DE",
+            Language: "en",
+            Openudid: "5e4621b0152c0d00",
+            //uid: "",
+            Net_type: "wifi",
+            Mnc: "02",
+            Mcc: "262",
+            Sn: "75814221ee75",
             Model_type: "PHONE",
-            timezone: "GMT+01:00",
+            Timezone: "GMT+01:00",
             "Cache-Control": "no-cache",
         };
         this.api = api;
@@ -249,6 +249,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 this.ecdh.generateKeys();
                 const data = {
+                    ab: this.headers.country,
                     client_secret_info: {
                         public_key: this.ecdh.getPublicKey("hex")
                     },
@@ -267,69 +268,83 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 const response = await this.request({
                     method: "post",
-                    endpoint: "v2/passport/login",
+                    endpoint: "v2/passport/login_sec",
                     data: data
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                        const dataresult = result.data;
-                        this.persistentData.user_id = dataresult.user_id;
-                        this.persistentData.email = dataresult.email;
-                        this.persistentData.nick_name = dataresult.nick_name;
-                        this.setToken(dataresult.auth_token);
-                        this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
-                        this.headers = {
-                            ...this.headers,
-                            gtoken: (0, utils_2.md5)(dataresult.user_id)
-                        };
-                        /*if (dataresult.server_secret_info?.public_key)
-                            this.serverPublicKey = dataresult.server_secret_info.public_key;*/
-                        this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
-                        this.api.setTokenData(this.token, this.tokenExpiration.getTime().toString());
-                        if (!this.connected)
-                            this.emit("connect");
-                        this.connected = true;
-                        this.scheduleRenewAuthToken();
-                    }
-                    else if (result.code == types_1.ResponseErrorCode.CODE_NEED_VERIFY_CODE) {
-                        this.log.debug(`Send verification code...`);
-                        const dataresult = result.data;
-                        this.setToken(dataresult.auth_token);
-                        this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
-                        this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
-                        this.api.setTokenData(this.token, this.tokenExpiration.getTime().toString());
-                        await this.sendVerifyCode(types_1.VerfyCodeTypes.TYPE_EMAIL);
-                        this.emit("tfa request");
-                    }
-                    else if (result.code == types_1.ResponseErrorCode.LOGIN_NEED_CAPTCHA || result.code == types_1.ResponseErrorCode.LOGIN_CAPTCHA_ERROR) {
-                        const dataresult = result.data;
-                        this.log.debug("Captcha verification received", { captchaId: dataresult.captcha_id, item: dataresult.item });
-                        this.emit("captcha request", dataresult.captcha_id, dataresult.item);
+                    if (result.data !== undefined) {
+                        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                            const dataresult = result.data;
+                            this.persistentData.user_id = dataresult.user_id;
+                            this.persistentData.email = dataresult.email;
+                            this.persistentData.nick_name = dataresult.nick_name;
+                            this.setToken(dataresult.auth_token);
+                            this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
+                            this.headers = {
+                                ...this.headers,
+                                gtoken: (0, utils_2.md5)(dataresult.user_id)
+                            };
+                            /*if (dataresult.server_secret_info?.public_key)
+                                this.serverPublicKey = dataresult.server_secret_info.public_key;*/
+                            this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
+                            this.api.setTokenData(this.token, this.tokenExpiration.getTime());
+                            if (!this.connected) {
+                                this.connected = true;
+                                this.emit("connect");
+                            }
+                            this.scheduleRenewAuthToken();
+                        }
+                        else if (result.code == types_1.ResponseErrorCode.CODE_NEED_VERIFY_CODE) {
+                            this.log.debug(`Send verification code...`);
+                            const dataresult = result.data;
+                            this.setToken(dataresult.auth_token);
+                            this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
+                            this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
+                            this.api.setTokenData(this.token, this.tokenExpiration.getTime());
+                            await this.sendVerifyCode(types_1.VerfyCodeTypes.TYPE_EMAIL);
+                            this.emit("tfa request");
+                        }
+                        else if (result.code == types_1.ResponseErrorCode.LOGIN_NEED_CAPTCHA || result.code == types_1.ResponseErrorCode.LOGIN_CAPTCHA_ERROR) {
+                            const dataresult = result.data;
+                            this.log.debug("Captcha verification received", { captchaId: dataresult.captcha_id, item: dataresult.item });
+                            this.emit("captcha request", dataresult.captcha_id, dataresult.item);
+                        }
+                        else {
+                            this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                            this.emit("connection error", new error_2.ApiResponseCodeError(`Response code not ok (${result.code}).`));
+                        }
                     }
                     else {
-                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                        this.log.error("Response data is missing", { code: result.code, msg: result.msg, data: result.data });
+                        this.emit("connection error", new error_2.ApiInvalidResponseError("Response data is missing"));
                     }
                 }
                 else {
                     this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                    this.emit("connection error", new error_2.ApiHTTPResponseCodeError(`HTTP response code not ok (${response.status}).`));
                 }
             }
             catch (error) {
                 this.log.error("Generic Error:", error);
+                this.emit("connection error", new error_2.ApiGenericError(`Generic error: ${error}`));
             }
         }
         else if (!this.connected) {
             try {
                 const profile = await this.getPassportProfile();
                 if (profile !== null) {
-                    this.emit("connect");
                     this.connected = true;
+                    this.emit("connect");
                     this.scheduleRenewAuthToken();
+                }
+                else {
+                    this.emit("connection error", new error_2.ApiInvalidResponseError(`Invalid passport profile response`));
                 }
             }
             catch (error) {
                 this.log.error("getPassportProfile Error", error);
+                this.emit("connection error", new error_2.ApiGenericError(`Get passport profile error: ${error}`));
             }
         }
     }
@@ -579,8 +594,8 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (error.response.statusCode === 401) {
                     this.invalidateToken();
                     this.log.error("Status return code 401, invalidate token", { status: error.response.statusCode, statusText: error.response.statusMessage });
-                    this.emit("close");
                     this.connected = false;
+                    this.emit("close");
                 }
             }
             throw error;
@@ -1176,6 +1191,152 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             this.log.error("Generic Error:", error);
         }
         return null;
+    }
+    async addUser(deviceSN, nickname, stationSN = "") {
+        if (this.connected) {
+            try {
+                const response = await this.request({
+                    method: "post",
+                    endpoint: "v1/app/device/local_user/add",
+                    data: {
+                        device_sn: deviceSN,
+                        nick_name: nickname,
+                        station_sn: stationSN === deviceSN ? "" : stationSN,
+                        transaction: `${new Date().getTime().toString()}`
+                    }
+                });
+                if (response.status == 200) {
+                    const result = response.data;
+                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        if (result.data)
+                            return result.data;
+                    }
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
+                }
+                else {
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+        }
+        return null;
+    }
+    async deleteUser(deviceSN, shortUserId, stationSN = "") {
+        if (this.connected) {
+            try {
+                const response = await this.request({
+                    method: "post",
+                    endpoint: "v1/app/device/user/delete",
+                    data: {
+                        device_sn: deviceSN,
+                        short_user_ids: [shortUserId],
+                        station_sn: stationSN === deviceSN ? "" : stationSN,
+                        transaction: `${new Date().getTime().toString()}`
+                    }
+                });
+                if (response.status == 200) {
+                    const result = response.data;
+                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        return true;
+                    }
+                    else {
+                        this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                    }
+                }
+                else {
+                    this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+        }
+        return false;
+    }
+    async getUsers(deviceSN, stationSN) {
+        try {
+            const response = await this.request({
+                method: "get",
+                endpoint: `v1/app/device/user/list?device_sn=${deviceSN}&station_sn=${stationSN}`
+            });
+            if (response.status == 200) {
+                const result = response.data;
+                if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.data) {
+                        const usersResponse = result.data;
+                        return usersResponse.user_list;
+                    }
+                }
+                else {
+                    this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                }
+            }
+            else {
+                this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+            }
+        }
+        catch (error) {
+            this.log.error("Generic Error:", error);
+        }
+        return null;
+    }
+    async getUser(deviceSN, stationSN, shortUserId) {
+        try {
+            const users = await this.getUsers(deviceSN, stationSN);
+            if (users !== null) {
+                for (const user of users) {
+                    if (user.short_user_id === shortUserId) {
+                        return user;
+                    }
+                }
+            }
+        }
+        catch (error) {
+            this.log.error("Generic Error:", error);
+        }
+        return null;
+    }
+    async updateUser(deviceSN, stationSN, shortUserId, nickname) {
+        if (this.connected) {
+            try {
+                const user = await this.getUser(deviceSN, stationSN, shortUserId);
+                if (user !== null) {
+                    const response = await this.request({
+                        method: "post",
+                        endpoint: "v1/app/device/local_user/update",
+                        data: {
+                            device_sn: deviceSN,
+                            nick_name: nickname,
+                            password_list: user.password_list,
+                            short_user_id: shortUserId,
+                            station_sn: stationSN === deviceSN ? "" : stationSN,
+                            user_type: user.user_type,
+                            transaction: `${new Date().getTime().toString()}`
+                        }
+                    });
+                    if (response.status == 200) {
+                        const result = response.data;
+                        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                            return true;
+                        }
+                        else {
+                            this.log.error("Response code not ok", { code: result.code, msg: result.msg });
+                        }
+                    }
+                    else {
+                        this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                    }
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+        }
+        return false;
     }
 }
 exports.HTTPApi = HTTPApi;

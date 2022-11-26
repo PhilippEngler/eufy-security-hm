@@ -6,7 +6,7 @@ const service_1 = require("./mqtt/service");
 const error_1 = require("./error");
 class MqttService extends tiny_typed_emitter_1.TypedEmitter {
     /**
-     * Create the PushService object.
+     * Create the MqttService object.
      * @param api The EufySecurityApi.
      * @param config The Config.
      * @param logger The Logger.
@@ -33,7 +33,7 @@ class MqttService extends tiny_typed_emitter_1.TypedEmitter {
         });
         this.mqttService.on("lock message", (message) => {
             this.api.getDevice(message.data.data.deviceSn).then((device) => {
-                device.processMQTTNotification(message.data.data, this.config.getEventDurationSecondsAsNumber());
+                device.processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
             }).catch((error) => {
                 if (error instanceof error_1.DeviceNotFoundError) {
                 }

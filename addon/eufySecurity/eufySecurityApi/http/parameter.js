@@ -18,7 +18,12 @@ class ParameterHelper {
                 type === types_1.CommandType.ARM_DELAY_CUS3 ||
                 type === types_1.CommandType.ARM_DELAY_OFF) {
                 try {
-                    return JSON.parse((0, utils_1.decodeBase64)(value).toString("utf8"));
+                    if (typeof value === "string") {
+                        return JSON.parse((0, utils_1.decodeBase64)(value).toString("utf8"));
+                    }
+                    else {
+                        return value; //return object
+                    }
                 }
                 catch (error) {
                     log.error(`Error readValue param ${type} `, error, type, value);
