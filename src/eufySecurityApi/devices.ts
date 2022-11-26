@@ -141,6 +141,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                             this.addEventListener(device, "LongTimeNotClose");
                             this.addEventListener(device, "LowBattery");
                             this.addEventListener(device, "Jammed");
+                            this.addEventListener(device, "StrangerPersonDetected");
+                            this.addEventListener(device, "DogDetected");
+                            this.addEventListener(device, "DogLickDetected");
+                            this.addEventListener(device, "DogPoopDetected");
 
                             this.addDevice(device);
                         }
@@ -314,6 +318,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.removeEventListener(this.devices[deviceSerial], "LongTimeNotClose");
                 this.removeEventListener(this.devices[deviceSerial], "LowBattery");
                 this.removeEventListener(this.devices[deviceSerial], "Jammed");
+                this.removeEventListener(this.devices[deviceSerial], "StrangerPersonDetected");
+                this.removeEventListener(this.devices[deviceSerial], "DogDetected");
+                this.removeEventListener(this.devices[deviceSerial], "DogLickDetected");
+                this.removeEventListener(this.devices[deviceSerial], "DogPoopDetected");
 
                 (this.devices[deviceSerial] as Device).destroy();
             }
@@ -407,6 +415,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
             device.updateProperty(PropertyName.DeviceSnooze, false);
             device.updateProperty(PropertyName.DeviceSnoozeTime, 0);
+            device.updateProperty(PropertyName.DeviceSnoozeStartTime, 0);
+            if (device.hasProperty(PropertyName.DeviceSnoozeHomebase)) {
+                device.updateProperty(PropertyName.DeviceSnoozeHomebase, false);
+            }
+            if (device.hasProperty(PropertyName.DeviceSnoozeMotion)) {
+                device.updateProperty(PropertyName.DeviceSnoozeMotion, false);
+            }
+            if (device.hasProperty(PropertyName.DeviceSnoozeChime)) {
+                device.updateProperty(PropertyName.DeviceSnoozeChime, false);
+            }
             delete this.deviceSnoozeTimeout[device.getSerial()];
         }, timeoutMS);
     }
@@ -676,6 +694,22 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 device.on("jammed", (device: Device, state: boolean) => this.onDeviceJammed(device, state));
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("jammed")} Listener.`);
                 break;
+            case "StrangerPersonDetected":
+                device.on("stranger person detected", (device: Device, state: boolean) => this.onDeviceStrangerPersonDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                break;
+            case "DogDetected":
+                device.on("dog detected", (device: Device, state: boolean) => this.onDeviceDogDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog detected")} Listener.`);
+                break;
+            case "DogLickDetected":
+                device.on("dog lick detected", (device: Device, state: boolean) => this.onDeviceDogLickDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                break;
+            case "DogPoopDetected":
+                device.on("dog poop detected", (device: Device, state: boolean) => this.onDeviceDogPoopDetected(device, state));
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog poop detected")} Listener.`);
+                break;
         }
     }
 
@@ -779,6 +813,22 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             case "Jammed":
                 device.removeAllListeners("jammed");
                 this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("jammed")} Listener.`);
+                break;
+            case "StrangerPersonDetected":
+                device.removeAllListeners("stranger person detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                break;
+            case "DogDetected":
+                device.removeAllListeners("dog detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog detected")} Listener.`);
+                break;
+            case "DogLickDetected":
+                device.removeAllListeners("dog lick detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                break;
+            case "DogPoopDetected":
+                device.removeAllListeners("dog poop detected");
+                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog poop detected")} Listener.`);
                 break;
         }
     }
@@ -1059,6 +1109,42 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private onDeviceJammed(device : Device, state : boolean) : void
     {
         this.emit("device jammed", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceStrangerPersonDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceStrangerPersonDetected(device: Device, state: boolean): void {
+        this.emit("device stranger person detected", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceDogDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceDogDetected(device: Device, state: boolean): void {
+        this.emit("device dog detected", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceDogLickDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceDogLickDetected(device: Device, state: boolean): void {
+        this.emit("device dog lick detected", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceDogPoopDetected is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceDogPoopDetected(device: Device, state: boolean): void {
+        this.emit("device dog poop detected", device, state);
     }
 
     /**

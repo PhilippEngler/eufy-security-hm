@@ -1270,7 +1270,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         device.updateProperty(PropertyName.DeviceSnoozeTime, snoozeTime);
                     }
                     this.httpService.refreshAllData().then(() => {
-                        const snoozeStartTime = device.getPropertyValue(PropertyName.DeviceHiddenSnoozeStartTime) as number;
+                        const snoozeStartTime = device.getPropertyValue(PropertyName.DeviceSnoozeStartTime) as number;
                         const currentTime = Math.trunc(new Date().getTime() / 1000);
                         let timeoutMS;
                         if (snoozeStartTime !== undefined && snoozeStartTime !== 0) {
