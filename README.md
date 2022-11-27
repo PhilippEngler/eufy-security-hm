@@ -12,7 +12,7 @@ The addon will only run with the original CCU3 Firmware and other community proj
 * RaspberryMatic running on RaspberryPi 3 or 4 based hardware: you can use the *arm64* instead of the *ccu3* package
 * RaspberryMatic on OVA platforms: use the *amd64* package
 
-TTheoretically, most of the eufy security devices should be compatible. There might be issues with new devices. The following eufy security devices are known as compatible (please report other compatible devices):
+Theoretically, most of the eufy security devices should be compatible. There might be issues with new devices. The following eufy security devices are known as compatible (please report other compatible devices):
 * HomeBase: HomeBase E (T8002), HomeBase 2 (T8010) and HomeBase 3 (T8030)
 * eufyCam: eufyCam E (T8112), eufyCam 2C (T8113), eufyCam 2 (T8114), eufyCam 2C Pro (T8142), eufyCam 2 Pro (T8140) and eufyCam 3C (T8161)
 
