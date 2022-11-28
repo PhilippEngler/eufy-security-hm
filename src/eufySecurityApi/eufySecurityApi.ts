@@ -1628,7 +1628,7 @@ export class EufySecurityApi
         {
             this.logError(`Error occured at setGuardMode: ${e.message}.`);
             this.setLastConnectionInfo(false);
-            json = {"success":false, "reason":e.message};
+            json = {"success":false, "reason":e.message.replaceAll(`"`, `'`)};
         }
 
         return JSON.stringify(json);

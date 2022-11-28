@@ -573,8 +573,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             var res : boolean;
             res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
                 return true;
-            }, () => {
-                return false;
+            }, (value : any) => {
+                if(typeof value === "boolean")
+                {
+                    return false;
+                }
+                else
+                {
+                    throw value;
+                }
             });
             if(res == true)
             {
@@ -609,7 +616,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeListener("guard mode", funcListener);
                 reject(false);
             }, timeout);
-            await this.setStationProperty(station.getSerial(), PropertyName.StationGuardMode, guardMode);
+            try
+            {
+                await this.setStationProperty(station.getSerial(), PropertyName.StationGuardMode, guardMode);
+            }
+            catch(e :any)
+            {
+                station.removeListener("guard mode", funcListener);
+                reject(e);
+            }
         });
     }
 
