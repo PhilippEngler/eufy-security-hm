@@ -598,17 +598,17 @@ export class Config
                 {
                     this.logger.logInfoBasic(" adding 'updateCloudInfoIntervall'.");
                     this.configJson.apiConfig.updateCloudInfoIntervall = 10;
-                    updated = true;
                 }
                 if(this.configJson.apiConfig.updateDeviceDataIntervall == undefined)
                 {
                     this.logger.logInfoBasic(" adding 'updateDeviceDataIntervall'.");
                     this.configJson.apiConfig.updateDeviceDataIntervall = 10;
-                    updated = true;
                 }
+                updated = true;
             }
             if(updated == true)
             {
+                this.configJson.configVersion = this.getConfigFileTemplateVersion();
                 this.configJson = this.checkConfigFile(this.configJson);
                 this.hasChanged = true;
                 this.writeConfig();
