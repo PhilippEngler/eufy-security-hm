@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * v1.7 - 20221126
+ * v1.8 - 20221127
  */
 port = "";
 redirectTarget = "";
@@ -197,7 +197,7 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${station.modelName} (${station.model})</div></div>`;
 	card += `<div class="col-md-8 p-3">`;
-	card += `${cardBodyText}</div>`;
+	card += `${cardBodyText}`;
 	card += `</div></div>`;
 	
 	card += `<div class="card-footer">${cardFooterText}</div>`;
@@ -225,7 +225,7 @@ function createWaitMessage(messageText)
 
 function createMessageContainer(classText, messageHeader, messageText, messageSubText)
 {
-	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="mb-0"}">${messageText}</p>` : ""}${messageSubText != "" ? `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>` : ""}</div>`;
+	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="mb-0">${messageText}</p>` : ""}${messageSubText != "" ? `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>` : ""}</div>`;
 }
 //#endregion
 
@@ -253,7 +253,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 					{
 						if(objResp.data[station].deviceType == "station")
 						{
-							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${objResp.data[station].softwareVersion}</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}</span></div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
+							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-1 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-1 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", "aktueller Status", getGuardModeAsString(objResp.data[station].guardMode))}</div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
 				}
@@ -377,7 +377,7 @@ function createCardDevice(device)
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
-	card += `<div class="row g-0"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${device.softwareVersion}</span></div><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.chargingStatus == 1 ? "bi-battery-charging" : device.battery < 16 ? "bi-battery" : device.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${device.battery < 6 ? "text-danger" : device.battery < 16 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${device.battery}%</span></div>${device.batteryTemperature > -99 && device.batteryTemperature < 99 ? `<div class="col mb-1 pe-1"><span class="text-nowrap"><i class="${device.batteryTemperature < 0 ? "bi-thermometer-low" : device.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${device.batteryTemperature}&deg;C</span></div>` : ""}</div>`;
+	card += `<div class="row g-0">${generateColumnForProperty("col mb-1 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-1 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-1 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.batteryTemperature, "&deg;C")}</div>`;
 	card += `</div></div></div>`;
 	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device.pictureTime, device.pictureUrl)}</small></div>`;
 	card += `</div></div>`;
@@ -411,6 +411,54 @@ function getDeviceLastEventTime(time, url)
 	{
 		return "letzte Aufnahme: nicht verfügbar";
 	}
+}
+
+function generateColumnForProperty(divClass, spanName, spanClass, displayFormatStart, displayFormatEnd, imageName, title, value, unit)
+{
+	if(value === undefined)
+	{
+		return "";
+	}
+	switch (imageName)
+	{
+		case "bi-battery":
+			if(value < 20)
+			{
+				imageName = "bi-battery";
+			}
+			else if(value < 55)
+			{
+				imageName = "bi-battery-half";
+			}
+			else
+			{
+				imageName = "bi-battery-full";
+			}
+			if(value < 6)
+			{
+				imageName = imageName + " text-danger";
+			}
+			else if(value < 16)
+			{
+				imageName = imageName + " text-warning";
+			}
+			break;
+		case "bi-thermometer-low":
+			if(value < 0)
+			{
+				imageName = "bi-thermometer-low";
+			}
+			else if(value < 30)
+			{
+				imageName = "bi-thermometer-half";
+			}
+			else
+			{
+				imageName = "bi-thermometer-high";
+			}
+			break;
+	}
+	return `<div class="${divClass}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
 }
 
 function generateDeviceSettingsModal(deviceId, deviceName)
@@ -636,29 +684,17 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.softwareVersion !== undefined)
 		{
 			deviceModal += `
-													<div class="col">
-														<span class="text-nowrap">
-															<i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${deviceProperties.softwareVersion}
-														</span>
-													</div>`;
+													${generateColumnForProperty("col", "spnFimware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", deviceProperties.softwareVersion)}`;
 		}
 		if(deviceProperties.battery !== undefined)
 		{
 			deviceModal += `
-													<div class="col">
-														<span class="text-nowrap">
-															<i class="${deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : deviceProperties.battery < 5 ? "bi-battery" : deviceProperties.battery < 50 ? "bi-battery-half" : "bi-battery-full"} ${deviceProperties.battery < 5 ? "text-danger" : deviceProperties.battery < 15 ? "text-warning" : ""}" title="Ladezustand des Akkus"></i>&nbsp;${deviceProperties.battery}%</span>
-														</span>
-													</div>`;
+													${generateColumnForProperty("col", "spnBattery", "text-nowrap", "", "", deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", deviceProperties.battery, "%")}`;
 		}
 		if(deviceProperties.batteryTemperature !== undefined && deviceProperties.batteryTemperature > -99 && deviceProperties.batteryTemperature < 99)
 		{
 			deviceModal += `
-													<div class="col">
-														<span class="text-nowrap">
-															<i class="${deviceProperties.batteryTemperature < 0 ? "bi-thermometer-low" : deviceProperties.batteryTemperature < 30 ? "bi-thermometer-half" : "bi-thermometer-high"}" title="Temperatur"></i>&nbsp;${deviceProperties.batteryTemperature}&deg;C
-														</span>
-													</div>`;
+													${generateColumnForProperty("col", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", deviceProperties.batteryTemperature, "&deg;C")}`;
 		}
 		deviceModal +=     `
 												</div>
@@ -786,7 +822,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										${deviceProperties.powerWorkingMode !== undefined || deviceProperties.powerSource !== undefined ? `<hr />` : ``}
-										<h5>Erkennungsstatisik</h5>
+										<h5>Erkennungsstatistik</h5>
 										<div class="row gap-3">
 											<div class="col">
 												<h5>${deviceProperties.lastChargingDays !== undefined ? deviceProperties.lastChargingDays : deviceProperties.detectionStatisticsWorkingDays}</h5>
@@ -1100,7 +1136,6 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 			return "schwarz/weiß Nachtsicht";
 		case "Spotlight Night Vision":
 			return "farbige Nachtsicht";
-		case "Low ":
 		case "Low":
 			switch(propertyName)
 			{
@@ -1413,11 +1448,7 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 												<h6 class="card-subtitle text-muted">${stationProperties.serialNumber}</h6>
 											</span>
 										</div>
-										<div class="col">
-											<span id="lblStationFirmware">
-												<h6 class="card-subtitle text-muted"><i class="bi-gear-wide-connected" title="Firmwareversion"></i>&nbsp;${stationProperties.softwareVersion}</h6>
-											</span>
-										</div>
+										${generateColumnForProperty("col", "lblStationFirmware", "", `<h6 class="card-subtitle text-muted">`, `</h6>`, "bi-gear-wide-connected", "Firmwareversion", stationProperties.softwareVersion)}
 									</div>
 									<div class="card mb-3 collapse" id="cardStationStorageSettings">
 										<h5 class="card-header">Speicher</h5>
@@ -1592,7 +1623,7 @@ function loadDataStatechange(showLoading)
 						{
 							lastChangeTime = "nicht verfügbar";
 						}
-						stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
+						stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
 					}
 				}
 				text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-3", stations);
