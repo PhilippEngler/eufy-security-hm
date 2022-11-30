@@ -871,7 +871,8 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 										${deviceProperties.powerWorkingMode !== undefined ? `<hr />` : ``}
 										<h5>Energiequelle</h5>
-										<label>zur Zeit genutzte Energiequelle: ${getDeviceStateValueInGerman(devicePropertiesMetadata.powerSource.states[deviceProperties.powerSource])} (${getDeviceStateValueInGerman(devicePropertiesMetadata.chargingStatus.states[deviceProperties.chargingStatus])})</label>`;
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.powerSource.name, deviceProperties.powerSource, setEventHandler, devicePropertiesMetadata.powerSource.states)}
+										<label>aktueller Status: ${getDeviceStateValueInGerman(devicePropertiesMetadata.chargingStatus.states[deviceProperties.chargingStatus])}</label>`;
 		}
 		if((deviceProperties.lastChargingDays !== undefined && deviceProperties.lastChargingTotalEvents !== undefined && deviceProperties.lastChargingRecordedEvents !== undefined) || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined))
 		{
@@ -1150,6 +1151,8 @@ function getPropertyNameInGerman(propertyName)
 			return "Intervall für erneutes Auslösen";
 		case "recordingEndClipMotionStops":
 			return "Clip frühzeitiger beenden wenn Bewegung stoppt";
+		case "powerSource":
+			return "Energiequelle";
 		case "continuousRecording":
 			return "Daueraufzeichnung aktiviert";
 		case "continuousRecordingType":
