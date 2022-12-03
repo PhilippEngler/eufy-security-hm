@@ -130,7 +130,12 @@ class ApiServer {
                             if (json.success == true) {
                                 json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
                                 json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
-                                json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                                if (json.data.rtspStreamUrl !== undefined) {
+                                    json.data.rtspStreamUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                                }
+                                if (json.data.pictureUrl !== undefined) {
+                                    json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                                }
                             }
                             responseString = JSON.stringify(json);
                         }

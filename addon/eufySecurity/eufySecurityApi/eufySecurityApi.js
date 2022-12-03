@@ -1202,7 +1202,7 @@ class EufySecurityApi {
         catch (e) {
             this.logError(`Error occured at setGuardMode: ${e.message}.`);
             this.setLastConnectionInfo(false);
-            json = { "success": false, "reason": e.message };
+            json = { "success": false, "reason": e.message.replaceAll(`"`, `'`) };
         }
         return JSON.stringify(json);
     }
@@ -1973,7 +1973,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "1.7.0";
+        return "1.7.1";
     }
     /**
      * Return the version of the library used for communicating with eufy.

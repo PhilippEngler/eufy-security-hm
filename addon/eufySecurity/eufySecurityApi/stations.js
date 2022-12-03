@@ -443,8 +443,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             var res;
             res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
                 return true;
-            }, () => {
-                return false;
+            }, (value) => {
+                if (typeof value === "boolean") {
+                    return false;
+                }
+                else {
+                    throw value;
+                }
             });
             if (res == true) {
                 this.setLastGuardModeChangeTimeNow(stationSerial);
@@ -474,7 +479,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.removeListener("guard mode", funcListener);
                 reject(false);
             }, timeout);
-            await this.setStationProperty(station.getSerial(), http_1.PropertyName.StationGuardMode, guardMode);
+            try {
+                await this.setStationProperty(station.getSerial(), http_1.PropertyName.StationGuardMode, guardMode);
+            }
+            catch (e) {
+                station.removeListener("guard mode", funcListener);
+                reject(e);
+            }
         });
     }
     /**
