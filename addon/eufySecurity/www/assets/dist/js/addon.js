@@ -1253,7 +1253,7 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 		case "Charging":
 			return "ladend";
 		case "Unplugged":
-			return "nicht angeschossen";
+			return "nicht angeschlossen";
 		case "Plugged":
 			return "angeschlossen";
 		case "Solar charging":
@@ -1774,10 +1774,10 @@ function loadDataStatechange(showLoading)
 					{
 						state = `${getGuardModeAsString(objResp.data[station].guardMode)}`;
 						buttons =  `<div class="row g-2">`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setArm('${objResp.data[station].serialNumber}')`}` , "ab&shy;we&shy;send", (objResp.data[station].guardMode != 0), undefined, undefined, setEventHandler)}</div>`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}'`}`, "zu Hause", (objResp.data[station].guardMode != 1), undefined, undefined, setEventHandler)}</div>`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, "Zeit&shy;steu&shy;e&shy;rung", (objResp.data[station].guardMode != 2), undefined, undefined, setEventHandler)}</div>`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, "de&shy;ak&shy;ti&shy;viert", (objResp.data[station].guardMode != 63), undefined, undefined, setEventHandler)}</div>`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setArm('${objResp.data[station].serialNumber}')`}` , "ab&shy;we&shy;send", (objResp.data[station].guardMode != 0), undefined, undefined, true)}</div>`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}'`}`, "zu Hause", (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, "Zeit&shy;steu&shy;e&shy;rung", (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
+						buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, "de&shy;ak&shy;ti&shy;viert", (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
 						buttons += `</div>`;
 						
 						if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
