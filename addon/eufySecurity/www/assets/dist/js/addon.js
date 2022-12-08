@@ -1008,6 +1008,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									<h5 class="card-header">Benachrichtigungen</h5>
 									<div class="card-body">
 										<h5>Art der Benachrichtigung</h5>
+										${createMessageContainer("alert alert-warning", "Hinweise zur Nutzung von Clouddiensten", "Für die Funktionalität einiger Modi werden Miniarturansichten für die Filmvorschau vorübergehend in der Cloud gespeichert. Dies ist für die Funktionalität der erweiteren Benachrichtigungen notwendig.", "Weitere Hinweise finden Sie in der App.")}
 										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationType.name, deviceProperties.notificationType, setEventHandler, devicePropertiesMetadata.notificationType.states)}`;
 		if(deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined)
 		{
