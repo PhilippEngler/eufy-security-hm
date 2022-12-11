@@ -727,6 +727,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             case "ConnectionError":
                 station.on("connection error", (station : Station, error : Error) => this.onStationConnectionError(station, error));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connection error")} Listeners.`);
+                break;
             case "Close":
                 station.on("close", (station : Station) => this.onStationClose(station));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("close")} Listener.`);
@@ -861,7 +862,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
-                break;
         }
     }
 
@@ -1016,7 +1016,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
-                break;
         }
     }
 
@@ -1150,7 +1149,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationClose(station : Station) : Promise<void>
     {
         this.api.logInfo(`Event "Close": station: ${station.getSerial()}`);
-        //this.emit("station close", station);
+        this.emit("station close", station);
 
         if(this.api.getServiceState() != "shutdown")
         {
