@@ -57,6 +57,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             for (deviceSerial in resDevices)
             {
+                if(this.api.getHouseId() === undefined || resDevices[deviceSerial].house_id === undefined || (this.api.getHouseId() != "all" && resDevices[deviceSerial].house_id != this.api.getHouseId()))
+                {
+                    this.api.logDebug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
+                    continue;
+                }
                 if(this.devices[deviceSerial])
                 {
                     device = this.devices[deviceSerial];
@@ -162,7 +167,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
                         if (!station.isConnected())
                         {
-                            station.setConnectionType(this.api.getConfig().getConnectionType());
+                            station.setConnectionType(this.api.getP2PConnectionType());
                             station.connect();
                         }
                     }).catch((error) => {

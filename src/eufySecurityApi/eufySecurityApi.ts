@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -83,7 +83,7 @@ export class EufySecurityApi
             if (this.config.getTrustedDeviceName() === undefined || this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient")
             {
                 this.config.setTrustedDeviceName(PhoneModels[randomNumber(0, PhoneModels.length)]);
-                this.config.writeConfig();
+                this.config.writeCurrentConfig();
             }
 
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
@@ -400,7 +400,7 @@ export class EufySecurityApi
     private onAuthTokenInvalidated(): void
     {
         this.setTokenData(undefined, undefined);
-        this.config.writeConfig();
+        this.config.writeCurrentConfig();
     }
 
     private onTfaRequest(): void
@@ -497,12 +497,12 @@ export class EufySecurityApi
      */
     public async refreshCloudData() : Promise<void>
     {
-        /*if (this.config.acceptInvitations)
+        if (this.config.getAcceptInvitations())
         {
             await this.processInvitations().catch(error => {
-                this.log.error("Error in processing invitations", error);
+                this.logError("Error in processing invitations", error);
             });
-        }*/
+        }
         
         await this.httpService.refreshAllData().catch(error => {
             this.logger.error("Error during API data refreshing", error);
@@ -1845,7 +1845,7 @@ export class EufySecurityApi
         var json = "";
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
-        res = this.config.writeConfig();
+        res = this.config.writeCurrentConfig();
         if(res == "saved" || res == "ok")
         {
             json = `{"success":true,"dataRemoved":true}`;
@@ -1903,6 +1903,15 @@ export class EufySecurityApi
     public getHttpsCertFile() : string
     {
         return this.config.getHttpsCertFile();
+    }
+
+    /**
+     * Get the houseId for filtering stations and devices.
+     * @returns The houseId as string.
+     */
+    public getHouseId() : string
+    {
+        return this.config.getHouseId(); 
     }
 
     /**
@@ -1996,7 +2005,7 @@ export class EufySecurityApi
         var json : any = {};
         
         json = {"success":true, "data":{}};
-        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "cameraDefaultImage":this.config.getCameraDefaultImage(), "cameraDefaultVideo":this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevel":this.config.getLogLevel()};
+        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "cameraDefaultImage":this.config.getCameraDefaultImage(), "cameraDefaultVideo":this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevel":this.config.getLogLevel()};
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -2014,6 +2023,7 @@ export class EufySecurityApi
      * @param httpsPort The https port for the api.
      * @param httpsKeyFile The key for https.
      * @param httpsCertFile The cert for https.
+     * @param houseId The houseId for filtering station and devices.
      * @param connectionTypeP2p The connection type for connecting with station.
      * @param localStaticUdpPortsActive Should the api use static ports to connect with station.
      * @param localStaticUdpPorts The local ports for connection with station.
@@ -2030,12 +2040,12 @@ export class EufySecurityApi
      * @param logLevel The log level.
      * @returns 
      */
-    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : Promise<string>
+    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevel : number) : Promise<string>
     {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
         var taskSetupLinksNeeded = false;
-        if(this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive)
+        if(this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getHouseId() != houseId || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive)
         {
             serviceRestart = true;
         }
@@ -2055,6 +2065,8 @@ export class EufySecurityApi
         this.config.setHttpsPort(httpsPort);
         this.config.setHttpsPKeyFile(httpsKeyFile);
         this.config.setHttpsCertFile(httpsCertFile);
+        this.config.setAcceptInvitations(acceptInvitations);
+        this.config.setHouseId(houseId);
         this.config.setConnectionType(connectionTypeP2p);
         if(localStaticUdpPorts !== undefined)
         {
@@ -2126,7 +2138,7 @@ export class EufySecurityApi
         this.config.setPushServiceActive(pushServiceActive);
         this.config.setLogLevel(logLevel);
 
-        var res = this.config.writeConfig();
+        var res = this.config.writeCurrentConfig();
         if(res == "saved")
         {
             return `{"success":true,"serviceRestart":${serviceRestart},"message":"Config saved."}`;
@@ -2146,7 +2158,7 @@ export class EufySecurityApi
      */
     public writeConfig() : string
     {
-        var res = this.config.writeConfig();
+        var res = this.config.writeCurrentConfig();
         if(res == "saved")
         {
             return `{"success":true,"message":"Config saved."}`;
@@ -2351,6 +2363,15 @@ export class EufySecurityApi
                 res = "unbekannt";
         }
         return res;
+    }
+
+    /**
+     * Get the event duration time in seconds.
+     * @returns The event duration in seconds.
+     */
+    public getEventDurationSeconds() : number
+    {
+        return this.config.getEventDurationSeconds()
     }
 
     /**
@@ -2614,6 +2635,73 @@ export class EufySecurityApi
         }
 
         return JSON.stringify(json);
+    }
+
+    /**
+     * Process and accept invitations.
+     */
+    public async processInvitations(): Promise<void>
+    {
+        let refreshCloud = false;
+
+        const invites = await this.httpService.getInvites().catch(error => {
+            this.logError("processInvitations - getInvites - Error:", error);
+            return error;
+        });
+        if(Object.keys(invites).length > 0)
+        {
+            const confirmInvites: Array<ConfirmInvite> = [];
+            for(const invite of Object.values(invites) as Invite[])
+            {
+                const devices: Array<string> = [];
+                invite.devices.forEach(device => {
+                    devices.push(device.device_sn);
+                });
+                if(devices.length > 0)
+                {
+                    confirmInvites.push({
+                        invite_id: invite.invite_id,
+                        station_sn: invite.station_sn,
+                        device_sns: devices
+                    });
+                }
+            }
+            if (confirmInvites.length > 0)
+            {
+                const result = await this.httpService.confirmInvites(confirmInvites).catch(error => {
+                    this.logError("processInvitations - confirmInvites - Error:", error);
+                    return error;
+                });
+                if(result)
+                {
+                    this.logInfo(`Accepted received invitations`, confirmInvites);
+                    refreshCloud = true;
+                }
+            }
+        }
+
+        const houseInvites = await this.httpService.getHouseInviteList().catch(error => {
+            this.logError("processInvitations - getHouseInviteList - Error:", error);
+            return error;
+        });
+        if(Object.keys(houseInvites).length > 0)
+        {
+            for(const invite of Object.values(houseInvites) as HouseInviteListResponse[]) {
+                const result = await this.httpService.confirmHouseInvite(invite.house_id, invite.id).catch(error => {
+                    this.logError("processInvitations - confirmHouseInvite - Error:", error);
+                    return error;
+                });
+                if(result)
+                {
+                    this.logInfo(`Accepted received house invitation from ${invite.action_user_email}`, invite);
+                    refreshCloud = true;
+                }
+            }
+        }
+        if(refreshCloud)
+        {
+            this.refreshCloudData();
+        }
     }
 
     /**

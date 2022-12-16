@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * v1.8 - 20221127
+ * v1.8 - 20221210
  */
 port = "";
 redirectTarget = "";
@@ -114,7 +114,7 @@ function initContent(page)
 			break;
 		case "settings":
 			validateFormSettings();
-			loadStationsSettings();
+			loadHouses();
 			loadSystemVariables();
 			break;
 		case "logfiles":
@@ -235,7 +235,6 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 //#region devices.html
  function loadStations()
  {
-	document.getElementById("stations").innerHTML = `<p id="stations"></p>`;
 	var xmlhttp, objResp, text = "", station = "", stations = "";
 	var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
 	xmlhttp = new XMLHttpRequest();
@@ -256,13 +255,13 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-1 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-1 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", "aktueller Status", getGuardModeAsString(objResp.data[station].guardMode))}</div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
+					text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
+					document.getElementById("stations").innerHTML =  text;
 				}
 				else
 				{
-					stations += createMessageContainer("alert alert-primary", "Es wurden keine Stationen gefunden.", "", "");
+					document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-primary", "Es wurden keine Stationen gefunden.", "Es wurden keine vefügbaren Stationen gefunden.", "Überprüfen Sie, ob Sie dem Account Stationen freigegeben haben beziehungsweise ob Sie das Haus für den Account freigegeben haben und ob Sie das korrekte Haus in den Einstellungen freigegeben haben.")}`;
 				}
-				text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
-				document.getElementById("stations").innerHTML =  text;
 			}
 			else
 			{
@@ -343,7 +342,7 @@ function loadDevices()
 				}
 				else
 				{
-					document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-primary", "Es wurden keine Geräte gefunden.", "", "")}`;
+					document.getElementById("devices").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-primary", "Es wurden keine Geräte gefunden.", "Es wurden keine vefügbaren Geräte gefunden.", "Überprüfen Sie, ob Sie dem Account Geräte freigegeben haben beziehungsweise ob Sie das Haus für den Account freigegeben haben und ob Sie das korrekte Haus in den Einstellungen freigegeben haben.")}`;
 				}
 			}
 			else
@@ -444,6 +443,10 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 			}
 			break;
 		case "bi-thermometer-low":
+			if(value < -49 || value > 99)
+			{
+				return "";
+			}
 			if(value < 0)
 			{
 				imageName = "bi-thermometer-low";
@@ -1008,7 +1011,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									<h5 class="card-header">Benachrichtigungen</h5>
 									<div class="card-body">
 										<h5>Art der Benachrichtigung</h5>
-										${createMessageContainer("alert alert-warning", "Hinweise zur Nutzung von Clouddiensten", "Für die Funktionalität einiger Modi werden Miniarturansichten für die Filmvorschau vorübergehend in der Cloud gespeichert. Dies ist für die Funktionalität der erweiteren Benachrichtigungen notwendig.", "Weitere Hinweise finden Sie in der App.")}
+										${createMessageContainer("alert alert-warning", "Hinweise zur Nutzung von Clouddiensten.", "Bei einigen Modi werden Informationen vorübergehend in der Cloud gespeichert.", "Weitere Hinweise finden Sie in der App.")}
 										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationType.name, deviceProperties.notificationType, setEventHandler, devicePropertiesMetadata.notificationType.states)}`;
 		if(deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined)
 		{
@@ -2262,6 +2265,58 @@ function generateNewTrustedDeviceName()
 	xmlHttp.send();
 }
 
+function loadHouses()
+{
+	var xmlHttp, objResp, house;
+	var url = `${location.protocol}//${location.hostname}:${port}/getHouses`;
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.overrideMimeType('application/json');
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					for(house in objResp.data)
+					{
+						var option = document.createElement("option");
+						option.value=objResp.data[house].houseId;
+						option.text=`Stationen und Geräte von '${objResp.data[house].houseName}'`;
+						document.getElementById("cbHouseSelection").add(option);
+					}
+					document.getElementById("houseSelectionMessage").innerHTML = "";
+					loadStationsSettings();
+				}
+				else
+				{
+					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Häuser.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
+					loadStationsSettings();
+				}
+			}
+			catch (e)
+			{
+				document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Häuser.", "", `Es ist folgender Fehler aufgetreten: ${e}`);
+				loadStationsSettings();
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Häuser.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+			loadStationsSettings();
+		}
+		else
+		{
+			document.getElementById("resultLoading").innerHTML = createWaitMessage("Laden der Einstellungen...");
+			document.getElementById("houseSelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Häuser...</strong></div>`;
+		}
+	};
+	xmlHttp.open("GET", url, true);
+	xmlHttp.send();
+}
+
 function loadStationsSettings()
 {
 	var xmlHttp, objResp, station, stations = "";
@@ -2279,7 +2334,7 @@ function loadStationsSettings()
 				{
 					for(station in objResp.data)
 					{
-						stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="mt-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">UDP Port für Verbindung mit der Station ${objResp.data[station].serialNumber} (${objResp.data[station].name}).</label>`;
+						stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="my-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">UDP Port für Verbindung mit der Station ${objResp.data[station].serialNumber} (${objResp.data[station].name}).</label>`;
 						stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="UDP Port ${objResp.data[station].serialNumber}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
 						stations += `<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung und keiner anderen Station zugeordnet sein.</small>`;
 						stations += `<div class="invalid-feedback">Bitte geben Sie eine Zahl zwischen 1 und 65535 ein. Diese Zahl darf keiner anderen Station zugeordnet sein.</div></div>`;
@@ -2379,6 +2434,18 @@ function loadDataSettings()
 					document.getElementById('txtPortHttps').value = objResp.data.httpsPort;
 					document.getElementById('txtHttpsKeyFile').value = objResp.data.httpsPKeyFile;
 					document.getElementById('txtHttpsCertFile').value = objResp.data.httpsCertFile;
+					if(objResp.data.acceptInvitations == true)
+					{
+						document.getElementById("chkAcceptInvitations").setAttribute("checked", true);
+					}
+					if(objResp.data.houseId === undefined)
+					{
+						document.getElementById("cbHouseSelection").selectedIndex = 0;
+					}
+					else
+					{
+						document.getElementById("cbHouseSelection").value = objResp.data.houseId;
+					}
 					if(objResp.data.connectionTypeP2p === undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2"))
 					{
 						document.getElementById("cbConnectionType").selectedIndex = 0;

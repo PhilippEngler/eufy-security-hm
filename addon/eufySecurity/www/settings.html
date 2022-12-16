@@ -159,12 +159,12 @@
 									<div class="col-md-12">
 										<div class="card-body" >
 											<h5>Einstellungen für HTTP</h5>
-											<div class="form-check form-switch" class="mt-2">
+											<div class="form-check form-switch mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useHttp" id="chkUseHttp" onchange="changeValue(useHttp)">
 												<label class="form-check-label" for="chkUseHttp">HTTP aktiv</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="txtPortHttp">Port über den die eufy Security API über HTTP erreichbar sein soll.</label>
+												<label class="mt-1 mb-2" for="txtPortHttp">Port über den die eufy Security API über HTTP erreichbar sein soll.</label>
 												<input type="text" name="httpPort" id="txtPortHttp" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
 												<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
 												<div class="invalid-feedback">
@@ -178,7 +178,7 @@
 												<label class="form-check-label" for="chkUseHttps">HTTPS aktiv</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="portHttpsport">Port über den die eufy Security API über HTTPS erreichbar sein soll.</label>
+												<label class="mt-1 mb-2" for="portHttpsport">Port über den die eufy Security API über HTTPS erreichbar sein soll.</label>
 												<input type="text" name="httpsPort" id="txtPortHttps" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
 												<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
 												<div class="invalid-feedback">
@@ -194,6 +194,25 @@
 												<label class="my-2" for="txtHttpsCertFile">Speicherort des Zertifikats.</label>
 												<input type="text" name="httpsCertFile" id="txtHttpsCertFile" class="form-control" placeholder="Zertifikatsdatei" required>
 												<small class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
+											</div>
+											<hr>
+											<h5>Einstellungen für die Hausverwaltungsfunktion</h5>
+											<div class="form-check form-switch" class="mt-2">
+												<input class="form-check-input" type="checkbox" role="switch" name="acceptInvitations" id="chkAcceptInvitations">
+												<label class="form-check-label" for="chkAcceptInvitations">Einladungen automatisch akzeptieren</label>
+											</div>
+											<div class="form-label-group was-validated" class="container-fluid">
+												<label class="mt-1 mb-2" for="cbConnectionType">Stationen und Geräte angezeigen.</label>
+												<div id="houseSelection">
+													<div id="houseSelectionMessage">
+
+													</div>
+													<select name="house" id="cbHouseSelection" class="form-select" required>
+														<option disabled selected value style="display: none;">Bitte auswählen...</option>
+														<option value="all">alle Stationen und Geräte des Accounts</option>
+													</select>
+													<small class="form-text text-muted mb-2">Bei der Einstellunge 'alle Stationen und Geräte des Accounts' werden alle Geräte angezeigt. Wird ein Haus ausgewählt, werden nur Geräte angezeigt, die diesem Haus zugeordnet wurden.</small>
+												</div>
 											</div>
 											<hr>
 											<h5>Einstellungen für die Verbindung zu den Stationen</h5>

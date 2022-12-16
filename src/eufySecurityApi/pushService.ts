@@ -163,18 +163,18 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
         try
         {
-            this.logger.debug("Received push message", message);
-            /*try
+            this.logger.info("Received push message", message);
+            try
             {
-                if ((message.type === ServerPushEvent.INVITE_DEVICE || message.type === ServerPushEvent.HOUSE_INVITE) && this.config.acceptInvitations)
+                if ((message.type === ServerPushEvent.INVITE_DEVICE || message.type === ServerPushEvent.HOUSE_INVITE) && this.config.getAcceptInvitations())
                 {
-                    this.processInvitations();
+                    this.api.processInvitations();
                 }
             }
             catch(error)
             {
                 this.logger.error(`Error processing server push notification for device invitation`, error);
-            }*/
+            }
             try
             {
                 if (message.type === ServerPushEvent.REMOVE_DEVICE || message.type === ServerPushEvent.REMOVE_HOMEBASE || message.type === ServerPushEvent.HOUSE_REMOVE)

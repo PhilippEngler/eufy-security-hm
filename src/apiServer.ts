@@ -557,6 +557,18 @@ class ApiServer
                                 apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                             }
 
+                            var apiacceptinvitations = false;
+                            if(postData.indexOf("acceptInvitations") >= 0)
+                            {
+                                apiacceptinvitations = getDataFromPOSTData(postData, "acceptInvitations", "boolean");
+                            }
+
+                            var apihouseid = "all";
+                            if(postData.indexOf("house") >= 0)
+                            {
+                                apihouseid = getDataFromPOSTData(postData, "house", "string");
+                            }
+
                             var apiconnectiontype = 1;
                             if(postData.indexOf("connectionType") >= 0)
                             {
@@ -677,7 +689,7 @@ class ApiServer
                             {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
-                                responseString = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                                responseString = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                             }
                             else
                             {
