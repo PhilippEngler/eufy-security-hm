@@ -14,6 +14,7 @@ import { EufyHouses } from './houses';
 import { NotSupportedError, ReadOnlyPropertyError } from './error';
 import { randomNumber } from './http/utils';
 import { PhoneModels } from './http/const';
+import { getModelName, makeDateTimeString } from './utils/utils';
 
 export class EufySecurityApi
 {
@@ -644,7 +645,7 @@ export class EufySecurityApi
         var properties = device.getProperties();
         var json : any = {};
 
-        json = {"eufyDeviceId":device.getId(), "deviceType":this.devices.getDeviceTypeAsString(device), "model":device.getModel(), "modelName":this.devices.getDeviceModelName(device), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
+        json = {"eufyDeviceId":device.getId(), "deviceType":this.devices.getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
 
         for(var property in properties)
         {
@@ -792,7 +793,7 @@ export class EufySecurityApi
                 var device = this.getDevices()[deviceSerial];
                 if(device)
                 {
-                    json = {"success":true, "model":device.getModel(), "modelName":this.devices.getDeviceModelName(device), "data":device.getPropertiesMetadata()};
+                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "data":device.getPropertiesMetadata()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -837,7 +838,7 @@ export class EufySecurityApi
                 var device = this.getDevices()[deviceSerial];
                 if(device)
                 {
-                    json = {"success":true, "model":device.getModel(), "modelName":this.devices.getDeviceModelName(device), "data":device.getProperties()};
+                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "data":device.getProperties()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -932,7 +933,7 @@ export class EufySecurityApi
             {
                 case PropertyName.Model:
                     json[property] = properties[property];
-                    json.modelName = this.stations.getStationModelName(station);
+                    json.modelName = getModelName(station.getModel());
                     break;
                 case PropertyName.StationGuardMode:
                     json[property] = properties[property] == undefined ? "n/a" : properties[property];
@@ -1031,7 +1032,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "type":station.getModel(), "modelName":this.stations.getStationModelName(station), "data":station.getPropertiesMetadata()};
+                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "data":station.getPropertiesMetadata()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1076,7 +1077,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "type":station.getModel(), "modelName":this.stations.getStationModelName(station), "data":station.getProperties()};
+                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "data":station.getProperties()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -2287,7 +2288,7 @@ export class EufySecurityApi
      */
     private setSystemVariableTime(systemVariable : string, dateTime : Date)
     {
-        this.setSystemVariableString(systemVariable, this.makeDateTimeString(dateTime.getTime()));
+        this.setSystemVariableString(systemVariable, makeDateTimeString(dateTime.getTime()));
     }
 
     /**
@@ -2301,16 +2302,6 @@ export class EufySecurityApi
         {
             this.homematicApi.setSystemVariable(systemVariable, newValue);
         }
-    }
-
-    /**
-     * Converts the given timestamp to the german dd.mm.yyyy hh:mm string.
-     * @param timestamp The timestamp as number.
-     */
-    private	makeDateTimeString(timestamp : number) : string
-    {
-        var dateTime = new Date(timestamp);
-        return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}`);
     }
 
     /**

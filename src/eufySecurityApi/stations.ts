@@ -8,6 +8,7 @@ import internal from "stream";
 import { AlarmEvent, ChargingType, CommandResult, CommandType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue } from "./utils";
+import { convertTimeStampToTimeStampMs } from "./utils/utils";
 
 /**
  * Represents all the stations in the account.
@@ -19,7 +20,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private serialNumbers : string[];
     private stations : { [stationSerial : string ] : Station } = {};
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
-    private lastGuardModeChangeTimeForStations : { [stationSerial : string] : any } = {};
+    private lastGuardModeChangeTimeForStations : { [stationSerial : string] : number | undefined } = {};
     private loadingStations?: Promise<unknown>;
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
@@ -631,84 +632,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 reject(e);
             }
         });
-    }
-
-    /**
-     * Retrieve the model name of a given station.
-     * @param station The station object.
-     * @returns A string with the model name of the device.
-     */
-    public getStationModelName(station : Station) : string
-    {
-        switch (station.getModel().substring(0,5))
-        {
-            //HomeBases
-            case "T8001":
-                return "HomeBase";
-            case "T8002":
-                return "HomeBase E";
-            case "T8010":
-                return "HomeBase 2";
-            case "T8030":
-                return "HomeBase 3";
-            //SoloDevices
-            //IndoorCams
-            case "T8400":
-                return "IndoorCam C24";
-            case "T8401":
-                return "IndoorCam C22";
-            case "T8410":
-                return "IndoorCam P24";
-            case "T8411":
-                return "IndoorCam P22";
-            case "T8414":
-                return "IndoorCam Mini 2k";
-            //SoloCams
-            case "T8122":
-                return "SoloCam L20";
-            case "T8123":
-                return "SoloCam L40";
-            case "T8424":
-                return "SoloCam S40";
-            case "T8130":
-                return "SoloCam E20";
-            case "T8131":
-                return "SoloCam E40";
-            case "T8150":
-                return "4G Starlight Camera";
-            //Doorbels
-            //Floodlight
-            case "T8420":
-                return "FloodlightCam 1080p";
-            case "T8422":
-                return "FloodlightCam E 2k";
-            case "T8423":
-                return "FloodlightCam 2 Pro";
-            case "T8424":
-                return "FloodlightCam 2k";
-            //Lock
-            case "T8500":
-                return "Smart Lock Front Door";
-            case "T8501":
-                return "Solo Smart Lock D20";
-            case "T8503":
-                return "Smart Lock R10";
-            case "T8503":
-                return "Smart Lock R20";
-            case "T8519":
-                return "Smart Lock Touch";
-            case "T8520":
-                return "Smart Lock Touch und Wi-Fi";
-            case "T8530":
-                return "Video Smart Lock"
-            //Bridges
-            case "T8021":
-                return "Wi-Fi Bridge und Doorbell Chime";
-            case "T8592":
-                return "Keypad";
-            default:
-                return "unbekannte Station";
-        }
     }
 
     /**
@@ -1825,27 +1748,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The serial of the station.
      * @param time The time as timestamp or undefined.
      */
-    private setLastGuardModeChangeTime(stationSerial : string, time : number | undefined, timestampType : string) : void
+    private setLastGuardModeChangeTime(stationSerial : string, timeStamp : number | undefined, timeStampType : string) : void
     {
-        if(time !== undefined)
+        if(timeStamp !== undefined)
         {
-            switch (timestampType)
-            {
-                case "sec":
-                    this.lastGuardModeChangeTimeForStations[stationSerial] = time * 1000;
-                    break;
-                case "ms":
-                    this.lastGuardModeChangeTimeForStations[stationSerial] = time;
-                    break;
-                default:
-                    this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
-            }
+            timeStamp = convertTimeStampToTimeStampMs(timeStamp, timeStampType);
         }
-        else
-        {
-            this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
-        }
-
+        this.lastGuardModeChangeTimeForStations[stationSerial] = timeStamp;
         this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations[stationSerial]);
     }
 
