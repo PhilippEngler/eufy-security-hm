@@ -1,8 +1,9 @@
 /**
  * Javascript for eufySecurity Addon
- * v1.8 - 20221210
+ * v1.9 - 20221217
  */
 port = "";
+action = "";
 redirectTarget = "";
 
 /**
@@ -33,6 +34,15 @@ function start(page)
 		else
 		{
 			redirectTarget = "";
+		}
+		
+		if(getParameterFromURLSearchParams(urlParams, "action"))
+		{
+			action = getParameterFromURLSearchParams(urlParams, "action");
+		}
+		else
+		{
+			action = "";
 		}
 	}
 	getAPIPort(page);
@@ -103,7 +113,7 @@ function getAPIPort(page)
 
 function initContent(page)
 {
-	if(page != "captcha")
+	if(page != "restartWaiter")
 	{
 		checkCaptchaState(page);
 	}
@@ -131,9 +141,6 @@ function initContent(page)
 		case "restartWaiter":
 			restartAPIService();
 			break;
-		case "captcha":
-			getCaptchaImage();
-			break;
 	}
 }
 
@@ -152,7 +159,7 @@ function checkCaptchaState(page)
 			{
 				if(objResp.captchaNeeded == true)
 				{
-					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/captcha.html?redirect=${page}.html`;
+					generateCaptchaCodeModal(page);
 				}
 			}
 			else
@@ -173,7 +180,40 @@ function checkCaptchaState(page)
 	xmlhttp.send();
 }
 
-function getCaptchaImage()
+function generateCaptchaCodeModal(page)
+{
+	generateContentCaptchaCodeModal();
+
+	const myModal = new bootstrap.Modal(document.getElementById('modalCaptchaCode'));
+	myModal.show();
+
+	getCaptchaImage(page);
+}
+
+function generateContentCaptchaCodeModal()
+{
+	var captchaCodeModal = `
+					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
+						<div class="modal-content">
+							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalCaptchaCodeTitle">
+								<div style="text-align:left; float:left;"><h5 class="mb-0">Captcha Abfrage</h5></div>
+							</div>
+							<div class="modal-body placeholder-glow" id="divModalCaptchaCodeContent">
+								<p id="captchaHint"></p>
+								<div class="my-3" id="captchaImage"></div>
+								<div class="my-3" id="captchaCode"></div>
+								<div class="my-3" id="captchaButton"></div>
+							</div>
+							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined, true)}
+							</div>
+						</div>
+					</div>`;
+	
+	document.getElementById("modalCaptchaCode").innerHTML = captchaCodeModal;
+}
+
+function getCaptchaImage(page)
 {
 	var xmlhttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/getCaptchaState`;
@@ -190,8 +230,8 @@ function getCaptchaImage()
 				{
 					document.getElementById("captchaHint").innerHTML = `Bitte geben Sie in das Textfeld den String aus dem Captcha ein.`;
 					document.getElementById("captchaImage").innerHTML = `<img src="${objResp.captcha.captcha}" alt="Captcha Image">`;
-					document.getElementById("captchaCode").innerHTML = `<input type="text" class="form-control" id="txtCaptchaCode">`;
-					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode()" class="btn btn-primary" type="button" value="Login">`;
+					document.getElementById("captchaCode").innerHTML = `<label class="my-2" for="txtCaptchaCode">Zeichenfolge, die in dem Captcha dargestellt wird.</label><input type="text" class="form-control" id="txtCaptchaCode">`;
+					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode('${page}')" class="btn btn-primary" type="button" value="Login">`;
 				}
 				else
 				{
@@ -216,7 +256,7 @@ function getCaptchaImage()
 	xmlhttp.send();
 }
 
-function setCaptchaCode()
+function setCaptchaCode(page)
 {
 	var xmlhttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/setCaptchaCode/${document.getElementById("txtCaptchaCode").value}`;
@@ -229,7 +269,7 @@ function setCaptchaCode()
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=index.html`;
+				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=captcha&redirect=${page}.html`;
 			}
 			else
 			{
@@ -1407,7 +1447,6 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 			return "Zeitstempel und Logo";
 		case "B&W Night Vision":
 			return "schwarz/weiß Nachtsicht";
-		case "Spotlight Night Vision":
 		case "Color Night Vision":
 			return "farbige Nachtsicht";
 		case "Low":
@@ -3443,10 +3482,19 @@ function loadDataInfo(showLoading)
 //#region restartWaiter.html
 async function restartAPIService()
 {
-	const toast = new bootstrap.Toast(toastRestartOK);
-	toast.show();
-	await delay(7500);
-	checkServiceState(0, 0, 0);
+	if(action == "captcha")
+	{
+		document.getElementById("heading").innerHTML = `Loginversuch wird durchgeführt`;
+		document.getElementById("hint").innerHTML = `Bitte warten Sie, wärend der Captcha-Code überprüft wird. Sie werden anschließend auf die vorherige Seite weitergeleitet.`;
+		checkServiceState(0, 0, 0);
+	}
+	else
+	{
+		const toast = new bootstrap.Toast(toastRestartOK);
+		toast.show();
+		await delay(7500);
+		checkServiceState(0, 0, 0);
+	}
 }
 
 async function checkServiceState(cntStart, cntInit, postInit)
