@@ -9,7 +9,7 @@ export class Config
     private oldConfig : any = undefined;
     private hasChanged : boolean;
     private logger : Logger;
-    private taskSaveConfig12h !: NodeJS.Timeout;
+    private taskSaveConfig24h !: NodeJS.Timeout;
     
     /**
      * Constructor, read the config file and provide values to the variables.
@@ -77,10 +77,10 @@ export class Config
      */
     public close()
     {
-        if(this.taskSaveConfig12h)
+        if(this.taskSaveConfig24h)
         {
             this.logger.logInfoBasic(`Remove scheduling for saveConfig12h.`);
-            clearInterval(this.taskSaveConfig12h);
+            clearInterval(this.taskSaveConfig24h);
         }
     }
 
@@ -167,7 +167,7 @@ export class Config
         {
             this.hasChanged = false;
             resConfigJson = JSON.parse(readFileSync(filePath, 'utf-8'));
-            this.taskSaveConfig12h = setInterval(async() => { this.writeConfig(this.configJson); }, (12 * 60 * 60 * 1000));
+            this.taskSaveConfig24h = setInterval(async() => { this.writeConfig(this.configJson); }, (24 * 60 * 60 * 1000));
             if(this.updateConfigNeeded(resConfigJson))
             {
                 resConfigJson = this.updateConfig(resConfigJson);
