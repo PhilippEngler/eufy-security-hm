@@ -69,7 +69,7 @@ export class Config
                 this.configJson = this.loadConfigJson("./config.json");
             }
         }
-        this.writeConfig(this.configJson);
+        //this.writeConfig(this.configJson);
     }
 
     /**
@@ -79,7 +79,7 @@ export class Config
     {
         if(this.taskSaveConfig24h)
         {
-            this.logger.logInfoBasic(`Remove scheduling for saveConfig12h.`);
+            this.logger.logInfoBasic(`Remove scheduling for saveConfig24h.`);
             clearInterval(this.taskSaveConfig24h);
         }
     }
@@ -132,7 +132,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 13;
+        return 14;
     }
 
     /**
@@ -488,7 +488,7 @@ export class Config
         var config = JSON.parse(`{}`);
         config.configVersion = this.getConfigFileTemplateVersion();
 
-        var accountData = {"eMail": "", "password": "", "encryptedPassword": "", "country": "DE", "language": "de"};
+        var accountData = {"eMail": "", "password": "", "encryptedPassword": "", "userId": "", "nickName": "", "clientPrivateKey": "", "serverPublicKey": "", "country": "DE", "language": "de"};
         config.accountData = accountData;
 
         var tokenData = {"token": "", "tokenExpires": 0};
@@ -502,6 +502,9 @@ export class Config
 
         var stations : [] = [];
         config.stations = stations;
+
+        var devicePublicKeys : [] = [];
+        config.devicePublicKeys = devicePublicKeys;
 
         return config;
     }
@@ -608,7 +611,7 @@ export class Config
         if(configJson.configVersion < this.getConfigFileTemplateVersion())
         {
             var updated = false;
-            if(configJson.configVersion == 11)
+            if(configJson.configVersion < 12)
             {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 12...");
                 if(configJson.apiConfig.updateCloudInfoIntervall == undefined)
@@ -623,13 +626,38 @@ export class Config
                 }
                 updated = true;
             }
-            if(configJson.configVersion == 12)
+            if(configJson.configVersion < 13)
             {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 13...");
                 if(configJson.apiConfig.houseId == undefined)
                 {
                     this.logger.logInfoBasic(" adding 'houseId'.");
                     configJson.apiConfig.houseId = "all";
+                }
+                updated = true;
+            }
+            if(configJson.configVersion < 14)
+            {
+                this.logger.logInfoBasic("Configfile needs Stage2 update to version 14...");
+                if(configJson.accountData.userId == undefined)
+                {
+                    this.logger.logInfoBasic(" adding 'userId'.");
+                    configJson.accountData.userId = "";
+                }
+                if(configJson.accountData.nickName == undefined)
+                {
+                    this.logger.logInfoBasic(" adding 'nickName'.");
+                    configJson.accountData.nickName = "";
+                }
+                if(configJson.accountData.clientPrivateKey == undefined)
+                {
+                    this.logger.logInfoBasic(" adding 'clientPrivateKey'.");
+                    configJson.accountData.clientPrivateKey = "";
+                }
+                if(configJson.accountData.serverPublicKey == undefined)
+                {
+                    this.logger.logInfoBasic(" adding 'serverPublicKey'.");
+                    configJson.accountData.serverPublicKey = "";
                 }
                 updated = true;
             }
@@ -667,6 +695,22 @@ export class Config
         if(configJson.accountData.encryptedPassword !== undefined)
         {
             newConfigJson.accountData.encryptedPassword = configJson.accountData.encryptedPassword;
+        }
+        if(configJson.accountData.userId !== undefined)
+        {
+            newConfigJson.accountData.userId = configJson.accountData.userId;
+        }
+        if(configJson.accountData.nickName !== undefined)
+        {
+            newConfigJson.accountData.nickName = configJson.accountData.nickName;
+        }
+        if(configJson.accountData.clientPrivateKey !== undefined)
+        {
+            newConfigJson.accountData.clientPrivateKey = configJson.accountData.clientPrivateKey;
+        }
+        if(configJson.accountData.serverPublicKey !== undefined)
+        {
+            newConfigJson.accountData.serverPublicKey = configJson.accountData.serverPublicKey;
         }
         if(configJson.accountData.country !== undefined)
         {
@@ -1072,6 +1116,34 @@ export class Config
     }
 
     /**
+     * Get the user id of the eufy security account.
+     */
+    public getUserId() : string
+    {
+        if(this.configJson.accountData.userId != undefined)
+        {
+            return this.configJson.accountData.userId;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the user id for the eufy security account.
+     * @param userId The user id to set.
+     */
+    public setUserId(userId : string) : void
+    {
+        if(this.configJson.accountData.userId != userId)
+        {
+            this.configJson.accountData.userId = userId;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
      * Get the password for the eufy security account.
      */
     public getPassword() : string
@@ -1095,6 +1167,118 @@ export class Config
         if(this.configJson.accountData.password != password)
         {
             this.configJson.accountData.password = password;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the nickname of the eufy security account.
+     */
+    public getNickName() : string
+    {
+        if(this.configJson.accountData.nickName != undefined)
+        {
+            return this.configJson.accountData.nickName;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the nickname for the eufy security account.
+     * @param nickName The nickname to set.
+     */
+    public setNickName(nickName : string) : void
+    {
+        if(this.configJson.accountData.nickName != nickName)
+        {
+            this.configJson.accountData.nickName = nickName;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the client private key of the eufy security account.
+     */
+    public getClientPrivateKey() : string
+    {
+        if(this.configJson.accountData.clientPrivateKey != undefined)
+        {
+            return this.configJson.accountData.clientPrivateKey;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the client private key for the eufy security account.
+     * @param clientPrivateKey The client private key to set.
+     */
+    public setClientPrivateKey(clientPrivateKey : string) : void
+    {
+        if(this.configJson.accountData.clientPrivateKey != clientPrivateKey)
+        {
+            this.configJson.accountData.clientPrivateKey = clientPrivateKey;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the server public key of the eufy security account.
+     */
+    public getServerPublicKey() : string
+    {
+        if(this.configJson.accountData.serverPublicKey != undefined)
+        {
+            return this.configJson.accountData.serverPublicKey;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the server public key for the eufy security account.
+     * @param serverPublicKey The server public key to set.
+     */
+    public setServerPublicKey(serverPublicKey : string) : void
+    {
+        if(this.configJson.accountData.serverPublicKey != serverPublicKey)
+        {
+            this.configJson.accountData.serverPublicKey = serverPublicKey;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the devices public keys of the eufy security account.
+     */
+    public getDevicePublicKeys() : any
+    {
+        if(this.configJson.devicePublicKeys != undefined)
+        {
+            return this.configJson.devicePublicKeys;
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Set the device public keys for the eufy security account.
+     * @param devicePublicKeys The device public keys to set.
+     */
+    public setDevicePublicKeys(devicePublicKeys : any) : void
+    {
+        if(this.configJson.devicePublicKeys != devicePublicKeys)
+        {
+            this.configJson.devicePublicKeys = devicePublicKeys;
             this.hasChanged = true;
         }
     }

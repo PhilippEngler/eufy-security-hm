@@ -1,9 +1,9 @@
-import { createCipheriv } from "crypto";
+import { createCipheriv, createDecipheriv } from "crypto";
 import { timeZoneData } from "./const";
 
 import { Device } from "./device";
 import { Schedule } from "./interfaces";
-import { NotificationSwitchMode, DeviceType, WifiSignalLevel, HB3DetectionTypes } from "./types";
+import { NotificationSwitchMode, DeviceType, SignalLevel, HB3DetectionTypes } from "./types";
 
 const normalizeVersionString = function (version: string): number[] {
     const trimmed = version ? version.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1") : "";
@@ -93,67 +93,87 @@ export const switchNotificationMode = function(currentValue: number, mode: Notif
     return result;
 }
 
-export const calculateWifiSignalLevel = function(device: Device, rssi: number): WifiSignalLevel {
+export const calculateWifiSignalLevel = function(device: Device, rssi: number): SignalLevel {
     if (device.isWiredDoorbell()) {
         if (rssi >= -65) {
-            return WifiSignalLevel.FULL;
+            return SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return WifiSignalLevel.STRONG;
+            return SignalLevel.STRONG;
         }
-        return rssi >= -80 ? WifiSignalLevel.NORMAL : WifiSignalLevel.WEAK;
+        return rssi >= -80 ? SignalLevel.NORMAL : SignalLevel.WEAK;
     } else if (device.isCamera2Product()) {
         if (rssi >= 0) {
-            return WifiSignalLevel.NO_SIGNAL;
+            return SignalLevel.NO_SIGNAL;
         }
         if (rssi >= -65) {
-            return WifiSignalLevel.FULL;
+            return SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return WifiSignalLevel.STRONG;
+            return SignalLevel.STRONG;
         }
-        return rssi >= -85 ? WifiSignalLevel.NORMAL : WifiSignalLevel.WEAK;
+        return rssi >= -85 ? SignalLevel.NORMAL : SignalLevel.WEAK;
 
     } else if (device.isFloodLight()) {
         if (rssi >= 0) {
-            return WifiSignalLevel.NO_SIGNAL;
+            return SignalLevel.NO_SIGNAL;
         }
         if (rssi >= -60) {
-            return WifiSignalLevel.FULL;
+            return SignalLevel.FULL;
         }
         if (rssi >= -70) {
-            return WifiSignalLevel.STRONG;
+            return SignalLevel.STRONG;
         }
-        return rssi >= -80 ? WifiSignalLevel.NORMAL : WifiSignalLevel.WEAK;
+        return rssi >= -80 ? SignalLevel.NORMAL : SignalLevel.WEAK;
 
     } else if (device.isBatteryDoorbell()) {
         if (rssi >= -65) {
-            return WifiSignalLevel.FULL;
+            return SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return WifiSignalLevel.STRONG;
+            return SignalLevel.STRONG;
         }
-        return rssi >= -85 ? WifiSignalLevel.NORMAL : WifiSignalLevel.WEAK;
-
+        return rssi >= -85 ? SignalLevel.NORMAL : SignalLevel.WEAK;
     } else {
         if (rssi >= 0) {
-            return WifiSignalLevel.NO_SIGNAL;
+            return SignalLevel.NO_SIGNAL;
         }
         if (rssi >= -65) {
-            return WifiSignalLevel.FULL;
+            return SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return WifiSignalLevel.STRONG;
+            return SignalLevel.STRONG;
         }
-        return rssi >= -85 ? WifiSignalLevel.NORMAL : WifiSignalLevel.WEAK;
+        return rssi >= -85 ? SignalLevel.NORMAL : SignalLevel.WEAK;
     }
 }
 
-export const encryptPassword = (password: string, key: Buffer): string => {
+export const calculateCellularSignalLevel = function(rssi: number): SignalLevel {
+    if (rssi >= 0) {
+        return SignalLevel.NO_SIGNAL;
+    }
+    if (rssi >= -90) {
+        return SignalLevel.FULL;
+    }
+    if (rssi >= -95) {
+        return SignalLevel.STRONG;
+    }
+    return rssi >= -105 ? SignalLevel.NORMAL : SignalLevel.WEAK;
+}
+
+export const encryptAPIData = (data: string, key: Buffer): string => {
     const cipher = createCipheriv("aes-256-cbc", key, key.slice(0, 16));
     return (
-        cipher.update(password, "utf8", "base64") +
+        cipher.update(data, "utf8", "base64") +
         cipher.final("base64")
+    );
+}
+
+export const decryptAPIData = (data: string, key: Buffer): Buffer => {
+    const cipher = createDecipheriv("aes-256-cbc", key, key.slice(0, 16));
+    return Buffer.concat([
+        cipher.update(data, "base64"),
+        cipher.final()]
     );
 }
 

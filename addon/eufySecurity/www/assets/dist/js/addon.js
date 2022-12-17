@@ -103,6 +103,10 @@ function getAPIPort(page)
 
 function initContent(page)
 {
+	if(page != "captcha")
+	{
+		checkCaptchaState(page);
+	}
 	switch(page)
 	{
 		case "devices":
@@ -127,7 +131,122 @@ function initContent(page)
 		case "restartWaiter":
 			restartAPIService();
 			break;
+		case "captcha":
+			getCaptchaImage();
+			break;
 	}
+}
+
+function checkCaptchaState(page)
+{
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/getCaptchaState`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success == true)
+			{
+				if(objResp.captchaNeeded == true)
+				{
+					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/captcha.html?redirect=${page}.html`;
+				}
+			}
+			else
+			{
+				//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
+		}
+		else
+		{
+			//document.getElementById("stations").innerHTML = createWaitMessage("Lade verfügbare Stationen...");
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+
+function getCaptchaImage()
+{
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/getCaptchaState`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success == true)
+			{
+				if(objResp.captchaNeeded == true)
+				{
+					document.getElementById("captchaHint").innerHTML = `Bitte geben Sie in das Textfeld den String aus dem Captcha ein.`;
+					document.getElementById("captchaImage").innerHTML = `<img src="${objResp.captcha.captcha}" alt="Captcha Image">`;
+					document.getElementById("captchaCode").innerHTML = `<input type="text" class="form-control" id="txtCaptchaCode">`;
+					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode()" class="btn btn-primary" type="button" value="Login">`;
+				}
+				else
+				{
+					document.getElementById("captchaHint").innerHTML = `Derzeit ist kein Captcha für den Account hinterlegt.`;
+				}
+			}
+			else
+			{
+				//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
+		}
+		else
+		{
+			document.getElementById("captchaHint").innerHTML = createWaitMessage("Ermittle Captcha Status...");
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+
+function setCaptchaCode()
+{
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/setCaptchaCode/${document.getElementById("txtCaptchaCode").value}`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success == true)
+			{
+				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=index.html`;
+			}
+			else
+			{
+				//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
+		}
+		else
+		{
+			//document.getElementById("stations").innerHTML = createWaitMessage("Lade verfügbare Stationen...");
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
 }
 
 function downloadFile(filetype)

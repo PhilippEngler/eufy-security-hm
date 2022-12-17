@@ -118,6 +118,19 @@ class ApiServer
                     case "getAccountInfo":
                         responseString = await api.getAccountInfoAsJson();
                         break;
+                    case "getCaptchaState":
+                        responseString = api.getCaptchaState();
+                        break;
+                    case "setCaptchaCode":
+                        if(url.length == 3)
+                        {
+                            responseString = api.setCaptchaCode(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getDevices":
                         responseString = await api.getDevicesAsJson();
                         break;

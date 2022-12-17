@@ -25,6 +25,7 @@ import { MQTTService } from "./mqtt/service";
 import { TalkbackStream } from "./p2p/talkback";
 import { PhoneModels } from "./http/const";
 import { randomNumber } from "./http/utils";
+import { initMediaInfo } from "./p2p/utils";
 
 export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
 
@@ -83,6 +84,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
     static async initialize(config: EufySecurityConfig, log: Logger = dummyLogger): Promise<EufySecurity> {
         const eufySecurity = new EufySecurity(config, log);
         await eufySecurity._initializeInternals();
+        await initMediaInfo();
         return eufySecurity;
     }
 
@@ -187,6 +189,12 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
             this.log.debug("Load previous token:", { token: this.persistentData.cloud_token, tokenExpiration: this.persistentData.cloud_token_expiration });
             this.api.setToken(this.persistentData.cloud_token);
             this.api.setTokenExpiration(new Date(this.persistentData.cloud_token_expiration));
+        }
+        if (this.persistentData.httpApi !== undefined && (this.persistentData.httpApi.clientPrivateKey === undefined || this.persistentData.httpApi.clientPrivateKey === "" || this.persistentData.httpApi.serverPublicKey === undefined || this.persistentData.httpApi.serverPublicKey === "")) {
+            this.log.debug("Incomplete persistent data for v2 encrypted cloud api communication. Invalidate authenticated session data.");
+            this.persistentData.cloud_token = "";
+            this.persistentData.cloud_token_expiration = 0;
+            this.persistentData.httpApi = undefined;
         }
         if (!this.persistentData.openudid || this.persistentData.openudid == "") {
             this.persistentData.openudid = generateUDID();

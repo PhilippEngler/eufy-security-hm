@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, CaptchaOptions } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -24,12 +24,21 @@ export class EufySecurityApi
     private homematicApi !: HomematicApi;
     private pushService !: PushService;
     private mqttService !: MqttService;
+    private httpApiPersistentData : HTTPApiPersistentData = {
+        user_id: "",
+        email: "",
+        nick_name: "",
+        device_public_keys: {},
+        clientPrivateKey: "",
+        serverPublicKey: ""
+    };
     private houses !: EufyHouses;
     private devices !: Devices;
     private stations !: Stations;
     private connected = false;
     private retries = 0;
     private serviceState : string = "init";
+    private captchaState = { captchaId: "", captcha: "" }
     
     private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
@@ -77,14 +86,26 @@ export class EufySecurityApi
         }
         else
         {
-            this.httpService = await HTTPApi.initialize(this, this.config.getCountry(), this.config.getEmailAddress(), this.config.getPassword(), this.logger);
+            if (this.config.getClientPrivateKey() === undefined || this.config.getClientPrivateKey() === "" || this.config.getServerPublicKey() === undefined || this.config.getServerPublicKey() === "")
+            {
+                this.logger.logInfoBasic("Incomplete persistent data for v2 encrypted cloud api communication. Invalidate authenticated session data.");
+                this.config.setToken("");
+                this.config.setTokenExpire(0);
+            }
+            this.httpApiPersistentData.user_id = this.config.getUserId();
+            this.httpApiPersistentData.email = this.config.getEmailAddress();
+            this.httpApiPersistentData.nick_name = this.config.getNickName();
+            this.httpApiPersistentData.clientPrivateKey = this.config.getClientPrivateKey();
+            this.httpApiPersistentData.serverPublicKey = this.config.getServerPublicKey();
+            this.httpApiPersistentData.device_public_keys = this.config.getDevicePublicKeys();
+            
+            this.httpService = await HTTPApi.initialize(this, this.config.getCountry(), this.config.getEmailAddress(), this.config.getPassword(), this.logger, this.httpApiPersistentData);
 
             this.httpService.setLanguage(this.config.getLanguage());
 
             if (this.config.getTrustedDeviceName() === undefined || this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient")
             {
                 this.config.setTrustedDeviceName(PhoneModels[randomNumber(0, PhoneModels.length)]);
-                this.config.writeCurrentConfig();
             }
 
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
@@ -188,6 +209,46 @@ export class EufySecurityApi
             json = {"success":false,"reason":"No connection to eufy."};
         }
 
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Returns the captcha state as JSON string.
+     * @returns The captcha state as JSON string.
+     */
+    public getCaptchaState() : string
+    {
+        var json : any = {};
+        var captchaNeeded = false;
+
+        if(this.captchaState.captchaId != "" || this.captchaState.captcha != "")
+        {
+            captchaNeeded = true;
+        }
+        
+        json = {"success":true,"captchaNeeded":captchaNeeded,"captcha":this.captchaState};
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Set the code from the captcha image and login again.
+     * @param code The code from the captcha image.
+     * @returns 
+     */
+    public setCaptchaCode(code : string) : string
+    {
+        var json : any = {};
+        var success = false;
+        var message = "No captcha code requested.";
+
+        if(this.captchaState.captchaId != "" || this.captchaState.captcha != "")
+        {
+            this.connect({ captcha: { captchaId: this.captchaState.captchaId, captchaCode: code}, force: false });
+            success = true;
+            message = "Connecting again with the captcha code provided.";
+        }
+        
+        json = {"success":success,"message":message};
         return JSON.stringify(json);
     }
 
@@ -379,12 +440,19 @@ export class EufySecurityApi
         this.stations = new Stations(this, this.httpService);
         this.devices = new Devices(this, this.httpService);
 
+        if(this.httpService.getPersistentData() !== undefined)
+        {
+            this.updateApiPersistentData(this.httpService.getPersistentData()!);
+        }
+
         await sleep(10);
         await this.refreshCloudData();
 
         this.setupScheduledTasks();
 
         this.serviceState = "ok";
+
+        this.writeConfig();
     }
 
     private onAPIConnectionError(error: Error): void
@@ -396,12 +464,15 @@ export class EufySecurityApi
     private onCaptchaRequest(id: string, captcha: string): void
     {
         //this.emit("captcha request", id, captcha);
+        this.captchaState.captchaId = id;
+        this.captchaState.captcha = captcha;
+        this.logInfo(`Captcha needed. Please check the addon website.`);
     }
 
     private onAuthTokenInvalidated(): void
     {
         this.setTokenData(undefined, undefined);
-        this.config.writeCurrentConfig();
+        this.writeConfig();
     }
 
     private onTfaRequest(): void
@@ -491,6 +562,15 @@ export class EufySecurityApi
             this.config.setToken(token);
             this.config.setTokenExpire(token_expiration.getTime() / 1000);
         }
+    }
+
+    public updateApiPersistentData(httpApiPersistentData : HTTPApiPersistentData)
+    {
+        this.config.setUserId(httpApiPersistentData.user_id);
+        this.config.setNickName(httpApiPersistentData.nick_name);
+        this.config.setClientPrivateKey(httpApiPersistentData.clientPrivateKey);
+        this.config.setServerPublicKey(httpApiPersistentData.serverPublicKey);
+        this.config.setDevicePublicKeys(httpApiPersistentData.device_public_keys);
     }
 
     /**
