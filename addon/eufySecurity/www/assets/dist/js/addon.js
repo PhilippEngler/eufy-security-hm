@@ -1408,6 +1408,7 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 		case "B&W Night Vision":
 			return "schwarz/weiß Nachtsicht";
 		case "Spotlight Night Vision":
+		case "Color Night Vision":
 			return "farbige Nachtsicht";
 		case "Low":
 			switch(propertyName)
