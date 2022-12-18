@@ -466,18 +466,19 @@ export class EufySecurityApi
         //this.emit("captcha request", id, captcha);
         this.captchaState.captchaId = id;
         this.captchaState.captcha = captcha;
-        this.logInfo(`Captcha needed. Please check the addon website.`);
+        this.logInfo(`Entering captcha code needed. Please check the addon website.`);
     }
 
     private onAuthTokenInvalidated(): void
     {
         this.setTokenData(undefined, undefined);
-        this.writeConfig();
+        this.logInfo(`The authentication token is invalid and have been removed.`);
     }
 
     private onTfaRequest(): void
     {
         //this.emit("tfa request");
+        this.logInfo(`A tfa (two factor authentication) request received. This addon does not support tfa at the moment.`);
     }
 
     /**
