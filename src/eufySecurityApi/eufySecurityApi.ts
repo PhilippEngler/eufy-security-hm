@@ -112,7 +112,7 @@ export class EufySecurityApi
 
             this.httpService.on("close", () => this.onAPIClose());
             this.httpService.on("connect", () => this.onAPIConnect());
-            this.httpService.on("captcha request", (id: string, captcha: string) => this.onCaptchaRequest(id, captcha));
+            this.httpService.on("captcha request", (captchaId: string, captcha: string) => this.onCaptchaRequest(captchaId, captcha));
             this.httpService.on("auth token invalidated", () => this.onAuthTokenInvalidated());
             this.httpService.on("tfa request", () => this.onTfaRequest());
             this.httpService.on("connection error", (error: Error) => this.onAPIConnectionError(error));
@@ -419,6 +419,8 @@ export class EufySecurityApi
         this.retries = 0;
         //this.emit("connect");
 
+        this.setCaptchaData("", "");
+        
         this.saveCloudToken();
 
         if(this.pushService)
@@ -461,11 +463,10 @@ export class EufySecurityApi
         //this.emit("connection error", error);
     }
 
-    private onCaptchaRequest(id: string, captcha: string): void
+    private onCaptchaRequest(captchaId: string, captcha: string): void
     {
         //this.emit("captcha request", id, captcha);
-        this.captchaState.captchaId = id;
-        this.captchaState.captcha = captcha;
+        this.setCaptchaData(captchaId, captcha);
         this.logInfo(`Entering captcha code needed. Please check the addon website.`);
     }
 
@@ -550,6 +551,17 @@ export class EufySecurityApi
     }
 
     /**
+     * Sets the captcha data to the captchaState variable.
+     * @param captchaId The value for the captcha id.
+     * @param captcha the captcha image as base64 string.
+     */
+    public setCaptchaData(captchaId : string, captcha : string)
+    {
+        this.captchaState.captchaId = captchaId;
+        this.captchaState.captcha = captcha;
+    }
+
+    /**
      * Save the login tokens.
      */
     private saveCloudToken() : void
@@ -565,6 +577,10 @@ export class EufySecurityApi
         }
     }
 
+    /**
+     * Save the persistent http api data.
+     * @param httpApiPersistentData The persistent data for the http api to save.
+     */
     public updateApiPersistentData(httpApiPersistentData : HTTPApiPersistentData)
     {
         this.config.setUserId(httpApiPersistentData.user_id);
