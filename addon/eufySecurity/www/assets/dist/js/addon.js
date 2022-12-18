@@ -2779,7 +2779,7 @@ function loadSystemVariables()
 					if(objResp.reason == "System variables in config disabled.")
 					{
 						document.getElementById("divSystemVariablesHint").innerHTML = "";
-						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", "Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.", "", "");
+						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", "Keine Systemvariablen.", "Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.", "Aktivieren Sie die Einstellung 'Systemvariablen bei API Aktionen automatisch aktualisieren', wenn Sie mit den Systemvariablen arbeiten möchten.");
 					}
 					else
 					{
