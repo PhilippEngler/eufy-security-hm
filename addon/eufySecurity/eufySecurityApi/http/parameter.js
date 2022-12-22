@@ -16,7 +16,8 @@ class ParameterHelper {
                 type === types_1.CommandType.ARM_DELAY_CUS1 ||
                 type === types_1.CommandType.ARM_DELAY_CUS2 ||
                 type === types_1.CommandType.ARM_DELAY_CUS3 ||
-                type === types_1.CommandType.ARM_DELAY_OFF) {
+                type === types_1.CommandType.ARM_DELAY_OFF ||
+                type === types_1.CommandType.CELLULAR_INFO) {
                 try {
                     if (typeof value === "string") {
                         return JSON.parse((0, utils_1.decodeBase64)(value).toString("utf8"));

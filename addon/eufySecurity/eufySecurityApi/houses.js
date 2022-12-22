@@ -40,8 +40,8 @@ class EufyHouses extends tiny_typed_emitter_1.TypedEmitter {
      * @param house_id The houseId.
      * @returns The house object.
      */
-    getHouse(house_id) {
-        return this.houses[house_id];
+    async getHouse(house_id) {
+        return await this.httpService.getHouseDetail(house_id);
     }
 }
 exports.EufyHouses = EufyHouses;

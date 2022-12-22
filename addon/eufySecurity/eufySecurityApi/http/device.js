@@ -86,7 +86,7 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
                 //TODO: Not perfectly solved, can in certain cases briefly trigger a double event where the last event is the correct one
                 const rawSensitivity = this.getRawProperty(types_1.ParamType.DETECT_MOTION_SENSITIVE);
                 const rawMode = this.getRawProperty(types_1.ParamType.DETECT_MODE);
-                if (rawSensitivity !== undefined && rawMode !== undefined) {
+                if (rawSensitivity !== undefined && rawMode !== undefined && this.hasProperty(types_1.PropertyName.DeviceMotionDetectionSensitivity)) {
                     const sensitivity = Number.parseInt(rawSensitivity);
                     const mode = Number.parseInt(rawMode);
                     if (mode === 3 && sensitivity === 2) {
@@ -106,8 +106,11 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
             }
-            else if (metadata.name === types_1.PropertyName.DeviceWifiRSSI) {
+            else if (metadata.name === types_1.PropertyName.DeviceWifiRSSI && this.hasProperty(types_1.PropertyName.DeviceWifiSignalLevel)) {
                 this.updateProperty(types_1.PropertyName.DeviceWifiSignalLevel, (0, utils_1.calculateWifiSignalLevel)(this, newValue));
+            }
+            else if (metadata.name === types_1.PropertyName.DeviceCellularRSSI && this.hasProperty(types_1.PropertyName.DeviceCellularSignalLevel)) {
+                this.updateProperty(types_1.PropertyName.DeviceCellularSignalLevel, (0, utils_1.calculateCellularSignalLevel)(newValue));
             }
         }
         catch (error) {
@@ -548,6 +551,26 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
                     return booleanProperty.default !== undefined ? booleanProperty.default : false;
                 }
             }
+            else if (property.key === types_2.CommandType.CELLULAR_INFO) {
+                switch (property.name) {
+                    case types_1.PropertyName.DeviceCellularSignal: {
+                        const stringProperty = property;
+                        return value !== undefined && value.Signal !== undefined ? String(value.Signal) : (stringProperty.default !== undefined ? stringProperty.default : "");
+                    }
+                    case types_1.PropertyName.DeviceCellularBand: {
+                        const stringProperty = property;
+                        return value !== undefined && value.band !== undefined ? String(value.band) : (stringProperty.default !== undefined ? stringProperty.default : "");
+                    }
+                    case types_1.PropertyName.DeviceCellularIMEI: {
+                        const stringProperty = property;
+                        return value !== undefined && value.imei !== undefined ? String(value.imei) : (stringProperty.default !== undefined ? stringProperty.default : "");
+                    }
+                    case types_1.PropertyName.DeviceCellularICCID: {
+                        const stringProperty = property;
+                        return value !== undefined && value.iccid !== undefined ? String(value.iccid) : (stringProperty.default !== undefined ? stringProperty.default : "");
+                    }
+                }
+            }
             else if (property.type === "number") {
                 const numericProperty = property;
                 try {
@@ -748,7 +771,8 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             type == types_1.DeviceType.SMART_SAFE_7400 ||
             type == types_1.DeviceType.SMART_SAFE_7401 ||
             type == types_1.DeviceType.SMART_SAFE_7402 ||
-            type == types_1.DeviceType.SMART_SAFE_7403)
+            type == types_1.DeviceType.SMART_SAFE_7403 ||
+            type == types_1.DeviceType.CAMERA_FG)
             //TODO: Add other battery devices
             return true;
         return false;
@@ -900,6 +924,9 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             Device.isSoloCameraSpotlight1080(type) ||
             Device.isSoloCameraSpotlight2k(type) ||
             Device.isSoloCameraSpotlightSolar(type);
+    }
+    static isStarlight4GLTE(type) {
+        return types_1.DeviceType.CAMERA_FG == type;
     }
     static isIndoorOutdoorCamera1080p(type) {
         return types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_1080P == type;
@@ -1069,6 +1096,9 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
     }
     isSoloCameraSpotlightSolar() {
         return Device.isSoloCameraSpotlightSolar(this.rawDevice.device_type);
+    }
+    isStarlight4GLTE() {
+        return Device.isStarlight4GLTE(this.rawDevice.device_type);
     }
     isIndoorOutdoorCamera1080p() {
         return Device.isIndoorOutdoorCamera1080p(this.rawDevice.device_type);
@@ -1260,7 +1290,7 @@ class Camera extends Device {
         try {
             const response = await this.api.request({
                 method: "post",
-                endpoint: "v1/web/equipment/start_stream",
+                endpoint: "v2/web/equipment/start_stream",
                 data: {
                     device_sn: this.rawDevice.device_sn,
                     station_sn: this.rawDevice.station_sn,
@@ -1274,10 +1304,11 @@ class Camera extends Device {
             if (response.status == 200) {
                 const result = response.data;
                 if (result.code == 0) {
-                    const dataresult = result.data;
+                    const dataresult = this.api.decryptAPIData(result.data);
                     this._isStreaming = true;
                     this.log.info(`Livestream of camera ${this.rawDevice.device_sn} started`);
-                    return dataresult.url;
+                    //rtmp://p2p-vir-7.eufylife.com/hls/REDACTED==?time=1649675937&token=REDACTED
+                    return `rtmp://${dataresult.domain}/hls/${dataresult.stream_name}==?time=${dataresult.time}&token=${dataresult.token}`;
                 }
                 else {
                     this.log.error("Response code not ok", { code: result.code, msg: result.msg });
@@ -1301,7 +1332,7 @@ class Camera extends Device {
         try {
             const response = await this.api.request({
                 method: "post",
-                endpoint: "v1/web/equipment/stop_stream",
+                endpoint: "v2/web/equipment/stop_stream",
                 data: {
                     device_sn: this.rawDevice.device_sn,
                     station_sn: this.rawDevice.station_sn,

@@ -41,10 +41,10 @@ const error_1 = require("./../error");
 const utils_2 = require("./../utils");
 const error_2 = require("./error");
 class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
-    constructor(api, apiBase, country, username, password, log, persistentData) {
+    constructor(apiBase, country, username, password, log, persistentData) {
         super();
+        this.SERVER_PUBLIC_KEY = "04c5c00c4f8d1197cc7c3167c52bf7acb054d722f0ef08dcd7e0883236e0d72a3868d9750cb47fa4619248f3d83f0f662671dadc6e2d31c2f41db0161651c7c076";
         this.ecdh = (0, crypto_1.createECDH)("prime256v1");
-        this.serverPublicKey = "04c5c00c4f8d1197cc7c3167c52bf7acb054d722f0ef08dcd7e0883236e0d72a3868d9750cb47fa4619248f3d83f0f662671dadc6e2d31c2f41db0161651c7c076";
         this.token = null;
         this.tokenExpiration = null;
         this.connected = false;
@@ -59,10 +59,12 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             user_id: "",
             email: "",
             nick_name: "",
-            device_public_keys: {}
+            device_public_keys: {},
+            clientPrivateKey: "",
+            serverPublicKey: ""
         };
         this.headers = {
-            App_version: "v4.4.3_1447",
+            App_version: "v4.5.1_1523",
             Os_type: "android",
             Os_version: "31",
             Phone_model: "ONEPLUS A3003",
@@ -78,7 +80,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             Timezone: "GMT+01:00",
             "Cache-Control": "no-cache",
         };
-        this.api = api;
         this.username = username;
         this.password = password;
         this.log = log;
@@ -86,8 +87,19 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         this.log.debug(`Loaded API_BASE: ${apiBase}`);
         this.headers.timezone = (0, utils_1.getTimezoneGMTString)();
         this.headers.country = country.toUpperCase();
-        if (persistentData)
+        if (persistentData) {
             this.persistentData = persistentData;
+        }
+        if (this.persistentData.serverPublicKey === undefined || this.persistentData.serverPublicKey === "") {
+            this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
+        }
+        if (this.persistentData.clientPrivateKey === undefined || this.persistentData.clientPrivateKey === "") {
+            this.ecdh.generateKeys();
+            this.persistentData.clientPrivateKey = this.ecdh.getPrivateKey().toString("hex");
+        }
+        else {
+            this.ecdh.setPrivateKey(Buffer.from(this.persistentData.clientPrivateKey, "hex"));
+        }
         this.requestEufyCloud = got_1.default.extend({
             prefixUrl: this.apiBase,
             headers: this.headers,
@@ -185,10 +197,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         }
         throw new error_2.ApiBaseLoadError(result.code, result.msg);
     }
-    static async initialize(api, country, username, password, log, persistentData) {
+    static async initialize(country, username, password, log, persistentData) {
         if ((0, i18n_iso_countries_1.isValid)(country) && country.length === 2) {
             const apiBase = await this.getApiBaseFromCloud(country);
-            return new HTTPApi(api, apiBase, country, username, password, log, persistentData);
+            return new HTTPApi(apiBase, country, username, password, log, persistentData);
         }
         throw new error_1.InvalidCountryCodeError("Invalid ISO 3166-1 Alpha-2 country code");
     }
@@ -241,13 +253,13 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return this.headers.language;
     }
     async login(options) {
+        var _a;
         options = (0, utils_2.mergeDeep)(options, {
             force: false
         });
         this.log.debug("Login and get an access token", { token: this.token, tokenExpiration: this.tokenExpiration });
         if (!this.token || (this.tokenExpiration && (new Date()).getTime() >= this.tokenExpiration.getTime()) || options.verifyCode || options.captcha || options.force) {
             try {
-                this.ecdh.generateKeys();
                 const data = {
                     ab: this.headers.country,
                     client_secret_info: {
@@ -255,7 +267,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     },
                     enc: 0,
                     email: this.username,
-                    password: (0, utils_1.encryptPassword)(this.password, this.ecdh.computeSecret(Buffer.from(this.serverPublicKey, "hex"))),
+                    password: (0, utils_1.encryptAPIData)(this.password, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex"))),
                     time_zone: new Date().getTimezoneOffset() !== 0 ? -new Date().getTimezoneOffset() * 60 * 1000 : 0,
                     transaction: `${new Date().getTime()}`
                 };
@@ -285,10 +297,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                                 ...this.headers,
                                 gtoken: (0, utils_2.md5)(dataresult.user_id)
                             };
-                            /*if (dataresult.server_secret_info?.public_key)
-                                this.serverPublicKey = dataresult.server_secret_info.public_key;*/
+                            if ((_a = dataresult.server_secret_info) === null || _a === void 0 ? void 0 : _a.public_key)
+                                this.persistentData.serverPublicKey = dataresult.server_secret_info.public_key;
                             this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
-                            this.api.setTokenData(this.token, this.tokenExpiration.getTime());
                             if (!this.connected) {
                                 this.connected = true;
                                 this.emit("connect");
@@ -301,7 +312,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             this.setToken(dataresult.auth_token);
                             this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
                             this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
-                            this.api.setTokenData(this.token, this.tokenExpiration.getTime());
                             await this.sendVerifyCode(types_1.VerfyCodeTypes.TYPE_EMAIL);
                             this.emit("tfa request");
                         }
@@ -450,7 +460,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const response = await this.request({
                     method: "post",
-                    endpoint: "v1/house/station_list",
+                    endpoint: "v2/house/station_list",
                     data: {
                         device_sn: "",
                         num: 1000,
@@ -465,7 +475,8 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        return result.data;
+                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                        return this.decryptAPIData(result.data);
                     }
                     else {
                         this.log.error("Response code not ok", { code: result.code, msg: result.msg });
@@ -486,7 +497,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const response = await this.request({
                     method: "post",
-                    endpoint: "v1/house/device_list",
+                    endpoint: "v2/house/device_list",
                     data: {
                         device_sn: "",
                         num: 1000,
@@ -501,7 +512,8 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        return result.data;
+                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                        return this.decryptAPIData(result.data);
                     }
                     else {
                         this.log.error("Response code not ok", { code: result.code, msg: result.msg });
@@ -841,7 +853,8 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        const dataresult = result.data;
+                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                        const dataresult = this.decryptAPIData(result.data);
                         if (dataresult) {
                             dataresult.forEach(record => {
                                 this.log.debug(`${functionName} - Record:`, record);
@@ -864,13 +877,13 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return records;
     }
     async getVideoEvents(startTime, endTime, filter, maxResults) {
-        return this._getEvents("getVideoEvents", "v1/event/app/get_all_video_record", startTime, endTime, filter, maxResults);
+        return this._getEvents("getVideoEvents", "v2/event/app/get_all_video_record", startTime, endTime, filter, maxResults);
     }
     async getAlarmEvents(startTime, endTime, filter, maxResults) {
-        return this._getEvents("getAlarmEvents", "v1/event/app/get_all_alarm_record", startTime, endTime, filter, maxResults);
+        return this._getEvents("getAlarmEvents", "v2/event/app/get_all_alarm_record", startTime, endTime, filter, maxResults);
     }
     async getHistoryEvents(startTime, endTime, filter, maxResults) {
-        return this._getEvents("getHistoryEvents", "v1/event/app/get_all_history_record", startTime, endTime, filter, maxResults);
+        return this._getEvents("getHistoryEvents", "v2/event/app/get_all_history_record", startTime, endTime, filter, maxResults);
     }
     async getAllVideoEvents(filter, maxResults) {
         const fifthyYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
@@ -993,6 +1006,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         }
         return "";
     }
+    decryptAPIData(data) {
+        return JSON.parse((0, utils_1.decryptAPIData)(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex"))).toString());
+    }
     async getSensorHistory(stationSN, deviceSN) {
         if (this.connected) {
             try {
@@ -1035,7 +1051,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const response = await this.request({
                     method: "post",
-                    endpoint: "v1/house/detail",
+                    endpoint: "v2/house/detail",
                     data: {
                         house_id: houseID,
                         transaction: `${new Date().getTime().toString()}`
@@ -1044,8 +1060,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                        if (result.data) {
-                            return result.data;
+                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                        const dataresult = this.decryptAPIData(result.data);
+                        if (dataresult) {
+                            return dataresult;
                         }
                     }
                     else {
@@ -1166,17 +1184,18 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         try {
             const response = await this.request({
                 method: "get",
-                endpoint: "v1/passport/profile"
+                endpoint: "v2/passport/profile"
             });
             if (response.status == 200) {
                 const result = response.data;
                 if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                    if (result.data) {
-                        const profile = result.data;
-                        this.persistentData.user_id = profile.user_id;
-                        this.persistentData.nick_name = profile.nick_name;
-                        this.persistentData.email = profile.email;
-                        return profile;
+                    //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                    const dataresult = this.decryptAPIData(result.data);
+                    if (dataresult) {
+                        this.persistentData.user_id = dataresult.user_id;
+                        this.persistentData.nick_name = dataresult.nick_name;
+                        this.persistentData.email = dataresult.email;
+                        return dataresult;
                     }
                 }
                 else {

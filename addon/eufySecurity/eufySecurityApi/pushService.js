@@ -118,17 +118,14 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("push message", message);
         try {
             this.logger.debug("Received push message", message);
-            /*try
-            {
-                if ((message.type === ServerPushEvent.INVITE_DEVICE || message.type === ServerPushEvent.HOUSE_INVITE) && this.config.acceptInvitations)
-                {
-                    this.processInvitations();
+            try {
+                if ((message.type === types_1.ServerPushEvent.INVITE_DEVICE || message.type === types_1.ServerPushEvent.HOUSE_INVITE) && this.config.getAcceptInvitations()) {
+                    this.api.processInvitations();
                 }
             }
-            catch(error)
-            {
+            catch (error) {
                 this.logger.error(`Error processing server push notification for device invitation`, error);
-            }*/
+            }
             try {
                 if (message.type === types_1.ServerPushEvent.REMOVE_DEVICE || message.type === types_1.ServerPushEvent.REMOVE_HOMEBASE || message.type === types_1.ServerPushEvent.HOUSE_REMOVE) {
                     this.api.refreshCloudData();

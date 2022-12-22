@@ -97,6 +97,17 @@ class ApiServer {
                     case "getAccountInfo":
                         responseString = await api.getAccountInfoAsJson();
                         break;
+                    case "getCaptchaState":
+                        responseString = api.getCaptchaState();
+                        break;
+                    case "setCaptchaCode":
+                        if (url.length == 3) {
+                            responseString = api.setCaptchaCode(url[2]);
+                        }
+                        else {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getDevices":
                         responseString = await api.getDevicesAsJson();
                         break;
@@ -462,6 +473,14 @@ class ApiServer {
                             if (postData.indexOf("httpsCertFile") >= 0) {
                                 apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                             }
+                            var apiacceptinvitations = false;
+                            if (postData.indexOf("acceptInvitations") >= 0) {
+                                apiacceptinvitations = getDataFromPOSTData(postData, "acceptInvitations", "boolean");
+                            }
+                            var apihouseid = "all";
+                            if (postData.indexOf("house") >= 0) {
+                                apihouseid = getDataFromPOSTData(postData, "house", "string");
+                            }
                             var apiconnectiontype = 1;
                             if (postData.indexOf("connectionType") >= 0) {
                                 apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
@@ -544,7 +563,7 @@ class ApiServer {
                             }
                             if (isDataOK == true) {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
-                                responseString = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                                responseString = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                             }
                             else {
                                 responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;

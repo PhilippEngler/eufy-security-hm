@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.randomNumber = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.SmartSafeByteWriter = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.encryptPassword = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
+exports.randomNumber = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.SmartSafeByteWriter = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
 const crypto_1 = require("crypto");
 const const_1 = require("./const");
 const types_1 = require("./types");
@@ -89,66 +89,87 @@ exports.switchNotificationMode = switchNotificationMode;
 const calculateWifiSignalLevel = function (device, rssi) {
     if (device.isWiredDoorbell()) {
         if (rssi >= -65) {
-            return types_1.WifiSignalLevel.FULL;
+            return types_1.SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return types_1.WifiSignalLevel.STRONG;
+            return types_1.SignalLevel.STRONG;
         }
-        return rssi >= -80 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+        return rssi >= -80 ? types_1.SignalLevel.NORMAL : types_1.SignalLevel.WEAK;
     }
     else if (device.isCamera2Product()) {
         if (rssi >= 0) {
-            return types_1.WifiSignalLevel.NO_SIGNAL;
+            return types_1.SignalLevel.NO_SIGNAL;
         }
         if (rssi >= -65) {
-            return types_1.WifiSignalLevel.FULL;
+            return types_1.SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return types_1.WifiSignalLevel.STRONG;
+            return types_1.SignalLevel.STRONG;
         }
-        return rssi >= -85 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+        return rssi >= -85 ? types_1.SignalLevel.NORMAL : types_1.SignalLevel.WEAK;
     }
     else if (device.isFloodLight()) {
         if (rssi >= 0) {
-            return types_1.WifiSignalLevel.NO_SIGNAL;
+            return types_1.SignalLevel.NO_SIGNAL;
         }
         if (rssi >= -60) {
-            return types_1.WifiSignalLevel.FULL;
+            return types_1.SignalLevel.FULL;
         }
         if (rssi >= -70) {
-            return types_1.WifiSignalLevel.STRONG;
+            return types_1.SignalLevel.STRONG;
         }
-        return rssi >= -80 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+        return rssi >= -80 ? types_1.SignalLevel.NORMAL : types_1.SignalLevel.WEAK;
     }
     else if (device.isBatteryDoorbell()) {
         if (rssi >= -65) {
-            return types_1.WifiSignalLevel.FULL;
+            return types_1.SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return types_1.WifiSignalLevel.STRONG;
+            return types_1.SignalLevel.STRONG;
         }
-        return rssi >= -85 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+        return rssi >= -85 ? types_1.SignalLevel.NORMAL : types_1.SignalLevel.WEAK;
     }
     else {
         if (rssi >= 0) {
-            return types_1.WifiSignalLevel.NO_SIGNAL;
+            return types_1.SignalLevel.NO_SIGNAL;
         }
         if (rssi >= -65) {
-            return types_1.WifiSignalLevel.FULL;
+            return types_1.SignalLevel.FULL;
         }
         if (rssi >= -75) {
-            return types_1.WifiSignalLevel.STRONG;
+            return types_1.SignalLevel.STRONG;
         }
-        return rssi >= -85 ? types_1.WifiSignalLevel.NORMAL : types_1.WifiSignalLevel.WEAK;
+        return rssi >= -85 ? types_1.SignalLevel.NORMAL : types_1.SignalLevel.WEAK;
     }
 };
 exports.calculateWifiSignalLevel = calculateWifiSignalLevel;
-const encryptPassword = (password, key) => {
+const calculateCellularSignalLevel = function (rssi) {
+    if (rssi >= 0) {
+        return types_1.SignalLevel.NO_SIGNAL;
+    }
+    if (rssi >= -90) {
+        return types_1.SignalLevel.FULL;
+    }
+    if (rssi >= -95) {
+        return types_1.SignalLevel.STRONG;
+    }
+    return rssi >= -105 ? types_1.SignalLevel.NORMAL : types_1.SignalLevel.WEAK;
+};
+exports.calculateCellularSignalLevel = calculateCellularSignalLevel;
+const encryptAPIData = (data, key) => {
     const cipher = (0, crypto_1.createCipheriv)("aes-256-cbc", key, key.slice(0, 16));
-    return (cipher.update(password, "utf8", "base64") +
+    return (cipher.update(data, "utf8", "base64") +
         cipher.final("base64"));
 };
-exports.encryptPassword = encryptPassword;
+exports.encryptAPIData = encryptAPIData;
+const decryptAPIData = (data, key) => {
+    const cipher = (0, crypto_1.createDecipheriv)("aes-256-cbc", key, key.slice(0, 16));
+    return Buffer.concat([
+        cipher.update(data, "base64"),
+        cipher.final()
+    ]);
+};
+exports.decryptAPIData = decryptAPIData;
 const getBlocklist = function (directions) {
     const result = [];
     for (let distance = 1; distance <= 5; distance++) {

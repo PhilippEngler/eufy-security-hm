@@ -20,5 +20,6 @@ __exportStar(require("./p2p"), exports);
 __exportStar(require("./push"), exports);
 __exportStar(require("./interfaces"), exports);
 __exportStar(require("./error"), exports);
+__exportStar(require("./utils/utils"), exports);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 exports.libVersion = require("../package.json").version;

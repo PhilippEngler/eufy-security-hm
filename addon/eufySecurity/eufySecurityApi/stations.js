@@ -7,6 +7,7 @@ const utils_1 = require("./push/utils");
 const error_1 = require("./error");
 const p2p_1 = require("./p2p");
 const utils_2 = require("./utils");
+const utils_3 = require("./utils/utils");
 /**
  * Represents all the stations in the account.
  */
@@ -46,6 +47,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const promises = [];
         const newStationsSNs = Object.keys(hubs);
         for (var stationSerial in resStations) {
+            if (this.api.getHouseId() !== undefined && resStations[stationSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resStations[stationSerial].house_id !== this.api.getHouseId()) {
+                this.api.logDebug(`Station ${stationSerial} does not match houseId (got ${resStations[stationSerial].house_id} want ${this.api.getHouseId()}).`);
+                continue;
+            }
             if (this.stations[stationSerial]) {
                 await this.updateStation(resStations[stationSerial]);
             }
@@ -489,81 +494,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         });
     }
     /**
-     * Retrieve the model name of a given station.
-     * @param station The station object.
-     * @returns A string with the model name of the device.
-     */
-    getStationModelName(station) {
-        switch (station.getModel().substring(0, 5)) {
-            //HomeBases
-            case "T8001":
-                return "HomeBase";
-            case "T8002":
-                return "HomeBase E";
-            case "T8010":
-                return "HomeBase 2";
-            case "T8030":
-                return "HomeBase 3";
-            //SoloDevices
-            //IndoorCams
-            case "T8400":
-                return "IndoorCam C24";
-            case "T8401":
-                return "IndoorCam C22";
-            case "T8410":
-                return "IndoorCam P24";
-            case "T8411":
-                return "IndoorCam P22";
-            case "T8414":
-                return "IndoorCam Mini 2k";
-            //SoloCams
-            case "T8122":
-                return "SoloCam L20";
-            case "T8123":
-                return "SoloCam L40";
-            case "T8424":
-                return "SoloCam S40";
-            case "T8130":
-                return "SoloCam E20";
-            case "T8131":
-                return "SoloCam E40";
-            case "T8150":
-                return "4G Starlight Camera";
-            //Doorbels
-            //Floodlight
-            case "T8420":
-                return "FloodlightCam 1080p";
-            case "T8422":
-                return "FloodlightCam E 2k";
-            case "T8423":
-                return "FloodlightCam 2 Pro";
-            case "T8424":
-                return "FloodlightCam 2k";
-            //Lock
-            case "T8500":
-                return "Smart Lock Front Door";
-            case "T8501":
-                return "Solo Smart Lock D20";
-            case "T8503":
-                return "Smart Lock R10";
-            case "T8503":
-                return "Smart Lock R20";
-            case "T8519":
-                return "Smart Lock Touch";
-            case "T8520":
-                return "Smart Lock Touch und Wi-Fi";
-            case "T8530":
-                return "Video Smart Lock";
-            //Bridges
-            case "T8021":
-                return "Wi-Fi Bridge und Doorbell Chime";
-            case "T8592":
-                return "Keypad";
-            default:
-                return "unbekannte Station";
-        }
-    }
-    /**
      * Add a given event listener for a given station.
      * @param station The station as Station object.
      * @param eventListenerName The event listener name as string.
@@ -581,6 +511,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             case "ConnectionError":
                 station.on("connection error", (station, error) => this.onStationConnectionError(station, error));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connection error")} Listeners.`);
+                break;
             case "Close":
                 station.on("close", (station) => this.onStationClose(station));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("close")} Listener.`);
@@ -715,7 +646,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
-                break;
         }
     }
     /**
@@ -867,7 +797,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
-                break;
         }
     }
     /**
@@ -989,7 +918,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationClose(station) {
         this.api.logInfo(`Event "Close": station: ${station.getSerial()}`);
-        //this.emit("station close", station);
+        this.emit("station close", station);
         if (this.api.getServiceState() != "shutdown") {
         }
         for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
@@ -1484,7 +1413,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug(`Event "DeviceShakeAlarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
-                device.shakeEvent(event, this.api.getConfig().getEventDurationSeconds());
+                device.shakeEvent(event, this.api.getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationShakeAlarm device ${deviceSerial} error`, error);
         });
@@ -1498,7 +1427,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug(`Event "Device911Alarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
-                device.alarm911Event(event, this.api.getConfig().getEventDurationSeconds());
+                device.alarm911Event(event, this.api.getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStation911Alarm device ${deviceSerial} error`, error);
         });
@@ -1511,7 +1440,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug(`Event "DeviceJammed": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
-                device.jammedEvent(this.api.getConfig().getEventDurationSeconds());
+                device.jammedEvent(this.api.getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationDeviceJammed device ${deviceSerial} error`, error);
         });
@@ -1524,7 +1453,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logInfo(`Event "DeviceLowBattery": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
-                device.lowBatteryEvent(this.api.getConfig().getEventDurationSeconds());
+                device.lowBatteryEvent(this.api.getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationDeviceLowBattery device ${deviceSerial} error`, error);
         });
@@ -1537,7 +1466,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
-                device.wrongTryProtectAlarmEvent(this.api.getConfig().getEventDurationSeconds());
+                device.wrongTryProtectAlarmEvent(this.api.getEventDurationSeconds());
         }).catch((error) => {
             this.api.logError(`onStationDeviceWrongTryProtectAlarm device ${deviceSerial} error`, error);
         });
@@ -1574,22 +1503,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param stationSerial The serial of the station.
      * @param time The time as timestamp or undefined.
      */
-    setLastGuardModeChangeTime(stationSerial, time, timestampType) {
-        if (time !== undefined) {
-            switch (timestampType) {
-                case "sec":
-                    this.lastGuardModeChangeTimeForStations[stationSerial] = time * 1000;
-                    break;
-                case "ms":
-                    this.lastGuardModeChangeTimeForStations[stationSerial] = time;
-                    break;
-                default:
-                    this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
-            }
+    setLastGuardModeChangeTime(stationSerial, timeStamp, timeStampType) {
+        if (timeStamp !== undefined) {
+            timeStamp = (0, utils_3.convertTimeStampToTimeStampMs)(timeStamp, timeStampType);
         }
-        else {
-            this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
-        }
+        this.lastGuardModeChangeTimeForStations[stationSerial] = timeStamp;
         this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations[stationSerial]);
     }
     /**

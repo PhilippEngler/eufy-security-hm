@@ -244,6 +244,8 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
         this._clearConnectTimeout();
         this._clearESDDisconnectTimeout();
         this._clearSecondaryCommandTimeout();
+        this._clearMessageStateTimeouts();
+        this._clearMessageVideoStateTimeouts();
         if (this.currentMessageState[types_1.P2PDataType.VIDEO].p2pStreaming) {
             this.endStream(types_1.P2PDataType.VIDEO);
         }
@@ -523,10 +525,12 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
         const messageState = this.messageStates.get(sequence);
         if (messageState) {
             messageState.retryTimeout = setTimeout(() => {
-                (0, utils_1.sendMessage)(this.socket, this.connectAddress, types_1.RequestMessageType.DATA, messageState.data).catch((error) => {
-                    this.log.error(`Station ${this.rawStation.station_sn} - Error:`, error);
-                });
-                this.resendNotAcknowledgedCommand(sequence);
+                if (this.connectAddress) {
+                    (0, utils_1.sendMessage)(this.socket, this.connectAddress, types_1.RequestMessageType.DATA, messageState.data).catch((error) => {
+                        this.log.error(`Station ${this.rawStation.station_sn} - Error:`, error);
+                    });
+                    this.resendNotAcknowledgedCommand(sequence);
+                }
             }, this.RESEND_NOT_ACKNOWLEDGED_COMMAND);
         }
     }
@@ -901,8 +905,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                 else {
                     if (!this.currentMessageState[dataType].waitForSeqNoTimeout)
                         this.currentMessageState[dataType].waitForSeqNoTimeout = setTimeout(() => {
-                            //TODO: End stream doesn't stop device for sending video and audio data
-                            this.endStream(dataType);
+                            this.endStream(dataType, true);
                             this.currentMessageState[dataType].waitForSeqNoTimeout = undefined;
                         }, this.MAX_EXPECTED_SEQNO_WAIT);
                     if (!this.currentMessageState[dataType].queuedData.get(message.seqNo)) {
@@ -1184,7 +1187,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
         this.currentMessageState[dataType].p2pStreamingTimeout = setTimeout(() => {
             var _a;
             this.log.info(`Stopping the station stream for the device ${(_a = this.deviceSNs[this.currentMessageState[dataType].p2pStreamChannel]) === null || _a === void 0 ? void 0 : _a.sn}, because we haven't received any data for ${this.MAX_STREAM_DATA_WAIT} seconds`);
-            this.endStream(dataType);
+            this.endStream(dataType, true);
         }, this.MAX_STREAM_DATA_WAIT);
     }
     handleDataBinaryAndVideo(message) {
@@ -1829,9 +1832,36 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
             this.currentMessageState[datatype].waitForAudioData = undefined;
         }
     }
-    endStream(datatype) {
+    endStream(datatype, force = false) {
         var _a, _b;
         if (this.currentMessageState[datatype].p2pStreaming) {
+            if (force) {
+                switch (datatype) {
+                    case types_1.P2PDataType.VIDEO:
+                        this.sendCommandWithInt({
+                            commandType: types_1.CommandType.CMD_STOP_REALTIME_MEDIA,
+                            value: this.currentMessageState[datatype].p2pStreamChannel,
+                            channel: this.currentMessageState[datatype].p2pStreamChannel
+                        }, {
+                            command: {
+                                name: http_1.CommandName.DeviceStopLivestream
+                            }
+                        });
+                        break;
+                    case types_1.P2PDataType.BINARY:
+                        this.sendCommandWithInt({
+                            commandType: types_1.CommandType.CMD_DOWNLOAD_CANCEL,
+                            value: this.currentMessageState[datatype].p2pStreamChannel,
+                            strValueSub: this.rawStation.member.admin_user_id,
+                            channel: this.currentMessageState[datatype].p2pStreamChannel
+                        }, {
+                            command: {
+                                name: http_1.CommandName.DeviceCancelDownload
+                            }
+                        });
+                        break;
+                }
+            }
             this.currentMessageState[datatype].p2pStreaming = false;
             (_a = this.currentMessageState[datatype].videoStream) === null || _a === void 0 ? void 0 : _a.push(null);
             (_b = this.currentMessageState[datatype].audioStream) === null || _b === void 0 ? void 0 : _b.push(null);

@@ -509,6 +509,8 @@ var CommandType;
     CommandType[CommandType["CMD_GET_WORKING_DAYS_HB3"] = 1191] = "CMD_GET_WORKING_DAYS_HB3";
     CommandType[CommandType["CMD_GET_DETECTED_EVENTS_HB3"] = 1192] = "CMD_GET_DETECTED_EVENTS_HB3";
     CommandType[CommandType["CMD_GET_RECORDED_EVENTS_HB3"] = 1193] = "CMD_GET_RECORDED_EVENTS_HB3";
+    CommandType[CommandType["CELLULAR_INFO"] = 7002] = "CELLULAR_INFO";
+    CommandType[CommandType["CELLULAR_SIGNAL_STRENGTH"] = 7006] = "CELLULAR_SIGNAL_STRENGTH";
 })(CommandType = exports.CommandType || (exports.CommandType = {}));
 var MessageType;
 (function (MessageType) {

@@ -16,14 +16,24 @@ const houses_1 = require("./houses");
 const error_1 = require("./error");
 const utils_3 = require("./http/utils");
 const const_1 = require("./http/const");
+const utils_4 = require("./utils/utils");
 class EufySecurityApi {
     /**
      * Create the api object.
      */
     constructor() {
+        this.httpApiPersistentData = {
+            user_id: "",
+            email: "",
+            nick_name: "",
+            device_public_keys: {},
+            clientPrivateKey: "",
+            serverPublicKey: ""
+        };
         this.connected = false;
         this.retries = 0;
         this.serviceState = "init";
+        this.captchaState = { captchaId: "", captcha: "" };
         this.logger = new logging_1.Logger(this);
         this.config = new config_1.Config(this.logger);
         this.homematicApi = new homematicApi_1.HomematicApi(this);
@@ -48,16 +58,26 @@ class EufySecurityApi {
             this.serviceState = "ok";
         }
         else {
-            this.httpService = await http_1.HTTPApi.initialize(this, this.config.getCountry(), this.config.getEmailAddress(), this.config.getPassword(), this.logger);
+            if (this.config.getClientPrivateKey() === undefined || this.config.getClientPrivateKey() === "" || this.config.getServerPublicKey() === undefined || this.config.getServerPublicKey() === "") {
+                this.logger.logInfoBasic("Incomplete persistent data for v2 encrypted cloud api communication. Invalidate authenticated session data.");
+                this.config.setToken("");
+                this.config.setTokenExpire(0);
+            }
+            this.httpApiPersistentData.user_id = this.config.getUserId();
+            this.httpApiPersistentData.email = this.config.getEmailAddress();
+            this.httpApiPersistentData.nick_name = this.config.getNickName();
+            this.httpApiPersistentData.clientPrivateKey = this.config.getClientPrivateKey();
+            this.httpApiPersistentData.serverPublicKey = this.config.getServerPublicKey();
+            this.httpApiPersistentData.device_public_keys = this.config.getDevicePublicKeys();
+            this.httpService = await http_1.HTTPApi.initialize(this.config.getCountry(), this.config.getEmailAddress(), this.config.getPassword(), this.logger, this.httpApiPersistentData);
             this.httpService.setLanguage(this.config.getLanguage());
             if (this.config.getTrustedDeviceName() === undefined || this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient") {
                 this.config.setTrustedDeviceName(const_1.PhoneModels[(0, utils_3.randomNumber)(0, const_1.PhoneModels.length)]);
-                this.config.writeConfig();
             }
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
             this.httpService.on("close", () => this.onAPIClose());
             this.httpService.on("connect", () => this.onAPIConnect());
-            this.httpService.on("captcha request", (id, captcha) => this.onCaptchaRequest(id, captcha));
+            this.httpService.on("captcha request", (captchaId, captcha) => this.onCaptchaRequest(captchaId, captcha));
             this.httpService.on("auth token invalidated", () => this.onAuthTokenInvalidated());
             this.httpService.on("tfa request", () => this.onTfaRequest());
             this.httpService.on("connection error", (error) => this.onAPIConnectionError(error));
@@ -130,6 +150,36 @@ class EufySecurityApi {
         return JSON.stringify(json);
     }
     /**
+     * Returns the captcha state as JSON string.
+     * @returns The captcha state as JSON string.
+     */
+    getCaptchaState() {
+        var json = {};
+        var captchaNeeded = false;
+        if (this.captchaState.captchaId != "" || this.captchaState.captcha != "") {
+            captchaNeeded = true;
+        }
+        json = { "success": true, "captchaNeeded": captchaNeeded, "captcha": this.captchaState };
+        return JSON.stringify(json);
+    }
+    /**
+     * Set the code from the captcha image and login again.
+     * @param code The code from the captcha image.
+     * @returns
+     */
+    setCaptchaCode(code) {
+        var json = {};
+        var success = false;
+        var message = "No captcha code requested.";
+        if (this.captchaState.captchaId != "" || this.captchaState.captcha != "") {
+            this.connect({ captcha: { captchaId: this.captchaState.captchaId, captchaCode: code }, force: false });
+            success = true;
+            message = "Connecting again with the captcha code provided.";
+        }
+        json = { "success": success, "message": message };
+        return JSON.stringify(json);
+    }
+    /**
      * Close the EufySecurityApi.
      */
     async close() {
@@ -173,10 +223,10 @@ class EufySecurityApi {
      */
     async closeStation() {
         this.logInfoBasic("Closing connections to all stations...");
-        if (this.devices != null || this.devices != undefined) {
+        if (this.devices != null || this.devices !== undefined) {
             this.devices.close();
         }
-        if (this.stations != null || this.devices != undefined) {
+        if (this.stations != null || this.devices !== undefined) {
             await this.stations.closeP2PConnections();
         }
     }
@@ -185,7 +235,7 @@ class EufySecurityApi {
      */
     async closeDevice() {
         this.logInfoBasic("Closing connections to all devices...");
-        if (this.devices != null || this.devices != undefined) {
+        if (this.devices != null || this.devices !== undefined) {
             this.devices.closeDevices();
         }
     }
@@ -257,6 +307,7 @@ class EufySecurityApi {
         this.connected = true;
         this.retries = 0;
         //this.emit("connect");
+        this.setCaptchaData("", "");
         this.saveCloudToken();
         if (this.pushService) {
             this.pushService.connect();
@@ -271,24 +322,31 @@ class EufySecurityApi {
         this.houses = new houses_1.EufyHouses(this, this.httpService);
         this.stations = new stations_1.Stations(this, this.httpService);
         this.devices = new devices_1.Devices(this, this.httpService);
+        if (this.httpService.getPersistentData() !== undefined) {
+            this.updateApiPersistentData(this.httpService.getPersistentData());
+        }
         await (0, utils_2.sleep)(10);
         await this.refreshCloudData();
         this.setupScheduledTasks();
         this.serviceState = "ok";
+        this.writeConfig();
     }
     onAPIConnectionError(error) {
         this.logError(`APIConnectionError occured. Error: ${error}`);
         //this.emit("connection error", error);
     }
-    onCaptchaRequest(id, captcha) {
+    onCaptchaRequest(captchaId, captcha) {
         //this.emit("captcha request", id, captcha);
+        this.setCaptchaData(captchaId, captcha);
+        this.logInfo(`Entering captcha code needed. Please check the addon website.`);
     }
     onAuthTokenInvalidated() {
         this.setTokenData(undefined, undefined);
-        this.config.writeConfig();
+        this.logInfo(`The authentication token is invalid and have been removed.`);
     }
     onTfaRequest() {
         //this.emit("tfa request");
+        this.logInfo(`A tfa (two factor authentication) request received. This addon does not support tfa at the moment.`);
     }
     /**
      * Returns the all stations as array.
@@ -341,8 +399,17 @@ class EufySecurityApi {
      * @param houseId The houseId of the house.
      * @returns The house as object.
      */
-    getHouse(houseId) {
-        return this.houses.getHouse(houseId);
+    async getHouse(houseId) {
+        return await this.houses.getHouse(houseId);
+    }
+    /**
+     * Sets the captcha data to the captchaState variable.
+     * @param captchaId The value for the captcha id.
+     * @param captcha the captcha image as base64 string.
+     */
+    setCaptchaData(captchaId, captcha) {
+        this.captchaState.captchaId = captchaId;
+        this.captchaState.captcha = captcha;
     }
     /**
      * Save the login tokens.
@@ -357,15 +424,25 @@ class EufySecurityApi {
         }
     }
     /**
+     * Save the persistent http api data.
+     * @param httpApiPersistentData The persistent data for the http api to save.
+     */
+    updateApiPersistentData(httpApiPersistentData) {
+        this.config.setUserId(httpApiPersistentData.user_id);
+        this.config.setNickName(httpApiPersistentData.nick_name);
+        this.config.setClientPrivateKey(httpApiPersistentData.clientPrivateKey);
+        this.config.setServerPublicKey(httpApiPersistentData.serverPublicKey);
+        this.config.setDevicePublicKeys(httpApiPersistentData.device_public_keys);
+    }
+    /**
      * Refreshing cloud data.
      */
     async refreshCloudData() {
-        /*if (this.config.acceptInvitations)
-        {
+        if (this.config.getAcceptInvitations()) {
             await this.processInvitations().catch(error => {
-                this.log.error("Error in processing invitations", error);
+                this.logError("Error in processing invitations", error);
             });
-        }*/
+        }
         await this.httpService.refreshAllData().catch(error => {
             this.logger.error("Error during API data refreshing", error);
         });
@@ -411,7 +488,9 @@ class EufySecurityApi {
                 if (houses) {
                     json = { "success": true, "data": [] };
                     for (var house_id in houses) {
-                        json.data.push(this.makeJsonObjectForHouse(this.getHouse(house_id)));
+                        var house = await this.getHouse(house_id);
+                        if (house && house != null)
+                            json.data.push(this.makeJsonObjectForHouse(house));
                     }
                     this.setLastConnectionInfo(true);
                 }
@@ -439,8 +518,8 @@ class EufySecurityApi {
         try {
             if (this.houses) {
                 await this.httpService.refreshHouseData();
-                var house = this.getHouse(houseId);
-                if (house) {
+                var house = await this.getHouse(houseId);
+                if (house && house != null) {
                     json = { "success": true, "data": this.makeJsonObjectForHouse(house) };
                     this.setLastConnectionInfo(true);
                 }
@@ -467,7 +546,7 @@ class EufySecurityApi {
     makeJsonObjectForDevice(device) {
         var properties = device.getProperties();
         var json = {};
-        json = { "eufyDeviceId": device.getId(), "deviceType": this.devices.getDeviceTypeAsString(device), "model": device.getModel(), "modelName": this.devices.getDeviceModelName(device), "name": device.getName(), "hardwareVersion": device.getHardwareVersion(), "softwareVersion": device.getSoftwareVersion(), "stationSerialNumber": device.getStationSerial() };
+        json = { "eufyDeviceId": device.getId(), "deviceType": this.devices.getDeviceTypeAsString(device), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "name": device.getName(), "hardwareVersion": device.getHardwareVersion(), "softwareVersion": device.getSoftwareVersion(), "stationSerialNumber": device.getStationSerial() };
         for (var property in properties) {
             switch (property) {
                 case http_1.PropertyName.Model:
@@ -477,11 +556,11 @@ class EufySecurityApi {
                 case http_1.PropertyName.DeviceStationSN:
                     break;
                 case http_1.PropertyName.DevicePictureUrl:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
-                    json.pictureTime = this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()));
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
+                    json.pictureTime = this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) === undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()));
                     break;
                 default:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
             }
         }
         return json;
@@ -578,7 +657,7 @@ class EufySecurityApi {
                 //await this.devices.loadDevices();
                 var device = this.getDevices()[deviceSerial];
                 if (device) {
-                    json = { "success": true, "model": device.getModel(), "modelName": this.devices.getDeviceModelName(device), "data": device.getPropertiesMetadata() };
+                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "data": device.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -612,7 +691,7 @@ class EufySecurityApi {
                 //await this.devices.loadDevices();
                 var device = this.getDevices()[deviceSerial];
                 if (device) {
-                    json = { "success": true, "model": device.getModel(), "modelName": this.devices.getDeviceModelName(device), "data": device.getProperties() };
+                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "data": device.getProperties() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -685,18 +764,18 @@ class EufySecurityApi {
             switch (property) {
                 case http_1.PropertyName.Model:
                     json[property] = properties[property];
-                    json.modelName = this.stations.getStationModelName(station);
+                    json.modelName = (0, utils_4.getModelName)(station.getModel());
                     break;
                 case http_1.PropertyName.StationGuardMode:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
-                    json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
+                    json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
                     break;
                 case http_1.PropertyName.StationHomeSecuritySettings:
                 case http_1.PropertyName.StationAwaySecuritySettings:
                     json[property] = properties[property];
                     break;
                 default:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
             }
         }
         return json;
@@ -759,7 +838,7 @@ class EufySecurityApi {
                 //await this.stations.loadStations();
                 var station = await this.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "type": station.getModel(), "modelName": this.stations.getStationModelName(station), "data": station.getPropertiesMetadata() };
+                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "data": station.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -792,7 +871,7 @@ class EufySecurityApi {
                 //await this.stations.loadStations();
                 var station = await this.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "type": station.getModel(), "modelName": this.stations.getStationModelName(station), "data": station.getProperties() };
+                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "data": station.getProperties() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1056,7 +1135,7 @@ class EufySecurityApi {
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                    if (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined) {
+                    if (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined) {
                         this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
                     else {
@@ -1179,7 +1258,7 @@ class EufySecurityApi {
                     json.data.push({ "stationSerial": station.getSerial(), "result": "success", "guardMode": station.getGuardMode() });
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
-                    if (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined) {
+                    if (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined) {
                         this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
                     else {
@@ -1269,8 +1348,8 @@ class EufySecurityApi {
                         device = devices[deviceSerial];
                         if (this.devices.getDeviceTypeAsString(device) == "camera") {
                             device = devices[deviceSerial];
-                            json.data.push({ "deviceSerial": deviceSerial, "pictureUrl": (device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL() : "", "pictureTime": this.devices.getLastVideoTime(deviceSerial) == undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl": device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL() });
-                            if (device.getLastCameraImageURL() == undefined) {
+                            json.data.push({ "deviceSerial": deviceSerial, "pictureUrl": (device.getLastCameraImageURL() !== undefined) ? device.getLastCameraImageURL() : "", "pictureTime": this.devices.getLastVideoTime(deviceSerial) === undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl": device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL() });
+                            if (device.getLastCameraImageURL() === undefined || device.getLastCameraImageURL().startsWith("T")) {
                                 this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
                             }
                             else {
@@ -1309,7 +1388,7 @@ class EufySecurityApi {
      * @param timestamp The timestamp to set.
      */
     updateStationGuardModeChangeTimeSystemVariable(stationSerial, timestamp) {
-        if (this.getStateUpdateEventActive() == true && timestamp != undefined) {
+        if (this.getStateUpdateEventActive() == true && timestamp !== undefined) {
             this.setSystemVariableTime("eufyLastModeChangeTime" + stationSerial, new Date(timestamp));
         }
         else {
@@ -1341,7 +1420,7 @@ class EufySecurityApi {
      * @param timestamp The timestamp to set.
      */
     updateCameraEventTimeSystemVariable(deviceSerial, timestamp) {
-        if (this.getApiUsePushService() == true && timestamp != undefined) {
+        if (this.getApiUsePushService() == true && timestamp !== undefined) {
             this.setSystemVariableTime("eufyCameraVideoTime" + deviceSerial, new Date(timestamp));
         }
         else {
@@ -1370,7 +1449,7 @@ class EufySecurityApi {
         var json = "";
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
-        res = this.config.writeConfig();
+        res = this.config.writeCurrentConfig();
         if (res == "saved" || res == "ok") {
             json = `{"success":true,"dataRemoved":true}`;
         }
@@ -1414,6 +1493,13 @@ class EufySecurityApi {
      */
     getHttpsCertFile() {
         return this.config.getHttpsCertFile();
+    }
+    /**
+     * Get the houseId for filtering stations and devices.
+     * @returns The houseId as string.
+     */
+    getHouseId() {
+        return this.config.getHouseId();
     }
     /**
      * Returns true if static udp ports should be used otherwise false.
@@ -1482,7 +1568,7 @@ class EufySecurityApi {
     async getAPIConfigAsJson() {
         var json = {};
         json = { "success": true, "data": {} };
-        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "cameraDefaultImage": this.config.getCameraDefaultImage(), "cameraDefaultVideo": this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "updateLinksActive": this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed": this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan": this.config.getUpdateLinksTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "logLevel": this.config.getLogLevel() };
+        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "acceptInvitations": this.config.getAcceptInvitations(), "houseId": this.config.getHouseId(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "cameraDefaultImage": this.config.getCameraDefaultImage(), "cameraDefaultVideo": this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "updateLinksActive": this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed": this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan": this.config.getUpdateLinksTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "logLevel": this.config.getLogLevel(), "tokenExpire": this.config.getTokenExpire() };
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -1499,6 +1585,7 @@ class EufySecurityApi {
      * @param httpsPort The https port for the api.
      * @param httpsKeyFile The key for https.
      * @param httpsCertFile The cert for https.
+     * @param houseId The houseId for filtering station and devices.
      * @param connectionTypeP2p The connection type for connecting with station.
      * @param localStaticUdpPortsActive Should the api use static ports to connect with station.
      * @param localStaticUdpPorts The local ports for connection with station.
@@ -1513,13 +1600,13 @@ class EufySecurityApi {
      * @param updateLinksTimespan The time between two scheduled runs of update links.
      * @param pushServiceActive Should the api use push service.
      * @param logLevel The log level.
-     * @returns
+     * @returns A JSON string containing the result.
      */
-    async setConfig(eMail, password, country, language, trustedDeviceName, httpActive, httpPort, httpsActive, httpsPort, httpsKeyFile, httpsCertFile, connectionTypeP2p, localStaticUdpPortsActive, localStaticUdpPorts, systemVariableActive, cameraDefaultImage, cameraDefaultVideo, stateUpdateEventActive, stateUpdateIntervallActive, stateUpdateIntervallTimespan, updateLinksActive, updateLinksOnlyWhenArmed, updateLinksTimespan, pushServiceActive, logLevel) {
+    async setConfig(eMail, password, country, language, trustedDeviceName, httpActive, httpPort, httpsActive, httpsPort, httpsKeyFile, httpsCertFile, acceptInvitations, houseId, connectionTypeP2p, localStaticUdpPortsActive, localStaticUdpPorts, systemVariableActive, cameraDefaultImage, cameraDefaultVideo, stateUpdateEventActive, stateUpdateIntervallActive, stateUpdateIntervallTimespan, updateLinksActive, updateLinksOnlyWhenArmed, updateLinksTimespan, pushServiceActive, logLevel) {
         var serviceRestart = false;
         var taskSetupStateNeeded = false;
         var taskSetupLinksNeeded = false;
-        if (this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive) {
+        if (this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getHouseId() != houseId || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive) {
             serviceRestart = true;
         }
         if (this.config.getEmailAddress() != eMail) {
@@ -1536,6 +1623,8 @@ class EufySecurityApi {
         this.config.setHttpsPort(httpsPort);
         this.config.setHttpsPKeyFile(httpsKeyFile);
         this.config.setHttpsCertFile(httpsCertFile);
+        this.config.setAcceptInvitations(acceptInvitations);
+        this.config.setHouseId(houseId);
         this.config.setConnectionType(connectionTypeP2p);
         if (localStaticUdpPorts !== undefined) {
             this.config.setLocalStaticUdpPortsActive(localStaticUdpPortsActive);
@@ -1591,7 +1680,7 @@ class EufySecurityApi {
         }
         this.config.setPushServiceActive(pushServiceActive);
         this.config.setLogLevel(logLevel);
-        var res = this.config.writeConfig();
+        var res = this.config.writeCurrentConfig();
         if (res == "saved") {
             return `{"success":true,"serviceRestart":${serviceRestart},"message":"Config saved."}`;
         }
@@ -1606,7 +1695,7 @@ class EufySecurityApi {
      * Write config to file.
      */
     writeConfig() {
-        var res = this.config.writeConfig();
+        var res = this.config.writeCurrentConfig();
         if (res == "saved") {
             return `{"success":true,"message":"Config saved."}`;
         }
@@ -1700,7 +1789,7 @@ class EufySecurityApi {
      * @param dateTime The dateTime value to set.
      */
     setSystemVariableTime(systemVariable, dateTime) {
-        this.setSystemVariableString(systemVariable, this.makeDateTimeString(dateTime.getTime()));
+        this.setSystemVariableString(systemVariable, (0, utils_4.makeDateTimeString)(dateTime.getTime()));
     }
     /**
      * Set a value value to a system variable.
@@ -1711,14 +1800,6 @@ class EufySecurityApi {
         if (this.config.getSystemVariableActive() == true) {
             this.homematicApi.setSystemVariable(systemVariable, newValue);
         }
-    }
-    /**
-     * Converts the given timestamp to the german dd.mm.yyyy hh:mm string.
-     * @param timestamp The timestamp as number.
-     */
-    makeDateTimeString(timestamp) {
-        var dateTime = new Date(timestamp);
-        return (`${dateTime.getDate().toString().padStart(2, '0')}.${(dateTime.getMonth() + 1).toString().padStart(2, '0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}`);
     }
     /**
      * returns the content of the logfile.
@@ -1764,6 +1845,13 @@ class EufySecurityApi {
                 res = "unbekannt";
         }
         return res;
+    }
+    /**
+     * Get the event duration time in seconds.
+     * @returns The event duration in seconds.
+     */
+    getEventDurationSeconds() {
+        return this.config.getEventDurationSeconds();
     }
     /**
      * Returns the P2P connection type determine how to connect to the station.
@@ -1969,18 +2057,73 @@ class EufySecurityApi {
         return JSON.stringify(json);
     }
     /**
+     * Process and accept invitations.
+     */
+    async processInvitations() {
+        let refreshCloud = false;
+        const invites = await this.httpService.getInvites().catch(error => {
+            this.logError("processInvitations - getInvites - Error:", error);
+            return error;
+        });
+        if (Object.keys(invites).length > 0) {
+            const confirmInvites = [];
+            for (const invite of Object.values(invites)) {
+                const devices = [];
+                invite.devices.forEach(device => {
+                    devices.push(device.device_sn);
+                });
+                if (devices.length > 0) {
+                    confirmInvites.push({
+                        invite_id: invite.invite_id,
+                        station_sn: invite.station_sn,
+                        device_sns: devices
+                    });
+                }
+            }
+            if (confirmInvites.length > 0) {
+                const result = await this.httpService.confirmInvites(confirmInvites).catch(error => {
+                    this.logError("processInvitations - confirmInvites - Error:", error);
+                    return error;
+                });
+                if (result) {
+                    this.logInfo(`Accepted received invitations`, confirmInvites);
+                    refreshCloud = true;
+                }
+            }
+        }
+        const houseInvites = await this.httpService.getHouseInviteList().catch(error => {
+            this.logError("processInvitations - getHouseInviteList - Error:", error);
+            return error;
+        });
+        if (Object.keys(houseInvites).length > 0) {
+            for (const invite of Object.values(houseInvites)) {
+                const result = await this.httpService.confirmHouseInvite(invite.house_id, invite.id).catch(error => {
+                    this.logError("processInvitations - confirmHouseInvite - Error:", error);
+                    return error;
+                });
+                if (result) {
+                    this.logInfo(`Accepted received house invitation from ${invite.action_user_email}`, invite);
+                    refreshCloud = true;
+                }
+            }
+        }
+        if (refreshCloud) {
+            this.refreshCloudData();
+        }
+    }
+    /**
      * Returns the version of this API.
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "1.7.1";
+        return "2.0.0";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "2.3.0";
+        return "2.3.1-b244";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

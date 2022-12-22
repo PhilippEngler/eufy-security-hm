@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.analyzeCodec = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.analyzeCodec = exports.initMediaInfo = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MEDIA_INFO = exports.MAGIC_WORD = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const crypto_js_1 = __importDefault(require("crypto-js"));
 const crypto_1 = require("crypto");
@@ -36,6 +36,7 @@ const types_1 = require("./types");
 const device_1 = require("../http/device");
 const ble_1 = require("./ble");
 exports.MAGIC_WORD = "XZYH";
+exports.MEDIA_INFO = null;
 const isPrivateIp = (ip) => /^(::f{4}:)?10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
     /^(::f{4}:)?192\.168\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
     /^(::f{4}:)?172\.(1[6-9]|2\d|30|31)\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
@@ -435,14 +436,34 @@ const getVideoCodec = (data) => {
     return types_1.VideoCodec.UNKNOWN; // Maybe return h264 as Eufy does?
 };
 exports.getVideoCodec = getVideoCodec;
+const initMediaInfo = async () => {
+    if (exports.MEDIA_INFO !== null && exports.MEDIA_INFO !== undefined) {
+        return exports.MEDIA_INFO;
+    }
+    return new Promise((resolve, reject) => {
+        (0, mediainfo_js_1.default)({
+        //chunkSize: 256 * 1024
+        }, mediainfo => {
+            exports.MEDIA_INFO = mediainfo;
+            resolve(mediainfo);
+        }, error => {
+            reject(error);
+        });
+    });
+};
+exports.initMediaInfo = initMediaInfo;
 const analyzeCodec = async (data) => {
     if (data !== undefined && data.length > 0) {
-        const mediainfo = await (0, mediainfo_js_1.default)({ chunkSize: data.byteLength });
-        mediainfo.openBufferInit(data.byteLength, 0);
-        const result = mediainfo.openBufferContinue(data, data.byteLength);
-        mediainfo.openBufferFinalize();
-        if (result) {
-            return JSON.parse(mediainfo.inform());
+        try {
+            const mediainfo = await (0, exports.initMediaInfo)();
+            mediainfo.openBufferInit(data.byteLength, 0);
+            const result = mediainfo.openBufferContinue(data, data.byteLength);
+            mediainfo.openBufferFinalize();
+            if (result) {
+                return JSON.parse(mediainfo.inform());
+            }
+        }
+        catch (error) {
         }
     }
     return {};

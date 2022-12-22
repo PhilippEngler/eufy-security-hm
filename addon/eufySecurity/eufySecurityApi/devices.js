@@ -6,6 +6,7 @@ const error_1 = require("./error");
 const http_1 = require("./http");
 const p2p_1 = require("./p2p");
 const utils_1 = require("./utils");
+const utils_2 = require("./utils/utils");
 /**
  * Represents all the Devices in the account.
  */
@@ -39,6 +40,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         var device;
         if (resDevices != null) {
             for (deviceSerial in resDevices) {
+                if (this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId()) {
+                    this.api.logDebug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
+                    continue;
+                }
                 if (this.devices[deviceSerial]) {
                     device = this.devices[deviceSerial];
                     this.updateDevice(resDevices[deviceSerial]);
@@ -123,7 +128,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station) => {
                         if (!station.isConnected()) {
-                            station.setConnectionType(this.api.getConfig().getConnectionType());
+                            station.setConnectionType(this.api.getP2PConnectionType());
                             station.connect();
                         }
                     }).catch((error) => {
@@ -369,122 +374,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         }
         else {
             return `unknown(${device.getRawDevice().device_type})`;
-        }
-    }
-    /**
-     * Retrieve the model name of a given device.
-     * @param device The device object.
-     * @returns A string with the model name of the device.
-     */
-    getDeviceModelName(device) {
-        switch (device.getModel().substring(0, 5)) {
-            //eufyCams
-            case "T8111":
-                return "eufyCam";
-            case "T8112":
-                return "eufyCam E";
-            case "T8113":
-                return "eufyCam 2C";
-            case "T8114":
-                return "eufyCam 2";
-            case "T8140":
-                return "eufyCam 2 Pro";
-            case "T8142":
-                return "eufyCam 2C Pro";
-            case "T8160":
-                return "eufyCam 3";
-            case "T8161":
-                return "eufyCam 3C";
-            //IndoorCams
-            case "T8400":
-                return "IndoorCam C24";
-            case "T8401":
-                return "IndoorCam C22";
-            case "T8410":
-                return "IndoorCam P24";
-            case "T8411":
-                return "IndoorCam P22";
-            case "T8414":
-                return "IndoorCam Mini 2k";
-            //SoloCams
-            case "T8122":
-                return "SoloCam L20";
-            case "T8123":
-                return "SoloCam L40";
-            case "T8424":
-                return "SoloCam S40";
-            case "T8130":
-                return "SoloCam E20";
-            case "T8131":
-                return "SoloCam E40";
-            case "T8150":
-                return "4G Starlight Camera";
-            //OutdoorCams
-            case "T8441":
-                return "OutdoorCam Pro";
-            case "T8442":
-                return "OutdoorCam";
-            //Wired Doorbells
-            case "T8200":
-                return "Video Doorbell 2K (wired)";
-            case "T8201":
-                return "Video Doorbell 1080p (wired)";
-            case "T8202":
-                return "Video Doorbell 2K Pro (wired)";
-            case "T8203":
-                return "Video Doorbell Dual 2K (wired)";
-            //Battery Doorbells
-            case "T8210":
-                return "Video Doorbell 2K (battery)";
-            case "T8212":
-                return "Video Doorbell 2C (battery)";
-            case "T8213":
-                return "Video Doorbell Dual 2K (battery)";
-            case "T8220":
-                return "Video Doorbell 1080p Slim (battery)";
-            case "T8221":
-                return "Video Doorbell 2E (battery)";
-            case "T8222":
-                return "Video Doorbell 1080p (battery)";
-            //Floodlight
-            case "T8420":
-                return "FloodlightCam 1080p";
-            case "T8422":
-                return "FloodlightCam E 2k";
-            case "T8423":
-                return "FloodlightCam 2 Pro";
-            case "T8424":
-                return "FloodlightCam 2k";
-            //Lock
-            case "T8500":
-                return "Smart Lock Front Door";
-            case "T8501":
-                return "Solo Smart Lock D20";
-            case "T8503":
-                return "Smart Lock R10";
-            case "T8503":
-                return "Smart Lock R20";
-            case "T8519":
-                return "Smart Lock Touch";
-            case "T8520":
-                return "Smart Lock Touch und Wi-Fi";
-            case "T8530":
-                return "Video Smart Lock";
-            //Bridges
-            case "T8021":
-                return "Wi-Fi Bridge und Doorbell Chime";
-            case "T8592":
-                return "Keypad";
-            //Keypad
-            case "T8960":
-                return "Keypad";
-            //Sensor
-            case "T8900":
-                return "Entry Sensor";
-            case "T8910":
-                return "Motion Sensor";
-            default:
-                return "unbekanntes Gerät";
         }
     }
     /**
@@ -1010,22 +899,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param deviceSerial The serial of the device.
      * @param time The time as timestamp or undefined.
      */
-    setLastVideoTime(deviceSerial, time, timestampType) {
-        if (time !== undefined) {
-            switch (timestampType) {
-                case "sec":
-                    this.lastVideoTimeForDevices[deviceSerial] = time * 1000;
-                    break;
-                case "ms":
-                    this.lastVideoTimeForDevices[deviceSerial] = time;
-                    break;
-                default:
-                    this.lastVideoTimeForDevices[deviceSerial] = undefined;
-            }
+    setLastVideoTime(deviceSerial, timeStamp, timeStampType) {
+        if (timeStamp !== undefined) {
+            timeStamp = (0, utils_2.convertTimeStampToTimeStampMs)(timeStamp, timeStampType);
         }
-        else {
-            this.lastVideoTimeForDevices[deviceSerial] = undefined;
-        }
+        this.lastVideoTimeForDevices[deviceSerial] = timeStamp;
         this.api.updateCameraEventTimeSystemVariable(deviceSerial, this.lastVideoTimeForDevices[deviceSerial]);
     }
     /**

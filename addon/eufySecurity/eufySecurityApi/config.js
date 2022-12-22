@@ -2,30 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Config = void 0;
 const fs_1 = require("fs");
-const ini_1 = require("ini");
 class Config {
     /**
      * Constructor, read the config file and provide values to the variables.
      */
     constructor(logger) {
-        this.oldConfig = undefined;
         this.logger = logger;
         this.hasChanged = false;
-        if (this.isConfigMigrationFromIniNeeded()) {
-            this.migrateConfigFromIniToJson();
-        }
-        else {
-            if (this.isConfigFileAvailable() == false) {
-                this.configJson = this.createEmptyConfigJson();
-                this.hasChanged = true;
-                this.writeConfig();
-            }
+        if (this.isConfigFileAvailable() == false) {
+            this.configJson = this.createEmptyConfigJson();
+            this.hasChanged = true;
         }
         if (this.existUploadedConfig() == true) {
             try {
                 this.configJson = this.checkConfigFile(this.loadConfigJson("./config.json.upload"));
                 this.hasChanged = true;
-                this.writeConfig();
                 (0, fs_1.unlinkSync)('./config.json.upload');
                 this.logger.logInfoBasic("Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
             }
@@ -36,7 +27,7 @@ class Config {
                 this.logger.logInfoBasic("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
                 if (this.isConfigFileAvailable() == false) {
                     this.configJson = this.createEmptyConfigJson();
-                    this.writeConfig();
+                    this.hasChanged = true;
                 }
                 else {
                     this.configJson = this.loadConfigJson("./config.json");
@@ -46,34 +37,21 @@ class Config {
         else {
             if (this.isConfigFileAvailable() == false) {
                 this.configJson = this.createEmptyConfigJson();
-                this.writeConfig();
+                this.hasChanged = true;
             }
             else {
                 this.configJson = this.loadConfigJson("./config.json");
             }
         }
-        //this.checkConfigValues();
-        this.updateConfig();
+        //this.writeConfig(this.configJson);
     }
     /**
      * Remove the scheduling for saveConfig12h
      */
     close() {
-        if (this.taskSaveConfig12h) {
-            this.logger.logInfoBasic(`Remove scheduling for saveConfig12h.`);
-            clearInterval(this.taskSaveConfig12h);
-        }
-    }
-    /**
-     * Checks if config must be migrated to json.
-     * @returns true if migration to json is needed, otherwise false.
-     */
-    isConfigMigrationFromIniNeeded() {
-        if (!(0, fs_1.existsSync)('./config.json') && (0, fs_1.existsSync)('./config.ini')) {
-            return true;
-        }
-        else {
-            return false;
+        if (this.taskSaveConfig24h) {
+            this.logger.logInfoBasic(`Remove scheduling for saveConfig24h.`);
+            clearInterval(this.taskSaveConfig24h);
         }
     }
     /**
@@ -86,6 +64,10 @@ class Config {
         }
         return false;
     }
+    /**
+     * Checks if a uploaded config.json.upload is available.
+     * @returns true, if there is a uploaded config, otherwise false.
+     */
     existUploadedConfig() {
         if ((0, fs_1.existsSync)('./config.json.upload')) {
             return true;
@@ -97,22 +79,7 @@ class Config {
      * @returns The expected version of the config file.
      */
     getConfigFileTemplateVersion() {
-        return 12;
-    }
-    /**
-     * Load Config from file.
-     */
-    loadConfig() {
-        try {
-            this.hasChanged = false;
-            var filecontent = (0, fs_1.readFileSync)('./config.ini', 'utf-8');
-            filecontent = this.updateConfigFileTemplateStage1(filecontent);
-            var config = (0, ini_1.parse)(filecontent);
-            this.updateConfigFileTemplateStage2(filecontent, config);
-            return config;
-        }
-        catch (ENOENT) {
-        }
+        return 14;
     }
     /**
      * Load the config from the given file and returns the config.
@@ -124,7 +91,10 @@ class Config {
         try {
             this.hasChanged = false;
             resConfigJson = JSON.parse((0, fs_1.readFileSync)(filePath, 'utf-8'));
-            this.taskSaveConfig12h = setInterval(async () => { this.writeConfig(); }, (12 * 60 * 60 * 1000));
+            this.taskSaveConfig24h = setInterval(async () => { this.writeConfig(this.configJson); }, (24 * 60 * 60 * 1000));
+            if (this.updateConfigNeeded(resConfigJson)) {
+                resConfigJson = this.updateConfig(resConfigJson);
+            }
         }
         catch (ENOENT) {
             this.logger.logErrorBasis(`No '${filePath}' available.`);
@@ -143,225 +113,12 @@ class Config {
         return filecontent;
     }
     /**
-     * Check and add config entries to the config string after parsed.
+     * Write given config json to file.
      */
-    updateConfigFileTemplateStage2(filecontent, config) {
-        var updated = false;
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 1) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 1...");
-            if (filecontent.indexOf("api_use_system_variables") == -1) {
-                this.logger.logInfoBasic("  adding 'api_use_system_variables'.");
-                filecontent = filecontent.replace("api_https_pkey_string=" + this.getHttpsPkeyString(), "api_https_pkey_string=" + this.getHttpsPkeyString() + "\r\napi_use_system_variables=false");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_camera_default_image") == -1) {
-                this.logger.logInfoBasic("  adding 'api_camera_default_image'.");
-                filecontent = filecontent.replace("api_use_system_variables=" + this.getSystemVariableActive(), "api_use_system_variables=" + this.getSystemVariableActive() + "\r\napi_camera_default_image=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_camera_default_video") == -1) {
-                this.logger.logInfoBasic("  adding 'api_camera_default_video'.");
-                filecontent = filecontent.replace("api_camera_default_image=" + this.getCameraDefaultImage(), "api_camera_default_image=" + this.getCameraDefaultImage() + "\r\napi_camera_default_video=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 1 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 2) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 2...");
-            if (filecontent.indexOf("api_udp_local_static_ports_active") == -1) {
-                this.logger.logInfoBasic("  adding 'api_udp_local_static_ports_active'.");
-                filecontent = filecontent.replace("api_https_pkey_string=" + this.getHttpsPkeyString(), "api_https_pkey_string=" + this.getHttpsPkeyString() + "\r\api_udp_local_static_ports_active=false");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 2 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 3) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 3...");
-            if (filecontent.indexOf("api_log_level") == -1) {
-                this.logger.logInfoBasic(" adding 'api_log_level'.");
-                filecontent = filecontent.replace("api_camera_default_video=" + this.getCameraDefaultVideo(), "api_camera_default_video=" + this.getCameraDefaultVideo() + "\r\napi_log_level=0");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 3 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 4) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 4...");
-            if (filecontent.indexOf("api_connection_type") == -1) {
-                this.logger.logInfoBasic(" adding 'api_connection_type'.");
-                filecontent = filecontent.replace("api_udp_local_static_ports_active=", "api_connection_type=1\r\napi_udp_local_static_ports_active=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_udp_local_static_ports=") > 0) {
-                this.logger.logInfoBasic(" removing 'api_udp_local_static_ports'.");
-                filecontent = filecontent.replace(/^.*api_udp_local_static_ports=.*$/mg, "");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 4 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 5) {
-            this.setTokenExpire(0);
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 5...");
-            if (filecontent.indexOf("api_update_state_active") == -1) {
-                this.logger.logInfoBasic(" adding 'api_update_state_active'.");
-                filecontent = filecontent.replace("api_log_level=", "api_update_state_active=false\r\napi_log_level=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_update_state_timespan") == -1) {
-                this.logger.logInfoBasic(" adding 'api_update_state_timespan'.");
-                filecontent = filecontent.replace("api_log_level=", "api_update_state_timespan=15\r\napi_log_level=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_update_links24_active") == -1) {
-                this.logger.logInfoBasic(" adding 'api_update_links24_active'.");
-                filecontent = filecontent.replace("api_log_level=", "api_update_links24_active=false\r\napi_log_level=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_update_links_active") == -1) {
-                this.logger.logInfoBasic(" adding 'api_update_links_active'.");
-                filecontent = filecontent.replace("api_log_level=", "api_update_links_active=false\r\napi_log_level=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_update_links_timespan") == -1) {
-                this.logger.logInfoBasic(" adding 'api_update_links_timespan'.");
-                filecontent = filecontent.replace("api_log_level=", "api_update_links_timespan=15\r\napi_log_level=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 5 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 6) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 6...");
-            if (filecontent.indexOf("api_udp_local_static_ports=") > 0) {
-                this.logger.logInfoBasic(" removing 'api_udp_local_static_ports'.");
-                filecontent = filecontent.replace(/^.*api_udp_local_static_ports=.*$/mg, "");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_update_links_only_when_active") == -1) {
-                this.logger.logInfoBasic(" adding 'api_update_links_only_when_active'.");
-                filecontent = filecontent.replace("api_log_level=", "api_update_links_only_when_active=false\r\napi_log_level=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 6 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 7) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 7...");
-            if (filecontent.indexOf("api_update_state_active") > 0) {
-                this.logger.logInfoBasic(" rename 'api_update_state_active' to 'api_update_state_intervall_active'.");
-                filecontent = filecontent.replace("api_update_state_active=", "api_update_state_intervall_active=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("api_update_state_event_active") == -1) {
-                this.logger.logInfoBasic(" adding 'api_update_state_event_active'.");
-                filecontent = filecontent.replace("api_update_state_intervall_active=", "api_update_state_event_active=false\r\napi_update_state_intervall_active=");
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 7 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 8) {
-            /*this.logger.logInfoBasic("Configfile needs Stage2 update to version 8...");
-            if(this.filecontent.indexOf("location") == -1)
-            {
-                this.logger.logInfoBasic(" adding 'location'.");
-                this.filecontent = this.filecontent.replace(`password=${this.getPassword()}`, `password=${this.getPassword()}\r\nlocation="1"`);
-                this.config = parse(this.filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 8 finished.");*/
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 9) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 9...");
-            if (filecontent.indexOf("country") == -1) {
-                this.logger.logInfoBasic(" adding 'country' and 'language'.");
-                filecontent = filecontent.replace(`password=${this.getPassword()}`, `password=${this.getPassword()}\r\ncountry=DE\r\nlanguage=de\r\n\r\n`);
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (filecontent.indexOf("[EufyAPIPushData]") == -1) {
-                this.logger.logInfoBasic(" adding '[EufyAPIPushData]'.");
-                filecontent = filecontent.replace(`language=${this.getLanguage()}`, `language=${this.getLanguage()}\r\n\r\n[EufyAPIPushData]\r\ntrusted_device_name=\r\nserial_number=\r\nevent_duration_seconds=10\r\naccept_invitations=false\r\nopen_udid=\r\nfid_response_name=\r\nfid_response_fid=\r\nfid_response_refresh_token=\r\nfid_response_auth_token_token=\r\nfid_response_auth_token_expires_in=\r\nfid_response_auth_token_expires_at=\r\ncheckin_response_stats_ok=\r\ncheckin_response_time_ms=\r\ncheckin_response_android_id=\r\ncheckin_response_security_token=\r\ncheckin_response_version_info=\r\ncheckin_response_device_data_version_info=\r\ngcm_response_token=\r\npersistent_ids=\r\n\r\n`);
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 9 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) < 10) {
-            this.logger.logInfoBasic("Configfile needs Stage2 update to version 10...");
-            if (filecontent.indexOf("api_use_pushservice") == -1) {
-                this.logger.logInfoBasic(" adding 'api_use_pushservice'.");
-                filecontent = filecontent.replace(`api_log_level=${this.getLogLevel()}`, `api_use_pushservice=false\r\napi_log_level=${this.getLogLevel()}\r\n\r\n`);
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...Stage2 update to version 11 finished.");
-        }
-        if (Number.parseInt(config['ConfigFileInfo']['config_file_version']) == 10) {
-            this.logger.logInfoBasic("Configfile needs country and language check...");
-            if (this.getCountry() == "") {
-                this.logger.logInfoBasic(" setting 'country' to standard value.");
-                filecontent = filecontent.replace(`country=`, `country=DE`);
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (this.getCountry() == "undefined") {
-                this.logger.logInfoBasic(" setting 'country' to standard value.");
-                filecontent = filecontent.replace(`country="undefined"`, `country=DE`);
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (this.getLanguage() == "") {
-                this.logger.logInfoBasic(" setting 'language' to standard value.");
-                filecontent = filecontent.replace(`language=`, `language=de`);
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            if (this.getLanguage() == "undefined") {
-                this.logger.logInfoBasic(" setting 'language' to standard value.");
-                filecontent = filecontent.replace(`language=undefined`, `language=de`);
-                config = (0, ini_1.parse)(filecontent);
-                updated = true;
-            }
-            updated = true;
-            this.logger.logInfoBasic("...country and language check finished.");
-            this.logger.logInfoBasic("...Stage2 update to version 11 finished.");
-        }
-        if (updated) {
-            config = (0, ini_1.parse)(filecontent);
-            config['ConfigFileInfo']['config_file_version'] = this.getConfigFileTemplateVersion();
-        }
-        return updated;
-    }
-    /**
-     * Write Configuration to file.
-     */
-    writeConfig() {
+    writeConfig(configJson) {
         if (this.hasChanged == true) {
             try {
-                (0, fs_1.writeFileSync)('./config.json', JSON.stringify(this.configJson));
+                (0, fs_1.writeFileSync)('./config.json', JSON.stringify(configJson));
                 this.hasChanged = false;
                 return "saved";
             }
@@ -374,128 +131,99 @@ class Config {
         }
     }
     /**
+     * Write given config json to file.
+     * @returns A string indicating the success.
+     */
+    writeCurrentConfig() {
+        return this.writeConfig(this.configJson);
+    }
+    /**
      * Create a empty config object with some default settings.
      * @returns The config object.
      */
     createEmptyConfigJson() {
         var config = JSON.parse(`{}`);
         config.configVersion = this.getConfigFileTemplateVersion();
-        var accountData = { "eMail": "", "password": "", "encryptedPassword": "", "country": "DE", "language": "de" };
+        var accountData = { "eMail": "", "password": "", "encryptedPassword": "", "userId": "", "nickName": "", "clientPrivateKey": "", "serverPublicKey": "", "country": "DE", "language": "de" };
         config.accountData = accountData;
         var tokenData = { "token": "", "tokenExpires": 0 };
         config.tokenData = tokenData;
         var pushData = { "trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": "" };
         config.pushData = pushData;
-        var apiConfig = { "httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false, "logLevel": 0 };
+        var apiConfig = { "httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false, "logLevel": 0 };
         config.apiConfig = apiConfig;
         var stations = [];
         config.stations = stations;
+        var devicePublicKeys = [];
+        config.devicePublicKeys = devicePublicKeys;
         return config;
     }
     /**
-     * Migrates the old config.ini to the new config.json and deletes the config.ini on exit.
-     */
-    migrateConfigFromIniToJson() {
-        this.logger.logInfoBasic("Migrating settings to json...");
-        var configIni = this.loadConfig();
-        this.configJson = this.createEmptyConfigJson();
-        this.configJson.accountData.eMail = configIni['EufyAPILoginData']['email'];
-        this.configJson.accountData.password = configIni['EufyAPILoginData']['password'];
-        if (configIni['EufyAPILoginData']['country'] != undefined) {
-            this.configJson.accountData.country = configIni['EufyAPILoginData']['country'];
-        }
-        this.configJson.accountData.language = configIni['EufyAPILoginData']['language'];
-        this.configJson.tokenData.token = configIni['EufyTokenData']['token'];
-        this.configJson.tokenData.tokenExpires = Number.parseInt(configIni['EufyTokenData']['tokenexpires']);
-        if (configIni['EufyAPIPushData'] != undefined) {
-            if (configIni['EufyAPIPushData']['trusted_device_name'] == "eufyclient") {
-                this.configJson.pushData.trustedDeviceName = "";
-            }
-            else {
-                this.configJson.pushData.trustedDeviceName = configIni['EufyAPIPushData']['trusted_device_name'];
-            }
-            this.configJson.pushData.serialNumber = configIni['EufyAPIPushData']['serial_number'];
-            this.configJson.pushData.eventDurationSeconds = Number.parseInt(configIni['EufyAPIPushData']['event_duration_seconds']);
-            this.configJson.pushData.acceptInvitations = configIni['EufyAPIPushData']['accept_invitations'];
-            this.configJson.pushData.openUdid = configIni['EufyAPIPushData']['open_udid'];
-            var fidResp = { name: configIni['EufyAPIPushData']['fid_response_name'], fid: configIni['EufyAPIPushData']['fid_response_fid'], refreshToken: configIni['EufyAPIPushData']['fid_response_refresh_Token'], authToken: { token: configIni['EufyAPIPushData']['fid_response_auth_token_token'], expiresIn: configIni['EufyAPIPushData']['fid_response_auth_token_expires_in'], expiresAt: Number.parseInt(configIni['EufyAPIPushData']['fid_response_auth_token_expires_at']) } };
-            this.configJson.pushData.fidResponse = fidResp;
-            var checkinResp = { statsOk: configIni['EufyAPIPushData']['checkin_response_stats_ok'], timeMs: configIni['EufyAPIPushData']['checkin_response_time_ms'], androidId: configIni['EufyAPIPushData']['checkin_response_android_id'], securityToken: configIni['EufyAPIPushData']['checkin_response_security_token'], versionInfo: configIni['EufyAPIPushData']['checkin_response_version_info'], deviceDataVersionInfo: configIni['EufyAPIPushData']['checkin_response_device_data_version_info'] };
-            this.configJson.pushData.checkinResponse = checkinResp;
-            this.configJson.pushData.gcmResponseToken = configIni['EufyAPIPushData']['gcm_response_token'];
-            this.configJson.pushData.persistentIds = configIni['EufyAPIPushData']['persistent_ids'];
-        }
-        this.configJson.apiConfig.httpActive = configIni['EufyAPIServiceData']['api_http_active'];
-        this.configJson.apiConfig.httpPort = Number.parseInt(configIni['EufyAPIServiceData']['api_http_port']);
-        this.configJson.apiConfig.httpsActive = configIni['EufyAPIServiceData']['api_https_active'];
-        this.configJson.apiConfig.httpsPort = Number.parseInt(configIni['EufyAPIServiceData']['api_https_port']);
-        this.configJson.apiConfig.httpsMethod = configIni['EufyAPIServiceData']['api_https_method'];
-        this.configJson.apiConfig.httpsPkeyFile = configIni['EufyAPIServiceData']['api_https_pkey_file'];
-        this.configJson.apiConfig.httpsCertFile = configIni['EufyAPIServiceData']['api_https_cert_file'];
-        this.configJson.apiConfig.httpsPkeyString = configIni['EufyAPIServiceData']['api_https_pkey_string'];
-        this.configJson.apiConfig.connectionTypeP2p = Number.parseInt(configIni['EufyAPIServiceData']['api_connection_type']);
-        this.configJson.apiConfig.localStaticUdpPortsActive = configIni['EufyAPIServiceData']['api_udp_local_static_ports_active'];
-        this.configJson.apiConfig.systemVariableActive = configIni['EufyAPIServiceData']['api_use_system_variables'];
-        this.configJson.apiConfig.cameraDefaultImage = configIni['EufyAPIServiceData']['api_camera_default_image'];
-        this.configJson.apiConfig.cameraDefaultVideo = configIni['EufyAPIServiceData']['api_camera_default_video'];
-        this.configJson.apiConfig.updateCloudInfoIntervall = 10;
-        this.configJson.apiConfig.updateDeviceDataIntervall = 10;
-        this.configJson.apiConfig.stateUpdateEventActive = configIni['EufyAPIServiceData']['api_update_state_event_active'];
-        this.configJson.apiConfig.stateUpdateIntervallActive = configIni['EufyAPIServiceData']['api_update_state_intervall_active'];
-        this.configJson.apiConfig.stateUpdateIntervallTimespan = Number.parseInt(configIni['EufyAPIServiceData']['api_update_state_timespan']);
-        this.configJson.apiConfig.updateLinksActive = configIni['EufyAPIServiceData']['api_update_links_active'];
-        this.configJson.apiConfig.updateLinksOnlyWhenArmed = configIni['EufyAPIServiceData']['api_update_links_only_when_active'];
-        this.configJson.apiConfig.updateLinksTimespan = Number.parseInt(configIni['EufyAPIServiceData']['api_update_links_timespan']);
-        if (configIni['EufyAPIServiceData']['api_use_pushservice'] != undefined) {
-            this.configJson.apiConfig.pushServiceActive = configIni['EufyAPIServiceData']['api_use_pushservice'];
-        }
-        this.configJson.apiConfig.logLevel = Number.parseInt(configIni['EufyAPIServiceData']['api_log_level']);
-        this.hasChanged = true;
-        this.writeConfig();
-        (0, fs_1.unlinkSync)('./config.ini');
-        this.logger.logInfoBasic("...migrating done. Removed old 'config.ini'.");
-        this.oldConfig = configIni;
-    }
-    /**
      * Checks if the config file needs to be updated.
+     * @param configJson The config as json object.
      * @returns A boolean value, true if the config need to be updated, otherwise false.
      */
-    updateConfigNeeded() {
-        if (this.configJson.configVersion == this.getConfigFileTemplateVersion()) {
+    updateConfigNeeded(configJson) {
+        if (configJson.configVersion == this.getConfigFileTemplateVersion()) {
             return false;
         }
-        return false;
+        return true;
     }
     /**
      * Update the config.json file to the most recent version.
      * @returns true, if the config was updated, otherwise false.
      */
-    updateConfig() {
-        if (this.configJson.configVersion < this.getConfigFileTemplateVersion()) {
+    updateConfig(configJson) {
+        if (configJson.configVersion < this.getConfigFileTemplateVersion()) {
             var updated = false;
-            if (this.configJson.configVersion == 11) {
+            if (configJson.configVersion < 12) {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 12...");
-                if (this.configJson.apiConfig.updateCloudInfoIntervall == undefined) {
+                if (configJson.apiConfig.updateCloudInfoIntervall == undefined) {
                     this.logger.logInfoBasic(" adding 'updateCloudInfoIntervall'.");
-                    this.configJson.apiConfig.updateCloudInfoIntervall = 10;
+                    configJson.apiConfig.updateCloudInfoIntervall = 10;
                 }
-                if (this.configJson.apiConfig.updateDeviceDataIntervall == undefined) {
+                if (configJson.apiConfig.updateDeviceDataIntervall == undefined) {
                     this.logger.logInfoBasic(" adding 'updateDeviceDataIntervall'.");
-                    this.configJson.apiConfig.updateDeviceDataIntervall = 10;
+                    configJson.apiConfig.updateDeviceDataIntervall = 10;
+                }
+                updated = true;
+            }
+            if (configJson.configVersion < 13) {
+                this.logger.logInfoBasic("Configfile needs Stage2 update to version 13...");
+                if (configJson.apiConfig.houseId == undefined) {
+                    this.logger.logInfoBasic(" adding 'houseId'.");
+                    configJson.apiConfig.houseId = "all";
+                }
+                updated = true;
+            }
+            if (configJson.configVersion < 14) {
+                this.logger.logInfoBasic("Configfile needs Stage2 update to version 14...");
+                if (configJson.accountData.userId == undefined) {
+                    this.logger.logInfoBasic(" adding 'userId'.");
+                    configJson.accountData.userId = "";
+                }
+                if (configJson.accountData.nickName == undefined) {
+                    this.logger.logInfoBasic(" adding 'nickName'.");
+                    configJson.accountData.nickName = "";
+                }
+                if (configJson.accountData.clientPrivateKey == undefined) {
+                    this.logger.logInfoBasic(" adding 'clientPrivateKey'.");
+                    configJson.accountData.clientPrivateKey = "";
+                }
+                if (configJson.accountData.serverPublicKey == undefined) {
+                    this.logger.logInfoBasic(" adding 'serverPublicKey'.");
+                    configJson.accountData.serverPublicKey = "";
                 }
                 updated = true;
             }
             if (updated == true) {
-                this.configJson.configVersion = this.getConfigFileTemplateVersion();
-                this.configJson = this.checkConfigFile(this.configJson);
+                configJson.configVersion = this.getConfigFileTemplateVersion();
+                configJson = this.checkConfigFile(configJson);
                 this.hasChanged = true;
-                this.writeConfig();
+                this.writeConfig(configJson);
             }
-            return true;
         }
-        else {
-            return false;
-        }
+        return configJson;
     }
     /**
      * Create a empty config object with some default settings.
@@ -514,6 +242,18 @@ class Config {
         }
         if (configJson.accountData.encryptedPassword !== undefined) {
             newConfigJson.accountData.encryptedPassword = configJson.accountData.encryptedPassword;
+        }
+        if (configJson.accountData.userId !== undefined) {
+            newConfigJson.accountData.userId = configJson.accountData.userId;
+        }
+        if (configJson.accountData.nickName !== undefined) {
+            newConfigJson.accountData.nickName = configJson.accountData.nickName;
+        }
+        if (configJson.accountData.clientPrivateKey !== undefined) {
+            newConfigJson.accountData.clientPrivateKey = configJson.accountData.clientPrivateKey;
+        }
+        if (configJson.accountData.serverPublicKey !== undefined) {
+            newConfigJson.accountData.serverPublicKey = configJson.accountData.serverPublicKey;
         }
         if (configJson.accountData.country !== undefined) {
             newConfigJson.accountData.country = configJson.accountData.country;
@@ -577,6 +317,9 @@ class Config {
         }
         if (configJson.apiConfig.httpsPkeyString !== undefined) {
             newConfigJson.apiConfig.httpsPkeyString = configJson.apiConfig.httpsPkeyString;
+        }
+        if (configJson.apiConfig.houseId !== undefined) {
+            newConfigJson.apiConfig.houseId = configJson.apiConfig.houseId;
         }
         if (configJson.apiConfig.connectionTypeP2p !== undefined) {
             newConfigJson.apiConfig.connectionTypeP2p = configJson.apiConfig.connectionTypeP2p;
@@ -683,61 +426,12 @@ class Config {
         return updated;
     }
     /**
-     * Checks if the old config.ini contains settings for a given station.
-     * @param stationSerial The serial of the station the check is to perform.
-     * @returns true, if migrarion is needed, otherwise no.
-     */
-    checkStationMigrationToJsonIsNeeded(stationSerial) {
-        if (this.oldConfig === undefined || this.oldConfig['EufyP2PData_' + stationSerial] === undefined) {
-            return false;
-        }
-        else {
-            return true;
-        }
-    }
-    /**
-     * Migrate a given station from the old config.ini to the new config.json.
-     * @param stationSerial The serial of the station the migration is to perform.
-     * @returns
-     */
-    migrateStationToJson(stationSerial) {
-        if (this.oldConfig !== undefined) {
-            var p2pDid, stationIpAddress, udpPort;
-            if (this.oldConfig['EufyP2PData_' + stationSerial]['p2p_did'] === undefined) {
-                p2pDid = "";
-            }
-            else {
-                p2pDid = this.oldConfig['EufyP2PData_' + stationSerial]['p2p_did'];
-            }
-            if (this.oldConfig['EufyP2PData_' + stationSerial]['base_ip_address'] === undefined) {
-                stationIpAddress = "";
-            }
-            else {
-                stationIpAddress = this.oldConfig['EufyP2PData_' + stationSerial]['base_ip_address'];
-            }
-            if (this.oldConfig['EufyP2PData_' + stationSerial]['udp_ports'] === undefined || this.oldConfig['EufyP2PData_' + stationSerial]['udp_ports'] == "") {
-                udpPort = null;
-            }
-            else {
-                udpPort = Number.parseInt(this.oldConfig['EufyP2PData_' + stationSerial]['udp_ports']);
-            }
-            return { "stationSerial": stationSerial, "p2pDid": p2pDid, "stationIpAddress": stationIpAddress, "udpPort": udpPort };
-        }
-        return null;
-    }
-    /**
      * Add section for a new station.
      * @param stationSerial Serialnumber of the new station.
      */
     updateWithNewStation(stationSerial) {
         this.logger.logInfoBasic(`Adding station ${stationSerial} to settings.`);
-        var station;
-        if (this.checkStationMigrationToJsonIsNeeded(stationSerial) == false) {
-            station = { "stationSerial": stationSerial, "p2pDid": "", "stationIpAddress": "", "udpPort": "" };
-        }
-        else {
-            station = this.migrateStationToJson(stationSerial);
-        }
+        var station = { "stationSerial": stationSerial, "p2pDid": "", "stationIpAddress": "", "udpPort": "" };
         if (Array.isArray(this.configJson.stations)) {
             this.configJson.stations.push(station);
         }
@@ -815,6 +509,27 @@ class Config {
         }
     }
     /**
+     * Get the user id of the eufy security account.
+     */
+    getUserId() {
+        if (this.configJson.accountData.userId != undefined) {
+            return this.configJson.accountData.userId;
+        }
+        else {
+            return "";
+        }
+    }
+    /**
+     * Set the user id for the eufy security account.
+     * @param userId The user id to set.
+     */
+    setUserId(userId) {
+        if (this.configJson.accountData.userId != userId) {
+            this.configJson.accountData.userId = userId;
+            this.hasChanged = true;
+        }
+    }
+    /**
      * Get the password for the eufy security account.
      */
     getPassword() {
@@ -832,6 +547,90 @@ class Config {
     setPassword(password) {
         if (this.configJson.accountData.password != password) {
             this.configJson.accountData.password = password;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the nickname of the eufy security account.
+     */
+    getNickName() {
+        if (this.configJson.accountData.nickName != undefined) {
+            return this.configJson.accountData.nickName;
+        }
+        else {
+            return "";
+        }
+    }
+    /**
+     * Set the nickname for the eufy security account.
+     * @param nickName The nickname to set.
+     */
+    setNickName(nickName) {
+        if (this.configJson.accountData.nickName != nickName) {
+            this.configJson.accountData.nickName = nickName;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the client private key of the eufy security account.
+     */
+    getClientPrivateKey() {
+        if (this.configJson.accountData.clientPrivateKey != undefined) {
+            return this.configJson.accountData.clientPrivateKey;
+        }
+        else {
+            return "";
+        }
+    }
+    /**
+     * Set the client private key for the eufy security account.
+     * @param clientPrivateKey The client private key to set.
+     */
+    setClientPrivateKey(clientPrivateKey) {
+        if (this.configJson.accountData.clientPrivateKey != clientPrivateKey) {
+            this.configJson.accountData.clientPrivateKey = clientPrivateKey;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the server public key of the eufy security account.
+     */
+    getServerPublicKey() {
+        if (this.configJson.accountData.serverPublicKey != undefined) {
+            return this.configJson.accountData.serverPublicKey;
+        }
+        else {
+            return "";
+        }
+    }
+    /**
+     * Set the server public key for the eufy security account.
+     * @param serverPublicKey The server public key to set.
+     */
+    setServerPublicKey(serverPublicKey) {
+        if (this.configJson.accountData.serverPublicKey != serverPublicKey) {
+            this.configJson.accountData.serverPublicKey = serverPublicKey;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the devices public keys of the eufy security account.
+     */
+    getDevicePublicKeys() {
+        if (this.configJson.devicePublicKeys != undefined) {
+            return this.configJson.devicePublicKeys;
+        }
+        else {
+            return "";
+        }
+    }
+    /**
+     * Set the device public keys for the eufy security account.
+     * @param devicePublicKeys The device public keys to set.
+     */
+    setDevicePublicKeys(devicePublicKeys) {
+        if (this.configJson.devicePublicKeys != devicePublicKeys) {
+            this.configJson.devicePublicKeys = devicePublicKeys;
             this.hasChanged = true;
         }
     }
@@ -1076,6 +875,27 @@ class Config {
         }
         else {
             return "";
+        }
+    }
+    /**
+     * Set the houseId for filtering station and devices.
+     * @param houseId The id for the house as string.
+     */
+    setHouseId(houseId) {
+        if (this.configJson.apiConfig.houseId != houseId) {
+            this.configJson.apiConfig.houseId = houseId;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the houseId as string for filtering stations and devices.
+     */
+    getHouseId() {
+        if (this.configJson.apiConfig.houseId != undefined) {
+            return this.configJson.apiConfig.houseId;
+        }
+        else {
+            return "all";
         }
     }
     /**
@@ -1491,8 +1311,7 @@ class Config {
         if (res) {
             this.setP2PDataP2pDid(stationSerial, p2pDid);
             this.setP2PDataStationIpAddress(stationSerial, station_ip_address);
-            this.writeConfig();
-            this.loadConfig();
+            this.writeConfig(this.configJson);
         }
     }
     /**
