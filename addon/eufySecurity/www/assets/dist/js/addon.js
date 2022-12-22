@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * v1.9 - 20221217
+ * v2.0 - 20221222
  */
 port = "";
 action = "";
@@ -3459,7 +3459,7 @@ function loadDataInfo(showLoading)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 1.7.0`;
+				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 2.0.0`;
 				document.getElementById("versionInfo").innerHTML = info;
 			}
 			else

@@ -312,11 +312,11 @@ export class EufySecurityApi
     private async closeStation() : Promise<void>
     {
         this.logInfoBasic("Closing connections to all stations...");
-        if(this.devices != null || this.devices != undefined)
+        if(this.devices != null || this.devices !== undefined)
         {
             this.devices.close();
         }
-        if(this.stations != null || this.devices != undefined)
+        if(this.stations != null || this.devices !== undefined)
         {
             await this.stations.closeP2PConnections();
         }
@@ -328,7 +328,7 @@ export class EufySecurityApi
     private async closeDevice() : Promise<void>
     {
         this.logInfoBasic("Closing connections to all devices...");
-        if(this.devices != null || this.devices != undefined)
+        if(this.devices != null || this.devices !== undefined)
         {
             this.devices.closeDevices();
         }
@@ -757,11 +757,11 @@ export class EufySecurityApi
                 case PropertyName.DeviceStationSN:
                     break;
                 case PropertyName.DevicePictureUrl:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
-                    json.pictureTime = this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) == undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()));
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
+                    json.pictureTime = this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) === undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()));
                     break;
                 default:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
             }
         }
 
@@ -1035,15 +1035,15 @@ export class EufySecurityApi
                     json.modelName = getModelName(station.getModel());
                     break;
                 case PropertyName.StationGuardMode:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
-                    json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
+                    json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
                     break;
                 case PropertyName.StationHomeSecuritySettings:
                 case PropertyName.StationAwaySecuritySettings:
                     json[property] = properties[property];
                     break;
                 default:
-                    json[property] = properties[property] == undefined ? "n/a" : properties[property];
+                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
             }
         }
 
@@ -1538,7 +1538,7 @@ export class EufySecurityApi
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                    if(this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined)
+                    if(this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined)
                     {
                         this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
@@ -1700,7 +1700,7 @@ export class EufySecurityApi
                     json.data.push({"stationSerial":station.getSerial(), "result":"success", "guardMode":station.getGuardMode()});
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
-                    if(this.stations.getLastGuardModeChangeTime(station.getSerial()) == undefined)
+                    if(this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined)
                     {
                         this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
@@ -1818,8 +1818,8 @@ export class EufySecurityApi
                         if(this.devices.getDeviceTypeAsString(device) == "camera")
                         {
                             device = devices[deviceSerial] as Camera;
-                            json.data.push({"deviceSerial":deviceSerial, "pictureUrl":(device.getLastCameraImageURL() != undefined) ? device.getLastCameraImageURL() : "", "pictureTime":this.devices.getLastVideoTime(deviceSerial) == undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
-                            if(device.getLastCameraImageURL() == undefined)
+                            json.data.push({"deviceSerial":deviceSerial, "pictureUrl":(device.getLastCameraImageURL() !== undefined) ? device.getLastCameraImageURL() : "", "pictureTime":this.devices.getLastVideoTime(deviceSerial) === undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
+                            if(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T"))
                             {
                                 this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
                             }
@@ -1868,7 +1868,7 @@ export class EufySecurityApi
      */
     public updateStationGuardModeChangeTimeSystemVariable(stationSerial : string, timestamp : number | undefined)
     {
-        if(this.getStateUpdateEventActive() == true && timestamp != undefined)
+        if(this.getStateUpdateEventActive() == true && timestamp !== undefined)
         {
             this.setSystemVariableTime("eufyLastModeChangeTime" + stationSerial, new Date(timestamp));
         }
@@ -1908,7 +1908,7 @@ export class EufySecurityApi
      */
     public updateCameraEventTimeSystemVariable(deviceSerial : string, timestamp : number | undefined)
     {
-        if(this.getApiUsePushService() == true && timestamp != undefined)
+        if(this.getApiUsePushService() == true && timestamp !== undefined)
         {
             this.setSystemVariableTime("eufyCameraVideoTime" + deviceSerial, new Date(timestamp));
         }
@@ -2800,7 +2800,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "1.7.1";
+        return "2.0.0";
     }
 
     /**
@@ -2809,6 +2809,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.3.0";
+        return "2.3.1-b244";
     }
 }
