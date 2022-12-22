@@ -9,6 +9,9 @@
 		<!-- Bootstrap core CSS -->
 		<link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
 		
+		<!-- Bootstrap icon font CSS -->
+		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
+		
 		<style>
 			/* used for nav bar toggle */
 			.nav-scroller {
@@ -77,7 +80,17 @@
 				<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-1 row-cols-xl-2">
 					<div class="col">
 						<div class="card mb-3">
-							<h5 class="card-header">Inhalt der Protokolldatei</h5>
+							<div class="card-header">
+								<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0">Inhalt der Protokolldatei</h5></div>
+								<div style="text-align:right;">
+									<span class="text-nowrap">
+										<h5 class="mb-0">
+											<button id="deleteLogfileData" onclick="emptyLogfile('log')" type="button" class="btn btn-outline-primary btn-sm me-3"><i class="bi-trash" title="Entferne alle Einträge" onclick="downloadFile('log')"></i></button>
+											<button id="downlLogfile" onclick="downloadFile('log')" type="button" class="btn btn-outline-primary btn-sm"><i class="bi-download" title="Download" onclick="downloadFile('log')"></i></button>
+										</h5>
+									</span>
+								</div>
+							</div>
 							<div class="row no-gutters">
 								<div class="col-md-12">
 									<div class="card-body">
@@ -86,14 +99,22 @@
 								</div>
 							</div>
 							<div class="card-footer">
-								<button id="downlLogfile" onclick="downloadFile('log')" type="button" class="btn btn-outline-primary me-3">Download</button>
-								<button id="deleteLogfileData" onclick="emptyLogfile('log')" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
 							</div>
 						</div>
 					</div>
 					<div class="col">
 						<div class="card mb-3">
-							<h5 class="card-header">Inhalt der Fehlerprotokolldatei</h5>
+							<div class="card-header">
+								<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0">Inhalt der Fehlerprotokolldatei</h5></div>
+								<div style="text-align:right;">
+									<span class="text-nowrap">
+										<h5 class="mb-0">
+											<button id="deleteErrfileData" onclick="emptyLogfile('err')" type="button" class="btn btn-outline-primary btn-sm me-3"><i class="bi-trash" title="Entferne alle Einträge" onclick="downloadFile('log')"></i></button>
+											<button id="downlErrfile" onclick="downloadFile('err')" type="button" class="btn btn-outline-primary btn-sm"><i class="bi-download" title="Download" onclick="downloadFile('log')"></i></button>
+										</h5>
+									</span>
+								</div>
+							</div>
 							<div class="row no-gutters">
 								<div class="col-md-12">
 									<div class="card-body">
@@ -102,8 +123,6 @@
 								</div>
 							</div>
 							<div class="card-footer">
-								<button id="downlErrfile" onclick="downloadFile('err')" type="button" class="btn btn-outline-primary me-3">Download</button>
-								<button id="deleteErrfileData" onclick="emptyLogfile('err')" type="button" class="btn btn-outline-primary">Entferne alle Einträge</button>
 							</div>
 						</div>
 					</div>

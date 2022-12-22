@@ -15,7 +15,6 @@ import { InvalidCountryCodeError, InvalidLanguageCodeError } from "./../error";
 import { md5, mergeDeep } from "./../utils";
 import { ApiBaseLoadError, ApiGenericError, ApiHTTPResponseCodeError, ApiInvalidResponseError, ApiResponseCodeError } from "./error";
 import { Logger } from "../utils/logging";
-import { EufySecurityApi } from "../eufySecurityApi";
 
 export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
@@ -25,7 +24,6 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     private apiBase;
 
-    private api : EufySecurityApi;
     private username: string;
     private password: string;
     private ecdh: ECDH = createECDH("prime256v1");
@@ -74,10 +72,9 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         "Cache-Control": "no-cache",
     };
 
-    private constructor(api: EufySecurityApi, apiBase: string, country: string, username: string, password: string, log: Logger, persistentData?: HTTPApiPersistentData) {
+    private constructor(apiBase: string, country: string, username: string, password: string, log: Logger, persistentData?: HTTPApiPersistentData) {
         super();
 
-        this.api = api;
         this.username = username;
         this.password = password;
         this.log = log;
@@ -206,10 +203,10 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         throw new ApiBaseLoadError(result.code, result.msg);
     }
 
-    static async initialize(api: EufySecurityApi, country: string, username: string, password: string, log: Logger, persistentData?: HTTPApiPersistentData): Promise<HTTPApi> {
+    static async initialize(country: string, username: string, password: string, log: Logger, persistentData?: HTTPApiPersistentData): Promise<HTTPApi> {
         if (isValidCountry(country) && country.length === 2) {
             const apiBase = await this.getApiBaseFromCloud(country);
-            return new HTTPApi(api, apiBase, country, username, password, log, persistentData);
+            return new HTTPApi(apiBase, country, username, password, log, persistentData);
         }
         throw new InvalidCountryCodeError("Invalid ISO 3166-1 Alpha-2 country code");
     }
@@ -863,11 +860,12 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                     }
                 });
                 this.log.debug(`${functionName} - Response:`, response.data);
-
+                
                 if (response.status == 200) {
                     const result: ResultResponse = response.data;
                     if (result.code == 0) {
-                        const dataresult: Array<EventRecordResponse> = result.data;
+                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                        const dataresult: Array<EventRecordResponse> = this.decryptAPIData(result.data);
                         if (dataresult) {
                             dataresult.forEach(record => {
                                 this.log.debug(`${functionName} - Record:`, record);
@@ -888,15 +886,15 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     }
 
     public async getVideoEvents(startTime: Date, endTime: Date, filter?: EventFilterType, maxResults?: number): Promise<Array<EventRecordResponse>> {
-        return this._getEvents("getVideoEvents", "v1/event/app/get_all_video_record", startTime, endTime, filter, maxResults);
+        return this._getEvents("getVideoEvents", "v2/event/app/get_all_video_record", startTime, endTime, filter, maxResults);
     }
 
     public async getAlarmEvents(startTime: Date, endTime: Date, filter?: EventFilterType, maxResults?: number): Promise<Array<EventRecordResponse>> {
-        return this._getEvents("getAlarmEvents", "v1/event/app/get_all_alarm_record", startTime, endTime, filter, maxResults);
+        return this._getEvents("getAlarmEvents", "v2/event/app/get_all_alarm_record", startTime, endTime, filter, maxResults);
     }
 
     public async getHistoryEvents(startTime: Date, endTime: Date, filter?: EventFilterType, maxResults?: number): Promise<Array<EventRecordResponse>> {
-        return this._getEvents("getHistoryEvents", "v1/event/app/get_all_history_record", startTime, endTime, filter, maxResults);
+        return this._getEvents("getHistoryEvents", "v2/event/app/get_all_history_record", startTime, endTime, filter, maxResults);
     }
 
     public async getAllVideoEvents(filter?: EventFilterType, maxResults?: number): Promise<Array<EventRecordResponse>> {
@@ -1061,7 +1059,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
             try {
                 const response = await this.request({
                     method: "post",
-                    endpoint: "v1/house/detail",
+                    endpoint: "v2/house/detail",
                     data: {
                         house_id: houseID,
                         transaction: `${new Date().getTime().toString()}`
@@ -1070,8 +1068,10 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                 if (response.status == 200) {
                     const result: ResultResponse = response.data;
                     if (result.code == ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                        if (result.data) {
-                            return result.data as HouseDetail;
+                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                        const dataresult: HouseDetail = this.decryptAPIData(result.data);
+                        if (dataresult) {
+                            return dataresult;
                         }
                     } else {
                         this.log.error("Response code not ok", {code: result.code, msg: result.msg });
@@ -1185,17 +1185,18 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         try {
             const response = await this.request({
                 method: "get",
-                endpoint: "v1/passport/profile"
+                endpoint: "v2/passport/profile"
             });
             if (response.status == 200) {
                 const result: ResultResponse = response.data;
                 if (result.code == ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                    if (result.data) {
-                        const profile = result.data as PassportProfileResponse;
-                        this.persistentData.user_id = profile.user_id;
-                        this.persistentData.nick_name = profile.nick_name;
-                        this.persistentData.email = profile.email;
-                        return profile;
+                    //TODO: Handle decryption exception resetting session auth information to reauthenticate
+                    const dataresult: PassportProfileResponse = this.decryptAPIData(result.data);
+                    if (dataresult) {
+                        this.persistentData.user_id = dataresult.user_id;
+                        this.persistentData.nick_name = dataresult.nick_name;
+                        this.persistentData.email = dataresult.email;
+                        return dataresult;
                     }
                 } else {
                     this.log.error("Response code not ok", {code: result.code, msg: result.msg });

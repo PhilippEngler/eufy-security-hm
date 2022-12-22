@@ -2702,6 +2702,14 @@ function loadDataSettings()
 					{
 						document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(objResp.data.logLevel)) + 1;
 					}
+					if(objResp.data.tokenExpire === undefined)
+					{
+						document.getElementById("spnToken").innerHTML = ``;
+					}
+					else
+					{
+						document.getElementById("spnToken").innerHTML = `Das zur Zeit genutzte Token läuft am ${makeDateTimeString(new Date(objResp.data.tokenExpire*1000))} ab. Es wird vorher aktualisiert.<br />`;
+					}
 					checkLogLevel(objResp.data.logLevel);
 					document.getElementById("resultLoading").innerHTML = "";
 					activateUIElements();
@@ -3357,10 +3365,10 @@ function loadLogfile(logfiletype, showLoading)
 			switch(logfiletype)
 			{
 				case "log":
-					document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Protokolldatei.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+					document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler beim Laden der Protokolldatei.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
 					break;
 				case "err":
-					document.getElementById("err").innerHTML = createMessageContainer("alert alert-danger", "Fehler beim Laden der Fehlerprotokolldatei.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+					document.getElementById("err").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler beim Laden der Fehlerprotokolldatei.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
 					break;
 			}
 		}

@@ -69,7 +69,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         for (var stationSerial in resStations)
         {
-            if(this.api.getHouseId() === undefined || resStations[stationSerial].house_id === undefined || (this.api.getHouseId() != "all" && resStations[stationSerial].house_id != this.api.getHouseId()))
+            if(this.api.getHouseId() !== undefined && resStations[stationSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resStations[stationSerial].house_id !== this.api.getHouseId())
             {
                 this.api.logDebug(`Station ${stationSerial} does not match houseId (got ${resStations[stationSerial].house_id} want ${this.api.getHouseId()}).`);
                 continue;

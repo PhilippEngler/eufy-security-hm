@@ -58,7 +58,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             for (deviceSerial in resDevices)
             {
-                if(this.api.getHouseId() === undefined || resDevices[deviceSerial].house_id === undefined || (this.api.getHouseId() != "all" && resDevices[deviceSerial].house_id != this.api.getHouseId()))
+                if(this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId())
                 {
                     this.api.logDebug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
                     continue;

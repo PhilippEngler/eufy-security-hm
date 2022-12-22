@@ -53,8 +53,8 @@ export class EufyHouses extends TypedEmitter<EufySecurityEvents>
      * @param house_id The houseId.
      * @returns The house object.
      */
-    public getHouse(house_id : string) : HouseDetail
+    public async getHouse(house_id : string) : Promise<HouseDetail | null>
     {
-        return this.houses[house_id];
+        return await this.httpService.getHouseDetail(house_id);
     }
 }
