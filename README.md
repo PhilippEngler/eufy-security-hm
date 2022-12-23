@@ -1,7 +1,9 @@
 # eufy Security AddOn for HomeMatic - eufy-security-hm
+**:warning: This addon is independent of Anker and eufy. eufy does not provide an open api, in case of any problems with this addon please *do not* contact eufy.**
+
 With this addon for the ELV/eq-3 CCU3 or a central based on the CCU3 (like RaspberryMatic) you can control your eufy security system and integrate it in your existing connected home environment. The addon provide a web-based user interface for configuration and monitoring. The communication between your eufy security system and your CCU is done by using predefined system variables. For interaction with your eufy security device there is an API.
 
-> Starting with the v1.7.0 branch, the file format for the config is changed from *ini* to *json*. At the first startup, the config will be automatically converted to *json*. Please backup your existing *ini* config before updating to any newer version. With the v2.0.0 branch, the capability to read the *ini* files will be removed. That means, that from v2.0.0 onwards, the *ini* to *json* converting process will be removed.
+> Starting with the v1.7.0 branch, the file format for the config has been changed from *ini* to *json*. At the first startup, the config will be automatically converted to *json*. Please backup your existing *ini* config before updating to any newer version. With the v2.0.0 branch, the capability to read the *ini* files was removed. If you want to update from a version lower than v1.7.0 to the v2.0.0 or upper, you can make a two step update (v1.6 -> v1.7.1 -> v2) or you can enter your settings manually.
 
 ## Features
 This addon supports multiple stations and multiple cams. The login token is stored in the config, so there is no need to login every time a connection to eufy is established. After retrieving the stations at startup, the local network address of each station is stored in the config and will be used for switching the guard mode.
