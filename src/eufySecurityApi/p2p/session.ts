@@ -1394,12 +1394,18 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                             this.currentMessageState[message.dataType].p2pStreamMetadata.audioCodec = AudioCodec.NONE;
                             this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived = true;
                             if (this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived && this.currentMessageState[message.dataType].p2pStreamFirstVideoDataReceived) {
+                                if(this.currentMessageState[message.dataType].p2pStreamChannel !== message.channel) {
+                                    this.currentMessageState[message.dataType].p2pStreamChannel = message.channel;
+                                }
                                 this.emitStreamStartEvent(message.dataType);
                             }
                         }, this.AUDIO_CODEC_ANALYZE_TIMEOUT);
                     }
                     if (this.currentMessageState[message.dataType].p2pStreamNotStarted) {
                         if (this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived && this.currentMessageState[message.dataType].p2pStreamFirstVideoDataReceived) {
+                            if(this.currentMessageState[message.dataType].p2pStreamChannel !== message.channel) {
+                                this.currentMessageState[message.dataType].p2pStreamChannel = message.channel;
+                            }
                             this.emitStreamStartEvent(message.dataType);
                         }
                     }
@@ -1463,6 +1469,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     }
                     if (this.currentMessageState[message.dataType].p2pStreamNotStarted) {
                         if (this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived && this.currentMessageState[message.dataType].p2pStreamFirstVideoDataReceived) {
+                            if(this.currentMessageState[message.dataType].p2pStreamChannel !== message.channel) {
+                                this.currentMessageState[message.dataType].p2pStreamChannel = message.channel;
+                            }
                             this.emitStreamStartEvent(message.dataType);
                         }
                     }
