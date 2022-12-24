@@ -30,7 +30,7 @@ export class Station extends TypedEmitter<StationEvents> {
     private rawStation: StationListResponse;
     private log: Logger;
 
-    private p2pSession!: P2PClientProtocol;
+    private p2pSession: P2PClientProtocol;
     private properties: PropertyValues = {};
     private rawProperties: RawValues = {};
     private ready = false;
@@ -130,7 +130,7 @@ export class Station extends TypedEmitter<StationEvents> {
         this.rawStation = station;
         if(this.p2pSession != null)
         {
-            this.p2pSession.updateRawStation(station);
+        this.p2pSession.updateRawStation(station);
         }
 
         const metadata = this.getPropertiesMetadata();

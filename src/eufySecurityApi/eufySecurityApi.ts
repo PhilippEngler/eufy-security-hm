@@ -2803,6 +2803,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.3.1-b244";
+        return "2.4.0";
     }
 }
