@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, CaptchaOptions } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -82,7 +82,7 @@ export class EufySecurityApi
 
             this.logError(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email, password and deviceName to run this addon (missing: ${missingSettings}).`);
         
-            this.serviceState = "ok";
+            this.setServiceState("ok");
         }
         else
         {
@@ -257,13 +257,6 @@ export class EufySecurityApi
      */
     public async close() : Promise<void>
     {
-        /*for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
-            this.stopStationLivestream(device_sn);
-        }
-        for (const device_sn of this.cameraCloudLivestreamTimeout.keys()) {
-            this.stopCloudLivestream(device_sn);
-        }*/
-
         if (this.refreshEufySecurityCloudTimeout !== undefined)
         {
             clearTimeout(this.refreshEufySecurityCloudTimeout);
@@ -452,15 +445,16 @@ export class EufySecurityApi
 
         this.setupScheduledTasks();
 
-        this.serviceState = "ok";
+        this.setServiceState("ok");
 
         this.writeConfig();
     }
 
     private onAPIConnectionError(error: Error): void
     {
-        this.logError(`APIConnectionError occured. Error: ${error}`);
         //this.emit("connection error", error);
+        this.logError(`APIConnectionError occured. Error: ${error}`);
+        this.setServiceState("ok");
     }
 
     private onCaptchaRequest(captchaId: string, captcha: string): void

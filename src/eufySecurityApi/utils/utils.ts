@@ -1,3 +1,6 @@
+export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
+export const pathToTemp = "/var/tmp/eufySecurity";
+
 /**
  * Retrieve the model name of a given station or device.
  * @param modelNumber The model number of the station or device.

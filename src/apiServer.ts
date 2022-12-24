@@ -841,7 +841,7 @@ function main()
 }
 
 /**
- * Create the apiPorts.txt file needed for using the api on the website if file does not exist or update it when the ports have changed. 
+ * Create the apiPorts.json file needed for using the api on the website if file does not exist or update it when the ports have changed. 
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */
