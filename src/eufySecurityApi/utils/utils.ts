@@ -137,6 +137,12 @@ export const makeDateTimeString = function(timestamp : number) : string
     return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}`);
 }
 
+/**
+ * Recalculate the timestamp to get a timestamp in milliseconds.
+ * @param timeStamp The value as timestamp.
+ * @param timeStampType The timestamp type.
+ * @returns The timestamp in milliseconds.
+ */
 export const convertTimeStampToTimeStampMs = function(timeStamp : number, timeStampType : string) : number | undefined
 {
     switch (timeStampType)
@@ -148,4 +154,13 @@ export const convertTimeStampToTimeStampMs = function(timeStamp : number, timeSt
         default:
             return undefined;
         }
+}
+
+/**
+ * The interface for EufyCountry
+ */
+export interface EufyCountry {
+    countryName: string;
+    countryPhoneCode: string;
+    countryCode: string;
 }

@@ -294,6 +294,9 @@ class ApiServer
                     case "getConfig":
                         responseString = await api.getAPIConfigAsJson();
                         break;
+                    case "getCountries":
+                        responseString = api.getCountriesAsJson();
+                        break;
                     case "getApiInfo":
                         responseString = api.getApiVersionAsJson();
                         break;

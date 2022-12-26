@@ -128,8 +128,7 @@ function initContent(page)
 			break;
 		case "settings":
 			validateFormSettings();
-			loadHouses();
-			loadSystemVariables();
+			loadCountries();
 			break;
 		case "logfiles":
 			loadLogfile("log", true);
@@ -164,16 +163,8 @@ function checkCaptchaState(page)
 			}
 			else
 			{
-				//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
+				document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", "Fehler beim Laden des Captcha Status.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
-		}
-		else
-		{
-			//document.getElementById("stations").innerHTML = createWaitMessage("Lade verfügbare Stationen...");
 		}
 	};
 	xmlhttp.open("GET", url, true);
@@ -196,13 +187,13 @@ function generateContentCaptchaCodeModal()
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalCaptchaCodeTitle">
-								<div style="text-align:left; float:left;"><h5 class="mb-0">Captcha Abfrage</h5></div>
+								<div style="text-align:left; float:left;"><h5 class="mb-0">Anmeldung benötigt Captcha</h5></div>
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalCaptchaCodeContent">
-								<p id="captchaHint"></p>
+								<h5 id="captchaHint"></h5>
 								<div class="my-3" id="captchaImage"></div>
 								<div class="my-3" id="captchaCode"></div>
-								<div class="my-3" id="captchaButton"></div>
+								<div class="mt-3" id="captchaButton"></div>
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
 								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined, true)}
@@ -229,23 +220,25 @@ function getCaptchaImage(page)
 				if(objResp.captchaNeeded == true)
 				{
 					document.getElementById("captchaHint").innerHTML = `Bitte geben Sie in das Textfeld den String aus dem Captcha ein.`;
-					document.getElementById("captchaImage").innerHTML = `<img src="${objResp.captcha.captcha}" alt="Captcha Image">`;
+					document.getElementById("captchaImage").innerHTML = `<label class="my-2" for="txtCaptchaCode">Captcha.</label><br /><img src="${objResp.captcha.captcha}" alt="Captcha Image">`;
 					document.getElementById("captchaCode").innerHTML = `<label class="my-2" for="txtCaptchaCode">Zeichenfolge, die in dem Captcha dargestellt wird.</label><input type="text" class="form-control" id="txtCaptchaCode">`;
-					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode('${page}')" class="btn btn-primary" type="button" value="Login">`;
+					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode('${page}')" class="btn btn-primary" type="button" value="Login fortsetzen">`;
+					document.getElementById("btnCloseModalDeviceSettingsBottom").setAttribute("disabled", true)
 				}
 				else
 				{
 					document.getElementById("captchaHint").innerHTML = `Derzeit ist kein Captcha für den Account hinterlegt.`;
+					document.getElementById("btnCloseModalDeviceSettingsBottom").removeAttribute("disabled");
 				}
 			}
 			else
 			{
-				//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
+				document.getElementById("captchaHint").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Captcha Status.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
+			document.getElementById("captchaHint").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Captcha Status.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
 		}
 		else
 		{
@@ -2418,6 +2411,58 @@ function generateNewTrustedDeviceName()
 			{
 
 			}
+		}
+	};
+	xmlHttp.open("GET", url, true);
+	xmlHttp.send();
+}
+
+function loadCountries()
+{
+	var xmlHttp, objResp, country;
+	var url = `${location.protocol}//${location.hostname}:${port}/getCountries`;
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.overrideMimeType('application/json');
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					for(country in objResp.data)
+					{
+						var option = document.createElement("option");
+						option.value=objResp.data[country].countryCode;
+						option.text=objResp.data[country].countryName;
+						document.getElementById("cbCountry").add(option);
+					}
+					document.getElementById("countrySelectionMessage").innerHTML = "";
+					loadHouses();
+				}
+				else
+				{
+					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Länder.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
+					loadHouses();
+				}
+			}
+			catch (e)
+			{
+				document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Länder.", "", `Es ist folgender Fehler aufgetreten: ${e}`);
+				loadHouses();
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Länder.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+			loadHouses();
+		}
+		else
+		{
+			document.getElementById("resultLoading").innerHTML = createWaitMessage("Laden der Einstellungen...");
+			document.getElementById("countrySelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>Laden der Länder...</strong></div>`;
 		}
 	};
 	xmlHttp.open("GET", url, true);

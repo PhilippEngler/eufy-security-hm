@@ -15,6 +15,7 @@ import { NotSupportedError, ReadOnlyPropertyError } from './error';
 import { randomNumber } from './http/utils';
 import { PhoneModels } from './http/const';
 import { getModelName, makeDateTimeString } from './utils/utils';
+import { countryData } from './utils/const';
 
 export class EufySecurityApi
 {
@@ -2265,6 +2266,11 @@ export class EufySecurityApi
         {
             return `{"success":false,"serviceRestart":false,"message":"Error during writing config."}`;
         }
+    }
+
+    public getCountriesAsJson() : string
+    {
+        return `{"success":true,"data":${JSON.stringify(countryData)}}`;
     }
 
     /**

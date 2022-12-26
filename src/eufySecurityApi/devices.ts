@@ -3,7 +3,7 @@ import { DeviceNotFoundError, ReadOnlyPropertyError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
 import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes } from './http';
 import { EufySecurityEvents } from './interfaces';
-import { P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
+import { SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
 
@@ -246,21 +246,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async updateDevice(device : DeviceListResponse) : Promise<void>
     {
         var stations = await this.api.getStations();
-        for (var stationSerial in stations)
-        {
-            if (!stations[stationSerial].isConnected())
-            {
-                if(stations[stationSerial].getDeviceType() == DeviceType.STATION)
-                {
-                    stations[stationSerial].setConnectionType(this.api.getP2PConnectionType());
-                }
-                else
-                {
-                    stations[stationSerial].setConnectionType(P2PConnectionType.QUICKEST);
-                }
-                stations[stationSerial].connect();
-            }
-        }
 
         if (this.loadingDevices !== undefined)
         {

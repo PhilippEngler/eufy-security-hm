@@ -72,13 +72,13 @@
 		</header>
 		
 		<main class="container-fluid">
-			<div id="loadApiSettingsError">
-			</div>
+			<div id="loadApiSettingsError"></div>
 			<div id="content">
+				<div id="captchaMessage"></div>
 				<h3>Geräte</h3>
 				<p>Hier finden Sie alle Geräte, die dem angegebenen Account zugeordnet sind.</p>
-				<p id="stations"></p>
-				<p id="devices"></p>
+				<div id="stations"></div>
+				<div id="devices"></div>
 			</div>
 		</main>
 
@@ -93,8 +93,7 @@
 				<strong id="toastPropertyUpdateFailedHeader" class="me-auto"></strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div id="toastPropertyUpdateFailedText" class="toast-body text-white">
-			</div>
+			<div id="toastPropertyUpdateFailedText" class="toast-body text-white"></div>
 		</div>
 
 		<div id="toastPropertyUpdateOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
@@ -102,18 +101,14 @@
 				<strong id="toastPropertyUpdateOKHeader" class="me-auto"></strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div id="toastPropertyUpdateOKText" class="toast-body text-white">
-			</div>
+			<div id="toastPropertyUpdateOKText" class="toast-body text-white"></div>
 		</div>
 
-		<div class="modal fade" id="modalStationSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalStationSettings" aria-hidden="true">
-		</div>
+		<div class="modal fade" id="modalStationSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalStationSettings" aria-hidden="true"></div>
 
-		<div class="modal fade" id="modalDeviceSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalDeviceSettings" aria-hidden="true">
-		</div>
+		<div class="modal fade" id="modalDeviceSettings" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalDeviceSettings" aria-hidden="true"></div>
 
-		<div class="modal fade" id="modalCaptchaCode" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalCaptchaCode" aria-hidden="true">
-		</div>
+		<div class="modal fade" id="modalCaptchaCode" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalCaptchaCode" aria-hidden="true"></div>
 		
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
