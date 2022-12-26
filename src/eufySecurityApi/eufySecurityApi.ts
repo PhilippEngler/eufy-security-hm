@@ -25,21 +25,14 @@ export class EufySecurityApi
     private homematicApi !: HomematicApi;
     private pushService !: PushService;
     private mqttService !: MqttService;
-    private httpApiPersistentData : HTTPApiPersistentData = {
-        user_id: "",
-        email: "",
-        nick_name: "",
-        device_public_keys: {},
-        clientPrivateKey: "",
-        serverPublicKey: ""
-    };
+    private httpApiPersistentData : HTTPApiPersistentData = { user_id: "", email: "", nick_name: "", device_public_keys: {}, clientPrivateKey: "", serverPublicKey: "" };
     private houses !: EufyHouses;
     private devices !: Devices;
     private stations !: Stations;
     private connected = false;
     private retries = 0;
     private serviceState : string = "init";
-    private captchaState = { captchaId: "", captcha: "" }
+    private captchaState = { captchaId: "", captcha: "" };
     
     private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
@@ -262,6 +255,8 @@ export class EufySecurityApi
         {
             clearTimeout(this.refreshEufySecurityCloudTimeout);
         }
+
+        this.clearScheduledTasks();
 
         this.closePushService();
         this.closeMqttService();

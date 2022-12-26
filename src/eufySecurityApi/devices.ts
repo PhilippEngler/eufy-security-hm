@@ -1026,7 +1026,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public updateDeviceProperties(deviceSerial : string, values : RawValues) : void
     {
-        if(this.devices[deviceSerial] != undefined)
+        if(this.devices[deviceSerial] !== undefined)
         {
             this.devices[deviceSerial].updateRawProperties(values);
         }

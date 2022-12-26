@@ -238,12 +238,12 @@ export class Config
             if(configJson.configVersion < 12)
             {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 12...");
-                if(configJson.apiConfig.updateCloudInfoIntervall == undefined)
+                if(configJson.apiConfig.updateCloudInfoIntervall === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'updateCloudInfoIntervall'.");
                     configJson.apiConfig.updateCloudInfoIntervall = 10;
                 }
-                if(configJson.apiConfig.updateDeviceDataIntervall == undefined)
+                if(configJson.apiConfig.updateDeviceDataIntervall === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'updateDeviceDataIntervall'.");
                     configJson.apiConfig.updateDeviceDataIntervall = 10;
@@ -253,7 +253,7 @@ export class Config
             if(configJson.configVersion < 13)
             {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 13...");
-                if(configJson.apiConfig.houseId == undefined)
+                if(configJson.apiConfig.houseId === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'houseId'.");
                     configJson.apiConfig.houseId = "all";
@@ -263,22 +263,22 @@ export class Config
             if(configJson.configVersion < 14)
             {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 14...");
-                if(configJson.accountData.userId == undefined)
+                if(configJson.accountData.userId === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'userId'.");
                     configJson.accountData.userId = "";
                 }
-                if(configJson.accountData.nickName == undefined)
+                if(configJson.accountData.nickName === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'nickName'.");
                     configJson.accountData.nickName = "";
                 }
-                if(configJson.accountData.clientPrivateKey == undefined)
+                if(configJson.accountData.clientPrivateKey === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'clientPrivateKey'.");
                     configJson.accountData.clientPrivateKey = "";
                 }
-                if(configJson.accountData.serverPublicKey == undefined)
+                if(configJson.accountData.serverPublicKey === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'serverPublicKey'.");
                     configJson.accountData.serverPublicKey = "";
@@ -636,7 +636,7 @@ export class Config
      */
     public getConfigFileVersion() : string
     {
-        if(this.configJson.configVersion != undefined)
+        if(this.configJson.configVersion !== undefined)
         {
             return this.configJson.configVersion;
         }
@@ -651,7 +651,7 @@ export class Config
      */
     public getEmailAddress() : string
     {
-        if(this.configJson.accountData.eMail != undefined)
+        if(this.configJson.accountData.eMail !== undefined)
         {
             return this.configJson.accountData.eMail;
         }
@@ -680,7 +680,7 @@ export class Config
      */
     public getUserId() : string
     {
-        if(this.configJson.accountData.userId != undefined)
+        if(this.configJson.accountData.userId !== undefined)
         {
             return this.configJson.accountData.userId;
         }
@@ -708,7 +708,7 @@ export class Config
      */
     public getPassword() : string
     {
-        if(this.configJson.accountData.password != undefined)
+        if(this.configJson.accountData.password !== undefined)
         {
             return this.configJson.accountData.password;
         }
@@ -736,7 +736,7 @@ export class Config
      */
     public getNickName() : string
     {
-        if(this.configJson.accountData.nickName != undefined)
+        if(this.configJson.accountData.nickName !== undefined)
         {
             return this.configJson.accountData.nickName;
         }
@@ -764,7 +764,7 @@ export class Config
      */
     public getClientPrivateKey() : string
     {
-        if(this.configJson.accountData.clientPrivateKey != undefined)
+        if(this.configJson.accountData.clientPrivateKey !== undefined)
         {
             return this.configJson.accountData.clientPrivateKey;
         }
@@ -792,7 +792,7 @@ export class Config
      */
     public getServerPublicKey() : string
     {
-        if(this.configJson.accountData.serverPublicKey != undefined)
+        if(this.configJson.accountData.serverPublicKey !== undefined)
         {
             return this.configJson.accountData.serverPublicKey;
         }
@@ -820,7 +820,7 @@ export class Config
      */
     public getDevicePublicKeys() : any
     {
-        if(this.configJson.devicePublicKeys != undefined)
+        if(this.configJson.devicePublicKeys !== undefined)
         {
             return this.configJson.devicePublicKeys;
         }
@@ -848,7 +848,7 @@ export class Config
      */
     public getConnectionType() : number
     {
-        if(this.configJson.apiConfig.connectionTypeP2p != undefined)
+        if(this.configJson.apiConfig.connectionTypeP2p !== undefined)
         {
             return this.configJson.apiConfig.connectionTypeP2p;
         }
@@ -876,7 +876,7 @@ export class Config
      */
     public getLocalStaticUdpPortsActive() : boolean
     {
-        if(this.configJson.apiConfig.localStaticUdpPortsActive != undefined)
+        if(this.configJson.apiConfig.localStaticUdpPortsActive !== undefined)
         {
             return this.configJson.apiConfig.localStaticUdpPortsActive;
         }
@@ -933,7 +933,7 @@ export class Config
      */
     public getSystemVariableActive() : boolean
     {
-        if(this.configJson.apiConfig.systemVariableActive != undefined)
+        if(this.configJson.apiConfig.systemVariableActive !== undefined)
         {
             return this.configJson.apiConfig.systemVariableActive;
         }
@@ -961,7 +961,7 @@ export class Config
      */
     public getHttpActive() : boolean
     {
-        if(this.configJson.apiConfig.httpActive != undefined)
+        if(this.configJson.apiConfig.httpActive !== undefined)
         {
             return this.configJson.apiConfig.httpActive;
         }
@@ -989,7 +989,7 @@ export class Config
      */
     public getHttpPort() : number
     {
-        if(this.configJson.apiConfig.httpPort != undefined)
+        if(this.configJson.apiConfig.httpPort !== undefined)
         {
             return this.configJson.apiConfig.httpPort;
         }
@@ -1017,7 +1017,7 @@ export class Config
      */
     public getHttpsActive() : boolean
     {
-        if(this.configJson.apiConfig.httpsActive != undefined)
+        if(this.configJson.apiConfig.httpsActive !== undefined)
         {
             return this.configJson.apiConfig.httpsActive;
         }
@@ -1045,7 +1045,7 @@ export class Config
      */
     public getHttpsPort() : number
     {
-        if(this.configJson.apiConfig.httpsPort != undefined)
+        if(this.configJson.apiConfig.httpsPort !== undefined)
         {
             return this.configJson.apiConfig.httpsPort;
         }
@@ -1073,7 +1073,7 @@ export class Config
      */
     public getHttpsMethod() : string
     {
-        if(this.configJson.apiConfig.httpsMethod != undefined)
+        if(this.configJson.apiConfig.httpsMethod !== undefined)
         {
             return this.configJson.apiConfig.httpsMethod;
         }
@@ -1101,7 +1101,7 @@ export class Config
      */
     public getHttpsPKeyFile() : string
     {
-        if(this.configJson.apiConfig.httpsPkeyFile != undefined)
+        if(this.configJson.apiConfig.httpsPkeyFile !== undefined)
         {
             return this.configJson.apiConfig.httpsPkeyFile;
         }
@@ -1129,7 +1129,7 @@ export class Config
      */
     public getHttpsCertFile() : string
     {
-        if(this.configJson.apiConfig.httpsCertFile != undefined)
+        if(this.configJson.apiConfig.httpsCertFile !== undefined)
         {
             return this.configJson.apiConfig.httpsCertFile;
         }
@@ -1157,7 +1157,7 @@ export class Config
      */
     public getHttpsPkeyString() : string
     {
-        if(this.configJson.apiConfig.httpsPkeyString != undefined)
+        if(this.configJson.apiConfig.httpsPkeyString !== undefined)
         {
             return this.configJson.apiConfig.httpsPkeyString;
         }
@@ -1185,7 +1185,7 @@ export class Config
      */
     public getHouseId() : string
     {
-        if(this.configJson.apiConfig.houseId != undefined)
+        if(this.configJson.apiConfig.houseId !== undefined)
         {
             return this.configJson.apiConfig.houseId;
         }
@@ -1213,7 +1213,7 @@ export class Config
      */
     public getCameraDefaultImage() : string
     {
-        if(this.configJson.apiConfig.cameraDefaultImage != undefined)
+        if(this.configJson.apiConfig.cameraDefaultImage !== undefined)
         {
             return this.configJson.apiConfig.cameraDefaultImage;
         }
@@ -1241,7 +1241,7 @@ export class Config
      */
     public getCameraDefaultVideo() : string
     {
-        if(this.configJson.apiConfig.cameraDefaultVideo != undefined)
+        if(this.configJson.apiConfig.cameraDefaultVideo !== undefined)
         {
             return this.configJson.apiConfig.cameraDefaultVideo;
         }
@@ -1270,7 +1270,7 @@ export class Config
      */
     public getUpdateCloudInfoIntervall() : number
     {
-        if(this.configJson.apiConfig.updateCloudInfoIntervall != undefined)
+        if(this.configJson.apiConfig.updateCloudInfoIntervall !== undefined)
         {
             return this.configJson.apiConfig.updateCloudInfoIntervall;
         }
@@ -1299,7 +1299,7 @@ export class Config
      */
     public getUpdateDeviceDataIntervall() : number
     {
-        if(this.configJson.apiConfig.updateDeviceDataIntervall != undefined)
+        if(this.configJson.apiConfig.updateDeviceDataIntervall !== undefined)
         {
             return this.configJson.apiConfig.updateDeviceDataIntervall;
         }
@@ -1327,7 +1327,7 @@ export class Config
      */
     public getStateUpdateEventActive() : boolean
     {
-        if(this.configJson.apiConfig.stateUpdateEventActive != undefined)
+        if(this.configJson.apiConfig.stateUpdateEventActive !== undefined)
         {
             return this.configJson.apiConfig.stateUpdateEventActive;
         }
@@ -1355,7 +1355,7 @@ export class Config
      */
     public getStateUpdateIntervallActive() : boolean
     {
-        if(this.configJson.apiConfig.stateUpdateIntervallActive != undefined)
+        if(this.configJson.apiConfig.stateUpdateIntervallActive !== undefined)
         {
             return this.configJson.apiConfig.stateUpdateIntervallActive;
         }
@@ -1383,7 +1383,7 @@ export class Config
      */
     public getStateUpdateIntervallTimespan() : number
     {
-        if(this.configJson.apiConfig.stateUpdateIntervallTimespan != undefined)
+        if(this.configJson.apiConfig.stateUpdateIntervallTimespan !== undefined)
         {
             return this.configJson.apiConfig.stateUpdateIntervallTimespan;
         }
@@ -1411,7 +1411,7 @@ export class Config
      */
     public getUpdateLinksActive() : boolean
     {
-        if(this.configJson.apiConfig.updateLinksActive != undefined)
+        if(this.configJson.apiConfig.updateLinksActive !== undefined)
         {
             return this.configJson.apiConfig.updateLinksActive;
         }
@@ -1439,7 +1439,7 @@ export class Config
      */
     public getUpdateLinksTimespan() : number
     {
-        if(this.configJson.apiConfig.updateLinksTimespan != undefined)
+        if(this.configJson.apiConfig.updateLinksTimespan !== undefined)
         {
             return this.configJson.apiConfig.updateLinksTimespan;
         }
@@ -1467,7 +1467,7 @@ export class Config
      */
     public getUpdateLinksOnlyWhenArmed() : boolean
     {
-        if(this.configJson.apiConfig.updateLinksOnlyWhenArmed != undefined)
+        if(this.configJson.apiConfig.updateLinksOnlyWhenArmed !== undefined)
         {
             return this.configJson.apiConfig.updateLinksOnlyWhenArmed;
         }
@@ -1495,7 +1495,7 @@ export class Config
      */
     public getLogLevel() : number
     {
-        if(this.configJson.apiConfig.logLevel != undefined)
+        if(this.configJson.apiConfig.logLevel !== undefined)
         {
             return this.configJson.apiConfig.logLevel;
         }
@@ -1523,7 +1523,7 @@ export class Config
      */
     public getToken() : string
     {
-        if(this.configJson.tokenData.token != undefined)
+        if(this.configJson.tokenData.token !== undefined)
         {
             return this.configJson.tokenData.token;
         }
@@ -1555,7 +1555,7 @@ export class Config
      */
     public getTokenExpire() : number
     {
-        if(this.configJson.tokenData.tokenExpires != undefined)
+        if(this.configJson.tokenData.tokenExpires !== undefined)
         {
             return this.configJson.tokenData.tokenExpires;
         }
@@ -1589,7 +1589,7 @@ export class Config
     public getP2PDataP2pDid(stationSerial : string) : string
     {
         var station = this.getStationIterator(stationSerial);
-        if(station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].p2pDid != undefined)
+        if(station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].p2pDid !== undefined)
         {
             return this.configJson.stations[station].p2pDid;
         }
@@ -1624,7 +1624,7 @@ export class Config
     public getP2PDataStationIpAddress(stationSerial: string) : string
     {
         var station = this.getStationIterator(stationSerial);
-        if(station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].stationIpAddress != undefined)
+        if(station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationIpAddress !== undefined)
         {
             return this.configJson.stations[station].stationIpAddress;
         }
@@ -1660,7 +1660,7 @@ export class Config
     public getLocalStaticUdpPortPerStation(stationSerial : string) : number | null
     {
         var station = this.getStationIterator(stationSerial);
-        if(station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].udpPort != undefined && this.configJson.stations[station].udpPort != null)
+        if(station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].udpPort !== undefined && this.configJson.stations[station].udpPort !== null)
         {
             return this.configJson.stations[station].udpPort;
         }
@@ -1678,7 +1678,7 @@ export class Config
      */
     public setLocalStaticUdpPortPerStation(stationSerial: string, udpPort : number | null) : boolean
     {
-        if(stationSerial != undefined)
+        if(stationSerial !== undefined)
         {
             var res;
             if(this.isStationInConfig(stationSerial) == false)
@@ -1748,7 +1748,7 @@ export class Config
      */
     public getPushServiceActive() : boolean
     {
-        if(this.configJson.apiConfig.pushServiceActive != undefined)
+        if(this.configJson.apiConfig.pushServiceActive !== undefined)
         {
             return this.configJson.apiConfig.pushServiceActive;
         }
@@ -1777,7 +1777,7 @@ export class Config
      */
     public getTrustedDeviceName() : string
     {
-        if(this.configJson.pushData.trustedDeviceName != undefined)
+        if(this.configJson.pushData.trustedDeviceName !== undefined)
         {
             return this.configJson.pushData.trustedDeviceName;
         }
@@ -1807,7 +1807,7 @@ export class Config
      */
     public getEventDurationSeconds() : number
     {
-        if(this.configJson.pushData.eventDurationSeconds != undefined)
+        if(this.configJson.pushData.eventDurationSeconds !== undefined)
         {
             return this.configJson.pushData.eventDurationSeconds;
         }
@@ -1836,7 +1836,7 @@ export class Config
      */
     public getAcceptInvitations() : boolean
     {
-        if(this.configJson.pushData.acceptInvitations != undefined)
+        if(this.configJson.pushData.acceptInvitations !== undefined)
         {
             return this.configJson.pushData.acceptInvitations;
         }
@@ -1865,7 +1865,7 @@ export class Config
      */
     public getOpenudid() : string
     {
-        if(this.configJson.pushData.openUdid != undefined)
+        if(this.configJson.pushData.openUdid !== undefined)
         {
             return this.configJson.pushData.openUdid;
         }
@@ -1894,7 +1894,7 @@ export class Config
      */
     public getSerialNumber() : string
     {
-        if(this.configJson.pushData.serialNumber != undefined)
+        if(this.configJson.pushData.serialNumber !== undefined)
         {
             return this.configJson.pushData.serialNumber;
         }
@@ -1939,7 +1939,7 @@ export class Config
      */
     public getCredentialsFidResponse() : FidInstallationResponse | null
     {
-        if(this.configJson.pushData.fidResponse != undefined)
+        if(this.configJson.pushData.fidResponse !== undefined)
         {
             return this.configJson.pushData.fidResponse as FidInstallationResponse;
         }
@@ -1968,7 +1968,7 @@ export class Config
      */
     public getCredentialsCheckinResponse() : CheckinResponse | null
     {
-        if(this.configJson.pushData.checkinResponse != undefined)
+        if(this.configJson.pushData.checkinResponse !== undefined)
         {
             return this.configJson.pushData.checkinResponse as CheckinResponse;
         }
@@ -2027,7 +2027,7 @@ export class Config
      */
     public getCredentialsPersistentIds() : string[]
     {
-        if(this.configJson.pushData.persistentIds != undefined)
+        if(this.configJson.pushData.persistentIds !== undefined)
         {
             return this.configJson.pushData.persistentIds;
         }
@@ -2056,7 +2056,7 @@ export class Config
      */
     public getCountry() : string
     {
-        if(this.configJson.accountData.country != undefined)
+        if(this.configJson.accountData.country !== undefined)
         {
             return this.configJson.accountData.country;
         }
@@ -2085,7 +2085,7 @@ export class Config
      */
     public getLanguage() : string
     {
-        if(this.configJson.accountData.language != undefined)
+        if(this.configJson.accountData.language !== undefined)
         {
             return this.configJson.accountData.language;
         }

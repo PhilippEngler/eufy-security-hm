@@ -100,7 +100,7 @@ class ApiServer
 
         var url = request.url?.split("/");
 
-        if(url == undefined)
+        if(url === undefined)
         {
             url = [];
         }

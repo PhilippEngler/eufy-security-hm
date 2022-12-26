@@ -119,7 +119,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
      */
     private savePushCredentials(credentials : Credentials | undefined) : void
     {
-        if(credentials != undefined)
+        if(credentials !== undefined)
         {
             this.config.setCredentialsFidResponse(credentials.fidResponse);
             this.config.setCredentialsCheckinResponse(credentials.checkinResponse);

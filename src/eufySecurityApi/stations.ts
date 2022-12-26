@@ -84,14 +84,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                if(station.getDeviceType() === DeviceType.STATION || station.getDeviceType() == DeviceType.HB3)
+                if(station.getDeviceType() === DeviceType.STATION || station.getDeviceType() === DeviceType.HB3)
                 {
-                    this.api.logInfo(`Station ${station.getSerial()}: set P2PConnType to '${this.api.getP2PConnectionType()}'`);
                     station.setConnectionType(this.api.getP2PConnectionType());
                 }
                 else
                 {
-                    this.api.logInfo(`Station ${station.getSerial()}: set P2PConnType to '${P2PConnectionType.QUICKEST}'`);
                     station.setConnectionType(P2PConnectionType.QUICKEST);
                 }
                 //station.setConnectionType(this.api.getP2PConnectionType());
