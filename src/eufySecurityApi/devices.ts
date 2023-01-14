@@ -205,7 +205,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             this.lastVideoTimeForDevices[serial] = undefined;
             if(this.api.getApiUsePushService())
             {
-                this.setLastVideoTimeFromCloud(serial);
+                this.setLastVideoTimeFromCloud(device);
             }
             this.emit("device added", device);
 
@@ -1032,26 +1032,26 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logError(`Error on update device properties. Device ${deviceSerial} does not exists.`);
+            this.api.logError(`Error on update device properties. Device ${deviceSerial} does not exists. (${JSON.stringify(values)})`);
         }
     }
 
     /**
      * Retrieves the last video event for the given device.
-     * @param deviceSerial The serial of the device.
+     * @param device The device.
      * @returns The time as timestamp or undefined.
      */
-    private async getLastVideoTimeFromCloud(deviceSerial : string) : Promise <number | undefined>
+    private async getLastVideoTimeFromCloud(device : Device) : Promise <number | undefined>
     {
-        var lastVideoTime = await this.httpService.getAllVideoEvents({deviceSN : deviceSerial}, 1);
-        if(lastVideoTime !== undefined && lastVideoTime.length >= 1)
+        if(!(device.getStationSerial().startsWith("T8030")))
         {
-            return lastVideoTime[0].create_time;
+            var lastVideoTime = await this.httpService.getAllVideoEvents({deviceSN : device.getSerial()}, 1);
+            if(lastVideoTime !== undefined && lastVideoTime.length >= 1)
+            {
+                return lastVideoTime[0].create_time;
+            }
         }
-        else
-        {
-            return undefined;
-        }
+        return undefined;
     }
 
     /**
@@ -1071,11 +1071,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
     /**
      * Helper function to retrieve the last event time from cloud and set the value to the array.
-     * @param deviceSerial The serial of the device.
+     * @param device The device.
      */
-    private async setLastVideoTimeFromCloud(deviceSerial : string) : Promise<void>
+    private async setLastVideoTimeFromCloud(device : Device) : Promise<void>
     {
-        this.setLastVideoTime(deviceSerial, await this.getLastVideoTimeFromCloud(deviceSerial), "sec");
+        this.setLastVideoTime(device.getSerial(), await this.getLastVideoTimeFromCloud(device), "sec");
     }
 
     /**

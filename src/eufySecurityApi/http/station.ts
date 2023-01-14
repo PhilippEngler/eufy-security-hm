@@ -88,6 +88,7 @@ export class Station extends TypedEmitter<StationEvents> {
         this.p2pSession.on("jammed", (channel: number) => this.onDeviceJammed(channel));
         this.p2pSession.on("low battery", (channel: number) => this.onDeviceLowBattery(channel));
         this.p2pSession.on("wrong try-protect alarm", (channel: number) => this.onDeviceWrongTryProtectAlarm(channel));
+        this.p2pSession.on("sd info ex", (sdStatus, sdCapacity, sdCapacityAvailable) => this.onSdInfoEx(sdStatus, sdCapacity, sdCapacityAvailable));
         this.update(this.rawStation);
         this.ready = true;
         this.p2pConnectionType = this.eufySecurityApi.getP2PConnectionType();
@@ -462,15 +463,41 @@ export class Station extends TypedEmitter<StationEvents> {
             case DeviceType.STATION:
             case DeviceType.HB3:
                 return `station`;
-            case DeviceType.FLOODLIGHT || DeviceType.FLOODLIGHT_CAMERA_8422 || DeviceType.FLOODLIGHT_CAMERA_8423 || DeviceType.FLOODLIGHT_CAMERA_8424:
+            case DeviceType.FLOODLIGHT:
+            case DeviceType.FLOODLIGHT_CAMERA_8422:
+            case DeviceType.FLOODLIGHT_CAMERA_8423:
+            case DeviceType.FLOODLIGHT_CAMERA_8424:
                 return `floodlight`;
-            case DeviceType.INDOOR_CAMERA || DeviceType.INDOOR_CAMERA_1080 || DeviceType.INDOOR_COST_DOWN_CAMERA || DeviceType.INDOOR_OUTDOOR_CAMERA_1080P || DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT || DeviceType.INDOOR_OUTDOOR_CAMERA_2K || DeviceType.INDOOR_PT_CAMERA || DeviceType.INDOOR_PT_CAMERA_1080:
+            case DeviceType.INDOOR_CAMERA:
+            case DeviceType.INDOOR_CAMERA_1080:
+            case DeviceType.INDOOR_COST_DOWN_CAMERA:
+            case DeviceType.INDOOR_OUTDOOR_CAMERA_1080P:
+            case DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT:
+            case DeviceType.INDOOR_OUTDOOR_CAMERA_2K:
+            case DeviceType.INDOOR_PT_CAMERA:
+            case DeviceType.INDOOR_PT_CAMERA_1080:
                 return `indoorcamera`;
-            case DeviceType.SOLO_CAMERA || DeviceType.SOLO_CAMERA_PRO || DeviceType.SOLO_CAMERA_SPOTLIGHT_1080 || DeviceType.SOLO_CAMERA_SPOTLIGHT_2K || DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
+            case DeviceType.SOLO_CAMERA:
+            case DeviceType.SOLO_CAMERA_PRO:
+            case DeviceType.SOLO_CAMERA_SPOTLIGHT_1080:
+            case DeviceType.SOLO_CAMERA_SPOTLIGHT_2K:
+            case DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
                 return `solocamera`;
-            case DeviceType.DOORBELL || DeviceType.DOORBELL_SOLO || DeviceType.BATTERY_DOORBELL || DeviceType.BATTERY_DOORBELL_2 || DeviceType.BATTERY_DOORBELL_PLUS:
+            case DeviceType.DOORBELL:
+            case DeviceType.DOORBELL_SOLO:
+            case DeviceType.BATTERY_DOORBELL:
+            case DeviceType.BATTERY_DOORBELL_2:
+            case DeviceType.BATTERY_DOORBELL_PLUS:
                 return `doorbell`;
-            case DeviceType.LOCK_8503 || DeviceType.LOCK_8504 || DeviceType.LOCK_8530 || DeviceType.LOCK_8592 || DeviceType.LOCK_85A3 || DeviceType.LOCK_BLE || DeviceType.LOCK_BLE_NO_FINGER || DeviceType.LOCK_WIFI || DeviceType.LOCK_WIFI_NO_FINGER:
+            case DeviceType.LOCK_8503:
+            case DeviceType.LOCK_8504:
+            case DeviceType.LOCK_8530:
+            case DeviceType.LOCK_8592:
+            case DeviceType.LOCK_85A3:
+            case DeviceType.LOCK_BLE:
+            case DeviceType.LOCK_BLE_NO_FINGER:
+            case DeviceType.LOCK_WIFI:
+            case DeviceType.LOCK_WIFI_NO_FINGER:
                 return `lock`;
             default:
                 return `unknown(${this.rawStation.device_type})`;
@@ -709,13 +736,14 @@ export class Station extends TypedEmitter<StationEvents> {
         });
     }
 
-    public async getStorageInfo(): Promise<void> {
+    public async getStorageInfoEx(): Promise<void> {
         this.log.debug(`Sending get storage info command to station ${this.getSerial()}`);
         //TODO: Verify channel! Should be 255...
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_SDINFO_EX,
             value: 0,
             valueSub: 0,
+            channel: 255,
             strValue: this.rawStation.member.admin_user_id
         });
     }
@@ -6587,6 +6615,10 @@ export class Station extends TypedEmitter<StationEvents> {
 
     private onDeviceWrongTryProtectAlarm(channel: number): void {
         this.emit("device wrong try-protect alarm", this._getDeviceSerial(channel));
+    }
+
+    private onSdInfoEx(sdStatus: number, sdCapacity: number, sdAvailableCapacity: number): void {
+        this.emit("sd info ex", this, sdStatus, sdCapacity, sdAvailableCapacity);
     }
 
     public async setVideoTypeStoreToNAS(device: Device, value: VideoTypeStoreToNAS): Promise<void> {

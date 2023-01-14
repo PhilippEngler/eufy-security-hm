@@ -418,6 +418,9 @@ class ApiServer
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "getTimeZones":
+                        responseString = api.getTimeZones();
+                        break;
                     case "getLogFileContent":
                         responseString = await api.getLogFileContent();
                         break;

@@ -84,15 +84,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                if(station.getDeviceType() === DeviceType.STATION || station.getDeviceType() === DeviceType.HB3)
+                /*if(station.getDeviceType() === DeviceType.STATION || station.getDeviceType() === DeviceType.HB3)
                 {
                     station.setConnectionType(this.api.getP2PConnectionType());
                 }
                 else
                 {
                     station.setConnectionType(P2PConnectionType.QUICKEST);
-                }
-                //station.setConnectionType(this.api.getP2PConnectionType());
+                }*/
+                station.setConnectionType(this.api.getP2PConnectionType());
                 station.connect();
 
                 if(this.api.getStateUpdateEventActive())
@@ -101,7 +101,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.addEventListener(station, "CurrentMode", false);
                     this.addEventListener(station, "PropertyChanged", false);
                     this.addEventListener(station, "RawPropertyChanged", false);
-                    this.setLastGuardModeChangeTimeFromCloud(stationSerial);
+                    this.setLastGuardModeChangeTimeFromCloud(station);
                 }
 
                 this.addEventListener(station, "Connect", false);
@@ -135,6 +135,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(station, "DeviceLowBattery", false);
                 this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
                 this.addEventListener(station, "DevicePinVerified", false);
+                this.addEventListener(station, "SdInfoEx", false);
 
                 this.addStation(station);
             }
@@ -169,6 +170,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         if (serial && !Object.keys(this.stations).includes(serial))
         {
             this.stations[serial] = station;
+            this.getStorageInfo(serial);
             this.emit("station added", station);
         }
         else
@@ -218,6 +220,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 this.stations[hub.station_sn].connect();
             }
+            this.getStorageInfo(hub.station_sn);
         }
         else
         {
@@ -306,6 +309,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.stations[stationSerial], "DeviceLowBattery");
                     this.removeEventListener(this.stations[stationSerial], "DeviceWrongTryProtectAlarm");
                     this.removeEventListener(this.stations[stationSerial], "DevicePinVerified");
+                    this.removeEventListener(this.stations[stationSerial], "SdInfoEx");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
@@ -643,6 +647,34 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * Retrieves the storage information from ether all station or a given station.
+     * @param stationSerial The serial of the station.
+     */
+    public async getStorageInfo(stationSerial? : string) : Promise<void>
+    {
+        if(stationSerial === undefined)
+        {
+            for (var serial in this.stations)
+            {
+                await this.getStorageInfoStation(serial);
+            }
+        }
+        else
+        {
+            await this.getStorageInfoStation(stationSerial);
+        }
+    }
+
+    /**
+     * Retrieves the storage information from the given station.
+     * @param stationSerial The serial of the station.
+     */
+    private async getStorageInfoStation(stationSerial : string) : Promise<void>
+    {
+        await this.stations[stationSerial].getStorageInfoEx();
+    }
+
+    /**
      * Add a given event listener for a given station.
      * @param station The station as Station object.
      * @param eventListenerName The event listener name as string.
@@ -795,6 +827,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             case "DevicePinVerified":
                 station.on("device pin verified", (deviceSN: string, successfull: boolean) => this.onStationDevicePinVerified(deviceSN, successfull));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device pin verified")} Listener.`);
+                break;
+            case "SdInfoEx":
+                station.on("sd info ex", (station: Station, sdStatus: number, sdCapacity: number, sdCapacityAvailable: number) => this.onStationSdInfoEx(station, sdStatus, sdCapacity, sdCapacityAvailable));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sd info ex")} Listener.`);
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
@@ -950,6 +986,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeAllListeners("device pin verified");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device pin verified")} Listener.`);
                 break;
+            case "SdInfoEx":
+                station.removeAllListeners("sd info ex");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sd info ex")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -1034,6 +1074,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 return station.listenerCount("device wrong try-protect alarm");
             case "DevicePinVerified":
                 return station.listenerCount("device pin verified");
+            case "SdInfoEx":
+                return station.listenerCount("sd info ex");
         }
         return -1;
     }
@@ -1734,21 +1776,40 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * The action to be performed when event sd info ex is fired.
+     * @param station The station as Station object.
+     * @param sdCapacity The capacity of the sd card.
+     * @param sdCapacityAvailable The available capacity of the sd card.
+     */
+    private onStationSdInfoEx(station : Station, sdStatus : number, sdCapacity : number, sdCapacityAvailable : number)
+    {
+        if(station.hasProperty(PropertyName.StationSdStatus)) {
+            station.updateProperty(PropertyName.StationSdStatus, sdStatus);
+        }
+        if(station.hasProperty(PropertyName.StationSdCapacity)) {
+            station.updateProperty(PropertyName.StationSdCapacity, sdCapacity);
+        }
+        if(station.hasProperty(PropertyName.StationSdCapacityAvailable)) {
+            station.updateProperty(PropertyName.StationSdCapacityAvailable, sdCapacityAvailable);
+        }
+    }
+
+    /**
      * Retrieves the last guard mode change event for the given station.
-     * @param stationSerial The serial of the station.
+     * @param station The station.
      * @returns The time as timestamp or undefined.
      */
-    private async getLastEventFromCloud(stationSerial : string) : Promise <number | undefined>
+    private async getLastEventFromCloud(station : Station) : Promise <number | undefined>
     {
-        var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({deviceSN : stationSerial}, 1);
-        if(lastGuardModeChangeTime !== undefined && lastGuardModeChangeTime.length >= 1)
+        if(!(station.getSerial().startsWith("T8030")))
         {
-            return lastGuardModeChangeTime[0].create_time;
+            var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({deviceSN : station.getSerial()}, 1);
+            if(lastGuardModeChangeTime !== undefined && lastGuardModeChangeTime.length >= 1)
+            {
+                return lastGuardModeChangeTime[0].create_time;
+            }
         }
-        else
-        {
-            return undefined;
-        }
+        return undefined;
     }
 
     /**
@@ -1768,11 +1829,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
     /**
      * Helper function to retrieve the last event time from cloud and set the value to the array.
-     * @param stationSerial The serial of the station.
+     * @param station The station.
      */
-    private async setLastGuardModeChangeTimeFromCloud(stationSerial : string) : Promise<void>
+    private async setLastGuardModeChangeTimeFromCloud(station : Station) : Promise<void>
     {
-        this.setLastGuardModeChangeTime(stationSerial, await this.getLastEventFromCloud(stationSerial), "sec");
+        this.setLastGuardModeChangeTime(station.getSerial(), await this.getLastEventFromCloud(station), "sec");
     }
 
     /**

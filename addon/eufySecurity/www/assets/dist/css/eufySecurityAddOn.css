@@ -133,3 +133,8 @@ code {
   text-align: center;
   flex: 0 0 88%;
 }
+
+/* show toast over modal */
+.toast {
+  z-index: 1056
+}

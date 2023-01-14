@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -13,7 +13,7 @@ import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
 import { NotSupportedError, ReadOnlyPropertyError } from './error';
 import { randomNumber } from './http/utils';
-import { PhoneModels } from './http/const';
+import { PhoneModels, timeZoneData } from './http/const';
 import { getModelName, makeDateTimeString } from './utils/utils';
 import { countryData } from './utils/const';
 
@@ -1015,6 +1015,23 @@ export class EufySecurityApi
         var properties = station.getProperties();
         var json : any = {};
 
+        var privacyMode : boolean | undefined = undefined;
+        if(this.devices.existDevice(station.getSerial()))
+        {
+            var device = this.devices.getDevices()[station.getSerial()];
+            if(device.isPanAndTiltCamera())
+            {
+                if(device.isEnabled())
+                {
+                    privacyMode = false;
+                }
+                else
+                {
+                    privacyMode = true;
+                }
+            }
+        }
+
         json = {"eufyDeviceId":station.getId(), "deviceType":station.getDeviceTypeString(), "wanIpAddress":station.getIPAddress(), "isP2PConnected":station.isConnected()};
         for (var property in properties)
         {
@@ -1026,6 +1043,10 @@ export class EufySecurityApi
                     break;
                 case PropertyName.StationGuardMode:
                     json[property] = properties[property] === undefined ? "n/a" : properties[property];
+                    if(privacyMode !== undefined)
+                    {
+                        json.privacyMode = privacyMode;
+                    }
                     json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
                     break;
                 case PropertyName.StationHomeSecuritySettings:
@@ -1745,7 +1766,7 @@ export class EufySecurityApi
         if(this.devices.existDevice(deviceSerial) == true)
         {
             const device : Device = await this.getDevices()[deviceSerial];
-            if(device.isIndoorCamera())
+            if(device.isPanAndTiltCamera())
             {
                 if(device.isEnabled() == value)
                 {
@@ -1781,6 +1802,15 @@ export class EufySecurityApi
     }
 
     /**
+     * Retrieves the timezones.
+     * @returns A JSON string with the timezones.
+     */
+    public getTimeZones() : string
+    {
+        return `{"success":true,"data":${JSON.stringify(timeZoneData)}}`;
+    }
+
+    /**
      * Update the library (at this time only image and the corrospondending datetime) from the devices.
      */
     public async getLibrary() : Promise<string>
@@ -1805,10 +1835,29 @@ export class EufySecurityApi
                     for (var deviceSerial in devices)
                     {
                         device = devices[deviceSerial];
-                        if(this.devices.getDeviceTypeAsString(device) == "camera")
+                        switch (this.devices.getDeviceTypeAsString(device))
                         {
-                            device = devices[deviceSerial] as Camera;
-                            json.data.push({"deviceSerial":deviceSerial, "pictureUrl":(device.getLastCameraImageURL() !== undefined) ? device.getLastCameraImageURL() : "", "pictureTime":this.devices.getLastVideoTime(deviceSerial) === undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
+                            case "camera":
+                                device = devices[deviceSerial] as Camera;
+                                break;
+                            case "doorbell":
+                                device = devices[deviceSerial] as DoorbellCamera;
+                                break;
+                            case "indoorcamera":
+                                device = devices[deviceSerial] as IndoorCamera;
+                                break;
+                            case "solocamera":
+                                device = devices[deviceSerial] as SoloCamera;
+                                break;
+                            case "floodlight":
+                                device = devices[deviceSerial] as FloodlightCamera;
+                                break;
+                            default:
+                                device = undefined;
+                        }
+                        if(device !== undefined)
+                        {
+                            json.data.push({"deviceSerial":deviceSerial, "pictureUrl":(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T")) ? this.config.getCameraDefaultImage() : device.getLastCameraImageURL(), "pictureTime":this.devices.getLastVideoTime(deviceSerial) === undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
                             if(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T"))
                             {
                                 this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
