@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * v2.0 - 20221222
+ * 20230115
  */
 port = "";
 action = "";
@@ -341,7 +341,7 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 {
 	var card = "";
 
-	card += `<div class="col"><div class="card mb-3">`;
+	card += `<div class="col"><div class="card">`;
 	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
 	card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="bi-gear" title="Einstellungen" onclick="generateStationSettingsModal('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
 	card += `</div>`;
@@ -362,7 +362,7 @@ function createStationTypeCardsContainer(firendlyTypeName, rowConfig, cards)
 {
 	if(cards != "")
 	{
-		return `<h4>${firendlyTypeName}</h4><div class="${rowConfig}">${cards}</div>`;
+		return `<p id="stationParagraph"><h4>${firendlyTypeName}</h4><div class="${rowConfig}">${cards}</div></p>`;
 	}
 	else
 	{
@@ -404,7 +404,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 					{
 						if(objResp.data[station].deviceType == "station")
 						{
-							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-1 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-1 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", "aktueller Status", getGuardModeAsString(objResp.data[station].guardMode))}</div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
+							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-1 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-1 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", "aktueller Status", `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? getGuardModeAsString(objResp.data[station].guardMode) : "privatsphäre"}`)}</div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
 					text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
@@ -520,7 +520,7 @@ function createCardDevice(device)
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
-	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;<i class="bi-gear" title="Einstellungen" onclick="generateDeviceSettingsModal('${device.serialNumber}')"></i></h5></span></div></div>`;
+	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.wifiSignalLevel === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
 
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
@@ -614,6 +614,40 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 			break;
 	}
 	return `<div class="${divClass}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
+}
+
+function generateStationDeviceSettingsSelectionModal(deviceId)
+{
+	generateContentStationDeviceSettingsSelectionModal(deviceId);
+
+	const myModal = new bootstrap.Modal(document.getElementById('modalSelectStationDevice'));
+	myModal.show();
+}
+
+function generateContentStationDeviceSettingsSelectionModal(deviceId)
+{
+	var stationDeviceModal = `
+					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
+						<div class="modal-content">
+							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
+								<h5 class="mb-0">Auswahl für Gerät ${deviceId}</h5>
+							</div>
+							<div class="modal-body" id="divModalDeviceSettingsContent">
+								<h5>Integriertes Gerät</h5>
+								<p>Bei dem ausgewählten Gerät ${deviceId} handelt es sich um ein Gerät, dass ohne Basisstation betrieben werden kann. Zu diesem Zweck existiert für das Gerät ebenfalls eine Basistation. Diese wird in der Geräteübersicht jedoch nicht angezeigt.</p>
+								<p>Sie können nachfolgend wählen, ob Sie Einstellungen für die Basisstation oder das Gerät vornehmen möchten.</p>
+								<div class="d-grid gap-2">
+									${makeButtonElement("btnOpenModalStationSettings", "btn btn-primary", `generateStationSettingsModal('${deviceId}')`, "Einstellungen für Basisstation aufrufen", true, "modal", undefined, true)}
+									${makeButtonElement("btnOpenModalDeviceSettings", "btn btn-primary", `generateDeviceSettingsModal('${deviceId}')`, "Einstellungen für das Gerät aufrufen", true, "modal", undefined, true)}
+								</div>
+							</div>
+							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined, true)}
+							</div>
+						</div>
+					</div>`;
+	
+	document.getElementById("modalSelectStationDevice").innerHTML = stationDeviceModal;
 }
 
 function generateDeviceSettingsModal(deviceId, deviceName)
@@ -801,7 +835,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
-								<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div><div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${deviceProperties.wifiRssi}dB"></i></span></h5></div>
+								<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div>${deviceProperties.wifiSignalLevel !== undefined ? `<div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${deviceProperties.wifiRssi}dB"></i></span></h5></div>` : ""}
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
@@ -1239,6 +1273,11 @@ function generateElementRange(type, serialNumber, name, propertyName, value, set
 	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value === undefined ? defaultValue : value}</span>${unit === undefined ? "" : getDeviceStateValueInGerman(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value === undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)"${setEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)"` : ""}>${defaultValue !== undefined ? `<div class="text-end">${generateElementButton(type, serialNumber, name, propertyName, setEventHandler, "btn btn-outline-secondary btn-sm", true, (defaultValue !== undefined && defaultValue != value))}</div>` : ""}</div>`;
 }
 
+function generateElementProgress(propertyName, value)
+{
+	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="Speicherauslastung" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
+}
+
 function generateElementSelect(type, serialNumber, name, propertyName, value, setEventHandler, states)
 {
 	var selectElement = `<div><label class="mb-2" for="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><select class="form-select mb-2" id="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${setEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)` : ""}">`;
@@ -1250,9 +1289,25 @@ function generateElementSelect(type, serialNumber, name, propertyName, value, se
 	return selectElement;
 }
 
+function generateElementSelectTimeZone(type, serialNumber, name, propertyName, value, setEventHandler, states)
+{
+	var selectElement = `<div><label class="mb-2" for="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><select class="form-select mb-2" id="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${setEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value) ` : ""}" disabled>`;
+	for(var state in states)
+	{
+		selectElement += makeSelectElementTimeZone(propertyName, value, `"${states[state].timeZoneGMT}"`, states[state])
+	}
+	selectElement += `</select></div>`;
+	return selectElement;
+}
+
 function makeSelectElement(propertyName, value, valueNumber, state)
 {
 	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${getDeviceStateValueInGerman(state, propertyName, valueNumber)}</option>`;
+}
+
+function makeSelectElementTimeZone(propertyName, value, valueNumber, state)
+{
+	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == state.timeZoneGMT || value ==  state.timeZoneGMT + "|1." + state.timeSn ? " selected" : ""}>${getDeviceStateValueInGerman(state.timeId, propertyName, valueNumber)}</option>`;
 }
 
 function generateElementButton(type, serialNumber, name, propertyName, setEventHandler, buttonClass, setToDefault, enabled)
@@ -1359,8 +1414,18 @@ function getPropertyNameInGerman(propertyName)
 			return "Moduswechsel in Modus durch das Keypad";
 		case "notificationStartAlarmDelay":
 			return "Starten der Alarmverzögerung";
+		case "timeZone":
+			return "Zeitzone auswählen";
 		case "timeFormat":
 			return "Zeitformat auswählen";
+		case "sdUsage":
+			return "Speicherauslastung";
+		case "sdCapacity":
+			return "Speicherkapazität";
+		case "sdCapacityUsed":
+			return "belegter Speicher";
+		case "sdCapacityAvailable":
+			return "verfügbarer Speicher";
 		case "rebootStation":
 			return "Station neu starten";
 		default:
@@ -1514,6 +1579,52 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 	}
 }
 
+function getSdStatusMessageText(sdStatus)
+{
+	switch(sdStatus)
+	{
+		case 0:
+			return "Speicher in Ordnung";
+		case 1:
+			return "Speicher nicht formatiert";
+		case 3:
+			return "Formatierung fehlgeschlagen";
+		case 4:
+			return "keine Speicherkarte eingesetzt";
+		case 5:
+			return "Speicher wird formatiert";
+		case 6:
+			return "Speicher ist ausgelastet";
+		case 2:
+		case 7:
+		case 8:
+		case 9:
+		case 10:
+			return "Mounten fehlgeschlagen (${sdStatus})";
+		case 11:
+			return "Speicher wird repariert";
+		case 12:
+		case 13:
+		case 14:
+		case 15:
+		case 16:
+		case 17:
+		case 18:
+		case 19:
+		case 20:
+		case 21:
+			return "Überprüfung des Speichers fehlgeschlagen (${sdStatus})";
+		case 22:
+			return "I/O Fehler";
+		case 23:
+			return "Problem mit der Speicherkarte festgestellt";
+		case 24:
+			return "Speicher wird gemountet.";
+		default:
+			return `unbekannter Zustand (${sdStatus})`;
+	}
+}
+
 function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 {
 	var xmlhttp, objResp;
@@ -1585,7 +1696,7 @@ function generateStationSettingsModal(stationId, stationName)
 		myModal.show();
 	}
 
-	getStationPropertiesMetadata(stationId);
+	getTimeZones(stationId);
 }
 
 function generateContentStationSettingsModal(stationId, stationName)
@@ -1639,7 +1750,47 @@ function generateContentStationSettingsModal(stationId, stationName)
 	document.getElementById("modalStationSettings").innerHTML = stationModal;
 }
 
-function getStationPropertiesMetadata(stationId)
+function getTimeZones(stationId)
+{
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/getTimeZones`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success == true)
+			{
+				if(objResp.data.length > 0)
+				{
+					getStationPropertiesMetadata(stationId, objResp.data)
+				}
+				else
+				{
+					document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage("Zeitzoneninformationen konnte nicht geladen werden.");;
+				}
+			}
+			else
+			{
+				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage("Fehler beim Laden der Zeitzoneninformationen.");
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage("Fehler beim Laden der Zeitzoneninformationen.");
+		}
+		else
+		{
+			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade Zeitzoneninformationen...");</strong></div>`;
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+
+function getStationPropertiesMetadata(stationId, timeZones)
 {
 	var xmlhttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}`;
@@ -1654,7 +1805,7 @@ function getStationPropertiesMetadata(stationId)
 			{
 				if(objResp.data.length = 1)
 				{
-					getStationProperties(stationId, objResp.data)
+					getStationProperties(stationId, timeZones, objResp.data)
 				}
 				else
 				{
@@ -1672,14 +1823,14 @@ function getStationPropertiesMetadata(stationId)
 		}
 		else
 		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
+			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade StationPropertiesMetadata...");</strong></div>`;
 		}
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
 }
 
-function getStationProperties(stationId, stationPropertiesMetadata)
+function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 {
 	var xmlhttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}`;
@@ -1694,7 +1845,7 @@ function getStationProperties(stationId, stationPropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillStationSettingsModal(stationId, stationPropertiesMetadata, objResp.modelName, objResp.data);
+					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.data);
 				}
 				else
 				{
@@ -1712,7 +1863,7 @@ function getStationProperties(stationId, stationPropertiesMetadata)
 		}
 		else
 		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
+			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade StationProperties...");</strong></div>`;
 		}
 	};
 	xmlhttp.open("GET", url, true);
@@ -1739,7 +1890,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelName, stationProperties)
+function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, stationProperties)
 {
 	var setEventHandler = true;
 	var stationModal =  `
@@ -1825,14 +1976,66 @@ function fillStationSettingsModal(stationId, stationPropertiesMetadata, modelNam
 										</div>
 									</div>`;
 	}
-	if(stationPropertiesMetadata.timeFormat !== undefined)
+	if(stationPropertiesMetadata.timeZone !== undefined || stationPropertiesMetadata.timeFormat !== undefined)
 	{
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationTimeSettings">
 										<h5 class="card-header">Zeiteinstellungen</h5>
-										<div class="card-body">
+										<div class="card-body">`;
+		if(stationPropertiesMetadata.timeZone !== undefined)
+		{
+			stationModal +=  `
+											<h5>Zeitzone</h5>
+											${generateElementSelectTimeZone("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.timeZone.name, stationProperties.timeZone, false, timeZone)}`;
+		}
+		if(stationPropertiesMetadata.timeFormat !== undefined)
+		{
+			stationModal +=  `
+											${stationPropertiesMetadata.timeZone !== undefined ? `<hr />`: ``}
 											<h5>Zeitformat</h5>
-											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.timeFormat.name, stationProperties.timeFormat, setEventHandler, stationPropertiesMetadata.timeFormat.states)}
+											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.timeFormat.name, stationProperties.timeFormat, setEventHandler, stationPropertiesMetadata.timeFormat.states)}`;
+		}
+		stationModal +=  `
+										</div>
+									</div>`;
+	}
+	if(stationPropertiesMetadata.sdCapacity !== undefined || stationPropertiesMetadata.sdCapacityAvailable !== undefined)
+	{
+		var conversionFactor = 1000;
+		if(stationProperties.model.startsWith("T8030"))
+		{
+			conversionFactor = 1024;
+		}
+		var sdCapacity = (stationProperties.sdCapacity/conversionFactor).toFixed(2);
+		var sdCapacityAvailable = (stationProperties.sdCapacityAvailable/conversionFactor).toFixed(2);
+		var sdCapacityUsed = (sdCapacity - sdCapacityAvailable).toFixed(2);
+		var sdCapacityUsedPercent = (sdCapacityUsed/sdCapacity*100).toFixed(0);
+		stationModal +=  `
+									<div class="card mb-3" id="cardStationStorageSettings">
+										<h5 class="card-header">Speicherinformationen</h5>
+										<div class="card-body">`;
+		if(stationPropertiesMetadata.sdCapacity !== undefined || stationPropertiesMetadata.sdCapacityAvailable !== undefined)
+		{
+			stationModal +=  `
+											<h5>interner Speicher</h5>
+											${stationProperties.sdStatus != 0 ? createMessageContainer("alert alert-warning", "Problem mit dem internen Speicher.", `Es ist folgendes Problem mit dem internen Speicher aufgetreten:<br />${getSdStatusMessageText(stationProperties.sdStatus)}`, "Bitte überprüfen Sie den internen Speicher in der App.") : ""}
+											${generateElementProgress("sdUsage", sdCapacityUsedPercent)}
+											<div class="row gap-3">
+												<div class="col">
+													<h5>${stationProperties.sdCapacity !== undefined ? sdCapacity : ""} GB</h5>
+													${getPropertyNameInGerman(stationPropertiesMetadata.sdCapacity.name)}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.sdCapacity !== undefined && stationProperties.sdCapacityAvailable !== undefined ? sdCapacityUsed : ""} GB</h5>
+													${getPropertyNameInGerman("sdCapacityUsed")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.sdCapacityAvailable !== undefined ? sdCapacityAvailable : ""} GB</h5>
+													${getPropertyNameInGerman(stationPropertiesMetadata.sdCapacityAvailable.name)}
+												</div>
+											</div>`;
+		}
+		stationModal +=  `
 										</div>
 									</div>`;
 	}
@@ -1926,36 +2129,32 @@ function loadDataStatechange(showLoading)
 			{
 				for(station in objResp.data)
 				{
-					if(objResp.data[station].deviceType == "station")
+					state = `${getGuardModeAsString(objResp.data[station].guardMode)}`;
+					buttons =  `<div class="row g-2">`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setArm('${objResp.data[station].serialNumber}')`}` , "ab&shy;we&shy;send", (objResp.data[station].guardMode != 0), undefined, undefined, true)}</div>`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}')`}`, "zu Hause", (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, "Zeit&shy;steu&shy;e&shy;rung", (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, "de&shy;ak&shy;ti&shy;viert", (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
+					buttons += `</div>`;
+					if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
 					{
-						state = `${getGuardModeAsString(objResp.data[station].guardMode)}`;
-						buttons =  `<div class="row g-2">`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setArm('${objResp.data[station].serialNumber}')`}` , "ab&shy;we&shy;send", (objResp.data[station].guardMode != 0), undefined, undefined, true)}</div>`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}'`}`, "zu Hause", (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, "Zeit&shy;steu&shy;e&shy;rung", (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
-						buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, "de&shy;ak&shy;ti&shy;viert", (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
-						buttons += `</div>`;
-						
-						if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
+						lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
+						if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
 						{
-							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
-							if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
-							{
-								lastChangeTimeAll = parseInt(objResp.data[station].guardModeTime);
-							}
+							lastChangeTimeAll = parseInt(objResp.data[station].guardModeTime);
 						}
-						else if(objResp.data[station].pictureTime == "n/a")
-						{
-							lastChangeTime = "unbekannt";
-						}
-						else
-						{
-							lastChangeTime = "nicht verfügbar";
-						}
-						stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
 					}
+					else if(objResp.data[station].pictureTime == "n/a")
+					{
+						lastChangeTime = "unbekannt";
+					}
+					else
+					{
+						lastChangeTime = "nicht verfügbar";
+					}
+					stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? "" : " (privacy)"}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
 				}
-				text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-3", stations);
+				text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
 				document.getElementById("btnArmAll").removeAttribute("disabled");
 				document.getElementById("btnHomeAll").removeAttribute("disabled");
 				document.getElementById("btnScheduleAll").removeAttribute("disabled");
@@ -2545,27 +2744,27 @@ function loadStationsSettings()
 					}
 					document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
 					document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
-					loadDataSettings();
+					loadSystemVariables();
 				}
 				else
 				{
 					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
 					document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
-					loadDataSettings();
+					loadSystemVariables();
 				}
 			}
 			catch (e)
 			{
 				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "", `Es ist folgender Fehler aufgetreten: ${e}`);
 				document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
-				loadDataSettings();
+				loadSystemVariables();
 			}
 		}
 		else if(this.readyState == 4)
 		{
 			document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", "Fehler bei der Ermittlung der Stationen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
 			document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
-			loadDataSettings();
+			loadSystemVariables();
 		}
 		else
 		{
@@ -2656,7 +2855,7 @@ function loadDataSettings()
 					}
 					else
 					{
-						document.getElementById("cbConnectionType").selectedIndex = (Number.parseInt(objResp.data.connectionTypeP2p)) + 1;
+						document.getElementById("cbConnectionType").value = objResp.data.connectionTypeP2p;
 					}
 					if(objResp.data.systemVariableActive == true)
 					{
@@ -2753,7 +2952,14 @@ function loadDataSettings()
 					}
 					else
 					{
-						document.getElementById("spnToken").innerHTML = `Das zur Zeit genutzte Token läuft am ${makeDateTimeString(new Date(objResp.data.tokenExpire*1000))} ab. Es wird vorher aktualisiert.<br />`;
+						if(objResp.data.tokenExpire == 0)
+						{
+							document.getElementById("spnToken").innerHTML = `Es ist kein Token gespeichert. Beim nächsten erfolgreichen Login wird ein neues Token erzeugt.<br />`;
+						}
+						else
+						{
+							document.getElementById("spnToken").innerHTML = `Das zur Zeit genutzte Token läuft am ${makeDateTimeString(new Date(objResp.data.tokenExpire*1000))} ab. Es wird vorher aktualisiert.<br />`;
+						}
 					}
 					checkLogLevel(objResp.data.logLevel);
 					document.getElementById("resultLoading").innerHTML = "";
@@ -2840,16 +3046,19 @@ function loadSystemVariables()
 						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: '${objResp.reason}'.`);
 					}
 				}
+				loadDataSettings();
 			}
 			catch (e)
 			{
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
 				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
+				loadDataSettings();
 			}
 		}
 		else if(this.readyState == 4)
 		{
 			document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der Systemvariablen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+			loadDataSettings();
 		}
 		else
 		{
