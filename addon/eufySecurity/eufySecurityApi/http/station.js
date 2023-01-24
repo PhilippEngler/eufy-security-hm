@@ -61,6 +61,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         this.p2pSession.on("jammed", (channel) => this.onDeviceJammed(channel));
         this.p2pSession.on("low battery", (channel) => this.onDeviceLowBattery(channel));
         this.p2pSession.on("wrong try-protect alarm", (channel) => this.onDeviceWrongTryProtectAlarm(channel));
+        this.p2pSession.on("sd info ex", (sdStatus, sdCapacity, sdCapacityAvailable) => this.onSdInfoEx(sdStatus, sdCapacity, sdCapacityAvailable));
         this.update(this.rawStation);
         this.ready = true;
         this.p2pConnectionType = this.eufySecurityApi.getP2PConnectionType();
@@ -409,15 +410,41 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             case types_1.DeviceType.STATION:
             case types_1.DeviceType.HB3:
                 return `station`;
-            case types_1.DeviceType.FLOODLIGHT || types_1.DeviceType.FLOODLIGHT_CAMERA_8422 || types_1.DeviceType.FLOODLIGHT_CAMERA_8423 || types_1.DeviceType.FLOODLIGHT_CAMERA_8424:
+            case types_1.DeviceType.FLOODLIGHT:
+            case types_1.DeviceType.FLOODLIGHT_CAMERA_8422:
+            case types_1.DeviceType.FLOODLIGHT_CAMERA_8423:
+            case types_1.DeviceType.FLOODLIGHT_CAMERA_8424:
                 return `floodlight`;
-            case types_1.DeviceType.INDOOR_CAMERA || types_1.DeviceType.INDOOR_CAMERA_1080 || types_1.DeviceType.INDOOR_COST_DOWN_CAMERA || types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_1080P || types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT || types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_2K || types_1.DeviceType.INDOOR_PT_CAMERA || types_1.DeviceType.INDOOR_PT_CAMERA_1080:
+            case types_1.DeviceType.INDOOR_CAMERA:
+            case types_1.DeviceType.INDOOR_CAMERA_1080:
+            case types_1.DeviceType.INDOOR_COST_DOWN_CAMERA:
+            case types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_1080P:
+            case types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT:
+            case types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_2K:
+            case types_1.DeviceType.INDOOR_PT_CAMERA:
+            case types_1.DeviceType.INDOOR_PT_CAMERA_1080:
                 return `indoorcamera`;
-            case types_1.DeviceType.SOLO_CAMERA || types_1.DeviceType.SOLO_CAMERA_PRO || types_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_1080 || types_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_2K || types_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
+            case types_1.DeviceType.SOLO_CAMERA:
+            case types_1.DeviceType.SOLO_CAMERA_PRO:
+            case types_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_1080:
+            case types_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_2K:
+            case types_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
                 return `solocamera`;
-            case types_1.DeviceType.DOORBELL || types_1.DeviceType.DOORBELL_SOLO || types_1.DeviceType.BATTERY_DOORBELL || types_1.DeviceType.BATTERY_DOORBELL_2 || types_1.DeviceType.BATTERY_DOORBELL_PLUS:
+            case types_1.DeviceType.DOORBELL:
+            case types_1.DeviceType.DOORBELL_SOLO:
+            case types_1.DeviceType.BATTERY_DOORBELL:
+            case types_1.DeviceType.BATTERY_DOORBELL_2:
+            case types_1.DeviceType.BATTERY_DOORBELL_PLUS:
                 return `doorbell`;
-            case types_1.DeviceType.LOCK_8503 || types_1.DeviceType.LOCK_8504 || types_1.DeviceType.LOCK_8530 || types_1.DeviceType.LOCK_8592 || types_1.DeviceType.LOCK_85A3 || types_1.DeviceType.LOCK_BLE || types_1.DeviceType.LOCK_BLE_NO_FINGER || types_1.DeviceType.LOCK_WIFI || types_1.DeviceType.LOCK_WIFI_NO_FINGER:
+            case types_1.DeviceType.LOCK_8503:
+            case types_1.DeviceType.LOCK_8504:
+            case types_1.DeviceType.LOCK_8530:
+            case types_1.DeviceType.LOCK_8592:
+            case types_1.DeviceType.LOCK_85A3:
+            case types_1.DeviceType.LOCK_BLE:
+            case types_1.DeviceType.LOCK_BLE_NO_FINGER:
+            case types_1.DeviceType.LOCK_WIFI:
+            case types_1.DeviceType.LOCK_WIFI_NO_FINGER:
                 return `lock`;
             default:
                 return `unknown(${this.rawStation.device_type})`;
@@ -630,13 +657,14 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             channel: Station.CHANNEL
         });
     }
-    async getStorageInfo() {
+    async getStorageInfoEx() {
         this.log.debug(`Sending get storage info command to station ${this.getSerial()}`);
         //TODO: Verify channel! Should be 255...
         await this.p2pSession.sendCommandWithIntString({
             commandType: types_2.CommandType.CMD_SDINFO_EX,
             value: 0,
             valueSub: 0,
+            channel: 255,
             strValue: this.rawStation.member.admin_user_id
         });
     }
@@ -6141,6 +6169,9 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
     }
     onDeviceWrongTryProtectAlarm(channel) {
         this.emit("device wrong try-protect alarm", this._getDeviceSerial(channel));
+    }
+    onSdInfoEx(sdStatus, sdCapacity, sdAvailableCapacity) {
+        this.emit("sd info ex", this, sdStatus, sdCapacity, sdAvailableCapacity);
     }
     async setVideoTypeStoreToNAS(device, value) {
         const propertyData = {

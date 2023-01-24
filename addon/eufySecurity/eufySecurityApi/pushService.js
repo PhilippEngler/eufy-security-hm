@@ -83,7 +83,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
      * @param credentials The Credentials.
      */
     savePushCredentials(credentials) {
-        if (credentials != undefined) {
+        if (credentials !== undefined) {
             this.config.setCredentialsFidResponse(credentials.fidResponse);
             this.config.setCredentialsCheckinResponse(credentials.checkinResponse);
             this.config.setCredentialsGcmResponse(credentials.gcmResponse);

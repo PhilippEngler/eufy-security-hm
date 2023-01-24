@@ -1142,6 +1142,9 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                             else if (msg_state.commandType === types_1.CommandType.CMD_STOP_TALKBACK || (msg_state.commandType === types_1.CommandType.CMD_DOORBELL_SET_PAYLOAD && msg_state.nestedCommandType === types_1.IndoorSoloSmartdropCommandType.CMD_END_SPEAK)) {
                                 this.stopTalkback(msg_state.channel);
                             }
+                            else if (msg_state.commandType === types_1.CommandType.CMD_SDINFO_EX) {
+                                this.emit("sd info ex", message.data.slice(0, 4).readUInt32LE(), message.data.slice(4, 8).readUInt32LE(), message.data.slice(8, 12).readUInt32LE());
+                            }
                         }
                     }
                     else {
@@ -1290,12 +1293,18 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                             this.currentMessageState[message.dataType].p2pStreamMetadata.audioCodec = types_1.AudioCodec.NONE;
                             this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived = true;
                             if (this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived && this.currentMessageState[message.dataType].p2pStreamFirstVideoDataReceived) {
+                                if (this.currentMessageState[message.dataType].p2pStreamChannel !== message.channel) {
+                                    this.currentMessageState[message.dataType].p2pStreamChannel = message.channel;
+                                }
                                 this.emitStreamStartEvent(message.dataType);
                             }
                         }, this.AUDIO_CODEC_ANALYZE_TIMEOUT);
                     }
                     if (this.currentMessageState[message.dataType].p2pStreamNotStarted) {
                         if (this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived && this.currentMessageState[message.dataType].p2pStreamFirstVideoDataReceived) {
+                            if (this.currentMessageState[message.dataType].p2pStreamChannel !== message.channel) {
+                                this.currentMessageState[message.dataType].p2pStreamChannel = message.channel;
+                            }
                             this.emitStreamStartEvent(message.dataType);
                         }
                     }
@@ -1355,6 +1364,9 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     if (this.currentMessageState[message.dataType].p2pStreamNotStarted) {
                         if (this.currentMessageState[message.dataType].p2pStreamFirstAudioDataReceived && this.currentMessageState[message.dataType].p2pStreamFirstVideoDataReceived) {
+                            if (this.currentMessageState[message.dataType].p2pStreamChannel !== message.channel) {
+                                this.currentMessageState[message.dataType].p2pStreamChannel = message.channel;
+                            }
                             this.emitStreamStartEvent(message.dataType);
                         }
                     }

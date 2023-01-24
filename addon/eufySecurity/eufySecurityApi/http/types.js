@@ -7,7 +7,7 @@ exports.DeviceMotionDetectionRangeStandardSensitivityProperty = exports.DeviceMo
 exports.DeviceLoiteringCustomResponseHomeBaseNotificationProperty = exports.DeviceLoiteringCustomResponseAutoVoiceResponseVoiceProperty = exports.DeviceLoiteringCustomResponseAutoVoiceResponseProperty = exports.DeviceLoiteringCustomResponsePhoneNotificationProperty = exports.DeviceMotionDetectionSensitivityAdvancedHProperty = exports.DeviceMotionDetectionSensitivityAdvancedGProperty = exports.DeviceMotionDetectionSensitivityAdvancedFProperty = exports.DeviceMotionDetectionSensitivityAdvancedEProperty = exports.DeviceMotionDetectionSensitivityAdvancedDProperty = exports.DeviceMotionDetectionSensitivityAdvancedCProperty = exports.DeviceMotionDetectionSensitivityAdvancedBProperty = exports.DeviceMotionDetectionSensitivityAdvancedAProperty = exports.DeviceMotionDetectionSensitivityStandardProperty = exports.DeviceMotionDetectionSensitivityModeProperty = exports.DeviceLoiteringDetectionLengthProperty = exports.DeviceLoiteringDetectionRangeProperty = exports.DeviceLoiteringDetectionProperty = exports.DeviceNotificationLockedProperty = exports.DeviceNotificationUnlockedProperty = exports.DeviceNotificationProperty = exports.DeviceSoundSimpleProperty = exports.DeviceSoundProperty = exports.DeviceScramblePasscodeSmartSafeProperty = exports.DeviceScramblePasscodeProperty = exports.DeviceWrongTryAttemptsSmartSafeProperty = exports.DeviceWrongTryAttemptsProperty = exports.DeviceWrongTryLockdownTimeSmartSafeProperty = exports.DeviceWrongTryLockdownTimeProperty = exports.DeviceWrongTryProtectionSmartSafeProperty = exports.DeviceWrongTryProtectionProperty = exports.DeviceOneTouchLockingProperty = exports.DeviceAutoLockScheduleEndTimeProperty = exports.DeviceAutoLockScheduleStartTimeProperty = exports.DeviceAutoLockScheduleProperty = exports.DeviceAutoLockTimerProperty = exports.DeviceAutoLockProperty = exports.DeviceAutoCalibrationProperty = exports.DeviceVideoColorNightvisionProperty = exports.DeviceVideoNightvisionImageAdjustmentProperty = exports.DeviceLightSettingsMotionActivationModeProperty = exports.DeviceLightSettingsColorTemperatureScheduleProperty = exports.DeviceLightSettingsColorTemperatureMotionProperty = exports.DeviceLightSettingsColorTemperatureManualProperty = exports.DeviceMotionOutOfViewDetectionProperty = exports.DeviceMotionAutoCruiseProperty = exports.DeviceMotionTrackingSensitivityProperty = exports.DeviceMotionDetectionTestModeProperty = exports.DeviceMotionDetectionRangeAdvancedRightSensitivityProperty = exports.DeviceMotionDetectionRangeAdvancedMiddleSensitivityProperty = exports.DeviceMotionDetectionRangeAdvancedLeftSensitivityProperty = void 0;
 exports.DeviceNotificationDualLockProperty = exports.DeviceNotificationDualUnlockProperty = exports.DeviceNotificationUnlockByAppProperty = exports.DeviceNotificationUnlockByFingerprintProperty = exports.DeviceNotificationUnlockByPINProperty = exports.DeviceNotificationUnlockByKeyProperty = exports.DeviceAlarmVolumeProperty = exports.DevicePromptVolumeProperty = exports.DeviceRemoteUnlockMasterPINProperty = exports.DeviceRemoteUnlockProperty = exports.DeviceTamperAlarmProperty = exports.DeviceInteriorBrightnessDurationProperty = exports.DeviceInteriorBrightnessProperty = exports.DevicePowerSaveProperty = exports.DeviceDualUnlockProperty = exports.DeviceLeftOpenAlarmDurationProperty = exports.DeviceLeftOpenAlarmProperty = exports.DeviceRadarMotionDetectedProperty = exports.DeviceSomeoneLoiteringProperty = exports.DevicePackageTakenProperty = exports.DevicePackageStrandedProperty = exports.DevicePackageDeliveredProperty = exports.StationOffSecuritySettings = exports.StationCustom3SecuritySettings = exports.StationCustom2SecuritySettings = exports.StationCustom1SecuritySettings = exports.StationAwaySecuritySettings = exports.StationHomeSecuritySettings = exports.DeviceSoundDetectionRoundLookProperty = exports.DeviceNotificationIntervalTimeProperty = exports.DeviceDefaultAngleIdleTimeProperty = exports.DeviceDefaultAngleProperty = exports.DeviceContinuousRecordingTypeProperty = exports.DeviceContinuousRecordingProperty = exports.DeviceRingAutoResponseTimeToProperty = exports.DeviceRingAutoResponseTimeFromProperty = exports.DeviceRingAutoResponseVoiceResponseVoiceProperty = exports.DeviceRingAutoResponseVoiceResponseProperty = exports.DeviceRingAutoResponseProperty = exports.DeviceDualCamWatchViewModeProperty = exports.DeviceDeliveryGuardPackageLiveCheckAssistanceProperty = exports.DeviceDeliveryGuardUncollectedPackageAlertTimeToCheckProperty = exports.DeviceDeliveryGuardUncollectedPackageAlertProperty = exports.DeviceDeliveryGuardPackageGuardingActivatedTimeToProperty = exports.DeviceDeliveryGuardPackageGuardingActivatedTimeFromProperty = exports.DeviceDeliveryGuardPackageGuardingVoiceResponseVoiceProperty = exports.DeviceDeliveryGuardPackageGuardingProperty = exports.DeviceDeliveryGuardProperty = exports.DeviceLoiteringCustomResponseTimeToProperty = exports.DeviceLoiteringCustomResponseTimeFromProperty = void 0;
 exports.StationNotificationStartAlarmDelayProperty = exports.StationNotificationSwitchModeKeypadProperty = exports.StationNotificationSwitchModeAppProperty = exports.StationNotificationSwitchModeGeofenceProperty = exports.StationNotificationSwitchModeScheduleProperty = exports.StationAlarmToneProperty = exports.StationPromptVolumeProperty = exports.StationAlarmVolumeProperty = exports.StationMacAddressProperty = exports.StationLanIpAddressStandaloneProperty = exports.StationLanIpAddressProperty = exports.StationCurrentModeKeyPadProperty = exports.StationCurrentModeProperty = exports.StationGuardModeKeyPadProperty = exports.StationGuardModeProperty = exports.BaseStationProperties = exports.StationSerialNumberProperty = exports.StationModelProperty = exports.StationNameProperty = exports.DeviceProperties = exports.WiredDoorbellT8200XDeviceProperties = exports.FloodlightT8420XDeviceProperties = exports.DeviceDetectionStatisticsRecordedEventsProperty = exports.DeviceDetectionStatisticsDetectedEventsProperty = exports.DeviceDetectionStatisticsWorkingDaysProperty = exports.DeviceDogPoopDetectedProperty = exports.DeviceDogLickDetectedProperty = exports.DeviceDogDetectedProperty = exports.DeviceVehicleDetectedProperty = exports.DeviceStrangerPersonDetectedProperty = exports.DeviceIdentityPersonDetectedProperty = exports.DevicePersonNameProperty = exports.DeviceSnoozeChimeProperty = exports.DeviceSnoozeMotionProperty = exports.DeviceSnoozeHomebaseProperty = exports.DeviceSnoozeStartTimeWiredDoorbellProperty = exports.DeviceSnoozeStartTimeProperty = exports.DeviceSnoozeTimeProperty = exports.DeviceSnoozeProperty = exports.DeviceVideoTypeStoreToNASProperty = exports.DeviceWrongTryProtectAlertProperty = exports.DeviceLongTimeNotCloseAlertProperty = exports.DeviceLowBatteryAlertProperty = exports.DeviceShakeAlertEventProperty = exports.DeviceShakeAlertProperty = exports.Device911AlertEventProperty = exports.Device911AlertProperty = exports.DeviceJammedAlertProperty = exports.DeviceNotificationJammedProperty = exports.DeviceNotificationWrongTryProtectProperty = void 0;
-exports.StationCommands = exports.DeviceCommands = exports.CommandName = exports.StationProperties = exports.StationAlarmDelayTypeProperty = exports.StationAlarmDelayProperty = exports.StationAlarmArmDelayProperty = exports.StationAlarmArmedProperty = exports.StationAlarmTypeProperty = exports.StationAlarmProperty = exports.StationTurnOffAlarmWithButtonProperty = exports.StationAutoEndAlarmProperty = exports.StationSwitchModeWithAccessCodeProperty = exports.StationTimeFormatProperty = void 0;
+exports.StationCommands = exports.DeviceCommands = exports.CommandName = exports.StationProperties = exports.StationSdAvailableCapacityProperty = exports.StationSdCapacityProperty = exports.StationSdStatusProperty = exports.StationAlarmDelayTypeProperty = exports.StationAlarmDelayProperty = exports.StationAlarmArmDelayProperty = exports.StationAlarmArmedProperty = exports.StationAlarmTypeProperty = exports.StationAlarmProperty = exports.StationTurnOffAlarmWithButtonProperty = exports.StationAutoEndAlarmProperty = exports.StationSwitchModeWithAccessCodeProperty = exports.StationTimeZoneProperty = exports.StationTimeFormatProperty = void 0;
 const types_1 = require("../p2p/types");
 var DeviceType;
 (function (DeviceType) {
@@ -585,7 +585,7 @@ var PropertyName;
     PropertyName["StationGuardMode"] = "guardMode";
     PropertyName["StationCurrentMode"] = "currentMode";
     PropertyName["StationTimeFormat"] = "timeFormat";
-    //StationTimezone = "timezone", //Supported also by T8520
+    PropertyName["StationTimeZone"] = "timeZone";
     PropertyName["StationAlarmVolume"] = "alarmVolume";
     PropertyName["StationAlarmTone"] = "alarmTone";
     PropertyName["StationPromptVolume"] = "promptVolume";
@@ -609,6 +609,9 @@ var PropertyName;
     PropertyName["StationAlarmArmDelay"] = "alarmArmDelay";
     PropertyName["StationAlarmDelay"] = "alarmDelay";
     PropertyName["StationAlarmDelayType"] = "alarmDelayType";
+    PropertyName["StationSdStatus"] = "sdStatus";
+    PropertyName["StationSdCapacity"] = "sdCapacity";
+    PropertyName["StationSdCapacityAvailable"] = "sdCapacityAvailable";
 })(PropertyName = exports.PropertyName || (exports.PropertyName = {}));
 exports.DeviceNameProperty = {
     key: "device_name",
@@ -5152,6 +5155,14 @@ exports.StationTimeFormatProperty = {
     },
     default: 0,
 };
+exports.StationTimeZoneProperty = {
+    key: "time_zone",
+    name: PropertyName.StationTimeZone,
+    label: "Time Zone",
+    readable: true,
+    writeable: false,
+    type: "string",
+};
 exports.StationSwitchModeWithAccessCodeProperty = {
     key: types_1.CommandType.CMD_KEYPAD_PSW_OPEN,
     name: PropertyName.StationSwitchModeWithAccessCode,
@@ -5266,6 +5277,33 @@ exports.StationAlarmDelayTypeProperty = {
     },
     default: 0,
 };
+exports.StationSdStatusProperty = {
+    key: "sd_status",
+    name: PropertyName.StationSdStatus,
+    label: "SD Status",
+    readable: true,
+    writeable: false,
+    type: "number",
+    default: undefined,
+};
+exports.StationSdCapacityProperty = {
+    key: "sd_capacity",
+    name: PropertyName.StationSdCapacity,
+    label: "SD Capacity",
+    readable: true,
+    writeable: false,
+    type: "number",
+    default: undefined,
+};
+exports.StationSdAvailableCapacityProperty = {
+    key: "sd_capacity_available",
+    name: PropertyName.StationSdCapacityAvailable,
+    label: "SD Capacity Available",
+    readable: true,
+    writeable: false,
+    type: "number",
+    default: undefined,
+};
 exports.StationProperties = {
     [DeviceType.STATION]: {
         ...exports.BaseStationProperties,
@@ -5274,6 +5312,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationPromptVolume]: exports.StationPromptVolumeProperty,
         [PropertyName.StationAlarmVolume]: exports.StationAlarmVolumeProperty,
         [PropertyName.StationAlarmTone]: exports.StationAlarmToneProperty,
@@ -5294,6 +5333,9 @@ exports.StationProperties = {
         [PropertyName.StationAlarmArmDelay]: exports.StationAlarmArmDelayProperty,
         [PropertyName.StationAlarmDelay]: exports.StationAlarmDelayProperty,
         [PropertyName.StationAlarmDelayType]: exports.StationAlarmDelayTypeProperty,
+        [PropertyName.StationSdStatus]: exports.StationSdStatusProperty,
+        [PropertyName.StationSdCapacity]: exports.StationSdCapacityProperty,
+        [PropertyName.StationSdCapacityAvailable]: exports.StationSdAvailableCapacityProperty,
     },
     [DeviceType.HB3]: {
         ...exports.BaseStationProperties,
@@ -5302,6 +5344,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationPromptVolume]: exports.StationPromptVolumeProperty,
         [PropertyName.StationAlarmVolume]: exports.StationAlarmVolumeProperty,
         [PropertyName.StationAlarmTone]: exports.StationAlarmToneProperty,
@@ -5322,6 +5365,9 @@ exports.StationProperties = {
         [PropertyName.StationAlarmArmDelay]: exports.StationAlarmArmDelayProperty,
         [PropertyName.StationAlarmDelay]: exports.StationAlarmDelayProperty,
         [PropertyName.StationAlarmDelayType]: exports.StationAlarmDelayTypeProperty,
+        [PropertyName.StationSdStatus]: exports.StationSdStatusProperty,
+        [PropertyName.StationSdCapacity]: exports.StationSdCapacityProperty,
+        [PropertyName.StationSdCapacityAvailable]: exports.StationSdAvailableCapacityProperty,
     },
     [DeviceType.INDOOR_CAMERA]: {
         ...exports.BaseStationProperties,
@@ -5350,8 +5396,12 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
+        [PropertyName.StationSdStatus]: exports.StationSdStatusProperty,
+        [PropertyName.StationSdCapacity]: exports.StationSdCapacityProperty,
+        [PropertyName.StationSdCapacityAvailable]: exports.StationSdAvailableCapacityProperty,
     },
     [DeviceType.INDOOR_COST_DOWN_CAMERA]: {
         ...exports.BaseStationProperties,

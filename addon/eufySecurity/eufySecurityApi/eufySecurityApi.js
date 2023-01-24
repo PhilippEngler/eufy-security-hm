@@ -17,19 +17,13 @@ const error_1 = require("./error");
 const utils_3 = require("./http/utils");
 const const_1 = require("./http/const");
 const utils_4 = require("./utils/utils");
+const const_2 = require("./utils/const");
 class EufySecurityApi {
     /**
      * Create the api object.
      */
     constructor() {
-        this.httpApiPersistentData = {
-            user_id: "",
-            email: "",
-            nick_name: "",
-            device_public_keys: {},
-            clientPrivateKey: "",
-            serverPublicKey: ""
-        };
+        this.httpApiPersistentData = { user_id: "", email: "", nick_name: "", device_public_keys: {}, clientPrivateKey: "", serverPublicKey: "" };
         this.connected = false;
         this.retries = 0;
         this.serviceState = "init";
@@ -55,7 +49,7 @@ class EufySecurityApi {
                 missingSettings += "password";
             }
             this.logError(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email, password and deviceName to run this addon (missing: ${missingSettings}).`);
-            this.serviceState = "ok";
+            this.setServiceState("ok");
         }
         else {
             if (this.config.getClientPrivateKey() === undefined || this.config.getClientPrivateKey() === "" || this.config.getServerPublicKey() === undefined || this.config.getServerPublicKey() === "") {
@@ -183,15 +177,10 @@ class EufySecurityApi {
      * Close the EufySecurityApi.
      */
     async close() {
-        /*for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
-            this.stopStationLivestream(device_sn);
-        }
-        for (const device_sn of this.cameraCloudLivestreamTimeout.keys()) {
-            this.stopCloudLivestream(device_sn);
-        }*/
         if (this.refreshEufySecurityCloudTimeout !== undefined) {
             clearTimeout(this.refreshEufySecurityCloudTimeout);
         }
+        this.clearScheduledTasks();
         this.closePushService();
         this.closeMqttService();
         await this.closeStation();
@@ -328,12 +317,13 @@ class EufySecurityApi {
         await (0, utils_2.sleep)(10);
         await this.refreshCloudData();
         this.setupScheduledTasks();
-        this.serviceState = "ok";
+        this.setServiceState("ok");
         this.writeConfig();
     }
     onAPIConnectionError(error) {
-        this.logError(`APIConnectionError occured. Error: ${error}`);
         //this.emit("connection error", error);
+        this.logError(`APIConnectionError occured. Error: ${error}`);
+        this.setServiceState("ok");
     }
     onCaptchaRequest(captchaId, captcha) {
         //this.emit("captcha request", id, captcha);
@@ -341,7 +331,7 @@ class EufySecurityApi {
         this.logInfo(`Entering captcha code needed. Please check the addon website.`);
     }
     onAuthTokenInvalidated() {
-        this.setTokenData(undefined, undefined);
+        this.setTokenData(undefined, 0);
         this.logInfo(`The authentication token is invalid and have been removed.`);
     }
     onTfaRequest() {
@@ -759,6 +749,18 @@ class EufySecurityApi {
     makeJsonObjectForStation(station) {
         var properties = station.getProperties();
         var json = {};
+        var privacyMode = undefined;
+        if (this.devices.existDevice(station.getSerial())) {
+            var device = this.devices.getDevices()[station.getSerial()];
+            if (device.isPanAndTiltCamera()) {
+                if (device.isEnabled()) {
+                    privacyMode = false;
+                }
+                else {
+                    privacyMode = true;
+                }
+            }
+        }
         json = { "eufyDeviceId": station.getId(), "deviceType": station.getDeviceTypeString(), "wanIpAddress": station.getIPAddress(), "isP2PConnected": station.isConnected() };
         for (var property in properties) {
             switch (property) {
@@ -768,6 +770,9 @@ class EufySecurityApi {
                     break;
                 case http_1.PropertyName.StationGuardMode:
                     json[property] = properties[property] === undefined ? "n/a" : properties[property];
+                    if (privacyMode !== undefined) {
+                        json.privacyMode = privacyMode;
+                    }
                     json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
                     break;
                 case http_1.PropertyName.StationHomeSecuritySettings:
@@ -1302,7 +1307,7 @@ class EufySecurityApi {
     async setPrivacyMode(deviceSerial, value) {
         if (this.devices.existDevice(deviceSerial) == true) {
             const device = await this.getDevices()[deviceSerial];
-            if (device.isIndoorCamera()) {
+            if (device.isPanAndTiltCamera()) {
                 if (device.isEnabled() == value) {
                     return `{"success":true,"info":"The value for privacy mode on device ${deviceSerial} already set."}`;
                 }
@@ -1330,6 +1335,13 @@ class EufySecurityApi {
         }
     }
     /**
+     * Retrieves the timezones.
+     * @returns A JSON string with the timezones.
+     */
+    getTimeZones() {
+        return `{"success":true,"data":${JSON.stringify(const_1.timeZoneData)}}`;
+    }
+    /**
      * Update the library (at this time only image and the corrospondending datetime) from the devices.
      */
     async getLibrary() {
@@ -1346,9 +1358,27 @@ class EufySecurityApi {
                     json = { "success": true, "data": [] };
                     for (var deviceSerial in devices) {
                         device = devices[deviceSerial];
-                        if (this.devices.getDeviceTypeAsString(device) == "camera") {
-                            device = devices[deviceSerial];
-                            json.data.push({ "deviceSerial": deviceSerial, "pictureUrl": (device.getLastCameraImageURL() !== undefined) ? device.getLastCameraImageURL() : "", "pictureTime": this.devices.getLastVideoTime(deviceSerial) === undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl": device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL() });
+                        switch (this.devices.getDeviceTypeAsString(device)) {
+                            case "camera":
+                                device = devices[deviceSerial];
+                                break;
+                            case "doorbell":
+                                device = devices[deviceSerial];
+                                break;
+                            case "indoorcamera":
+                                device = devices[deviceSerial];
+                                break;
+                            case "solocamera":
+                                device = devices[deviceSerial];
+                                break;
+                            case "floodlight":
+                                device = devices[deviceSerial];
+                                break;
+                            default:
+                                device = undefined;
+                        }
+                        if (device !== undefined) {
+                            json.data.push({ "deviceSerial": deviceSerial, "pictureUrl": (device.getLastCameraImageURL() === undefined || device.getLastCameraImageURL().startsWith("T")) ? this.config.getCameraDefaultImage() : device.getLastCameraImageURL(), "pictureTime": this.devices.getLastVideoTime(deviceSerial) === undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl": device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL() });
                             if (device.getLastCameraImageURL() === undefined || device.getLastCameraImageURL().startsWith("T")) {
                                 this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
                             }
@@ -1705,6 +1735,9 @@ class EufySecurityApi {
         else {
             return `{"success":false,"serviceRestart":false,"message":"Error during writing config."}`;
         }
+    }
+    getCountriesAsJson() {
+        return `{"success":true,"data":${JSON.stringify(const_2.countryData)}}`;
     }
     /**
      * Check if all system variables are created on the CCU
@@ -2123,7 +2156,7 @@ class EufySecurityApi {
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "2.3.1-b244";
+        return "2.4.0";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

@@ -178,11 +178,11 @@ class Config {
             var updated = false;
             if (configJson.configVersion < 12) {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 12...");
-                if (configJson.apiConfig.updateCloudInfoIntervall == undefined) {
+                if (configJson.apiConfig.updateCloudInfoIntervall === undefined) {
                     this.logger.logInfoBasic(" adding 'updateCloudInfoIntervall'.");
                     configJson.apiConfig.updateCloudInfoIntervall = 10;
                 }
-                if (configJson.apiConfig.updateDeviceDataIntervall == undefined) {
+                if (configJson.apiConfig.updateDeviceDataIntervall === undefined) {
                     this.logger.logInfoBasic(" adding 'updateDeviceDataIntervall'.");
                     configJson.apiConfig.updateDeviceDataIntervall = 10;
                 }
@@ -190,7 +190,7 @@ class Config {
             }
             if (configJson.configVersion < 13) {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 13...");
-                if (configJson.apiConfig.houseId == undefined) {
+                if (configJson.apiConfig.houseId === undefined) {
                     this.logger.logInfoBasic(" adding 'houseId'.");
                     configJson.apiConfig.houseId = "all";
                 }
@@ -198,19 +198,19 @@ class Config {
             }
             if (configJson.configVersion < 14) {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 14...");
-                if (configJson.accountData.userId == undefined) {
+                if (configJson.accountData.userId === undefined) {
                     this.logger.logInfoBasic(" adding 'userId'.");
                     configJson.accountData.userId = "";
                 }
-                if (configJson.accountData.nickName == undefined) {
+                if (configJson.accountData.nickName === undefined) {
                     this.logger.logInfoBasic(" adding 'nickName'.");
                     configJson.accountData.nickName = "";
                 }
-                if (configJson.accountData.clientPrivateKey == undefined) {
+                if (configJson.accountData.clientPrivateKey === undefined) {
                     this.logger.logInfoBasic(" adding 'clientPrivateKey'.");
                     configJson.accountData.clientPrivateKey = "";
                 }
-                if (configJson.accountData.serverPublicKey == undefined) {
+                if (configJson.accountData.serverPublicKey === undefined) {
                     this.logger.logInfoBasic(" adding 'serverPublicKey'.");
                     configJson.accountData.serverPublicKey = "";
                 }
@@ -431,7 +431,7 @@ class Config {
      */
     updateWithNewStation(stationSerial) {
         this.logger.logInfoBasic(`Adding station ${stationSerial} to settings.`);
-        var station = { "stationSerial": stationSerial, "p2pDid": "", "stationIpAddress": "", "udpPort": "" };
+        var station = { "stationSerial": stationSerial, "p2pDid": null, "stationIpAddress": null, "udpPort": null };
         if (Array.isArray(this.configJson.stations)) {
             this.configJson.stations.push(station);
         }
@@ -479,7 +479,7 @@ class Config {
      * @returns The configfile version as string.
      */
     getConfigFileVersion() {
-        if (this.configJson.configVersion != undefined) {
+        if (this.configJson.configVersion !== undefined) {
             return this.configJson.configVersion;
         }
         else {
@@ -490,7 +490,7 @@ class Config {
      * Get the eMail address of the eufy security account.
      */
     getEmailAddress() {
-        if (this.configJson.accountData.eMail != undefined) {
+        if (this.configJson.accountData.eMail !== undefined) {
             return this.configJson.accountData.eMail;
         }
         else {
@@ -512,7 +512,7 @@ class Config {
      * Get the user id of the eufy security account.
      */
     getUserId() {
-        if (this.configJson.accountData.userId != undefined) {
+        if (this.configJson.accountData.userId !== undefined) {
             return this.configJson.accountData.userId;
         }
         else {
@@ -533,7 +533,7 @@ class Config {
      * Get the password for the eufy security account.
      */
     getPassword() {
-        if (this.configJson.accountData.password != undefined) {
+        if (this.configJson.accountData.password !== undefined) {
             return this.configJson.accountData.password;
         }
         else {
@@ -554,7 +554,7 @@ class Config {
      * Get the nickname of the eufy security account.
      */
     getNickName() {
-        if (this.configJson.accountData.nickName != undefined) {
+        if (this.configJson.accountData.nickName !== undefined) {
             return this.configJson.accountData.nickName;
         }
         else {
@@ -575,7 +575,7 @@ class Config {
      * Get the client private key of the eufy security account.
      */
     getClientPrivateKey() {
-        if (this.configJson.accountData.clientPrivateKey != undefined) {
+        if (this.configJson.accountData.clientPrivateKey !== undefined) {
             return this.configJson.accountData.clientPrivateKey;
         }
         else {
@@ -596,7 +596,7 @@ class Config {
      * Get the server public key of the eufy security account.
      */
     getServerPublicKey() {
-        if (this.configJson.accountData.serverPublicKey != undefined) {
+        if (this.configJson.accountData.serverPublicKey !== undefined) {
             return this.configJson.accountData.serverPublicKey;
         }
         else {
@@ -617,7 +617,7 @@ class Config {
      * Get the devices public keys of the eufy security account.
      */
     getDevicePublicKeys() {
-        if (this.configJson.devicePublicKeys != undefined) {
+        if (this.configJson.devicePublicKeys !== undefined) {
             return this.configJson.devicePublicKeys;
         }
         else {
@@ -638,7 +638,7 @@ class Config {
      * Returns true if the connection type for connecting with station.
      */
     getConnectionType() {
-        if (this.configJson.apiConfig.connectionTypeP2p != undefined) {
+        if (this.configJson.apiConfig.connectionTypeP2p !== undefined) {
             return this.configJson.apiConfig.connectionTypeP2p;
         }
         else {
@@ -659,7 +659,7 @@ class Config {
      * Returns true if the static udp ports should be used otherwise false.
      */
     getLocalStaticUdpPortsActive() {
-        if (this.configJson.apiConfig.localStaticUdpPortsActive != undefined) {
+        if (this.configJson.apiConfig.localStaticUdpPortsActive !== undefined) {
             return this.configJson.apiConfig.localStaticUdpPortsActive;
         }
         else {
@@ -702,7 +702,7 @@ class Config {
      * Get a boolean value if the api shoud set system variables on the CCU.
      */
     getSystemVariableActive() {
-        if (this.configJson.apiConfig.systemVariableActive != undefined) {
+        if (this.configJson.apiConfig.systemVariableActive !== undefined) {
             return this.configJson.apiConfig.systemVariableActive;
         }
         else {
@@ -723,7 +723,7 @@ class Config {
      * Get weather http should be used for api.
      */
     getHttpActive() {
-        if (this.configJson.apiConfig.httpActive != undefined) {
+        if (this.configJson.apiConfig.httpActive !== undefined) {
             return this.configJson.apiConfig.httpActive;
         }
         else {
@@ -744,7 +744,7 @@ class Config {
      * Get the port for the webserver (HTTP) for the api.
      */
     getHttpPort() {
-        if (this.configJson.apiConfig.httpPort != undefined) {
+        if (this.configJson.apiConfig.httpPort !== undefined) {
             return this.configJson.apiConfig.httpPort;
         }
         else {
@@ -765,7 +765,7 @@ class Config {
      * Get weather https should be used for api.
      */
     getHttpsActive() {
-        if (this.configJson.apiConfig.httpsActive != undefined) {
+        if (this.configJson.apiConfig.httpsActive !== undefined) {
             return this.configJson.apiConfig.httpsActive;
         }
         else {
@@ -786,7 +786,7 @@ class Config {
      * Get the port for the webserver (HTTPS) for the api.
      */
     getHttpsPort() {
-        if (this.configJson.apiConfig.httpsPort != undefined) {
+        if (this.configJson.apiConfig.httpsPort !== undefined) {
             return this.configJson.apiConfig.httpsPort;
         }
         else {
@@ -807,7 +807,7 @@ class Config {
      * Returns the method used for https.
      */
     getHttpsMethod() {
-        if (this.configJson.apiConfig.httpsMethod != undefined) {
+        if (this.configJson.apiConfig.httpsMethod !== undefined) {
             return this.configJson.apiConfig.httpsMethod;
         }
         else {
@@ -828,7 +828,7 @@ class Config {
      * Get the key for https.
      */
     getHttpsPKeyFile() {
-        if (this.configJson.apiConfig.httpsPkeyFile != undefined) {
+        if (this.configJson.apiConfig.httpsPkeyFile !== undefined) {
             return this.configJson.apiConfig.httpsPkeyFile;
         }
         else {
@@ -849,7 +849,7 @@ class Config {
      * Returns the cert file for https.
      */
     getHttpsCertFile() {
-        if (this.configJson.apiConfig.httpsCertFile != undefined) {
+        if (this.configJson.apiConfig.httpsCertFile !== undefined) {
             return this.configJson.apiConfig.httpsCertFile;
         }
         else {
@@ -870,7 +870,7 @@ class Config {
      * Get the key as string for https.
      */
     getHttpsPkeyString() {
-        if (this.configJson.apiConfig.httpsPkeyString != undefined) {
+        if (this.configJson.apiConfig.httpsPkeyString !== undefined) {
             return this.configJson.apiConfig.httpsPkeyString;
         }
         else {
@@ -891,7 +891,7 @@ class Config {
      * Get the houseId as string for filtering stations and devices.
      */
     getHouseId() {
-        if (this.configJson.apiConfig.houseId != undefined) {
+        if (this.configJson.apiConfig.houseId !== undefined) {
             return this.configJson.apiConfig.houseId;
         }
         else {
@@ -912,7 +912,7 @@ class Config {
      * Get the default image for cameras.
      */
     getCameraDefaultImage() {
-        if (this.configJson.apiConfig.cameraDefaultImage != undefined) {
+        if (this.configJson.apiConfig.cameraDefaultImage !== undefined) {
             return this.configJson.apiConfig.cameraDefaultImage;
         }
         else {
@@ -933,7 +933,7 @@ class Config {
      * Get the default video for cameras.
      */
     getCameraDefaultVideo() {
-        if (this.configJson.apiConfig.cameraDefaultVideo != undefined) {
+        if (this.configJson.apiConfig.cameraDefaultVideo !== undefined) {
             return this.configJson.apiConfig.cameraDefaultVideo;
         }
         else {
@@ -955,7 +955,7 @@ class Config {
      * @returns The timespan duration as number.
      */
     getUpdateCloudInfoIntervall() {
-        if (this.configJson.apiConfig.updateCloudInfoIntervall != undefined) {
+        if (this.configJson.apiConfig.updateCloudInfoIntervall !== undefined) {
             return this.configJson.apiConfig.updateCloudInfoIntervall;
         }
         else {
@@ -977,7 +977,7 @@ class Config {
      * @returns The timespan duration as number.
      */
     getUpdateDeviceDataIntervall() {
-        if (this.configJson.apiConfig.updateDeviceDataIntervall != undefined) {
+        if (this.configJson.apiConfig.updateDeviceDataIntervall !== undefined) {
             return this.configJson.apiConfig.updateDeviceDataIntervall;
         }
         else {
@@ -998,7 +998,7 @@ class Config {
      * Determines if the updated state runs by event.
      */
     getStateUpdateEventActive() {
-        if (this.configJson.apiConfig.stateUpdateEventActive != undefined) {
+        if (this.configJson.apiConfig.stateUpdateEventActive !== undefined) {
             return this.configJson.apiConfig.stateUpdateEventActive;
         }
         else {
@@ -1019,7 +1019,7 @@ class Config {
      * Determines if the updated state runs scheduled.
      */
     getStateUpdateIntervallActive() {
-        if (this.configJson.apiConfig.stateUpdateIntervallActive != undefined) {
+        if (this.configJson.apiConfig.stateUpdateIntervallActive !== undefined) {
             return this.configJson.apiConfig.stateUpdateIntervallActive;
         }
         else {
@@ -1040,7 +1040,7 @@ class Config {
      * Returns the time between runs of two scheduled tasks for update state.
      */
     getStateUpdateIntervallTimespan() {
-        if (this.configJson.apiConfig.stateUpdateIntervallTimespan != undefined) {
+        if (this.configJson.apiConfig.stateUpdateIntervallTimespan !== undefined) {
             return this.configJson.apiConfig.stateUpdateIntervallTimespan;
         }
         else {
@@ -1061,7 +1061,7 @@ class Config {
      * Determines if the updated links runs scheduled.
      */
     getUpdateLinksActive() {
-        if (this.configJson.apiConfig.updateLinksActive != undefined) {
+        if (this.configJson.apiConfig.updateLinksActive !== undefined) {
             return this.configJson.apiConfig.updateLinksActive;
         }
         else {
@@ -1082,7 +1082,7 @@ class Config {
      * Returns the time between runs of two scheduled tasks for update state.
      */
     getUpdateLinksTimespan() {
-        if (this.configJson.apiConfig.updateLinksTimespan != undefined) {
+        if (this.configJson.apiConfig.updateLinksTimespan !== undefined) {
             return this.configJson.apiConfig.updateLinksTimespan;
         }
         else {
@@ -1103,7 +1103,7 @@ class Config {
      * Return weather the api should only refresh links when eufy state is other than off or deactivated.
      */
     getUpdateLinksOnlyWhenArmed() {
-        if (this.configJson.apiConfig.updateLinksOnlyWhenArmed != undefined) {
+        if (this.configJson.apiConfig.updateLinksOnlyWhenArmed !== undefined) {
             return this.configJson.apiConfig.updateLinksOnlyWhenArmed;
         }
         else {
@@ -1124,7 +1124,7 @@ class Config {
      * Returns the log level.
      */
     getLogLevel() {
-        if (this.configJson.apiConfig.logLevel != undefined) {
+        if (this.configJson.apiConfig.logLevel !== undefined) {
             return this.configJson.apiConfig.logLevel;
         }
         else {
@@ -1145,7 +1145,7 @@ class Config {
      * Get the token for login to the eufy security account.
      */
     getToken() {
-        if (this.configJson.tokenData.token != undefined) {
+        if (this.configJson.tokenData.token !== undefined) {
             return this.configJson.tokenData.token;
         }
         else {
@@ -1169,7 +1169,7 @@ class Config {
      * Get the timestamp the token expires.
      */
     getTokenExpire() {
-        if (this.configJson.tokenData.tokenExpires != undefined) {
+        if (this.configJson.tokenData.tokenExpires !== undefined) {
             return this.configJson.tokenData.tokenExpires;
         }
         else {
@@ -1195,7 +1195,7 @@ class Config {
      */
     getP2PDataP2pDid(stationSerial) {
         var station = this.getStationIterator(stationSerial);
-        if (station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].p2pDid != undefined) {
+        if (station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].p2pDid !== undefined) {
             return this.configJson.stations[station].p2pDid;
         }
         else {
@@ -1222,7 +1222,7 @@ class Config {
      */
     getP2PDataStationIpAddress(stationSerial) {
         var station = this.getStationIterator(stationSerial);
-        if (station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].stationIpAddress != undefined) {
+        if (station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationIpAddress !== undefined) {
             return this.configJson.stations[station].stationIpAddress;
         }
         else {
@@ -1250,7 +1250,7 @@ class Config {
      */
     getLocalStaticUdpPortPerStation(stationSerial) {
         var station = this.getStationIterator(stationSerial);
-        if (station != undefined && this.configJson.stations != undefined && this.configJson.stations[station] != undefined && this.configJson.stations[station].udpPort != undefined && this.configJson.stations[station].udpPort != null) {
+        if (station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].udpPort !== undefined && this.configJson.stations[station].udpPort !== null) {
             return this.configJson.stations[station].udpPort;
         }
         else {
@@ -1264,7 +1264,7 @@ class Config {
      * @returns True on success otherwise false.
      */
     setLocalStaticUdpPortPerStation(stationSerial, udpPort) {
-        if (stationSerial != undefined) {
+        if (stationSerial !== undefined) {
             var res;
             if (this.isStationInConfig(stationSerial) == false) {
                 this.logger.logInfo(1, `Station ${stationSerial} not in config. Try to create new station entry.`);
@@ -1319,7 +1319,7 @@ class Config {
      * @returns Boolean for enableing or diableing.
      */
     getPushServiceActive() {
-        if (this.configJson.apiConfig.pushServiceActive != undefined) {
+        if (this.configJson.apiConfig.pushServiceActive !== undefined) {
             return this.configJson.apiConfig.pushServiceActive;
         }
         else {
@@ -1341,7 +1341,7 @@ class Config {
      * @returns The trusted device name.
      */
     getTrustedDeviceName() {
-        if (this.configJson.pushData.trustedDeviceName != undefined) {
+        if (this.configJson.pushData.trustedDeviceName !== undefined) {
             return this.configJson.pushData.trustedDeviceName;
         }
         else {
@@ -1364,7 +1364,7 @@ class Config {
      * @returns A String value contaiong the seconds
      */
     getEventDurationSeconds() {
-        if (this.configJson.pushData.eventDurationSeconds != undefined) {
+        if (this.configJson.pushData.eventDurationSeconds !== undefined) {
             return this.configJson.pushData.eventDurationSeconds;
         }
         else {
@@ -1386,7 +1386,7 @@ class Config {
      * @returns A boolean value
      */
     getAcceptInvitations() {
-        if (this.configJson.pushData.acceptInvitations != undefined) {
+        if (this.configJson.pushData.acceptInvitations !== undefined) {
             return this.configJson.pushData.acceptInvitations;
         }
         else {
@@ -1408,7 +1408,7 @@ class Config {
      * @returns The openudid
      */
     getOpenudid() {
-        if (this.configJson.pushData.openUdid != undefined) {
+        if (this.configJson.pushData.openUdid !== undefined) {
             return this.configJson.pushData.openUdid;
         }
         else {
@@ -1430,7 +1430,7 @@ class Config {
      * @returns The serial number
      */
     getSerialNumber() {
-        if (this.configJson.pushData.serialNumber != undefined) {
+        if (this.configJson.pushData.serialNumber !== undefined) {
             return this.configJson.pushData.serialNumber;
         }
         else {
@@ -1464,7 +1464,7 @@ class Config {
      * @returns The fid response credentials.
      */
     getCredentialsFidResponse() {
-        if (this.configJson.pushData.fidResponse != undefined) {
+        if (this.configJson.pushData.fidResponse !== undefined) {
             return this.configJson.pushData.fidResponse;
         }
         else {
@@ -1486,7 +1486,7 @@ class Config {
      * @returns The checkin response credentials
      */
     getCredentialsCheckinResponse() {
-        if (this.configJson.pushData.checkinResponse != undefined) {
+        if (this.configJson.pushData.checkinResponse !== undefined) {
             return this.configJson.pushData.checkinResponse;
         }
         else {
@@ -1531,7 +1531,7 @@ class Config {
      * @returns The persistent id credentials
      */
     getCredentialsPersistentIds() {
-        if (this.configJson.pushData.persistentIds != undefined) {
+        if (this.configJson.pushData.persistentIds !== undefined) {
             return this.configJson.pushData.persistentIds;
         }
         else {
@@ -1553,7 +1553,7 @@ class Config {
      * @returns The country code
      */
     getCountry() {
-        if (this.configJson.accountData.country != undefined) {
+        if (this.configJson.accountData.country !== undefined) {
             return this.configJson.accountData.country;
         }
         else {
@@ -1575,7 +1575,7 @@ class Config {
      * @returns The language code
      */
     getLanguage() {
-        if (this.configJson.accountData.language != undefined) {
+        if (this.configJson.accountData.language !== undefined) {
             return this.configJson.accountData.language;
         }
         else {

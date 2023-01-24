@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getModelName = void 0;
+exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getModelName = exports.pathToTemp = exports.pathToNodeJs = void 0;
+exports.pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
+exports.pathToTemp = "/var/tmp/eufySecurity";
 /**
  * Retrieve the model name of a given station or device.
  * @param modelNumber The model number of the station or device.
@@ -134,6 +136,12 @@ const makeDateTimeString = function (timestamp) {
     return (`${dateTime.getDate().toString().padStart(2, '0')}.${(dateTime.getMonth() + 1).toString().padStart(2, '0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}`);
 };
 exports.makeDateTimeString = makeDateTimeString;
+/**
+ * Recalculate the timestamp to get a timestamp in milliseconds.
+ * @param timeStamp The value as timestamp.
+ * @param timeStampType The timestamp type.
+ * @returns The timestamp in milliseconds.
+ */
 const convertTimeStampToTimeStampMs = function (timeStamp, timeStampType) {
     switch (timeStampType) {
         case "sec":

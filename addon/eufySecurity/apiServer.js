@@ -84,7 +84,7 @@ class ApiServer {
         var contentType = "application/json";
         var fileName = "";
         var url = (_a = request.url) === null || _a === void 0 ? void 0 : _a.split("/");
-        if (url == undefined) {
+        if (url === undefined) {
             url = [];
         }
         // We use 'GET' for nearly all function of the api, exept updateing the config
@@ -241,6 +241,9 @@ class ApiServer {
                     case "getConfig":
                         responseString = await api.getAPIConfigAsJson();
                         break;
+                    case "getCountries":
+                        responseString = api.getCountriesAsJson();
+                        break;
                     case "getApiInfo":
                         responseString = api.getApiVersionAsJson();
                         break;
@@ -351,6 +354,9 @@ class ApiServer {
                         else {
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
+                        break;
+                    case "getTimeZones":
+                        responseString = api.getTimeZones();
                         break;
                     case "getLogFileContent":
                         responseString = await api.getLogFileContent();
@@ -670,7 +676,7 @@ function main() {
     apiServer = new ApiServer();
 }
 /**
- * Create the apiPorts.txt file needed for using the api on the website if file does not exist or update it when the ports have changed.
+ * Create the apiPorts.json file needed for using the api on the website if file does not exist or update it when the ports have changed.
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */

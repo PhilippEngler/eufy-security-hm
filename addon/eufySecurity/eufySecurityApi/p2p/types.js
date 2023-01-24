@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.ChargingType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
+exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.ChargingType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.TfcardStatus = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
 exports.RequestMessageType = {
     STUN: Buffer.from([0xF1, 0x00]),
     LOOKUP: Buffer.from([0xF1, 0x20]),
@@ -619,6 +619,35 @@ var ErrorCode;
     ErrorCode[ErrorCode["ERROR_FAILED_TO_REQUEST"] = 503] = "ERROR_FAILED_TO_REQUEST";
     ErrorCode[ErrorCode["ERROR_SEQUENCE_NUMBER"] = -151] = "ERROR_SEQUENCE_NUMBER";
 })(ErrorCode = exports.ErrorCode || (exports.ErrorCode = {}));
+var TfcardStatus;
+(function (TfcardStatus) {
+    TfcardStatus[TfcardStatus["TFCARD_BUSY"] = 6] = "TFCARD_BUSY";
+    TfcardStatus[TfcardStatus["TFCARD_E2FSCK_FAIL_MOUNT_FAIL_REINSERT"] = 8] = "TFCARD_E2FSCK_FAIL_MOUNT_FAIL_REINSERT";
+    TfcardStatus[TfcardStatus["TFCARD_E2FSCK_FAIL_MOUNT_RO"] = 9] = "TFCARD_E2FSCK_FAIL_MOUNT_RO";
+    TfcardStatus[TfcardStatus["TFCARD_E2FSCK_FAIL_MOUNT_RW"] = 7] = "TFCARD_E2FSCK_FAIL_MOUNT_RW";
+    TfcardStatus[TfcardStatus["TFCARD_E2FSCK_FAIL_MOUNT_RW_ERR"] = 10] = "TFCARD_E2FSCK_FAIL_MOUNT_RW_ERR";
+    TfcardStatus[TfcardStatus["TFCARD_FORMATING"] = 5] = "TFCARD_FORMATING";
+    TfcardStatus[TfcardStatus["TFCARD_FORMAT_FAIL"] = 3] = "TFCARD_FORMAT_FAIL";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNTING"] = 24] = "TFCARD_MOUNTING";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_FAIL"] = 2] = "TFCARD_MOUNT_FAIL";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_FAIL_E2FSCK_ERROR"] = 12] = "TFCARD_MOUNT_FAIL_E2FSCK_ERROR";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_FAIL_E2FSCK_TIMEOUT"] = 13] = "TFCARD_MOUNT_FAIL_E2FSCK_TIMEOUT";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RERR_E2FSCK_ERROR"] = 20] = "TFCARD_MOUNT_RERR_E2FSCK_ERROR";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RERR_E2FSCK_OK"] = 19] = "TFCARD_MOUNT_RERR_E2FSCK_OK";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RERR_E2FSCK_TIMEOUT"] = 21] = "TFCARD_MOUNT_RERR_E2FSCK_TIMEOUT";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RO_E2FSCK_ERROR"] = 17] = "TFCARD_MOUNT_RO_E2FSCK_ERROR";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RO_E2FSCK_OK"] = 16] = "TFCARD_MOUNT_RO_E2FSCK_OK";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RO_E2FSCK_TIMEOUT"] = 18] = "TFCARD_MOUNT_RO_E2FSCK_TIMEOUT";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RW_E2FSCK_ERROR"] = 14] = "TFCARD_MOUNT_RW_E2FSCK_ERROR";
+    TfcardStatus[TfcardStatus["TFCARD_MOUNT_RW_E2FSCK_TIMEOUT"] = 15] = "TFCARD_MOUNT_RW_E2FSCK_TIMEOUT";
+    TfcardStatus[TfcardStatus["TFCARD_NON_ORIGINAL"] = 1] = "TFCARD_NON_ORIGINAL";
+    TfcardStatus[TfcardStatus["TFCARD_NORMAL"] = 0] = "TFCARD_NORMAL";
+    TfcardStatus[TfcardStatus["TFCARD_NULL"] = -1] = "TFCARD_NULL";
+    TfcardStatus[TfcardStatus["TFCARD_REMOVE"] = 4] = "TFCARD_REMOVE";
+    TfcardStatus[TfcardStatus["TFCARD_REPAIRING"] = 11] = "TFCARD_REPAIRING";
+    TfcardStatus[TfcardStatus["TFCARD_RISK"] = 23] = "TFCARD_RISK";
+    TfcardStatus[TfcardStatus["TFCARD_UNNORMAL_IO_ERROR"] = 22] = "TFCARD_UNNORMAL_IO_ERROR";
+})(TfcardStatus = exports.TfcardStatus || (exports.TfcardStatus = {}));
 var AlarmEvent;
 (function (AlarmEvent) {
     //com.oceanwing.battery.cam.zmedia.model.ZControlResponse

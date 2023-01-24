@@ -1407,7 +1407,7 @@ function getPropertyNameInGerman(propertyName)
 		case "notificationSwitchModeSchedule":
 			return "Moduswechsel in Modus Zeitplan";
 		case "notificationSwitchModeGeofence":
-			return "Moduswechsel in Modus Geofancing";
+			return "Moduswechsel in Modus Geofencing";
 		case "notificationSwitchModeApp":
 			return "Moduswechsel in Modus durch die App";
 		case "notificationSwitchModeKeypad":

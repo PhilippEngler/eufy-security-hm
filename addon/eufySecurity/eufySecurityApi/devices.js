@@ -4,7 +4,6 @@ exports.Devices = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const error_1 = require("./error");
 const http_1 = require("./http");
-const p2p_1 = require("./p2p");
 const utils_1 = require("./utils");
 const utils_2 = require("./utils/utils");
 /**
@@ -158,7 +157,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             this.devices[serial] = device;
             this.lastVideoTimeForDevices[serial] = undefined;
             if (this.api.getApiUsePushService()) {
-                this.setLastVideoTimeFromCloud(serial);
+                this.setLastVideoTimeFromCloud(device);
             }
             this.emit("device added", device);
             if (device.isLock()) {
@@ -190,17 +189,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async updateDevice(device) {
         var stations = await this.api.getStations();
-        for (var stationSerial in stations) {
-            if (!stations[stationSerial].isConnected()) {
-                if (stations[stationSerial].getDeviceType() == http_1.DeviceType.STATION) {
-                    stations[stationSerial].setConnectionType(this.api.getP2PConnectionType());
-                }
-                else {
-                    stations[stationSerial].setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
-                }
-                stations[stationSerial].connect();
-            }
-        }
         if (this.loadingDevices !== undefined) {
             await this.loadingDevices;
         }
@@ -873,26 +861,26 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param values The raw values.
      */
     updateDeviceProperties(deviceSerial, values) {
-        if (this.devices[deviceSerial] != undefined) {
+        if (this.devices[deviceSerial] !== undefined) {
             this.devices[deviceSerial].updateRawProperties(values);
         }
         else {
-            this.api.logError(`Error on update device properties. Device ${deviceSerial} does not exists.`);
+            this.api.logError(`Error on update device properties. Device ${deviceSerial} does not exists. (${JSON.stringify(values)})`);
         }
     }
     /**
      * Retrieves the last video event for the given device.
-     * @param deviceSerial The serial of the device.
+     * @param device The device.
      * @returns The time as timestamp or undefined.
      */
-    async getLastVideoTimeFromCloud(deviceSerial) {
-        var lastVideoTime = await this.httpService.getAllVideoEvents({ deviceSN: deviceSerial }, 1);
-        if (lastVideoTime !== undefined && lastVideoTime.length >= 1) {
-            return lastVideoTime[0].create_time;
+    async getLastVideoTimeFromCloud(device) {
+        if (!(device.getStationSerial().startsWith("T8030"))) {
+            var lastVideoTime = await this.httpService.getAllVideoEvents({ deviceSN: device.getSerial() }, 1);
+            if (lastVideoTime !== undefined && lastVideoTime.length >= 1) {
+                return lastVideoTime[0].create_time;
+            }
         }
-        else {
-            return undefined;
-        }
+        return undefined;
     }
     /**
      * Set the last video time to the array.
@@ -908,10 +896,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     }
     /**
      * Helper function to retrieve the last event time from cloud and set the value to the array.
-     * @param deviceSerial The serial of the device.
+     * @param device The device.
      */
-    async setLastVideoTimeFromCloud(deviceSerial) {
-        this.setLastVideoTime(deviceSerial, await this.getLastVideoTimeFromCloud(deviceSerial), "sec");
+    async setLastVideoTimeFromCloud(device) {
+        this.setLastVideoTime(device.getSerial(), await this.getLastVideoTimeFromCloud(device), "sec");
     }
     /**
      * Set the time for the last video to the current time.

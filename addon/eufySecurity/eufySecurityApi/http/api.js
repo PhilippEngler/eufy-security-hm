@@ -61,7 +61,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             nick_name: "",
             device_public_keys: {},
             clientPrivateKey: "",
-            serverPublicKey: ""
+            serverPublicKey: this.SERVER_PUBLIC_KEY
         };
         this.headers = {
             App_version: "v4.5.1_1523",
@@ -90,15 +90,31 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         if (persistentData) {
             this.persistentData = persistentData;
         }
-        if (this.persistentData.serverPublicKey === undefined || this.persistentData.serverPublicKey === "") {
-            this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
-        }
         if (this.persistentData.clientPrivateKey === undefined || this.persistentData.clientPrivateKey === "") {
             this.ecdh.generateKeys();
             this.persistentData.clientPrivateKey = this.ecdh.getPrivateKey().toString("hex");
         }
         else {
-            this.ecdh.setPrivateKey(Buffer.from(this.persistentData.clientPrivateKey, "hex"));
+            try {
+                this.ecdh.setPrivateKey(Buffer.from(this.persistentData.clientPrivateKey, "hex"));
+            }
+            catch (error) {
+                this.log.debug(`Invalid client private key, generate new client private key...`, error);
+                this.ecdh.generateKeys();
+                this.persistentData.clientPrivateKey = this.ecdh.getPrivateKey().toString("hex");
+            }
+        }
+        if (this.persistentData.serverPublicKey === undefined || this.persistentData.serverPublicKey === "") {
+            this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
+        }
+        else {
+            try {
+                this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex"));
+            }
+            catch (error) {
+                this.log.debug(`Invalid server public key, fallback to default server public key...`, error);
+                this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
+            }
         }
         this.requestEufyCloud = got_1.default.extend({
             prefixUrl: this.apiBase,
@@ -267,7 +283,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     },
                     enc: 0,
                     email: this.username,
-                    password: (0, utils_1.encryptAPIData)(this.password, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex"))),
+                    password: (0, utils_1.encryptAPIData)(this.password, this.ecdh.computeSecret(Buffer.from(this.SERVER_PUBLIC_KEY, "hex"))),
                     time_zone: new Date().getTimezoneOffset() !== 0 ? -new Date().getTimezoneOffset() * 60 * 1000 : 0,
                     transaction: `${new Date().getTime()}`
                 };
@@ -288,8 +304,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     if (result.data !== undefined) {
                         if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                             const dataresult = result.data;
+                            if ((_a = dataresult.server_secret_info) === null || _a === void 0 ? void 0 : _a.public_key)
+                                this.persistentData.serverPublicKey = dataresult.server_secret_info.public_key;
                             this.persistentData.user_id = dataresult.user_id;
-                            this.persistentData.email = dataresult.email;
+                            this.persistentData.email = this.decryptAPIData(dataresult.email, false);
                             this.persistentData.nick_name = dataresult.nick_name;
                             this.setToken(dataresult.auth_token);
                             this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
@@ -297,9 +315,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                                 ...this.headers,
                                 gtoken: (0, utils_2.md5)(dataresult.user_id)
                             };
-                            if ((_a = dataresult.server_secret_info) === null || _a === void 0 ? void 0 : _a.public_key)
-                                this.persistentData.serverPublicKey = dataresult.server_secret_info.public_key;
-                            this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
+                            this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration, serverPublicKey: this.persistentData.serverPublicKey });
                             if (!this.connected) {
                                 this.connected = true;
                                 this.emit("connect");
@@ -471,12 +487,12 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         transaction: `${new Date().getTime()}`
                     }
                 });
-                this.log.debug("Stations - Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
-                        return this.decryptAPIData(result.data);
+                        const stationList = this.decryptAPIData(result.data);
+                        this.log.debug("Decrypted station list data", stationList);
+                        return stationList;
                     }
                     else {
                         this.log.error("Response code not ok", { code: result.code, msg: result.msg });
@@ -508,12 +524,12 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         transaction: `${new Date().getTime()}`
                     }
                 });
-                this.log.debug("Devices - Response:", response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
-                        return this.decryptAPIData(result.data);
+                        const deviceList = this.decryptAPIData(result.data);
+                        this.log.debug("Decrypted device list data", deviceList);
+                        return deviceList;
                     }
                     else {
                         this.log.error("Response code not ok", { code: result.code, msg: result.msg });
@@ -534,8 +550,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         const houses = await this.getHouseList();
         if (houses && houses.length > 0) {
             houses.forEach(element => {
-                this.log.debug(`Houses - element: ${JSON.stringify(element)}`);
-                this.log.debug(`Houses - house name: ${element.house_name}`);
                 this.houses[element.house_id] = element;
             });
             if (Object.keys(this.houses).length > 0)
@@ -550,8 +564,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         const stations = await this.getStationList();
         if (stations && stations.length > 0) {
             stations.forEach(element => {
-                this.log.debug(`Stations - element: ${JSON.stringify(element)}`);
-                this.log.debug(`Stations - device_type: ${element.device_type}`);
                 this.hubs[element.station_sn] = element;
             });
             if (Object.keys(this.hubs).length > 0)
@@ -598,7 +610,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 headers: internalResponse.headers,
                 data: internalResponse.body,
             };
-            this.log.debug("Response:", { response: response.data });
+            this.log.debug("Response:", { token: this.token, request: request, response: response.data });
             return response;
         }
         catch (error) {
@@ -853,7 +865,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
                         const dataresult = this.decryptAPIData(result.data);
                         if (dataresult) {
                             dataresult.forEach(record => {
@@ -886,16 +897,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return this._getEvents("getHistoryEvents", "v2/event/app/get_all_history_record", startTime, endTime, filter, maxResults);
     }
     async getAllVideoEvents(filter, maxResults) {
-        const fifthyYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
-        return this.getVideoEvents(new Date(new Date().getTime() - fifthyYearsInMilliseconds), new Date(), filter, maxResults);
+        const fifteenYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
+        return this.getVideoEvents(new Date(new Date().getTime() - fifteenYearsInMilliseconds), new Date(), filter, maxResults);
     }
     async getAllAlarmEvents(filter, maxResults) {
-        const fifthyYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
-        return this.getAlarmEvents(new Date(new Date().getTime() - fifthyYearsInMilliseconds), new Date(), filter, maxResults);
+        const fifteenYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
+        return this.getAlarmEvents(new Date(new Date().getTime() - fifteenYearsInMilliseconds), new Date(), filter, maxResults);
     }
     async getAllHistoryEvents(filter, maxResults) {
-        const fifthyYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
-        return this.getHistoryEvents(new Date(new Date().getTime() - fifthyYearsInMilliseconds), new Date(), filter, maxResults);
+        const fifteenYearsInMilliseconds = 15 * 365 * 24 * 60 * 60 * 1000;
+        return this.getHistoryEvents(new Date(new Date().getTime() - fifteenYearsInMilliseconds), new Date(), filter, maxResults);
     }
     isConnected() {
         return this.connected;
@@ -1006,8 +1017,25 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         }
         return "";
     }
-    decryptAPIData(data) {
-        return JSON.parse((0, utils_1.decryptAPIData)(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex"))).toString());
+    decryptAPIData(data, json = true) {
+        let decryptedData;
+        try {
+            decryptedData = (0, utils_1.decryptAPIData)(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex")));
+        }
+        catch (error) {
+            this.log.error("Data decryption error, invalidating session data and reconnecting...", error);
+            this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
+            this.invalidateToken();
+            this.emit("close");
+        }
+        if (decryptedData) {
+            if (json)
+                return JSON.parse(decryptedData.toString());
+            return decryptedData.toString();
+        }
+        if (json)
+            return {};
+        return undefined;
     }
     async getSensorHistory(stationSN, deviceSN) {
         if (this.connected) {
@@ -1060,10 +1088,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                        //TODO: Handle decryption exception resetting session auth information to reauthenticate
-                        const dataresult = this.decryptAPIData(result.data);
-                        if (dataresult) {
-                            return dataresult;
+                        if (result.data) {
+                            const houseDetail = this.decryptAPIData(result.data);
+                            this.log.debug("Decrypted house detail data", houseDetail);
+                            return houseDetail;
                         }
                     }
                     else {
@@ -1127,7 +1155,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                         if (result.data) {
-                            return result.data;
+                            const houseInviteList = this.decryptAPIData(result.data);
+                            this.log.debug("Decrypted house invite list data", houseInviteList);
+                            return houseInviteList;
                         }
                     }
                     else {
@@ -1189,13 +1219,13 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             if (response.status == 200) {
                 const result = response.data;
                 if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                    //TODO: Handle decryption exception resetting session auth information to reauthenticate
-                    const dataresult = this.decryptAPIData(result.data);
-                    if (dataresult) {
-                        this.persistentData.user_id = dataresult.user_id;
-                        this.persistentData.nick_name = dataresult.nick_name;
-                        this.persistentData.email = dataresult.email;
-                        return dataresult;
+                    if (result.data) {
+                        const profile = this.decryptAPIData(result.data);
+                        this.log.debug("Decrypted passport profile data", profile);
+                        this.persistentData.user_id = profile.user_id;
+                        this.persistentData.nick_name = profile.nick_name;
+                        this.persistentData.email = profile.email;
+                        return profile;
                     }
                 }
                 else {
