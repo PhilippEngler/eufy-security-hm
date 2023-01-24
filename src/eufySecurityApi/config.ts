@@ -572,7 +572,7 @@ export class Config
     private updateWithNewStation(stationSerial : string) : boolean
     {
         this.logger.logInfoBasic(`Adding station ${stationSerial} to settings.`);
-        var station = {"stationSerial": stationSerial, "p2pDid": "", "stationIpAddress": "", "udpPort": ""};
+        var station = {"stationSerial": stationSerial, "p2pDid": null, "stationIpAddress": null, "udpPort": null};
 
         if(Array.isArray(this.configJson.stations))
         {

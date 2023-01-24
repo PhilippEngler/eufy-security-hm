@@ -462,7 +462,7 @@ export class EufySecurityApi
 
     private onAuthTokenInvalidated(): void
     {
-        this.setTokenData(undefined, undefined);
+        this.setTokenData(undefined, 0);
         this.logInfo(`The authentication token is invalid and have been removed.`);
     }
 
