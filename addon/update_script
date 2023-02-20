@@ -173,6 +173,90 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/node_modules/ini ]; then
     rm -r ${ADDON_DIR}/node_modules/ini
   fi
+  if [ -e ${ADDON_DIR}/node_modules/ansi-regex ]; then
+    rm -r ${ADDON_DIR}/node_modules/ansi-regex
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/ansi-styles ]; then
+    rm -r ${ADDON_DIR}/node_modules/ansi-styles
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/cliui ]; then
+    rm -r ${ADDON_DIR}/node_modules/cliui
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/color-convert ]; then
+    rm -r ${ADDON_DIR}/node_modules/color-convert
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/color-name ]; then
+    rm -r ${ADDON_DIR}/node_modules/color-name
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/define-properties ]; then
+    rm -r ${ADDON_DIR}/node_modules/define-properties
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/emoji-regex ]; then
+    rm -r ${ADDON_DIR}/node_modules/emoji-regex
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/escalade ]; then
+    rm -r ${ADDON_DIR}/node_modules/escalade
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/get-caller-file ]; then
+    rm -r ${ADDON_DIR}/node_modules/get-caller-file
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/has-property-descriptors ]; then
+    rm -r ${ADDON_DIR}/node_modules/has-property-descriptors
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/is-fullwidth-code-point ]; then
+    rm -r ${ADDON_DIR}/node_modules/is-fullwidth-code-point
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/is-nan ]; then
+    rm -r ${ADDON_DIR}/node_modules/is-nan
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/mediainfo.js ]; then
+    rm -r ${ADDON_DIR}/node_modules/mediainfo.js
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/object-keys ]; then
+    rm -r ${ADDON_DIR}/node_modules/object-keys
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/require-directory ]; then
+    rm -r ${ADDON_DIR}/node_modules/require-directory
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/string-width ]; then
+    rm -r ${ADDON_DIR}/node_modules/string-width
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/strip-ansi ]; then
+    rm -r ${ADDON_DIR}/node_modules/strip-ansi
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/wrap-ansi ]; then
+    rm -r ${ADDON_DIR}/node_modules/wrap-ansi
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/y18n ]; then
+    rm -r ${ADDON_DIR}/node_modules/y18n
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/yargs ]; then
+    rm -r ${ADDON_DIR}/node_modules/yargs
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/yargs-parser ]; then
+    rm -r ${ADDON_DIR}/node_modules/yargs-parser
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/@bropat ]; then
+    rm -r ${ADDON_DIR}/node_modules/@bropat
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/async ]; then
+    rm -r ${ADDON_DIR}/node_modules/async
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/isexe ]; then
+    rm -r ${ADDON_DIR}/node_modules/isexe
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/mime ]; then
+    rm -r ${ADDON_DIR}/node_modules/mime
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/which ]; then
+    rm -r ${ADDON_DIR}/node_modules/which
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/number-allocator/node-modules ]; then
+    rm -r ${ADDON_DIR}/node_modules/number-allocator/node-modules
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/.bin/mediainfo.js ]; then
+    rm ${ADDON_DIR}/node_modules/.bin/mediainfo.js
+  fi
   # remove unused asset files
   if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css ]; then
     rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.css

@@ -7,6 +7,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import { Message, MessageTag, RawPushMessage } from "./models";
 import { PushClientParser } from "./parser";
 import { PushClientEvents } from "./interfaces";
+import { parseJSON } from "../utils";
 
 import { Logger } from "../utils/logging";
 
@@ -257,7 +258,7 @@ export class PushClient extends TypedEmitter<PushClientEvents> {
         const messageData: Record<string, any> = {};
         appData.forEach((kv: { key: string; value: any }) => {
             if (kv.key === "payload") {
-                const payload = JSON.parse(Buffer.from(kv.value, "base64").toString("utf8"));
+                const payload = parseJSON(Buffer.from(kv.value, "base64").toString("utf8"), this.log);
                 messageData[kv.key] = payload;
             } else {
                 messageData[kv.key] = kv.value;

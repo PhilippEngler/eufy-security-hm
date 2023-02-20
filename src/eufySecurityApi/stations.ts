@@ -5,7 +5,7 @@ import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, St
 import { sleep } from './push/utils';
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError } from "./error";
 import internal from "stream";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata } from "./p2p";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
@@ -84,14 +84,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                /*if(station.getDeviceType() === DeviceType.STATION || station.getDeviceType() === DeviceType.HB3)
-                {
-                    station.setConnectionType(this.api.getP2PConnectionType());
-                }
-                else
-                {
-                    station.setConnectionType(P2PConnectionType.QUICKEST);
-                }*/
                 station.setConnectionType(this.api.getP2PConnectionType());
                 station.connect();
 

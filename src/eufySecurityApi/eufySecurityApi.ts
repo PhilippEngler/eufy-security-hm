@@ -49,7 +49,7 @@ export class EufySecurityApi
         this.logger = new Logger(this);
         this.config = new Config(this.logger);
         this.homematicApi = new HomematicApi(this);
-        
+
         this.initialize();
     }
 
@@ -74,7 +74,7 @@ export class EufySecurityApi
                 missingSettings += "password";
             }
 
-            this.logError(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email, password and deviceName to run this addon (missing: ${missingSettings}).`);
+            this.logError(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email and password to run this addon (missing: ${missingSettings}).`);
         
             this.setServiceState("ok");
         }
@@ -82,7 +82,7 @@ export class EufySecurityApi
         {
             if (this.config.getClientPrivateKey() === undefined || this.config.getClientPrivateKey() === "" || this.config.getServerPublicKey() === undefined || this.config.getServerPublicKey() === "")
             {
-                this.logger.logInfoBasic("Incomplete persistent data for v2 encrypted cloud api communication. Invalidate authenticated session data.");
+                this.logger.logDebug(this.getApiLogLevel(), "Incomplete persistent data for v2 encrypted cloud api communication. Invalidate authenticated session data.");
                 this.config.setToken("");
                 this.config.setTokenExpire(0);
             }
@@ -107,6 +107,7 @@ export class EufySecurityApi
             this.httpService.on("close", () => this.onAPIClose());
             this.httpService.on("connect", () => this.onAPIConnect());
             this.httpService.on("captcha request", (captchaId: string, captcha: string) => this.onCaptchaRequest(captchaId, captcha));
+            this.httpService.on("auth token renewed", (token, token_expiration) => this.onAuthTokenRenewed(token, token_expiration));
             this.httpService.on("auth token invalidated", () => this.onAuthTokenInvalidated());
             this.httpService.on("tfa request", () => this.onTfaRequest());
             this.httpService.on("connection error", (error: Error) => this.onAPIConnectionError(error));
@@ -446,6 +447,10 @@ export class EufySecurityApi
         this.writeConfig();
     }
 
+    /**
+     * Eventhandler for API Connection Error event.
+     * @param error The error occured.
+     */
     private onAPIConnectionError(error: Error): void
     {
         //this.emit("connection error", error);
@@ -453,6 +458,11 @@ export class EufySecurityApi
         this.setServiceState("ok");
     }
 
+    /**
+     * Eventhandler for API Captcha Request event.
+     * @param captchaId The captchaId.
+     * @param captcha The captcha image as base64 encoded string.
+     */
     private onCaptchaRequest(captchaId: string, captcha: string): void
     {
         //this.emit("captcha request", id, captcha);
@@ -460,12 +470,36 @@ export class EufySecurityApi
         this.logInfo(`Entering captcha code needed. Please check the addon website.`);
     }
 
+    /**
+     * Eventhandler for API Auth Token Renewed event.
+     * @param token The new token.
+     * @param token_expiration The new token expiration time.
+     */
+    private onAuthTokenRenewed(token: string | null, token_expiration: Date): void
+    {
+        if (token == null)
+        {
+            this.setTokenData(undefined, 0);
+        }
+        else
+        {
+            this.setTokenData(token, token_expiration.getTime());
+        }
+        this.logInfo(`The authentication token has been renewed.`);
+    }
+
+    /**
+     * Eventhandler for API Auth Token Invalidated event.
+     */
     private onAuthTokenInvalidated(): void
     {
         this.setTokenData(undefined, 0);
         this.logInfo(`The authentication token is invalid and have been removed.`);
     }
 
+    /**
+     * Eventhandler for API Tfa Request.
+     */
     private onTfaRequest(): void
     {
         //this.emit("tfa request");
@@ -614,11 +648,19 @@ export class EufySecurityApi
         await this.httpService.refreshDeviceData();
     }
 
+    /**
+     * Generate a new random trusted device name from the device name list.
+     * @returns The trusted device name.
+     */
     private generateNewTrustedDeviceName() : string
     {
         return PhoneModels[randomNumber(0, PhoneModels.length)];
     }
 
+    /**
+     * Generate a new random trusted device name and return a JSON resonse.
+     * @returns The trusted device name as JSON string.
+     */
     public generateNewTrustedDeviceNameJson() : string
     {
         var json : any = {};
@@ -2131,6 +2173,10 @@ export class EufySecurityApi
         return this.config.getStateUpdateEventActive();
     }
 
+    /**
+     * Get the config object.
+     * @returns The config object.
+     */
     public getConfig() : Config
     {
         return this.config;
@@ -2312,6 +2358,10 @@ export class EufySecurityApi
         }
     }
 
+    /**
+     * Get all countries as JSON.
+     * @returns The countries as JSON response.
+     */
     public getCountriesAsJson() : string
     {
         return `{"success":true,"data":${JSON.stringify(countryData)}}`;
@@ -2844,7 +2894,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.0.0";
+        return "2.0.2";
     }
 
     /**
@@ -2853,6 +2903,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.4.0";
+        return "2.4.1";
     }
 }

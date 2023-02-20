@@ -160,6 +160,7 @@ export interface HTTPApiEvents {
     "tfa request": () => void;
     "captcha request": (id: string, captcha: string) => void;
     "auth token invalidated": () => void;
+    "auth token renewed": (token: string | null, token_expiration: Date) => void;
 }
 
 export interface StationEvents {

@@ -47,7 +47,7 @@ export class Station extends TypedEmitter<StationEvents> {
 
     private pinVerified = false;
 
-    protected constructor(eufySecurityApi: EufySecurityApi, api: HTTPApi, station: StationListResponse, publicKey = "") {
+    protected constructor(eufySecurityApi: EufySecurityApi, api: HTTPApi, station: StationListResponse, ipAddress?: string, publicKey = "") {
         super();
         this.eufySecurityApi = eufySecurityApi;
         this.api = api;
@@ -56,7 +56,7 @@ export class Station extends TypedEmitter<StationEvents> {
         this.log = api.getLog();
         this.update(this.rawStation);
         
-        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress() as string, this.eufySecurityApi.getLocalStaticUdpPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api, this.lockPublicKey);
+        this.p2pSession = new P2PClientProtocol(this.getLANIPAddress() as string, this.eufySecurityApi.getLocalStaticUdpPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api, ipAddress, this.lockPublicKey);
         this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
         this.p2pSession.on("timeout", () => this.onTimeout());
@@ -97,12 +97,12 @@ export class Station extends TypedEmitter<StationEvents> {
         });
     }
 
-    static async initialize(eufySecurityApi: EufySecurityApi, api: HTTPApi, stationData: StationListResponse): Promise<Station> {
+    static async initialize(eufySecurityApi: EufySecurityApi, api: HTTPApi, stationData: StationListResponse, ipAddress?: string): Promise<Station> {
         let publicKey: string | undefined;
         if (Device.isLock(stationData.device_type)) {
             publicKey = await api.getPublicKey(stationData.station_sn, PublicKeyType.LOCK);
         }
-        const station = new Station(eufySecurityApi, api, stationData, publicKey);
+        const station = new Station(eufySecurityApi, api, stationData, ipAddress, publicKey);
         return station;
     }
 
@@ -131,7 +131,7 @@ export class Station extends TypedEmitter<StationEvents> {
         this.rawStation = station;
         if(this.p2pSession != null)
         {
-        this.p2pSession.updateRawStation(station);
+            this.p2pSession.updateRawStation(station);
         }
 
         const metadata = this.getPropertiesMetadata();
@@ -738,7 +738,6 @@ export class Station extends TypedEmitter<StationEvents> {
 
     public async getStorageInfoEx(): Promise<void> {
         this.log.debug(`Sending get storage info command to station ${this.getSerial()}`);
-        //TODO: Verify channel! Should be 255...
         await this.p2pSession.sendCommandWithIntString({
             commandType: CommandType.CMD_SDINFO_EX,
             value: 0,

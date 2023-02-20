@@ -1002,12 +1002,3 @@ export interface LockV12P2PCommand {
     bleCommand: number;
     payload: LockV12P2PCommandType;
 }
-
-export interface RequestPreviewImageElementType {
-    file: string;
-}
-
-export interface ResponsePreviewImageElementType {
-    file: string;
-    content: string;
-}
