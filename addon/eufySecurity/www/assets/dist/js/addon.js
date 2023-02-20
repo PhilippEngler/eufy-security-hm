@@ -520,7 +520,7 @@ function createCardDevice(device)
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
-	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.wifiSignalLevel === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
+	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.wifiSignalLevel === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
 
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
@@ -616,29 +616,29 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 	return `<div class="${divClass}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
 }
 
-function generateStationDeviceSettingsSelectionModal(deviceId)
+function generateStationDeviceSettingsSelectionModal(deviceId, deviceName)
 {
-	generateContentStationDeviceSettingsSelectionModal(deviceId);
+	generateContentStationDeviceSettingsSelectionModal(deviceId, deviceName);
 
 	const myModal = new bootstrap.Modal(document.getElementById('modalSelectStationDevice'));
 	myModal.show();
 }
 
-function generateContentStationDeviceSettingsSelectionModal(deviceId)
+function generateContentStationDeviceSettingsSelectionModal(deviceId, deviceName)
 {
 	var stationDeviceModal = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
-								<h5 class="mb-0">Auswahl für Gerät ${deviceId}</h5>
+								<h5 class="mb-0">${deviceName} (${deviceId})</h5>
 							</div>
 							<div class="modal-body" id="divModalDeviceSettingsContent">
 								<h5>Integriertes Gerät</h5>
-								<p>Bei dem ausgewählten Gerät ${deviceId} handelt es sich um ein Gerät, dass ohne Basisstation betrieben werden kann. Zu diesem Zweck existiert für das Gerät ebenfalls eine Basistation. Diese wird in der Geräteübersicht jedoch nicht angezeigt.</p>
+								<p>Bei dem ausgewählten Gerät ${deviceName} (${deviceId}) handelt es sich um ein Gerät, dass ohne Basisstation betrieben wird. Aus diesem Grund gibt es für dieses Gerät eine Basistation mit der selben Seriennummer. In der Geräteübersicht wird die Basisstation jedoch nicht angezeigt.</p>
 								<p>Sie können nachfolgend wählen, ob Sie Einstellungen für die Basisstation oder das Gerät vornehmen möchten.</p>
 								<div class="d-grid gap-2">
 									${makeButtonElement("btnOpenModalStationSettings", "btn btn-primary", `generateStationSettingsModal('${deviceId}')`, "Einstellungen für Basisstation aufrufen", true, "modal", undefined, true)}
-									${makeButtonElement("btnOpenModalDeviceSettings", "btn btn-primary", `generateDeviceSettingsModal('${deviceId}')`, "Einstellungen für das Gerät aufrufen", true, "modal", undefined, true)}
+									${makeButtonElement("btnOpenModalDeviceSettings", "btn btn-primary", `generateDeviceSettingsModal('${deviceId}')`, "Einstellungen für Gerät aufrufen", true, "modal", undefined, true)}
 								</div>
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
@@ -1207,9 +1207,9 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>Benachrichtigung senden</h5>
 										${deviceProperties.notificationPerson !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationPerson.name, deviceProperties.notificationPerson, devicePropertiesMetadata.notificationPerson.states, setEventHandler)}` : ""}
 										${deviceProperties.notificationPet !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationPet.name, deviceProperties.notificationPet, setEventHandler)}` : ""}
+										${deviceProperties.notificationAllOtherMotion !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllOtherMotion.name, deviceProperties.notificationAllOtherMotion, setEventHandler)}` : ""}
 										${deviceProperties.notificationCrying !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationCrying.name, deviceProperties.notificationCrying, setEventHandler)}` : ""}
-										${deviceProperties.notificationAllSound !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllSound.name, deviceProperties.notificationAllSound, setEventHandler)}` : ""}
-										${deviceProperties.notificationAllOtherMotion !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllOtherMotion.name, deviceProperties.notificationAllOtherMotion, setEventHandler)}` : ""}`;
+										${deviceProperties.notificationAllSound !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllSound.name, deviceProperties.notificationAllSound, setEventHandler)}` : ""}`;
 		}
 		deviceModal += `
 									</div>
@@ -2152,7 +2152,7 @@ function loadDataStatechange(showLoading)
 					{
 						lastChangeTime = "nicht verfügbar";
 					}
-					stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${getGuardModeAsString(objResp.data[station].guardMode)}${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? "" : " (privacy)"}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
+					stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="aktueller Status"></i>&nbsp;${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? getGuardModeAsString(objResp.data[station].guardMode) : "ausgeschaltet"}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">letzer Statuswechsel: ${lastChangeTime}</small>`);
 				}
 				text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
 				document.getElementById("btnArmAll").removeAttribute("disabled");
