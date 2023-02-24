@@ -492,9 +492,11 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                 if (response.status == 200) {
                     const result: ResultResponse = response.data;
                     if (result.code == 0) {
-                        const stationList = this.decryptAPIData(result.data) as Array<StationListResponse>;
-                        this.log.debug("Decrypted station list data", stationList);
-                        return stationList;
+                        if (result.data) {
+                            const stationList = this.decryptAPIData(result.data) as Array<StationListResponse>;
+                            this.log.debug("Decrypted station list data", stationList);
+                            return stationList;
+                        }
                     } else {
                         this.log.error("Response code not ok", {code: result.code, msg: result.msg });
                     }
@@ -527,9 +529,11 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                 if (response.status == 200) {
                     const result: ResultResponse = response.data;
                     if (result.code == 0) {
-                        const deviceList = this.decryptAPIData(result.data) as Array<DeviceListResponse>;
-                        this.log.debug("Decrypted device list data", deviceList);
-                        return deviceList;
+                        if (result.data) {
+                            const deviceList = this.decryptAPIData(result.data) as Array<DeviceListResponse>;
+                            this.log.debug("Decrypted device list data", deviceList);
+                            return deviceList;
+                        }
                     } else {
                         this.log.error("Response code not ok", {code: result.code, msg: result.msg });
                     }
@@ -873,12 +877,16 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                 if (response.status == 200) {
                     const result: ResultResponse = response.data;
                     if (result.code == 0) {
-                        const dataresult: Array<EventRecordResponse> = this.decryptAPIData(result.data);
-                        if (dataresult) {
-                            dataresult.forEach(record => {
-                                this.log.debug(`${functionName} - Record:`, record);
-                                records.push(record);
-                            });
+                        if (result.data) {
+                            const dataresult: Array<EventRecordResponse> = this.decryptAPIData(result.data);
+                            if (dataresult) {
+                                dataresult.forEach(record => {
+                                    this.log.debug(`${functionName} - Record:`, record);
+                                    records.push(record);
+                                });
+                            }
+                        } else {
+                            this.log.error("Response data is missing", {code: result.code, msg: result.msg, data: result.data });
                         }
                     } else {
                         this.log.error(`${functionName} - Response code not ok`, {code: result.code, msg: result.msg });
@@ -1026,23 +1034,25 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         return "";
     }
 
-    public decryptAPIData(data: string, json = true): any {
-        let decryptedData: Buffer | undefined;
-        try {
-            decryptedData = decryptAPIData(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex")));
-        } catch (error) {
-            this.log.error("Data decryption error, invalidating session data and reconnecting...", error);
-            this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
-            this.invalidateToken();
-            this.emit("close");
-        }
-        if (decryptedData) {
+    public decryptAPIData(data?: string, json = true): any {
+        if (data) {
+            let decryptedData: Buffer | undefined;
+            try {
+                decryptedData = decryptAPIData(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex")));
+            } catch (error) {
+                this.log.error("Data decryption error, invalidating session data and reconnecting...", error);
+                this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
+                this.invalidateToken();
+                this.emit("close");
+            }
+            if (decryptedData) {
+                if (json)
+                    return parseJSON(decryptedData.toString("utf-8"), this.log);
+                return decryptedData.toString();
+            }
             if (json)
-                return parseJSON(decryptedData.toString("utf-8"), this.log);
-            return decryptedData.toString();
+                return {};
         }
-        if (json)
-            return {};
         return undefined;
     }
 
