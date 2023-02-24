@@ -1584,25 +1584,25 @@ function getSdStatusMessageText(sdStatus)
 	switch(sdStatus)
 	{
 		case 0:
-			return "Speicher in Ordnung";
+			return `Der Speicher ist in Ordnung.`;
 		case 1:
-			return "Speicher nicht formatiert";
+			return `Der Speicher ist nicht formatiert.`;
 		case 3:
-			return "Formatierung fehlgeschlagen";
+			return `Die Formatierung des Speichers ist fehlgeschlagen.`;
 		case 4:
-			return "keine Speicherkarte eingesetzt";
+			return `Es ist keine Speicherkarte eingesetzt.`;
 		case 5:
-			return "Speicher wird formatiert";
+			return `Der Speicher wird formatiert.`;
 		case 6:
-			return "Speicher ist ausgelastet";
+			return `Der Speicher ist ausgelastet.`;
 		case 2:
 		case 7:
 		case 8:
 		case 9:
 		case 10:
-			return "Mounten fehlgeschlagen (${sdStatus})";
+			return `Das Mounten ist fehlgeschlagen (${sdStatus}).`;
 		case 11:
-			return "Speicher wird repariert";
+			return `Der Speicher wird repariert.`;
 		case 12:
 		case 13:
 		case 14:
@@ -1613,15 +1613,15 @@ function getSdStatusMessageText(sdStatus)
 		case 19:
 		case 20:
 		case 21:
-			return "Überprüfung des Speichers fehlgeschlagen (${sdStatus})";
+			return `Die Überprüfung des Speichers ist fehlgeschlagen (${sdStatus}).`;
 		case 22:
-			return "I/O Fehler";
+			return `Es ist ein I/O Fehler aufgetreten.`;
 		case 23:
-			return "Problem mit der Speicherkarte festgestellt";
+			return `Es wurde ein Problem mit der Speicherkarte festgestellt.`;
 		case 24:
-			return "Speicher wird gemountet.";
+			return `Der Speicher wird gemountet.`;
 		default:
-			return `unbekannter Zustand (${sdStatus})`;
+			return `Der Speicher hat einen unbekannten Zustand (${sdStatus}).`;
 	}
 }
 
@@ -2018,7 +2018,8 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 		{
 			stationModal +=  `
 											<h5>interner Speicher</h5>
-											${stationProperties.sdStatus != 0 ? createMessageContainer("alert alert-warning", "Problem mit dem internen Speicher.", `Es ist folgendes Problem mit dem internen Speicher aufgetreten:<br />${getSdStatusMessageText(stationProperties.sdStatus)}`, "Bitte überprüfen Sie den internen Speicher in der App.") : ""}
+											<label class="mb-1">Status</label>
+											${stationProperties.sdStatus != 0 ? createMessageContainer("alert alert-warning", "", `Es ist folgendes Problem mit dem internen Speicher aufgetreten:<br />${getSdStatusMessageText(stationProperties.sdStatus)}`, "Bitte überprüfen Sie die Einstellungen für den internen Speicher in der App.") : createMessageContainer("alert alert-success", "", getSdStatusMessageText(stationProperties.sdStatus), "")}
 											${generateElementProgress("sdUsage", sdCapacityUsedPercent)}
 											<div class="row gap-3">
 												<div class="col">
