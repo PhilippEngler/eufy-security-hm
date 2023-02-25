@@ -105,9 +105,8 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private connectAddress: Address | undefined = undefined;
     private localIPAddress: string | undefined = undefined;
-    private localIPAddressSettings: string;
-    private localUDPPort : number;
     private preferredIPAddress: string | undefined = undefined;
+    private preferredUdpPort: number;
     private dskKey = "";
     private dskExpiration: Date | null = null;
     private log: Logger;
@@ -120,16 +119,13 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private lockAESKeys: Map<number, string> = new Map<number, string>();
     private channel = 255;
 
-    constructor(localIPAddressSettings: string, localUDPPort: number | null, connectionType: P2PConnectionType, rawStation: StationListResponse, api: HTTPApi, ipAddress?: string, publicKey = "") {
+    constructor(preferredIPAddress: string, preferredUdpPort: number | null, connectionType: P2PConnectionType, rawStation: StationListResponse, api: HTTPApi, ipAddress?: string, publicKey = "") {
         super();
-        this.localIPAddressSettings = localIPAddressSettings;
-        if(localUDPPort === undefined || localUDPPort == null)
-        {
-            this.localUDPPort = 0;
-        }
-        else
-        {
-            this.localUDPPort = localUDPPort;
+        this.preferredIPAddress = preferredIPAddress;
+        if(preferredUdpPort === undefined || preferredUdpPort == null) {
+            this.preferredUdpPort = 0;
+        } else {
+            this.preferredUdpPort = preferredUdpPort;
         }
         this.connectionType = connectionType;
         this.api = api;
@@ -432,29 +428,15 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 host = this.preferredIPAddress;
             } else if (this.localIPAddress !== undefined) {
                 host = this.localIPAddress;
-            } else if(this.localIPAddressSettings !== "") {
-                this.localIPAddress = this.localIPAddressSettings;
-            } else if (this.localIPAddress !== this.localIPAddressSettings) {
-                this.localIPAddress = undefined;
-            }
-        }
-        if (host === undefined && this.localIPAddress !== undefined) {
-            host = this.localIPAddress;
             } else {
                 const localIP = getLocalIpAddress();
                 host = localIP.substring(0, localIP.lastIndexOf(".") + 1).concat("255")
             }
-        
-        if(this.connectionType == P2PConnectionType.ONLY_LOCAL)
-        {
-            this.localLookup(host);
         }
-        else
-        {
-            this.localLookup(host);
+        this.localLookup(host);
+        if(this.connectionType == P2PConnectionType.QUICKEST) {
             this.cloudLookup();
         }
-
         this._clearLookupTimeout();
         this._clearLookupRetryTimeout();
 
@@ -473,7 +455,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             this.terminating = false;
             await this.renewDSKKey();
             if (!this.binded)
-                this.socket.bind(this.localUDPPort, () => {
+                this.socket.bind(this.preferredUdpPort, () => {
                     this.binded = true;
                     try {
                         this.socket.setRecvBufferSize(this.UDP_RECVBUFFERSIZE_BYTES);
@@ -761,7 +743,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 this._clearLookupTimeout();
                 this._clearLookupRetryTimeout();
 
-                const p2pDid = `${msg.slice(4, 12).toString("utf8").replace(/[\0]+$/g, "")}-${msg.slice(12, 16).readUInt32BE()}-${msg.slice(16, 24).toString("utf8").replace(/[\0]+$/g, "")}`;
+                const p2pDid = `${msg.slice(4, 12).toString("utf8").replace(/[\0]+$/g, "")}-${msg.slice(12, 16).readUInt32BE().toString().padStart(6, '0')}-${msg.slice(16, 24).toString("utf8").replace(/[\0]+$/g, "")}`;
                 this.log.debug(`Station ${this.rawStation.station_sn} - LOCAL_LOOKUP_RESP - Got response`, { ip: rinfo.address, port: rinfo.port, p2pDid: p2pDid });
 
                 if (p2pDid === this.rawStation.p2p_did) {
