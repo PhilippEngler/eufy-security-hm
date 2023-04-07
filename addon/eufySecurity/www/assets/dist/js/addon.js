@@ -2019,7 +2019,7 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 			stationModal +=  `
 											<h5>interner Speicher</h5>
 											<label class="mb-1">Status</label>
-											${stationProperties.sdStatus != 0 ? createMessageContainer("alert alert-warning", "", `Es ist folgendes Problem mit dem internen Speicher aufgetreten:<br />${getSdStatusMessageText(stationProperties.sdStatus)}`, "Bitte überprüfen Sie die Einstellungen für den internen Speicher in der App.") : createMessageContainer("alert alert-success", "", getSdStatusMessageText(stationProperties.sdStatus), "")}
+											${stationProperties.sdStatus == 0 ? createMessageContainer("alert alert-success", "", getSdStatusMessageText(stationProperties.sdStatus), "") : createMessageContainer("alert alert-warning", "", `Es ist folgendes Problem mit dem internen Speicher aufgetreten:<br />${getSdStatusMessageText(stationProperties.sdStatus)}`, "Bitte überprüfen Sie die Einstellungen für den internen Speicher in der App.")}
 											${generateElementProgress("sdUsage", sdCapacityUsedPercent)}
 											<div class="row gap-3">
 												<div class="col">
@@ -2136,6 +2136,10 @@ function loadDataStatechange(showLoading)
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}')`}`, "zu Hause", (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, "Zeit&shy;steu&shy;e&shy;rung", (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, "de&shy;ak&shy;ti&shy;viert", (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
+					if(objResp.data[station].deviceType == "indoorcamera" && objResp.data[station].model == "T8410")
+					{
+						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].privacyMode === true ? `setEnable('${objResp.data[station].serialNumber}', true)` : `setEnable('${objResp.data[station].serialNumber}', false)`}`, `${objResp.data[station].privacyMode === true ? `ein&shy;schal&shy;ten` : `aus&shy;schal&shy;ten`}` , true, undefined, undefined, true)}</div>`;
+					}
 					buttons += `</div>`;
 					if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
 					{
@@ -2957,9 +2961,13 @@ function loadDataSettings()
 						{
 							document.getElementById("spnToken").innerHTML = `Es ist kein Token gespeichert. Beim nächsten erfolgreichen Login wird ein neues Token erzeugt.<br />`;
 						}
+						else if(objResp.data.tokenExpire.toString().length == 10 || objResp.data.tokenExpire.toString().length == 13)
+						{
+							document.getElementById("spnToken").innerHTML = `Das zur Zeit genutzte Token läuft am ${objResp.data.tokenExpire.toString().length == 10 ? makeDateTimeString(new Date(objResp.data.tokenExpire*1000)) : makeDateTimeString(new Date(objResp.data.tokenExpire))} ab. Es wird vorher aktualisiert.<br />`;
+						}
 						else
 						{
-							document.getElementById("spnToken").innerHTML = `Das zur Zeit genutzte Token läuft am ${makeDateTimeString(new Date(objResp.data.tokenExpire*1000))} ab. Es wird vorher aktualisiert.<br />`;
+							document.getElementById("spnToken").innerHTML = `Der Ablaufzeitpunkt des Tokens ist unbekannt ('${objResp.data.tokenExpire}').<br />`;
 						}
 					}
 					checkLogLevel(objResp.data.logLevel);
