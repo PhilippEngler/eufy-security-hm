@@ -89,7 +89,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
                 if(this.api.getStateUpdateEventActive())
                 {
-                    this.addEventListener(station, "GuardModeChanged", false);
+                    this.addEventListener(station, "GuardMode", false);
                     this.addEventListener(station, "CurrentMode", false);
                     this.addEventListener(station, "PropertyChanged", false);
                     this.addEventListener(station, "RawPropertyChanged", false);
@@ -266,7 +266,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 {
                     await this.stations[stationSerial].close();
                     
-                    this.removeEventListener(this.stations[stationSerial], "GuardModeChanged");
+                    this.removeEventListener(this.stations[stationSerial], "GuardMode");
                     this.removeEventListener(this.stations[stationSerial], "CurrentMode");
                     this.removeEventListener(this.stations[stationSerial], "PropertyChanged");
                     this.removeEventListener(this.stations[stationSerial], "RawPropertyChanged");
@@ -604,7 +604,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
     /**
      * Wait for the GuardModeEvent after changing guardMode for a given base.
-     * @param station The sation for waiting for the GuardModeChanged event.
+     * @param station The sation for waiting for the GuardMode event.
      * @param guardMode The guard mode to set.
      * @param timeout The timespan in ms maximal to wait for the event.
      * @returns Returns true or false.
@@ -720,7 +720,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.on("command result", (station : Station, result : CommandResult) => this.onStationCommandResult(station, result));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("command result")} Listener.`);
                 break;
-            case "GuardModeChanged":
+            case "GuardMode":
                 station.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardMode(station, guardMode));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
@@ -878,7 +878,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeAllListeners("command result");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("command result")} Listener.`);
                 break;
-            case "GuardModeChanged":
+            case "GuardMode":
                 station.removeAllListeners("guard mode");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
@@ -1793,14 +1793,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async getLastEventFromCloud(station : Station) : Promise <number | undefined>
     {
-        if(!(station.getSerial().startsWith("T8030")))
+        /*if(!(station.getSerial().startsWith("T8030")))
         {
             var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({deviceSN : station.getSerial()}, 1);
             if(lastGuardModeChangeTime !== undefined && lastGuardModeChangeTime.length >= 1)
             {
                 return lastGuardModeChangeTime[0].create_time;
             }
-        }
+        }*/
         return undefined;
     }
 
