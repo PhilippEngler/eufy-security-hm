@@ -404,7 +404,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 					{
 						if(objResp.data[station].deviceType == "station")
 						{
-							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-1 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-1 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", "aktueller Status", `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? getGuardModeAsString(objResp.data[station].guardMode) : "privatsphäre"}`)}</div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
+							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", "aktueller Status", `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? getGuardModeAsString(objResp.data[station].guardMode) : "privatsphäre"}`)}</div>`, `<small class="text-muted">IP-Adresse: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
 					text += createStationTypeCardsContainer("Stationen", "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
@@ -528,7 +528,7 @@ function createCardDevice(device)
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
-	card += `<div class="row g-0">${generateColumnForProperty("col mb-1 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-1 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-1 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.batteryTemperature, "&deg;C")}</div>`;
+	card += `<div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.batteryTemperature, "&deg;C")}</div>`;
 	card += `</div></div></div>`;
 	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device.pictureTime, device.pictureUrl)}</small></div>`;
 	card += `</div></div>`;
@@ -1239,6 +1239,7 @@ function isStationOrDevicesKnown(modell)
 		case "T8113":
 		case "T8114":
 		case "T8142":
+		case "T8160":
 		case "T8161":
 		case "T8400":
 		case "T8410":
@@ -2138,7 +2139,7 @@ function loadDataStatechange(showLoading)
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, "de&shy;ak&shy;ti&shy;viert", (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
 					if(objResp.data[station].deviceType == "indoorcamera" && objResp.data[station].model == "T8410")
 					{
-						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].privacyMode === true ? `setEnable('${objResp.data[station].serialNumber}', true)` : `setEnable('${objResp.data[station].serialNumber}', false)`}`, `${objResp.data[station].privacyMode === true ? `ein&shy;schal&shy;ten` : `aus&shy;schal&shy;ten`}` , true, undefined, undefined, true)}</div>`;
+						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? `ein&shy;schal&shy;ten` : `aus&shy;schal&shy;ten`}`, true, undefined, undefined, true)}</div>`;
 					}
 					buttons += `</div>`;
 					if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
@@ -2215,7 +2216,7 @@ function setArm(stationserial)
 {
 	if(stationserial == "")
 	{
-		document.getElementById("btnArmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;abwesend`;
+		document.getElementById("btnArmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;ab&shy;we&shy;send`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/away`;
 		xmlHttp = new XMLHttpRequest();
@@ -2253,7 +2254,7 @@ function setArm(stationserial)
 	}
 	else
 	{
-		document.getElementById("btnArm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;abwesend`;
+		document.getElementById("btnArm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;ab&shy;we&shy;send`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/away`;
 		xmlHttp = new XMLHttpRequest();
@@ -2373,7 +2374,7 @@ function setSchedule(stationserial)
 {
 	if(stationserial=="")
 	{
-		document.getElementById("btnScheduleAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;Zeitsteuerung`;
+		document.getElementById("btnScheduleAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;Zeit&shy;steu&shy;e&shy;rung`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/schedule`;
 		xmlHttp = new XMLHttpRequest();
@@ -2411,7 +2412,7 @@ function setSchedule(stationserial)
 	}
 	else
 	{
-		document.getElementById("btnSchedule" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;Zeitsteuerung`;
+		document.getElementById("btnSchedule" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;Zeit&shy;steu&shy;e&shy;rung`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/schedule`;
 		xmlHttp = new XMLHttpRequest();
@@ -2452,7 +2453,7 @@ function setDisarm(stationserial)
 {
 	if(stationserial=="")
 	{
-		document.getElementById("btnDisarmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;deaktiviert`;
+		document.getElementById("btnDisarmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;de&shy;ak&shy;ti&shy;viert`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/disarmed`;
 		xmlHttp = new XMLHttpRequest();
@@ -2490,9 +2491,56 @@ function setDisarm(stationserial)
 	}
 	else
 	{
-		document.getElementById("btnDisarm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;deaktiviert`;
+		document.getElementById("btnDisarm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;de&shy;ak&shy;ti&shy;viert`;
 		var xmlHttp, objResp;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/disarmed`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
+		{
+			if(this.readyState == 4 && this.status == 200)
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					const toast = new bootstrap.Toast(toastOK);
+					toast.show();
+					loadDataStatechange(false);
+				}
+				else
+				{
+					const toast = new bootstrap.Toast(toastFailed);
+					toast.show();
+					loadDataStatechange(false);
+				}
+			}
+			else if(this.readyState != 4)
+			{
+
+			}
+			else
+			{
+
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+}
+
+function setPrivacy(stationserial, enabled)
+{
+	if(stationserial=="")
+	{
+		const toast = new bootstrap.Toast(toastFailed);
+		toast.show();
+		loadDataStatechange(false);
+	}
+	else
+	{
+		document.getElementById("btnPrivacy" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${enabled === true ? `ein&shy;schal&shy;ten` : `aus&shy;schal&shy;ten`}`;
+		var xmlHttp, objResp;
+		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/${enabled === false ? `privacyOn` : `privacyOff`}`;
 		xmlHttp = new XMLHttpRequest();
 		xmlHttp.overrideMimeType('application/json');
 		xmlHttp.onreadystatechange = function()
