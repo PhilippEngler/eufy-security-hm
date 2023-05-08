@@ -757,10 +757,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, "");
             
             }
-            else if (name === PropertyName.DevicePictureUrl)// && device.hasProperty(PropertyName.DevicePicture))
+            else if (name === PropertyName.DevicePictureUrl && value !== "")
             {
                 const picture = device.getPropertyValue(PropertyName.DevicePicture);
-                if (picture === undefined || (picture && (picture as Picture).data?.length === 0))
+                if (picture === undefined || picture === null || (picture && (picture as Picture).data?.length === 0))
                 {
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
                         station.downloadImage(value as string);

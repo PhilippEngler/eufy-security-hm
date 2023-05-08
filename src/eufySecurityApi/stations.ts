@@ -1826,7 +1826,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         this.api.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
             for (const device of devices) {
-                if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && device.getPropertyValue(PropertyName.DevicePicture) === undefined) {
+                if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && (device.getPropertyValue(PropertyName.DevicePicture) === undefined || device.getPropertyValue(PropertyName.DevicePicture) === null)) {
                     this.api.logDebug(`onStationImageDownload - Set first picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
                     device.updateProperty(PropertyName.DevicePicture, picture);
                     break;
