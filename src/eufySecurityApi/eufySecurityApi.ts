@@ -526,12 +526,21 @@ export class EufySecurityApi
     }
 
     /**
-     * Return the Devices object.
-     * @returns The Devices object.
+     * Returns all devices as object.
+     * @returns The object.
      */
-    public getDevices() : { [deviceSerial : string] : Device }
+    public async getDevices() : Promise<{ [deviceSerial : string] : Device }>
     {
-        return this.devices.getDevices();
+        return await this.devices.getDevices();
+    }
+
+    /**
+     * Returns all devices of a given station as object.
+     * @returns The object.
+     */
+    public async getDevicesFromStation(baseSerial : string) : Promise<Array<Device>>
+    {
+        return await this.devices.getDevicesFromStation(baseSerial);
     }
 
     /**
@@ -816,7 +825,7 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var devices = this.getDevices();
+                var devices = await this.getDevices();
                 if(devices)
                 {
                     json = {"success":true, "data":[]};
@@ -876,7 +885,7 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var device = this.getDevices()[deviceSerial];
+                var device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
                     json = {"success":true, "data":this.makeJsonObjectForDevice(device)};
@@ -921,7 +930,7 @@ export class EufySecurityApi
                 //await this.updateDeviceData();
                 //await this.devices.loadDevices();
 
-                var device = this.getDevices()[deviceSerial];
+                var device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
                     json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "data":device.getPropertiesMetadata()};
@@ -966,7 +975,7 @@ export class EufySecurityApi
                 //await this.updateDeviceData();
                 //await this.devices.loadDevices();
 
-                var device = this.getDevices()[deviceSerial];
+                var device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
                     json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "data":device.getProperties()};
@@ -1052,7 +1061,7 @@ export class EufySecurityApi
      * Create a JSON object for a given station.
      * @param station The station the JSON object created for.
      */
-    private makeJsonObjectForStation(station : Station) : any
+    private async makeJsonObjectForStation(station : Station) : Promise<any>
     {
         var properties = station.getProperties();
         var json : any = {};
@@ -1060,7 +1069,7 @@ export class EufySecurityApi
         var privacyMode : boolean | undefined = undefined;
         if(this.devices.existDevice(station.getSerial()))
         {
-            var device = this.devices.getDevices()[station.getSerial()];
+            var device = (await this.devices.getDevices())[station.getSerial()];
             if(device.isPanAndTiltCamera())
             {
                 if(device.isEnabled())
@@ -1125,7 +1134,7 @@ export class EufySecurityApi
                     json = {"success":true, "data":[]};
                     for (var stationSerial in stations)
                     {
-                        json.data.push(this.makeJsonObjectForStation(stations[stationSerial]));
+                        json.data.push(await this.makeJsonObjectForStation(stations[stationSerial]));
                     }
                     this.setLastConnectionInfo(true);
                 }
@@ -1376,7 +1385,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "data":this.makeJsonObjectForStation(station)};
+                    json = {"success":true, "data":await this.makeJsonObjectForStation(station)};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1473,7 +1482,7 @@ export class EufySecurityApi
                     json = {"success":true, "data":[]};
                     for (var stationSerial in stations)
                     {
-                        json.data.push(this.makeJsonObjectForStation(stations[stationSerial]));
+                        json.data.push(await this.makeJsonObjectForStation(stations[stationSerial]));
 
                         if(mode == -1)
                         {
@@ -1587,7 +1596,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "data":this.makeJsonObjectForStation(station)};
+                    json = {"success":true, "data":await this.makeJsonObjectForStation(station)};
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
@@ -1734,7 +1743,7 @@ export class EufySecurityApi
             {
                 if(this.devices.existDevice(stationSerial) == true)
                 {
-                    const device : Device = this.getDevices()[stationSerial];
+                    const device : Device = (await this.getDevices())[stationSerial];
                     if(device.isEnabled() == false)
                     {
                         await this.setPrivacyMode(stationSerial, true);
@@ -1807,7 +1816,7 @@ export class EufySecurityApi
     {
         if(this.devices.existDevice(deviceSerial) == true)
         {
-            const device : Device = await this.getDevices()[deviceSerial];
+            const device : Device = (await this.getDevices())[deviceSerial];
             if(device.isPanAndTiltCamera())
             {
                 if(device.isEnabled() == value)
@@ -1822,7 +1831,7 @@ export class EufySecurityApi
                     await this.httpService.refreshStationData();
                     //await this.httpService.refreshDeviceData();
                     await this.devices.loadDevices();
-                    if(await this.getDevices()[deviceSerial].isEnabled() == value as boolean)
+                    if((await this.getDevices())[deviceSerial].isEnabled() == value as boolean)
                     {
                         return `{"success":true,"enabled":${value as boolean}}`;
                     }
@@ -1841,6 +1850,50 @@ export class EufySecurityApi
         {
             return `{"success":false,"reason":"Device ${deviceSerial} does not exists."}`;
         }
+    }
+
+    /**
+     * Forces a new p2p connection to a station specified by serial.
+     * @param stationSerial The serial of the station.
+     * @returns A JSON string with the result.
+     */
+    public async connectStation(stationSerial: string) : Promise<string>
+    {
+        var json : any = {};
+
+        if(this.stations)
+        {
+            await this.httpService.refreshStationData();
+            var station = await this.stations.getStation(stationSerial);
+
+            if(station)
+            {
+                if(station.isConnected() === true)
+                {
+                    json = {"success":false, "message":"P2P connection to station already established."};
+                }
+                else
+                {
+                    await station.connect();
+                    await sleep(500);
+
+                    await this.httpService.refreshStationData();
+                    station = await this.stations.getStation(stationSerial);
+                    var connected = station.isConnected();
+                    json = {"success":connected, "conneceted":connected};
+                }
+            }
+            else
+            {
+                json = {"success":false, "message":"The specified station could not be found."};
+            }
+        }
+        else
+        {
+            json = {"success":false, "message":"No connection to eufy."};
+        }
+
+        return JSON.stringify(json);
     }
 
     /**
@@ -1868,7 +1921,7 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var devices = this.getDevices();
+                var devices = await this.getDevices();
                 var device;
 
                 if(devices)
@@ -2384,7 +2437,7 @@ export class EufySecurityApi
                     var station : Station;
                     var device : Device;
                     var stations = await this.getStations();
-                    var devices = this.getDevices();
+                    var devices = await this.getDevices();
 
                     var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime","eufyLastModeChangeTime"];
                     var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus","Zeitpunkt des letzten Moduswechsels"];
@@ -2903,6 +2956,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.4.1";
+        return "2.5.0-b266";
     }
 }

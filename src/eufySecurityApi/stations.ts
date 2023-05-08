@@ -1,13 +1,15 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError, Schedule } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError, Schedule, Picture } from './http';
 import { sleep } from './push/utils';
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError } from "./error";
 import internal from "stream";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata } from "./p2p";
+import EventEmitter from "events";
+import imageType from "image-type";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
-import { parseValue } from "./utils";
+import { parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
 
 /**
@@ -21,7 +23,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private stations : { [stationSerial : string ] : Station } = {};
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
     private lastGuardModeChangeTimeForStations : { [stationSerial : string] : number | undefined } = {};
-    private loadingStations?: Promise<unknown>;
+    private stationsLoaded = false;
+    private loadingEmitter = new EventEmitter();
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
 
@@ -63,9 +66,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         const resStations = hubs;
 
         var station : Station;
-        const stationsSNs : string[] = Object.keys(this.stations);
+        const stationsSerials : string[] = Object.keys(this.stations);
         const promises: Array<Promise<Station>> = [];
-        const newStationsSNs = Object.keys(hubs);
+        const newStationsSerials = Object.keys(hubs);
 
         for (var stationSerial in resStations)
         {
@@ -80,7 +83,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
             else
             {
-                station = await Station.initialize(this.api, this.httpService, resStations[stationSerial]);
+                this.stationsLoaded = false;
+                station = await Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
@@ -128,20 +132,22 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
                 this.addEventListener(station, "DevicePinVerified", false);
                 this.addEventListener(station, "SdInfoEx", false);
+                this.addEventListener(station, "ImageDownload", false);
 
                 this.addStation(station);
             }
         }
 
-        this.loadingStations = Promise.all(promises).then(() => {
-            this.loadingStations = undefined;
+        Promise.all(promises).then(() => {
+            this.stationsLoaded = true;
+            this.loadingEmitter.emit("stations loaded");
         });
 
-        for (const stationSN of stationsSNs)
+        for (const stationSerial of stationsSerials)
         {
-            if (!newStationsSNs.includes(stationSN))
+            if (!newStationsSerials.includes(stationSerial))
             {
-                this.getStation(stationSN).then((station: Station) => {
+                this.getStation(stationSerial).then((station: Station) => {
                     this.removeStation(station);
                 }).catch((error: any) => {
                     this.api.logError("Error removing station", error);
@@ -200,9 +206,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async updateStation(hub : StationListResponse) : Promise<void>
     {
-        if (this.loadingStations !== undefined)
+        if (!this.stationsLoaded)
         {
-            await this.loadingStations;
+            await waitForEvent(this.loadingEmitter, "stations loaded");
         }
         if (Object.keys(this.stations).includes(hub.station_sn))
         {
@@ -302,6 +308,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.stations[stationSerial], "DeviceWrongTryProtectAlarm");
                     this.removeEventListener(this.stations[stationSerial], "DevicePinVerified");
                     this.removeEventListener(this.stations[stationSerial], "SdInfoEx");
+                    this.removeEventListener(this.stations[stationSerial], "ImageDownload");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
@@ -364,10 +371,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         {
             station.startLivestream(camera);
 
-            this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
-                this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                this.stopStationLivestream(deviceSerial);
-            }, this.cameraMaxLivestreamSeconds * 1000));
+            if (this.cameraMaxLivestreamSeconds > 0)
+            {
+                this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
+                    this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                    this.stopStationLivestream(deviceSerial);
+                }, this.cameraMaxLivestreamSeconds * 1000));
+            }
         }
         else
         {
@@ -393,11 +403,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         if(!camera.isStreaming())
         {
             const url = await camera.startStream();
-            if (url !== "") {
-                this.cameraCloudLivestreamTimeout.set(deviceSerial, setTimeout(() => {
-                    this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                    this.stopCloudLivestream(deviceSerial);
-                }, this.cameraMaxLivestreamSeconds * 1000));
+            if (url !== "")
+            {
+                if (this.cameraMaxLivestreamSeconds > 0)
+                {
+                    this.cameraCloudLivestreamTimeout.set(deviceSerial, setTimeout(() => {
+                        this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                        this.stopCloudLivestream(deviceSerial);
+                    }, this.cameraMaxLivestreamSeconds * 1000));
+                }
                 this.emit("cloud livestream start", station, camera, url);
             }
             else
@@ -487,9 +501,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     public async getStations() : Promise<{ [stationSerial : string ] : Station }>
     {
-        if (this.loadingStations !== undefined)
+        if (!this.stationsLoaded)
         {
-            await this.loadingStations;
+            await waitForEvent(this.loadingEmitter, "stations loaded");
         }
         return this.stations;
     }
@@ -499,17 +513,17 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The serial of the station to retrive.
      * @returns The station object.
      */
-    public async getStation(stationSN: string): Promise<Station>
+    public async getStation(stationSerial: string): Promise<Station>
     {
-        if (this.loadingStations !== undefined)
+        if (!this.stationsLoaded)
         {
-            await this.loadingStations;
+            await waitForEvent(this.loadingEmitter, "stations loaded");
         }
-        if (Object.keys(this.stations).includes(stationSN))
+        if (Object.keys(this.stations).includes(stationSerial))
         {
-            return this.stations[stationSN];
+            return this.stations[stationSerial];
         }
-        throw new StationNotFoundError(`No station with serial number: ${stationSN}!`);
+        throw new StationNotFoundError(`No station with serial number: ${stationSerial}!`);
     }
 
     /**
@@ -663,7 +677,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async getStorageInfoStation(stationSerial : string) : Promise<void>
     {
-        await this.stations[stationSerial].getStorageInfoEx();
+        try
+        {
+            const station = await this.getStation(stationSerial);
+            if (station.isStation() || (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE))
+            {
+                await station.getStorageInfoEx();
+            }
+        }
+        catch (error)
+        {
+            this.api.logError("getStorageInfo Error", error);
+        }
     }
 
     /**
@@ -741,7 +766,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
-                station.on("property changed", (station : Station, name : string, value : PropertyValue) => this.onStationPropertyChanged(station, name, value));
+                station.on("property changed", (station : Station, name : string, value : PropertyValue, ready: boolean) => this.onStationPropertyChanged(station, name, value, ready));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
@@ -821,8 +846,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device pin verified")} Listener.`);
                 break;
             case "SdInfoEx":
-                station.on("sd info ex", (station: Station, sdStatus: number, sdCapacity: number, sdCapacityAvailable: number) => this.onStationSdInfoEx(station, sdStatus, sdCapacity, sdCapacityAvailable));
+                station.on("sd info ex", (station: Station, sdStatus: TFCardStatus, sdCapacity: number, sdCapacityAvailable: number) => this.onStationSdInfoEx(station, sdStatus, sdCapacity, sdCapacityAvailable));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sd info ex")} Listener.`);
+                break;
+            case "ImageDownload":
+                station.on("image download", (station: Station, file: string, image: Buffer) => this.onStationImageDownload(station, file, image));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("image download")} Listener.`);
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
@@ -1475,9 +1504,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    private async onStationPropertyChanged(station : Station, name : string, value : PropertyValue) : Promise<void>
+    private async onStationPropertyChanged(station : Station, name : string, value : PropertyValue, ready: boolean) : Promise<void>
     {
-        if(name != "guardMode" && name != "currentMode")
+        if (ready && (!name.startsWith("hidden-") && name != "guardMode" && name != "currentMode"))
         {
             this.api.logDebug(`Event "PropertyChanged": station: ${station.getSerial()} | name: ${name} | value: ${value}`);
         }
@@ -1773,7 +1802,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param sdCapacity The capacity of the sd card.
      * @param sdCapacityAvailable The available capacity of the sd card.
      */
-    private onStationSdInfoEx(station : Station, sdStatus : number, sdCapacity : number, sdCapacityAvailable : number)
+    private onStationSdInfoEx(station : Station, sdStatus : TFCardStatus, sdCapacity : number, sdCapacityAvailable : number)
     {
         if(station.hasProperty(PropertyName.StationSdStatus)) {
             station.updateProperty(PropertyName.StationSdStatus, sdStatus);
@@ -1784,6 +1813,28 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         if(station.hasProperty(PropertyName.StationSdCapacityAvailable)) {
             station.updateProperty(PropertyName.StationSdCapacityAvailable, sdCapacityAvailable);
         }
+    }
+
+    private onStationImageDownload(station: Station, file: string, image: Buffer): void
+    {
+        const type = imageType(image);
+        const picture: Picture = {
+            data: image,
+            type: type !== null ? type : { ext: "unknown", mime: "application/octet-stream" }
+        };
+        this.emit("station image download", station, file, picture);
+
+        this.api.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
+            for (const device of devices) {
+                if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && device.getPropertyValue(PropertyName.DevicePicture) === undefined) {
+                    this.api.logDebug(`onStationImageDownload - Set first picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
+                    device.updateProperty(PropertyName.DevicePicture, picture);
+                    break;
+                }
+            }
+        }).catch((error : any) => {
+            this.api.logError(`onStationImageDownload - Set first picture error`, error);
+        });
     }
 
     /**

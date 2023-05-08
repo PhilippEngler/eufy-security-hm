@@ -211,7 +211,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             try
             {
                 var rawDevices = await this.api.getRawDevices();
-                var devices = rawDevices.getDevices();
+                var devices = await rawDevices.getDevices();
                 for(var deviceSerial in devices)
                 {
                     try

@@ -5,11 +5,11 @@ import { HTTPApi } from "./api";
 import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty, PublicKeyType, MotionDetectionMode, VideoTypeStoreToNAS, HB3DetectionTypes } from "./types";
 import { SnoozeDetail, StationListResponse, StationSecuritySettings } from "./models"
 import { ParameterHelper } from "./parameter";
-import { IndexedProperty, PropertyMetadataAny, PropertyValue, PropertyValues, RawValues, StationEvents, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule } from "./interfaces";
+import { IndexedProperty, PropertyMetadataAny, PropertyValue, PropertyValues, RawValues, StationEvents, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, PropertyMetadataObject } from "./interfaces";
 import { encodePasscode, getBlocklist, getHB3DetectionMode, hexDate, hexTime, hexWeek, isGreaterEqualMinVersion, isNotificationSwitchMode, switchNotificationMode } from "./utils";
 import { StreamMetadata } from "../p2p/interfaces";
 import { P2PClientProtocol } from "../p2p/session";
-import { AlarmEvent, ChargingType, CommandType, ErrorCode, ESLBleCommand, ESLCommand, IndoorSoloSmartdropCommandType, LockV12P2PCommand, P2PConnectionType, PanTiltDirection, SmartSafeAlarm911Event, SmartSafeCommandCode, SmartSafeShakeAlarmEvent, VideoCodec, WatermarkSetting1, WatermarkSetting2, WatermarkSetting3, WatermarkSetting4 } from "../p2p/types";
+import { AlarmEvent, ChargingType, CommandType, ErrorCode, ESLBleCommand, ESLCommand, IndoorSoloSmartdropCommandType, LockV12P2PCommand, P2PConnectionType, PanTiltDirection, SmartSafeAlarm911Event, SmartSafeCommandCode, SmartSafeShakeAlarmEvent, TFCardStatus, VideoCodec, WatermarkSetting1, WatermarkSetting2, WatermarkSetting3, WatermarkSetting4 } from "../p2p/types";
 import { Address, CmdCameraInfoResponse, CommandResult, ESLStationP2PThroughData, LockAdvancedOnOffRequestPayload, AdvancedLockSetParamsType, PropertyData, CustomData, CommandData } from "../p2p/models";
 import { Device, DoorbellCamera, Lock, SmartSafe } from "./device";
 import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand } from "../p2p/utils";
@@ -55,7 +55,7 @@ export class Station extends TypedEmitter<StationEvents> {
         this.lockPublicKey = publicKey;
         this.log = api.getLog();
         this.update(this.rawStation);
-        
+
         this.p2pSession = new P2PClientProtocol(this.getLANIPAddress() as string, this.eufySecurityApi.getLocalStaticUdpPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api, ipAddress, this.lockPublicKey);
         this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
@@ -89,21 +89,28 @@ export class Station extends TypedEmitter<StationEvents> {
         this.p2pSession.on("low battery", (channel: number) => this.onDeviceLowBattery(channel));
         this.p2pSession.on("wrong try-protect alarm", (channel: number) => this.onDeviceWrongTryProtectAlarm(channel));
         this.p2pSession.on("sd info ex", (sdStatus, sdCapacity, sdCapacityAvailable) => this.onSdInfoEx(sdStatus, sdCapacity, sdCapacityAvailable));
+        this.p2pSession.on("image download", (file, image) => this.onImageDownload(file, image));
+        this.p2pSession.on("tfcard status", (channel, status) => this.onTFCardStatus(channel, status));
+    }
+
+    protected initializeState(): void {
         this.update(this.rawStation);
         this.ready = true;
-        this.p2pConnectionType = this.eufySecurityApi.getP2PConnectionType();
         setImmediate(() => {
             this.emit("ready", this);
         });
     }
 
-    static async initialize(eufySecurityApi: EufySecurityApi, api: HTTPApi, stationData: StationListResponse, ipAddress?: string): Promise<Station> {
+    public initialize(): void {
+        this.initializeState();
+    }
+
+    static async getInstance(eufySecurityApi: EufySecurityApi, api: HTTPApi, stationData: StationListResponse, ipAddress?: string): Promise<Station> {
         let publicKey: string | undefined;
         if (Device.isLock(stationData.device_type)) {
             publicKey = await api.getPublicKey(stationData.station_sn, PublicKeyType.LOCK);
         }
-        const station = new Station(eufySecurityApi, api, stationData, ipAddress, publicKey);
-        return station;
+        return new Station(eufySecurityApi, api, stationData, ipAddress, publicKey);
     }
 
     public getStateID(state: string, level = 2): string {
@@ -156,8 +163,7 @@ export class Station extends TypedEmitter<StationEvents> {
             || this.properties[name] === undefined) {
             const oldValue = this.properties[name];
             this.properties[name] = value;
-            if (this.ready)
-                this.emit("property changed", this, name, value);
+            this.emit("property changed", this, name, value, this.ready);
             try {
                 this.handlePropertyChange(this.getPropertyMetadata(name), oldValue, this.properties[name]);
             } catch (error) {
@@ -337,6 +343,9 @@ export class Station extends TypedEmitter<StationEvents> {
             } else if (property.type === "string") {
                 const stringProperty = property as PropertyMetadataString;
                 return value !== undefined ? value : (stringProperty.default !== undefined ? stringProperty.default : "");
+            } else if (property.type === "object") {
+                const objectProperty = property as PropertyMetadataObject;
+                return value !== undefined ? value : (objectProperty.default !== undefined ? objectProperty.default : undefined);
             }
         } catch (error) {
             this.log.error("Convert Error:", { property: property, value: value, error: error });
@@ -372,7 +381,12 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     public getProperties(): PropertyValues {
-        return this.properties;
+        const result: PropertyValues = {};
+        for (const property of Object.keys(this.properties)) {
+            if (!property.startsWith("hidden-"))
+                result[property] = this.properties[property];
+        }
+        return result;
     }
 
     public getPropertiesMetadata(): IndexedProperty {
@@ -386,6 +400,10 @@ export class Station extends TypedEmitter<StationEvents> {
             metadata[PropertyName.StationSwitchModeWithAccessCode] = StationSwitchModeWithAccessCodeProperty;
             metadata[PropertyName.StationAutoEndAlarm] = StationAutoEndAlarmProperty;
             metadata[PropertyName.StationTurnOffAlarmWithButton] = StationTurnOffAlarmWithButtonProperty;
+        }
+        for (const property of Object.keys(metadata)) {
+            if (property.startsWith("hidden-"))
+                delete metadata[property];
         }
         return metadata;
     }
@@ -542,6 +560,8 @@ export class Station extends TypedEmitter<StationEvents> {
                 if (message.alarm_type !== undefined)
                     this.emit("alarm event", this, message.alarm_type);
             }
+        } else if (message.msg_type === CusPushEvent.TFCARD && message.station_sn === this.getSerial() && message.tfcard_status !== undefined) {
+            this.updateRawProperty(CommandType.CMD_GET_TFCARD_STATUS, message.tfcard_status.toString());
         }
     }
 
@@ -6200,7 +6220,7 @@ export class Station extends TypedEmitter<StationEvents> {
             this.p2pSession.startTalkback(device.getChannel());
             this.emit("command result", this, {
                 channel: device.getChannel(),
-                command_type: 0,
+                command_type: CommandType.CMD_START_TALKBACK,
                 return_code: 0,
                 customData: {
                     command: commandData
@@ -6245,7 +6265,7 @@ export class Station extends TypedEmitter<StationEvents> {
             this.p2pSession.stopTalkback(device.getChannel());
             this.emit("command result", this, {
                 channel: device.getChannel(),
-                command_type: 0,
+                command_type: CommandType.CMD_STOP_TALKBACK,
                 return_code: 0,
                 customData: {
                     command: commandData
@@ -7386,6 +7406,39 @@ export class Station extends TypedEmitter<StationEvents> {
         } else {
             throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
+    }
+
+    private onImageDownload(file: string, image: Buffer): void {
+        this.emit("image download", this, file, image);
+    }
+
+    public async downloadImage(cover_path: string): Promise<void> {
+        const commandData: CommandData = {
+            name: CommandName.StationDownloadImage,
+            value: cover_path
+        };
+        if (!this.hasCommand(CommandName.StationDownloadImage)) {
+            throw new NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
+        }
+        this.log.debug(`Sending download image command to station ${this.getSerial()}`);
+        await this.p2pSession.sendCommandWithStringPayload({
+            commandType: CommandType.CMD_SET_PAYLOAD,
+            value: JSON.stringify({
+                account_id: this.rawStation.member.admin_user_id,
+                cmd: CommandType.CMD_DATABASE_IMAGE,
+                mChannel: Station.CHANNEL, //TODO: Check indoor devices
+                payload: [{ "file": cover_path }],
+                "transaction": cover_path
+            }),
+            channel: Station.CHANNEL, //TODO: Check indoor devices
+            strValueSub: this.rawStation.member.admin_user_id,
+        }, {
+            command: commandData,
+        });
+    }
+
+    private onTFCardStatus(channel: number, status: TFCardStatus): void {
+        this.updateRawProperty(CommandType.CMD_GET_TFCARD_STATUS, status.toString());
     }
 
 }

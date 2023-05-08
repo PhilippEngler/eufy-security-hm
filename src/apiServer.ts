@@ -105,7 +105,7 @@ class ApiServer
             url = [];
         }
 
-        // We use 'GET' for nearly all function of the api, exept updateing the config
+        // we use 'GET' for all api-functions exept setConfig and uploadConfig
         if(request.method == "GET")
         {
             if(url.length > 1)
@@ -418,6 +418,16 @@ class ApiServer
                             responseString = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "connect":
+                        if(url.length == 3)
+                        {
+                            responseString = await api.connectStation(url[2]);
+                        }
+                        else
+                        {
+                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getTimeZones":
                         responseString = api.getTimeZones();
                         break;
@@ -491,7 +501,7 @@ class ApiServer
                 response.end(responseString);
             }
         }
-        // We must handele the change config throught POST based on the form data we receive...
+        // using 'POST' for setConfig and uploadConfig
         else if(request.method == "POST")
         {
             if(url.length > 1)
