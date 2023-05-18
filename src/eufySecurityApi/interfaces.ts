@@ -4,10 +4,10 @@ import { Device } from "./http/device";
 import { HTTPApiPersistentData, Picture, PropertyValue, Schedule } from "./http/interfaces";
 import { Station } from "./http/station";
 import { DeviceSmartLockMessage } from "./mqtt/model";
-import { StreamMetadata } from "./p2p/interfaces";
+import { DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata } from "./p2p/interfaces";
 import { CommandResult } from "./p2p/models";
 import { TalkbackStream } from "./p2p/talkback";
-import { AlarmEvent, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p/types";
+import { AlarmEvent, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p/types";
 import { Credentials, PushMessage } from "./push/models";
 
 export interface StationIPAddresses {
@@ -72,6 +72,7 @@ export interface EufySecurityEvents {
     "device low battery": (device: Device, state: boolean) => void;
     "device jammed": (device: Device, state: boolean) => void;
     "device pin verified": (device: Device, successfull: boolean) => void;
+    "devices loaded": () => void;
     "station added": (station: Station) => void;
     "station removed": (station: Station) => void;
     "station livestream start": (station: Station, device: Device, metadata: StreamMetadata, videostream: Readable, audiostream: Readable) => void;
@@ -96,6 +97,10 @@ export interface EufySecurityEvents {
     "station talkback start": (station: Station, device: Device, talkbackStream: TalkbackStream) => void;
     "station talkback stop": (station: Station, device: Device) => void;
     "station image download": (station: Station, file: string, image: Picture) => void;
+    "station database query latest": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>) => void;
+    "station database query local": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLocal>) => void;
+    "station database count by date": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>) => void;
+    "station database delete": (station: Station, returnCode: DatabaseReturnCode, failedIds: Array<unknown>) => void;
     "push connect": () => void;
     "push close": () => void;
     "push message": (message: PushMessage) => void;
