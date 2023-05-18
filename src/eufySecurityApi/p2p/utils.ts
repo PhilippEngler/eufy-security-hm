@@ -1,6 +1,6 @@
 import { Socket } from "dgram";
 import NodeRSA from "node-rsa";
-import CryptoJS from "crypto-js"
+import * as CryptoJS from "crypto-js"
 import { randomBytes, createCipheriv, createECDH, ECDH, createHmac, createDecipheriv } from "crypto";
 import * as os from "os";
 

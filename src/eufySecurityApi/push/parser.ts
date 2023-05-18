@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as path from "path";
-import { BufferReader, load, Root } from "protobuf-typescript";
+import { BufferReader, load, Root } from "protobufjs";
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import { MessageTag, ProcessingState } from "./models";

@@ -143,7 +143,7 @@ export class Station extends TypedEmitter<StationEvents> {
         this.rawStation = station;
         if(this.p2pSession != null)
         {
-        this.p2pSession.updateRawStation(station);
+            this.p2pSession.updateRawStation(station);
         }
 
         const metadata = this.getPropertiesMetadata(true);
