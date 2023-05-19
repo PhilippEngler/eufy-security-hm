@@ -4,9 +4,8 @@ import { DeviceNotFoundError, ReadOnlyPropertyError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
 import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture } from './http';
 import { EufySecurityEvents } from './interfaces';
-import { SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
+import { DatabaseQueryLocal, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue, waitForEvent } from "./utils";
-import { convertTimeStampToTimeStampMs } from "./utils/utils";
 
 /**
  * Represents all the Devices in the account.
@@ -16,12 +15,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private api : EufySecurityApi;
     private httpService : HTTPApi;
     private devices : { [deviceSerial : string] : any } = {};
-    private lastVideoTimeForDevices : { [deviceSerial : string] : number | undefined } = {};
+    private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
     private devicesLoaded = false;
     private loadingEmitter = new EventEmitter();
-    private deviceSnoozeTimeout : {
-        [dataType : string] : NodeJS.Timeout;
-    } = {};
+    private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
+    private deviceImageLoadTimeout : { [deviceSerial : string] : NodeJS.Timeout } = {};
 
     /**
      * Create the Devices objects holding all devices in the account.
@@ -183,6 +181,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.loadingEmitter.emit("devices loaded");
             });
 
+            if (promises.length === 0)
+            {
+                this.devicesLoaded = true;
+                this.loadingEmitter.emit("devices loaded");
+            }
+
             for (const deviceSN of deviceSNs)
             {
                 if (!newDeviceSNs.includes(deviceSN))
@@ -194,6 +198,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     });
                 }
             }
+
+            this.emit("devices loaded");
         }
     }
 
@@ -207,11 +213,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         if (serial && !Object.keys(this.devices).includes(serial))
         {
             this.devices[serial] = device;
-            this.lastVideoTimeForDevices[serial] = undefined;
-            if(this.api.getApiUsePushService())
-            {
-                this.setLastVideoTimeFromCloud(device);
-            }
+            this.devicesHistory[serial] = [];
             this.emit("device added", device);
 
             if (device.isLock())
@@ -795,8 +797,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onCryingDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logInfo(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.setLastVideoTimeNow(device.getSerial());
+        this.api.logDebug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.loadDeviceImage(device.getSerial());
+        //this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -806,8 +809,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onSoundDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logInfo(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.setLastVideoTimeNow(device.getSerial());
+        this.api.logDebug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.loadDeviceImage(device.getSerial());
+        //this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -817,8 +821,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onPetDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logInfo(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.setLastVideoTimeNow(device.getSerial());
+        this.api.logDebug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.loadDeviceImage(device.getSerial());
+        //this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -828,8 +833,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onVehicleDetected(device: Device, state: boolean): void
     {
-        this.api.logInfo(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.setLastVideoTimeNow(device.getSerial());
+        this.api.logDebug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
+        this.loadDeviceImage(device.getSerial());
+        //this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -840,7 +846,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onMotionDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.setLastVideoTimeNow(device.getSerial());
+        this.loadDeviceImage(device.getSerial());
+        //this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -852,7 +859,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPersonDetected(device : Device, state : boolean, person : string) : Promise<void>
     {
         this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
-        this.setLastVideoTimeNow(device.getSerial());
+        this.loadDeviceImage(device.getSerial());
+        //this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -862,8 +870,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onRings(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logInfo(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
-        this.setLastVideoTimeNow(device.getSerial());
+        this.api.logDebug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
+        //this.setLastVideoTimeNow(device.getSerial());
     }
 
     /**
@@ -873,7 +881,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onLocked(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logInfo(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
+        this.api.logDebug(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
     }
 
     /**
@@ -883,7 +891,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onOpen(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logInfo(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
+        this.api.logDebug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
     }
 
     /**
@@ -1076,64 +1084,132 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Retrieves the last video event for the given device.
-     * @param device The device.
-     * @returns The time as timestamp or undefined.
+     * Add a given event result to the local store if the event is not already stored.
+     * @param deviceSerial The serial of the device.
+     * @param eventResult The event result data.
+     * @returns 
      */
-    private async getLastVideoTimeFromCloud(device : Device) : Promise <number | undefined>
+    public addEventResultForDevice(deviceSerial : string, eventResult : DatabaseQueryLocal)
     {
-        if(!(device.getStationSerial().startsWith("T8030")))
+        for (let event of this.devicesHistory[deviceSerial])
         {
-            var lastVideoTime = await this.httpService.getAllVideoEvents({deviceSN : device.getSerial()}, 1);
-            if(lastVideoTime !== undefined && lastVideoTime.length >= 1)
+            if(event.record_id === eventResult.record_id)
             {
-                return lastVideoTime[0].create_time;
+                return;
             }
         }
-        return undefined;
+        this.devicesHistory[deviceSerial].push(eventResult);
     }
 
     /**
-     * Set the last video time to the array.
+     * Returns the stored events for a given device.
      * @param deviceSerial The serial of the device.
-     * @param time The time as timestamp or undefined.
+     * @returns The stored events.
      */
-    private setLastVideoTime(deviceSerial : string, timeStamp : number | undefined, timeStampType : string) : void
+    public getEventResultsForDevice(deviceSerial : string) : DatabaseQueryLocal[]
     {
-        if(timeStamp !== undefined)
+        return this.devicesHistory[deviceSerial];
+    }
+
+    /**
+     * Set the tomeout of one minute to download image of last event.
+     * @param deviceSerial The serial of the device.
+     */
+    private loadDeviceImage(deviceSerial : string)
+    {
+        if (this.deviceImageLoadTimeout[deviceSerial] !== undefined)
         {
-            timeStamp = convertTimeStampToTimeStampMs(timeStamp, timeStampType);
+            clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
         }
-        this.lastVideoTimeForDevices[deviceSerial] = timeStamp;
-        this.api.updateCameraEventTimeSystemVariable(deviceSerial, this.lastVideoTimeForDevices[deviceSerial]);
+
+        this.deviceImageLoadTimeout[deviceSerial] = setTimeout(() => { this.getDeviceImage(deviceSerial) }, 60 * 1000);
     }
 
     /**
-     * Helper function to retrieve the last event time from cloud and set the value to the array.
-     * @param device The device.
-     */
-    private async setLastVideoTimeFromCloud(device : Device) : Promise<void>
-    {
-        this.setLastVideoTime(device.getSerial(), await this.getLastVideoTimeFromCloud(device), "sec");
-    }
-
-    /**
-     * Set the time for the last video to the current time.
+     * Helper for removing timeout and initiate download of the image of the last event.
      * @param deviceSerial The serial of the device.
      */
-    private setLastVideoTimeNow(deviceSerial : string) : void
+    private getDeviceImage(deviceSerial : string)
     {
-        this.setLastVideoTime(deviceSerial, new Date().getTime(), "ms");
+        if (this.deviceImageLoadTimeout[deviceSerial] !== undefined)
+        {
+            clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
+        }
+
+        this.getDeviceEvents(deviceSerial);
     }
 
     /**
-     * Retrieve the last video time from the array.
+     * Retrieves the events of the given device.
      * @param deviceSerial The serial of the device.
-     * @returns The timestamp as number or undefined.
      */
-    public getLastVideoTime(deviceSerial : string) : number | undefined
+    public async getDeviceEvents(deviceSerial : string)
     {
-        return this.lastVideoTimeForDevices[deviceSerial];
+        var device = await this.getDevice(deviceSerial);
+        var station = await this.api.getStation(device.getStationSerial());
+        var deviceSerials : string[] = [];
+        var dateEnd = new Date(Date.now())
+        var dateStart = new Date(dateEnd.getFullYear()-1, dateEnd.getMonth(), dateEnd.getDate());
+
+        deviceSerials.push(device.getSerial());
+        if(device)
+        {
+            station.databaseQueryLocal(deviceSerials, dateStart, dateEnd);
+        }
+    }
+
+    /**
+     * Retrieves the events of all devices.
+     */
+    public async getDevicesEvents()
+    {
+        var devices = await this.getDevices();
+        var stations = await this.api.getStations();
+        var dateEnd = new Date(Date.now())
+        var dateStart = new Date(dateEnd.getFullYear()-1, dateEnd.getMonth(), dateEnd.getDate());
+
+        for(let station in stations)
+        {
+            let deviceSerials : string[] = [];
+            for(let device in devices)
+            {
+                if(devices[device].getStationSerial() === stations[station].getSerial())
+                {
+                    deviceSerials.push(devices[device].getSerial());
+                }
+            }
+
+            stations[station].databaseQueryLocal(deviceSerials, dateStart, dateEnd);
+        }
+    }
+
+    /**
+     * Downloads the image of the last event for the given device.
+     * @param deviceSerial The serial of the device.
+     */
+    public async downloadLatestImageForDevice(deviceSerial : string)
+    {
+        var device = await this.getDevice(deviceSerial);
+        var station = await this.api.getStation(device.getStationSerial());
+        var results = this.getEventResultsForDevice(deviceSerial);
+        if(results.length > 0 && results[results.length -1].history.thumb_path)
+        {
+            station.downloadImage(results[results.length -1].history.thumb_path);
+        }
+    }
+
+    /**
+     * Returns the timestamp of the last event for the given device.
+     * @param deviceSerial The serial of the device.
+     * @returns The timestamp or undefinied.
+     */
+    public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
+    {
+        if(this.devicesHistory[deviceSerial] === undefined || this.devicesHistory[deviceSerial].length == 0)
+        {
+            return undefined;
+        }
+        return this.devicesHistory[deviceSerial][this.devicesHistory[deviceSerial].length -1].history.start_time.valueOf();
     }
 
     /**

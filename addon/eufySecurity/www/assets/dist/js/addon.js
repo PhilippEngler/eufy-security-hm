@@ -530,7 +530,7 @@ function createCardDevice(device)
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
 	card += `<div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.batteryTemperature, "&deg;C")}</div>`;
 	card += `</div></div></div>`;
-	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device.pictureTime, device.pictureUrl)}</small></div>`;
+	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device)}</small></div>`;
 	card += `</div></div>`;
 
 	return card;
@@ -548,13 +548,13 @@ function createDeviceTypeCardsContainer(typeName, firendlyTypeName, cards)
 	}
 }
 
-function getDeviceLastEventTime(time, url)
+function getDeviceLastEventTime(device)
 {
-	if(time !== undefined && time != "" && time != "n/a" && time != "n/d" && time != "0")
+	if(device.pictureTime !== undefined && device.pictureTime != "" && device.pictureTime != "n/a" && device.pictureTime != "n/d" && device.pictureTime != "0")
 	{
-		return `letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(time)))} | <a href="${url}">Standbild</a>`;
+		return `letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(device.pictureTime)))} | <a href="javascript:generateDeviceImageModal('${device.serialNumber}','${device.name}');">Standbild</a>`;
 	}
-	else if(time === undefined || time == "n/a")
+	else if(device.pictureTime === undefined || device.pictureTime == "n/a")
 	{
 		return "keine Aufnahme verfügbar";
 	}
@@ -648,6 +648,34 @@ function generateContentStationDeviceSettingsSelectionModal(deviceId, deviceName
 					</div>`;
 	
 	document.getElementById("modalSelectStationDevice").innerHTML = stationDeviceModal;
+}
+
+function generateDeviceImageModal(deviceId, deviceName)
+{
+	generateContentDeviceImageModal(deviceId, deviceName);
+
+	const myModal = new bootstrap.Modal(document.getElementById('modalDeviceImage'));
+	myModal.show();
+}
+
+function generateContentDeviceImageModal(deviceId, deviceName)
+{
+	var deviceImage = `
+					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
+						<div class="modal-content">
+							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
+								<h5 class="mb-0">${deviceName} (${deviceId})</h5>
+							</div>
+							<div class="modal-body text-center" id="divModalDeviceSettingsContent">
+								<img src="${location.protocol}//${location.hostname}:${port}/getDeviceImage/${deviceId}" class="img-fluid" alt="Standbild">
+							</div>
+							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined, true)}
+							</div>
+						</div>
+					</div>`;
+	
+	document.getElementById("modalDeviceImage").innerHTML = deviceImage;
 }
 
 function generateDeviceSettingsModal(deviceId, deviceName)

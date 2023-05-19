@@ -1,5 +1,8 @@
+import path from 'path'
+import { existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync, mkdirSync } from 'fs';
+
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera, Picture } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -8,7 +11,7 @@ import { MqttService } from './mqttService';
 import { generateUDID, generateSerialnumber } from './utils';
 import { Devices } from './devices'
 import { Stations } from './stations';
-import { P2PConnectionType } from './p2p';
+import { DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from './p2p';
 import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
 import { NotSupportedError, ReadOnlyPropertyError } from './error';
@@ -437,6 +440,12 @@ export class EufySecurityApi
             this.updateApiPersistentData(this.httpService.getPersistentData()!);
         }
 
+        this.stations.on("station image download", (station: Station, file: string, image: Picture) => this.onStationImageDownload(station, file, image));
+        this.stations.on("station database query local", (station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]) => this.onStationDatabaseQueryLocal(station, returnCode, data));
+
+        //this.devices.on("device added", (device: Device) => this.onDeviceAdded(device));
+        this.devices.once("devices loaded", () => this.onDevicesLoaded());
+
         await sleep(10);
         await this.refreshCloudData();
 
@@ -504,6 +513,91 @@ export class EufySecurityApi
     {
         //this.emit("tfa request");
         this.logInfo(`A tfa (two factor authentication) request received. This addon does not support tfa at the moment.`);
+    }
+
+    /**
+     * The action to be performed when event station image download is fired.
+     * @param station The station as Station object.
+     * @param file The file name.
+     * @param image The image.
+     */
+    private async onStationImageDownload(station : Station, file : string, image : Picture)
+    {
+        /*var filename = path.basename(file);
+        var filenameContent = path.parse(file).name.split("_c", 2);
+        var channel = filenameContent[1];
+        var device = (await this.devices.getDeviceByStationAndChannel(station.getSerial(), Number.parseInt(channel))).getSerial();
+        try
+        {
+            if(!existsSync(`/var/eufySecurity/images/${station.getSerial()}/${device}/`))
+            {
+                mkdirSync(`/var/eufySecurity/images/${station.getSerial()}/${device}/`, { recursive: true });
+            }
+            else
+            {
+                var files = readdirSync(`/var/eufySecurity/images/${station.getSerial()}/${device}/`)
+                for(var file in files)
+                {
+                    if(filename !== files[file])
+                    {
+                        unlinkSync(path.join(`/var/eufySecurity/images/${station.getSerial()}/${device}/`, files[file]));
+                    }
+                }
+            }
+            writeFileSync(`/var/eufySecurity/images/${station.getSerial()}/${device}/${filename}`, image.data);
+        }
+        catch (error : any)
+        {
+            this.logInfo(`Error occured: ${error.message}`);
+        }*/
+    }
+
+    /**
+     * The action to be performed when event station database query local is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    private async onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[])
+    {
+        var deviceSerials : string[] = [];
+        if(returnCode == 0 && data && data.length > 0)
+        {
+            for(let i=0; i<data.length; i++)
+            {
+                let deviceSerial = data[i].device_sn;
+                if(deviceSerial)
+                {
+                    if(!deviceSerials.includes(deviceSerial))
+                    {
+                        deviceSerials.push(deviceSerial);
+                    }
+                    this.devices.addEventResultForDevice(deviceSerial, data[i]);
+                }
+            }
+
+            for(let deviceSerial in deviceSerials)
+            {
+                this.devices.downloadLatestImageForDevice(deviceSerials[deviceSerial]);
+            }
+        }
+    }
+
+    /**
+     * The action to be performed when event device added is fired.
+     * @param device The device as Device object.
+     */
+    private async onDeviceAdded(device : Device)
+    {
+        this.devices.getDeviceEvents(device.getSerial());
+    }
+
+    /**
+     * The action to be performed when event devices loaded is fired.
+     */
+    private async onDevicesLoaded()
+    {
+        this.devices.getDevicesEvents();
     }
 
     /**
@@ -797,9 +891,9 @@ export class EufySecurityApi
                 case PropertyName.SoftwareVersion:
                 case PropertyName.DeviceStationSN:
                     break;
-                case PropertyName.DevicePictureUrl:
-                    json[property] = properties[property] === undefined ? "n/a" : properties[property];
-                    json.pictureTime = this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastVideoTime(device.getSerial()) === undefined ? "n/a" : this.devices.getLastVideoTime(device.getSerial()));
+                case PropertyName.DevicePicture:
+                    //json[property] = properties[property] === undefined ? "n/a" : properties[property];
+                    json.pictureTime = this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastEventTimeForDevice(device.getSerial()) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(device.getSerial()));
                     break;
                 default:
                     json[property] = properties[property] === undefined ? "n/a" : properties[property];
@@ -867,6 +961,21 @@ export class EufySecurityApi
         await this.devices.loadDevices();
             
         return this.devices;
+    }
+
+    /**
+     * Returns the last event picture of a given device.
+     * @param deviceSerial The serial of the device.
+     * @returns The picture.
+     */
+    public async getDeviceImage(deviceSerial : string) : Promise<any>
+    {
+        var device = (await this.getDevices())[deviceSerial];
+        if(device)
+        {
+            return device.getPropertyValue(PropertyName.DevicePicture) as Picture
+        }
+        return null;
     }
 
     /**
@@ -1952,7 +2061,7 @@ export class EufySecurityApi
                         }
                         if(device !== undefined)
                         {
-                            json.data.push({"deviceSerial":deviceSerial, "pictureUrl":(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T")) ? this.config.getCameraDefaultImage() : device.getLastCameraImageURL(), "pictureTime":this.devices.getLastVideoTime(deviceSerial) === undefined ? "n/a" : this.devices.getLastVideoTime(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
+                            json.data.push({"deviceSerial":deviceSerial, "pictureUrl":(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T")) ? this.config.getCameraDefaultImage() : device.getLastCameraImageURL(), "pictureTime":this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
                             if(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T"))
                             {
                                 this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
@@ -2956,6 +3065,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.5.0-b266";
+        return "2.6.2";
     }
 }

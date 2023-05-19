@@ -7,10 +7,11 @@ import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, 
 import internal from "stream";
 import EventEmitter from "events";
 import imageType from "image-type";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata, TFCardStatus } from "./p2p";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
+import path from "path";
 
 /**
  * Represents all the stations in the account.
@@ -133,6 +134,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(station, "DevicePinVerified", false);
                 this.addEventListener(station, "SdInfoEx", false);
                 this.addEventListener(station, "ImageDownload", false);
+                this.addEventListener(station, "DatabaseQueryLocal", false);
 
                 this.addStation(station);
             }
@@ -142,6 +144,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.stationsLoaded = true;
             this.loadingEmitter.emit("stations loaded");
         });
+
+        if (promises.length === 0)
+        {
+            this.stationsLoaded = true;
+            this.loadingEmitter.emit("stations loaded");
+        }
 
         for (const stationSerial of stationsSerials)
         {
@@ -309,6 +317,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.stations[stationSerial], "DevicePinVerified");
                     this.removeEventListener(this.stations[stationSerial], "SdInfoEx");
                     this.removeEventListener(this.stations[stationSerial], "ImageDownload");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseQueryLocal");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
@@ -853,6 +862,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.on("image download", (station: Station, file: string, image: Buffer) => this.onStationImageDownload(station, file, image));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("image download")} Listener.`);
                 break;
+            case "DatabaseQueryLocal":
+                station.on("database query local", (station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]) => this.onStationDatabaseQueryLocal(station, returnCode, data));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -1011,6 +1024,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeAllListeners("sd info ex");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sd info ex")} Listener.`);
                 break;
+            case "ImageDownload":
+                station.removeAllListeners("image download");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("image download")} Listener.`);
+                break;
+            case "DatabaseQueryLocal":
+                station.removeAllListeners("database query local");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -1097,6 +1118,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 return station.listenerCount("device pin verified");
             case "SdInfoEx":
                 return station.listenerCount("sd info ex");
+            case "ImageDownload":
+                return station.listenerCount("image download");
+            case "DatabaseQueryLocal":
+                return station.listenerCount("database query local");
         }
         return -1;
     }
@@ -1815,6 +1840,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
     }
 
+    /**
+     * The action to be performed when event station image download is fired.
+     * @param station The station as Station object.
+     * @param file The file name.
+     * @param image The image.
+     */
     private onStationImageDownload(station: Station, file: string, image: Buffer): void
     {
         const type = imageType(image);
@@ -1825,9 +1856,16 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.emit("station image download", station, file, picture);
 
         this.api.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
+            var filename = path.parse(file).name;
+            var channel = 0;
+            if(filename.includes("_c"))
+            {
+                channel = Number.parseInt(filename.split("_c", 2)[1]);
+            }
             for (const device of devices) {
-                if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && (device.getPropertyValue(PropertyName.DevicePicture) === undefined || device.getPropertyValue(PropertyName.DevicePicture) === null)) {
-                    this.api.logDebug(`onStationImageDownload - Set first picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
+                //if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && (device.getPropertyValue(PropertyName.DevicePicture) === undefined || device.getPropertyValue(PropertyName.DevicePicture) === null)) {
+                if (device.getSerial() === station.getSerial() || device.getChannel() === channel) {
+                    this.api.logDebug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
                     device.updateProperty(PropertyName.DevicePicture, picture);
                     break;
                 }
@@ -1835,6 +1873,17 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }).catch((error : any) => {
             this.api.logError(`onStationImageDownload - Set first picture error`, error);
         });
+    }
+
+    /**
+     * The action to be performed when event station database query local is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    private onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[])
+    {
+        this.emit("station database query local", station, returnCode, data);
     }
 
     /**
