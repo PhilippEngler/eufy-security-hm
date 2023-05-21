@@ -257,6 +257,13 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/node_modules/.bin/mediainfo.js ]; then
     rm ${ADDON_DIR}/node_modules/.bin/mediainfo.js
   fi
+  # remove unused node_modules files from versions lower than 2.1
+  if [ -e ${ADDON_DIR}/node_modules/js-sdsl ]; then
+    rm ${ADDON_DIR}/node_modules/js-sdsl
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/protobuf-typescript ]; then
+    rm ${ADDON_DIR}/node_modules/protobuf-typescript
+  fi
   # remove unused asset files
   if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css ]; then
     rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.css
