@@ -26,7 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PushClientParser = void 0;
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 const path = __importStar(require("path"));
-const protobuf_typescript_1 = require("protobuf-typescript");
+const protobufjs_1 = require("protobufjs");
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const models_1 = require("./models");
 class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
@@ -52,7 +52,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
         this.removeAllListeners();
     }
     static async init(log) {
-        this.proto = await (0, protobuf_typescript_1.load)(path.join(__dirname, "./proto/mcs.proto"));
+        this.proto = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/mcs.proto"));
         return new PushClientParser(log);
     }
     handleData(newData) {
@@ -108,7 +108,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
     }
     onGotMessageSize() {
         let incompleteSizePacket = false;
-        const reader = new protobuf_typescript_1.BufferReader(this.data);
+        const reader = new protobufjs_1.BufferReader(this.data);
         try {
             this.messageSize = reader.int32();
         }
@@ -210,5 +210,5 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
 }
-exports.PushClientParser = PushClientParser;
 PushClientParser.proto = null;
+exports.PushClientParser = PushClientParser;

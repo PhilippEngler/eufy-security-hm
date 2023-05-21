@@ -184,5 +184,5 @@ class BleCommandFactory {
         return Buffer.concat([data, Buffer.from([hash])]);
     }
 }
-exports.BleCommandFactory = BleCommandFactory;
 BleCommandFactory.HEADER = Buffer.from([-1, 9]);
+exports.BleCommandFactory = BleCommandFactory;

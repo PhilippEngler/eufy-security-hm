@@ -64,7 +64,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             serverPublicKey: this.SERVER_PUBLIC_KEY
         };
         this.headers = {
-            App_version: "v4.5.1_1523",
+            App_version: "v4.6.0_1630",
             Os_type: "android",
             Os_version: "31",
             Phone_model: "ONEPLUS A3003",
@@ -320,6 +320,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                                 this.connected = true;
                                 this.emit("connect");
                             }
+                            else {
+                                this.emit("auth token renewed", this.token, this.tokenExpiration);
+                            }
                             this.scheduleRenewAuthToken();
                         }
                         else if (result.code == types_1.ResponseErrorCode.CODE_NEED_VERIFY_CODE) {
@@ -490,9 +493,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        const stationList = this.decryptAPIData(result.data);
-                        this.log.debug("Decrypted station list data", stationList);
-                        return stationList;
+                        if (result.data) {
+                            const stationList = this.decryptAPIData(result.data);
+                            this.log.debug("Decrypted station list data", stationList);
+                            return stationList;
+                        }
                     }
                     else {
                         this.log.error("Response code not ok", { code: result.code, msg: result.msg });
@@ -527,9 +532,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        const deviceList = this.decryptAPIData(result.data);
-                        this.log.debug("Decrypted device list data", deviceList);
-                        return deviceList;
+                        if (result.data) {
+                            const deviceList = this.decryptAPIData(result.data);
+                            this.log.debug("Decrypted device list data", deviceList);
+                            return deviceList;
+                        }
                     }
                     else {
                         this.log.error("Response code not ok", { code: result.code, msg: result.msg });
@@ -552,12 +559,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             houses.forEach(element => {
                 this.houses[element.house_id] = element;
             });
-            if (Object.keys(this.houses).length > 0)
-                this.emit("houses", this.houses);
         }
         else {
             this.log.info("No houses found.");
         }
+        this.emit("houses", this.houses);
     }
     async refreshStationData() {
         //Get Stations
@@ -566,12 +572,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             stations.forEach(element => {
                 this.hubs[element.station_sn] = element;
             });
-            if (Object.keys(this.hubs).length > 0)
-                this.emit("hubs", this.hubs);
         }
         else {
             this.log.info("No stations found.");
         }
+        this.emit("hubs", this.hubs);
     }
     async refreshDeviceData() {
         //Get Devices
@@ -580,12 +585,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             devices.forEach(element => {
                 this.devices[element.device_sn] = element;
             });
-            if (Object.keys(this.devices).length > 0)
-                this.emit("devices", this.devices);
         }
         else {
             this.log.info("No devices found.");
         }
+        this.emit("devices", this.devices);
     }
     async refreshAllData() {
         //Get the latest info
@@ -598,11 +602,12 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     }
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     async request(request) {
-        this.log.debug("Request:", { method: request.method, endpoint: request.endpoint, token: this.token, data: request.data });
+        this.log.debug("Request:", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
         try {
             const internalResponse = await this.requestEufyCloud(request.endpoint, {
                 method: request.method,
                 json: request.data,
+                responseType: request.responseType !== undefined ? request.responseType : "json"
             });
             const response = {
                 status: internalResponse.statusCode,
@@ -865,12 +870,18 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        const dataresult = this.decryptAPIData(result.data);
-                        if (dataresult) {
-                            dataresult.forEach(record => {
-                                this.log.debug(`${functionName} - Record:`, record);
-                                records.push(record);
-                            });
+                        if (result.data) {
+                            const dataresult = this.decryptAPIData(result.data);
+                            this.log.debug(`${functionName} - Decrypted data:`, dataresult);
+                            if (dataresult) {
+                                dataresult.forEach(record => {
+                                    this.log.debug(`${functionName} - Record:`, record);
+                                    records.push(record);
+                                });
+                            }
+                        }
+                        else {
+                            this.log.error("Response data is missing", { code: result.code, msg: result.msg, data: result.data });
                         }
                     }
                     else {
@@ -932,7 +943,10 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             const invites = {};
                             result.data.forEach((invite) => {
                                 invites[invite.invite_id] = invite;
-                                invites[invite.invite_id].devices = JSON.parse(invites[invite.invite_id].devices);
+                                let data = (0, utils_2.parseJSON)(invites[invite.invite_id].devices, this.log);
+                                if (data === undefined)
+                                    data = [];
+                                invites[invite.invite_id].devices = data;
                             });
                             return invites;
                         }
@@ -1018,23 +1032,25 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         return "";
     }
     decryptAPIData(data, json = true) {
-        let decryptedData;
-        try {
-            decryptedData = (0, utils_1.decryptAPIData)(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex")));
-        }
-        catch (error) {
-            this.log.error("Data decryption error, invalidating session data and reconnecting...", error);
-            this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
-            this.invalidateToken();
-            this.emit("close");
-        }
-        if (decryptedData) {
+        if (data) {
+            let decryptedData;
+            try {
+                decryptedData = (0, utils_1.decryptAPIData)(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex")));
+            }
+            catch (error) {
+                this.log.error("Data decryption error, invalidating session data and reconnecting...", error);
+                this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
+                this.invalidateToken();
+                this.emit("close");
+            }
+            if (decryptedData) {
+                if (json)
+                    return (0, utils_2.parseJSON)(decryptedData.toString("utf-8"), this.log);
+                return decryptedData.toString();
+            }
             if (json)
-                return JSON.parse(decryptedData.toString());
-            return decryptedData.toString();
+                return {};
         }
-        if (json)
-            return {};
         return undefined;
     }
     async getSensorHistory(stationSN, deviceSN) {
@@ -1387,6 +1403,33 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         }
         return false;
     }
+    async getImage(deviceSN, url) {
+        if (this.connected) {
+            try {
+                const device = this.devices[deviceSN];
+                if (device) {
+                    const station = this.hubs[device.station_sn];
+                    if (station) {
+                        const response = await this.request({
+                            method: "GET",
+                            endpoint: new URL(url),
+                            responseType: "buffer"
+                        });
+                        if (response.status == 200) {
+                            return (0, utils_1.decodeImage)(station.p2p_did, response.data);
+                        }
+                        else {
+                            this.log.error("Status return code not 200", { status: response.status, statusText: response.statusText });
+                        }
+                    }
+                }
+            }
+            catch (error) {
+                this.log.error("Generic Error:", error);
+            }
+        }
+        return Buffer.alloc(0);
+    }
 }
-exports.HTTPApi = HTTPApi;
 HTTPApi.apiDomainBase = "https://extend.eufylife.com";
+exports.HTTPApi = HTTPApi;

@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mergeDeep = exports.validValue = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
+exports.waitForEvent = exports.parseJSON = exports.mergeDeep = exports.validValue = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const removeLastChar = function (text, char) {
@@ -179,3 +179,29 @@ const mergeDeep = function (target, source) {
     return target;
 };
 exports.mergeDeep = mergeDeep;
+const parseJSON = function (data, log) {
+    try {
+        return JSON.parse(data.replace(/[\0]+$/g, ""));
+    }
+    catch (error) {
+        log.error("JSON parse error", data, error);
+    }
+    return undefined;
+};
+exports.parseJSON = parseJSON;
+function waitForEvent(emitter, event) {
+    return new Promise((resolve, reject) => {
+        const success = (val) => {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            emitter.off("error", fail);
+            resolve(val);
+        };
+        const fail = (err) => {
+            emitter.off(event, success);
+            reject(err);
+        };
+        emitter.once(event, success);
+        emitter.once("error", fail);
+    });
+}
+exports.waitForEvent = waitForEvent;

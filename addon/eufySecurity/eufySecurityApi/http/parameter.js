@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParameterHelper = void 0;
 const types_1 = require("../p2p/types");
 const utils_1 = require("../p2p/utils");
+const utils_2 = require("../utils");
 const types_2 = require("./types");
 class ParameterHelper {
     static readValue(type, value, log) {
@@ -20,7 +21,7 @@ class ParameterHelper {
                 type === types_1.CommandType.CELLULAR_INFO) {
                 try {
                     if (typeof value === "string") {
-                        return JSON.parse((0, utils_1.decodeBase64)(value).toString("utf8"));
+                        return (0, utils_2.parseJSON)((0, utils_1.decodeBase64)(value).toString("utf8"), log);
                     }
                     else {
                         return value; //return object
@@ -43,7 +44,7 @@ class ParameterHelper {
                 type === types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_GUARD_VOICE) {
                 if (typeof value === "string") {
                     try {
-                        return JSON.parse(value); //return object
+                        return (0, utils_2.parseJSON)(value, log); //return object
                     }
                     catch (error) {
                         log.error(`Error readValue param ${type} `, error, type, value);

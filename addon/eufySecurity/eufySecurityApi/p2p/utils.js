@@ -26,17 +26,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.analyzeCodec = exports.initMediaInfo = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MEDIA_INFO = exports.MAGIC_WORD = void 0;
+exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
-const crypto_js_1 = __importDefault(require("crypto-js"));
+const CryptoJS = __importStar(require("crypto-js"));
 const crypto_1 = require("crypto");
 const os = __importStar(require("os"));
-const mediainfo_js_1 = __importDefault(require("mediainfo.js"));
 const types_1 = require("./types");
 const device_1 = require("../http/device");
 const ble_1 = require("./ble");
 exports.MAGIC_WORD = "XZYH";
-exports.MEDIA_INFO = null;
 const isPrivateIp = (ip) => /^(::f{4}:)?10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
     /^(::f{4}:)?192\.168\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
     /^(::f{4}:)?172\.(1[6-9]|2\d|30|31)\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(ip) ||
@@ -282,15 +280,15 @@ const getNewRSAPrivateKey = () => {
 };
 exports.getNewRSAPrivateKey = getNewRSAPrivateKey;
 const decryptAESData = (hexkey, data) => {
-    const key = crypto_js_1.default.enc.Hex.parse(hexkey);
-    const cipherParams = crypto_js_1.default.lib.CipherParams.create({
-        ciphertext: crypto_js_1.default.enc.Hex.parse(data.toString("hex"))
+    const key = CryptoJS.enc.Hex.parse(hexkey);
+    const cipherParams = CryptoJS.lib.CipherParams.create({
+        ciphertext: CryptoJS.enc.Hex.parse(data.toString("hex"))
     });
-    const decrypted = crypto_js_1.default.AES.decrypt(cipherParams, key, {
-        mode: crypto_js_1.default.mode.ECB,
-        padding: crypto_js_1.default.pad.NoPadding
+    const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.NoPadding
     });
-    return Buffer.from(crypto_js_1.default.enc.Hex.stringify(decrypted), "hex");
+    return Buffer.from(CryptoJS.enc.Hex.stringify(decrypted), "hex");
 };
 exports.decryptAESData = decryptAESData;
 const findStartCode = (data) => {
@@ -322,28 +320,28 @@ const isIFrame = (data) => {
 };
 exports.isIFrame = isIFrame;
 const decryptLockAESData = (key, iv, data) => {
-    const ekey = crypto_js_1.default.enc.Hex.parse(key);
-    const eiv = crypto_js_1.default.enc.Hex.parse(iv);
-    const cipherParams = crypto_js_1.default.lib.CipherParams.create({
-        ciphertext: crypto_js_1.default.enc.Hex.parse(data.toString("hex"))
+    const ekey = CryptoJS.enc.Hex.parse(key);
+    const eiv = CryptoJS.enc.Hex.parse(iv);
+    const cipherParams = CryptoJS.lib.CipherParams.create({
+        ciphertext: CryptoJS.enc.Hex.parse(data.toString("hex"))
     });
-    const decrypted = crypto_js_1.default.AES.decrypt(cipherParams, ekey, {
+    const decrypted = CryptoJS.AES.decrypt(cipherParams, ekey, {
         iv: eiv,
-        mode: crypto_js_1.default.mode.CBC,
-        padding: crypto_js_1.default.pad.Pkcs7
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
     });
-    return Buffer.from(crypto_js_1.default.enc.Hex.stringify(decrypted), "hex");
+    return Buffer.from(CryptoJS.enc.Hex.stringify(decrypted), "hex");
 };
 exports.decryptLockAESData = decryptLockAESData;
 const encryptLockAESData = (key, iv, data) => {
-    const ekey = crypto_js_1.default.enc.Hex.parse(key);
-    const eiv = crypto_js_1.default.enc.Hex.parse(iv);
-    const encrypted = crypto_js_1.default.AES.encrypt(crypto_js_1.default.enc.Hex.parse(data.toString("hex")), ekey, {
+    const ekey = CryptoJS.enc.Hex.parse(key);
+    const eiv = CryptoJS.enc.Hex.parse(iv);
+    const encrypted = CryptoJS.AES.encrypt(CryptoJS.enc.Hex.parse(data.toString("hex")), ekey, {
         iv: eiv,
-        mode: crypto_js_1.default.mode.CBC,
-        padding: crypto_js_1.default.pad.Pkcs7
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
     });
-    return Buffer.from(crypto_js_1.default.enc.Hex.stringify(encrypted.ciphertext), "hex");
+    return Buffer.from(CryptoJS.enc.Hex.stringify(encrypted.ciphertext), "hex");
 };
 exports.encryptLockAESData = encryptLockAESData;
 const generateBasicLockAESKey = (adminID, stationSN) => {
@@ -436,39 +434,6 @@ const getVideoCodec = (data) => {
     return types_1.VideoCodec.UNKNOWN; // Maybe return h264 as Eufy does?
 };
 exports.getVideoCodec = getVideoCodec;
-const initMediaInfo = async () => {
-    if (exports.MEDIA_INFO !== null && exports.MEDIA_INFO !== undefined) {
-        return exports.MEDIA_INFO;
-    }
-    return new Promise((resolve, reject) => {
-        (0, mediainfo_js_1.default)({
-        //chunkSize: 256 * 1024
-        }, mediainfo => {
-            exports.MEDIA_INFO = mediainfo;
-            resolve(mediainfo);
-        }, error => {
-            reject(error);
-        });
-    });
-};
-exports.initMediaInfo = initMediaInfo;
-const analyzeCodec = async (data) => {
-    if (data !== undefined && data.length > 0) {
-        try {
-            const mediainfo = await (0, exports.initMediaInfo)();
-            mediainfo.openBufferInit(data.byteLength, 0);
-            const result = mediainfo.openBufferContinue(data, data.byteLength);
-            mediainfo.openBufferFinalize();
-            if (result) {
-                return JSON.parse(mediainfo.inform());
-            }
-        }
-        catch (error) {
-        }
-    }
-    return {};
-};
-exports.analyzeCodec = analyzeCodec;
 const checkT8420 = (serialNumber) => {
     if (!(serialNumber !== undefined && serialNumber !== null && serialNumber.length > 0 && serialNumber.startsWith("T8420")) || serialNumber.length <= 7 || serialNumber[6] != "6") {
         return false;

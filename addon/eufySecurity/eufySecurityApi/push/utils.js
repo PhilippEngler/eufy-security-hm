@@ -26,7 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertTimestampMs = exports.sleep = exports.parseCheckinResponse = exports.buildCheckinRequest = exports.generateFid = exports.VALID_FID_PATTERN = void 0;
 const crypto_1 = require("crypto");
 const path = __importStar(require("path"));
-const protobuf_typescript_1 = require("protobuf-typescript");
+const protobufjs_1 = require("protobufjs");
 exports.VALID_FID_PATTERN = /^[cdef][\w-]{21}$/;
 function generateFid() {
     const fidByteArray = new Uint8Array(17);
@@ -43,7 +43,7 @@ function generateFid() {
 }
 exports.generateFid = generateFid;
 const buildCheckinRequest = async () => {
-    const root = await (0, protobuf_typescript_1.load)(path.join(__dirname, "./proto/checkin.proto"));
+    const root = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/checkin.proto"));
     const CheckinRequestModel = root.lookupType("CheckinRequest");
     const payload = {
         imei: "109269993813709",
@@ -76,7 +76,7 @@ const buildCheckinRequest = async () => {
 };
 exports.buildCheckinRequest = buildCheckinRequest;
 const parseCheckinResponse = async (data) => {
-    const root = await (0, protobuf_typescript_1.load)(path.join(__dirname, "./proto/checkin.proto"));
+    const root = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/checkin.proto"));
     const CheckinResponseModel = root.lookupType("CheckinResponse");
     const message = CheckinResponseModel.decode(data);
     const object = CheckinResponseModel.toObject(message, {

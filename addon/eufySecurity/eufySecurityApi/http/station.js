@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Station = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
+const date_and_time_1 = __importDefault(require("date-and-time"));
 const types_1 = require("./types");
 const parameter_1 = require("./parameter");
 const utils_1 = require("./utils");
@@ -14,7 +18,7 @@ const types_3 = require("../push/types");
 const error_2 = require("./error");
 const utils_3 = require("../utils");
 class Station extends tiny_typed_emitter_1.TypedEmitter {
-    constructor(eufySecurityApi, api, station, publicKey = "") {
+    constructor(eufySecurityApi, api, station, ipAddress, publicKey = "") {
         super();
         this.properties = {};
         this.rawProperties = {};
@@ -29,7 +33,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         this.lockPublicKey = publicKey;
         this.log = api.getLog();
         this.update(this.rawStation);
-        this.p2pSession = new session_1.P2PClientProtocol(this.getLANIPAddress(), this.eufySecurityApi.getLocalStaticUdpPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api, this.lockPublicKey);
+        this.p2pSession = new session_1.P2PClientProtocol(this.getLANIPAddress(), this.eufySecurityApi.getLocalStaticUdpPortForStation(this.rawStation.station_sn), this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api, ipAddress, this.lockPublicKey);
         this.p2pSession.on("connect", (address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
         this.p2pSession.on("timeout", () => this.onTimeout());
@@ -62,20 +66,29 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         this.p2pSession.on("low battery", (channel) => this.onDeviceLowBattery(channel));
         this.p2pSession.on("wrong try-protect alarm", (channel) => this.onDeviceWrongTryProtectAlarm(channel));
         this.p2pSession.on("sd info ex", (sdStatus, sdCapacity, sdCapacityAvailable) => this.onSdInfoEx(sdStatus, sdCapacity, sdCapacityAvailable));
+        this.p2pSession.on("image download", (file, image) => this.onImageDownload(file, image));
+        this.p2pSession.on("tfcard status", (channel, status) => this.onTFCardStatus(channel, status));
+        this.p2pSession.on("database query latest", (returnCode, data) => this.onDatabaseQueryLatest(returnCode, data));
+        this.p2pSession.on("database query local", (returnCode, data) => this.onDatabaseQueryLocal(returnCode, data));
+        this.p2pSession.on("database count by date", (returnCode, data) => this.onDatabaseCountByDate(returnCode, data));
+        this.p2pSession.on("database delete", (returnCode, failedIds) => this.onDatabaseDelete(returnCode, failedIds));
+    }
+    initializeState() {
         this.update(this.rawStation);
         this.ready = true;
-        this.p2pConnectionType = this.eufySecurityApi.getP2PConnectionType();
         setImmediate(() => {
             this.emit("ready", this);
         });
     }
-    static async initialize(eufySecurityApi, api, stationData) {
+    initialize() {
+        this.initializeState();
+    }
+    static async getInstance(eufySecurityApi, api, stationData, ipAddress) {
         let publicKey;
         if (device_1.Device.isLock(stationData.device_type)) {
             publicKey = await api.getPublicKey(stationData.station_sn, types_1.PublicKeyType.LOCK);
         }
-        const station = new Station(eufySecurityApi, api, stationData, publicKey);
-        return station;
+        return new Station(eufySecurityApi, api, stationData, ipAddress, publicKey);
     }
     getStateID(state, level = 2) {
         switch (level) {
@@ -100,7 +113,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         if (this.p2pSession != null) {
             this.p2pSession.updateRawStation(station);
         }
-        const metadata = this.getPropertiesMetadata();
+        const metadata = this.getPropertiesMetadata(true);
         for (const property of Object.values(metadata)) {
             if (this.rawStation[property.key] !== undefined && typeof property.key === "string") {
                 this.updateProperty(property.name, this.rawStation[property.key]);
@@ -121,10 +134,9 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             || this.properties[name] === undefined) {
             const oldValue = this.properties[name];
             this.properties[name] = value;
-            if (this.ready)
-                this.emit("property changed", this, name, value);
+            this.emit("property changed", this, name, value, this.ready);
             try {
-                this.handlePropertyChange(this.getPropertyMetadata(name), oldValue, this.properties[name]);
+                this.handlePropertyChange(this.getPropertyMetadata(name, true), oldValue, this.properties[name]);
             }
             catch (error) {
                 if (error instanceof error_2.InvalidPropertyError) {
@@ -188,7 +200,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     this.log.error("Number conversion error", error);
                 }
             }
-            const metadata = this.getPropertiesMetadata();
+            const metadata = this.getPropertiesMetadata(true);
             for (const property of Object.values(metadata)) {
                 if (property.key === type) {
                     try {
@@ -308,14 +320,18 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 const stringProperty = property;
                 return value !== undefined ? value : (stringProperty.default !== undefined ? stringProperty.default : "");
             }
+            else if (property.type === "object") {
+                const objectProperty = property;
+                return value !== undefined ? value : (objectProperty.default !== undefined ? objectProperty.default : undefined);
+            }
         }
         catch (error) {
             this.log.error("Convert Error:", { property: property, value: value, error: error });
         }
         return value;
     }
-    getPropertyMetadata(name) {
-        const property = this.getPropertiesMetadata()[name];
+    getPropertyMetadata(name, hidden = false) {
+        const property = this.getPropertiesMetadata(hidden)[name];
         if (property !== undefined)
             return property;
         throw new error_2.InvalidPropertyError(`Property ${name} invalid`);
@@ -337,12 +353,21 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         return this.rawProperties;
     }
     getProperties() {
-        return this.properties;
+        const result = {};
+        for (const property of Object.keys(this.properties)) {
+            if (!property.startsWith("hidden-"))
+                result[property] = this.properties[property];
+        }
+        return result;
     }
-    getPropertiesMetadata() {
-        let metadata = types_1.StationProperties[this.getDeviceType()];
+    getPropertiesMetadata(hidden = false) {
+        let metadata = {
+            ...types_1.StationProperties[this.getDeviceType()]
+        };
         if (metadata === undefined) {
-            metadata = types_1.StationProperties[types_1.DeviceType.STATION];
+            metadata = {
+                ...types_1.StationProperties[types_1.DeviceType.STATION]
+            };
         }
         if (this.hasDeviceWithType(types_1.DeviceType.KEYPAD)) {
             metadata[types_1.PropertyName.StationGuardMode] = types_1.StationGuardModeKeyPadProperty;
@@ -351,10 +376,16 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             metadata[types_1.PropertyName.StationAutoEndAlarm] = types_1.StationAutoEndAlarmProperty;
             metadata[types_1.PropertyName.StationTurnOffAlarmWithButton] = types_1.StationTurnOffAlarmWithButtonProperty;
         }
+        if (!hidden) {
+            for (const property of Object.keys(metadata)) {
+                if (property.startsWith("hidden-"))
+                    delete metadata[property];
+            }
+        }
         return metadata;
     }
-    hasProperty(name) {
-        return this.getPropertiesMetadata()[name] !== undefined;
+    hasProperty(name, hidden = false) {
+        return this.getPropertiesMetadata(hidden)[name] !== undefined;
     }
     getCommands() {
         const commands = types_1.StationCommands[this.getDeviceType()];
@@ -485,6 +516,9 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 if (message.alarm_type !== undefined)
                     this.emit("alarm event", this, message.alarm_type);
             }
+        }
+        else if (message.msg_type === types_3.CusPushEvent.TFCARD && message.station_sn === this.getSerial() && message.tfcard_status !== undefined) {
+            this.updateRawProperty(types_2.CommandType.CMD_GET_TFCARD_STATUS, message.tfcard_status.toString());
         }
     }
     getP2pDid() {
@@ -659,7 +693,6 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
     }
     async getStorageInfoEx() {
         this.log.debug(`Sending get storage info command to station ${this.getSerial()}`);
-        //TODO: Verify channel! Should be 255...
         await this.p2pSession.sendCommandWithIntString({
             commandType: types_2.CommandType.CMD_SDINFO_EX,
             value: 0,
@@ -834,6 +867,9 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         this.terminating = false;
         this.resetCurrentDelay();
         this.log.info(`Connected to station ${this.getSerial()} on host ${address.host} and port ${address.port}`);
+        if (this.hasCommand(types_1.CommandName.StationDatabaseQueryLatestInfo)) {
+            this.databaseQueryLatestInfo();
+        }
         this.emit("connect", this);
     }
     onDisconnect() {
@@ -5824,7 +5860,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             this.p2pSession.startTalkback(device.getChannel());
             this.emit("command result", this, {
                 channel: device.getChannel(),
-                command_type: 0,
+                command_type: types_2.CommandType.CMD_START_TALKBACK,
                 return_code: 0,
                 customData: {
                     command: commandData
@@ -5870,7 +5906,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             this.p2pSession.stopTalkback(device.getChannel());
             this.emit("command result", this, {
                 channel: device.getChannel(),
-                command_type: 0,
+                command_type: types_2.CommandType.CMD_STOP_TALKBACK,
                 return_code: 0,
                 customData: {
                     command: commandData
@@ -6831,7 +6867,189 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
         }
     }
+    onImageDownload(file, image) {
+        this.emit("image download", this, file, image);
+    }
+    async downloadImage(cover_path) {
+        const commandData = {
+            name: types_1.CommandName.StationDownloadImage,
+            value: cover_path
+        };
+        if (!this.hasCommand(types_1.CommandName.StationDownloadImage)) {
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
+        }
+        this.log.debug(`Sending download image command to station ${this.getSerial()} for file ${cover_path}`);
+        await this.p2pSession.sendCommandWithStringPayload({
+            commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+            value: JSON.stringify({
+                account_id: this.rawStation.member.admin_user_id,
+                cmd: types_2.CommandType.CMD_DATABASE_IMAGE,
+                mChannel: Station.CHANNEL,
+                payload: [{ "file": cover_path }],
+                "transaction": cover_path
+            }),
+            channel: Station.CHANNEL,
+            strValueSub: this.rawStation.member.admin_user_id,
+        }, {
+            command: commandData,
+        });
+    }
+    onTFCardStatus(channel, status) {
+        this.updateRawProperty(types_2.CommandType.CMD_GET_TFCARD_STATUS, status.toString());
+    }
+    async databaseQueryLatestInfo() {
+        const commandData = {
+            name: types_1.CommandName.StationDatabaseQueryLatestInfo,
+        };
+        if (!this.hasCommand(commandData.name)) {
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
+        }
+        this.log.debug(`Sending database query latest info command to station ${this.getSerial()}`);
+        await this.p2pSession.sendCommandWithStringPayload({
+            commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+            value: JSON.stringify({
+                "account_id": this.rawStation.member.admin_user_id,
+                "cmd": types_2.CommandType.CMD_DATABASE,
+                "mChannel": 0,
+                "mValue3": 0,
+                "payload": {
+                    "cmd": types_2.CommandType.CMD_DATABASE_QUERY_LATEST_INFO,
+                    "table": "history_record_info",
+                    "transaction": `${new Date().getTime()}`
+                }
+            }),
+            channel: 0
+        }, {
+            command: commandData
+        });
+    }
+    async databaseQueryLocal(serialNumbers, startDate, endDate, eventType = 0, detectionType = 0, storageType = 0) {
+        const commandData = {
+            name: types_1.CommandName.StationDatabaseQueryLocal,
+            value: {
+                serialNumbers: serialNumbers,
+                eventType: eventType,
+                detectionType: detectionType
+            }
+        };
+        if (!this.hasCommand(commandData.name)) {
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
+        }
+        this.log.debug(`Sending database query local command to station ${this.getSerial()}`, { serialNumbers: serialNumbers, startDate: startDate, endDate: endDate, eventType: eventType, detectionType: detectionType, storageType: storageType });
+        const devices = [];
+        for (const serial of serialNumbers) {
+            devices.push({ device_sn: serial });
+        }
+        await this.p2pSession.sendCommandWithStringPayload({
+            commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+            value: JSON.stringify({
+                "account_id": this.rawStation.member.admin_user_id,
+                "cmd": types_2.CommandType.CMD_DATABASE,
+                "mChannel": 0,
+                "mValue3": 0,
+                "payload": {
+                    "cmd": types_2.CommandType.CMD_DATABASE_QUERY_LOCAL,
+                    "payload": {
+                        "count": 20,
+                        "detection_type": detectionType,
+                        "device_info": devices,
+                        "end_date": date_and_time_1.default.format(endDate, "YYYYMMDD"),
+                        "event_type": eventType,
+                        "flag": 0,
+                        "res_unzip": 1,
+                        "start_date": date_and_time_1.default.format(startDate, "YYYYMMDD"),
+                        "start_time": `${date_and_time_1.default.format(endDate, "YYYYMMDD")}000000`,
+                        "storage_cloud": storageType === types_2.FilterStorageType.NONE || (storageType !== types_2.FilterStorageType.LOCAL && storageType !== types_2.FilterStorageType.CLOUD) ? -1 : storageType,
+                        "ai_type": 0
+                    },
+                    "table": "history_record_info",
+                    "transaction": `${new Date().getTime()}`
+                }
+            }),
+            channel: 0
+        }, {
+            command: commandData
+        });
+    }
+    async databaseDelete(ids) {
+        const commandData = {
+            name: types_1.CommandName.StationDatabaseDelete,
+            value: ids
+        };
+        if (!this.hasCommand(commandData.name)) {
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
+        }
+        this.log.debug(`Sending database delete command to station ${this.getSerial()}`, { ids: ids });
+        const lids = [];
+        for (const id of ids) {
+            lids.push({ "id": id });
+        }
+        await this.p2pSession.sendCommandWithStringPayload({
+            commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+            value: JSON.stringify({
+                "account_id": this.rawStation.member.admin_user_id,
+                "cmd": types_2.CommandType.CMD_DATABASE,
+                "mChannel": 0,
+                "mValue3": 0,
+                "payload": {
+                    "cmd": types_2.CommandType.CMD_DATABASE_DELETE,
+                    "payload": lids,
+                    "table": "history_record_info",
+                    "transaction": `${new Date().getTime()}`
+                }
+            }),
+            channel: 0
+        }, {
+            command: commandData
+        });
+    }
+    async databaseCountByDate(startDate, endDate) {
+        const commandData = {
+            name: types_1.CommandName.StationDatabaseCountByDate,
+            value: {
+                startDate: startDate,
+                endDate: endDate
+            }
+        };
+        if (!this.hasCommand(commandData.name)) {
+            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${this.getSerial()}`);
+        }
+        this.log.debug(`Sending database count by date command to station ${this.getSerial()}`, { startDate: startDate, endDate: endDate });
+        await this.p2pSession.sendCommandWithStringPayload({
+            commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+            value: JSON.stringify({
+                "account_id": this.rawStation.member.admin_user_id,
+                "cmd": types_2.CommandType.CMD_DATABASE,
+                "mChannel": 0,
+                "mValue3": 0,
+                "payload": {
+                    "cmd": types_2.CommandType.CMD_DATABASE_COUNT_BY_DATE,
+                    "payload": {
+                        "end_date": date_and_time_1.default.format(endDate, "YYYYMMDD"),
+                        "start_date": date_and_time_1.default.format(startDate, "YYYYMMDD"),
+                    },
+                    "table": "history_record_info",
+                    "transaction": `${new Date().getTime()}`
+                }
+            }),
+            channel: 0
+        }, {
+            command: commandData
+        });
+    }
+    onDatabaseQueryLatest(returnCode, data) {
+        this.emit("database query latest", this, returnCode, data);
+    }
+    onDatabaseQueryLocal(returnCode, data) {
+        this.emit("database query local", this, returnCode, data);
+    }
+    onDatabaseCountByDate(returnCode, data) {
+        this.emit("database count by date", this, returnCode, data);
+    }
+    onDatabaseDelete(returnCode, failedIds) {
+        this.emit("database delete", this, returnCode, failedIds);
+    }
 }
-exports.Station = Station;
 Station.CHANNEL = 255;
 Station.CHANNEL_INDOOR = 1000;
+exports.Station = Station;

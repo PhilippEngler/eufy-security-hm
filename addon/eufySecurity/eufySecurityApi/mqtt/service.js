@@ -28,7 +28,7 @@ const mqtt = __importStar(require("mqtt"));
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const fs_1 = require("fs");
 const path = __importStar(require("path"));
-const protobuf_typescript_1 = require("protobuf-typescript");
+const protobufjs_1 = require("protobufjs");
 class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
     constructor(log) {
         super();
@@ -45,7 +45,7 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
         this.deviceSmartLockMessageModel = MQTTService.proto.lookupType("DeviceSmartLockMessage");
     }
     static async init(log) {
-        this.proto = await (0, protobuf_typescript_1.load)(path.join(__dirname, "./proto/lock.proto"));
+        this.proto = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/lock.proto"));
         return new MQTTService(log);
     }
     parseSmartLockMessage(data) {
@@ -163,5 +163,5 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
 }
-exports.MQTTService = MQTTService;
 MQTTService.proto = null;
+exports.MQTTService = MQTTService;

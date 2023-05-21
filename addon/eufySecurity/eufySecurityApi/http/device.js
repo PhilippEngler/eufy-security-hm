@@ -28,15 +28,18 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("ready", this);
         });
     }
+    initialize() {
+        this.initializeState();
+    }
     getRawDevice() {
         return this.rawDevice;
     }
     update(device, cloudOnlyProperties = false) {
         this.rawDevice = device;
-        const metadata = this.getPropertiesMetadata();
+        const metadata = this.getPropertiesMetadata(true);
         for (const property of Object.values(metadata)) {
             if (this.rawDevice[property.key] !== undefined && typeof property.key === "string") {
-                this.updateProperty(property.name, this.rawDevice[property.key]);
+                this.updateProperty(property.name, property.key === "cover_path" ? (0, utils_1.getImagePath)(this.rawDevice[property.key]) : this.rawDevice[property.key]);
             }
             else if (this.properties[property.name] === undefined && property.default !== undefined && !this.ready) {
                 this.updateProperty(property.name, property.default);
@@ -54,12 +57,9 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             || this.properties[name] === undefined) {
             const oldValue = this.properties[name];
             this.properties[name] = value;
-            if (!name.startsWith("hidden-")) {
-                if (this.ready)
-                    this.emit("property changed", this, name, value);
-            }
+            this.emit("property changed", this, name, value, this.ready);
             try {
-                this.handlePropertyChange(this.getPropertyMetadata(name), oldValue, this.properties[name]);
+                this.handlePropertyChange(this.getPropertyMetadata(name, true), oldValue, this.properties[name]);
             }
             catch (error) {
                 if (error instanceof error_1.InvalidPropertyError) {
@@ -124,7 +124,7 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             this.rawProperties[type] = parsedValue;
             if (this.ready)
                 this.emit("raw property changed", this, type, this.rawProperties[type]);
-            const metadata = this.getPropertiesMetadata();
+            const metadata = this.getPropertiesMetadata(true);
             for (const property of Object.values(metadata)) {
                 if (property.key === type) {
                     try {
@@ -595,14 +595,18 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
                 const stringProperty = property;
                 return value !== undefined ? value : (stringProperty.default !== undefined ? stringProperty.default : "");
             }
+            else if (property.type === "object") {
+                const objectProperty = property;
+                return value !== undefined ? value : (objectProperty.default !== undefined ? objectProperty.default : undefined);
+            }
         }
         catch (error) {
             this.log.error("Convert Error:", { property: property, value: value, error: error });
         }
         return value;
     }
-    getPropertyMetadata(name) {
-        const property = this.getPropertiesMetadata()[name];
+    getPropertyMetadata(name, hidden = false) {
+        const property = this.getPropertiesMetadata(hidden)[name];
         if (property !== undefined)
             return property;
         throw new error_1.InvalidPropertyError(`Property ${name} invalid`);
@@ -627,8 +631,10 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
         }
         return result;
     }
-    getPropertiesMetadata() {
-        let metadata = types_1.DeviceProperties[this.getDeviceType()];
+    getPropertiesMetadata(hidden = false) {
+        let metadata = {
+            ...types_1.DeviceProperties[this.getDeviceType()]
+        };
         if (this.isFloodLightT8420X()) {
             metadata = {
                 ...types_1.FloodlightT8420XDeviceProperties
@@ -670,14 +676,23 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             newMetadata[types_1.PropertyName.DeviceDetectionStatisticsRecordedEvents] = types_1.DeviceDetectionStatisticsRecordedEventsProperty;
             //TODO: Check with future devices if this property overriding is correct (for example with indoor cameras etc.)
             newMetadata[types_1.PropertyName.DeviceEnabled] = types_1.DeviceEnabledSoloProperty;
-            return newMetadata;
+            metadata = newMetadata;
         }
-        if (metadata === undefined)
-            return types_1.GenericDeviceProperties;
+        else if (metadata === undefined) {
+            metadata = {
+                ...types_1.GenericDeviceProperties
+            };
+        }
+        if (!hidden) {
+            for (const property of Object.keys(metadata)) {
+                if (property.startsWith("hidden-"))
+                    delete metadata[property];
+            }
+        }
         return metadata;
     }
-    hasProperty(name) {
-        return this.getPropertiesMetadata()[name] !== undefined;
+    hasProperty(name, hidden = false) {
+        return this.getPropertiesMetadata(hidden)[name] !== undefined;
     }
     getCommands() {
         const commands = types_1.DeviceCommands[this.getDeviceType()];
@@ -1245,10 +1260,8 @@ class Camera extends Device {
         this.properties[types_1.PropertyName.DevicePersonDetected] = false;
         this.properties[types_1.PropertyName.DevicePersonName] = "";
     }
-    static async initialize(api, device) {
-        const camera = new Camera(api, device);
-        camera.initializeState();
-        return camera;
+    static async getInstance(api, device) {
+        return new Camera(api, device);
     }
     getStateChannel() {
         return "cameras";
@@ -1264,9 +1277,6 @@ class Camera extends Device {
             this.log.error("Convert Error:", { property: property, value: value, error: error });
         }
         return super.convertRawPropertyValue(property, value);
-    }
-    getLastCameraImageURL() {
-        return this.getPropertyValue(types_1.PropertyName.DevicePictureUrl);
     }
     getLastCameraVideoURL() {
         if (this.isCamera()) {
@@ -1456,8 +1466,15 @@ class Camera extends Device {
         if (message.type !== undefined && message.event_type !== undefined) {
             if (message.event_type === types_3.CusPushEvent.SECURITY && message.device_sn === this.getSerial()) {
                 try {
-                    if (!(0, utils_3.isEmpty)(message.pic_url))
-                        this.updateProperty(types_1.PropertyName.DevicePictureUrl, message.pic_url);
+                    if (!(0, utils_3.isEmpty)(message.pic_url)) {
+                        (0, utils_1.getImage)(this.api, this.getSerial(), message.pic_url).then((image) => {
+                            if (image.data.length > 0) {
+                                this.updateProperty(types_1.PropertyName.DevicePicture, image);
+                            }
+                        }).catch((error) => {
+                            this.log.debug(`CusPushEvent.SECURITY - Device: ${message.device_sn} - Get picture - Error:`, error);
+                        });
+                    }
                     if (message.fetch_id !== undefined) {
                         // Person or someone identified
                         this.updateProperty(types_1.PropertyName.DevicePersonName, !(0, utils_3.isEmpty)(message.person_name) ? message.person_name : "Unknown");
@@ -1486,8 +1503,15 @@ class Camera extends Device {
             else if (message.msg_type === types_1.DeviceType.HB3) {
                 if (message.device_sn === this.getSerial()) {
                     try {
-                        if (!(0, utils_3.isEmpty)(message.pic_url))
-                            this.updateProperty(types_1.PropertyName.DevicePictureUrl, message.pic_url);
+                        if (!(0, utils_3.isEmpty)(message.pic_url)) {
+                            (0, utils_1.getImage)(this.api, this.getSerial(), message.pic_url).then((image) => {
+                                if (image.data.length > 0) {
+                                    this.updateProperty(types_1.PropertyName.DevicePicture, image);
+                                }
+                            }).catch((error) => {
+                                this.log.debug(`HB3PairedDevicePushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
+                            });
+                        }
                         switch (message.event_type) {
                             case types_3.HB3PairedDevicePushEvent.MOTION_DETECTION:
                                 this.updateProperty(types_1.PropertyName.DeviceMotionDetected, true);
@@ -1598,10 +1622,8 @@ class Camera extends Device {
 }
 exports.Camera = Camera;
 class SoloCamera extends Camera {
-    static async initialize(api, device) {
-        const camera = new SoloCamera(api, device);
-        camera.initializeState();
-        return camera;
+    static async getInstance(api, device) {
+        return new SoloCamera(api, device);
     }
     isLedEnabled() {
         return this.getPropertyValue(types_1.PropertyName.DeviceStatusLed);
@@ -1614,8 +1636,15 @@ class SoloCamera extends Camera {
         if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== types_1.DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (!(0, utils_3.isEmpty)(message.pic_url))
-                        this.updateProperty(types_1.PropertyName.DevicePictureUrl, message.pic_url);
+                    if (!(0, utils_3.isEmpty)(message.pic_url)) {
+                        (0, utils_1.getImage)(this.api, this.getSerial(), message.pic_url).then((image) => {
+                            if (image.data.length > 0) {
+                                this.updateProperty(types_1.PropertyName.DevicePicture, image);
+                            }
+                        }).catch((error) => {
+                            this.log.debug(`SoloPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
+                        });
+                    }
                     switch (message.event_type) {
                         case types_3.IndoorPushEvent.MOTION_DETECTION:
                             this.updateProperty(types_1.PropertyName.DeviceMotionDetected, true);
@@ -1655,10 +1684,8 @@ class IndoorCamera extends Camera {
         this.properties[types_1.PropertyName.DeviceSoundDetected] = false;
         this.properties[types_1.PropertyName.DeviceCryingDetected] = false;
     }
-    static async initialize(api, device) {
-        const camera = new IndoorCamera(api, device);
-        camera.initializeState();
-        return camera;
+    static async getInstance(api, device) {
+        return new IndoorCamera(api, device);
     }
     isLedEnabled() {
         return this.getPropertyValue(types_1.PropertyName.DeviceStatusLed);
@@ -1686,8 +1713,15 @@ class IndoorCamera extends Camera {
         if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== types_1.DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (!(0, utils_3.isEmpty)(message.pic_url))
-                        this.updateProperty(types_1.PropertyName.DevicePictureUrl, message.pic_url);
+                    if (!(0, utils_3.isEmpty)(message.pic_url)) {
+                        (0, utils_1.getImage)(this.api, this.getSerial(), message.pic_url).then((image) => {
+                            if (image.data.length > 0) {
+                                this.updateProperty(types_1.PropertyName.DevicePicture, image);
+                            }
+                        }).catch((error) => {
+                            this.log.debug(`IndoorPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
+                        });
+                    }
                     switch (message.event_type) {
                         case types_3.IndoorPushEvent.MOTION_DETECTION:
                             this.updateProperty(types_1.PropertyName.DeviceMotionDetected, true);
@@ -1753,11 +1787,9 @@ class DoorbellCamera extends Camera {
         this.voices = voices;
         this.properties[types_1.PropertyName.DeviceRinging] = false;
     }
-    static async initialize(api, device) {
+    static async getInstance(api, device) {
         const voices = await api.getVoices(device.device_sn);
-        const camera = new DoorbellCamera(api, device, voices);
-        camera.initializeState();
-        return camera;
+        return new DoorbellCamera(api, device, voices);
     }
     loadMetadataVoiceStates(propertyName, metadata) {
         if (metadata[propertyName] !== undefined) {
@@ -1777,8 +1809,8 @@ class DoorbellCamera extends Camera {
     getVoices() {
         return this.voices;
     }
-    getPropertiesMetadata() {
-        let metadata = super.getPropertiesMetadata();
+    getPropertiesMetadata(hidden = false) {
+        let metadata = super.getPropertiesMetadata(hidden);
         metadata = this.loadMetadataVoiceStates(types_1.PropertyName.DeviceLoiteringCustomResponseAutoVoiceResponseVoice, metadata);
         metadata = this.loadMetadataVoiceStates(types_1.PropertyName.DeviceDeliveryGuardPackageGuardingVoiceResponseVoice, metadata);
         metadata = this.loadMetadataVoiceStates(types_1.PropertyName.DeviceRingAutoResponseVoiceResponseVoice, metadata);
@@ -1810,11 +1842,18 @@ class DoorbellCamera extends Camera {
     }
     processPushNotification(message, eventDurationSeconds) {
         super.processPushNotification(message, eventDurationSeconds);
-        if (message.type !== undefined && message.event_type !== undefined) {
+        if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== types_1.DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (!(0, utils_3.isEmpty)(message.pic_url))
-                        this.updateProperty(types_1.PropertyName.DevicePictureUrl, message.pic_url);
+                    if (!(0, utils_3.isEmpty)(message.pic_url)) {
+                        (0, utils_1.getImage)(this.api, this.getSerial(), message.pic_url).then((image) => {
+                            if (image.data.length > 0) {
+                                this.updateProperty(types_1.PropertyName.DevicePicture, image);
+                            }
+                        }).catch((error) => {
+                            this.log.debug(`DoorbellPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
+                        });
+                    }
                     switch (message.event_type) {
                         case types_3.DoorbellPushEvent.MOTION_DETECTION:
                             this.updateProperty(types_1.PropertyName.DeviceMotionDetected, true);
@@ -1897,11 +1936,9 @@ class DoorbellCamera extends Camera {
 }
 exports.DoorbellCamera = DoorbellCamera;
 class WiredDoorbellCamera extends DoorbellCamera {
-    static async initialize(api, device) {
+    static async getInstance(api, device) {
         const voices = await api.getVoices(device.device_sn);
-        const camera = new WiredDoorbellCamera(api, device, voices);
-        camera.initializeState();
-        return camera;
+        return new WiredDoorbellCamera(api, device, voices);
     }
     isLedEnabled() {
         return this.getPropertyValue(types_1.PropertyName.DeviceStatusLed);
@@ -1915,11 +1952,9 @@ class WiredDoorbellCamera extends DoorbellCamera {
 }
 exports.WiredDoorbellCamera = WiredDoorbellCamera;
 class BatteryDoorbellCamera extends DoorbellCamera {
-    static async initialize(api, device) {
+    static async getInstance(api, device) {
         const voices = await api.getVoices(device.device_sn);
-        const camera = new BatteryDoorbellCamera(api, device, voices);
-        camera.initializeState();
-        return camera;
+        return new BatteryDoorbellCamera(api, device, voices);
     }
     isLedEnabled() {
         return this.getPropertyValue(types_1.PropertyName.DeviceStatusLed);
@@ -1927,10 +1962,8 @@ class BatteryDoorbellCamera extends DoorbellCamera {
 }
 exports.BatteryDoorbellCamera = BatteryDoorbellCamera;
 class FloodlightCamera extends Camera {
-    static async initialize(api, device) {
-        const camera = new FloodlightCamera(api, device);
-        camera.initializeState();
-        return camera;
+    static async getInstance(api, device) {
+        return new FloodlightCamera(api, device);
     }
     isLedEnabled() {
         return this.getPropertyValue(types_1.PropertyName.DeviceStatusLed);
@@ -1979,11 +2012,18 @@ class FloodlightCamera extends Camera {
     }
     processPushNotification(message, eventDurationSeconds) {
         super.processPushNotification(message, eventDurationSeconds);
-        if (message.type !== undefined && message.event_type !== undefined) {
+        if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== types_1.DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (!(0, utils_3.isEmpty)(message.pic_url))
-                        this.updateProperty(types_1.PropertyName.DevicePictureUrl, message.pic_url);
+                    if (!(0, utils_3.isEmpty)(message.pic_url)) {
+                        (0, utils_1.getImage)(this.api, this.getSerial(), message.pic_url).then((image) => {
+                            if (image.data.length > 0) {
+                                this.updateProperty(types_1.PropertyName.DevicePicture, image);
+                            }
+                        }).catch((error) => {
+                            this.log.debug(`FloodlightPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
+                        });
+                    }
                     switch (message.event_type) {
                         case types_3.IndoorPushEvent.MOTION_DETECTION:
                             this.updateProperty(types_1.PropertyName.DeviceMotionDetected, true);
@@ -2017,10 +2057,8 @@ class FloodlightCamera extends Camera {
 }
 exports.FloodlightCamera = FloodlightCamera;
 class Sensor extends Device {
-    static async initialize(api, device) {
-        const sensor = new Sensor(api, device);
-        sensor.initializeState();
-        return sensor;
+    static async getInstance(api, device) {
+        return new Sensor(api, device);
     }
     getStateChannel() {
         return "sensors";
@@ -2031,10 +2069,8 @@ class Sensor extends Device {
 }
 exports.Sensor = Sensor;
 class EntrySensor extends Sensor {
-    static async initialize(api, device) {
-        const sensor = new EntrySensor(api, device);
-        sensor.initializeState();
-        return sensor;
+    static async getInstance(api, device) {
+        return new EntrySensor(api, device);
     }
     isSensorOpen() {
         return this.getPropertyValue(types_1.PropertyName.DeviceSensorOpen);
@@ -2090,10 +2126,8 @@ class MotionSensor extends Sensor {
         super(api, device);
         this.properties[types_1.PropertyName.DeviceMotionDetected] = false;
     }
-    static async initialize(api, device) {
-        const sensor = new MotionSensor(api, device);
-        sensor.initializeState();
-        return sensor;
+    static async getInstance(api, device) {
+        return new MotionSensor(api, device);
     }
     isMotionDetected() {
         return this.getPropertyValue(types_1.PropertyName.DeviceMotionDetected);
@@ -2130,13 +2164,11 @@ class MotionSensor extends Sensor {
         }
     }
 }
-exports.MotionSensor = MotionSensor;
 MotionSensor.MOTION_COOLDOWN_MS = 120000;
+exports.MotionSensor = MotionSensor;
 class Lock extends Device {
-    static async initialize(api, device) {
-        const lock = new Lock(api, device);
-        lock.initializeState();
-        return lock;
+    static async getInstance(api, device) {
+        return new Lock(api, device);
     }
     getStateChannel() {
         return "locks";
@@ -2451,7 +2483,6 @@ class Lock extends Device {
         return ssbytes.getData();
     }
 }
-exports.Lock = Lock;
 Lock.VERSION_CODE_LOCKV12 = 18;
 Lock.hexTime = function (time) {
     const buf = Buffer.allocUnsafe(2);
@@ -2459,6 +2490,7 @@ Lock.hexTime = function (time) {
     buf.writeUint8(Number.parseInt(time.split(":")[1]));
     return buf.readUInt16BE().toString(16).padStart(4, "0");
 };
+exports.Lock = Lock;
 class Keypad extends Device {
     //TODO: CMD_KEYPAD_BATTERY_CHARGER_STATE = 1655
     //TODO: CMD_KEYPAD_BATTERY_TEMP_STATE = 1654
@@ -2467,10 +2499,8 @@ class Keypad extends Device {
     //TODO: CMD_KEYPAD_IS_PSW_SET = 1670
     //TODO: CMD_KEYPAD_SET_CUSTOM_MAP = 1660
     //TODO: CMD_KEYPAD_SET_PASSWORD = 1650
-    static async initialize(api, device) {
-        const keypad = new Keypad(api, device);
-        keypad.initializeState();
-        return keypad;
+    static async getInstance(api, device) {
+        return new Keypad(api, device);
     }
     getStateChannel() {
         return "keypads";
@@ -2499,10 +2529,8 @@ class Keypad extends Device {
 }
 exports.Keypad = Keypad;
 class SmartSafe extends Device {
-    static async initialize(api, device) {
-        const safe = new SmartSafe(api, device);
-        safe.initializeState();
-        return safe;
+    static async getInstance(api, device) {
+        return new SmartSafe(api, device);
     }
     getStateChannel() {
         return "smartsafes";
@@ -2792,7 +2820,6 @@ class SmartSafe extends Device {
         return this.getPropertyValue(types_1.PropertyName.DeviceLocked);
     }
 }
-exports.SmartSafe = SmartSafe;
 SmartSafe.IV = "052E19EB3F880512E99EBB684D4DC1FE";
 SmartSafe.DATA_HEADER = [-1, 9];
 SmartSafe.VERSION_CODE = 1;
@@ -2806,11 +2833,10 @@ SmartSafe.PUSH_NOTIFICATION_POSITION = {
     [types_1.PropertyName.DeviceNotificationWrongTryProtect]: 6,
     [types_1.PropertyName.DeviceNotificationJammed]: 7,
 };
+exports.SmartSafe = SmartSafe;
 class UnknownDevice extends Device {
-    static async initialize(api, device) {
-        const unknown = new UnknownDevice(api, device);
-        unknown.initializeState();
-        return unknown;
+    static async getInstance(api, device) {
+        return new UnknownDevice(api, device);
     }
     getStateChannel() {
         return "unknown";

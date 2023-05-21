@@ -1,13 +1,19 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Stations = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const http_1 = require("./http");
 const utils_1 = require("./push/utils");
 const error_1 = require("./error");
+const events_1 = __importDefault(require("events"));
+const image_type_1 = __importDefault(require("image-type"));
 const p2p_1 = require("./p2p");
 const utils_2 = require("./utils");
 const utils_3 = require("./utils/utils");
+const path_1 = __importDefault(require("path"));
 /**
  * Represents all the stations in the account.
  */
@@ -22,6 +28,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.stations = {};
         this.skipNextModeChangeEvent = {};
         this.lastGuardModeChangeTimeForStations = {};
+        this.stationsLoaded = false;
+        this.loadingEmitter = new events_1.default();
         this.P2P_REFRESH_INTERVAL_MIN = 720;
         this.cameraMaxLivestreamSeconds = 30;
         this.cameraStationLivestreamTimeout = new Map();
@@ -43,9 +51,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug("Got hubs:", hubs);
         const resStations = hubs;
         var station;
-        const stationsSNs = Object.keys(this.stations);
+        const stationsSerials = Object.keys(this.stations);
         const promises = [];
-        const newStationsSNs = Object.keys(hubs);
+        const newStationsSerials = Object.keys(hubs);
         for (var stationSerial in resStations) {
             if (this.api.getHouseId() !== undefined && resStations[stationSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resStations[stationSerial].house_id !== this.api.getHouseId()) {
                 this.api.logDebug(`Station ${stationSerial} does not match houseId (got ${resStations[stationSerial].house_id} want ${this.api.getHouseId()}).`);
@@ -55,26 +63,18 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 await this.updateStation(resStations[stationSerial]);
             }
             else {
-                station = await http_1.Station.initialize(this.api, this.httpService, resStations[stationSerial]);
+                this.stationsLoaded = false;
+                station = await http_1.Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                /*if(station.getDeviceType() === DeviceType.STATION || station.getDeviceType() === DeviceType.HB3)
-                {
-                    station.setConnectionType(this.api.getP2PConnectionType());
-                }
-                else
-                {
-                    station.setConnectionType(P2PConnectionType.QUICKEST);
-                }*/
                 station.setConnectionType(this.api.getP2PConnectionType());
                 station.connect();
                 if (this.api.getStateUpdateEventActive()) {
-                    this.addEventListener(station, "GuardModeChanged", false);
+                    this.addEventListener(station, "GuardMode", false);
                     this.addEventListener(station, "CurrentMode", false);
                     this.addEventListener(station, "PropertyChanged", false);
                     this.addEventListener(station, "RawPropertyChanged", false);
-                    this.setLastGuardModeChangeTimeFromCloud(station);
                 }
                 this.addEventListener(station, "Connect", false);
                 this.addEventListener(station, "ConnectionError", false);
@@ -108,15 +108,23 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
                 this.addEventListener(station, "DevicePinVerified", false);
                 this.addEventListener(station, "SdInfoEx", false);
+                this.addEventListener(station, "ImageDownload", false);
+                this.addEventListener(station, "DatabaseQueryLocal", false);
                 this.addStation(station);
+                station.initialize();
             }
         }
-        this.loadingStations = Promise.all(promises).then(() => {
-            this.loadingStations = undefined;
+        Promise.all(promises).then(() => {
+            this.stationsLoaded = true;
+            this.loadingEmitter.emit("stations loaded");
         });
-        for (const stationSN of stationsSNs) {
-            if (!newStationsSNs.includes(stationSN)) {
-                this.getStation(stationSN).then((station) => {
+        if (promises.length === 0) {
+            this.stationsLoaded = true;
+            this.loadingEmitter.emit("stations loaded");
+        }
+        for (const stationSerial of stationsSerials) {
+            if (!newStationsSerials.includes(stationSerial)) {
+                this.getStation(stationSerial).then((station) => {
                     this.removeStation(station);
                 }).catch((error) => {
                     this.api.logError("Error removing station", error);
@@ -163,8 +171,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param hub The object containg the specific hub.
      */
     async updateStation(hub) {
-        if (this.loadingStations !== undefined) {
-            await this.loadingStations;
+        if (!this.stationsLoaded) {
+            await (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
         }
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub, this.stations[hub.station_sn] !== undefined && !this.stations[hub.station_sn].isIntegratedDevice() && this.stations[hub.station_sn].isConnected());
@@ -210,7 +218,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             for (var stationSerial in this.stations) {
                 if (this.stations[stationSerial]) {
                     await this.stations[stationSerial].close();
-                    this.removeEventListener(this.stations[stationSerial], "GuardModeChanged");
+                    this.removeEventListener(this.stations[stationSerial], "GuardMode");
                     this.removeEventListener(this.stations[stationSerial], "CurrentMode");
                     this.removeEventListener(this.stations[stationSerial], "PropertyChanged");
                     this.removeEventListener(this.stations[stationSerial], "RawPropertyChanged");
@@ -246,6 +254,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     this.removeEventListener(this.stations[stationSerial], "DeviceWrongTryProtectAlarm");
                     this.removeEventListener(this.stations[stationSerial], "DevicePinVerified");
                     this.removeEventListener(this.stations[stationSerial], "SdInfoEx");
+                    this.removeEventListener(this.stations[stationSerial], "ImageDownload");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseQueryLocal");
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
                 }
@@ -293,10 +303,12 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const camera = device;
         if (!station.isLiveStreaming(camera)) {
             station.startLivestream(camera);
-            this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
-                this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                this.stopStationLivestream(deviceSerial);
-            }, this.cameraMaxLivestreamSeconds * 1000));
+            if (this.cameraMaxLivestreamSeconds > 0) {
+                this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
+                    this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                    this.stopStationLivestream(deviceSerial);
+                }, this.cameraMaxLivestreamSeconds * 1000));
+            }
         }
         else {
             this.api.logWarn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
@@ -316,10 +328,12 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         if (!camera.isStreaming()) {
             const url = await camera.startStream();
             if (url !== "") {
-                this.cameraCloudLivestreamTimeout.set(deviceSerial, setTimeout(() => {
-                    this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                    this.stopCloudLivestream(deviceSerial);
-                }, this.cameraMaxLivestreamSeconds * 1000));
+                if (this.cameraMaxLivestreamSeconds > 0) {
+                    this.cameraCloudLivestreamTimeout.set(deviceSerial, setTimeout(() => {
+                        this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                        this.stopCloudLivestream(deviceSerial);
+                    }, this.cameraMaxLivestreamSeconds * 1000));
+                }
                 this.emit("cloud livestream start", station, camera, url);
             }
             else {
@@ -386,8 +400,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * Returns a Array of all stations.
      */
     async getStations() {
-        if (this.loadingStations !== undefined) {
-            await this.loadingStations;
+        if (!this.stationsLoaded) {
+            await (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
         }
         return this.stations;
     }
@@ -396,14 +410,14 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param stationSerial The serial of the station to retrive.
      * @returns The station object.
      */
-    async getStation(stationSN) {
-        if (this.loadingStations !== undefined) {
-            await this.loadingStations;
+    async getStation(stationSerial) {
+        if (!this.stationsLoaded) {
+            await (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
         }
-        if (Object.keys(this.stations).includes(stationSN)) {
-            return this.stations[stationSN];
+        if (Object.keys(this.stations).includes(stationSerial)) {
+            return this.stations[stationSerial];
         }
-        throw new error_1.StationNotFoundError(`No station with serial number: ${stationSN}!`);
+        throw new error_1.StationNotFoundError(`No station with serial number: ${stationSerial}!`);
     }
     /**
      * Checks if a station with the given serial exists.
@@ -477,7 +491,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     }
     /**
      * Wait for the GuardModeEvent after changing guardMode for a given base.
-     * @param station The sation for waiting for the GuardModeChanged event.
+     * @param station The sation for waiting for the GuardMode event.
      * @param guardMode The guard mode to set.
      * @param timeout The timespan in ms maximal to wait for the event.
      * @returns Returns true or false.
@@ -524,7 +538,15 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param stationSerial The serial of the station.
      */
     async getStorageInfoStation(stationSerial) {
-        await this.stations[stationSerial].getStorageInfoEx();
+        try {
+            const station = await this.getStation(stationSerial);
+            if (station.isStation() || (station.hasProperty(http_1.PropertyName.StationSdStatus) && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== p2p_1.TFCardStatus.REMOVE)) {
+                await station.getStorageInfoEx();
+            }
+        }
+        catch (error) {
+            this.api.logError("getStorageInfo Error", error);
+        }
     }
     /**
      * Add a given event listener for a given station.
@@ -577,7 +599,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.on("command result", (station, result) => this.onStationCommandResult(station, result));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("command result")} Listener.`);
                 break;
-            case "GuardModeChanged":
+            case "GuardMode":
                 station.on("guard mode", (station, guardMode) => this.onStationGuardMode(station, guardMode));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
@@ -598,7 +620,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
-                station.on("property changed", (station, name, value) => this.onStationPropertyChanged(station, name, value));
+                station.on("property changed", (station, name, value, ready) => this.onStationPropertyChanged(station, name, value, ready));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
@@ -681,6 +703,14 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.on("sd info ex", (station, sdStatus, sdCapacity, sdCapacityAvailable) => this.onStationSdInfoEx(station, sdStatus, sdCapacity, sdCapacityAvailable));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sd info ex")} Listener.`);
                 break;
+            case "ImageDownload":
+                station.on("image download", (station, file, image) => this.onStationImageDownload(station, file, image));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("image download")} Listener.`);
+                break;
+            case "DatabaseQueryLocal":
+                station.on("database query local", (station, returnCode, data) => this.onStationDatabaseQueryLocal(station, returnCode, data));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -732,7 +762,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.removeAllListeners("command result");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("command result")} Listener.`);
                 break;
-            case "GuardModeChanged":
+            case "GuardMode":
                 station.removeAllListeners("guard mode");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
@@ -836,6 +866,14 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.removeAllListeners("sd info ex");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sd info ex")} Listener.`);
                 break;
+            case "ImageDownload":
+                station.removeAllListeners("image download");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("image download")} Listener.`);
+                break;
+            case "DatabaseQueryLocal":
+                station.removeAllListeners("database query local");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -919,6 +957,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 return station.listenerCount("device pin verified");
             case "SdInfoEx":
                 return station.listenerCount("sd info ex");
+            case "ImageDownload":
+                return station.listenerCount("image download");
+            case "DatabaseQueryLocal":
+                return station.listenerCount("database query local");
         }
         return -1;
     }
@@ -1279,8 +1321,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    async onStationPropertyChanged(station, name, value) {
-        if (name != "guardMode" && name != "currentMode") {
+    async onStationPropertyChanged(station, name, value, ready) {
+        if (ready && (!name.startsWith("hidden-") && name != "guardMode" && name != "currentMode")) {
             this.api.logDebug(`Event "PropertyChanged": station: ${station.getSerial()} | name: ${name} | value: ${value}`);
         }
     }
@@ -1545,18 +1587,44 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
     /**
-     * Retrieves the last guard mode change event for the given station.
-     * @param station The station.
-     * @returns The time as timestamp or undefined.
+     * The action to be performed when event station image download is fired.
+     * @param station The station as Station object.
+     * @param file The file name.
+     * @param image The image.
      */
-    async getLastEventFromCloud(station) {
-        if (!(station.getSerial().startsWith("T8030"))) {
-            var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({ deviceSN: station.getSerial() }, 1);
-            if (lastGuardModeChangeTime !== undefined && lastGuardModeChangeTime.length >= 1) {
-                return lastGuardModeChangeTime[0].create_time;
+    onStationImageDownload(station, file, image) {
+        const type = (0, image_type_1.default)(image);
+        const picture = {
+            data: image,
+            type: type !== null ? type : { ext: "unknown", mime: "application/octet-stream" }
+        };
+        this.emit("station image download", station, file, picture);
+        this.api.getDevicesFromStation(station.getSerial()).then((devices) => {
+            var filename = path_1.default.parse(file).name;
+            var channel = 0;
+            if (filename.includes("_c")) {
+                channel = Number.parseInt(filename.split("_c", 2)[1]);
             }
-        }
-        return undefined;
+            for (const device of devices) {
+                //if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && (device.getPropertyValue(PropertyName.DevicePicture) === undefined || device.getPropertyValue(PropertyName.DevicePicture) === null)) {
+                if (device.getSerial() === station.getSerial() || device.getChannel() === channel) {
+                    this.api.logDebug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
+                    device.updateProperty(http_1.PropertyName.DevicePicture, picture);
+                    break;
+                }
+            }
+        }).catch((error) => {
+            this.api.logError(`onStationImageDownload - Set first picture error`, error);
+        });
+    }
+    /**
+     * The action to be performed when event station database query local is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    onStationDatabaseQueryLocal(station, returnCode, data) {
+        this.emit("station database query local", station, returnCode, data);
     }
     /**
      * Set the last guard mode change time to the array.
@@ -1569,13 +1637,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
         this.lastGuardModeChangeTimeForStations[stationSerial] = timeStamp;
         this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations[stationSerial]);
-    }
-    /**
-     * Helper function to retrieve the last event time from cloud and set the value to the array.
-     * @param station The station.
-     */
-    async setLastGuardModeChangeTimeFromCloud(station) {
-        this.setLastGuardModeChangeTime(station.getSerial(), await this.getLastEventFromCloud(station), "sec");
     }
     /**
      * Set the time for the last guard mode change to the current time.

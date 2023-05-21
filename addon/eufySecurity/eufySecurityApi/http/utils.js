@@ -1,8 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.randomNumber = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.SmartSafeByteWriter = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
+exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.SmartSafeByteWriter = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
 const crypto_1 = require("crypto");
 const const_1 = require("./const");
+const md5_1 = __importDefault(require("crypto-js/md5"));
+const enc_hex_1 = __importDefault(require("crypto-js/enc-hex"));
+const sha256_1 = __importDefault(require("crypto-js/sha256"));
+const image_type_1 = __importDefault(require("image-type"));
 const types_1 = require("./types");
 const normalizeVersionString = function (version) {
     const trimmed = version ? version.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1") : "";
@@ -63,6 +70,13 @@ const getAbsoluteFilePath = function (device_type, channel, filename) {
     return `/media/mmcblk0p1/Camera${String(channel).padStart(2, "0")}/${filename}.dat`;
 };
 exports.getAbsoluteFilePath = getAbsoluteFilePath;
+const getImageFilePath = function (device_type, channel, filename) {
+    if (device_type === types_1.DeviceType.FLOODLIGHT) {
+        return `/mnt/data/video/${filename}_c${String(channel).padStart(2, "0")}.jpg`;
+    }
+    return `/media/mmcblk0p1/video/${filename}_c${String(channel).padStart(2, "0")}.jpg`;
+};
+exports.getImageFilePath = getImageFilePath;
 const isNotificationSwitchMode = function (value, mode) {
     if (value === 1)
         value = 240;
@@ -368,3 +382,114 @@ const randomNumber = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 exports.randomNumber = randomNumber;
+const getIdSuffix = function (p2pDid) {
+    let result = 0;
+    const match = p2pDid.match(/^[A-Z]+-(\d+)-[A-Z]+$/);
+    if ((match === null || match === void 0 ? void 0 : match.length) == 2) {
+        const num1 = Number.parseInt(match[1][0]);
+        const num2 = Number.parseInt(match[1][1]);
+        const num3 = Number.parseInt(match[1][3]);
+        const num4 = Number.parseInt(match[1][5]);
+        result = num1 + num2 + num3;
+        if (num3 < 5) {
+            result = result + num3;
+        }
+        result = result + num4;
+    }
+    return result;
+};
+exports.getIdSuffix = getIdSuffix;
+const getImageBaseCode = function (serialnumber, p2pDid) {
+    let nr = 0;
+    try {
+        nr = Number.parseInt(`0x${serialnumber[serialnumber.length - 1]}`);
+    }
+    catch (error) {
+    }
+    nr = (nr + 10) % 10;
+    const base = serialnumber.substring(nr);
+    return `${base}${(0, exports.getIdSuffix)(p2pDid)}`;
+};
+exports.getImageBaseCode = getImageBaseCode;
+const getImageSeed = function (p2pDid, code) {
+    try {
+        const ncode = Number.parseInt(code.substring(2));
+        const prefix = 1000 - (0, exports.getIdSuffix)(p2pDid);
+        return (0, md5_1.default)(`${prefix}${ncode}`).toString(enc_hex_1.default).toUpperCase();
+    }
+    catch (error) {
+        //TODO: raise custom exception
+    }
+    return ``;
+};
+exports.getImageSeed = getImageSeed;
+const getImageKey = function (serialnumber, p2pDid, code) {
+    const basecode = (0, exports.getImageBaseCode)(serialnumber, p2pDid);
+    const seed = (0, exports.getImageSeed)(p2pDid, code);
+    const data = `01${basecode}${seed}`;
+    const hash = (0, sha256_1.default)(data);
+    const hashBytes = [...Buffer.from(hash.toString(enc_hex_1.default), "hex")];
+    const startByte = hashBytes[10];
+    for (let i = 0; i < 32; i++) {
+        const byte = hashBytes[i];
+        let fixed_byte = startByte;
+        if (i < 31) {
+            fixed_byte = hashBytes[i + 1];
+        }
+        if ((i == 31) || ((i & 1) != 0)) {
+            hashBytes[10] = fixed_byte;
+            if ((126 < byte) || (126 < hashBytes[10])) {
+                if (byte < hashBytes[10] || (byte - hashBytes[10]) == 0) {
+                    hashBytes[i] = hashBytes[10] - byte;
+                }
+                else {
+                    hashBytes[i] = byte - hashBytes[10];
+                }
+            }
+        }
+        else if ((byte < 125) || (fixed_byte < 125)) {
+            hashBytes[i] = fixed_byte + byte;
+        }
+    }
+    return `${Buffer.from(hashBytes.slice(16)).toString("hex").toUpperCase()}`;
+};
+exports.getImageKey = getImageKey;
+const decodeImage = function (p2pDid, data) {
+    if (data.length >= 12) {
+        const header = data.slice(0, 12).toString();
+        if (header === "eufysecurity") {
+            const serialnumber = data.slice(13, 29).toString();
+            const code = data.slice(30, 40).toString();
+            const imageKey = (0, exports.getImageKey)(serialnumber, p2pDid, code);
+            const otherData = data.slice(41);
+            const encryptedData = otherData.slice(0, 256);
+            const cipher = (0, crypto_1.createDecipheriv)("aes-128-ecb", Buffer.from(imageKey, "utf-8").slice(0, 16), null);
+            cipher.setAutoPadding(false);
+            const decryptedData = Buffer.concat([
+                cipher.update(encryptedData),
+                cipher.final()
+            ]);
+            decryptedData.copy(otherData);
+            return otherData;
+        }
+    }
+    return data;
+};
+exports.decodeImage = decodeImage;
+const getImagePath = function (path) {
+    const splittedPath = path.split("~");
+    if (splittedPath.length === 2) {
+        return splittedPath[1];
+    }
+    return path;
+};
+exports.getImagePath = getImagePath;
+const getImage = async function (api, serial, url) {
+    const image = await api.getImage(serial, url);
+    const type = await (0, image_type_1.default)(image);
+    return {
+        data: image,
+        type: type !== null ? type : { ext: "unknown", mime: "application/octet-stream" }
+    };
+};
+exports.getImage = getImage;

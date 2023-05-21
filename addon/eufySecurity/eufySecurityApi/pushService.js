@@ -151,7 +151,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
             }
             try {
                 var rawDevices = await this.api.getRawDevices();
-                var devices = rawDevices.getDevices();
+                var devices = await rawDevices.getDevices();
                 for (var deviceSerial in devices) {
                     try {
                         devices[deviceSerial].processPushNotification(message, this.config.getEventDurationSeconds());

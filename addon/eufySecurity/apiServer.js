@@ -80,59 +80,59 @@ class ApiServer {
      */
     async requestListener(request, response) {
         var _a;
-        var responseString = "";
+        var responseData = "";
         var contentType = "application/json";
         var fileName = "";
         var url = (_a = request.url) === null || _a === void 0 ? void 0 : _a.split("/");
         if (url === undefined) {
             url = [];
         }
-        // We use 'GET' for nearly all function of the api, exept updateing the config
+        // we use 'GET' for all api-functions exept setConfig and uploadConfig
         if (request.method == "GET") {
             if (url.length > 1) {
                 switch (url[1]) {
                     case "getServiceState":
-                        responseString = `{"success":true,"message":"${api.getServiceState()}"}`;
+                        responseData = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
                     case "getAccountInfo":
-                        responseString = await api.getAccountInfoAsJson();
+                        responseData = await api.getAccountInfoAsJson();
                         break;
                     case "getCaptchaState":
-                        responseString = api.getCaptchaState();
+                        responseData = api.getCaptchaState();
                         break;
                     case "setCaptchaCode":
                         if (url.length == 3) {
-                            responseString = api.setCaptchaCode(url[2]);
+                            responseData = api.setCaptchaCode(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDevices":
-                        responseString = await api.getDevicesAsJson();
+                        responseData = await api.getDevicesAsJson();
                         break;
                     case "getDevice":
                         if (url.length == 3) {
-                            responseString = await api.getDeviceAsJson(url[2]);
+                            responseData = await api.getDeviceAsJson(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDevicePropertiesMetadata":
                         if (url.length == 3) {
-                            responseString = await api.getDevicePropertiesMetadataAsJson(url[2]);
+                            responseData = await api.getDevicePropertiesMetadataAsJson(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDeviceProperties":
                         if (url.length == 3) {
-                            responseString = await api.getDevicePropertiesAsJson(url[2]);
+                            responseData = await api.getDevicePropertiesAsJson(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDevicePropertiesTruncated":
@@ -148,47 +148,63 @@ class ApiServer {
                                     json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
                             }
-                            responseString = JSON.stringify(json);
+                            responseData = JSON.stringify(json);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "setDeviceProperty":
                         if (url.length == 5) {
-                            responseString = await api.setDeviceProperty(url[2], url[3], url[4]);
+                            responseData = await api.setDeviceProperty(url[2], url[3], url[4]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getDeviceImage":
+                        if (url.length == 3) {
+                            var picture = await api.getDeviceImage(url[2]);
+                            if (picture !== null) {
+                                responseData = picture.data;
+                                contentType = picture.type.mime;
+                                fileName = "";
+                            }
+                            else {
+                                responseData = `{"success":false,"message":"No image for device."}`;
+                            }
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStations":
                     case "getBases":
-                        responseString = await api.getStationsAsJson();
+                        responseData = await api.getStationsAsJson();
                         break;
                     case "getStation":
                     case "getBase":
                         if (url.length == 3) {
-                            responseString = await api.getStationAsJson(url[2]);
+                            responseData = await api.getStationAsJson(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStationPropertiesMetadata":
                         if (url.length == 3) {
-                            responseString = await api.getStationPropertiesMetadataAsJson(url[2]);
+                            responseData = await api.getStationPropertiesMetadataAsJson(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStationProperties":
                         if (url.length == 3) {
-                            responseString = await api.getStationPropertiesAsJson(url[2]);
+                            responseData = await api.getStationPropertiesAsJson(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStationPropertiesTruncated":
@@ -199,229 +215,238 @@ class ApiServer {
                                 json.data.macAddress = "XX:XX:XX:XX:XX:XX";
                                 json.data.lanIpAddress = "XXX.XXX.XXX.XXX";
                             }
-                            responseString = JSON.stringify(json);
+                            responseData = JSON.stringify(json);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "setStationProperty":
                         if (url.length == 5) {
-                            responseString = await api.setStationProperty(url[2], url[3], url[4]);
+                            responseData = await api.setStationProperty(url[2], url[3], url[4]);
                         }
                         else if (url[3] == "rebootStation" && url.length == 4) {
-                            responseString = await api.rebootStation(url[2]);
+                            responseData = await api.rebootStation(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getHouses":
-                        responseString = await api.getHousesAsJson();
+                        responseData = await api.getHousesAsJson();
                         break;
                     case "getHouse":
                         if (url.length == 3) {
-                            responseString = await api.getHouseAsJson(url[2]);
+                            responseData = await api.getHouseAsJson(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getMode":
                         if (url.length == 2) {
-                            responseString = await api.getGuardMode();
+                            responseData = await api.getGuardMode();
                         }
                         else if (url.length == 3) {
-                            responseString = await api.getGuardModeStation(url[2]);
+                            responseData = await api.getGuardModeStation(url[2]);
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getConfig":
-                        responseString = await api.getAPIConfigAsJson();
+                        responseData = await api.getAPIConfigAsJson();
                         break;
                     case "getCountries":
-                        responseString = api.getCountriesAsJson();
+                        responseData = api.getCountriesAsJson();
                         break;
                     case "getApiInfo":
-                        responseString = api.getApiVersionAsJson();
+                        responseData = api.getApiVersionAsJson();
                         break;
                     case "getApiState":
-                        responseString = await api.getApiStateAsJson();
+                        responseData = await api.getApiStateAsJson();
                         break;
                     case "setMode":
                         if (url.length == 3) {
                             switch (url[2]) {
                                 case "away":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.AWAY);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.AWAY);
                                     break;
                                 case "custom1":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.CUSTOM1);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.CUSTOM1);
                                     break;
                                 case "custom2":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.CUSTOM2);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.CUSTOM2);
                                     break;
                                 case "custom3":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.CUSTOM3);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.CUSTOM3);
                                     break;
                                 case "disarmed":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.DISARMED);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.DISARMED);
                                     break;
                                 case "geo":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.GEO);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.GEO);
                                     break;
                                 case "home":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.HOME);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.HOME);
                                     break;
                                 case "off":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.OFF);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.OFF);
                                     break;
                                 case "schedule":
-                                    responseString = await api.setGuardMode(http_2.GuardMode.SCHEDULE);
+                                    responseData = await api.setGuardMode(http_2.GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
-                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations."}`;
+                                    responseData = `{"success":false,"message":"This mode cannot be set for all stations."}`;
                                     break;
                                 case "privacyOff":
-                                    responseString = `{"success":false,"message":"This mode cannot be set for all stations."}`;
+                                    responseData = `{"success":false,"message":"This mode cannot be set for all stations."}`;
                                     break;
                                 default:
-                                    responseString = `{"success":false,"message":"Unknown mode to set."}`;
+                                    responseData = `{"success":false,"message":"Unknown mode to set."}`;
                             }
                         }
                         else if (url.length == 4) {
                             switch (url[3]) {
                                 case "away":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.AWAY);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.AWAY);
                                     break;
                                 case "custom1":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM1);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM1);
                                     break;
                                 case "custom2":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM2);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM2);
                                     break;
                                 case "custom3":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM3);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM3);
                                     break;
                                 case "disarmed":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.DISARMED);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.DISARMED);
                                     break;
                                 case "geo":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.GEO);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.GEO);
                                     break;
                                 case "home":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.HOME);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.HOME);
                                     break;
                                 case "off":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.OFF);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.OFF);
                                     break;
                                 case "schedule":
-                                    responseString = await api.setGuardModeStation(url[2], http_2.GuardMode.SCHEDULE);
+                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
-                                    responseString = await api.setPrivacyMode(url[2], false);
+                                    responseData = await api.setPrivacyMode(url[2], false);
                                     break;
                                 case "privacyOff":
-                                    responseString = await api.setPrivacyMode(url[2], true);
+                                    responseData = await api.setPrivacyMode(url[2], true);
                                     break;
                                 default:
-                                    responseString = `{"success":false,"message":"Unknown mode to set."}`;
+                                    responseData = `{"success":false,"message":"Unknown mode to set."}`;
                             }
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "checkSystemVariables":
-                        responseString = await api.checkSystemVariables();
+                        responseData = await api.checkSystemVariables();
                         break;
                     case "createSystemVariable":
                         if (url.length == 3) {
-                            responseString = await api.createSystemVariable(url[2], "");
+                            responseData = await api.createSystemVariable(url[2], "");
                         }
                         else if (url.length == 4) {
-                            responseString = await api.createSystemVariable(url[2], decodeURIComponent(url[3]));
+                            responseData = await api.createSystemVariable(url[2], decodeURIComponent(url[3]));
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getLibrary":
                         if (url.length == 2) {
-                            responseString = await api.getLibrary();
+                            responseData = await api.getLibrary();
                         }
                         else {
-                            responseString = `{"success":false,"message":"Number of arguments not supported."}`;
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "connect":
+                        if (url.length == 3) {
+                            responseData = await api.connectStation(url[2]);
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getTimeZones":
-                        responseString = api.getTimeZones();
+                        responseData = api.getTimeZones();
                         break;
                     case "getLogFileContent":
-                        responseString = await api.getLogFileContent();
+                        responseData = await api.getLogFileContent();
                         break;
                     case "getErrorFileContent":
-                        responseString = await api.getErrorFileContent();
+                        responseData = await api.getErrorFileContent();
                         break;
                     case "removeTokenData":
-                        responseString = api.setTokenData("", 0);
+                        responseData = api.setTokenData("", 0);
                         break;
                     case "generateNewTrustedDeviceName":
-                        responseString = api.generateNewTrustedDeviceNameJson();
+                        responseData = api.generateNewTrustedDeviceNameJson();
                         break;
                     case "clearLogFile":
                         emptyLogFile();
-                        responseString = `{"success":true}`;
+                        responseData = `{"success":true}`;
                         break;
                     case "clearErrFile":
                         emptyErrFile();
-                        responseString = `{"success":true}`;
+                        responseData = `{"success":true}`;
                         break;
                     case "restartService":
                         restartServer();
-                        responseString = `{"success":true}`;
+                        responseData = `{"success":true}`;
                         break;
                     case "downloadConfig":
                         api.writeConfig();
-                        responseString = (0, fs_1.readFileSync)('config.json', 'utf-8');
+                        responseData = (0, fs_1.readFileSync)('config.json', 'utf-8');
                         contentType = "text/json";
                         var dateTime = new Date();
                         fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".json";
                         break;
                     case "downloadLogFile":
-                        responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
+                        responseData = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
                         contentType = "text/plain";
                         fileName = "eufySecurity.log";
                         break;
                     case "downloadErrFile":
-                        responseString = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
+                        responseData = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
                         contentType = "text/plain";
                         fileName = "eufySecurity.err";
                         break;
                     default:
-                        responseString = `{"success":false,"message":"Unknown command."}`;
+                        responseData = `{"success":false,"message":"Unknown command."}`;
                 }
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', contentType + '; charset=UTF-8');
-                if (contentType == "application/json") {
+                if (fileName === "") {
                     response.writeHead(200);
-                    response.end(responseString);
+                    //response.end(responseData);
                 }
-                else {
+                else if (fileName !== "") {
                     response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
-                    response.end(responseString);
+                    //response.end(responseData);
                 }
+                response.end(responseData);
             }
             else {
-                responseString = `{"success":false,"message":"Unknown command."}`;
+                responseData = `{"success":false,"message":"Unknown command."}`;
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', '; charset=UTF-8');
                 response.writeHead(200);
-                response.end(responseString);
+                response.end(responseData);
             }
         }
-        // We must handele the change config throught POST based on the form data we receive...
+        // using 'POST' for setConfig and uploadConfig
         else if (request.method == "POST") {
             if (url.length > 1) {
                 switch (url[1]) {
@@ -569,16 +594,16 @@ class ApiServer {
                             }
                             if (isDataOK == true) {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
-                                responseString = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
                             }
                             else {
-                                responseString = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
+                                responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
                             }
-                            var resJson = JSON.parse(responseString);
+                            var resJson = JSON.parse(responseData);
                             response.setHeader('Access-Control-Allow-Origin', '*');
                             response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                             response.writeHead(200);
-                            response.end(responseString);
+                            response.end(responseData);
                             if (resJson.success == true && resJson.serviceRestart == true) {
                                 logger.logInfoBasic("Settings saved. Restarting apiServer.");
                                 restartServer();
@@ -604,33 +629,33 @@ class ApiServer {
                         });
                         request.on("end", function () {
                             try {
-                                responseString = "";
+                                responseData = "";
                                 if (checkUploadedFileMetadata(postData) == false) {
                                     logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing.");
-                                    responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
+                                    responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
                                 }
                                 else {
                                     var fileContent = getUploadFileContent(postData);
                                     if (fileContent === undefined) {
-                                        if (responseString == "") {
+                                        if (responseData == "") {
                                             logger.logInfoBasic("Error during upload and saving config file: File content could not be determined.");
-                                            responseString = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
+                                            responseData = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
                                         }
                                         else {
                                             logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
-                                            responseString = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
+                                            responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
                                         }
                                     }
                                     else {
                                         (0, fs_1.writeFileSync)("config.json.upload", fileContent, 'utf-8');
-                                        responseString = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
+                                        responseData = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
                                     }
                                 }
-                                var resJson = JSON.parse(responseString);
+                                var resJson = JSON.parse(responseData);
                                 response.setHeader('Access-Control-Allow-Origin', '*');
                                 response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                                 response.writeHead(200);
-                                response.end(responseString);
+                                response.end(responseData);
                                 if (resJson.success == true && resJson.serviceRestart == true) {
                                     logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
                                     restartServer();
@@ -644,28 +669,28 @@ class ApiServer {
                         });
                         break;
                     default:
-                        responseString = `{"success":false,"message":"Unknown command."}`;
+                        responseData = `{"success":false,"message":"Unknown command."}`;
                         response.setHeader('Access-Control-Allow-Origin', '*');
                         response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                         response.writeHead(200);
-                        response.end(responseString);
+                        response.end(responseData);
                 }
             }
             else {
-                responseString = `{"success":false,"message":"Wrong amount of arguments."}`;
+                responseData = `{"success":false,"message":"Wrong amount of arguments."}`;
                 response.setHeader('Access-Control-Allow-Origin', '*');
                 response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                 response.writeHead(200);
-                response.end(responseString);
+                response.end(responseData);
             }
         }
         // Be polite and give a answer even we know that there is noting to answer...
         else {
-            responseString = `{"success":false,"message":"Unknown command."}`;
+            responseData = `{"success":false,"message":"Unknown command."}`;
             response.setHeader('Access-Control-Allow-Origin', '*');
             response.setHeader('Content-Type', 'application/json; charset=UTF-8');
             response.writeHead(200);
-            response.end(responseString);
+            response.end(responseData);
         }
     }
 }
