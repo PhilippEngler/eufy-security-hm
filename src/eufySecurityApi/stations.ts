@@ -98,7 +98,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.addEventListener(station, "CurrentMode", false);
                     this.addEventListener(station, "PropertyChanged", false);
                     this.addEventListener(station, "RawPropertyChanged", false);
-                    this.setLastGuardModeChangeTimeFromCloud(station);
                 }
 
                 this.addEventListener(station, "Connect", false);
@@ -137,6 +136,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(station, "DatabaseQueryLocal", false);
 
                 this.addStation(station);
+                station.initialize();
             }
         }
 
@@ -1887,24 +1887,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Retrieves the last guard mode change event for the given station.
-     * @param station The station.
-     * @returns The time as timestamp or undefined.
-     */
-    private async getLastEventFromCloud(station : Station) : Promise <number | undefined>
-    {
-        /*if(!(station.getSerial().startsWith("T8030")))
-        {
-            var lastGuardModeChangeTime = await this.httpService.getAllAlarmEvents({deviceSN : station.getSerial()}, 1);
-            if(lastGuardModeChangeTime !== undefined && lastGuardModeChangeTime.length >= 1)
-            {
-                return lastGuardModeChangeTime[0].create_time;
-            }
-        }*/
-        return undefined;
-    }
-
-    /**
      * Set the last guard mode change time to the array.
      * @param stationSerial The serial of the station.
      * @param time The time as timestamp or undefined.
@@ -1917,15 +1899,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         this.lastGuardModeChangeTimeForStations[stationSerial] = timeStamp;
         this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations[stationSerial]);
-    }
-
-    /**
-     * Helper function to retrieve the last event time from cloud and set the value to the array.
-     * @param station The station.
-     */
-    private async setLastGuardModeChangeTimeFromCloud(station : Station) : Promise<void>
-    {
-        this.setLastGuardModeChangeTime(station.getSerial(), await this.getLastEventFromCloud(station), "sec");
     }
 
     /**
