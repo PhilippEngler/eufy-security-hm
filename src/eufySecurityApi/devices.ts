@@ -19,7 +19,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private devicesLoaded = false;
     private loadingEmitter = new EventEmitter();
     private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
-    private deviceImageLoadTimeout : { [deviceSerial : string] : NodeJS.Timeout } = {};
+    private deviceImageLoadTimeout : { [deviceSerial : string] : NodeJS.Timeout | undefined } = {};
 
     /**
      * Create the Devices objects holding all devices in the account.
@@ -214,6 +214,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             this.devices[serial] = device;
             this.devicesHistory[serial] = [];
+            this.deviceImageLoadTimeout[serial] = undefined;
             this.emit("device added", device);
 
             if (device.isLock())
@@ -1192,7 +1193,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
         var results = this.getEventResultsForDevice(deviceSerial);
-        if(results.length > 0 && results[results.length -1].history.thumb_path)
+        if(results.length > 0 && results[results.length -1].history && results[results.length -1].history.thumb_path)
         {
             station.downloadImage(results[results.length -1].history.thumb_path);
         }
