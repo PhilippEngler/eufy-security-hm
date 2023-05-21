@@ -2061,23 +2061,8 @@ export class EufySecurityApi
                         }
                         if(device !== undefined)
                         {
-                            json.data.push({"deviceSerial":deviceSerial, "pictureUrl":(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T")) ? this.config.getCameraDefaultImage() : device.getLastCameraImageURL(), "pictureTime":this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
-                            if(device.getLastCameraImageURL() === undefined || (device.getLastCameraImageURL() as string).startsWith("T"))
-                            {
-                                this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
-                            }
-                            else
-                            {
-                                this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, device.getLastCameraImageURL() as string);
-                            }
-                            if(device.getLastCameraVideoURL() == "")
-                            {
-                                this.setSystemVariableString("eufyCameraVideoURL" + deviceSerial, this.config.getCameraDefaultVideo());
-                            }
-                            else
-                            {
-                                this.setSystemVariableString("eufyCameraVideoURL" + deviceSerial, device.getLastCameraVideoURL());
-                            }
+                            json.data.push({"deviceSerial":deviceSerial, "pictureTime":this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
+                            this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
                         }
                     }
                     this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
