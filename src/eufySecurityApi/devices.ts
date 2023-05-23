@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, DeviceType, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue, waitForEvent } from "./utils";
@@ -1123,7 +1123,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
         }
 
-        this.deviceImageLoadTimeout[deviceSerial] = setTimeout(() => { this.getDeviceImage(deviceSerial) }, 60 * 1000);
+        this.deviceImageLoadTimeout[deviceSerial] = setTimeout(() => { this.getDeviceImage(deviceSerial) }, 75 * 1000);
     }
 
     /**
@@ -1136,7 +1136,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
         }
-
+        
         this.getDeviceEvents(deviceSerial);
     }
 
@@ -1193,9 +1193,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
         var results = this.getEventResultsForDevice(deviceSerial);
-        if(results.length > 0 && results[results.length -1].history && results[results.length -1].history.thumb_path)
+        if(results && results.length > 0)
         {
-            station.downloadImage(results[results.length -1].history.thumb_path);
+            for(var pos = results.length - 1; pos >= 0; pos--)
+            {
+                if(results[pos].history && results[pos].history.thumb_path)
+                {
+                    station.downloadImage(results[pos].history.thumb_path);
+                    return;
+                }
+            }
         }
     }
 
@@ -1206,11 +1213,17 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
     {
-        if(this.devicesHistory[deviceSerial] === undefined || this.devicesHistory[deviceSerial].length == 0)
+        if(this.devicesHistory[deviceSerial] !== undefined && this.devicesHistory[deviceSerial].length > 0)
         {
-            return undefined;
+            for(var pos = this.devicesHistory[deviceSerial].length - 1; pos >= 0; pos--)
+            {
+                if(this.devicesHistory[deviceSerial][pos].history && this.devicesHistory[deviceSerial][pos].history.start_time)
+                {
+                    return this.devicesHistory[deviceSerial][pos].history.start_time.valueOf();
+                }
+            }
         }
-        return this.devicesHistory[deviceSerial][this.devicesHistory[deviceSerial].length -1].history.start_time.valueOf();
+        return undefined;
     }
 
     /**
