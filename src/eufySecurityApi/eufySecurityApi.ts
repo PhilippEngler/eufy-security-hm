@@ -2669,7 +2669,9 @@ export class EufySecurityApi
             case GuardMode.AWAY:
                 res = "aktiviert";
                 break;
-            case GuardMode.CUSTOM1 || GuardMode.CUSTOM2 || GuardMode.CUSTOM3:
+            case GuardMode.CUSTOM1:
+            case GuardMode.CUSTOM2:
+            case GuardMode.CUSTOM3:
                 res = "personalisiert";
                 break;
             case GuardMode.DISARMED:
