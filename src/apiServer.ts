@@ -206,7 +206,6 @@ class ApiServer
                             {
                                 responseData = picture.data;
                                 contentType = picture.type.mime;
-                                fileName = "";
                             }
                             else
                             {
