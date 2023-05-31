@@ -2017,7 +2017,9 @@ class EufySecurityApi {
             case http_1.GuardMode.AWAY:
                 res = "aktiviert";
                 break;
-            case http_1.GuardMode.CUSTOM1 || http_1.GuardMode.CUSTOM2 || http_1.GuardMode.CUSTOM3:
+            case http_1.GuardMode.CUSTOM1:
+            case http_1.GuardMode.CUSTOM2:
+            case http_1.GuardMode.CUSTOM3:
                 res = "personalisiert";
                 break;
             case http_1.GuardMode.DISARMED:
@@ -2310,7 +2312,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "2.1.0";
+        return "2.1.1";
     }
     /**
      * Return the version of the library used for communicating with eufy.

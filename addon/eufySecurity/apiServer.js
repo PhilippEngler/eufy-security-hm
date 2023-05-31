@@ -168,7 +168,6 @@ class ApiServer {
                             if (picture !== null) {
                                 responseData = picture.data;
                                 contentType = picture.type.mime;
-                                fileName = "";
                             }
                             else {
                                 responseData = `{"success":false,"message":"No image for device."}`;

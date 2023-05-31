@@ -680,7 +680,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onCryingDetected(device, state) {
         this.api.logDebug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -690,7 +692,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onSoundDetected(device, state) {
         this.api.logDebug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -700,7 +704,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onPetDetected(device, state) {
         this.api.logDebug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -710,7 +716,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onVehicleDetected(device, state) {
         this.api.logDebug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -720,7 +728,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onMotionDetected(device, state) {
         this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        //if(state === false)
+        //{
         this.loadDeviceImage(device.getSerial());
+        //}
         //this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -731,7 +742,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onPersonDetected(device, state, person) {
         this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
-        this.loadDeviceImage(device.getSerial());
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -921,7 +934,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     addEventResultForDevice(deviceSerial, eventResult) {
         for (let event of this.devicesHistory[deviceSerial]) {
-            if (event.record_id === eventResult.record_id) {
+            if (event.history && eventResult.history && event.history.start_time && eventResult.history.start_time && event.record_id === eventResult.record_id && event.history.storage_path === eventResult.history.storage_path && event.history.start_time === eventResult.history.start_time) {
                 return;
             }
         }
@@ -943,7 +956,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         if (this.deviceImageLoadTimeout[deviceSerial] !== undefined) {
             clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
         }
-        this.deviceImageLoadTimeout[deviceSerial] = setTimeout(() => { this.getDeviceImage(deviceSerial); }, 60 * 1000);
+        this.deviceImageLoadTimeout[deviceSerial] = setTimeout(() => { this.getDeviceImage(deviceSerial); }, 75 * 1000);
     }
     /**
      * Helper for removing timeout and initiate download of the image of the last event.
@@ -964,7 +977,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         var station = await this.api.getStation(device.getStationSerial());
         var deviceSerials = [];
         var dateEnd = new Date(Date.now());
-        var dateStart = new Date(dateEnd.getFullYear() - 1, dateEnd.getMonth(), dateEnd.getDate());
+        dateEnd.setDate(dateEnd.getDate() + 1);
+        var dateStart = new Date(Date.now());
+        dateStart.setFullYear(dateStart.getFullYear() - 1);
         deviceSerials.push(device.getSerial());
         if (device) {
             station.databaseQueryLocal(deviceSerials, dateStart, dateEnd);
@@ -977,7 +992,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         var devices = await this.getDevices();
         var stations = await this.api.getStations();
         var dateEnd = new Date(Date.now());
-        var dateStart = new Date(dateEnd.getFullYear() - 1, dateEnd.getMonth(), dateEnd.getDate());
+        dateEnd.setDate(dateEnd.getDate() + 1);
+        var dateStart = new Date(Date.now());
+        dateStart.setFullYear(dateStart.getFullYear() - 1);
         for (let station in stations) {
             let deviceSerials = [];
             for (let device in devices) {
@@ -996,8 +1013,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
         var results = this.getEventResultsForDevice(deviceSerial);
-        if (results.length > 0 && results[results.length - 1].history && results[results.length - 1].history.thumb_path) {
-            station.downloadImage(results[results.length - 1].history.thumb_path);
+        if (results && results.length > 0) {
+            for (var pos = results.length - 1; pos >= 0; pos--) {
+                if (results[pos].history && results[pos].history.thumb_path) {
+                    station.downloadImage(results[pos].history.thumb_path);
+                    return;
+                }
+            }
         }
     }
     /**
@@ -1006,10 +1028,14 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @returns The timestamp or undefinied.
      */
     getLastEventTimeForDevice(deviceSerial) {
-        if (this.devicesHistory[deviceSerial] === undefined || this.devicesHistory[deviceSerial].length == 0) {
-            return undefined;
+        if (this.devicesHistory[deviceSerial] !== undefined && this.devicesHistory[deviceSerial].length > 0) {
+            for (var pos = this.devicesHistory[deviceSerial].length - 1; pos >= 0; pos--) {
+                if (this.devicesHistory[deviceSerial][pos].history && this.devicesHistory[deviceSerial][pos].history.start_time) {
+                    return this.devicesHistory[deviceSerial][pos].history.start_time.valueOf();
+                }
+            }
         }
-        return this.devicesHistory[deviceSerial][this.devicesHistory[deviceSerial].length - 1].history.start_time.valueOf();
+        return undefined;
     }
     /**
      * Set the given property for the given device to the given value.
