@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20230521
+ * 20230531
  */
 port = "";
 action = "";
@@ -436,7 +436,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 function loadDevices()
 {
 	var xmlhttp, objResp, device;
-	var text = "", cams = "", indoorcams = "", solocams = "", doorbellcams = "", floodlightcams = "", locks = "", keypads = "", sensors = "", unknown = "";
+	var text = "", cams = "", indoorcams = "", solocams = "", doorbellcams = "", outdoorlights = "", locks = "", keypads = "", sensors = "", unknown = "";
 	var url = `${location.protocol}//${location.hostname}:${port}/getDevices`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
@@ -466,7 +466,7 @@ function loadDevices()
 								doorbellcams += createCardDevice(objResp.data[device]);
 								break;
 							case "floodlight":
-								floodlightcams += createCardDevice(objResp.data[device]);
+								outdoorlights += createCardDevice(objResp.data[device]);
 								break;
 							case "lock":
 								locks += createCardDevice(objResp.data[device]);
@@ -484,9 +484,9 @@ function loadDevices()
 					text += createDeviceTypeCardsContainer("cameras", "Kameras", cams);
 					text += createDeviceTypeCardsContainer("indoorcameras", "Innenkameras", indoorcams);
 					text += createDeviceTypeCardsContainer("solocameras", "Solokameras", solocams);
-					text += createDeviceTypeCardsContainer("doorbellcameras", "Videotürklingelkameras", doorbellcams);
-					text += createDeviceTypeCardsContainer("floodlightcameras", "Flutlichtkameras", floodlightcams);
-					text += createDeviceTypeCardsContainer("locks", "Locks", locks);
+					text += createDeviceTypeCardsContainer("doorbellcameras", "Videotürklingel", doorbellcams);
+					text += createDeviceTypeCardsContainer("outdoorlights", "Außenleuchten", outdoorlights);
+					text += createDeviceTypeCardsContainer("locks", "Schlösser", locks);
 					text += createDeviceTypeCardsContainer("keypads", "Keypads", keypads);
 					text += createDeviceTypeCardsContainer("sensors", "Sensoren", sensors);
 					text += createDeviceTypeCardsContainer("unknown", "unbekannte Geräte", unknown);
@@ -3798,7 +3798,7 @@ function loadDataInfo(showLoading)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 2.1.0`;
+				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 2.1.1`;
 				document.getElementById("versionInfo").innerHTML = info;
 			}
 			else

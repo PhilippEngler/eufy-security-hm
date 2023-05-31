@@ -3040,7 +3040,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.1.0";
+        return "2.1.1";
     }
 
     /**

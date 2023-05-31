@@ -799,7 +799,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onCryingDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
 
@@ -811,7 +814,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onSoundDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
 
@@ -823,7 +829,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPetDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
 
@@ -835,7 +844,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private onVehicleDetected(device: Device, state: boolean): void
     {
         this.api.logDebug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
 
@@ -847,7 +859,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onMotionDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
-        this.loadDeviceImage(device.getSerial());
+        //if(state === false)
+        //{
+            this.loadDeviceImage(device.getSerial());
+        //}
         //this.setLastVideoTimeNow(device.getSerial());
     }
 
@@ -860,7 +875,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPersonDetected(device : Device, state : boolean, person : string) : Promise<void>
     {
         this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
-        this.loadDeviceImage(device.getSerial());
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
 
@@ -1094,7 +1112,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         for (let event of this.devicesHistory[deviceSerial])
         {
-            if(event.record_id === eventResult.record_id)
+            if(event.history && eventResult.history && event.history.start_time && eventResult.history.start_time && event.record_id === eventResult.record_id && event.history.storage_path === eventResult.history.storage_path && event.history.start_time === eventResult.history.start_time)
             {
                 return;
             }
@@ -1149,8 +1167,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
         var deviceSerials : string[] = [];
-        var dateEnd = new Date(Date.now())
-        var dateStart = new Date(dateEnd.getFullYear()-1, dateEnd.getMonth(), dateEnd.getDate());
+        var dateEnd = new Date(Date.now());
+        dateEnd.setDate(dateEnd.getDate()+1);
+        var dateStart = new Date(Date.now());
+        dateStart.setFullYear(dateStart.getFullYear()-1);
 
         deviceSerials.push(device.getSerial());
         if(device)
@@ -1166,8 +1186,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         var devices = await this.getDevices();
         var stations = await this.api.getStations();
-        var dateEnd = new Date(Date.now())
-        var dateStart = new Date(dateEnd.getFullYear()-1, dateEnd.getMonth(), dateEnd.getDate());
+        var dateEnd = new Date(Date.now());
+        dateEnd.setDate(dateEnd.getDate()+1);
+        var dateStart = new Date(Date.now());
+        dateStart.setFullYear(dateStart.getFullYear()-1);
 
         for(let station in stations)
         {
