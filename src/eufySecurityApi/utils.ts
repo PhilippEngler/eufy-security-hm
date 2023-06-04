@@ -158,6 +158,7 @@ export const parseJSON = function(data: string, log: Logger): any {
 
 export function waitForEvent<T>(emitter: EventEmitter, event: string): Promise<T> {
     return new Promise((resolve, reject) => {
+        emitter.setMaxListeners(30);
         const success = (val: T): void => {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             emitter.off("error", fail);
