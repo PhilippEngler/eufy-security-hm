@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue, waitForEvent } from "./utils";
@@ -88,11 +88,19 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     else if(Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type))
                     {
                         new_device = WiredDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial]);
-                    } 
+                    }
                     else if(Device.isFloodLight(resDevices[deviceSerial].device_type))
                     {
                         new_device = FloodlightCamera.getInstance(this.httpService, resDevices[deviceSerial]);
-                    }                        
+                    }
+                    else if (Device.isWallLightCam(resDevices[deviceSerial].device_type))
+                    {
+                        new_device = WallLightCam.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (Device.isGarageCamera(resDevices[deviceSerial].device_type))
+                    {
+                        new_device = GarageCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
                     else if(Device.isCamera(resDevices[deviceSerial].device_type))
                     {
                         new_device = Camera.getInstance(this.httpService, resDevices[deviceSerial]);
@@ -457,14 +465,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             return "camera";
         }
-        else if(device.isEntrySensor())
-        {
-            return "sensor";
-        }
-        else if(device.isKeyPad())
-        {
-            return "keypad";
-        }
         else if(device.isDoorbell())
         {
             return "doorbell";
@@ -481,9 +481,29 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             return "floodlight";
         }
-        else if (device.isLock())
+        else if(device.isWallLightCam())
+        {
+            return "walllightcamera";
+        }
+        else if(device.isGarageCamera())
+        {
+            return "garagecamera";
+        }
+        else if(device.isStarlight4GLTE())
+        {
+            return "starlight4glte"
+        }
+        else if(device.isLock())
         {
             return "lock";
+        }
+        else if(device.isEntrySensor())
+        {
+            return "sensor";
+        }
+        else if(device.isKeyPad())
+        {
+            return "keypad";
         }
         else
         {
@@ -766,7 +786,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 if (picture === undefined || picture === null || (picture && (picture as Picture).data?.length === 0))
                 {
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
-                        station.downloadImage(value as string);
+                        if (station.hasCommand(CommandName.StationDownloadImage))
+                        {
+                            station.downloadImage(value as string);
+                        }
                     }).catch((error) => {
                         this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station download image (station: ${device.getStationSerial()} image_path: ${value})`, error);
                     });
@@ -858,11 +881,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onMotionDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
-        //if(state === false)
-        //{
+        this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        if(state === false)
+        {
             this.loadDeviceImage(device.getSerial());
-        //}
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
 
@@ -874,7 +897,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onPersonDetected(device : Device, state : boolean, person : string) : Promise<void>
     {
-        this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
         if(state === false)
         {
             this.loadDeviceImage(device.getSerial());
@@ -1666,7 +1689,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.HUMAN_RECOGNITION, value as boolean);
                 break;
             case PropertyName.DeviceMotionDetectionTypeHuman:
-                await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.HUMAN_DETECTION, value as boolean);
+                if (device.isWallLightCam())
+                {
+                    await station.setMotionDetectionTypeHuman(device, value as boolean);
+                }
+                else
+                {
+                    await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.HUMAN_DETECTION, value as boolean);
+                }
                 break;
             case PropertyName.DeviceMotionDetectionTypePet:
                 await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.PET_DETECTION, value as boolean);
@@ -1675,7 +1705,50 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.VEHICLE_DETECTION, value as boolean);
                 break;
             case PropertyName.DeviceMotionDetectionTypeAllOtherMotions:
-                await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.ALL_OTHER_MOTION, value as boolean);
+                if (device.isWallLightCam())
+                {
+                    await station.setMotionDetectionTypeAllOtherMotions(device, value as boolean);
+                }
+                else
+                {
+                    await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.ALL_OTHER_MOTION, value as boolean);
+                }
+                break;
+            case PropertyName.DeviceLightSettingsManualDailyLighting:
+                await station.setLightSettingsManualDailyLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsManualColoredLighting:
+                await station.setLightSettingsManualColoredLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsManualDynamicLighting:
+                await station.setLightSettingsManualDynamicLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsMotionDailyLighting:
+                await station.setLightSettingsMotionDailyLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsMotionColoredLighting:
+                await station.setLightSettingsMotionColoredLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsMotionDynamicLighting:
+                await station.setLightSettingsMotionDynamicLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsScheduleDailyLighting:
+                await station.setLightSettingsScheduleDailyLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsScheduleColoredLighting:
+                await station.setLightSettingsScheduleColoredLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsScheduleDynamicLighting:
+                await station.setLightSettingsScheduleDynamicLighting(device, value as number);
+                break;
+            case PropertyName.DeviceDoorControlWarning:
+                await station.setDoorControlWarning(device, value as boolean);
+                break;
+            case PropertyName.DeviceDoor1Open:
+                await station.openDoor(device, value as boolean, 1);
+                break;
+            case PropertyName.DeviceDoor2Open:
+                await station.openDoor(device, value as boolean, 2);
                 break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))

@@ -1,14 +1,14 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import { HTTPApi } from "./api";
-import { CommandName, DeviceCommands, DeviceEvent, DeviceProperties, DeviceType, FloodlightMotionTriggeredDistance, GenericDeviceProperties, ParamType, PropertyName, DeviceDogDetectedProperty, DeviceDogLickDetectedProperty, DeviceDogPoopDetectedProperty, DeviceIdentityPersonDetectedProperty, DeviceMotionHB3DetectionTypeAllOhterMotionsProperty, DeviceMotionHB3DetectionTypeHumanProperty, DeviceMotionHB3DetectionTypeHumanRecognitionProperty, DeviceMotionHB3DetectionTypePetProperty, DeviceMotionHB3DetectionTypeVehicleProperty, DeviceStrangerPersonDetectedProperty, DeviceVehicleDetectedProperty, HB3DetectionTypes, DevicePersonDetectedProperty, DeviceMotionDetectedProperty, DevicePetDetectedProperty, DeviceSoundDetectedProperty, DeviceCryingDetectedProperty, DeviceDetectionStatisticsWorkingDaysProperty, DeviceDetectionStatisticsDetectedEventsProperty, DeviceDetectionStatisticsRecordedEventsProperty, DeviceEnabledSoloProperty, FloodlightT8420XDeviceProperties, WiredDoorbellT8200XDeviceProperties } from "./types";
-import { ResultResponse, StreamResponse, DeviceListResponse, Voice } from "./models"
+import { CommandName, DeviceCommands, DeviceEvent, DeviceProperties, DeviceType, FloodlightMotionTriggeredDistance, GenericDeviceProperties, ParamType, PropertyName, DeviceDogDetectedProperty, DeviceDogLickDetectedProperty, DeviceDogPoopDetectedProperty, DeviceIdentityPersonDetectedProperty, DeviceMotionHB3DetectionTypeAllOhterMotionsProperty, DeviceMotionHB3DetectionTypeHumanProperty, DeviceMotionHB3DetectionTypeHumanRecognitionProperty, DeviceMotionHB3DetectionTypePetProperty, DeviceMotionHB3DetectionTypeVehicleProperty, DeviceStrangerPersonDetectedProperty, DeviceVehicleDetectedProperty, HB3DetectionTypes, DevicePersonDetectedProperty, DeviceMotionDetectedProperty, DevicePetDetectedProperty, DeviceSoundDetectedProperty, DeviceCryingDetectedProperty, DeviceDetectionStatisticsWorkingDaysProperty, DeviceDetectionStatisticsDetectedEventsProperty, DeviceDetectionStatisticsRecordedEventsProperty, DeviceEnabledSoloProperty, FloodlightT8420XDeviceProperties, WiredDoorbellT8200XDeviceProperties, GarageDoorState } from "./types";
+import { ResultResponse, StreamResponse, DeviceListResponse, Voice, GarageDoorSensorsProperty } from "./models"
 import { ParameterHelper } from "./parameter";
 import { DeviceEvents, PropertyValue, PropertyValues, PropertyMetadataAny, IndexedProperty, RawValues, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, Voices, PropertyMetadataObject } from "./interfaces";
 import { CommandType, ESLAnkerBleConstant } from "../p2p/types";
 import { calculateCellularSignalLevel, calculateWifiSignalLevel, getAbsoluteFilePath, getDistances, getImage, getImagePath, hexDate, hexTime, hexWeek, isHB3DetectionModeEnabled, SmartSafeByteWriter } from "./utils";
 import { eslTimestamp, getCurrentTimeInSeconds } from "../p2p/utils";
-import { CusPushEvent, DoorbellPushEvent, LockPushEvent, IndoorPushEvent, SmartSafeEvent, HB3PairedDevicePushEvent } from "../push/types";
+import { CusPushEvent, DoorbellPushEvent, LockPushEvent, IndoorPushEvent, SmartSafeEvent, HB3PairedDevicePushEvent, GarageDoorPushEvent } from "../push/types";
 import { PushMessage, SmartSafeEventValueDetail } from "../push/models";
 import { isEmpty } from "../utils";
 import { InvalidPropertyError, PropertyNotSupportedError } from "./error";
@@ -68,9 +68,9 @@ export class Device extends TypedEmitter<DeviceEvents> {
         this.log.debug("Normalized Properties", { deviceSN: this.getSerial(), properties: this.properties });
     }
 
-    public updateProperty(name: string, value: PropertyValue): boolean {
+    public updateProperty(name: string, value: PropertyValue, force = false): boolean {
         if ((this.properties[name] !== undefined && this.properties[name] !== value)
-            || this.properties[name] === undefined) {
+            || this.properties[name] === undefined || force) {
             const oldValue = this.properties[name];
             this.properties[name] = value;
             this.emit("property changed", this, name, value, this.ready);
@@ -504,13 +504,13 @@ export class Device extends TypedEmitter<DeviceEvents> {
                         }
                     }
                 }
-            } else if (
+            } else if ((
                 property.name === PropertyName.DeviceMotionDetectionTypeHuman ||
                 property.name === PropertyName.DeviceMotionDetectionTypeHumanRecognition ||
                 property.name === PropertyName.DeviceMotionDetectionTypePet ||
                 property.name === PropertyName.DeviceMotionDetectionTypeVehicle ||
                 property.name === PropertyName.DeviceMotionDetectionTypeAllOtherMotions
-            ) {
+            ) && this.getStationSerial().startsWith("T8030")) {
                 const booleanProperty = property as PropertyMetadataBoolean;
                 try {
                     return isHB3DetectionModeEnabled(Number.parseInt(value), property.name === PropertyName.DeviceMotionDetectionTypeHuman ? HB3DetectionTypes.HUMAN_DETECTION : property.name === PropertyName.DeviceMotionDetectionTypeHumanRecognition ? HB3DetectionTypes.HUMAN_RECOGNITION : property.name === PropertyName.DeviceMotionDetectionTypePet ? HB3DetectionTypes.PET_DETECTION : property.name === PropertyName.DeviceMotionDetectionTypeVehicle ? HB3DetectionTypes.VEHICLE_DETECTION : HB3DetectionTypes.ALL_OTHER_MOTION);
@@ -645,7 +645,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
             newMetadata[PropertyName.DeviceEnabled] = DeviceEnabledSoloProperty;
 
             metadata = newMetadata;
-        } else if (metadata === undefined) {
+        } else if (Object.keys(metadata).length === 0) {
             metadata = {
                 ...GenericDeviceProperties
             };
@@ -730,7 +730,12 @@ export class Device extends TypedEmitter<DeviceEvents> {
             type == DeviceType.INDOOR_COST_DOWN_CAMERA ||
             type == DeviceType.FLOODLIGHT_CAMERA_8422 ||
             type == DeviceType.FLOODLIGHT_CAMERA_8423 ||
-            type == DeviceType.FLOODLIGHT_CAMERA_8424)
+            type == DeviceType.FLOODLIGHT_CAMERA_8424 ||
+            type == DeviceType.WALL_LIGHT_CAM ||
+            type == DeviceType.WALL_LIGHT_CAM_81A0 ||
+            type == DeviceType.CAMERA_GARAGE_T8453_COMMON ||
+            type == DeviceType.CAMERA_GARAGE_T8453 ||
+            type == DeviceType.CAMERA_GARAGE_T8452)
             return true;
         return false;
     }
@@ -763,7 +768,8 @@ export class Device extends TypedEmitter<DeviceEvents> {
             type == DeviceType.SMART_SAFE_7401 ||
             type == DeviceType.SMART_SAFE_7402 ||
             type == DeviceType.SMART_SAFE_7403 ||
-            type == DeviceType.CAMERA_FG)
+            type == DeviceType.CAMERA_FG ||
+            type == DeviceType.WALL_LIGHT_CAM_81A0)
             //TODO: Add other battery devices
             return true;
         return false;
@@ -847,6 +853,12 @@ export class Device extends TypedEmitter<DeviceEvents> {
 
     static isFloodLightT8420X(type: number, serialnumber: string): boolean {
         if (type == DeviceType.FLOODLIGHT && serialnumber.startsWith("T8420") && serialnumber.length > 7 && serialnumber.charAt(6) === "6")
+            return true;
+        return false;
+    }
+
+    static isWallLightCam(type: number): boolean{
+        if(type == DeviceType.WALL_LIGHT_CAM || type == DeviceType.WALL_LIGHT_CAM_81A0)
             return true;
         return false;
     }
@@ -1035,6 +1047,14 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return false;
     }
 
+    static isGarageCamera(type: number): boolean {
+        if (type == DeviceType.CAMERA_GARAGE_T8452 ||
+            type == DeviceType.CAMERA_GARAGE_T8453 ||
+            type == DeviceType.CAMERA_GARAGE_T8453_COMMON)
+            return true;
+        return false;
+    }
+
     static isIntegratedDeviceBySn(sn: string): boolean {
         return sn.startsWith("T8420") ||
             sn.startsWith("T820") ||
@@ -1071,6 +1091,10 @@ export class Device extends TypedEmitter<DeviceEvents> {
 
     public isFloodLightT8420X(): boolean {
         return Device.isFloodLightT8420X(this.rawDevice.device_type, this.rawDevice.device_sn);
+    }
+
+    public isWallLightCam(): boolean {
+        return Device.isWallLightCam(this.rawDevice.device_type);
     }
 
     public isDoorbell(): boolean {
@@ -1261,11 +1285,15 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return Device.isSmartSafe(this.rawDevice.device_type);
     }
 
+    public isGarageCamera(): boolean {
+        return Device.isGarageCamera(this.rawDevice.device_type);
+    }
+
     public isIntegratedDevice(): boolean {
         if (this.isLock() || this.isSmartDrop()) {
             return this.rawDevice.device_sn === this.rawDevice.station_sn;
         }
-        return this.isWiredDoorbellDual() || this.isFloodLight() ||this.isWiredDoorbell() || this.isIndoorCamera() || this.isSoloCameras();
+        return this.isWiredDoorbellDual() || this.isFloodLight() ||this.isWiredDoorbell() || this.isIndoorCamera() || this.isSoloCameras() || this.isWallLightCam();
     }
 
     public hasBattery(): boolean {
@@ -1394,6 +1422,10 @@ export class Camera extends Device {
         {
             return "";
         }
+    }
+
+    public getLastCameraImageURL(): PropertyValue {
+        return this.getPropertyValue(PropertyName.DevicePictureUrl);
     }
 
     public getMACAddress(): string {
@@ -1593,7 +1625,7 @@ export class Camera extends Device {
                     if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
                             if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image);
+                                this.updateProperty(PropertyName.DevicePicture, image, true);
                             }
                         }).catch((error) => {
                             this.log.debug(`CusPushEvent.SECURITY - Device: ${message.device_sn} - Get picture - Error:`, error);
@@ -1627,7 +1659,7 @@ export class Camera extends Device {
                         if (!isEmpty(message.pic_url)) {
                             getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
                                 if (image.data.length > 0) {
-                                    this.updateProperty(PropertyName.DevicePicture, image);
+                                    this.updateProperty(PropertyName.DevicePicture, image, true);
                                 }
                             }).catch((error) => {
                                 this.log.debug(`HB3PairedDevicePushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
@@ -1765,7 +1797,7 @@ export class SoloCamera extends Camera {
                     if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
                             if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image);
+                                this.updateProperty(PropertyName.DevicePicture, image, true);
                             }
                         }).catch((error) => {
                             this.log.debug(`SoloPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
@@ -1853,7 +1885,7 @@ export class IndoorCamera extends Camera {
                     if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
                             if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image);
+                                this.updateProperty(PropertyName.DevicePicture, image, true);
                             }
                         }).catch((error) => {
                             this.log.debug(`IndoorPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
@@ -1993,7 +2025,7 @@ export class DoorbellCamera extends Camera {
                     if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
                             if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image);
+                                this.updateProperty(PropertyName.DevicePicture, image, true);
                             }
                         }).catch((error) => {
                             this.log.debug(`DoorbellPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
@@ -2175,7 +2207,7 @@ export class FloodlightCamera extends Camera {
                     if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
                             if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image);
+                                this.updateProperty(PropertyName.DevicePicture, image, true);
                             }
                         }).catch((error) => {
                             this.log.debug(`FloodlightPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
@@ -2211,6 +2243,209 @@ export class FloodlightCamera extends Camera {
         }
     }
 
+}
+
+export class WallLightCam extends Camera {
+
+    static async getInstance(api: HTTPApi, device: DeviceListResponse): Promise<WallLightCam> {
+        return new WallLightCam(api, device);
+    }
+
+    public isLedEnabled(): PropertyValue {
+        return this.getPropertyValue(PropertyName.DeviceStatusLed);
+    }
+
+    public isMotionDetectionEnabled(): PropertyValue {
+        return this.getPropertyValue(PropertyName.DeviceMotionDetection);
+    }
+
+    protected convertRawPropertyValue(property: PropertyMetadataAny, value: string): PropertyValue {
+        try {
+            switch (property.key) {
+                case CommandType.CMD_DEV_RECORD_AUTOSTOP:
+                    return value !== undefined ? (value === "0" ? true : false) : false;
+                case CommandType.CMD_SET_AUDIO_MUTE_RECORD:
+                    return value !== undefined ? (value === "1" ? true : false) : false;
+            }
+        } catch (error) {
+            this.log.error("Convert Error:", { property: property, value: value, error: error });
+        }
+        return super.convertRawPropertyValue(property, value);
+    }
+
+    public processPushNotification(message: PushMessage, eventDurationSeconds: number): void {
+        super.processPushNotification(message, eventDurationSeconds);
+        if (message.type !== undefined && message.event_type !== undefined) {
+            if (message.device_sn === this.getSerial()) {
+                try {
+                    if (!isEmpty(message.pic_url)) {
+                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                            if (image.data.length > 0) {
+                                this.updateProperty(PropertyName.DevicePicture, image);
+                            }
+                        }).catch((error) => {
+                            this.log.debug(`WallLightCamPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
+                        });
+                    }
+                    switch (message.event_type) {
+                        case IndoorPushEvent.MOTION_DETECTION:
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                            }, eventDurationSeconds * 1000));
+                            break;
+                        case IndoorPushEvent.FACE_DETECTION:
+                            this.updateProperty(PropertyName.DevicePersonName, !isEmpty(message.person_name) ? message.person_name! : "Unknown");
+                            this.updateProperty(PropertyName.DevicePersonDetected, true);
+                            this.clearEventTimeout(DeviceEvent.PersonDetected);
+                            this.eventTimeouts.set(DeviceEvent.PersonDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DevicePersonName, "");
+                                this.updateProperty(PropertyName.DevicePersonDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                            }, eventDurationSeconds * 1000));
+                            break;
+                        default:
+                            this.log.debug("Unhandled WallLightCam push event", message);
+                            break;
+                    }
+                } catch (error) {
+                    this.log.debug(`WallLightCamPushEvent - Device: ${message.device_sn} Error:`, error);
+                }
+            }
+        }
+    }
+}
+
+export class GarageCamera extends Camera {
+
+    static async getInstance(api: HTTPApi, device: DeviceListResponse): Promise<GarageCamera> {
+        return new GarageCamera(api, device);
+    }
+
+    public isLedEnabled(): PropertyValue {
+        return this.getPropertyValue(PropertyName.DeviceStatusLed);
+    }
+
+    public isMotionDetectionEnabled(): PropertyValue {
+        return this.getPropertyValue(PropertyName.DeviceMotionDetection);
+    }
+
+    protected convertRawPropertyValue(property: PropertyMetadataAny, value: string): PropertyValue {
+        try {
+            switch (property.key) {
+                case CommandType.CMD_SET_AUDIO_MUTE_RECORD:
+                    return value !== undefined ? (value === "1" ? true : false) : false;
+                case CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS:
+                    if (value != undefined) {
+                        const status = Number.parseInt(value);
+                        if (status >= 0) {
+                            if (property.name === PropertyName.DeviceDoor1Open) {
+                                return (status & GarageDoorState.A_OPENED) === GarageDoorState.A_OPENED;
+                            } else if (property.name === PropertyName.DeviceDoor2Open) {
+                                return (status & GarageDoorState.B_OPENED) === GarageDoorState.B_OPENED;
+                            }
+                        }
+                    }
+                    return false;
+                case CommandType.CMD_CAMERA_GARAGE_DOOR_SENSORS:
+                    if (value != undefined) {
+                        const sensorsData = value as unknown as GarageDoorSensorsProperty;
+                        if (property.name === PropertyName.DeviceDoorSensor1BatteryLevel) {
+                            if (sensorsData?.data?.door_1?.power !== undefined && sensorsData?.data?.door_1?.power > 1) {
+                                this.updateProperty(PropertyName.DeviceDoorSensor1LowBattery, false);
+                            }
+                            return sensorsData?.data?.door_1?.power !== undefined ? sensorsData?.data?.door_1?.power : 0;
+                        } else if (property.name === PropertyName.DeviceDoorSensor2BatteryLevel) {
+                            if (sensorsData?.data?.door_2?.power !== undefined && sensorsData?.data?.door_2?.power > 1) {
+                                this.updateProperty(PropertyName.DeviceDoorSensor1LowBattery, false);
+                            }
+                            return sensorsData?.data?.door_2?.power !== undefined ? sensorsData?.data?.door_2?.power : 0;
+                        } else if (property.name === PropertyName.DeviceDoorSensor1MacAddress) {
+                            return sensorsData?.data?.door_1?.mac_address !== undefined ? sensorsData?.data?.door_1?.mac_address : "";
+                        } else if (property.name === PropertyName.DeviceDoorSensor2MacAddress) {
+                            return sensorsData?.data?.door_2?.mac_address !== undefined ? sensorsData?.data?.door_2?.mac_address : "";
+                        } else if (property.name === PropertyName.DeviceDoorSensor1Name) {
+                            return sensorsData?.data?.door_1?.name !== undefined ? sensorsData?.data?.door_1?.name : "";
+                        } else if (property.name === PropertyName.DeviceDoorSensor2Name) {
+                            return sensorsData?.data?.door_2?.name !== undefined ? sensorsData?.data?.door_2?.name : "";
+                        } else if (property.name === PropertyName.DeviceDoorSensor1SerialNumber) {
+                            return sensorsData?.data?.door_1?.sn !== undefined ? sensorsData?.data?.door_1?.sn : "";
+                        } else if (property.name === PropertyName.DeviceDoorSensor2SerialNumber) {
+                            return sensorsData?.data?.door_2?.sn !== undefined ? sensorsData?.data?.door_2?.sn : "";
+                        } else if (property.name === PropertyName.DeviceDoorSensor1Version) {
+                            return sensorsData?.data?.door_1?.version !== undefined ? sensorsData?.data?.door_1?.version : "";
+                        } else if (property.name === PropertyName.DeviceDoorSensor2Version) {
+                            return sensorsData?.data?.door_2?.version !== undefined ? sensorsData?.data?.door_2?.version : "";
+                        } else if (property.name === PropertyName.DeviceDoorControlWarning) {
+                            return sensorsData?.data?.door_1?.playalarm !== undefined ? sensorsData?.data?.door_1?.playalarm === 1 ? true : false : false;
+                        } else if (property.name === PropertyName.DeviceDoorSensor1Status) {
+                            return sensorsData?.data?.door_1?.power !== undefined ? sensorsData?.data?.door_1?.power >= 1 && sensorsData?.data?.door_1?.sn !== "" ? 1 : 0 : 0;
+                        } else if (property.name === PropertyName.DeviceDoorSensor2Status) {
+                            return sensorsData?.data?.door_2?.power !== undefined ? sensorsData?.data?.door_2?.power >= 1 && sensorsData?.data?.door_2?.sn !== "" ? 1 : 0 : 0;
+                        }
+                    }
+                    break;
+            }
+        } catch (error) {
+            this.log.error("Convert Error:", { property: property, value: value, error: error });
+        }
+        return super.convertRawPropertyValue(property, value);
+    }
+
+    public processPushNotification(message: PushMessage, eventDurationSeconds: number): void {
+        super.processPushNotification(message, eventDurationSeconds);
+        if (message.type !== undefined && message.event_type !== undefined) {
+            if (message.device_sn === this.getSerial()) {
+                try {
+                    if (!isEmpty(message.pic_url)) {
+                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                            if (image.data.length > 0) {
+                                this.updateProperty(PropertyName.DevicePicture, image);
+                            }
+                        }).catch((error) => {
+                            this.log.debug(`GarageDoorPushEvent - Device: ${message.device_sn} - Get picture - Error:`, error);
+                        });
+                    }
+                    switch (message.event_type) {
+                        case GarageDoorPushEvent.CLOSED_DOOR_BY_APP:
+                        case GarageDoorPushEvent.CLOSED_DOOR_WITHOUT_APP:
+                        case GarageDoorPushEvent.TIMEOUT_CLOSED_DOOR:
+                            if (message.door_id === 1) {
+                                this.updateProperty(PropertyName.DeviceDoor1Open, false);
+                            } else if (message.door_id === 2) {
+                                this.updateProperty(PropertyName.DeviceDoor2Open, false);
+                            }
+                            break;
+                        case GarageDoorPushEvent.OPEN_DOOR_BY_APP:
+                        case GarageDoorPushEvent.OPEN_DOOR_WITHOUT_APP:
+                        case GarageDoorPushEvent.TIMEOUT_DOOR_OPEN_WARNING:
+                        case GarageDoorPushEvent.TIMEOUT_DOOR_OPEN_WARNING_MINUTES:
+                            if (message.door_id === 1) {
+                                this.updateProperty(PropertyName.DeviceDoor1Open, true);
+                            } else if (message.door_id === 2) {
+                                this.updateProperty(PropertyName.DeviceDoor2Open, true);
+                            }
+                            break;
+                        case GarageDoorPushEvent.LOW_BATTERY:
+                            //TODO: Check if low battery status resets to false after battery change
+                            if (message.door_id === 1) {
+                                this.updateProperty(PropertyName.DeviceDoorSensor1LowBattery, true);
+                            } else if (message.door_id === 2) {
+                                this.updateProperty(PropertyName.DeviceDoorSensor2LowBattery, true);
+                            }
+                            break;
+                        default:
+                            this.log.debug("Unhandled GarageDoor push event", message);
+                            break;
+                    }
+                } catch (error) {
+                    this.log.debug(`GarageDoorPushEvent - Device: ${message.device_sn} Error:`, error);
+                }
+            }
+        }
+    }
 }
 
 export class Sensor extends Device {

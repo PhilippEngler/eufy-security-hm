@@ -42,7 +42,7 @@ export interface CommandResult {
 
 export interface CmdNotifyPayload {
     cmd: number;
-    payload: ESLStationP2PThroughData | ESLAdvancedLockStatusNotification | SmartSafeSettingsNotification | SmartSafeStatusNotification | ESLBleV12P2PThroughData | string,
+    payload: ESLStationP2PThroughData | ESLAdvancedLockStatusNotification | SmartSafeSettingsNotification | SmartSafeStatusNotification | ESLBleV12P2PThroughData | EntrySensorStatus | GarageDoorStatus | string,
     payloadLen?: number;
 }
 
@@ -168,4 +168,14 @@ export interface SmartSafeP2PCommandType {
 export interface CmdDatabaseImageResponse {
     file: string;
     content: string;
+}
+
+export interface EntrySensorStatus {
+    status: number;
+}
+
+export interface GarageDoorStatus {
+    type: number;
+    notify_tag: string;
+    door_id: number;
 }

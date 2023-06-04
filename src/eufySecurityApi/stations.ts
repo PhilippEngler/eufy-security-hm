@@ -7,7 +7,7 @@ import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, 
 import internal from "stream";
 import EventEmitter from "events";
 import imageType from "image-type";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata, TFCardStatus } from "./p2p";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
@@ -133,7 +133,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.addEventListener(station, "DevicePinVerified", false);
                 this.addEventListener(station, "SdInfoEx", false);
                 this.addEventListener(station, "ImageDownload", false);
+                this.addEventListener(station, "DatabaseQueryLatest", false);
                 this.addEventListener(station, "DatabaseQueryLocal", false);
+                this.addEventListener(station, "DatabaseCountByDate", false);
+                this.addEventListener(station, "DatabaseDelete", false);
+                this.addEventListener(station, "SensorStatus", false);
+                this.addEventListener(station, "GarageDoorStatus", false);
 
                 this.addStation(station);
                 station.initialize();
@@ -317,7 +322,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.stations[stationSerial], "DevicePinVerified");
                     this.removeEventListener(this.stations[stationSerial], "SdInfoEx");
                     this.removeEventListener(this.stations[stationSerial], "ImageDownload");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseQueryLatest");
                     this.removeEventListener(this.stations[stationSerial], "DatabaseQueryLocal");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseCountByDate");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseDelete");
+                    this.removeEventListener(this.stations[stationSerial], "SensorStatus");
+                    this.removeEventListener(this.stations[stationSerial], "GarageDoorStatus");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
@@ -862,9 +872,29 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.on("image download", (station: Station, file: string, image: Buffer) => this.onStationImageDownload(station, file, image));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("image download")} Listener.`);
                 break;
+            case "DatabaseQueryLatest":
+                station.on("database query latest", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>) => this.onStationDatabaseQueryLatest(station, returnCode, data));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query latest")} Listener.`);
+                break;
             case "DatabaseQueryLocal":
                 station.on("database query local", (station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]) => this.onStationDatabaseQueryLocal(station, returnCode, data));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
+            case "DatabaseCountByDate":
+                station.on("database count by date", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>) => this.onStationDatabaseCountByDate(station, returnCode, data));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database count by date")} Listener.`);
+                break;
+            case "DatabaseDelete":
+                station.on("database delete", (station: Station, returnCode: DatabaseReturnCode, failedIds: Array<unknown>) => this.onStationDatabaseDelete(station, returnCode, failedIds));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database delete")} Listener.`);
+                break;
+            case "SensorStatus":
+                station.on("sensor status", (station: Station, channel: number, status: number) => this.onStationSensorStatus(station, channel, status));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sensor status")} Listener.`);
+                break;
+            case "GarageDoorStatus":
+                station.on("garage door status", (station: Station, channel: number, doorId: number, status: number) => this.onStationGarageDoorStatus(station, channel, doorId, status));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
@@ -1028,9 +1058,29 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeAllListeners("image download");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("image download")} Listener.`);
                 break;
+            case "DatabaseQueryLatest":
+                station.removeAllListeners("database query latest");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query latest")} Listener.`);
+                break;
             case "DatabaseQueryLocal":
                 station.removeAllListeners("database query local");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
+            case "DatabaseCountByDate":
+                station.removeAllListeners("database count by date");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database count by date")} Listener.`);
+                break;
+            case "DatabaseDelete":
+                station.removeAllListeners("database delete");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database delete")} Listener.`);
+                break;
+            case "SensorStatus":
+                station.removeAllListeners("sensor status");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sensor status")} Listener.`);
+                break;
+            case "GarageDoorStatus":
+                station.removeAllListeners("garage door status");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
@@ -1215,7 +1265,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationLivestreamStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station livestream start", station, device, metadata, videoStream, audioStream);
         }).catch((error) => {
             this.api.logError(`Station start livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1230,7 +1280,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationLivestreamStop(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station livestream stop", station, device);
         }).catch((error) => {
             this.api.logError(`Station stop livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1245,7 +1295,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationLivestreamError(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamError": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             station.stopLivestream(device);
         }).catch((error) => {
             this.api.logError(`Station livestream error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
@@ -1263,7 +1313,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationDownloadStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
     {
         this.api.logDebug(`Event "DownloadStart": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station download start", station, device, metadata, videoStream, audioStream);
         }).catch((error) => {
             this.api.logError(`Station start download error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1278,7 +1328,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationDownloadFinish(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "DownloadFinish": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station download finish", station, device);
         }).catch((error) => {
             this.api.logError(`Station finish download error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1293,12 +1343,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private onStationCommandResult(station: Station, result: CommandResult): void {
         this.emit("station command result", station, result);
         if (result.return_code === 0) {
-            this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+            this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
                 if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLockWifiR10() && !device.isLockWifiR20() && !device.isLockWifiVideo() && !device.isSmartSafe()) ||
                     (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS)) {
-                    if (device.hasProperty(result.customData.property.name)) {
+                    if (device.hasProperty(result.customData.property.name) && typeof result.customData.property.value !== "object") {
                         device.updateProperty(result.customData.property.name, result.customData.property.value);
-                    } else if (station.hasProperty(result.customData.property.name)) {
+                    } else if (station.hasProperty(result.customData.property.name) && typeof result.customData.property.value !== "object") {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
                 } else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === CommandName.DeviceSnooze) {
@@ -1338,7 +1388,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             const customValue = result.customData.command.value;
             switch (result.customData.command.name) {
                 case CommandName.DeviceAddUser:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.emit("user added", device, customValue.username, customValue.schedule);
@@ -1353,7 +1403,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     });
                     break;
                 case CommandName.DeviceDeleteUser:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.httpService.deleteUser(device.getSerial(), customValue.short_user_id, device.getStationSerial()).then((result) => {
@@ -1372,7 +1422,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     });
                     break;
                 case CommandName.DeviceUpdateUserPasscode:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.emit("user passcode updated", device, customValue.username);
@@ -1384,7 +1434,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     });
                     break;
                 case CommandName.DeviceUpdateUserSchedule:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.emit("user schedule updated", device, customValue.username, customValue.schedule);
@@ -1409,7 +1459,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "SecondaryCommandResult": station: ${station.getSerial()} | result: ${result}`);
         if (result.return_code === 0)
         {
-            this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device: Device) => {
+            this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
                 if (result.customData !== undefined && result.customData.property !== undefined)
                 {
                     if (device.hasProperty(result.customData.property.name))
@@ -1485,7 +1535,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationRTSPLivestreamStart(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "RTSPLivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp livestream start", station, device);
         }).catch((error) => {
             this.api.logError(`Station start rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1500,7 +1550,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationRTSPLivestreamStop(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "RTSPLivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp livestream stop", station, device);
         }).catch((error) => {
             this.api.logError(`Station stop rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1515,7 +1565,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationRTSPURL(station : Station, channel : number, value : string) : Promise<void>
     {
         this.api.logDebug(`Event "RTSPURL": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp url", station, device, value);
             device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, value);
         }).catch((error) => {
@@ -1571,7 +1621,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationRuntimeState(station : Station, channel : number, batteryLevel : number, temperature : number) : Promise<void>
     {
         this.api.logDebug(`Event "RuntimeState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceBattery))
             {
                 const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
@@ -1597,7 +1647,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationChargingState(station : Station, channel : number, chargeType : number, batteryLevel : number) : Promise<void>
     {
         this.api.logDebug(`Event "ChargingState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceBattery))
             {
                 const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
@@ -1623,7 +1673,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationWifiRssi(station : Station, channel : number, rssi : number) : Promise<void>
     {
         this.api.logDebug(`Event "WifiRssi": station: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceWifiRSSI))
             {
                 const metadataWifiRssi = device.getPropertyMetadata(PropertyName.DeviceWifiRSSI);
@@ -1643,7 +1693,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "FloodlightManualSwitch": station: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceLight)) {
                 const metadataLight = device.getPropertyMetadata(PropertyName.DeviceLight);
                 device.updateRawProperty(metadataLight.key as number, enabled === true ? "1" : "0");
@@ -1673,7 +1723,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationTalkbackStarted(station : Station, channel : number, talkbackStream : TalkbackStream) : Promise<void>
     {
         this.api.logDebug(`Event "TalkbackStarted": station: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station talkback start", station, device, talkbackStream);
         }).catch((error) => {
             this.api.logError(`Station talkback start error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1688,7 +1738,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationTalkbackStopped(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "TalkbackStopped": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station talkback stop", station, device);
         }).catch((error) => {
             this.api.logError(`Station talkback stop error (station: ${station.getSerial()} channel: ${channel})`, error);
@@ -1704,7 +1754,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async onStationTalkbackError(station : Station, channel : number, error : Error) : Promise<void>
     {
         this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device: Device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             station.stopTalkback(device);
         }).catch((error) => {
             this.api.logError(`Station talkback error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
@@ -1876,6 +1926,40 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * The action to be performed when event station database query latest is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    private onStationDatabaseQueryLatest(station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>): void
+    {
+        if (returnCode === DatabaseReturnCode.SUCCESSFUL)
+        {
+            for(const element of data)
+            {
+                if ((element.device_sn !== "" && !station.isStation()) || (station.isStation() && element.device_sn !== station.getSerial()))
+                {
+                    this.api.getDevice(element.device_sn).then((device) => {
+                        const raw = device.getRawDevice();
+                        if ("crop_local_path" in element)
+                        {
+                            raw.cover_path = (element as DatabaseQueryLatestInfoLocal).crop_local_path;
+                        }
+                        else if ("crop_cloud_path" in element)
+                        {
+                            raw.cover_path = (element as DatabaseQueryLatestInfoCloud).crop_cloud_path;
+                        }
+                        device.update(raw);
+                    }).catch((error) => {
+                        this.api.logError("onStationDatabaseQueryLatest Error:", error);
+                    });
+                }
+            }
+        }
+        this.emit("station database query latest", station, returnCode, data);
+    }
+
+    /**
      * The action to be performed when event station database query local is fired.
      * @param station The station as Station object.
      * @param returnCode The return code of the query.
@@ -1884,6 +1968,61 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[])
     {
         this.emit("station database query local", station, returnCode, data);
+    }
+
+    /**
+     * The action to be performed when event station database count by date is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    private onStationDatabaseCountByDate(station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>): void {
+        this.emit("station database count by date", station, returnCode, data);
+    }
+
+    /**
+     * The action to be performed when event station database delete is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param failedIds A list of id could not be deleted.
+     */
+    private onStationDatabaseDelete(station: Station, returnCode: DatabaseReturnCode, failedIds: Array<unknown>): void {
+        this.emit("station database delete", station, returnCode, failedIds);
+    }
+
+    /**
+     * The action to be performed when event station sensor state is fired.
+     * @param station The station as Station object.
+     * @param channel The channel of the device.
+     * @param status The status of the sensor.
+     */
+    private onStationSensorStatus(station: Station, channel: number, status: number): void
+    {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
+            if (device.hasProperty(PropertyName.DeviceSensorOpen))
+            {
+                const metadataSensorOpen = device.getPropertyMetadata(PropertyName.DeviceSensorOpen);
+                device.updateRawProperty(metadataSensorOpen.key as number, status.toString());
+            }
+        }).catch((error) => {
+            this.api.logError(`Station sensor status error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
+    }
+
+    /**
+     * The action to be performed when event station garage door status is fired.
+     * @param station The station as Station object.
+     * @param channel The channel of the device.
+     * @param doorId The id of the door.
+     * @param status The status of the garage door.
+     */
+    private onStationGarageDoorStatus(station: Station, channel: number, doorId:number, status: number): void
+    {
+        this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
+            device.updateRawProperty(CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS, status.toString());
+        }).catch((error) => {
+            this.api.logError(`Station garage door status error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
 
     /**

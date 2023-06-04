@@ -46,6 +46,8 @@ export interface P2PClientProtocolEvents {
     "database query local": (returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLocal>) => void;
     "database count by date": (returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>) => void;
     "database delete": (returnCode: DatabaseReturnCode, failedIds: Array<unknown>) => void;
+    "sensor status": (channel: number, status: number) => void;
+    "garage door status": (channel: number, doorId: number, status: number) => void;
 }
 
 export interface P2PQueueMessage {

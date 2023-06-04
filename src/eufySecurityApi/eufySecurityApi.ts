@@ -523,7 +523,7 @@ export class EufySecurityApi
         /*var filename = path.basename(file);
         var filenameContent = path.parse(file).name.split("_c", 2);
         var channel = filenameContent[1];
-        var device = (await this.devices.getDeviceByStationAndChannel(station.getSerial(), Number.parseInt(channel))).getSerial();
+        var device = (await this.devices.getStationDevice(station.getSerial(), Number.parseInt(channel))).getSerial();
         try
         {
             if(!existsSync(`/var/eufySecurity/images/${station.getSerial()}/${device}/`))
@@ -650,7 +650,7 @@ export class EufySecurityApi
      * @param channel The channel of the device.
      * @returns The device as object.
      */
-    public async getDeviceByStationAndChannel(stationSerial : string, channel : number) : Promise<Device>
+    public async getStationDevice(stationSerial : string, channel : number) : Promise<Device>
     {
         return this.devices.getDeviceByStationAndChannel(stationSerial, channel);
     }
@@ -3040,7 +3040,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.1.1";
+        return "2.1.2";
     }
 
     /**
@@ -3049,6 +3049,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.6.2";
+        return "2.7.0-b301";
     }
 }
