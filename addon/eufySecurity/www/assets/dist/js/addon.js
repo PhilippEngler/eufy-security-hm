@@ -1,10 +1,11 @@
 /**
  * Javascript for eufySecurity Addon
- * 20230531
+ * 20230604
  */
-port = "";
 action = "";
+port = "";
 redirectTarget = "";
+version = "2.1.2";
 
 /**
  * common used java script functions
@@ -436,7 +437,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 function loadDevices()
 {
 	var xmlhttp, objResp, device;
-	var text = "", cams = "", indoorcams = "", solocams = "", doorbellcams = "", outdoorlights = "", locks = "", keypads = "", sensors = "", unknown = "";
+	var text = "", cams = "", indoorcams = "", solocams = "", starlight4glte = "", doorbellcams = "", outdoorlights = "", locks = "", keypads = "", sensors = "", unknown = "";
 	var url = `${location.protocol}//${location.hostname}:${port}/getDevices`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
@@ -457,15 +458,20 @@ function loadDevices()
 								cams += createCardDevice(objResp.data[device]);
 								break;
 							case "indoorcamera":
+							case "garagecamera":
 								indoorcams += createCardDevice(objResp.data[device]);
 								break;
 							case "solocamera":
 								solocams += createCardDevice(objResp.data[device]);
 								break;
+							case "starlight4glte":
+								starlight4glte += createCardDevice(objResp.data[device]);
+								break;
 							case "doorbell":
 								doorbellcams += createCardDevice(objResp.data[device]);
 								break;
 							case "floodlight":
+							case "walllightcamera":
 								outdoorlights += createCardDevice(objResp.data[device]);
 								break;
 							case "lock":
@@ -484,8 +490,9 @@ function loadDevices()
 					text += createDeviceTypeCardsContainer("cameras", "Kameras", cams);
 					text += createDeviceTypeCardsContainer("indoorcameras", "Innenkameras", indoorcams);
 					text += createDeviceTypeCardsContainer("solocameras", "Solokameras", solocams);
+					text += createDeviceTypeCardsContainer("starlight4glte", "4G LTE Kameras", solocams);
 					text += createDeviceTypeCardsContainer("doorbellcameras", "Videotürklingel", doorbellcams);
-					text += createDeviceTypeCardsContainer("outdoorlights", "Außenleuchten", outdoorlights);
+					text += createDeviceTypeCardsContainer("outdoorlights", "Außenleuchten mit Kamera", outdoorlights);
 					text += createDeviceTypeCardsContainer("locks", "Schlösser", locks);
 					text += createDeviceTypeCardsContainer("keypads", "Keypads", keypads);
 					text += createDeviceTypeCardsContainer("sensors", "Sensoren", sensors);
@@ -3798,7 +3805,7 @@ function loadDataInfo(showLoading)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: 2.1.1`;
+				info = `eufy Security AddOn: ${objResp.apiVersion}<br />eufy Security Client: ${objResp.eufySecurityClientVersion}<br />HomeMatic API: ${objResp.homematicApiVersion}<br />Webseite: ${version}`;
 				document.getElementById("versionInfo").innerHTML = info;
 			}
 			else
