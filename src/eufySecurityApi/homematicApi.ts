@@ -18,27 +18,28 @@ export class HomematicApi
     }
 
     /**
-     * Checks weather the system variable is available on the CCU.
-     * @param variableName The name of the system variable to check.
+     * Get the vaulue of a given system variable.
+     * @param variableName The name of the system variable to get.
      */
-    public async isSystemVariableAvailable(variableName : string) : Promise<boolean>
+    public async getSystemVariable(variableName : string) : Promise<string>
     {
-        var res = await this.getSystemVariable(variableName);
-        if(res == "null")
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        var data = "";
+        this.getSystemVariables();
+        
+        var response = await axios.post("http://localhost:8181/esapi.exe", "string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='" + variableName + "'){result=svObject.Value();break;}}svName='null';svObject=null;", { headers : {'Content-Type': 'text/plain' } });
+
+        data = response.data;
+        data = data.substring(data.indexOf("<result>"));
+        data = data.substring(8, data.indexOf("</result>"));
+
+        return data;
     }
 
     /**
      * Get the vaulue of a given system variable.
      * @param variableName The name of the system variable to get.
      */
-    public async getSystemVariable(variableName : string) : Promise<string>
+    public async getSystemVariable1(variableName : string) : Promise<string>
     {
         var data = "";
         
@@ -70,6 +71,23 @@ export class HomematicApi
     }
 
     /**
+     * Get all system variables available as array.
+     * @returns An array containg all system variables.
+     */
+    public async getSystemVariables() : Promise<string[]>
+    {
+        var data = "";
+        
+        var response = await axios.post("http://localhost:8181/esapi.exe", "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();", { headers : {'Content-Type': 'text/plain' } });
+
+        data = response.data;
+        data = data.substring(data.indexOf("<result>"));
+        data = data.substring(8, data.indexOf("</result>"));
+
+        return data.split("\t");
+    }
+
+    /**
      * Create a system variable in the CCU.
      * @param variableName The name of the system variable to create.
      * @param variableInfo The info of the system variable to create.
@@ -83,6 +101,24 @@ export class HomematicApi
         data = response.data;
         data = data.substring(data.indexOf("<svObj>"));
         data = data.substring(7, data.indexOf("</svObj>"));
+
+        return data;
+    }
+
+    /**
+     * Remove a system variable from the CCU.
+     * @param variableName The name of the system variable to remove.
+     * @param variableInfo The info of the system variable to remove.
+     */
+    public async removeSystemVariable(variableName : string) : Promise<string>
+    {
+        var data = "";
+        
+        var response = await axios.post("http://localhost:8181/esapi.exe", "string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '" + variableName + "'){dom.DeleteObject(svObject);result='true';break;}}", { headers : {'Content-Type': 'text/plain' } });
+
+        data = response.data;
+        data = data.substring(data.indexOf("<result>"));
+        data = data.substring(8, data.indexOf("</result>"));
 
         return data;
     }
@@ -140,6 +176,6 @@ export class HomematicApi
      */
     public getHomematicApiVersion() : string
     {
-        return "1.5.1";
+        return "2.2.0";
     }
 }

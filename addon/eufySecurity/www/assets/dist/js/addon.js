@@ -3096,7 +3096,7 @@ function loadSystemVariables()
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.", "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.", "Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren`");
+					document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.", "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.", "Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.");
 					sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
 					for(systemVariable in objResp.data)
 					{
@@ -3124,6 +3124,7 @@ function loadSystemVariables()
 					}
 					sysVarTable += `</tbody></table>`;
 					document.getElementById("divSystemVariables").innerHTML = sysVarTable;
+					loadDeprecatedSystemVariables();
 				}
 				else
 				{
@@ -3155,6 +3156,86 @@ function loadSystemVariables()
 		else
 		{
 			document.getElementById("divSystemVariables").innerHTML = createWaitMessage("Laden der Systemvariablen...");
+		}
+	};
+	xmlHttp.open("GET", url, true);
+	xmlHttp.send();
+}
+
+function loadDeprecatedSystemVariables()
+{
+	var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "";
+	var deprecatedFound = false;
+	var url = `${location.protocol}//${location.hostname}:${port}/deprecatedSystemVariables`;
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.overrideMimeType('application/json');
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					//document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.", "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.", "Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.");
+					sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
+					for(systemVariable in objResp.data)
+					{
+						sysVarName = objResp.data[systemVariable].sysVarName;
+						sysVarInfo = objResp.data[systemVariable].sysVarInfo;
+						sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
+						if(sysVarAvailable==true)
+						{
+							deprecatedFound = true;
+							sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="angelegt"></i></th>`;
+							sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
+							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, "System&shy;variable ent&shy;fernen", true, undefined, undefined, true)}</div></td>`;
+							sysVarTable += `</tr>`;
+						}
+					}
+					sysVarTable += `</tbody></table>`;
+					if(deprecatedFound == true)
+					{
+						document.getElementById("divDeprecatedSystemVariables").innerHTML = sysVarTable;
+						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = `<hr /><div class="form-label-group" class="container-fluid"><label for="btnShowDeprecatedSystemVariables" class="mb-2">Veraltete Systemvariablen anzeigen<br /><small class="form-text text-muted">Die nachfolgenden Systemvariablen werden nicht mehr genutzt und können entfernt werden.</small></label></div>`;
+					}
+					else
+					{
+						document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+					}
+				}
+				else
+				{
+					if(objResp.reason == "System variables in config disabled.")
+					{
+						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+						document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", "Keine Systemvariablen.", "Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.", "Aktivieren Sie die Einstellung 'Systemvariablen bei API Aktionen automatisch aktualisieren', wenn Sie mit den Systemvariablen arbeiten möchten.");
+					}
+					else
+					{
+						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+						document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: '${objResp.reason}'.`);
+					}
+				}
+				loadDataSettings();
+			}
+			catch (e)
+			{
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
+				loadDataSettings();
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+			loadDataSettings();
+		}
+		else
+		{
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = createWaitMessage("Laden der veralteten Systemvariablen...");
 		}
 	};
 	xmlHttp.open("GET", url, true);
@@ -3246,21 +3327,87 @@ function createSysVar(varName, varInfo)
 				}
 				else
 				{
+					document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+					document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+					document.getElementById("divSystemVariablesHint").innerHTML = "";
 					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
 				}
 			}
 			catch (e)
 			{
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
 				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
 			}
 		}
 		else if(this.readyState == 4)
 		{
+			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+			document.getElementById("divSystemVariablesHint").innerHTML = "";
 			document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der Systemvariablen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
 		}
 		else
 		{
+			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+			document.getElementById("divSystemVariablesHint").innerHTML = "";
 			document.getElementById("divSystemVariables").innerHTML = createWaitMessage("Laden der Systemvariablen...");
+		}
+	};
+	xmlHttp.open("GET", url, true);
+	xmlHttp.send();
+}
+
+function removeSysVar(varName)
+{
+	var xmlHttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/removeSystemVariable/${varName}`;
+	console.log(url);
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.overrideMimeType('application/json');
+	text = `<table class="table"><thead><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					loadSystemVariables();
+				}
+				else
+				{
+					document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+					document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+					document.getElementById("divSystemVariablesHint").innerHTML = "";
+					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`);
+				}
+			}
+			catch (e)
+			{
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
+				document.getElementById("divSystemVariables").innerHTML = document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+			document.getElementById("divSystemVariablesHint").innerHTML = "";
+			document.getElementById("divSystemVariables").innerHTML = document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
+		}
+		else
+		{
+			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+			document.getElementById("divSystemVariablesHint").innerHTML = "";
+			document.getElementById("divSystemVariables").innerHTML = createWaitMessage("Laden der veralteten Systemvariablen...");
 		}
 	};
 	xmlHttp.open("GET", url, true);

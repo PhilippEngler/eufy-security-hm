@@ -427,6 +427,19 @@ class ApiServer
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "deprecatedSystemVariables":
+                        responseData = await api.deprecatedSystemVariables();
+                        break;
+                    case "removeSystemVariable":
+                        if(url.length == 3)
+                        {
+                            responseData = await api.removeSystemVariable(url[2]);
+                        }
+                        else
+                        {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getLibrary":
                         if(url.length == 2)
                         {
