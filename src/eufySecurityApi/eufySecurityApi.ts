@@ -2555,9 +2555,9 @@ export class EufySecurityApi
                     {
                         device = devices[deviceSerial];
                         
-                        json.data.push({"sysVarName":`eufyCameraImageURL${device.getSerial()}`, "sysVarInfo":`Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())});
+                        //json.data.push({"sysVarName":`eufyCameraImageURL${device.getSerial()}`, "sysVarInfo":`Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())});
                         json.data.push({"sysVarName":`eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo":`Zeitpunkt des letzten Videos der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial())});
-                        //json.data.push({"sysVarName":`eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo":`letztes Video der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())});
+                        json.data.push({"sysVarName":`eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo":`letztes Video der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())});
                     }
                 }
                 else
@@ -2600,14 +2600,14 @@ export class EufySecurityApi
                     var stations = await this.getStations();
                     var devices = await this.getDevices();
 
-                    var commonSystemVariablesName : string[];
+                    /*var commonSystemVariablesName : string[];
                     var commonSystemVariablesInfo : string[];
 
                     commonSystemVariablesName = [];
-                    commonSystemVariablesInfo = [];
+                    commonSystemVariablesInfo = [];*/
 
                     json = {"success":true, "data":[]};
-                    var i = 0;
+                    /*var i = 0;
 
                     for (var sv of commonSystemVariablesName)
                     {
@@ -2621,13 +2621,13 @@ export class EufySecurityApi
                         
                         //json.data.push({});
                         //json.data.push({});
-                    }
+                    }*/
                     
                     for (var deviceSerial in devices)
                     {
                         device = devices[deviceSerial];
                         
-                        json.data.push({"sysVarName":`eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo":`letztes Video der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())});
+                        json.data.push({"sysVarName":`eufyCameraImageURL${device.getSerial()}`, "sysVarInfo":`Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())});
                     }
                 }
                 else
