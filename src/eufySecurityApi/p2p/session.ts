@@ -21,6 +21,7 @@ import { SmartSafeEventValueDetail } from "../push/models";
 import { BleCommandFactory } from "./ble";
 import { CommandName, Station } from "../http";
 import { parseJSON } from "../utils";
+import { sleep } from "../push";
 
 import { Logger } from "../utils/logging";
 
@@ -485,8 +486,10 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     public async sendPing(address: Address): Promise<void> {
         if ((this.lastPong && ((new Date().getTime() - this.lastPong) / this.getHeartbeatInterval() >= this.MAX_RETRIES)) ||
             (this.connectTime && !this.lastPong && ((new Date().getTime() - this.connectTime) / this.getHeartbeatInterval() >= this.MAX_RETRIES))) {
-            if (!this.energySavingDevice)
+            if (!this.energySavingDevice) {
                 this.log.warn(`Station ${this.rawStation.station_sn} - Heartbeat check failed. Connection seems lost. Try to reconnect...`);
+                await sleep(Math.random() * 1000);
+            }
             this._disconnected();
         }
         await this.sendMessage(`Send ping to station ${this.rawStation.station_sn}`, address, RequestMessageType.PING, this.lastPongData);
