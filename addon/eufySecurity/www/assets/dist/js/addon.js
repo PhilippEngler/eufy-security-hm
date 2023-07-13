@@ -535,7 +535,7 @@ function createCardDevice(device)
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
-	card += `<div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.batteryTemperature, "&deg;C")}</div>`;
+	card += `<div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : device.chargingStatus == 4 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.batteryTemperature, "&deg;C")}</div>`;
 	card += `</div></div></div>`;
 	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device)}</small></div>`;
 	card += `</div></div>`;
@@ -1506,7 +1506,7 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 		case "Battery":
 			return "Batterie";
 		case "Solar Panel":
-			return "Solarpanel";
+			return "externes Solarpanel";
 		case "Charging":
 			return "ladend";
 		case "Unplugged":
@@ -3083,7 +3083,8 @@ function loadDataSettings()
 
 function loadSystemVariables()
 {
-	var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "";
+	var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "", sysVarDeprTable = "";
+	var sysVarToDelete = false;
 	var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
@@ -3096,35 +3097,55 @@ function loadSystemVariables()
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.", "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.", "Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.");
+					document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.", "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.</br >Falls Systemvariablen gefunden werden, die mit 'eufy' beginnen und nicht mehr benötigt werden (beispielsweise für gelöschte Geräte), erscheinen diese in einer zweiten Tabelle. Dort können diese Systemvariablen gelöscht werden.", "Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.");
 					sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
 					for(systemVariable in objResp.data)
 					{
 						sysVarName = objResp.data[systemVariable].sysVarName;
 						sysVarInfo = objResp.data[systemVariable].sysVarInfo;
 						sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
-						if(sysVarAvailable==true)
+						if(objResp.data[systemVariable].sysVarCurrent==true)
 						{
-							sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="angelegt"></i></th>`;
+							if(sysVarAvailable==true)
+							{
+								sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="angelegt"></i></th>`;
+							}
+							else
+							{
+								sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="nicht angelegt"></i></th>`;
+							}
+							sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
+							if(sysVarAvailable==true)
+							{
+								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", undefined, "System&shy;variable anlegen", false, undefined, undefined, false)}</div></td>`;
+							}
+							else
+							{
+								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, "System&shy;variable anlegen", true, undefined, undefined, true)}</div></td>`;
+							}
+							sysVarTable += `</tr>`;
 						}
 						else
 						{
-							sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="nicht angelegt"></i></th>`;
+							if(sysVarToDelete==false)
+							{
+								sysVarDeprTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
+							}
+							sysVarToDelete = true;
+							sysVarDeprTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="angelegt"></i></th>`;
+							sysVarDeprTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
+							sysVarDeprTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, "System&shy;variable ent&shy;fernen", true, undefined, undefined, true)}</div></td>`;
+							sysVarDeprTable += `</tr>`;
 						}
-						sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
-						if(sysVarAvailable==true)
-						{
-							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", undefined, "System&shy;variable anlegen", false, undefined, undefined, false)}</div></td>`;
-						}
-						else
-						{
-							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, "System&shy;variable anlegen", true, undefined, undefined, true)}</div></td>`;
-						}
-						sysVarTable += `</tr>`;
 					}
 					sysVarTable += `</tbody></table>`;
 					document.getElementById("divSystemVariables").innerHTML = sysVarTable;
-					loadDeprecatedSystemVariables();
+					if(sysVarToDelete==true)
+					{
+						sysVarDeprTable += `</tbody></table>`;
+						document.getElementById("divDeprecatedSystemVariables").innerHTML = sysVarDeprTable;
+						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = `<hr /><div class="form-label-group" class="container-fluid"><label for="btnShowDeprecatedSystemVariables" class="mb-2">Veraltete Systemvariablen<br /><small class="form-text text-muted">Die nachfolgenden mit 'eufy' beginnenden Systemvariablen werden nicht mehr genutzt und können entfernt werden.</small></label></div>`;
+					}
 				}
 				else
 				{
@@ -3156,86 +3177,6 @@ function loadSystemVariables()
 		else
 		{
 			document.getElementById("divSystemVariables").innerHTML = createWaitMessage("Laden der Systemvariablen...");
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
-}
-
-function loadDeprecatedSystemVariables()
-{
-	var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "";
-	var deprecatedFound = false;
-	var url = `${location.protocol}//${location.hostname}:${port}/deprecatedSystemVariables`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					//document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.", "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.", "Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option 'Systemvariablen bei API Aktionen automatisch aktualisieren'.");
-					sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">Status</th><th scope="col" style="width: 75%;">Name der Systemvariable</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
-					for(systemVariable in objResp.data)
-					{
-						sysVarName = objResp.data[systemVariable].sysVarName;
-						sysVarInfo = objResp.data[systemVariable].sysVarInfo;
-						sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
-						if(sysVarAvailable==true)
-						{
-							deprecatedFound = true;
-							sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="angelegt"></i></th>`;
-							sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
-							sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, "System&shy;variable ent&shy;fernen", true, undefined, undefined, true)}</div></td>`;
-							sysVarTable += `</tr>`;
-						}
-					}
-					sysVarTable += `</tbody></table>`;
-					if(deprecatedFound == true)
-					{
-						document.getElementById("divDeprecatedSystemVariables").innerHTML = sysVarTable;
-						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = `<hr /><div class="form-label-group" class="container-fluid"><label for="btnShowDeprecatedSystemVariables" class="mb-2">Veraltete Systemvariablen anzeigen<br /><small class="form-text text-muted">Die nachfolgenden Systemvariablen werden nicht mehr genutzt und können entfernt werden.</small></label></div>`;
-					}
-					else
-					{
-						document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
-						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-					}
-				}
-				else
-				{
-					if(objResp.reason == "System variables in config disabled.")
-					{
-						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-						document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", "Keine Systemvariablen.", "Die Aktualisierung von Systemvariablen bei API Aktionen ist deaktiviert.", "Aktivieren Sie die Einstellung 'Systemvariablen bei API Aktionen automatisch aktualisieren', wenn Sie mit den Systemvariablen arbeiten möchten.");
-					}
-					else
-					{
-						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-						document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: '${objResp.reason}'.`);
-					}
-				}
-				loadDataSettings();
-			}
-			catch (e)
-			{
-				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "", `Es ist folgender Fehler aufgetreten: ${e}.`);
-				loadDataSettings();
-			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", "Fehler bei der Ermittlung der veralteten Systemvariablen.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`);
-			loadDataSettings();
-		}
-		else
-		{
-			document.getElementById("divDeprecatedSystemVariables").innerHTML = createWaitMessage("Laden der veralteten Systemvariablen...");
 		}
 	};
 	xmlHttp.open("GET", url, true);

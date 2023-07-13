@@ -257,7 +257,7 @@ export class EufySecurityApi
             clearTimeout(this.refreshEufySecurityCloudTimeout);
         }
 
-        this.clearScheduledTasks();
+        //this.clearScheduledTasks();
 
         this.closePushService();
         this.closeMqttService();
@@ -2517,7 +2517,7 @@ export class EufySecurityApi
     public async checkSystemVariables() : Promise<string>
     {
         var json : any = {};
-        var availableSystemVariables = await this.homematicApi.getSystemVariables();
+        var availableSystemVariables = await this.homematicApi.getSystemVariables("eufy");
         try
         {
             if(this.config.getSystemVariableActive() == true)
@@ -2539,7 +2539,11 @@ export class EufySecurityApi
 
                     for (var sv of commonSystemVariablesName)
                     {
-                        json.data.push({"sysVarName":sv, "sysVarInfo":commonSystemVariablesInfo[i], "sysVarAvailable":availableSystemVariables.includes(sv)});
+                        json.data.push({"sysVarName":sv, "sysVarInfo":commonSystemVariablesInfo[i], "sysVarAvailable":availableSystemVariables.includes(sv), "sysVarCurrent":true});
+                        if(availableSystemVariables.includes(sv))
+                        {
+                            availableSystemVariables.splice(availableSystemVariables.indexOf(sv), 1);
+                        }
                         i = i + 1;
                     }
 
@@ -2547,87 +2551,47 @@ export class EufySecurityApi
                     {
                         station = stations[stationSerial];
                         
-                        json.data.push({"sysVarName":`eufyCentralState${station.getSerial()}`, "sysVarInfo":`aktueller Status der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCentralState" + station.getSerial())});
-                        json.data.push({"sysVarName":`eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo":`Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial())});
+                        json.data.push({"sysVarName":`eufyCentralState${station.getSerial()}`, "sysVarInfo":`aktueller Status der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCentralState" + station.getSerial()), "sysVarCurrent":true});
+                        if(availableSystemVariables.includes("eufyCentralState" + station.getSerial()))
+                        {
+                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralState${station.getSerial()}`), 1);
+                        }
+                        json.data.push({"sysVarName":`eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo":`Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()), "sysVarCurrent":true});
+                        if(availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()))
+                        {
+                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyLastModeChangeTime${station.getSerial()}`), 1);
+                        }
                     }
                     
                     for (var deviceSerial in devices)
                     {
                         device = devices[deviceSerial];
                         
-                        //json.data.push({"sysVarName":`eufyCameraImageURL${device.getSerial()}`, "sysVarInfo":`Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())});
-                        json.data.push({"sysVarName":`eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo":`Zeitpunkt des letzten Videos der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial())});
-                        json.data.push({"sysVarName":`eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo":`letztes Video der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())});
-                    }
-                }
-                else
-                {
-                    json = {"success":false, "reason":"No connection to eufy."};
-                }
-            }
-            else
-            {
-                json = {"success":false, "reason":"System variables in config disabled."};
-            }
-        }
-        catch (e : any)
-        {
-            this.logError(`Error occured at checkSystemVariables(). Error: ${e.message}`);
-            this.setLastConnectionInfo(false);
-            json = {"success":false, "reason":e.message};
-        }
-
-        return JSON.stringify(json);
-    }
-
-    /**
-     * Check for deprecated system variables on the CCU
-     */
-    public async deprecatedSystemVariables() : Promise<string>
-    {
-        var json : any = {};
-        var availableSystemVariables = await this.homematicApi.getSystemVariables();
-        try
-        {
-            if(this.config.getSystemVariableActive() == true)
-            {
-                if(this.stations && this.devices)
-                {
-                    await this.loadData();
-
-                    var station : Station;
-                    var device : Device;
-                    var stations = await this.getStations();
-                    var devices = await this.getDevices();
-
-                    /*var commonSystemVariablesName : string[];
-                    var commonSystemVariablesInfo : string[];
-
-                    commonSystemVariablesName = [];
-                    commonSystemVariablesInfo = [];*/
-
-                    json = {"success":true, "data":[]};
-                    /*var i = 0;
-
-                    for (var sv of commonSystemVariablesName)
-                    {
-                        json.data.push({"sysVarName":sv, "sysVarInfo":commonSystemVariablesInfo[i], "sysVarAvailable":availableSystemVariables.includes(sv)});
-                        i = i + 1;
+                        if(availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()))
+                        {
+                            json.data.push({"sysVarName":`eufyCameraImageURL${device.getSerial()}`, "sysVarInfo":`Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()), "sysVarCurrent":false});
+                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraImageURL${device.getSerial()}`), 1);
+                        }
+                        json.data.push({"sysVarName":`eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo":`Zeitpunkt des letzten Videos der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial()), "sysVarCurrent":true});
+                        if(availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial()))
+                        {
+                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoTime${device.getSerial()}`), 1);
+                        }
+                        json.data.push({"sysVarName":`eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo":`letztes Video der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial()), "sysVarCurrent":true});
+                        if(availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial()))
+                        {
+                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoURL${device.getSerial()}`), 1);
+                        }
                     }
 
-                    for (var stationSerial in stations)
+                    if(availableSystemVariables.length > 0)
                     {
-                        station = stations[stationSerial];
-                        
-                        //json.data.push({});
-                        //json.data.push({});
-                    }*/
-                    
-                    for (var deviceSerial in devices)
-                    {
-                        device = devices[deviceSerial];
-                        
-                        json.data.push({"sysVarName":`eufyCameraImageURL${device.getSerial()}`, "sysVarInfo":`Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())});
+                        for(let i = 0; i < availableSystemVariables.length; i++)
+                        {
+                            json.data.push({"sysVarName":`${availableSystemVariables[i]}`, "sysVarInfo":`unbekannte Variable`, "sysVarAvailable":true, "sysVarCurrent":false});
+                            availableSystemVariables.splice(availableSystemVariables.indexOf(availableSystemVariables[i]), 1);
+                            i--;
+                        }
                     }
                 }
                 else

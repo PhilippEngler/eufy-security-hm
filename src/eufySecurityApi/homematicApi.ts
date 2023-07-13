@@ -74,9 +74,10 @@ export class HomematicApi
      * Get all system variables available as array.
      * @returns An array containg all system variables.
      */
-    public async getSystemVariables() : Promise<string[]>
+    public async getSystemVariables(variableStartstring? : string) : Promise<string[]>
     {
         var data = "";
+        var res : string[];
         
         var response = await axios.post("http://localhost:8181/esapi.exe", "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();", { headers : {'Content-Type': 'text/plain' } });
 
@@ -84,7 +85,25 @@ export class HomematicApi
         data = data.substring(data.indexOf("<result>"));
         data = data.substring(8, data.indexOf("</result>"));
 
-        return data.split("\t");
+        res = data.split("\t");
+        
+        if(variableStartstring === undefined)
+        {
+            return res;
+        }
+        else
+        {
+            for (var i = 0; i < res.length; i++)
+            {
+                if(!(res[i].startsWith(variableStartstring)))
+                {
+                    res.splice(i, 1);
+                    i--;
+                }
+            }
+
+            return res;
+        }
     }
 
     /**

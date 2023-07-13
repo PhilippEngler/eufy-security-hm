@@ -427,9 +427,6 @@ class ApiServer
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
-                    case "deprecatedSystemVariables":
-                        responseData = await api.deprecatedSystemVariables();
-                        break;
                     case "removeSystemVariable":
                         if(url.length == 3)
                         {
