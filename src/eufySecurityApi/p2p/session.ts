@@ -108,7 +108,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private connectAddress: Address | undefined = undefined;
     private localIPAddress: string | undefined = undefined;
     private preferredIPAddress: string | undefined = undefined;
-    private preferredUdpPort: number;
+    private preferredUdpPort: number | undefined = undefined;
     private dskKey = "";
     private dskExpiration: Date | null = null;
     private log: Logger;
@@ -121,18 +121,17 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private lockAESKeys: Map<number, string> = new Map<number, string>();
     private channel = 255;
 
-    constructor(preferredIPAddress: string, preferredUdpPort: number | null, connectionType: P2PConnectionType, rawStation: StationListResponse, api: HTTPApi, ipAddress?:string, publicKey = "") {
+    constructor(connectionType: P2PConnectionType, rawStation: StationListResponse, api: HTTPApi, ipAddress?: string, preferredUdpPort?: number | null, publicKey = "") {
         super();
-        this.preferredIPAddress = preferredIPAddress;
-        if(preferredUdpPort === undefined || preferredUdpPort == null) {
-            this.preferredUdpPort = 0;
-        } else {
-            this.preferredUdpPort = preferredUdpPort;
-        }
         this.connectionType = connectionType;
         this.api = api;
         this.lockPublicKey = publicKey;
         this.preferredIPAddress = ipAddress;
+        if(preferredUdpPort === undefined || preferredUdpPort === null) {
+            this.preferredUdpPort = 0;
+        } else {
+            this.preferredUdpPort = preferredUdpPort;
+        }
         this.log = api.getLog();
         this.cloudAddresses = decodeP2PCloudIPs(rawStation.app_conn);
         this.log.debug("Loaded P2P cloud ip addresses", this.cloudAddresses);
