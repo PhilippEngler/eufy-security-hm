@@ -1906,15 +1906,31 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.emit("station image download", station, file, picture);
 
         this.api.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
-            var filename = path.parse(file).name;
-            var channel = 0;
-            if(filename.includes("_c"))
+            var channel = -1;
+            if(path.parse(file).name.includes("_c"))
             {
-                channel = Number.parseInt(filename.split("_c", 2)[1]);
+                channel = Number.parseInt(path.parse(file).name.split("_c", 2)[1]);
+            }
+            else if(file.includes("/Camera"))
+            {
+                var res = file.split("/");
+                for(var elem of res)
+                {
+                    if(elem.startsWith("Camera"))
+                    {
+                        channel = Number.parseInt(elem.replace("Camera", ""));
+                        break;
+                    }
+                }
+            }
+            if(channel == -1)
+            {
+                this.api.logError(`onStationImageDownload - Channel could not be extracted for file '${file}' on station ${station.getSerial()}.`);
+                return;
             }
             for (const device of devices) {
                 //if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && (device.getPropertyValue(PropertyName.DevicePicture) === undefined || device.getPropertyValue(PropertyName.DevicePicture) === null)) {
-                if (device.getSerial() === station.getSerial() || device.getChannel() === channel) {
+                if (device.getSerial() === station.getSerial() || (device.getStationSerial() === station.getSerial() && device.getChannel() === channel)) {
                     this.api.logDebug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
                     device.updateProperty(PropertyName.DevicePicture, picture);
                     break;
