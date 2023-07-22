@@ -1,11 +1,11 @@
 /**
  * Javascript for eufySecurity Addon
- * 20230604
+ * 20230720
  */
 action = "";
 port = "";
 redirectTarget = "";
-version = "2.1.2";
+version = "2.2.0";
 
 /**
  * common used java script functions
@@ -344,7 +344,7 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 
 	card += `<div class="col"><div class="card">`;
 	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
-	card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0"><i class="bi-gear" title="Einstellungen" onclick="generateStationSettingsModal('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
+	card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${station.isP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>&nbsp;&nbsp;` : ""}<i class="bi-gear" title="Einstellungen" onclick="generateStationSettingsModal('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
 	card += `</div>`;
 	
 	card += `<div class="card-body p-0"><div class="row g-0">`;
@@ -527,7 +527,7 @@ function createCardDevice(device)
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
-	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.wifiSignalLevel === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
+	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>&nbsp;&nbsp;` : ""}${device.state === 2 ? `<i class="bi-exclamation-triangle" title="Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert."></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
 
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
@@ -930,6 +930,20 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	deviceModal +=     `
 									</div>
 								</div>`;
+	if(deviceProperties.state === 2)
+	{
+		deviceModal += `
+									${createMessageContainer("alert alert-warning", "Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert.", "Um Einstellungen für dieses Gerät vornehmen zu können, laden Sie das Gerät wieder auf.", "")}
+								</div>
+							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined, setEventHandler)}
+							</div>
+						</div>
+					</div>`;
+
+		document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
+		return;
+	}
 	if(deviceProperties.enabled !== undefined || deviceProperties.antitheftDetection !== undefined || deviceProperties.statusLed !== undefined || deviceProperties.imageMirrored !== undefined)
 	{
 		deviceModal += `
@@ -1881,7 +1895,7 @@ function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.data);
+					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.isP2PConnected, objResp.data);
 				}
 				else
 				{
@@ -1926,7 +1940,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, stationProperties)
+function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, isP2PConnected, stationProperties)
 {
 	var setEventHandler = true;
 	var stationModal =  `
@@ -1965,13 +1979,20 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 											</span>
 										</div>
 										${generateColumnForProperty("col", "lblStationFirmware", "", `<h6 class="card-subtitle text-muted">`, `</h6>`, "bi-gear-wide-connected", "Firmwareversion", stationProperties.softwareVersion)}
-									</div>
-									<div class="card mb-3 collapse" id="cardStationStorageSettings">
-										<h5 class="card-header">Speicher</h5>
-										<div class="card-body">
-											<label>Speicherbelegung:</label>
-										</div>
 									</div>`;
+	if(isP2PConnected === false)
+	{
+		stationModal +=  `
+									${createMessageContainer("alert alert-warning", "Es besteht keine P2P-Verbindung zu diesem Gerät.", "Um Einstellungen für dieses Gerät vornehmen zu können, muss die P2P-Verbindung wieder hergestellt werden.", "")}
+								</div>
+								<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+									${makeButtonElement("btnCloseModalStationSettingsBottom", "btn btn-primary btn-sm", undefined, "Schließen", true, "modal", undefined, setEventHandler)}
+								</div>
+							</div>
+						</div>`;
+		document.getElementById("modalStationSettings").innerHTML = stationModal;
+		return;
+	}
 	if(stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined || stationPropertiesMetadata.promptVolume !== undefined)
 	{
 		stationModal +=  `

@@ -871,12 +871,12 @@ export class EufySecurityApi
      * Create a JSON object for a given device.
      * @param device The device the JSON object created for.
      */
-    private makeJsonObjectForDevice(device : Device) : any
+    private makeJsonObjectForDevice(device : Device, isStationP2PConnected : boolean) : any
     {
         var properties = device.getProperties();
         var json : any = {};
 
-        json = {"eufyDeviceId":device.getId(), "deviceType":this.devices.getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
+        json = {"eufyDeviceId":device.getId(), "isStationP2PConnected":isStationP2PConnected, "deviceType":this.devices.getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
 
         for(var property in properties)
         {
@@ -922,7 +922,7 @@ export class EufySecurityApi
                     json = {"success":true, "data":[]};
                     for (var deviceSerial in devices)
                     {
-                        json.data.push(this.makeJsonObjectForDevice(devices[deviceSerial]));
+                        json.data.push(this.makeJsonObjectForDevice(devices[deviceSerial], (await this.stations.getStation(devices[deviceSerial].getStationSerial())).isConnected()));
                     }
                     this.setLastConnectionInfo(true);
                 }
@@ -994,7 +994,7 @@ export class EufySecurityApi
                 var device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
-                    json = {"success":true, "data":this.makeJsonObjectForDevice(device)};
+                    json = {"success":true, "data":this.makeJsonObjectForDevice(device, (await this.stations.getStation(device.getStationSerial())).isConnected())};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1344,7 +1344,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "data":station.getProperties()};
+                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "data":station.getProperties()};
                     this.setLastConnectionInfo(true);
                 }
                 else
