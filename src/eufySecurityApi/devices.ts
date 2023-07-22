@@ -6,6 +6,7 @@ import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, Floo
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue, waitForEvent } from "./utils";
+import { CameraEvent } from "./utils/utils";
 
 /**
  * Represents all the Devices in the account.
@@ -15,7 +16,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private api : EufySecurityApi;
     private httpService : HTTPApi;
     private devices : { [deviceSerial : string] : any } = {};
-    private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
+    //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
+    private devicesLastEvent : { [deviceSerial : string] : CameraEvent | null } = {};
     private devicesLoaded = false;
     private loadingEmitter = new EventEmitter();
     private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
@@ -221,7 +223,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         if (serial && !Object.keys(this.devices).includes(serial))
         {
             this.devices[serial] = device;
-            this.devicesHistory[serial] = [];
+            //this.devicesHistory[serial] = [];
+            this.devicesLastEvent[serial] = null;
             this.deviceImageLoadTimeout[serial] = undefined;
             this.emit("device added", device);
 
@@ -1129,9 +1132,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Add a given event result to the local store if the event is not already stored.
      * @param deviceSerial The serial of the device.
      * @param eventResult The event result data.
-     * @returns 
      */
-    public addEventResultForDevice(deviceSerial : string, eventResult : DatabaseQueryLocal)
+    /*public addEventResultForDevice(deviceSerial : string, eventResult : DatabaseQueryLocal)
     {
         for (let event of this.devicesHistory[deviceSerial])
         {
@@ -1141,6 +1143,17 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             }
         }
         this.devicesHistory[deviceSerial].push(eventResult);
+    }*/
+
+    /**
+     * Set given event data to the local store.
+     * @param deviceSerial The serial of the device.
+     * @param path The path to the image.
+     * @param start_time The date as Date.
+     */
+    public addLastEventForDevice(deviceSerial : string, path : string, start_time : Date)
+    {
+        this.devicesLastEvent[deviceSerial] = { path, start_time };
     }
 
     /**
@@ -1148,13 +1161,23 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @returns The stored events.
      */
-    public getEventResultsForDevice(deviceSerial : string) : DatabaseQueryLocal[]
+    /*public getEventResultsForDevice1(deviceSerial : string) : DatabaseQueryLocal[]
     {
         return this.devicesHistory[deviceSerial];
+    }*/
+
+    /**
+     * Returns the stored last event for a given device.
+     * @param deviceSerial The serial of the device.
+     * @returns The stored last event.
+     */
+    public getLastEventForDevice(deviceSerial : string) : CameraEvent | null
+    {
+        return this.devicesLastEvent[deviceSerial];
     }
 
     /**
-     * Set the tomeout of one minute to download image of last event.
+     * Set the timeout of 75 seconds to download image of last event.
      * @param deviceSerial The serial of the device.
      */
     private loadDeviceImage(deviceSerial : string)
@@ -1178,14 +1201,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
         }
         
-        this.getDeviceEvents(deviceSerial);
+        //this.getDeviceEvents(deviceSerial);
+        this.getDeviceLastEvent(deviceSerial);
     }
 
     /**
      * Retrieves the events of the given device.
      * @param deviceSerial The serial of the device.
      */
-    public async getDeviceEvents(deviceSerial : string)
+    /*public async getDeviceEvents(deviceSerial : string)
     {
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
@@ -1200,12 +1224,27 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             station.databaseQueryLocal(deviceSerials, dateStart, dateEnd);
         }
+    }*/
+
+    /**
+     * Retrieves the last event of the given device.
+     * @param deviceSerial The serial of the device.
+     */
+    public async getDeviceLastEvent(deviceSerial : string)
+    {
+        var device = await this.getDevice(deviceSerial);
+        var station = await this.api.getStation(device.getStationSerial());
+
+        if(device)
+        {
+            station.databaseQueryLatestInfo();
+        }
     }
 
     /**
      * Retrieves the events of all devices.
      */
-    public async getDevicesEvents()
+    /*public async getDevicesEvents()
     {
         var devices = await this.getDevices();
         var stations = await this.api.getStations();
@@ -1227,6 +1266,19 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
             stations[station].databaseQueryLocal(deviceSerials, dateStart, dateEnd);
         }
+    }*/
+
+    /**
+     * Retrieves the last event of all devices.
+     */
+    public async getDevicesLastEvent()
+    {
+        var stations = await this.api.getStations();
+
+        for(let station in stations)
+        {
+            stations[station].databaseQueryLatestInfo();
+        }
     }
 
     /**
@@ -1237,7 +1289,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
-        var results = this.getEventResultsForDevice(deviceSerial);
+        /*var results = this.getEventResultsForDevice(deviceSerial);
         if(results && results.length > 0)
         {
             for(var pos = results.length - 1; pos >= 0; pos--)
@@ -1248,6 +1300,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     return;
                 }
             }
+        }*/
+        var result = this.getLastEventForDevice(deviceSerial);
+        if(result !== null && result.path !== "")
+        {
+            station.downloadImage(result.path);
+            return;
         }
     }
 
@@ -1256,7 +1314,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @returns The timestamp or undefinied.
      */
-    public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
+    /*public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
     {
         if(this.devicesHistory[deviceSerial] !== undefined && this.devicesHistory[deviceSerial].length > 0)
         {
@@ -1267,6 +1325,21 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     return this.devicesHistory[deviceSerial][pos].history.start_time.valueOf();
                 }
             }
+        }
+        return undefined;
+    }*/
+
+    /**
+     * Returns the timestamp of the last event for the given device.
+     * @param deviceSerial The serial of the device.
+     * @returns The timestamp or undefinied.
+     */
+    public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
+    {
+        var result = this.getLastEventForDevice(deviceSerial);
+        if(result !== null && result.path !== "")
+        {
+            return result.start_time.valueOf();
         }
         return undefined;
     }

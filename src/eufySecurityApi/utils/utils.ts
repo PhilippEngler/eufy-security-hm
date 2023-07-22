@@ -164,3 +164,8 @@ export interface EufyCountry {
     countryPhoneCode: string;
     countryCode: string;
 }
+
+export interface CameraEvent {
+    path: string;
+    start_time: Date;
+}

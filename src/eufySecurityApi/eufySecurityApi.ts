@@ -8,7 +8,7 @@ import { MqttService } from './mqttService';
 import { generateUDID, generateSerialnumber } from './utils';
 import { Devices } from './devices'
 import { Stations } from './stations';
-import { DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from './p2p';
+import { DatabaseQueryLatestInfo, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from './p2p';
 import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
 import { NotSupportedError, ReadOnlyPropertyError } from './error';
@@ -16,6 +16,7 @@ import { randomNumber } from './http/utils';
 import { PhoneModels, timeZoneData } from './http/const';
 import { getModelName, makeDateTimeString } from './utils/utils';
 import { countryData } from './utils/const';
+import path from 'path';
 
 export class EufySecurityApi
 {
@@ -439,6 +440,7 @@ export class EufySecurityApi
 
         this.stations.on("station image download", (station: Station, file: string, image: Picture) => this.onStationImageDownload(station, file, image));
         this.stations.on("station database query local", (station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]) => this.onStationDatabaseQueryLocal(station, returnCode, data));
+        this.stations.on("station database query latest", (station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLatestInfo[]) => this.onStationDatabaseQueryLatest(station, returnCode, data));
 
         //this.devices.on("device added", (device: Device) => this.onDeviceAdded(device));
         this.devices.once("devices loaded", () => this.onDevicesLoaded());
@@ -557,7 +559,7 @@ export class EufySecurityApi
      */
     private async onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[])
     {
-        var deviceSerials : string[] = [];
+        /*var deviceSerials : string[] = [];
         if(returnCode == 0 && data && data.length > 0)
         {
             for(let i=0; i<data.length; i++)
@@ -577,6 +579,55 @@ export class EufySecurityApi
             {
                 this.devices.downloadLatestImageForDevice(deviceSerials[deviceSerial]);
             }
+        }*/
+    }
+
+    /**
+     * The action to be performed when event station database query latest is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    private async onStationDatabaseQueryLatest(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLatestInfo[])
+    {
+        if(returnCode == 0 && data && data.length > 0)
+        {
+            for(let i=0; i<data.length; i++)
+            {
+                try
+                {
+                    var response = data[i] as DatabaseQueryLatestInfoLocal;
+                    var file = "";
+                    var fileName = "";
+                    var timeString = "";
+
+                    file = response.crop_local_path;
+                    fileName = path.parse(file).name + path.parse(file).ext;
+
+                    if(fileName.includes("_c"))
+                    {
+                        timeString = path.parse(file).name.split("_c", 2)[0];
+                    }
+                    else if(file.includes("/Camera"))
+                    {
+                        var res = file.split("/");
+                        if(file.includes("snapshort.jpg"))
+                        {
+                            timeString = res[res.length-2];
+                        }
+                        else
+                        {
+                            timeString = res[res.length-1].replace("n", "");
+                        }
+                    }
+                    this.devices.addLastEventForDevice(response.device_sn, file, new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6)), Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14))));
+                    this.devices.downloadLatestImageForDevice(response.device_sn);
+                }
+                catch (error)
+                {
+                    continue;
+                }
+            }
         }
     }
 
@@ -586,7 +637,8 @@ export class EufySecurityApi
      */
     private async onDeviceAdded(device : Device)
     {
-        this.devices.getDeviceEvents(device.getSerial());
+        //this.devices.getDeviceEvents(device.getSerial());
+        this.devices.getDeviceLastEvent(device.getSerial());
     }
 
     /**
@@ -594,7 +646,8 @@ export class EufySecurityApi
      */
     private async onDevicesLoaded()
     {
-        this.devices.getDevicesEvents();
+        //this.devices.getDevicesEvents();
+        this.devices.getDevicesLastEvent();
     }
 
     /**
