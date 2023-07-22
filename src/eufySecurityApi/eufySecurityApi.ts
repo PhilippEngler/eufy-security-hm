@@ -597,6 +597,13 @@ export class EufySecurityApi
                 try
                 {
                     var response = data[i] as DatabaseQueryLatestInfoLocal;
+
+                    if(response.crop_local_path === "")
+                    {
+                        this.logError("DatabaseQueryLatest: Empty path detected.", JSON.stringify(response));
+                        continue;
+                    }
+
                     var file = "";
                     var fileName = "";
                     var timeString = "";
@@ -606,7 +613,7 @@ export class EufySecurityApi
 
                     if(fileName.includes("_c"))
                     {
-                        timeString = path.parse(file).name.split("_c", 2)[0];
+                        timeString = fileName.split("_c", 2)[0];
                     }
                     else if(file.includes("/Camera"))
                     {
@@ -619,6 +626,11 @@ export class EufySecurityApi
                         {
                             timeString = res[res.length-1].replace("n", "");
                         }
+                    }
+                    else
+                    {
+                        this.logError("DatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
+                        continue;
                     }
                     this.devices.addLastEventForDevice(response.device_sn, file, new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6)), Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14))));
                     this.devices.downloadLatestImageForDevice(response.device_sn);
