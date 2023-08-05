@@ -178,7 +178,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             Promise.all(promises).then((devices) => {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
-                        if (!station.isConnected())
+                        if (!station.isConnected() && station.isP2PConnectableDevice())
                         {
                             station.setConnectionType(this.api.getP2PConnectionType());
                             station.connect();

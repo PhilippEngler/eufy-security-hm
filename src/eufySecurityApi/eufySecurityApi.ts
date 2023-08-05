@@ -2046,8 +2046,9 @@ export class EufySecurityApi
                 {
                     json = {"success":false, "message":"P2P connection to station already established."};
                 }
-                else
+                else if (station.isP2PConnectableDevice())
                 {
+                    station.setConnectionType(this.getP2PConnectionType());
                     await station.connect();
                     await sleep(500);
 
@@ -3174,6 +3175,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.7.0-b322";
+        return "2.7.0";
     }
 }

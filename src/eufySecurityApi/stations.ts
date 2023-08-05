@@ -89,8 +89,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                station.setConnectionType(this.api.getP2PConnectionType());
-                station.connect();
+                if (station.isP2PConnectableDevice())
+                {
+                    station.setConnectionType(this.api.getP2PConnectionType());
+                    station.connect();
+                }
 
                 if(this.api.getStateUpdateEventActive())
                 {
@@ -227,7 +230,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         if (Object.keys(this.stations).includes(hub.station_sn))
         {
             this.stations[hub.station_sn].update(hub, this.stations[hub.station_sn] !== undefined && !this.stations[hub.station_sn].isIntegratedDevice() && this.stations[hub.station_sn].isConnected());
-            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice())
+            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice())
             {
                 this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 this.stations[hub.station_sn].connect();
