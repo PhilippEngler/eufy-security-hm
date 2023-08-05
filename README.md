@@ -10,8 +10,9 @@ This addon supports multiple stations and multiple cams. The login token is stor
 
 ## Devices
 The addon will only run with the original CCU3 Firmware and other community projects (RaspberryMatic, piVCCU and debmatic).
-* CCU3 or RaspberryMatic on arm processors: use the *ccu3* package (CCU1 and CCU2 are not supported)
-* RaspberryMatic running on RaspberryPi 3 or 4 based hardware: you can use the *arm64* instead of the *ccu3* package
+* CCU3 with original software: use the *ccu3* package (CCU1 and CCU2 are not supported)
+* RaspberryMatic running on other hardware than RaspberryPi 3 or 4 based hardware: use the *arm32* package
+* RaspberryMatic running on RaspberryPi 3 or 4 based hardware (including RaspberryMatic running on CCU3): you can use the *arm64* instead of the *arm32* package
 * RaspberryMatic on OVA platforms: use the *amd64* package
 
 Theoretically, most of the eufy security devices should be compatible. There might be issues with new devices. The following eufy security devices are known as compatible (please report other compatible devices):
