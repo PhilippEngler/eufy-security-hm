@@ -604,7 +604,7 @@ export class Station extends TypedEmitter<StationEvents> {
         return this.p2pSession.isConnected();
     }
 
-    public close(): void {
+    public async close(): Promise<void> {
         this.terminating = true;
         this.log.info(`Disconnect from station ${this.getSerial()}`);
         if (this.reconnectTimeout) {
@@ -612,7 +612,7 @@ export class Station extends TypedEmitter<StationEvents> {
             this.reconnectTimeout = undefined;
         }
         if (this.p2pSession.isConnected()) {
-            this.p2pSession.close();
+            await this.p2pSession.close();
         }
     }
 

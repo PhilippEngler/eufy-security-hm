@@ -66,7 +66,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug("Got hubs:", hubs);
         const resStations = hubs;
 
-        var station : Station;
         const stationsSerials : string[] = Object.keys(this.stations);
         const promises: Array<Promise<Station>> = [];
         const newStationsSerials = Object.keys(hubs);
@@ -85,66 +84,70 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             else
             {
                 this.stationsLoaded = waitForEvent<void>(this.loadingEmitter, "stations loaded");
-                station = await Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
+                let new_station = Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                if (station.isP2PConnectableDevice())
-                {
-                    station.setConnectionType(this.api.getP2PConnectionType());
-                    station.connect();
-                }
+                
+                promises.push(new_station.then((station: Station) => {
+                    try
+                    {
+                        if(this.api.getStateUpdateEventActive())
+                        {
+                            this.addEventListener(station, "GuardMode", false);
+                            this.addEventListener(station, "CurrentMode", false);
+                            this.addEventListener(station, "PropertyChanged", false);
+                            this.addEventListener(station, "RawPropertyChanged", false);
+                        }
 
-                if(this.api.getStateUpdateEventActive())
-                {
-                    this.addEventListener(station, "GuardMode", false);
-                    this.addEventListener(station, "CurrentMode", false);
-                    this.addEventListener(station, "PropertyChanged", false);
-                    this.addEventListener(station, "RawPropertyChanged", false);
-                }
+                        this.addEventListener(station, "Connect", false);
+                        this.addEventListener(station, "ConnectionError", false);
+                        this.addEventListener(station, "Close", false);
+                        this.addEventListener(station, "RawDevicePropertyChanged", false);
+                        this.addEventListener(station, "LivestreamStart", false);
+                        this.addEventListener(station, "LivestreamStop", false);
+                        this.addEventListener(station, "LivestreamError", false);
+                        this.addEventListener(station, "DownloadStart", false);
+                        this.addEventListener(station, "DownloadFinish", false);
+                        this.addEventListener(station, "CommandResult", false);
+                        this.addEventListener(station, "RTSPLivestreamStart", false);
+                        this.addEventListener(station, "RTSPLivestreamStop", false);
+                        this.addEventListener(station, "RTSPUrl", false);
+                        this.addEventListener(station, "AlarmEvent", false);
+                        this.addEventListener(station, "RuntimeState", false);
+                        this.addEventListener(station, "ChargingState", false);
+                        this.addEventListener(station, "WifiRssi", false);
+                        this.addEventListener(station, "FloodlightManualSwitch", false);
+                        this.addEventListener(station, "AlarmDelayEvent", false);
+                        this.addEventListener(station, "TalkbackStarted", false);
+                        this.addEventListener(station, "TalkbackStopped", false);
+                        this.addEventListener(station, "TalkbackError", false);
+                        this.addEventListener(station, "AlarmArmedEvent", false);
+                        this.addEventListener(station, "AlarmArmDelayEvent", false);
+                        this.addEventListener(station, "SecondaryCommandResult", false);
+                        this.addEventListener(station, "DeviceShakeAlarm", false);
+                        this.addEventListener(station, "Device911Alarm", false);
+                        this.addEventListener(station, "DeviceJammed", false);
+                        this.addEventListener(station, "DeviceLowBattery", false);
+                        this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
+                        this.addEventListener(station, "DevicePinVerified", false);
+                        this.addEventListener(station, "SdInfoEx", false);
+                        this.addEventListener(station, "ImageDownload", false);
+                        this.addEventListener(station, "DatabaseQueryLatest", false);
+                        this.addEventListener(station, "DatabaseQueryLocal", false);
+                        this.addEventListener(station, "DatabaseCountByDate", false);
+                        this.addEventListener(station, "DatabaseDelete", false);
+                        this.addEventListener(station, "SensorStatus", false);
+                        this.addEventListener(station, "GarageDoorStatus", false);
 
-                this.addEventListener(station, "Connect", false);
-                this.addEventListener(station, "ConnectionError", false);
-                this.addEventListener(station, "Close", false);
-                this.addEventListener(station, "RawDevicePropertyChanged", false);
-                this.addEventListener(station, "LivestreamStart", false);
-                this.addEventListener(station, "LivestreamStop", false);
-                this.addEventListener(station, "LivestreamError", false);
-                this.addEventListener(station, "DownloadStart", false);
-                this.addEventListener(station, "DownloadFinish", false);
-                this.addEventListener(station, "CommandResult", false);
-                this.addEventListener(station, "RTSPLivestreamStart", false);
-                this.addEventListener(station, "RTSPLivestreamStop", false);
-                this.addEventListener(station, "RTSPUrl", false);
-                this.addEventListener(station, "AlarmEvent", false);
-                this.addEventListener(station, "RuntimeState", false);
-                this.addEventListener(station, "ChargingState", false);
-                this.addEventListener(station, "WifiRssi", false);
-                this.addEventListener(station, "FloodlightManualSwitch", false);
-                this.addEventListener(station, "AlarmDelayEvent", false);
-                this.addEventListener(station, "TalkbackStarted", false);
-                this.addEventListener(station, "TalkbackStopped", false);
-                this.addEventListener(station, "TalkbackError", false);
-                this.addEventListener(station, "AlarmArmedEvent", false);
-                this.addEventListener(station, "AlarmArmDelayEvent", false);
-                this.addEventListener(station, "SecondaryCommandResult", false);
-                this.addEventListener(station, "DeviceShakeAlarm", false);
-                this.addEventListener(station, "Device911Alarm", false);
-                this.addEventListener(station, "DeviceJammed", false);
-                this.addEventListener(station, "DeviceLowBattery", false);
-                this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
-                this.addEventListener(station, "DevicePinVerified", false);
-                this.addEventListener(station, "SdInfoEx", false);
-                this.addEventListener(station, "ImageDownload", false);
-                this.addEventListener(station, "DatabaseQueryLatest", false);
-                this.addEventListener(station, "DatabaseQueryLocal", false);
-                this.addEventListener(station, "DatabaseCountByDate", false);
-                this.addEventListener(station, "DatabaseDelete", false);
-                this.addEventListener(station, "SensorStatus", false);
-                this.addEventListener(station, "GarageDoorStatus", false);
-
-                this.addStation(station);
-                station.initialize();
+                        this.addStation(station);
+                        station.initialize();
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.api.logError("HandleHubs Error", error);
+                    }
+                    return station;
+                }));
             }
         }
 

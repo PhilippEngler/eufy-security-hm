@@ -54,7 +54,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         const promises: Array<Promise<Device>> = [];
         
         var deviceSerial : string;
-        var device : Device;
         
         if(resDevices != null)
         {
@@ -67,7 +66,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
                 if(this.devices[deviceSerial])
                 {
-                    device = this.devices[deviceSerial];
                     this.updateDevice(resDevices[deviceSerial]);
                 }
                 else
