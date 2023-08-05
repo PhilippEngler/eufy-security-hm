@@ -4,7 +4,17 @@ exports.PushService = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const service_1 = require("./push/service");
 const types_1 = require("./push/types");
+const _1 = require(".");
 class PushService extends tiny_typed_emitter_1.TypedEmitter {
+    api;
+    config;
+    logger;
+    httpService;
+    pushService;
+    pushCloudRegistered = false;
+    pushCloudChecked = false;
+    credential;
+    persistentIds;
     /**
      * Create the PushService object.
      * @param api The EufySecurityApi.
@@ -14,8 +24,6 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
      */
     constructor(api, httpService, config, logger) {
         super();
-        this.pushCloudRegistered = false;
-        this.pushCloudChecked = false;
         this.api = api;
         this.httpService = httpService;
         this.config = config;
@@ -123,7 +131,8 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                     this.api.processInvitations();
                 }
             }
-            catch (error) {
+            catch (err) {
+                const error = (0, _1.ensureError)(err);
                 this.logger.error(`Error processing server push notification for device invitation`, error);
             }
             try {
@@ -131,7 +140,8 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                     this.api.refreshCloudData();
                 }
             }
-            catch (error) {
+            catch (err) {
+                const error = (0, _1.ensureError)(err);
                 this.logger.error(`Error processing server push notification for device/station/house removal`, error);
             }
             try {
@@ -141,12 +151,14 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                     try {
                         stations[stationSerial].processPushNotification(message);
                     }
-                    catch (error) {
+                    catch (err) {
+                        const error = (0, _1.ensureError)(err);
                         this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
                     }
                 }
             }
-            catch (error) {
+            catch (err) {
+                const error = (0, _1.ensureError)(err);
                 this.api.logError("Process push notification for stations", error);
             }
             try {
@@ -156,12 +168,14 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                     try {
                         devices[deviceSerial].processPushNotification(message, this.config.getEventDurationSeconds());
                     }
-                    catch (error) {
+                    catch (err) {
+                        const error = (0, _1.ensureError)(err);
                         this.logger.error(`Error processing push notification for device ${deviceSerial}`, error);
                     }
                 }
             }
-            catch (error) {
+            catch (err) {
+                const error = (0, _1.ensureError)(err);
                 this.api.logError("Process push notification for devices", error);
             }
         }

@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.RGBColorToDecimal = exports.DecimalToRGBColor = exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const CryptoJS = __importStar(require("crypto-js"));
 const crypto_1 = require("crypto");
@@ -651,3 +651,15 @@ const getLockV12P2PCommand = function (deviceSN, user_id, command, channel, lock
     };
 };
 exports.getLockV12P2PCommand = getLockV12P2PCommand;
+const DecimalToRGBColor = function (color) {
+    return {
+        red: (color >> 16) & 0xff,
+        green: (color >> 8) & 0xff,
+        blue: color & 0xff,
+    };
+};
+exports.DecimalToRGBColor = DecimalToRGBColor;
+const RGBColorToDecimal = function (color) {
+    return (color.red << 16) + (color.green << 8) + (color.blue);
+};
+exports.RGBColorToDecimal = RGBColorToDecimal;

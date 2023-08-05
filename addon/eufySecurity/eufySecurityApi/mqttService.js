@@ -5,6 +5,10 @@ const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const service_1 = require("./mqtt/service");
 const error_1 = require("./error");
 class MqttService extends tiny_typed_emitter_1.TypedEmitter {
+    api;
+    config;
+    logger;
+    mqttService;
     /**
      * Create the MqttService object.
      * @param api The EufySecurityApi.

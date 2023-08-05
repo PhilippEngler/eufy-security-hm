@@ -67,26 +67,26 @@ const getModelName = function (modelNumber) {
             return "OutdoorCam";
         //Wired Doorbells
         case "T8200":
-            return "Video Doorbell 2K (wired)";
+            return "Video Doorbell 2K";
         case "T8201":
-            return "Video Doorbell 1080p (wired)";
+            return "Video Doorbell 1080p";
         case "T8202":
-            return "Video Doorbell 2K Pro (wired)";
+            return "Video Doorbell 2K Pro";
         case "T8203":
-            return "Video Doorbell Dual 2K (wired)";
+            return "Video Doorbell Dual 2K";
         //Battery Doorbells
         case "T8210":
-            return "Video Doorbell 2K (battery)";
+            return "Video Doorbell 2K";
         case "T8212":
-            return "Video Doorbell 2C (battery)";
+            return "Video Doorbell 2C";
         case "T8213":
-            return "Video Doorbell Dual 2K (battery)";
+            return "Video Doorbell Dual 2K";
         case "T8220":
-            return "Video Doorbell 1080p Slim (battery)";
+            return "Video Doorbell 1080p Slim";
         case "T8221":
-            return "Video Doorbell 2E (battery)";
+            return "Video Doorbell 2E";
         case "T8222":
-            return "Video Doorbell 1080p (battery)";
+            return "Video Doorbell 1080p";
         //Floodlight
         case "T8420":
             return "FloodlightCam 1080p";

@@ -18,6 +18,19 @@ const path_1 = __importDefault(require("path"));
  * Represents all the stations in the account.
  */
 class Stations extends tiny_typed_emitter_1.TypedEmitter {
+    api;
+    httpService;
+    serialNumbers;
+    stations = {};
+    skipNextModeChangeEvent = {};
+    lastGuardModeChangeTimeForStations = {};
+    loadingEmitter = new events_1.default();
+    stationsLoaded;
+    P2P_REFRESH_INTERVAL_MIN = 720;
+    cameraMaxLivestreamSeconds = 30;
+    cameraStationLivestreamTimeout = new Map();
+    cameraCloudLivestreamTimeout = new Map();
+    refreshEufySecurityP2PTimeout = {};
     /**
      * Create the Bases objects holding all stations in the account.
      * @param api The eufySecurityApi.
@@ -25,16 +38,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     constructor(api, httpService) {
         super();
-        this.stations = {};
-        this.skipNextModeChangeEvent = {};
-        this.lastGuardModeChangeTimeForStations = {};
-        this.stationsLoaded = false;
-        this.loadingEmitter = new events_1.default();
-        this.P2P_REFRESH_INTERVAL_MIN = 720;
-        this.cameraMaxLivestreamSeconds = 30;
-        this.cameraStationLivestreamTimeout = new Map();
-        this.cameraCloudLivestreamTimeout = new Map();
-        this.refreshEufySecurityP2PTimeout = {};
         this.api = api;
         this.httpService = httpService;
         this.serialNumbers = [];
@@ -50,7 +53,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async handleHubs(hubs) {
         this.api.logDebug("Got hubs:", hubs);
         const resStations = hubs;
-        var station;
         const stationsSerials = Object.keys(this.stations);
         const promises = [];
         const newStationsSerials = Object.keys(hubs);
@@ -63,70 +65,83 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 await this.updateStation(resStations[stationSerial]);
             }
             else {
-                this.stationsLoaded = false;
-                station = await http_1.Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
+                this.stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
+                let new_station = http_1.Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 this.serialNumbers.push(stationSerial);
-                station.setConnectionType(this.api.getP2PConnectionType());
-                station.connect();
-                if (this.api.getStateUpdateEventActive()) {
-                    this.addEventListener(station, "GuardMode", false);
-                    this.addEventListener(station, "CurrentMode", false);
-                    this.addEventListener(station, "PropertyChanged", false);
-                    this.addEventListener(station, "RawPropertyChanged", false);
-                }
-                this.addEventListener(station, "Connect", false);
-                this.addEventListener(station, "ConnectionError", false);
-                this.addEventListener(station, "Close", false);
-                this.addEventListener(station, "RawDevicePropertyChanged", false);
-                this.addEventListener(station, "LivestreamStart", false);
-                this.addEventListener(station, "LivestreamStop", false);
-                this.addEventListener(station, "LivestreamError", false);
-                this.addEventListener(station, "DownloadStart", false);
-                this.addEventListener(station, "DownloadFinish", false);
-                this.addEventListener(station, "CommandResult", false);
-                this.addEventListener(station, "RTSPLivestreamStart", false);
-                this.addEventListener(station, "RTSPLivestreamStop", false);
-                this.addEventListener(station, "RTSPUrl", false);
-                this.addEventListener(station, "AlarmEvent", false);
-                this.addEventListener(station, "RuntimeState", false);
-                this.addEventListener(station, "ChargingState", false);
-                this.addEventListener(station, "WifiRssi", false);
-                this.addEventListener(station, "FloodlightManualSwitch", false);
-                this.addEventListener(station, "AlarmDelayEvent", false);
-                this.addEventListener(station, "TalkbackStarted", false);
-                this.addEventListener(station, "TalkbackStopped", false);
-                this.addEventListener(station, "TalkbackError", false);
-                this.addEventListener(station, "AlarmArmedEvent", false);
-                this.addEventListener(station, "AlarmArmDelayEvent", false);
-                this.addEventListener(station, "SecondaryCommandResult", false);
-                this.addEventListener(station, "DeviceShakeAlarm", false);
-                this.addEventListener(station, "Device911Alarm", false);
-                this.addEventListener(station, "DeviceJammed", false);
-                this.addEventListener(station, "DeviceLowBattery", false);
-                this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
-                this.addEventListener(station, "DevicePinVerified", false);
-                this.addEventListener(station, "SdInfoEx", false);
-                this.addEventListener(station, "ImageDownload", false);
-                this.addEventListener(station, "DatabaseQueryLocal", false);
-                this.addStation(station);
-                station.initialize();
+                promises.push(new_station.then((station) => {
+                    try {
+                        if (this.api.getStateUpdateEventActive()) {
+                            this.addEventListener(station, "GuardMode", false);
+                            this.addEventListener(station, "CurrentMode", false);
+                            this.addEventListener(station, "PropertyChanged", false);
+                            this.addEventListener(station, "RawPropertyChanged", false);
+                        }
+                        this.addEventListener(station, "Connect", false);
+                        this.addEventListener(station, "ConnectionError", false);
+                        this.addEventListener(station, "Close", false);
+                        this.addEventListener(station, "RawDevicePropertyChanged", false);
+                        this.addEventListener(station, "LivestreamStart", false);
+                        this.addEventListener(station, "LivestreamStop", false);
+                        this.addEventListener(station, "LivestreamError", false);
+                        this.addEventListener(station, "DownloadStart", false);
+                        this.addEventListener(station, "DownloadFinish", false);
+                        this.addEventListener(station, "CommandResult", false);
+                        this.addEventListener(station, "RTSPLivestreamStart", false);
+                        this.addEventListener(station, "RTSPLivestreamStop", false);
+                        this.addEventListener(station, "RTSPUrl", false);
+                        this.addEventListener(station, "AlarmEvent", false);
+                        this.addEventListener(station, "RuntimeState", false);
+                        this.addEventListener(station, "ChargingState", false);
+                        this.addEventListener(station, "WifiRssi", false);
+                        this.addEventListener(station, "FloodlightManualSwitch", false);
+                        this.addEventListener(station, "AlarmDelayEvent", false);
+                        this.addEventListener(station, "TalkbackStarted", false);
+                        this.addEventListener(station, "TalkbackStopped", false);
+                        this.addEventListener(station, "TalkbackError", false);
+                        this.addEventListener(station, "AlarmArmedEvent", false);
+                        this.addEventListener(station, "AlarmArmDelayEvent", false);
+                        this.addEventListener(station, "SecondaryCommandResult", false);
+                        this.addEventListener(station, "DeviceShakeAlarm", false);
+                        this.addEventListener(station, "Device911Alarm", false);
+                        this.addEventListener(station, "DeviceJammed", false);
+                        this.addEventListener(station, "DeviceLowBattery", false);
+                        this.addEventListener(station, "DeviceWrongTryProtectAlarm", false);
+                        this.addEventListener(station, "DevicePinVerified", false);
+                        this.addEventListener(station, "SdInfoEx", false);
+                        this.addEventListener(station, "ImageDownload", false);
+                        this.addEventListener(station, "DatabaseQueryLatest", false);
+                        this.addEventListener(station, "DatabaseQueryLocal", false);
+                        this.addEventListener(station, "DatabaseCountByDate", false);
+                        this.addEventListener(station, "DatabaseDelete", false);
+                        this.addEventListener(station, "SensorStatus", false);
+                        this.addEventListener(station, "GarageDoorStatus", false);
+                        this.addStation(station);
+                        station.initialize();
+                    }
+                    catch (err) {
+                        const error = (0, error_1.ensureError)(err);
+                        this.api.logError("HandleHubs Error", error);
+                    }
+                    return station;
+                }));
             }
         }
         Promise.all(promises).then(() => {
-            this.stationsLoaded = true;
             this.loadingEmitter.emit("stations loaded");
+            this.stationsLoaded = undefined;
         });
         if (promises.length === 0) {
-            this.stationsLoaded = true;
             this.loadingEmitter.emit("stations loaded");
+            this.stationsLoaded = undefined;
         }
         for (const stationSerial of stationsSerials) {
             if (!newStationsSerials.includes(stationSerial)) {
                 this.getStation(stationSerial).then((station) => {
                     this.removeStation(station);
-                }).catch((error) => {
+                }).catch((err) => {
+                    const error = (0, error_1.ensureError)(err);
                     this.api.logError("Error removing station", error);
                 });
             }
@@ -172,11 +187,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async updateStation(hub) {
         if (!this.stationsLoaded) {
-            await (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
+            await this.stationsLoaded;
         }
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub, this.stations[hub.station_sn] !== undefined && !this.stations[hub.station_sn].isIntegratedDevice() && this.stations[hub.station_sn].isConnected());
-            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice()) {
+            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
                 this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 this.stations[hub.station_sn].connect();
             }
@@ -255,7 +270,12 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     this.removeEventListener(this.stations[stationSerial], "DevicePinVerified");
                     this.removeEventListener(this.stations[stationSerial], "SdInfoEx");
                     this.removeEventListener(this.stations[stationSerial], "ImageDownload");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseQueryLatest");
                     this.removeEventListener(this.stations[stationSerial], "DatabaseQueryLocal");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseCountByDate");
+                    this.removeEventListener(this.stations[stationSerial], "DatabaseDelete");
+                    this.removeEventListener(this.stations[stationSerial], "SensorStatus");
+                    this.removeEventListener(this.stations[stationSerial], "GarageDoorStatus");
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
                 }
@@ -266,12 +286,14 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * Update the infos of all connected devices over P2P.
      */
     async updateDeviceData() {
-        await this.httpService.refreshAllData().catch(error => {
+        await this.httpService.refreshAllData().catch(err => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError("Error occured at updateDeviceData while API data refreshing.", error);
         });
         Object.values(this.stations).forEach(async (station) => {
             if (station.isConnected() && station.getDeviceType() !== http_1.DeviceType.DOORBELL) {
-                await station.getCameraInfo().catch(error => {
+                await station.getCameraInfo().catch(err => {
+                    const error = (0, error_1.ensureError)(err);
                     this.api.logError(`Error occured at updateDeviceData while station ${station.getSerial()} p2p data refreshing.`, error);
                 });
             }
@@ -298,7 +320,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const device = await this.api.getDevice(deviceSerial);
         const station = await this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStartLivestream)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStartLivestream } });
         }
         const camera = device;
         if (!station.isLiveStreaming(camera)) {
@@ -322,7 +344,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const device = await this.api.getDevice(deviceSerial);
         const station = await this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStartLivestream)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStartLivestream } });
         }
         const camera = device;
         if (!camera.isStreaming()) {
@@ -352,7 +374,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const device = await this.api.getDevice(deviceSerial);
         const station = await this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStopLivestream)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStopLivestream } });
         }
         if (station.isConnected() && station.isLiveStreaming(device)) {
             await station.stopLivestream(device);
@@ -374,7 +396,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const device = await this.api.getDevice(deviceSerial);
         const station = await this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceStopLivestream)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStopLivestream } });
         }
         const camera = device;
         if (camera.isStreaming()) {
@@ -400,8 +422,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * Returns a Array of all stations.
      */
     async getStations() {
-        if (!this.stationsLoaded) {
-            await (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
+        if (this.stationsLoaded) {
+            await this.stationsLoaded;
         }
         return this.stations;
     }
@@ -411,13 +433,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @returns The station object.
      */
     async getStation(stationSerial) {
-        if (!this.stationsLoaded) {
-            await (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
+        if (this.stationsLoaded) {
+            await this.stationsLoaded;
         }
         if (Object.keys(this.stations).includes(stationSerial)) {
             return this.stations[stationSerial];
         }
-        throw new error_1.StationNotFoundError(`No station with serial number: ${stationSerial}!`);
+        throw new error_1.StationNotFoundError("Station doesn't exists", { context: { station: stationSerial } });
     }
     /**
      * Checks if a station with the given serial exists.
@@ -544,7 +566,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 await station.getStorageInfoEx();
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError("getStorageInfo Error", error);
         }
     }
@@ -707,9 +730,29 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.on("image download", (station, file, image) => this.onStationImageDownload(station, file, image));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("image download")} Listener.`);
                 break;
+            case "DatabaseQueryLatest":
+                station.on("database query latest", (station, returnCode, data) => this.onStationDatabaseQueryLatest(station, returnCode, data));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query latest")} Listener.`);
+                break;
             case "DatabaseQueryLocal":
                 station.on("database query local", (station, returnCode, data) => this.onStationDatabaseQueryLocal(station, returnCode, data));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
+            case "DatabaseCountByDate":
+                station.on("database count by date", (station, returnCode, data) => this.onStationDatabaseCountByDate(station, returnCode, data));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database count by date")} Listener.`);
+                break;
+            case "DatabaseDelete":
+                station.on("database delete", (station, returnCode, failedIds) => this.onStationDatabaseDelete(station, returnCode, failedIds));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database delete")} Listener.`);
+                break;
+            case "SensorStatus":
+                station.on("sensor status", (station, channel, status) => this.onStationSensorStatus(station, channel, status));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sensor status")} Listener.`);
+                break;
+            case "GarageDoorStatus":
+                station.on("garage door status", (station, channel, doorId, status) => this.onStationGarageDoorStatus(station, channel, doorId, status));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
@@ -870,9 +913,29 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.removeAllListeners("image download");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("image download")} Listener.`);
                 break;
+            case "DatabaseQueryLatest":
+                station.removeAllListeners("database query latest");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query latest")} Listener.`);
+                break;
             case "DatabaseQueryLocal":
                 station.removeAllListeners("database query local");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query local")} Listener.`);
+                break;
+            case "DatabaseCountByDate":
+                station.removeAllListeners("database count by date");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database count by date")} Listener.`);
+                break;
+            case "DatabaseDelete":
+                station.removeAllListeners("database delete");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database delete")} Listener.`);
+                break;
+            case "SensorStatus":
+                station.removeAllListeners("sensor status");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sensor status")} Listener.`);
+                break;
+            case "GarageDoorStatus":
+                station.removeAllListeners("garage door status");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
@@ -972,7 +1035,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug(`Event "Connect": station: ${station.getSerial()}`);
         this.emit("station connect", station);
         if ((http_1.Device.isCamera(station.getDeviceType()) && !http_1.Device.isWiredDoorbell(station.getDeviceType()) || http_1.Device.isSmartSafe(station.getDeviceType()))) {
-            station.getCameraInfo().catch(error => {
+            station.getCameraInfo().catch(err => {
+                const error = (0, error_1.ensureError)(err);
                 this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
             });
             if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
@@ -981,7 +1045,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             }
             if (!station.isEnergySavingDevice()) {
                 this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                    station.getCameraInfo().catch(error => {
+                    station.getCameraInfo().catch(err => {
+                        const error = (0, error_1.ensureError)(err);
                         this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
                     });
                 }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
@@ -1012,7 +1077,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     clearTimeout(this.cameraStationLivestreamTimeout.get(device_sn));
                     this.cameraStationLivestreamTimeout.delete(device_sn);
                 }
-            }).catch((error) => {
+            }).catch((err) => {
+                const error = (0, error_1.ensureError)(err);
                 this.api.logError(`Station ${station.getSerial()} - Error:`, error);
             });
         }
@@ -1036,9 +1102,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationLivestreamStart(station, channel, metadata, videoStream, audioStream) {
         this.api.logDebug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station livestream start", station, device, metadata, videoStream, audioStream);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station start livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1049,9 +1116,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationLivestreamStop(station, channel) {
         this.api.logDebug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station livestream stop", station, device);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station stop livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1062,9 +1130,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationLivestreamError(station, channel) {
         this.api.logDebug(`Event "LivestreamError": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             station.stopLivestream(device);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station livestream error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
         });
     }
@@ -1078,9 +1147,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationDownloadStart(station, channel, metadata, videoStream, audioStream) {
         this.api.logDebug(`Event "DownloadStart": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station download start", station, device, metadata, videoStream, audioStream);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station start download error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1091,9 +1161,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationDownloadFinish(station, channel) {
         this.api.logDebug(`Event "DownloadFinish": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station download finish", station, device);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station finish download error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1105,14 +1176,29 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     onStationCommandResult(station, result) {
         this.emit("station command result", station, result);
         if (result.return_code === 0) {
-            this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device) => {
+            if (result.customData !== undefined && result.customData.onSuccess !== undefined) {
+                try {
+                    result.customData.onSuccess();
+                }
+                catch (err) {
+                    const error = (0, error_1.ensureError)(err);
+                    this.api.logError(`Station command result (station: ${station.getSerial()}) - onSuccess callback error`, error);
+                }
+            }
+            this.api.getStationDevice(station.getSerial(), result.channel).then((device) => {
                 if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLockWifiR10() && !device.isLockWifiR20() && !device.isLockWifiVideo() && !device.isSmartSafe()) ||
                     (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== p2p_1.CommandType.CMD_SMARTSAFE_SETTINGS)) {
                     if (device.hasProperty(result.customData.property.name)) {
-                        device.updateProperty(result.customData.property.name, result.customData.property.value);
+                        const metadata = device.getPropertyMetadata(result.customData.property.name);
+                        if (typeof result.customData.property.value !== "object" || metadata.type === "object") {
+                            device.updateProperty(result.customData.property.name, result.customData.property.value);
+                        }
                     }
                     else if (station.hasProperty(result.customData.property.name)) {
-                        station.updateProperty(result.customData.property.name, result.customData.property.value);
+                        const metadata = station.getPropertyMetadata(result.customData.property.name);
+                        if (typeof result.customData.property.value !== "object" || metadata.type === "object") {
+                            station.updateProperty(result.customData.property.name, result.customData.property.value);
+                        }
                     }
                 }
                 else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === http_1.CommandName.DeviceSnooze) {
@@ -1132,11 +1218,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                             timeoutMS = snoozeTime * 1000;
                         }
                         this.api.setDeviceSnooze(device, timeoutMS);
-                    }).catch(error => {
+                    }).catch(err => {
+                        const error = (0, error_1.ensureError)(err);
                         this.api.logError("Error during API data refreshing", error);
                     });
                 }
-            }).catch((error) => {
+            }).catch((err) => {
+                const error = (0, error_1.ensureError)(err);
                 if (error instanceof error_1.DeviceNotFoundError) {
                     if (result.customData !== undefined && result.customData.property !== undefined) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
@@ -1150,26 +1238,37 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.getCameraInfo();
             }
         }
+        else {
+            if (result.customData !== undefined && result.customData.onFailure !== undefined) {
+                try {
+                    result.customData.onFailure();
+                }
+                catch (err) {
+                    const error = (0, error_1.ensureError)(err);
+                    this.api.logError(`Station command result (station: ${station.getSerial()}) - onFailure callback error`, error);
+                }
+            }
+        }
         if (result.customData !== undefined && result.customData.command !== undefined) {
             const customValue = result.customData.command.value;
             switch (result.customData.command.name) {
                 case http_1.CommandName.DeviceAddUser:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.emit("user added", device, customValue.username, customValue.schedule);
                                 break;
                             case 4:
-                                this.emit("user error", device, customValue.username, new error_1.AddUserError("Passcode already used by another user, please choose a different one"));
+                                this.emit("user error", device, customValue.username, new error_1.AddUserError("Passcode already used by another user, please choose a different one", { context: { device: device.getSerial(), username: customValue.username, schedule: customValue.schedule } }));
                                 break;
                             default:
-                                this.emit("user error", device, customValue.username, new error_1.AddUserError(`Error creating user with return code ${result.return_code}`));
+                                this.emit("user error", device, customValue.username, new error_1.AddUserError("Error creating user", { context: { device: device.getSerial(), username: customValue.username, schedule: customValue.schedule, returnode: result.return_code } }));
                                 break;
                         }
                     });
                     break;
                 case http_1.CommandName.DeviceDeleteUser:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.httpService.deleteUser(device.getSerial(), customValue.short_user_id, device.getStationSerial()).then((result) => {
@@ -1177,36 +1276,36 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                                         this.emit("user deleted", device, customValue.username);
                                     }
                                     else {
-                                        this.emit("user error", device, customValue.username, new error_1.DeleteUserError(`Error in deleting user "${customValue.username}" with id "${customValue.short_user_id}" through cloud api call`));
+                                        this.emit("user error", device, customValue.username, new error_1.DeleteUserError("Error in deleting user through cloud api call", { context: { device: device.getSerial(), username: customValue.username, shortUserId: customValue.short_user_id } }));
                                     }
                                 });
                                 break;
                             default:
-                                this.emit("user error", device, customValue.username, new Error(`Error deleting user with return code ${result.return_code}`));
+                                this.emit("user error", device, customValue.username, new error_1.DeleteUserError("Error deleting user", { context: { device: device.getSerial(), username: customValue.username, shortUserId: customValue.short_user_id, returnCode: result.return_code } }));
                                 break;
                         }
                     });
                     break;
                 case http_1.CommandName.DeviceUpdateUserPasscode:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.emit("user passcode updated", device, customValue.username);
                                 break;
                             default:
-                                this.emit("user error", device, customValue.username, new error_1.UpdateUserPasscodeError(`Error updating user passcode with return code ${result.return_code}`));
+                                this.emit("user error", device, customValue.username, new error_1.UpdateUserPasscodeError("Error updating user passcode", { context: { device: device.getSerial(), username: customValue.username, returnCode: result.return_code } }));
                                 break;
                         }
                     });
                     break;
                 case http_1.CommandName.DeviceUpdateUserSchedule:
-                    this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device) => {
+                    this.api.getStationDevice(station.getSerial(), result.channel).then((device) => {
                         switch (result.return_code) {
                             case 0:
                                 this.emit("user schedule updated", device, customValue.username, customValue.schedule);
                                 break;
                             default:
-                                this.emit("user error", device, customValue.username, new error_1.UpdateUserScheduleError(`Error updating user schedule with return code ${result.return_code}`));
+                                this.emit("user error", device, customValue.username, new error_1.UpdateUserScheduleError("Error updating user schedule", { context: { device: device.getSerial(), username: customValue.username, schedule: customValue.schedule, returnCode: result.return_code } }));
                                 break;
                         }
                     });
@@ -1222,7 +1321,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     onStationSecondaryCommandResult(station, result) {
         this.api.logDebug(`Event "SecondaryCommandResult": station: ${station.getSerial()} | result: ${result}`);
         if (result.return_code === 0) {
-            this.api.getDeviceByStationAndChannel(station.getSerial(), result.channel).then((device) => {
+            this.api.getStationDevice(station.getSerial(), result.channel).then((device) => {
                 if (result.customData !== undefined && result.customData.property !== undefined) {
                     if (device.hasProperty(result.customData.property.name)) {
                         device.updateProperty(result.customData.property.name, result.customData.property.value);
@@ -1231,7 +1330,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
                 }
-            }).catch((error) => {
+            }).catch((err) => {
+                const error = (0, error_1.ensureError)(err);
                 if (error instanceof error_1.DeviceNotFoundError) {
                     if (result.customData !== undefined && result.customData.property !== undefined) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
@@ -1282,9 +1382,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationRTSPLivestreamStart(station, channel) {
         this.api.logDebug(`Event "RTSPLivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station rtsp livestream start", station, device);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station start rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1295,9 +1396,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationRTSPLivestreamStop(station, channel) {
         this.api.logDebug(`Event "RTSPLivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station rtsp livestream stop", station, device);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station stop rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1308,10 +1410,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationRTSPURL(station, channel, value) {
         this.api.logDebug(`Event "RTSPURL": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station rtsp url", station, device, value);
             device.setCustomPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl, value);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station rtsp url error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1354,7 +1457,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationRuntimeState(station, channel, batteryLevel, temperature) {
         this.api.logDebug(`Event "RuntimeState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceBattery)) {
                 const metadataBattery = device.getPropertyMetadata(http_1.PropertyName.DeviceBattery);
                 device.updateRawProperty(metadataBattery.key, batteryLevel.toString());
@@ -1363,7 +1466,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 const metadataBatteryTemperature = device.getPropertyMetadata(http_1.PropertyName.DeviceBatteryTemp);
                 device.updateRawProperty(metadataBatteryTemperature.key, temperature.toString());
             }
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station runtime state error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1376,7 +1480,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationChargingState(station, channel, chargeType, batteryLevel) {
         this.api.logDebug(`Event "ChargingState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceBattery)) {
                 const metadataBattery = device.getPropertyMetadata(http_1.PropertyName.DeviceBattery);
                 if (chargeType !== p2p_1.ChargingType.PLUGGED && batteryLevel > 0)
@@ -1386,7 +1490,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 const metadataChargingStatus = device.getPropertyMetadata(http_1.PropertyName.DeviceChargingStatus);
                 device.updateRawProperty(metadataChargingStatus.key, chargeType.toString());
             }
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station charging state error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1398,12 +1503,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationWifiRssi(station, channel, rssi) {
         this.api.logDebug(`Event "WifiRssi": station: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceWifiRSSI)) {
                 const metadataWifiRssi = device.getPropertyMetadata(http_1.PropertyName.DeviceWifiRSSI);
                 device.updateRawProperty(metadataWifiRssi.key, rssi.toString());
             }
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station wifi rssi error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1415,12 +1521,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationFloodlightManualSwitch(station, channel, enabled) {
         this.api.logDebug(`Event "FloodlightManualSwitch": station: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceLight)) {
                 const metadataLight = device.getPropertyMetadata(http_1.PropertyName.DeviceLight);
                 device.updateRawProperty(metadataLight.key, enabled === true ? "1" : "0");
             }
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station floodlight manual switch error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1441,9 +1548,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationTalkbackStarted(station, channel, talkbackStream) {
         this.api.logDebug(`Event "TalkbackStarted": station: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station talkback start", station, device, talkbackStream);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station talkback start error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1454,9 +1562,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationTalkbackStopped(station, channel) {
         this.api.logDebug(`Event "TalkbackStopped": station: ${station.getSerial()} | channel: ${channel}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             this.emit("station talkback stop", station, device);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station talkback stop error (station: ${station.getSerial()} channel: ${channel})`, error);
         });
     }
@@ -1468,9 +1577,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationTalkbackError(station, channel, error) {
         this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
-        this.api.getDeviceByStationAndChannel(station.getSerial(), channel).then((device) => {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             station.stopTalkback(device);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station talkback error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
         });
     }
@@ -1499,7 +1609,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
                 device.shakeEvent(event, this.api.getEventDurationSeconds());
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`onStationShakeAlarm device ${deviceSerial} error`, error);
         });
     }
@@ -1513,7 +1624,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
                 device.alarm911Event(event, this.api.getEventDurationSeconds());
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`onStation911Alarm device ${deviceSerial} error`, error);
         });
     }
@@ -1526,7 +1638,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
                 device.jammedEvent(this.api.getEventDurationSeconds());
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`onStationDeviceJammed device ${deviceSerial} error`, error);
         });
     }
@@ -1539,7 +1652,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
                 device.lowBatteryEvent(this.api.getEventDurationSeconds());
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`onStationDeviceLowBattery device ${deviceSerial} error`, error);
         });
     }
@@ -1552,7 +1666,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getDevice(deviceSerial).then((device) => {
             if (device.isSmartSafe())
                 device.wrongTryProtectAlarmEvent(this.api.getEventDurationSeconds());
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`onStationDeviceWrongTryProtectAlarm device ${deviceSerial} error`, error);
         });
     }
@@ -1565,7 +1680,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device) => {
             this.emit("device pin verified", device, successfull);
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`onStationDevicePinVerified device ${deviceSerial} error`, error);
         });
     }
@@ -1600,22 +1716,63 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         };
         this.emit("station image download", station, file, picture);
         this.api.getDevicesFromStation(station.getSerial()).then((devices) => {
-            var filename = path_1.default.parse(file).name;
-            var channel = 0;
-            if (filename.includes("_c")) {
-                channel = Number.parseInt(filename.split("_c", 2)[1]);
+            var channel = -1;
+            if (path_1.default.parse(file).name.includes("_c")) {
+                channel = Number.parseInt(path_1.default.parse(file).name.split("_c", 2)[1]);
+            }
+            else if (file.includes("/Camera")) {
+                var res = file.split("/");
+                for (var elem of res) {
+                    if (elem.startsWith("Camera")) {
+                        channel = Number.parseInt(elem.replace("Camera", ""));
+                        break;
+                    }
+                }
+            }
+            if (channel == -1) {
+                this.api.logError(`onStationImageDownload - Channel could not be extracted for file '${file}' on station ${station.getSerial()}.`);
+                return;
             }
             for (const device of devices) {
                 //if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && (device.getPropertyValue(PropertyName.DevicePicture) === undefined || device.getPropertyValue(PropertyName.DevicePicture) === null)) {
-                if (device.getSerial() === station.getSerial() || device.getChannel() === channel) {
+                if (device.getSerial() === station.getSerial() || (device.getStationSerial() === station.getSerial() && device.getChannel() === channel)) {
                     this.api.logDebug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
                     device.updateProperty(http_1.PropertyName.DevicePicture, picture);
                     break;
                 }
             }
-        }).catch((error) => {
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`onStationImageDownload - Set first picture error`, error);
         });
+    }
+    /**
+     * The action to be performed when event station database query latest is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    onStationDatabaseQueryLatest(station, returnCode, data) {
+        if (returnCode === p2p_1.DatabaseReturnCode.SUCCESSFUL) {
+            for (const element of data) {
+                if ((element.device_sn !== "" && !station.isStation()) || (station.isStation() && element.device_sn !== station.getSerial())) {
+                    this.api.getDevice(element.device_sn).then((device) => {
+                        const raw = device.getRawDevice();
+                        if ("crop_local_path" in element) {
+                            raw.cover_path = element.crop_local_path;
+                        }
+                        else if ("crop_cloud_path" in element) {
+                            raw.cover_path = element.crop_cloud_path;
+                        }
+                        device.update(raw);
+                    }).catch((err) => {
+                        const error = (0, error_1.ensureError)(err);
+                        this.api.logError("onStationDatabaseQueryLatest Error:", error);
+                    });
+                }
+            }
+        }
+        this.emit("station database query latest", station, returnCode, data);
     }
     /**
      * The action to be performed when event station database query local is fired.
@@ -1625,6 +1782,56 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     onStationDatabaseQueryLocal(station, returnCode, data) {
         this.emit("station database query local", station, returnCode, data);
+    }
+    /**
+     * The action to be performed when event station database count by date is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param data The result data.
+     */
+    onStationDatabaseCountByDate(station, returnCode, data) {
+        this.emit("station database count by date", station, returnCode, data);
+    }
+    /**
+     * The action to be performed when event station database delete is fired.
+     * @param station The station as Station object.
+     * @param returnCode The return code of the query.
+     * @param failedIds A list of id could not be deleted.
+     */
+    onStationDatabaseDelete(station, returnCode, failedIds) {
+        this.emit("station database delete", station, returnCode, failedIds);
+    }
+    /**
+     * The action to be performed when event station sensor state is fired.
+     * @param station The station as Station object.
+     * @param channel The channel of the device.
+     * @param status The status of the sensor.
+     */
+    onStationSensorStatus(station, channel, status) {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
+            if (device.hasProperty(http_1.PropertyName.DeviceSensorOpen)) {
+                const metadataSensorOpen = device.getPropertyMetadata(http_1.PropertyName.DeviceSensorOpen);
+                device.updateRawProperty(metadataSensorOpen.key, status.toString());
+            }
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
+            this.api.logError(`Station sensor status error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
+    }
+    /**
+     * The action to be performed when event station garage door status is fired.
+     * @param station The station as Station object.
+     * @param channel The channel of the device.
+     * @param doorId The id of the door.
+     * @param status The status of the garage door.
+     */
+    onStationGarageDoorStatus(station, channel, doorId, status) {
+        this.api.getStationDevice(station.getSerial(), channel).then((device) => {
+            device.updateRawProperty(p2p_1.CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS, status.toString());
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
+            this.api.logError(`Station garage door status error (station: ${station.getSerial()} channel: ${channel})`, error);
+        });
     }
     /**
      * Set the last guard mode change time to the array.
@@ -1705,9 +1912,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 break;
             default:
                 if (!Object.values(http_1.PropertyName).includes(name)) {
-                    throw new error_1.ReadOnlyPropertyError(`Property ${name} is read only`);
+                    throw new error_1.ReadOnlyPropertyError("Property is read only", { context: { station: stationSerial, propertyName: name, propertyValue: value } });
                 }
-                throw new http_1.InvalidPropertyError(`Station ${stationSerial} has no writable property named ${name}`);
+                throw new http_1.InvalidPropertyError("Station has no writable property", { context: { station: stationSerial, propertyName: name, propertyValue: value } });
         }
     }
     /**
@@ -1732,9 +1939,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 this.emit("user error", device, username, new error_1.AddUserError("Error on creating user through cloud api call"));
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`addUser device ${deviceSN} error`, error);
-            this.emit("user error", device, username, new error_1.AddUserError(`Got exception: ${error}`));
+            this.emit("user error", device, username, new error_1.AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
         }
     }
     /**
@@ -1746,7 +1954,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceDeleteUser)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceDeleteUser, username: username } });
         }
         try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
@@ -1760,16 +1968,17 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 if (!found) {
-                    this.emit("user error", device, username, new error_1.DeleteUserError(`User with username "${username}" not found`));
+                    this.emit("user error", device, username, new error_1.DeleteUserError("User not found", { context: { device: deviceSN, username: username } }));
                 }
             }
             else {
-                this.emit("user error", device, username, new error_1.DeleteUserError("Error on getting user list through cloud api call"));
+                this.emit("user error", device, username, new error_1.DeleteUserError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username } }));
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`deleteUser device ${deviceSN} error`, error);
-            this.emit("user error", device, username, new error_1.DeleteUserError(`Got exception: ${error}`));
+            this.emit("user error", device, username, new error_1.DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
         }
     }
     /**
@@ -1781,7 +1990,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async updateUser(deviceSN, username, newUsername) {
         const device = await this.api.getDevice(deviceSN);
         if (!device.hasCommand(http_1.CommandName.DeviceUpdateUsername)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUsername, usernmae: username, newUsername: newUsername } });
         }
         try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
@@ -1794,23 +2003,24 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                             this.emit("user username updated", device, username);
                         }
                         else {
-                            this.emit("user error", device, username, new error_1.UpdateUserUsernameError(`Error in changing username "${username}" to "${newUsername}" through cloud api call`));
+                            this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Error in changing username through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
                         }
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    this.emit("user error", device, username, new error_1.UpdateUserUsernameError(`Error in changing username "${username}" to "${newUsername}" through cloud api call`));
+                    this.emit("user error", device, username, new error_1.UpdateUserUsernameError("User not found", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
                 }
             }
             else {
-                this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Error on getting user list through cloud api call"));
+                this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`updateUser device ${deviceSN} error`, error);
-            this.emit("user error", device, username, new error_1.UpdateUserUsernameError(`Got exception: ${error}`));
+            this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
         }
     }
     /**
@@ -1823,7 +2033,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
         if (!device.hasCommand(http_1.CommandName.DeviceUpdateUserPasscode)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUserPasscode, username: username, passcode: "[redacted]" } });
         }
         try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
@@ -1836,16 +2046,17 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 if (!found) {
-                    this.emit("user error", device, username, new error_1.UpdateUserPasscodeError(`User with username "${username}" not found`));
+                    this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("User not found", { context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
                 }
             }
             else {
                 this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("Error on getting user list through cloud api call"));
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`updateUserPasscode device ${deviceSN} error`, error);
-            this.emit("user error", device, username, new error_1.UpdateUserPasscodeError(`Got exception: ${error}`));
+            this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
         }
     }
     /**
@@ -1857,8 +2068,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async updateUserSchedule(deviceSN, username, schedule) {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceUpdateUserPasscode)) {
-            throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+        if (!device.hasCommand(http_1.CommandName.DeviceUpdateUserSchedule)) {
+            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUserSchedule, usernmae: username, schedule: schedule } });
         }
         try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
@@ -1871,16 +2082,17 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 if (!found) {
-                    this.emit("user error", device, username, new error_1.UpdateUserScheduleError(`User with username "${username}" not found`));
+                    this.emit("user error", device, username, new error_1.UpdateUserScheduleError("User not found", { context: { device: deviceSN, username: username, schedule: schedule } }));
                 }
             }
             else {
-                this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Error on getting user list through cloud api call"));
+                this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, schedule: schedule } }));
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`updateUserSchedule device ${deviceSN} error`, error);
-            this.emit("user error", device, username, new error_1.UpdateUserScheduleError(`Got exception: ${error}`));
+            this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));
         }
     }
 }

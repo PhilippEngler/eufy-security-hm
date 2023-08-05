@@ -79,11 +79,10 @@ class ApiServer {
      * @param response The response object.
      */
     async requestListener(request, response) {
-        var _a;
         var responseData = "";
         var contentType = "application/json";
         var fileName = "";
-        var url = (_a = request.url) === null || _a === void 0 ? void 0 : _a.split("/");
+        var url = request.url?.split("/");
         if (url === undefined) {
             url = [];
         }
@@ -362,6 +361,14 @@ class ApiServer {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "removeSystemVariable":
+                        if (url.length == 3) {
+                            responseData = await api.removeSystemVariable(url[2]);
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getLibrary":
                         if (url.length == 2) {
                             responseData = await api.getLibrary();
@@ -619,9 +626,8 @@ class ApiServer {
                         var postData = "";
                         var isDataOK = true;
                         request.on("data", function (chunk) {
-                            var _a;
                             postData += chunk.toString();
-                            if (request.headers['content-length'] !== undefined && Number.parseInt((_a = request.headers['content-length']) === null || _a === void 0 ? void 0 : _a.toString()) > 500000) {
+                            if (request.headers['content-length'] !== undefined && Number.parseInt(request.headers['content-length']?.toString()) > 500000) {
                                 logger.logInfoBasic("Error during upload and saving config file: File is to large.");
                                 request.destroy(new Error("FileToLarge"));
                             }

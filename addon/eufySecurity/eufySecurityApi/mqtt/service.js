@@ -30,17 +30,24 @@ const fs_1 = require("fs");
 const path = __importStar(require("path"));
 const protobufjs_1 = require("protobufjs");
 class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
+    CLIENT_ID_FORMAT = "android_EufySecurity_<user_id>_<android_id>";
+    USERNAME_FORMAT = "eufy_<user_id>";
+    SUBSCRIBE_NOTICE_FORMAT = "/phone/<user_id>/notice";
+    SUBSCRIBE_LOCK_FORMAT = "/phone/smart_lock/<device_sn>/push_message";
+    SUBSCRIBE_DOORBELL_FORMAT = "/phone/doorbell/<device_sn>/push_message";
+    static proto = null;
+    log;
+    connected = false;
+    client = null;
+    connecting = false;
+    clientID;
+    androidID;
+    apiBase;
+    email;
+    subscribeLocks = [];
+    deviceSmartLockMessageModel;
     constructor(log) {
         super();
-        this.CLIENT_ID_FORMAT = "android_EufySecurity_<user_id>_<android_id>";
-        this.USERNAME_FORMAT = "eufy_<user_id>";
-        this.SUBSCRIBE_NOTICE_FORMAT = "/phone/<user_id>/notice";
-        this.SUBSCRIBE_LOCK_FORMAT = "/phone/smart_lock/<device_sn>/push_message";
-        this.SUBSCRIBE_DOORBELL_FORMAT = "/phone/doorbell/<device_sn>/push_message";
-        this.connected = false;
-        this.client = null;
-        this.connecting = false;
-        this.subscribeLocks = [];
         this.log = log;
         this.deviceSmartLockMessageModel = MQTTService.proto.lookupType("DeviceSmartLockMessage");
     }
@@ -110,11 +117,10 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
                 this.emit("close");
             });
             this.client.on("error", (error) => {
-                var _a;
                 this.connecting = false;
                 this.log.error("MQTT Error", error);
                 if (error.code === 1 || error.code === 2 || error.code === 4 || error.code === 5)
-                    (_a = this.client) === null || _a === void 0 ? void 0 : _a.end();
+                    this.client?.end();
             });
             this.client.on("message", (topic, message, _packet) => {
                 if (topic.includes("smart_lock")) {
@@ -129,8 +135,7 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
     _subscribeLock(deviceSN) {
-        var _a;
-        (_a = this.client) === null || _a === void 0 ? void 0 : _a.subscribe(this.SUBSCRIBE_LOCK_FORMAT.replace("<device_sn>", deviceSN), { qos: 1 }, (error, granted) => {
+        this.client?.subscribe(this.SUBSCRIBE_LOCK_FORMAT.replace("<device_sn>", deviceSN), { qos: 1 }, (error, granted) => {
             if (error) {
                 this.log.error(`Subscribe error for lock ${deviceSN}`, error);
             }
@@ -155,13 +160,11 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
         return this.connected;
     }
     close() {
-        var _a;
         if (this.connected) {
-            (_a = this.client) === null || _a === void 0 ? void 0 : _a.end(true);
+            this.client?.end(true);
             this.connected = false;
             this.connecting = false;
         }
     }
 }
-MQTTService.proto = null;
 exports.MQTTService = MQTTService;

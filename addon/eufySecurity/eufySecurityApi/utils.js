@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.waitForEvent = exports.parseJSON = exports.mergeDeep = exports.validValue = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
+exports.getShortUrl = exports.waitForEvent = exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const removeLastChar = function (text, char) {
@@ -71,7 +71,7 @@ const parseValue = function (metadata, value) {
                         value = value === 1 ? true : false;
                     }
                     else {
-                        throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a boolean value`);
+                        throw new error_1.InvalidPropertyValueError("Property expects a boolean value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
                     }
                     break;
                 case "string":
@@ -79,15 +79,15 @@ const parseValue = function (metadata, value) {
                         value = value.toLowerCase() === "true" ? true : false;
                     }
                     else {
-                        throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a boolean value`);
+                        throw new error_1.InvalidPropertyValueError("Property expects a boolean value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
                     }
                     break;
                 default:
-                    throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a boolean value`);
+                    throw new error_1.InvalidPropertyValueError("Property expects a boolean value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
             }
         }
         else {
-            throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a boolean value`);
+            throw new error_1.InvalidPropertyValueError("Property expects a boolean value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
         }
     }
     else if (metadata.type === "number") {
@@ -99,16 +99,17 @@ const parseValue = function (metadata, value) {
                     try {
                         value = Number.parseInt(value);
                     }
-                    catch (error) {
-                        throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a number value`);
+                    catch (err) {
+                        const error = (0, error_1.ensureError)(err);
+                        throw new error_1.InvalidPropertyValueError("Property expects a number value", { cause: error, context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
                     }
                     break;
                 default:
-                    throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a number value`);
+                    throw new error_1.InvalidPropertyValueError("Property expects a number value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
             }
         }
         else {
-            throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a number value`);
+            throw new error_1.InvalidPropertyValueError("Property expects a number value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
         }
     }
     else if (metadata.type === "string") {
@@ -123,38 +124,65 @@ const parseValue = function (metadata, value) {
                     value = value === true ? "true" : "false";
                     break;
                 default:
-                    throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a number value`);
+                    throw new error_1.InvalidPropertyValueError("Property expects a string value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
             }
         }
         else {
-            throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a number value`);
+            throw new error_1.InvalidPropertyValueError("Property expects a string value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
+        }
+    }
+    else if (metadata.type === "object") {
+        if (value === undefined || value === null) {
+            throw new error_1.InvalidPropertyValueError("Property expects an object value", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
         }
     }
     else {
-        throw new error_1.InvalidPropertyValueError(`Property ${metadata.name} expects a ${metadata.type} value`);
+        throw new error_1.InvalidPropertyValueError(`Property expects a ${metadata.type} value`, { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
     }
     return value;
 };
 exports.parseValue = parseValue;
+const parseJSON = function (data, log) {
+    try {
+        return JSON.parse(data.replace(/[\0]+$/g, ""));
+    }
+    catch (err) {
+        const error = (0, error_1.ensureError)(err);
+        log.error("JSON parse error", { data: data, error: error });
+    }
+    return undefined;
+};
+exports.parseJSON = parseJSON;
 const validValue = function (metadata, value) {
     if (metadata.type === "number") {
         const numberMetadata = metadata;
         const numericValue = Number(value);
         if ((numberMetadata.min !== undefined && numberMetadata.min > numericValue) || (numberMetadata.max !== undefined && numberMetadata.max < numericValue) || (numberMetadata.states !== undefined && numberMetadata.states[numericValue] === undefined) || Number.isNaN(numericValue)) {
-            throw new error_1.InvalidPropertyValueError(`Value "${numericValue}" isn't a valid value for property "${numberMetadata.name}"`);
+            throw new error_1.InvalidPropertyValueError("Invalid value for this property according to metadata", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
         }
     }
     else if (metadata.type === "string") {
         const stringMetadata = metadata;
         const stringValue = String(value);
         if ((stringMetadata.format !== undefined && stringValue.match(stringMetadata.format) === null) || (stringMetadata.minLength !== undefined && stringMetadata.minLength > stringValue.length) || (stringMetadata.maxLength !== undefined && stringMetadata.maxLength < stringValue.length)) {
-            throw new error_1.InvalidPropertyValueError(`Value "${stringValue}" isn't a valid value for property "${stringMetadata.name}"`);
+            throw new error_1.InvalidPropertyValueError("Invalid value for this property according to metadata", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
         }
     }
     else if (metadata.type === "boolean") {
         const str = String(value).toLowerCase().trim();
-        if (str !== "true" && str !== "false") {
-            throw new error_1.InvalidPropertyValueError(`Value "${value}" isn't a valid value for property "${metadata.name}"`);
+        if (str !== "true" && str !== "false" && str !== "1" && str !== "0") {
+            throw new error_1.InvalidPropertyValueError("Invalid value for this property according to metadata", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
+        }
+    }
+    else if (metadata.type === "object") {
+        const metadataObject = metadata;
+        if (value !== undefined && value !== null && metadataObject.isValidObject !== undefined) {
+            if (!metadataObject.isValidObject(value)) {
+                throw new error_1.InvalidPropertyValueError("Invalid value for this property according to metadata", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
+            }
+        }
+        else {
+            throw new error_1.InvalidPropertyValueError("Invalid value for this property according to metadata", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
         }
     }
 };
@@ -179,18 +207,9 @@ const mergeDeep = function (target, source) {
     return target;
 };
 exports.mergeDeep = mergeDeep;
-const parseJSON = function (data, log) {
-    try {
-        return JSON.parse(data.replace(/[\0]+$/g, ""));
-    }
-    catch (error) {
-        log.error("JSON parse error", data, error);
-    }
-    return undefined;
-};
-exports.parseJSON = parseJSON;
 function waitForEvent(emitter, event) {
     return new Promise((resolve, reject) => {
+        emitter.setMaxListeners(30);
         const success = (val) => {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             emitter.off("error", fail);
@@ -205,3 +224,15 @@ function waitForEvent(emitter, event) {
     });
 }
 exports.waitForEvent = waitForEvent;
+function getShortUrl(url, prefixUrl) {
+    if (url.password) {
+        url = new URL(url.toString()); // prevent original url mutation
+        url.password = "[redacted]";
+    }
+    let shortUrl = url.toString();
+    if (prefixUrl && shortUrl.startsWith(prefixUrl)) {
+        shortUrl = shortUrl.slice(prefixUrl.length);
+    }
+    return shortUrl;
+}
+exports.getShortUrl = getShortUrl;

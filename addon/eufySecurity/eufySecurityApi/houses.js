@@ -6,6 +6,10 @@ const tiny_typed_emitter_1 = require("tiny-typed-emitter");
  * Represents all the Houses the account has access to.
  */
 class EufyHouses extends tiny_typed_emitter_1.TypedEmitter {
+    api;
+    httpService;
+    //private houses: Houses = {};
+    houses = {};
     /**
      * Create the Houses objects holding all houses in the account.
      * @param api The eufySecurityApi.
@@ -13,8 +17,6 @@ class EufyHouses extends tiny_typed_emitter_1.TypedEmitter {
      */
     constructor(api, httpService) {
         super();
-        //private houses: Houses = {};
-        this.houses = {};
         this.api = api;
         this.httpService = httpService;
         this.httpService.on("houses", (houses) => this.handleHouses(houses));

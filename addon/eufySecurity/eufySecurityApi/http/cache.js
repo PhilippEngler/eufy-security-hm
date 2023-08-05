@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Cache = void 0;
 class Cache extends Map {
+    ttl = 60000;
+    schedules = new Map();
     constructor(ttl) {
         super();
-        this.ttl = 60000;
-        this.schedules = new Map();
         if (ttl !== undefined)
             this.ttl = ttl;
     }

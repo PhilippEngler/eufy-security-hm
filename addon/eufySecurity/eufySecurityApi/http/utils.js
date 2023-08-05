@@ -11,6 +11,8 @@ const enc_hex_1 = __importDefault(require("crypto-js/enc-hex"));
 const sha256_1 = __importDefault(require("crypto-js/sha256"));
 const image_type_1 = __importDefault(require("image-type"));
 const types_1 = require("./types");
+const error_1 = require("../error");
+const error_2 = require("./error");
 const normalizeVersionString = function (version) {
     const trimmed = version ? version.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1") : "";
     const pieces = trimmed.split(RegExp("\\."));
@@ -286,10 +288,8 @@ const getAdvancedLockTimezone = function (stationSN) {
 };
 exports.getAdvancedLockTimezone = getAdvancedLockTimezone;
 class SmartSafeByteWriter {
-    constructor() {
-        this.split_byte = -95;
-        this.data = Buffer.from([]);
-    }
+    split_byte = -95;
+    data = Buffer.from([]);
     write(bytes) {
         const tmp_data = Buffer.from(bytes);
         this.data = Buffer.concat([this.data, Buffer.from([this.split_byte]), Buffer.from([tmp_data.length & 255]), tmp_data]);
@@ -385,7 +385,7 @@ exports.randomNumber = randomNumber;
 const getIdSuffix = function (p2pDid) {
     let result = 0;
     const match = p2pDid.match(/^[A-Z]+-(\d+)-[A-Z]+$/);
-    if ((match === null || match === void 0 ? void 0 : match.length) == 2) {
+    if (match?.length == 2) {
         const num1 = Number.parseInt(match[1][0]);
         const num2 = Number.parseInt(match[1][1]);
         const num3 = Number.parseInt(match[1][3]);
@@ -404,7 +404,9 @@ const getImageBaseCode = function (serialnumber, p2pDid) {
     try {
         nr = Number.parseInt(`0x${serialnumber[serialnumber.length - 1]}`);
     }
-    catch (error) {
+    catch (err) {
+        const error = (0, error_1.ensureError)(err);
+        throw new error_2.ImageBaseCodeError("Error generating image base code", { cause: error, context: { serialnumber: serialnumber, p2pDid: p2pDid } });
     }
     nr = (nr + 10) % 10;
     const base = serialnumber.substring(nr);
@@ -417,10 +419,10 @@ const getImageSeed = function (p2pDid, code) {
         const prefix = 1000 - (0, exports.getIdSuffix)(p2pDid);
         return (0, md5_1.default)(`${prefix}${ncode}`).toString(enc_hex_1.default).toUpperCase();
     }
-    catch (error) {
-        //TODO: raise custom exception
+    catch (err) {
+        const error = (0, error_1.ensureError)(err);
+        throw new error_2.ImageBaseCodeError("Error generating image seed", { cause: error, context: { p2pDid: p2pDid, code: code } });
     }
-    return ``;
 };
 exports.getImageSeed = getImageSeed;
 const getImageKey = function (serialnumber, p2pDid, code) {

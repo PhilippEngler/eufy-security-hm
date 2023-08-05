@@ -1,65 +1,66 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BleInvalidChecksumError = exports.BleInvalidDataHeaderError = exports.BleAdditionalDataSeparatorError = exports.BleAdditionalDataError = exports.BleDataError = exports.BleDataTypeError = exports.BleCommandCodeError = exports.BleVersionCodeError = void 0;
-class BleVersionCodeError extends Error {
-    constructor(message) {
-        super(message);
+const error_1 = require("../error");
+class BleVersionCodeError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleVersionCodeError.name;
     }
 }
 exports.BleVersionCodeError = BleVersionCodeError;
-class BleCommandCodeError extends Error {
-    constructor(message) {
-        super(message);
+class BleCommandCodeError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleCommandCodeError.name;
     }
 }
 exports.BleCommandCodeError = BleCommandCodeError;
-class BleDataTypeError extends Error {
-    constructor(message) {
-        super(message);
+class BleDataTypeError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleDataTypeError.name;
     }
 }
 exports.BleDataTypeError = BleDataTypeError;
-class BleDataError extends Error {
-    constructor(message) {
-        super(message);
+class BleDataError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleDataError.name;
     }
 }
 exports.BleDataError = BleDataError;
-class BleAdditionalDataError extends Error {
-    constructor(message) {
-        super(message);
+class BleAdditionalDataError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleAdditionalDataError.name;
     }
 }
 exports.BleAdditionalDataError = BleAdditionalDataError;
-class BleAdditionalDataSeparatorError extends Error {
-    constructor(message) {
-        super(message);
+class BleAdditionalDataSeparatorError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleAdditionalDataSeparatorError.name;
     }
 }
 exports.BleAdditionalDataSeparatorError = BleAdditionalDataSeparatorError;
-class BleInvalidDataHeaderError extends Error {
-    constructor(message) {
-        super(message);
+class BleInvalidDataHeaderError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleInvalidDataHeaderError.name;
     }
 }
 exports.BleInvalidDataHeaderError = BleInvalidDataHeaderError;
-class BleInvalidChecksumError extends Error {
-    constructor(message) {
-        super(message);
+class BleInvalidChecksumError extends error_1.BaseError {
+    constructor(message, options = {}) {
+        super(message, options);
         Object.setPrototypeOf(this, new.target.prototype);
         this.name = BleInvalidChecksumError.name;
     }

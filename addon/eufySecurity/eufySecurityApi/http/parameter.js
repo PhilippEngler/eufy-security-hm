@@ -18,19 +18,22 @@ class ParameterHelper {
                 type === types_1.CommandType.ARM_DELAY_CUS2 ||
                 type === types_1.CommandType.ARM_DELAY_CUS3 ||
                 type === types_1.CommandType.ARM_DELAY_OFF ||
-                type === types_1.CommandType.CELLULAR_INFO) {
-                try {
-                    if (typeof value === "string") {
-                        return (0, utils_2.parseJSON)((0, utils_1.decodeBase64)(value).toString("utf8"), log);
+                type === types_1.CommandType.CELLULAR_INFO ||
+                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_MANUAL_COLORED_LIGHTING ||
+                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_SCHEDULE_COLORED_LIGHTING ||
+                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_MANUAL_COLORED_LIGHTING ||
+                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_COLORED_LIGHTING_COLORS ||
+                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_DYNAMIC_LIGHTING_THEMES) {
+                if (typeof value === "string") {
+                    const parsedValue = (0, utils_2.parseJSON)((0, utils_1.decodeBase64)(value).toString("utf8"), log);
+                    if (parsedValue === undefined) {
+                        log.warn("Non-parsable parameter value received from eufy cloud. Will be ignored.", { type: type, value: value });
                     }
-                    else {
-                        return value; //return object
-                    }
+                    return parsedValue;
                 }
-                catch (error) {
-                    log.error(`Error readValue param ${type} `, error, type, value);
+                else {
+                    return value; //return object
                 }
-                return "";
             }
             else if (type === types_1.CommandType.CMD_BAT_DOORBELL_SET_NOTIFICATION_MODE ||
                 type === types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_DETECTION_SENSITIVITY ||
@@ -41,15 +44,14 @@ class ParameterHelper {
                 type === types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_DISTANCE ||
                 type === types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_TIME ||
                 type === types_1.CommandType.CMD_DOORBELL_DUAL_DELIVERY_GUARD_SWITCH ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_GUARD_VOICE) {
+                type === types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_GUARD_VOICE ||
+                type === types_1.CommandType.CMD_CAMERA_GARAGE_DOOR_SENSORS) {
                 if (typeof value === "string") {
-                    try {
-                        return (0, utils_2.parseJSON)(value, log); //return object
+                    const parsedValue = (0, utils_2.parseJSON)(value, log);
+                    if (parsedValue === undefined) {
+                        log.warn("Non-parsable parameter value received from eufy cloud. Will be ignored.", { type: type, value: value });
                     }
-                    catch (error) {
-                        log.error(`Error readValue param ${type} `, error, type, value);
-                    }
-                    return "";
+                    return parsedValue;
                 }
                 else {
                     return value; //return object

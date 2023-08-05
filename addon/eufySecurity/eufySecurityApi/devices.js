@@ -13,18 +13,21 @@ const utils_1 = require("./utils");
  * Represents all the Devices in the account.
  */
 class Devices extends tiny_typed_emitter_1.TypedEmitter {
+    api;
+    httpService;
+    devices = {};
+    //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
+    devicesLastEvent = {};
+    loadingEmitter = new events_1.default();
+    devicesLoaded;
+    deviceSnoozeTimeout = {};
+    deviceImageLoadTimeout = {};
     /**
      * Create the Devices objects holding all devices in the account.
      * @param httpService The httpService.
      */
     constructor(api, httpService) {
         super();
-        this.devices = {};
-        this.devicesHistory = {};
-        this.devicesLoaded = false;
-        this.loadingEmitter = new events_1.default();
-        this.deviceSnoozeTimeout = {};
-        this.deviceImageLoadTimeout = {};
         this.api = api;
         this.httpService = httpService;
         if (this.api.getApiUsePushService() == false) {
@@ -42,7 +45,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         const newDeviceSNs = Object.keys(devices);
         const promises = [];
         var deviceSerial;
-        var device;
         if (resDevices != null) {
             for (deviceSerial in resDevices) {
                 if (this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId()) {
@@ -50,11 +52,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     continue;
                 }
                 if (this.devices[deviceSerial]) {
-                    device = this.devices[deviceSerial];
                     this.updateDevice(resDevices[deviceSerial]);
                 }
                 else {
-                    this.devicesLoaded = false;
+                    this.devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
                     let new_device;
                     if (http_1.Device.isIndoorCamera(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial]);
@@ -70,6 +71,12 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     else if (http_1.Device.isFloodLight(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.FloodlightCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (http_1.Device.isWallLightCam(resDevices[deviceSerial].device_type)) {
+                        new_device = http_1.WallLightCam.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (http_1.Device.isGarageCamera(resDevices[deviceSerial].device_type)) {
+                        new_device = http_1.GarageCamera.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isCamera(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.Camera.getInstance(this.httpService, resDevices[deviceSerial]);
@@ -124,8 +131,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                             this.addDevice(device);
                             device.initialize();
                         }
-                        catch (error) {
-                            this.api.logError("Error", error);
+                        catch (err) {
+                            const error = (0, error_1.ensureError)(err);
+                            this.api.logError("HandleDevices Error", error);
                         }
                         return device;
                     }));
@@ -134,26 +142,28 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             Promise.all(promises).then((devices) => {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station) => {
-                        if (!station.isConnected()) {
+                        if (!station.isConnected() && station.isP2PConnectableDevice()) {
                             station.setConnectionType(this.api.getP2PConnectionType());
                             station.connect();
                         }
-                    }).catch((error) => {
-                        this.api.logError("Error trying to connect to station afte device loaded", error);
+                    }).catch((err) => {
+                        const error = (0, error_1.ensureError)(err);
+                        this.api.logError("Error trying to connect to station after device loaded", error);
                     });
                 });
-                this.devicesLoaded = true;
                 this.loadingEmitter.emit("devices loaded");
+                this.devicesLoaded = undefined;
             });
             if (promises.length === 0) {
-                this.devicesLoaded = true;
                 this.loadingEmitter.emit("devices loaded");
+                this.devicesLoaded = undefined;
             }
             for (const deviceSN of deviceSNs) {
                 if (!newDeviceSNs.includes(deviceSN)) {
                     this.getDevice(deviceSN).then((device) => {
                         this.removeDevice(device);
-                    }).catch((error) => {
+                    }).catch((err) => {
+                        const error = (0, error_1.ensureError)(err);
                         this.api.logError("Error removing device", error);
                     });
                 }
@@ -169,7 +179,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         const serial = device.getSerial();
         if (serial && !Object.keys(this.devices).includes(serial)) {
             this.devices[serial] = device;
-            this.devicesHistory[serial] = [];
+            //this.devicesHistory[serial] = [];
+            this.devicesLastEvent[serial] = null;
             this.deviceImageLoadTimeout[serial] = undefined;
             this.emit("device added", device);
             if (device.isLock()) {
@@ -201,8 +212,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async updateDevice(device) {
         var stations = await this.api.getStations();
-        if (!this.devicesLoaded) {
-            await (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
+        if (this.devicesLoaded) {
+            await this.devicesLoaded;
         }
         if (Object.keys(this.devices).includes(device.device_sn)) {
             this.devices[device.device_sn].update(device, stations[device.station_sn] !== undefined && !stations[device.station_sn].isIntegratedDevice() && stations[device.station_sn].isConnected());
@@ -273,8 +284,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * Returns all Devices.
      */
     async getDevices() {
-        if (!this.devicesLoaded) {
-            await (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
+        if (this.devicesLoaded) {
+            await this.devicesLoaded;
         }
         return this.devices;
     }
@@ -284,13 +295,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @returns The device as Device object.
      */
     async getDevice(deviceSerial) {
-        if (!this.devicesLoaded) {
-            await (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
+        if (this.devicesLoaded) {
+            await this.devicesLoaded;
         }
         if (Object.keys(this.devices).includes(deviceSerial)) {
             return this.devices[deviceSerial];
         }
-        throw new error_1.DeviceNotFoundError(`Device with this serial ${deviceSerial} doesn't exists!`);
+        throw new error_1.DeviceNotFoundError("Device doesn't exists", { context: { device: deviceSerial } });
     }
     /**
      * Returns a device specified by station and channel.
@@ -299,19 +310,19 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @returns The device specified by base and channel.
      */
     async getDeviceByStationAndChannel(baseSerial, channel) {
-        if (!this.devicesLoaded) {
-            await (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
+        if (this.devicesLoaded) {
+            await this.devicesLoaded;
         }
         for (const device of Object.values(this.devices)) {
             if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial)) {
                 return device;
             }
         }
-        throw new error_1.DeviceNotFoundError(`No device with channel ${channel} found on station with serial number: ${baseSerial}!`);
+        throw new error_1.DeviceNotFoundError("No device with passed channel found on station", { context: { station: baseSerial, channel: channel } });
     }
     async getDevicesFromStation(stationSerial) {
-        if (!this.devicesLoaded) {
-            await (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
+        if (this.devicesLoaded) {
+            await this.devicesLoaded;
         }
         const arr = [];
         Object.keys(this.devices).forEach((serialNumber) => {
@@ -365,12 +376,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         if (device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro() || device.isCamera3() || device.isCamera3C()) {
             return "camera";
         }
-        else if (device.isEntrySensor()) {
-            return "sensor";
-        }
-        else if (device.isKeyPad()) {
-            return "keypad";
-        }
         else if (device.isDoorbell()) {
             return "doorbell";
         }
@@ -383,8 +388,23 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         else if (device.isFloodLight()) {
             return "floodlight";
         }
+        else if (device.isWallLightCam()) {
+            return "walllightcamera";
+        }
+        else if (device.isGarageCamera()) {
+            return "garagecamera";
+        }
+        else if (device.isStarlight4GLTE()) {
+            return "starlight4glte";
+        }
         else if (device.isLock()) {
             return "lock";
+        }
+        else if (device.isEntrySensor()) {
+            return "sensor";
+        }
+        else if (device.isKeyPad()) {
+            return "keypad";
         }
         else {
             return `unknown(${device.getRawDevice().device_type})`;
@@ -631,7 +651,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param value The value and timestamp of the new value as PropertyValue.
      */
     async onPropertyChanged(device, name, value, ready) {
-        var _a;
         //this.emit("device property changed", device, name, value);
         this.api.logDebug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
         try {
@@ -641,7 +660,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             if (name === http_1.PropertyName.DeviceRTSPStream && value === true && (device.getPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl) === undefined || (device.getPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl) !== undefined && device.getPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl) === ""))) {
                 this.api.getStation(device.getStationSerial()).then((station) => {
                     station.setRTSPStream(device, true);
-                }).catch((error) => {
+                }).catch((err) => {
+                    const error = (0, error_1.ensureError)(err);
                     this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
                 });
             }
@@ -650,16 +670,20 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             }
             else if (name === http_1.PropertyName.DevicePictureUrl && value !== "") {
                 const picture = device.getPropertyValue(http_1.PropertyName.DevicePicture);
-                if (picture === undefined || picture === null || (picture && ((_a = picture.data) === null || _a === void 0 ? void 0 : _a.length) === 0)) {
+                if (picture === undefined || picture === null || (picture && picture.data?.length === 0)) {
                     this.api.getStation(device.getStationSerial()).then((station) => {
-                        station.downloadImage(value);
-                    }).catch((error) => {
+                        if (station.hasCommand(http_1.CommandName.StationDownloadImage)) {
+                            station.downloadImage(value);
+                        }
+                    }).catch((err) => {
+                        const error = (0, error_1.ensureError)(err);
                         this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station download image (station: ${device.getStationSerial()} image_path: ${value})`, error);
                     });
                 }
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name})`, error);
         }
     }
@@ -727,11 +751,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onMotionDetected(device, state) {
-        this.api.logInfo(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
-        //if(state === false)
-        //{
-        this.loadDeviceImage(device.getSerial());
-        //}
+        this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
         //this.setLastVideoTimeNow(device.getSerial());
     }
     /**
@@ -741,7 +764,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param person The person detected.
      */
     async onPersonDetected(device, state, person) {
-        this.api.logInfo(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
         if (state === false) {
             this.loadDeviceImage(device.getSerial());
         }
@@ -782,12 +805,14 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             if (device.getPropertyValue(http_1.PropertyName.DeviceRTSPStream) !== undefined && device.getPropertyValue(http_1.PropertyName.DeviceRTSPStream) === true) {
                 this.api.getStation(device.getStationSerial()).then((station) => {
                     station.setRTSPStream(device, true);
-                }).catch((error) => {
+                }).catch((err) => {
+                    const error = (0, error_1.ensureError)(err);
                     this.api.logError(`Device ready error (device: ${device.getSerial()}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
                 });
             }
         }
-        catch (error) {
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
             this.api.logError(`Device ready error (device: ${device.getSerial()})`, error);
         }
     }
@@ -918,7 +943,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param deviceSerial The serial of the device.
      * @param values The raw values.
      */
-    updateDeviceProperties(deviceSerial, values) {
+    async updateDeviceProperties(deviceSerial, values) {
+        if (this.devicesLoaded) {
+            await this.devicesLoaded;
+        }
         if (this.devices[deviceSerial] !== undefined) {
             this.devices[deviceSerial].updateRawProperties(values);
         }
@@ -930,26 +958,46 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * Add a given event result to the local store if the event is not already stored.
      * @param deviceSerial The serial of the device.
      * @param eventResult The event result data.
-     * @returns
      */
-    addEventResultForDevice(deviceSerial, eventResult) {
-        for (let event of this.devicesHistory[deviceSerial]) {
-            if (event.history && eventResult.history && event.history.start_time && eventResult.history.start_time && event.record_id === eventResult.record_id && event.history.storage_path === eventResult.history.storage_path && event.history.start_time === eventResult.history.start_time) {
+    /*public addEventResultForDevice(deviceSerial : string, eventResult : DatabaseQueryLocal)
+    {
+        for (let event of this.devicesHistory[deviceSerial])
+        {
+            if(event.history && eventResult.history && event.history.start_time && eventResult.history.start_time && event.record_id === eventResult.record_id && event.history.storage_path === eventResult.history.storage_path && event.history.start_time === eventResult.history.start_time)
+            {
                 return;
             }
         }
         this.devicesHistory[deviceSerial].push(eventResult);
+    }*/
+    /**
+     * Set given event data to the local store.
+     * @param deviceSerial The serial of the device.
+     * @param path The path to the image.
+     * @param start_time The date as Date.
+     */
+    addLastEventForDevice(deviceSerial, path, start_time) {
+        this.devicesLastEvent[deviceSerial] = { path, start_time };
     }
     /**
      * Returns the stored events for a given device.
      * @param deviceSerial The serial of the device.
      * @returns The stored events.
      */
-    getEventResultsForDevice(deviceSerial) {
+    /*public getEventResultsForDevice1(deviceSerial : string) : DatabaseQueryLocal[]
+    {
         return this.devicesHistory[deviceSerial];
+    }*/
+    /**
+     * Returns the stored last event for a given device.
+     * @param deviceSerial The serial of the device.
+     * @returns The stored last event.
+     */
+    getLastEventForDevice(deviceSerial) {
+        return this.devicesLastEvent[deviceSerial];
     }
     /**
-     * Set the tomeout of one minute to download image of last event.
+     * Set the timeout of 75 seconds to download image of last event.
      * @param deviceSerial The serial of the device.
      */
     loadDeviceImage(deviceSerial) {
@@ -966,43 +1014,78 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         if (this.deviceImageLoadTimeout[deviceSerial] !== undefined) {
             clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
         }
-        this.getDeviceEvents(deviceSerial);
+        //this.getDeviceEvents(deviceSerial);
+        this.getDeviceLastEvent(deviceSerial);
     }
     /**
      * Retrieves the events of the given device.
      * @param deviceSerial The serial of the device.
      */
-    async getDeviceEvents(deviceSerial) {
+    /*public async getDeviceEvents(deviceSerial : string)
+    {
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
-        var deviceSerials = [];
+        var deviceSerials : string[] = [];
         var dateEnd = new Date(Date.now());
-        dateEnd.setDate(dateEnd.getDate() + 1);
+        dateEnd.setDate(dateEnd.getDate()+1);
         var dateStart = new Date(Date.now());
-        dateStart.setFullYear(dateStart.getFullYear() - 1);
+        dateStart.setFullYear(dateStart.getFullYear()-1);
+
         deviceSerials.push(device.getSerial());
-        if (device) {
+        if(device)
+        {
             station.databaseQueryLocal(deviceSerials, dateStart, dateEnd);
+        }
+    }*/
+    /**
+     * Retrieves the last event of the given device.
+     * @param deviceSerial The serial of the device.
+     */
+    async getDeviceLastEvent(deviceSerial) {
+        try {
+            var device = await this.getDevice(deviceSerial);
+            var station = await this.api.getStation(device.getStationSerial());
+            if (device) {
+                station.databaseQueryLatestInfo();
+            }
+        }
+        catch (error) {
+            this.api.logError("No Device getDeviceLastEvent.");
         }
     }
     /**
      * Retrieves the events of all devices.
      */
-    async getDevicesEvents() {
+    /*public async getDevicesEvents()
+    {
         var devices = await this.getDevices();
         var stations = await this.api.getStations();
         var dateEnd = new Date(Date.now());
-        dateEnd.setDate(dateEnd.getDate() + 1);
+        dateEnd.setDate(dateEnd.getDate()+1);
         var dateStart = new Date(Date.now());
-        dateStart.setFullYear(dateStart.getFullYear() - 1);
-        for (let station in stations) {
-            let deviceSerials = [];
-            for (let device in devices) {
-                if (devices[device].getStationSerial() === stations[station].getSerial()) {
+        dateStart.setFullYear(dateStart.getFullYear()-1);
+
+        for(let station in stations)
+        {
+            let deviceSerials : string[] = [];
+            for(let device in devices)
+            {
+                if(devices[device].getStationSerial() === stations[station].getSerial())
+                {
                     deviceSerials.push(devices[device].getSerial());
                 }
             }
+
             stations[station].databaseQueryLocal(deviceSerials, dateStart, dateEnd);
+        }
+    }*/
+    /**
+     * Retrieves the last event of all devices.
+     */
+    async getDevicesLastEvent() {
+        var stations = await this.api.getStations();
+        for (let station in stations) {
+            stations[station].databaseQueryLatestInfo();
         }
     }
     /**
@@ -1010,16 +1093,29 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param deviceSerial The serial of the device.
      */
     async downloadLatestImageForDevice(deviceSerial) {
-        var device = await this.getDevice(deviceSerial);
-        var station = await this.api.getStation(device.getStationSerial());
-        var results = this.getEventResultsForDevice(deviceSerial);
-        if (results && results.length > 0) {
-            for (var pos = results.length - 1; pos >= 0; pos--) {
-                if (results[pos].history && results[pos].history.thumb_path) {
-                    station.downloadImage(results[pos].history.thumb_path);
-                    return;
+        try {
+            var device = await this.getDevice(deviceSerial);
+            var station = await this.api.getStation(device.getStationSerial());
+            /*var results = this.getEventResultsForDevice(deviceSerial);
+            if(results && results.length > 0)
+            {
+                for(var pos = results.length - 1; pos >= 0; pos--)
+                {
+                    if(results[pos].history && results[pos].history.thumb_path)
+                    {
+                        station.downloadImage(results[pos].history.thumb_path);
+                        return;
+                    }
                 }
+            }*/
+            var result = this.getLastEventForDevice(deviceSerial);
+            if (result !== null && result.path !== "") {
+                station.downloadImage(result.path);
+                return;
             }
+        }
+        catch (error) {
+            this.api.logError("No Device downloadLatestImageForDevice.");
         }
     }
     /**
@@ -1027,13 +1123,29 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param deviceSerial The serial of the device.
      * @returns The timestamp or undefinied.
      */
-    getLastEventTimeForDevice(deviceSerial) {
-        if (this.devicesHistory[deviceSerial] !== undefined && this.devicesHistory[deviceSerial].length > 0) {
-            for (var pos = this.devicesHistory[deviceSerial].length - 1; pos >= 0; pos--) {
-                if (this.devicesHistory[deviceSerial][pos].history && this.devicesHistory[deviceSerial][pos].history.start_time) {
+    /*public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
+    {
+        if(this.devicesHistory[deviceSerial] !== undefined && this.devicesHistory[deviceSerial].length > 0)
+        {
+            for(var pos = this.devicesHistory[deviceSerial].length - 1; pos >= 0; pos--)
+            {
+                if(this.devicesHistory[deviceSerial][pos].history && this.devicesHistory[deviceSerial][pos].history.start_time)
+                {
                     return this.devicesHistory[deviceSerial][pos].history.start_time.valueOf();
                 }
             }
+        }
+        return undefined;
+    }*/
+    /**
+     * Returns the timestamp of the last event for the given device.
+     * @param deviceSerial The serial of the device.
+     * @returns The timestamp or undefinied.
+     */
+    getLastEventTimeForDevice(deviceSerial) {
+        var result = this.getLastEventForDevice(deviceSerial);
+        if (result !== null && result.path !== "") {
+            return result.start_time.valueOf();
         }
         return undefined;
     }
@@ -1452,7 +1564,12 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_RECOGNITION, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypeHuman:
-                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_DETECTION, value);
+                if (device.isWallLightCam()) {
+                    await station.setMotionDetectionTypeHuman(device, value);
+                }
+                else {
+                    await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_DETECTION, value);
+                }
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypePet:
                 await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.PET_DETECTION, value);
@@ -1461,13 +1578,69 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.VEHICLE_DETECTION, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypeAllOtherMotions:
-                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);
+                if (device.isWallLightCam()) {
+                    await station.setMotionDetectionTypeAllOtherMotions(device, value);
+                }
+                else {
+                    await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);
+                }
+                break;
+            case http_1.PropertyName.DeviceLightSettingsManualLightingActiveMode:
+                await station.setLightSettingsManualLightingActiveMode(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsManualDailyLighting:
+                await station.setLightSettingsManualDailyLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsManualColoredLighting:
+                await station.setLightSettingsManualColoredLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsManualDynamicLighting:
+                await station.setLightSettingsManualDynamicLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsMotionLightingActiveMode:
+                await station.setLightSettingsMotionLightingActiveMode(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsMotionDailyLighting:
+                await station.setLightSettingsMotionDailyLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsMotionColoredLighting:
+                await station.setLightSettingsMotionColoredLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsMotionDynamicLighting:
+                await station.setLightSettingsMotionDynamicLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsScheduleLightingActiveMode:
+                await station.setLightSettingsScheduleLightingActiveMode(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsScheduleDailyLighting:
+                await station.setLightSettingsScheduleDailyLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsScheduleColoredLighting:
+                await station.setLightSettingsScheduleColoredLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsScheduleDynamicLighting:
+                await station.setLightSettingsScheduleDynamicLighting(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsColoredLightingColors:
+                await station.setLightSettingsColoredLightingColors(device, value);
+                break;
+            case http_1.PropertyName.DeviceLightSettingsDynamicLightingThemes:
+                await station.setLightSettingsDynamicLightingThemes(device, value);
+                break;
+            case http_1.PropertyName.DeviceDoorControlWarning:
+                await station.setDoorControlWarning(device, value);
+                break;
+            case http_1.PropertyName.DeviceDoor1Open:
+                await station.openDoor(device, value, 1);
+                break;
+            case http_1.PropertyName.DeviceDoor2Open:
+                await station.openDoor(device, value, 2);
                 break;
             default:
                 if (!Object.values(http_1.PropertyName).includes(name)) {
-                    throw new error_1.ReadOnlyPropertyError(`Property ${name} is read only`);
+                    throw new error_1.ReadOnlyPropertyError("Property is read only", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });
                 }
-                throw new http_1.InvalidPropertyError(`Device ${deviceSerial} has no writable property named ${name}`);
+                throw new http_1.InvalidPropertyError("Device has no writable property", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });
         }
     }
 }

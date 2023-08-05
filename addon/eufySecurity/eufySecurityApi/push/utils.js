@@ -27,6 +27,7 @@ exports.convertTimestampMs = exports.sleep = exports.parseCheckinResponse = expo
 const crypto_1 = require("crypto");
 const path = __importStar(require("path"));
 const protobufjs_1 = require("protobufjs");
+const error_1 = require("./error");
 exports.VALID_FID_PATTERN = /^[cdef][\w-]{21}$/;
 function generateFid() {
     const fidByteArray = new Uint8Array(17);
@@ -39,7 +40,7 @@ function generateFid() {
     if (exports.VALID_FID_PATTERN.test(fid)) {
         return fid;
     }
-    throw new Error(`Generated FID is invalid?!`);
+    throw new error_1.FidGenerationError("Generated invalid FID", { context: { fid: fid } });
 }
 exports.generateFid = generateFid;
 const buildCheckinRequest = async () => {

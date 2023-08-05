@@ -19,6 +19,7 @@ __exportStar(require("./models"), exports);
 __exportStar(require("./interfaces"), exports);
 __exportStar(require("./service"), exports);
 __exportStar(require("./types"), exports);
+__exportStar(require("./error"), exports);
 var utils_1 = require("./utils");
 Object.defineProperty(exports, "sleep", { enumerable: true, get: function () { return utils_1.sleep; } });
 Object.defineProperty(exports, "convertTimestampMs", { enumerable: true, get: function () { return utils_1.convertTimestampMs; } });

@@ -3,6 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Config = void 0;
 const fs_1 = require("fs");
 class Config {
+    configJson;
+    hasChanged;
+    logger;
+    taskSaveConfig24h;
     /**
      * Constructor, read the config file and provide values to the variables.
      */
