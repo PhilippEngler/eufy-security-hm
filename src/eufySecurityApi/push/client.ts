@@ -8,6 +8,8 @@ import { Message, MessageTag, RawPushMessage } from "./models";
 import { PushClientParser } from "./parser";
 import { PushClientEvents } from "./interfaces";
 import { parseJSON } from "../utils";
+import { BuildHeartbeatAckRequestError, BuildHeartbeatPingRequestError, BuildLoginRequestError } from "./error";
+import { ensureError } from "../error";
 
 import { Logger } from "../utils/logging";
 
@@ -122,7 +124,7 @@ export class PushClient extends TypedEmitter<PushClientEvents> {
 
         const errorMessage = LoginRequestType.verify(loginRequest);
         if (errorMessage) {
-            throw new Error(errorMessage);
+            throw new BuildLoginRequestError(errorMessage, { context: { loginRequest: loginRequest } });
         }
 
         const buffer = LoginRequestType.encodeDelimited(loginRequest).finish();
@@ -140,7 +142,7 @@ export class PushClient extends TypedEmitter<PushClientEvents> {
         const HeartbeatPingRequestType = PushClient.proto!.lookupType("mcs_proto.HeartbeatPing");
         const errorMessage = HeartbeatPingRequestType.verify(heartbeatPingRequest);
         if (errorMessage) {
-            throw new Error(errorMessage);
+            throw new BuildHeartbeatPingRequestError(errorMessage, { context: { heartbeatPingRequest: heartbeatPingRequest } });
         }
 
         const buffer = HeartbeatPingRequestType.encodeDelimited(heartbeatPingRequest).finish();
@@ -163,7 +165,7 @@ export class PushClient extends TypedEmitter<PushClientEvents> {
         const HeartbeatAckRequestType = PushClient.proto!.lookupType("mcs_proto.HeartbeatAck");
         const errorMessage = HeartbeatAckRequestType.verify(heartbeatAckRequest);
         if (errorMessage) {
-            throw new Error(errorMessage);
+            throw new BuildHeartbeatAckRequestError(errorMessage, { context: { heartbeatAckRequest: heartbeatAckRequest } });
         }
 
         const buffer = HeartbeatAckRequestType.encodeDelimited(heartbeatAckRequest).finish();
@@ -189,8 +191,9 @@ export class PushClient extends TypedEmitter<PushClientEvents> {
         this.scheduleReconnect();
     }
 
-    private onSocketError(error: any): void {
-        this.log.error(`onSocketError:`, error);
+    private onSocketError(err: any): void {
+        const error = ensureError(err);
+        this.log.error(`onSocketError`, error);
     }
 
     private handleParsedMessage(message: Message): void {

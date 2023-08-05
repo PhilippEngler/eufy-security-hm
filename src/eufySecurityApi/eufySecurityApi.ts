@@ -11,7 +11,7 @@ import { Stations } from './stations';
 import { DatabaseQueryLatestInfo, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from './p2p';
 import { sleep } from './push/utils';
 import { EufyHouses } from './houses';
-import { NotSupportedError, ReadOnlyPropertyError } from './error';
+import { NotSupportedError, ReadOnlyPropertyError, ensureError } from './error';
 import { randomNumber } from './http/utils';
 import { PhoneModels, timeZoneData } from './http/const';
 import { getModelName, makeDateTimeString } from './utils/utils';
@@ -345,7 +345,8 @@ export class EufySecurityApi
                         return await this.httpService.addTrustDevice(options?.verifyCode);
                 }
             })
-            .catch((error) => {
+            .catch((err) => {
+                const error = ensureError(err);
                 this.logger.error("Connect Error", error);
             });
     }
@@ -786,12 +787,14 @@ export class EufySecurityApi
     {
         if (this.config.getAcceptInvitations())
         {
-            await this.processInvitations().catch(error => {
+            await this.processInvitations().catch(err => {
+                const error = ensureError(err);
                 this.logError("Error in processing invitations", error);
             });
         }
         
-        await this.httpService.refreshAllData().catch(error => {
+        await this.httpService.refreshAllData().catch(err => {
+            const error = ensureError(err);
             this.logger.error("Error during API data refreshing", error);
         });
 
@@ -1595,9 +1598,9 @@ export class EufySecurityApi
      * @param deviceSerial The serial of the device the raw values changed for.
      * @param values The raw values for the device.
      */
-    public updateDeviceProperties(deviceSerial : string, values : RawValues) : void
+    public async updateDeviceProperties(deviceSerial : string, values : RawValues) : Promise<void>
     {
-        this.devices.updateDeviceProperties(deviceSerial, values);
+        await this.devices.updateDeviceProperties(deviceSerial, values);
     }
 
     /**
@@ -3092,8 +3095,9 @@ export class EufySecurityApi
     {
         let refreshCloud = false;
 
-        const invites = await this.httpService.getInvites().catch(error => {
-            this.logError("processInvitations - getInvites - Error:", error);
+        const invites = await this.httpService.getInvites().catch(err => {
+            const error = ensureError(err);
+            this.logError("processInvitations - getInvites - Error", error);
             return error;
         });
         if(Object.keys(invites).length > 0)
@@ -3116,8 +3120,9 @@ export class EufySecurityApi
             }
             if (confirmInvites.length > 0)
             {
-                const result = await this.httpService.confirmInvites(confirmInvites).catch(error => {
-                    this.logError("processInvitations - confirmInvites - Error:", error);
+                const result = await this.httpService.confirmInvites(confirmInvites).catch(err => {
+                    const error = ensureError(err);
+                    this.logError("processInvitations - confirmInvites - Error", error);
                     return error;
                 });
                 if(result)
@@ -3128,15 +3133,17 @@ export class EufySecurityApi
             }
         }
 
-        const houseInvites = await this.httpService.getHouseInviteList().catch(error => {
-            this.logError("processInvitations - getHouseInviteList - Error:", error);
+        const houseInvites = await this.httpService.getHouseInviteList().catch(err => {
+            const error = ensureError(err);
+            this.logError("processInvitations - getHouseInviteList - Error", error);
             return error;
         });
         if(Object.keys(houseInvites).length > 0)
         {
             for(const invite of Object.values(houseInvites) as HouseInviteListResponse[]) {
-                const result = await this.httpService.confirmHouseInvite(invite.house_id, invite.id).catch(error => {
-                    this.logError("processInvitations - confirmHouseInvite - Error:", error);
+                const result = await this.httpService.confirmHouseInvite(invite.house_id, invite.id).catch(err => {
+                    const error = ensureError(err);
+                    this.logError("processInvitations - confirmHouseInvite - Error", error);
                     return error;
                 });
                 if(result)
@@ -3167,6 +3174,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.7.0-b301";
+        return "2.7.0-b322";
     }
 }

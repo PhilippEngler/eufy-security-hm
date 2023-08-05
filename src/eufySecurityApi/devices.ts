@@ -1,10 +1,10 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
-import { DeviceNotFoundError, ReadOnlyPropertyError } from "./error";
+import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
 import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera } from './http';
 import { EufySecurityEvents } from './interfaces';
-import { DatabaseQueryLocal, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
+import { DatabaseQueryLocal, DynamicLighting, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { parseValue, waitForEvent } from "./utils";
 import { CameraEvent } from "./utils/utils";
 
@@ -18,8 +18,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private devices : { [deviceSerial : string] : any } = {};
     //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
     private devicesLastEvent : { [deviceSerial : string] : CameraEvent | null } = {};
-    private devicesLoaded = false;
     private loadingEmitter = new EventEmitter();
+    private devicesLoaded?: Promise<void>;
     private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
     private deviceImageLoadTimeout : { [deviceSerial : string] : NodeJS.Timeout | undefined } = {};
 
@@ -72,7 +72,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
                 else
                 {
-                    this.devicesLoaded = false;
+                    this.devicesLoaded = waitForEvent<void>(this.loadingEmitter, "devices loaded");
                     let new_device : Promise<Device>;
 
                     if(Device.isIndoorCamera(resDevices[deviceSerial].device_type))
@@ -166,9 +166,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                             this.addDevice(device);
                             device.initialize();
                         }
-                        catch (error)
-                        {
-                            this.api.logError("Error", error);
+                        catch (err) {
+                            const error = ensureError(err);
+                            this.api.logError("HandleDevices Error", error);
                         }
                         return device;
                     }));
@@ -183,18 +183,19 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                             station.setConnectionType(this.api.getP2PConnectionType());
                             station.connect();
                         }
-                    }).catch((error) => {
-                        this.api.logError("Error trying to connect to station afte device loaded", error);
+                    }).catch((err) => {
+                        const error = ensureError(err);
+                        this.api.logError("Error trying to connect to station after device loaded", error);
                     });
                 });
-                this.devicesLoaded = true;
                 this.loadingEmitter.emit("devices loaded");
+                this.devicesLoaded = undefined;
             });
 
             if (promises.length === 0)
             {
-                this.devicesLoaded = true;
                 this.loadingEmitter.emit("devices loaded");
+                this.devicesLoaded = undefined;
             }
 
             for (const deviceSN of deviceSNs)
@@ -203,7 +204,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 {
                     this.getDevice(deviceSN).then((device: Device) => {
                         this.removeDevice(device);
-                    }).catch((error) => {
+                    }).catch((err) => {
+                        const error = ensureError(err);
                         this.api.logError("Error removing device", error);
                     });
                 }
@@ -266,9 +268,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         var stations = await this.api.getStations();
 
-        if (!this.devicesLoaded)
+        if (this.devicesLoaded)
         {
-            await waitForEvent(this.loadingEmitter, "devices loaded");
+            await this.devicesLoaded;
         }
         if (Object.keys(this.devices).includes(device.device_sn))
         {
@@ -354,9 +356,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async getDevices() : Promise<{ [deviceSerial : string] : any }> 
     {
-        if (!this.devicesLoaded)
+        if (this.devicesLoaded)
         {
-            await waitForEvent(this.loadingEmitter, "devices loaded");
+            await this.devicesLoaded;
         }
         return this.devices;
     }
@@ -368,15 +370,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async getDevice(deviceSerial : string) : Promise<Device>
     {
-        if (!this.devicesLoaded)
+        if (this.devicesLoaded)
         {
-            await waitForEvent(this.loadingEmitter, "devices loaded");
+            await this.devicesLoaded;
         }
         if (Object.keys(this.devices).includes(deviceSerial))
         {
             return this.devices[deviceSerial];
         }
-        throw new DeviceNotFoundError(`Device with this serial ${deviceSerial} doesn't exists!`);
+        throw new DeviceNotFoundError("Device doesn't exists", { context: { device: deviceSerial } });
     }
 
     /**
@@ -387,9 +389,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async getDeviceByStationAndChannel(baseSerial : string, channel : number) : Promise<Device>
     {
-        if (!this.devicesLoaded)
+        if (this.devicesLoaded)
         {
-            await waitForEvent(this.loadingEmitter, "devices loaded");
+            await this.devicesLoaded;
         }
         for (const device of Object.values(this.devices))
         {
@@ -398,14 +400,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 return device;
             }
         }
-        throw new DeviceNotFoundError(`No device with channel ${channel} found on station with serial number: ${baseSerial}!`);
+        throw new DeviceNotFoundError("No device with passed channel found on station", { context: { station: baseSerial, channel: channel } });
     }
 
     public async getDevicesFromStation(stationSerial: string): Promise<Array<Device>>
     {
-        if (!this.devicesLoaded)
+        if (this.devicesLoaded)
         {
-            await waitForEvent(this.loadingEmitter, "devices loaded");
+            await this.devicesLoaded;
         }
         const arr: Array<Device> = [];
         Object.keys(this.devices).forEach((serialNumber: string) => {
@@ -774,7 +776,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             {
                 this.api.getStation(device.getStationSerial()).then((station: Station) => {
                     station.setRTSPStream(device, true);
-                }).catch((error) => {
+                }).catch((err) => {
+                    const error = ensureError(err);
                     this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
                 });
             }
@@ -793,14 +796,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         {
                             station.downloadImage(value as string);
                         }
-                    }).catch((error) => {
+                    }).catch((err) => {
+                        const error = ensureError(err);
                         this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station download image (station: ${device.getStationSerial()} image_path: ${value})`, error);
                     });
                 }
             }
         }
-        catch (error)
+        catch (err)
         {
+            const error = ensureError(err);
             this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name})`, error);
         }
     }
@@ -952,13 +957,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             {
                 this.api.getStation(device.getStationSerial()).then((station: Station) => {
                     station.setRTSPStream(device, true);
-                }).catch((error) => {
+                }).catch((err) => {
+                    const error = ensureError(err);
                     this.api.logError(`Device ready error (device: ${device.getSerial()}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
                 });
             }
         }
-        catch (error)
+        catch (err)
         {
+            const error = ensureError(err);
             this.api.logError(`Device ready error (device: ${device.getSerial()})`, error);
         }
     }
@@ -1116,8 +1123,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @param values The raw values.
      */
-    public updateDeviceProperties(deviceSerial : string, values : RawValues) : void
+    public async updateDeviceProperties(deviceSerial : string, values : RawValues) : Promise<void>
     {
+        if (this.devicesLoaded)
+        {
+            await this.devicesLoaded;
+        }
         if(this.devices[deviceSerial] !== undefined)
         {
             this.devices[deviceSerial].updateRawProperties(values);
@@ -1232,6 +1243,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async getDeviceLastEvent(deviceSerial : string)
     {
+        try{
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
 
@@ -1239,6 +1251,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             station.databaseQueryLatestInfo();
         }
+        } catch (error) { this.api.logError("No Device getDeviceLastEvent.")}
     }
 
     /**
@@ -1287,6 +1300,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async downloadLatestImageForDevice(deviceSerial : string)
     {
+        try{
         var device = await this.getDevice(deviceSerial);
         var station = await this.api.getStation(device.getStationSerial());
         /*var results = this.getEventResultsForDevice(deviceSerial);
@@ -1307,6 +1321,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             station.downloadImage(result.path);
             return;
         }
+        } catch (error) { this.api.logError("No Device downloadLatestImageForDevice.")}
     }
 
     /**
@@ -1787,32 +1802,47 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     await station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 }
                 break;
+            case PropertyName.DeviceLightSettingsManualLightingActiveMode:
+                await station.setLightSettingsManualLightingActiveMode(device, value as number);
+                break;
             case PropertyName.DeviceLightSettingsManualDailyLighting:
                 await station.setLightSettingsManualDailyLighting(device, value as number);
                 break;
             case PropertyName.DeviceLightSettingsManualColoredLighting:
-                await station.setLightSettingsManualColoredLighting(device, value as number);
+                await station.setLightSettingsManualColoredLighting(device, value as RGBColor);
                 break;
             case PropertyName.DeviceLightSettingsManualDynamicLighting:
                 await station.setLightSettingsManualDynamicLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsMotionLightingActiveMode:
+                await station.setLightSettingsMotionLightingActiveMode(device, value as number);
                 break;
             case PropertyName.DeviceLightSettingsMotionDailyLighting:
                 await station.setLightSettingsMotionDailyLighting(device, value as number);
                 break;
             case PropertyName.DeviceLightSettingsMotionColoredLighting:
-                await station.setLightSettingsMotionColoredLighting(device, value as number);
+                await station.setLightSettingsMotionColoredLighting(device, value as RGBColor);
                 break;
             case PropertyName.DeviceLightSettingsMotionDynamicLighting:
                 await station.setLightSettingsMotionDynamicLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsScheduleLightingActiveMode:
+                await station.setLightSettingsScheduleLightingActiveMode(device, value as number);
                 break;
             case PropertyName.DeviceLightSettingsScheduleDailyLighting:
                 await station.setLightSettingsScheduleDailyLighting(device, value as number);
                 break;
             case PropertyName.DeviceLightSettingsScheduleColoredLighting:
-                await station.setLightSettingsScheduleColoredLighting(device, value as number);
+                await station.setLightSettingsScheduleColoredLighting(device, value as RGBColor);
                 break;
             case PropertyName.DeviceLightSettingsScheduleDynamicLighting:
                 await station.setLightSettingsScheduleDynamicLighting(device, value as number);
+                break;
+            case PropertyName.DeviceLightSettingsColoredLightingColors:
+                await station.setLightSettingsColoredLightingColors(device, value as RGBColor[]);
+                break;
+            case PropertyName.DeviceLightSettingsDynamicLightingThemes:
+                await station.setLightSettingsDynamicLightingThemes(device, value as DynamicLighting[]);
                 break;
             case PropertyName.DeviceDoorControlWarning:
                 await station.setDoorControlWarning(device, value as boolean);
@@ -1826,9 +1856,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
                 {
-                    throw new ReadOnlyPropertyError(`Property ${name} is read only`);
+                    throw new ReadOnlyPropertyError("Property is read only", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });
                 }
-                throw new InvalidPropertyError(`Device ${deviceSerial} has no writable property named ${name}`);
+                throw new InvalidPropertyError("Device has no writable property", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });
         }
     }
 }

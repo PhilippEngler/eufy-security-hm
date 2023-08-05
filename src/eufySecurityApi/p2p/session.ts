@@ -15,7 +15,7 @@ import { HTTPApi } from "../http/api";
 import { Device, Lock } from "../http/device";
 import { decodeImage, getAdvancedLockTimezone } from "../http/utils";
 import { TalkbackStream } from "./talkback";
-import { LivestreamError, TalkbackError } from "../error";
+import { LivestreamError, TalkbackError, ensureError } from "../error";
 import { SmartSafeEvent } from "../push/types";
 import { SmartSafeEventValueDetail } from "../push/models";
 import { BleCommandFactory } from "./ble";
@@ -303,8 +303,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     }
 
     private async sendMessage(errorSubject: string, address: Address, msgID: Buffer, payload?: Buffer): Promise<void> {
-        await sendMessage(this.socket, address, msgID, payload).catch((error) => {
-            this.log.error(`${errorSubject} - msgID: ${msgID.toString("hex")} payload: ${payload?.toString("hex")} - Error:`, error);
+        await sendMessage(this.socket, address, msgID, payload).catch((err) => {
+            const error = ensureError(err);
+            this.log.error(`${errorSubject} - msgID: ${msgID.toString("hex")} payload: ${payload?.toString("hex")} - Error`, error);
         });
     }
 
@@ -461,8 +462,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     try {
                         this.socket.setRecvBufferSize(this.UDP_RECVBUFFERSIZE_BYTES);
                         this.socket.setBroadcast(true);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - Error:`, { error: error, currentRecBufferSize: this.socket.getRecvBufferSize(), recBufferRequestedSize: this.UDP_RECVBUFFERSIZE_BYTES });
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - Error`, { error: error, currentRecBufferSize: this.socket.getRecvBufferSize(), recBufferRequestedSize: this.UDP_RECVBUFFERSIZE_BYTES });
                     }
                     this.lookup(host);
                 });
@@ -526,19 +528,23 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         const payload = buildCommandWithStringTypePayload(p2pcommand.value, p2pcommand.channel);
         let nested_commandType = undefined;
 
+        this.log.debug(`sendCommandWithStringPayload:`, { p2pcommand: p2pcommand, customData: customData });
+
         if (p2pcommand.commandType == CommandType.CMD_SET_PAYLOAD) {
             try {
                 const json = JSON.parse(p2pcommand.value);
                 nested_commandType = json.cmd;
-            } catch (error) {
-                this.log.error(`CMD_SET_PAYLOAD - Station ${this.rawStation.station_sn} - Error:`, error);
+            } catch (err) {
+                const error = ensureError(err);
+                this.log.error(`CMD_SET_PAYLOAD - Station ${this.rawStation.station_sn} - Error`, error);
             }
         } else if (p2pcommand.commandType == CommandType.CMD_DOORBELL_SET_PAYLOAD) {
             try {
                 const json = JSON.parse(p2pcommand.value);
                 nested_commandType = json.commandType;
-            } catch (error) {
-                this.log.error(`CMD_DOORBELL_SET_PAYLOAD - Station ${this.rawStation.station_sn} - Error:`, error);
+            } catch (err) {
+                const error = ensureError(err);
+                this.log.error(`CMD_DOORBELL_SET_PAYLOAD - Station ${this.rawStation.station_sn} - Error`, error);
             }
         }
 
@@ -622,8 +628,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         if (messageState) {
             messageState.retryTimeout = setTimeout(() => {
                 if (this.connectAddress) {
-                    sendMessage(this.socket, this.connectAddress, RequestMessageType.DATA, messageState.data).catch((error) => {
-                        this.log.error(`Station ${this.rawStation.station_sn} - Error:`, error);
+                    sendMessage(this.socket, this.connectAddress, RequestMessageType.DATA, messageState.data).catch((err) => {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - Error`, error);
                     });
                     this.resendNotAcknowledgedCommand(sequence);
                 }
@@ -860,8 +867,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     this.sendQueue = [];
                     /*const payload = buildVoidCommandPayload(255);
                     const data = Buffer.concat([buildCommandHeader(0, CommandType.CMD_GATEWAYINFO), payload]);
-                    sendMessage(this.socket, this.connectAddress!, RequestMessageType.DATA, data).catch((error) => {
-                        this.log.error(`Station ${this.rawStation.station_sn} - Error:`, error);
+                    sendMessage(this.socket, this.connectAddress!, RequestMessageType.DATA, data).catch((err) => {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - Error`, error);
                     });
                     this.sendCommand(CommandType.CMD_PING, payload, 255);*/
                     const payload = buildVoidCommandPayload(255);
@@ -892,7 +900,8 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                             Lock.encodeCmdStatus(this.rawStation.member.admin_user_id)
                         );
                         this.sendCommandWithStringPayload(command.payload);
-                    } catch (error) {
+                    } catch (err) {
+                        const error = ensureError(err);
                         this.log.error(`Send query status lock command to station ${this.rawStation.station_sn} - Error`, error);
                     }
                     tmpSendQueue.forEach(element => {
@@ -1252,11 +1261,11 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                 if (return_code === ErrorCode.ERROR_PPCS_SUCCESSFUL) {
                                     this.startTalkback(msg_state.channel);
                                 } else if (return_code === ErrorCode.ERROR_NOT_FIND_DEV) {
-                                    this.emit("talkback error", msg_state.channel, new TalkbackError(`Station ${this.rawStation.station_sn} channel ${msg_state.channel} someone is responding now.`));
+                                    this.emit("talkback error", msg_state.channel, new TalkbackError("Someone is responding now.", { context: { station: this.rawStation.station_sn, channel: msg_state.channel } }));
                                 } else if (return_code === ErrorCode.ERROR_DEV_BUSY) {
-                                    this.emit("talkback error", msg_state.channel, new TalkbackError(`Station ${this.rawStation.station_sn} channel ${msg_state.channel} wait a second, device is busy.`));
+                                    this.emit("talkback error", msg_state.channel, new TalkbackError("Wait a second, device is busy.", { context: { station: this.rawStation.station_sn, channel: msg_state.channel } }));
                                 } else {
-                                    this.emit("talkback error", msg_state.channel, new TalkbackError(`Station ${this.rawStation.station_sn} channel ${msg_state.channel} connect failed please try again later.`));
+                                    this.emit("talkback error", msg_state.channel, new TalkbackError("Connect failed please try again later.", { context: { station: this.rawStation.station_sn, channel: msg_state.channel } }));
                                 }
                             } else if (msg_state.commandType === CommandType.CMD_STOP_TALKBACK || (msg_state.commandType === CommandType.CMD_DOORBELL_SET_PAYLOAD && msg_state.nestedCommandType === IndoorSoloSmartdropCommandType.CMD_END_SPEAK)) {
                                 this.stopTalkback(msg_state.channel);
@@ -1343,16 +1352,17 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                             try {
                                 videoMetaData.aesKey = rsaKey.decrypt(key).toString("hex");
                                 this.log.debug(`Station ${this.rawStation.station_sn} - Decrypted AES key: ${videoMetaData.aesKey}`);
-                            } catch (error) {
-                                this.log.warn(`Station ${this.rawStation.station_sn} - AES key could not be decrypted! The entire stream is discarded. - Error:`, error);
+                            } catch (err) {
+                                const error = ensureError(err);
+                                this.log.warn(`Station ${this.rawStation.station_sn} - AES key could not be decrypted! The entire stream is discarded. - Error`, error);
                                 this.currentMessageState[message.dataType].invalidStream = true;
-                                this.emit("livestream error", message.channel, new LivestreamError(`Station ${this.rawStation.station_sn} AES key could not be decrypted! The entire stream is discarded.`));
+                                this.emit("livestream error", message.channel, new LivestreamError("Station AES key could not be decrypted! The entire stream is discarded.", { context: { station: this.rawStation.station_sn } }));
                                 return;
                             }
                         } else {
                             this.log.warn(`Station ${this.rawStation.station_sn} - Private RSA key is missing! Stream could not be decrypted. The entire stream is discarded.`);
                             this.currentMessageState[message.dataType].invalidStream = true;
-                            this.emit("livestream error", message.channel, new LivestreamError(`Station ${this.rawStation.station_sn} private RSA key is missing! Stream could not be decrypted. The entire stream is discarded.`));
+                            this.emit("livestream error", message.channel, new LivestreamError("Station Private RSA key is missing! Stream could not be decrypted. The entire stream is discarded.", { context: { station: this.rawStation.station_sn } }));
                             return;
                         }
                         payloadStart = 151;
@@ -1475,7 +1485,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     this.currentMessageState[message.dataType].audioStream?.push(audio_data);
                     break;
                 default:
-                    this.log.debug(`Station ${this.rawStation.station_sn} - Not implemented message`, { commandIdName: CommandType[message.commandId], commandId: message.commandId, channel: message.channel, data: message.data.toString("hex") });
+                    this.log.info(`Station ${this.rawStation.station_sn} - Not implemented message`, { commandIdName: CommandType[message.commandId], commandId: message.commandId, channel: message.channel, data: message.data.toString("hex") });
                     break;
             }
         } else {
@@ -1495,8 +1505,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         const data = message.data.toString("utf8");
                         this.log.debug(`Station ${this.rawStation.station_sn} - Camera info`, { cameraInfo: data });
                         this.emit("camera info", parseJSON(data, this.log) as CmdCameraInfoResponse);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - Camera info - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - Camera info - Error`, error);
                     }
                     break;
                 case CommandType.CMD_CONVERT_MP4_OK:
@@ -1521,16 +1532,18 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         //TODO: Finish implementation, emit an event...
                         //VDBStreamInfo (1005) and VoltageEvent (1015)
                         //this.emit("", parseJSON(message.data.toString(), this.log) as xy);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_DOORBELL_NOTIFY_PAYLOAD - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_DOORBELL_NOTIFY_PAYLOAD - Error`, error);
                     }
                     break;
                 case CommandType.CMD_NAS_SWITCH:
                     try {
                         this.log.debug(`Station ${this.rawStation.station_sn} - CMD_NAS_SWITCH`, { payload: message.data.toString() });
                         this.emit("rtsp url", message.channel, message.data.toString("utf8", 0, message.data.indexOf("\0", 0, "utf8")));
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_NAS_SWITCH - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_NAS_SWITCH - Error`, error);
                     }
                     break;
                 case CommandType.SUB1G_REP_UNPLUG_POWER_LINE:
@@ -1539,8 +1552,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         const chargeType = message.data.slice(0, 4).readUInt32LE() as ChargingType;
                         const batteryLevel = message.data.slice(4, 8).readUInt32LE();
                         this.emit("charging state", message.channel, chargeType, batteryLevel);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - SUB1G_REP_UNPLUG_POWER_LINE - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - SUB1G_REP_UNPLUG_POWER_LINE - Error`, error);
                     }
                     break;
                 case CommandType.SUB1G_REP_RUNTIME_STATE:
@@ -1549,8 +1563,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         const batteryLevel = message.data.slice(0, 4).readUInt32LE();
                         const temperature = message.data.slice(4, 8).readUInt32LE();
                         this.emit("runtime state", message.channel, batteryLevel, temperature);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - SUB1G_REP_RUNTIME_STATE - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - SUB1G_REP_RUNTIME_STATE - Error`, error);
                     }
                     break;
                 case CommandType.CMD_SET_FLOODLIGHT_MANUAL_SWITCH:
@@ -1558,16 +1573,18 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         const enabled = message.data.readUIntBE(0, 1) === 1 ? true : false;
                         this.log.debug(`Station ${this.rawStation.station_sn} - CMD_SET_FLOODLIGHT_MANUAL_SWITCH`, { enabled: enabled, payload: message.data.toString() });
                         this.emit("floodlight manual switch", message.channel, enabled);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_SET_FLOODLIGHT_MANUAL_SWITCH - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_SET_FLOODLIGHT_MANUAL_SWITCH - Error`, error);
                     }
                     break;
                 case CommandType.CMD_GET_DEVICE_PING:
                     try {
                         this.log.debug(`Station ${this.rawStation.station_sn} - CMD_GET_DEVICE_PING`, { payload: message.data.toString() });
                         this.sendCommandDevicePing(message.channel);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_GET_DEVICE_PING - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_GET_DEVICE_PING - Error`, error);
                     }
                     break;
                 case CommandType.CMD_NOTIFY_PAYLOAD:
@@ -1686,8 +1703,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                                 this.emit("secondary command", result);
                                             }
                                             this.log.debug(`Station ${this.rawStation.station_sn} - CMD_NOTIFY_PAYLOAD SmartSafe return code: ${data.data.readInt8(0)}`, { commandIdName: CommandType[json.cmd], commandId: json.cmd, decoded: data, commandCode: SmartSafeCommandCode[data.commandCode], returnCode: returnCode, channel: this.lastChannel, customData: this.lastCustomData });
-                                        } catch (error) {
-                                            this.log.error(`Station ${this.rawStation.station_sn} - CMD_NOTIFY_PAYLOAD SmartSafe Error:`, { commandIdName: CommandType[json.cmd], commandId: json.cmd, channel: this.lastChannel, customData: this.lastCustomData, payload: payload, error: error });
+                                        } catch (err) {
+                                            const error = ensureError(err);
+                                            this.log.error(`Station ${this.rawStation.station_sn} - CMD_NOTIFY_PAYLOAD SmartSafe Error`, { commandIdName: CommandType[json.cmd], commandId: json.cmd, channel: this.lastChannel, customData: this.lastCustomData, payload: payload, error: error });
                                         }
                                         this._clearSecondaryCommandTimeout();
                                         this.sendQueuedMessage();
@@ -1760,8 +1778,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                 this.log.debug(`Station ${this.rawStation.station_sn} - CMD_NOTIFY_PAYLOAD - Not implemented`, { commandIdName: CommandType[json.cmd], commandId: json.cmd, message: message.data.toString() });
                             }
                         }
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_NOTIFY_PAYLOAD Error:`, { error: error, payload: message.data.toString() });
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_NOTIFY_PAYLOAD Error`, { error: error, payload: message.data.toString() });
                     }
                     break;
                 case CommandType.CMD_GET_DELAY_ALARM:
@@ -1775,8 +1794,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         } else {
                             this.emit("alarm delay", alarmEventNumber as AlarmEvent, alarmDelay);
                         }
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_GET_DELAY_ALARM - Error:`, { error: error, payload: message.data.toString("hex") });
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_GET_DELAY_ALARM - Error`, { error: error, payload: message.data.toString("hex") });
                     }
                     break;
                 case CommandType.CMD_SET_TONE_FILE:
@@ -1784,8 +1804,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         this.log.debug(`Station ${this.rawStation.station_sn} - CMD_SET_TONE_FILE :`, { payload: message.data.toString("hex") });
                         const alarmEventNumber: AlarmEvent = message.data.slice(0, 4).readUInt32LE();
                         this.emit("alarm event", alarmEventNumber);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_SET_TONE_FILE - Error:`, { error: error, payload: message.data.toString("hex") });
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_SET_TONE_FILE - Error`, { error: error, payload: message.data.toString("hex") });
                     }
                     break;
                 case CommandType.CMD_SET_SNOOZE_MODE:
@@ -1793,8 +1814,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     try {
                         this.log.debug(`Station ${this.rawStation.station_sn} - CMD_SET_SNOOZE_MODE`, { payload: Buffer.from(message.data.toString(), "base64").toString() });
                         this.emit("parameter", message.channel, CommandType.CMD_SET_SNOOZE_MODE, message.data.toString());
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_SET_SNOOZE_MODE - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_SET_SNOOZE_MODE - Error`, error);
                     }
                     break;
                 case CommandType.CMD_PING:
@@ -1806,8 +1828,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         this.log.debug(`Station ${this.rawStation.station_sn} - CMD_DATABASE_IMAGE`, { message: message.data.toString("utf-8") });
                         const image = parseJSON(message.data.toString("utf-8"), this.log) as CmdDatabaseImageResponse;
                         this.emit("image download", image.file, decodeImage(this.rawStation.p2p_did, Buffer.from(image.content, "base64")));
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_DATABASE_IMAGE - Error:`, error);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_DATABASE_IMAGE - Error`, error);
                     }
                     break;
                 case CommandType.CMD_GET_TFCARD_STATUS:
@@ -1815,8 +1838,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         this.log.debug(`Station ${this.rawStation.station_sn} - CMD_GET_TFCARD_STATUS :`, { payload: message.data.toString("hex") });
                         const tfCardStatus: TFCardStatus = message.data.slice(0, 4).readUInt32LE();
                         this.emit("tfcard status", message.channel, tfCardStatus);
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_GET_TFCARD_STATUS - Error:`, { error: error, payload: message.data.toString("hex") });
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_GET_TFCARD_STATUS - Error`, { error: error, payload: message.data.toString("hex") });
                     }
                     break;
                 case CommandType.CMD_DATABASE:
@@ -1953,16 +1977,18 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                 this.log.debug(`Station ${this.rawStation.station_sn} - Not implemented - CMD_DATABASE message`, { commandIdName: CommandType[message.commandId], commandId: message.commandId, channel: message.channel, databaseResponse: databaseResponse });
                                 break;
                         }
-                    } catch (error) {
-                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_DATABASE - Error:`, { error: error, payload: message.data.toString() });
+                    } catch (err) {
+                        const error = ensureError(err);
+                        this.log.error(`Station ${this.rawStation.station_sn} - CMD_DATABASE - Error`, { error: error, payload: message.data.toString() });
                     }
                     break;
                 default:
                     this.log.debug(`Station ${this.rawStation.station_sn} - Not implemented - CONTROL message`, { commandIdName: CommandType[message.commandId], commandId: message.commandId, channel: message.channel, data: message.data.toString("hex") });
                     break;
             }
-        } catch (error) {
-            this.log.error(`Station ${this.rawStation.station_sn} - ${CommandType[message.commandId]} - Error:`, error);
+        } catch (err) {
+            const error = ensureError(err);
+            this.log.error(`Station ${this.rawStation.station_sn} - ${CommandType[message.commandId]} - Error`, error);
         }
     }
 
@@ -2277,8 +2303,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 } else {
                     this.log.error(`Station ${this.rawStation.station_sn} - Status return code not 200`, { status: response.status, statusText: response.statusText });
                 }
-            } catch (error) {
-                this.log.error(`Station ${this.rawStation.station_sn} - Generic Error:`, error);
+            } catch (err) {
+                const error = ensureError(err);
+                this.log.error(`Station ${this.rawStation.station_sn} - Generic Error`, error);
             }
         }
     }
@@ -2348,7 +2375,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         } else {
             this.log.error(`Station ${this.rawStation.station_sn} - Max send video data retries ${this.messageVideoStates.get(message.sequence)?.retries} reached. Discard data.`, { sequence: message.sequence, channel: message.channel, retries: message.retries });
             this.messageVideoStates.delete(message.sequence);
-            this.emit("talkback error", message.channel, new TalkbackError(`Station ${this.rawStation.station_sn} max send video data retries ${this.messageVideoStates.get(message.sequence)?.retries} reached. Discard data packet.`));
+            this.emit("talkback error", message.channel, new TalkbackError("Max send video data retries reached. Discard data packet.", { context: { station: this.rawStation.station_sn, channel: message.channel, retries: message.retries } }));
             return;
         }
 
