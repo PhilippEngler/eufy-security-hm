@@ -25,7 +25,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
     private lastGuardModeChangeTimeForStations : { [stationSerial : string] : number | undefined } = {};
     private loadingEmitter = new EventEmitter();
-    private stationsLoaded?: Promise<void>;
+    private stationsLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "stations loaded");
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
 
@@ -83,7 +83,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
             else
             {
-                this.stationsLoaded = waitForEvent<void>(this.loadingEmitter, "stations loaded");
+                if (this.stationsLoaded === undefined)
+                {
+                    this.stationsLoaded = waitForEvent<void>(this.loadingEmitter, "stations loaded");
+                }
                 let new_station = Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
@@ -1193,7 +1196,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         this.api.logDebug(`Event "Connect": station: ${station.getSerial()}`);
         this.emit("station connect", station);
-        if ((Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType())))
+        if (Station.isStation(station.getDeviceType()) || (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType())))
         {
             station.getCameraInfo().catch(err => {
                 const error = ensureError(err);

@@ -19,7 +19,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
     private devicesLastEvent : { [deviceSerial : string] : CameraEvent | null } = {};
     private loadingEmitter = new EventEmitter();
-    private devicesLoaded?: Promise<void>;
+    private devicesLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "devices loaded");
     private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
     private deviceImageLoadTimeout : { [deviceSerial : string] : NodeJS.Timeout | undefined } = {};
 
@@ -70,7 +70,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
                 else
                 {
-                    this.devicesLoaded = waitForEvent<void>(this.loadingEmitter, "devices loaded");
+                    if (this.devicesLoaded === undefined)
+                    {
+                        this.devicesLoaded = waitForEvent<void>(this.loadingEmitter, "devices loaded");
+                    }
                     let new_device : Promise<Device>;
 
                     if(Device.isIndoorCamera(resDevices[deviceSerial].device_type))
@@ -1241,15 +1244,20 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async getDeviceLastEvent(deviceSerial : string)
     {
-        try{
-        var device = await this.getDevice(deviceSerial);
-        var station = await this.api.getStation(device.getStationSerial());
-
-        if(device)
+        try
         {
-            station.databaseQueryLatestInfo();
+            var device = await this.getDevice(deviceSerial);
+            var station = await this.api.getStation(device.getStationSerial());
+
+            if(device)
+            {
+                station.databaseQueryLatestInfo();
+            }
         }
-        } catch (error) { this.api.logError("No Device getDeviceLastEvent.")}
+        catch (error)
+        {
+            this.api.logError("Error at getDeviceLastEvent: ", error);
+        }
     }
 
     /**
@@ -1298,28 +1306,33 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async downloadLatestImageForDevice(deviceSerial : string)
     {
-        try{
-        var device = await this.getDevice(deviceSerial);
-        var station = await this.api.getStation(device.getStationSerial());
-        /*var results = this.getEventResultsForDevice(deviceSerial);
-        if(results && results.length > 0)
+        try
         {
-            for(var pos = results.length - 1; pos >= 0; pos--)
+            var device = await this.getDevice(deviceSerial);
+            var station = await this.api.getStation(device.getStationSerial());
+            /*var results = this.getEventResultsForDevice(deviceSerial);
+            if(results && results.length > 0)
             {
-                if(results[pos].history && results[pos].history.thumb_path)
+                for(var pos = results.length - 1; pos >= 0; pos--)
                 {
-                    station.downloadImage(results[pos].history.thumb_path);
-                    return;
+                    if(results[pos].history && results[pos].history.thumb_path)
+                    {
+                        station.downloadImage(results[pos].history.thumb_path);
+                        return;
+                    }
                 }
+            }*/
+            var result = this.getLastEventForDevice(deviceSerial);
+            if(result !== null && result.path !== "")
+            {
+                station.downloadImage(result.path);
+                return;
             }
-        }*/
-        var result = this.getLastEventForDevice(deviceSerial);
-        if(result !== null && result.path !== "")
-        {
-            station.downloadImage(result.path);
-            return;
         }
-        } catch (error) { this.api.logError("No Device downloadLatestImageForDevice.")}
+        catch (error)
+        {
+            this.api.logError("Error at downloadLatestImageForDevice: ", error);
+        }
     }
 
     /**
