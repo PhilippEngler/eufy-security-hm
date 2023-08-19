@@ -63,6 +63,7 @@ export enum DeviceType {
     SMART_TRACK_LINK = 157, //T87B0
     SMART_TRACK_CARD = 159, //T87B2
     LOCK_8502 = 180,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     LOCK_8506 = 180,
     WALL_LIGHT_CAM_81A0 = 10005,
 }
@@ -171,8 +172,8 @@ export enum GuardMode {
 export enum ResponseErrorCode {
     CODE_CONNECT_ERROR = 997,
     CODE_ERROR_PIN = 36006,
-    CODE_IS_OPEN = 25074,
-    CODE_IS_OPEN_OTHERS = 25080,
+    //CODE_IS_OPEN = 25074,
+    //CODE_IS_OPEN_OTHERS = 25080,
     CODE_MULTI_ALARM = 36002,
     CODE_NEED_VERIFY_CODE = 26052,
     CODE_NETWORK_ERROR = 998,
@@ -728,8 +729,10 @@ export enum PropertyName {
     StationCurrentMode = "currentMode",
     StationTimeFormat = "timeFormat",
     StationTimeZone = "timeZone",
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     StationAlarmVolume = "alarmVolume",
     StationAlarmTone = "alarmTone",
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     StationPromptVolume = "promptVolume",
     StationNotificationSwitchModeSchedule = "notificationSwitchModeSchedule",
     StationNotificationSwitchModeGeofence = "notificationSwitchModeGeofence",
@@ -4977,7 +4980,7 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceAutoNightvision]: DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionIndoorSoloFloodProperty,
         [PropertyName.DeviceWatermark]: DeviceWatermarkIndoorFloodProperty,
-        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
         [PropertyName.DeviceStatusLed]: DeviceStatusLedIndoorFloodProperty,
         [PropertyName.DevicePicture]: DevicePictureProperty,
@@ -5014,7 +5017,7 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceAutoNightvision]: DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionIndoorSoloFloodProperty,
         [PropertyName.DeviceWatermark]: DeviceWatermarkSoloWiredDoorbellProperty,
-        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
         [PropertyName.DeviceStatusLed]: DeviceStatusLedProperty,
         [PropertyName.DevicePicture]: DevicePictureProperty,
@@ -5066,7 +5069,7 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceAutoNightvision]: DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionIndoorSoloFloodProperty,
         [PropertyName.DeviceWatermark]: DeviceWatermarkIndoorFloodProperty,
-        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
         [PropertyName.DeviceStatusLed]: DeviceStatusLedIndoorFloodProperty,
         [PropertyName.DevicePicture]: DevicePictureProperty,

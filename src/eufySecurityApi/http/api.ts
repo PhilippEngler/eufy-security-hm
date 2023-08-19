@@ -16,7 +16,6 @@ import { getShortUrl, md5, mergeDeep, parseJSON } from "./../utils";
 import { ApiBaseLoadError, ApiGenericError, ApiHTTPResponseCodeError, ApiInvalidResponseError, ApiRequestError, ApiResponseCodeError } from "./error";
 import { Logger } from "../utils/logging";
 
-
 export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     private static apiDomainBase = "https://extend.eufylife.com";
