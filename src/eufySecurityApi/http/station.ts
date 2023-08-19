@@ -524,6 +524,9 @@ export class Station extends TypedEmitter<StationEvents> {
             case DeviceType.INDOOR_PT_CAMERA:
             case DeviceType.INDOOR_PT_CAMERA_1080:
                 return `indoorcamera`;
+            case DeviceType.WALL_LIGHT_CAM:
+            case DeviceType.WALL_LIGHT_CAM_81A0:
+                return "walllightcam";
             case DeviceType.SOLO_CAMERA:
             case DeviceType.SOLO_CAMERA_PRO:
             case DeviceType.SOLO_CAMERA_SPOTLIGHT_1080:

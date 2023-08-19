@@ -96,6 +96,11 @@ export const getModelName = function(modelNumber : string) : string
             return "FloodlightCam 2 Pro";
         case "T8424":
             return "FloodlightCam 2k";
+        //WallLightCam
+        case "T84A0":
+            return "Solar WallLightCam S120";
+        case "T84A1":
+            return "WallLightCam S100";
         //Lock
         case "T8500":
             return "Smart Lock Front Door";
@@ -159,13 +164,15 @@ export const convertTimeStampToTimeStampMs = function(timeStamp : number, timeSt
 /**
  * The interface for EufyCountry
  */
-export interface EufyCountry {
+export interface EufyCountry
+{
     countryName: string;
     countryPhoneCode: string;
     countryCode: string;
 }
 
-export interface CameraEvent {
+export interface CameraEvent
+{
     path: string;
     start_time: Date;
 }
