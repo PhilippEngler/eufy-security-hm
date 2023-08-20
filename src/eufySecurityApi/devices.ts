@@ -275,7 +275,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if (Object.keys(this.devices).includes(device.device_sn))
         {
-            this.devices[device.device_sn].update(device, stations[device.station_sn] !== undefined && !stations[device.station_sn].isIntegratedDevice() && stations[device.station_sn].isConnected())
+            this.devices[device.device_sn].update(device)
         }
         else
         {
@@ -789,19 +789,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             }
             else if (name === PropertyName.DevicePictureUrl && value !== "")
             {
-                const picture = device.getPropertyValue(PropertyName.DevicePicture);
-                if (picture === undefined || picture === null || (picture && (picture as Picture).data?.length === 0))
-                {
-                    this.api.getStation(device.getStationSerial()).then((station: Station) => {
-                        if (station.hasCommand(CommandName.StationDownloadImage))
-                        {
-                            station.downloadImage(value as string);
-                        }
-                    }).catch((err) => {
-                        const error = ensureError(err);
-                        this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station download image (station: ${device.getStationSerial()} image_path: ${value})`, error);
-                    });
-                }
+                this.api.getStation(device.getStationSerial()).then((station: Station) => {
+                    if (station.hasCommand(CommandName.StationDownloadImage))
+                    {
+                        station.downloadImage(value as string);
+                    }
+                }).catch((err) => {
+                    const error = ensureError(err);
+                    this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station download image (station: ${device.getStationSerial()} image_path: ${value})`, error);
+                });
             }
         }
         catch (err)

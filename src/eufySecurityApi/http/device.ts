@@ -1,12 +1,12 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 
 import { HTTPApi } from "./api";
-import { CommandName, DeviceCommands, DeviceEvent, DeviceProperties, DeviceType, FloodlightMotionTriggeredDistance, GenericDeviceProperties, ParamType, PropertyName, DeviceDogDetectedProperty, DeviceDogLickDetectedProperty, DeviceDogPoopDetectedProperty, DeviceIdentityPersonDetectedProperty, DeviceMotionHB3DetectionTypeAllOhterMotionsProperty, DeviceMotionHB3DetectionTypeHumanProperty, DeviceMotionHB3DetectionTypeHumanRecognitionProperty, DeviceMotionHB3DetectionTypePetProperty, DeviceMotionHB3DetectionTypeVehicleProperty, DeviceStrangerPersonDetectedProperty, DeviceVehicleDetectedProperty, HB3DetectionTypes, DevicePersonDetectedProperty, DeviceMotionDetectedProperty, DevicePetDetectedProperty, DeviceSoundDetectedProperty, DeviceCryingDetectedProperty, DeviceDetectionStatisticsWorkingDaysProperty, DeviceDetectionStatisticsDetectedEventsProperty, DeviceDetectionStatisticsRecordedEventsProperty, DeviceEnabledSoloProperty, FloodlightT8420XDeviceProperties, WiredDoorbellT8200XDeviceProperties, GarageDoorState } from "./types";
+import { CommandName, DeviceCommands, DeviceEvent, DeviceProperties, DeviceType, FloodlightMotionTriggeredDistance, GenericDeviceProperties, ParamType, PropertyName, DeviceDogDetectedProperty, DeviceDogLickDetectedProperty, DeviceDogPoopDetectedProperty, DeviceIdentityPersonDetectedProperty, DeviceMotionHB3DetectionTypeAllOhterMotionsProperty, DeviceMotionHB3DetectionTypeHumanProperty, DeviceMotionHB3DetectionTypeHumanRecognitionProperty, DeviceMotionHB3DetectionTypePetProperty, DeviceMotionHB3DetectionTypeVehicleProperty, DeviceStrangerPersonDetectedProperty, DeviceVehicleDetectedProperty, HB3DetectionTypes, DevicePersonDetectedProperty, DeviceMotionDetectedProperty, DevicePetDetectedProperty, DeviceSoundDetectedProperty, DeviceCryingDetectedProperty, DeviceDetectionStatisticsWorkingDaysProperty, DeviceDetectionStatisticsDetectedEventsProperty, DeviceDetectionStatisticsRecordedEventsProperty, DeviceEnabledSoloProperty, FloodlightT8420XDeviceProperties, WiredDoorbellT8200XDeviceProperties, GarageDoorState, SourceType } from "./types";
 import { ResultResponse, StreamResponse, DeviceListResponse, Voice, GarageDoorSensorsProperty } from "./models"
 import { ParameterHelper } from "./parameter";
 import { DeviceEvents, PropertyValue, PropertyValues, PropertyMetadataAny, IndexedProperty, RawValues, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, Voices, PropertyMetadataObject } from "./interfaces";
 import { CommandType, ESLAnkerBleConstant } from "../p2p/types";
-import { calculateCellularSignalLevel, calculateWifiSignalLevel, getAbsoluteFilePath, getDistances, getImage, getImagePath, hexDate, hexTime, hexWeek, isHB3DetectionModeEnabled, SmartSafeByteWriter } from "./utils";
+import { calculateCellularSignalLevel, calculateWifiSignalLevel, getAbsoluteFilePath, getDistances, getImage, getImagePath, hexDate, hexTime, hexWeek, isHB3DetectionModeEnabled, isPrioritySourceType, SmartSafeByteWriter } from "./utils";
 import { DecimalToRGBColor, eslTimestamp, getCurrentTimeInSeconds } from "../p2p/utils";
 import { CusPushEvent, DoorbellPushEvent, LockPushEvent, IndoorPushEvent, SmartSafeEvent, HB3PairedDevicePushEvent, GarageDoorPushEvent } from "../push/types";
 import { PushMessage, SmartSafeEventValueDetail } from "../push/models";
@@ -52,7 +52,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return this.rawDevice;
     }
 
-    public update(device: DeviceListResponse, cloudOnlyProperties = false): void {
+    public update(device: DeviceListResponse): void {
         this.rawDevice = device;
         const metadata = this.getPropertiesMetadata(true);
         for (const property of Object.values(metadata)) {
@@ -62,9 +62,9 @@ export class Device extends TypedEmitter<DeviceEvents> {
                 this.updateProperty(property.name, property.default);
             }
         }
-        if (!cloudOnlyProperties && this.rawDevice.params) {
+        if (this.rawDevice.params) {
             this.rawDevice.params.forEach(param => {
-                this.updateRawProperty(param.param_type, param.param_value);
+                this.updateRawProperty(param.param_type, param.param_value, "http");
             });
         }
         this.log.debug("Normalized Properties", { deviceSN: this.getSerial(), properties: this.properties });
@@ -94,7 +94,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
     public updateRawProperties(values: RawValues): void {
         Object.keys(values).forEach(paramtype => {
             const param_type = Number.parseInt(paramtype);
-            this.updateRawProperty(param_type, values[param_type]);
+            this.updateRawProperty(param_type, values[param_type].value, values[param_type].source);
         });
     }
 
@@ -133,21 +133,24 @@ export class Device extends TypedEmitter<DeviceEvents> {
         }
     }
 
-    public updateRawProperty(type: number, value: string): boolean {
+    public updateRawProperty(type: number, value: string, source: SourceType): boolean {
         const parsedValue = ParameterHelper.readValue(type, value, this.log);
-        if (parsedValue !== undefined && ((this.rawProperties[type] !== undefined && this.rawProperties[type] !== parsedValue)
-            || this.rawProperties[type] === undefined)) {
+        if (parsedValue !== undefined &&
+            ((this.rawProperties[type] !== undefined && this.rawProperties[type].value !== parsedValue && isPrioritySourceType(this.rawProperties[type].source, source)) || this.rawProperties[type] === undefined)) {
 
-            this.rawProperties[type] = parsedValue;
+            this.rawProperties[type] = {
+                value: parsedValue,
+                source: source
+            };
             if (this.ready)
-                this.emit("raw property changed", this, type, this.rawProperties[type] as string);
+                this.emit("raw property changed", this, type, this.rawProperties[type].value);
 
             const metadata = this.getPropertiesMetadata(true);
 
             for (const property of Object.values(metadata)) {
                 if (property.key === type) {
                     try {
-                        this.updateProperty(property.name, this.convertRawPropertyValue(property, this.rawProperties[type]));
+                        this.updateProperty(property.name, this.convertRawPropertyValue(property, this.rawProperties[type].value));
                     } catch (err) {
                         const error = ensureError(err);
                         if (error instanceof PropertyNotSupportedError) {
@@ -621,7 +624,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
     }
 
     public getRawProperty(type: number): string {
-        return this.rawProperties[type];
+        return this.rawProperties[type].value;
     }
 
     public getRawProperties(): RawValues {
@@ -2626,7 +2629,7 @@ export class EntrySensor extends Sensor {
             if (message.event_type === CusPushEvent.DOOR_SENSOR && message.device_sn === this.getSerial()) {
                 try {
                     if (message.sensor_open !== undefined) {
-                        this.updateRawProperty(CommandType.CMD_ENTRY_SENSOR_STATUS, message.sensor_open ? "1" : "0");
+                        this.updateRawProperty(CommandType.CMD_ENTRY_SENSOR_STATUS, message.sensor_open ? "1" : "0", "push");
                     }
                 } catch (err) {
                     const error = ensureError(err);
@@ -2790,7 +2793,7 @@ export class Lock extends Device {
     public processPushNotification(message: PushMessage, eventDurationSeconds: number): void {
         super.processPushNotification(message, eventDurationSeconds);
         if (message.event_type !== undefined) {
-            this.processNotification(message.event_type, message.event_time, message.device_sn, eventDurationSeconds);
+            this.processNotification(message.event_type, message.event_time, message.device_sn, eventDurationSeconds, "push");
         }
     }
 
@@ -2798,15 +2801,15 @@ export class Lock extends Device {
         if (message.eventType === LockPushEvent.STATUS_CHANGE) {
             // Lock state event
             const cmdType = this.isLockBle() || this.isLockBleNoFinger() ? CommandType.CMD_DOORLOCK_GET_STATE : CommandType.CMD_SMARTLOCK_QUERY_STATUS;
-            this.updateRawProperty(cmdType, message.lockState);
+            this.updateRawProperty(cmdType, message.lockState, "mqtt");
         } else if (message.eventType === LockPushEvent.OTA_STATUS) {
             // OTA Status - ignore event
         } else {
-            this.processNotification(message.eventType, message.eventTime, this.getSerial(), eventDurationSeconds);
+            this.processNotification(message.eventType, message.eventTime, this.getSerial(), eventDurationSeconds, "mqtt");
         }
     }
 
-    private processNotification(eventType: number, eventTime: number, deviceSN: string, eventDurationSeconds: number): void {
+    private processNotification(eventType: number, eventTime: number, deviceSN: string, eventDurationSeconds: number, source: SourceType): void {
         if (deviceSN === this.getSerial()) {
             try {
                 switch (eventType) {
@@ -2819,7 +2822,7 @@ export class Lock extends Device {
                     case LockPushEvent.TEMPORARY_PW_LOCK:
                     {
                         const cmdType = this.isLockBle() || this.isLockBleNoFinger() ? CommandType.CMD_DOORLOCK_GET_STATE : CommandType.CMD_SMARTLOCK_QUERY_STATUS;
-                        this.updateRawProperty(cmdType, "4");
+                        this.updateRawProperty(cmdType, "4", source);
                         break;
                     }
                     case LockPushEvent.APP_UNLOCK:
@@ -2830,7 +2833,7 @@ export class Lock extends Device {
                     case LockPushEvent.TEMPORARY_PW_UNLOCK:
                     {
                         const cmdType = this.isLockBle() || this.isLockBleNoFinger() ? CommandType.CMD_DOORLOCK_GET_STATE : CommandType.CMD_SMARTLOCK_QUERY_STATUS;
-                        this.updateRawProperty(cmdType, "3");
+                        this.updateRawProperty(cmdType, "3", source);
                         break;
                     }
                     case LockPushEvent.LOCK_MECHANICAL_ANOMALY:
@@ -2839,7 +2842,7 @@ export class Lock extends Device {
                     case LockPushEvent.MULTIPLE_ERRORS:
                     {
                         const cmdType = this.isLockBle() || this.isLockBleNoFinger() ? CommandType.CMD_DOORLOCK_GET_STATE : CommandType.CMD_SMARTLOCK_QUERY_STATUS;
-                        this.updateRawProperty(cmdType, "5");
+                        this.updateRawProperty(cmdType, "5", source);
                         break;
                     }
                     case LockPushEvent.LOW_POWER:
@@ -3359,7 +3362,7 @@ export class SmartSafe extends Device {
                             const eventValues = message.event_value as SmartSafeEventValueDetail;
 
                             if (eventValues.action === 0) {
-                                this.updateRawProperty(CommandType.CMD_SMARTSAFE_LOCK_STATUS, "0");
+                                this.updateRawProperty(CommandType.CMD_SMARTSAFE_LOCK_STATUS, "0", "push");
                                 /*
                                     type values:
                                         1: Unlocked by PIN
@@ -3369,7 +3372,7 @@ export class SmartSafe extends Device {
                                         5: Unlocked by Dual Unlock
                                 */
                             } else if (eventValues.action === 1) {
-                                this.updateRawProperty(CommandType.CMD_SMARTSAFE_LOCK_STATUS, "1");
+                                this.updateRawProperty(CommandType.CMD_SMARTSAFE_LOCK_STATUS, "1", "push");
                             } else if (eventValues.action === 2) {
                                 this.jammedEvent(eventDurationSeconds);
                             } else if (eventValues.action === 3) {
