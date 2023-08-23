@@ -3166,7 +3166,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.2.1-b3";
+        return "2.2.1-b4";
     }
 
     /**
@@ -3175,6 +3175,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.8.0";
+        return "2.8.1-b340";
     }
 }

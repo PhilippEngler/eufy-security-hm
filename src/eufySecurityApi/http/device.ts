@@ -134,7 +134,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
     }
 
     public updateRawProperty(type: number, value: string, source: SourceType): boolean {
-        const parsedValue = ParameterHelper.readValue(type, value, this.log);
+        const parsedValue = ParameterHelper.readValue(type, value, this.getSerial(), this.log);
         if (parsedValue !== undefined &&
             ((this.rawProperties[type] !== undefined && this.rawProperties[type].value !== parsedValue && isPrioritySourceType(this.rawProperties[type].source, source)) || this.rawProperties[type] === undefined)) {
 
@@ -623,8 +623,8 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return this.getPropertyValue(name) !== undefined;
     }
 
-    public getRawProperty(type: number): string {
-        return this.rawProperties[type].value;
+    public getRawProperty(type: number): string | undefined {
+        return this.rawProperties[type]?.value;
     }
 
     public getRawProperties(): RawValues {
