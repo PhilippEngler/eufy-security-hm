@@ -535,7 +535,7 @@ function createCardDevice(device)
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
-	card += `<div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : device.chargingStatus == 4 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.batteryTemperature, "&deg;C")}</div>`;
+	card += `<div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : device.chargingStatus == 4 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.state === 2 ? `---` : device.batteryTemperature, "&deg;C")}</div>`;
 	card += `</div></div></div>`;
 	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device)}</small></div>`;
 	card += `</div></div>`;
@@ -620,7 +620,7 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 			}
 			break;
 	}
-	return `<div class="${divClass}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
+	return `<div class="${divClass}${value === `---` ? ` text-muted` : ""}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
 }
 
 function generateStationDeviceSettingsSelectionModal(deviceId, deviceName)
@@ -874,7 +874,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
-	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,6)) == false)
+	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,5)) == false)
 	{
 		setEventHandler = false;
 		deviceModal += `
@@ -920,7 +920,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.batteryTemperature !== undefined && deviceProperties.batteryTemperature > -99 && deviceProperties.batteryTemperature < 99)
 		{
 			deviceModal += `
-													${generateColumnForProperty("col", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", deviceProperties.batteryTemperature, "&deg;C")}`;
+													${generateColumnForProperty("col", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", deviceProperties.state === 2 ? `---` : deviceProperties.batteryTemperature, "&deg;C")}`;
 		}
 		deviceModal +=     `
 												</div>
@@ -1005,18 +1005,28 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${deviceProperties.motionDetection !== undefined ? `<hr />`: ``}
 										<h5>Erkennungsempfindlichkeit</h5>
 										${deviceProperties.motionDetectionSensitivity !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivity.unit, devicePropertiesMetadata.motionDetectionSensitivity.min, devicePropertiesMetadata.motionDetectionSensitivity.max, devicePropertiesMetadata.motionDetectionSensitivity.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityStandard !== undefined ? `<button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStandard" aria-expanded="false" aria-controls="collapseStandard">Erkennungsempfindlichkeit - Standard</button>` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedA !== undefined ? `<button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced" aria-expanded="false" aria-controls="collapseAdvanced">Erkennungsempfindlichkeit - Erweitert</button>` : ""}
-										${deviceProperties.motionDetectionSensitivityStandard !== undefined ? `<div id="collapseStandard"><div class="card card-body mt-2 mb-2">${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityStandard.name, deviceProperties.motionDetectionSensitivityStandard, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityStandard.unit, devicePropertiesMetadata.motionDetectionSensitivityStandard.min, devicePropertiesMetadata.motionDetectionSensitivityStandard.max, devicePropertiesMetadata.motionDetectionSensitivityStandard.default)}</div></div>` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedA !== undefined ? `<div class="collapse" id="collapseAdvanced"><div class="card card-body mt-2 mb-2">${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.name, deviceProperties.motionDetectionSensitivityAdvancedA, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedB !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.name, deviceProperties.motionDetectionSensitivityAdvancedB, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedC !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.name, deviceProperties.motionDetectionSensitivityAdvancedC, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedD !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.name, deviceProperties.motionDetectionSensitivityAdvancedD, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedE !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.name, deviceProperties.motionDetectionSensitivityAdvancedE, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedF !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.name, deviceProperties.motionDetectionSensitivityAdvancedF, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedG !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.name, deviceProperties.motionDetectionSensitivityAdvancedF, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedH !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.name, deviceProperties.motionDetectionSensitivityAdvancedH, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.default)}` : ""}
-										${deviceProperties.motionDetectionSensitivityAdvancedA !== undefined ? `</div></div>` : ""}`;
+										${deviceProperties.motionDetectionSensitivityMode !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityMode.name, deviceProperties.motionDetectionSensitivityMode, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityMode.states)}` : ``}`;
+				if(deviceProperties.motionDetectionSensitivityMode !== undefined && deviceProperties.motionDetectionSensitivityMode == 0)
+				{
+					deviceModal += `
+										<div id="collapseStandard" ${deviceProperties.motionDetectionSensitivityMode != 0 ? `class="collapse"` : ""}>
+											<div class="card card-body mt-2 mb-2">
+												${deviceProperties.motionDetectionSensitivityStandard !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityStandard.name, deviceProperties.motionDetectionSensitivityStandard, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityStandard.unit, devicePropertiesMetadata.motionDetectionSensitivityStandard.min, devicePropertiesMetadata.motionDetectionSensitivityStandard.max, devicePropertiesMetadata.motionDetectionSensitivityStandard.default)}` : ""}
+											</div>
+										</div>
+										<div id="collapseAdvanced" ${deviceProperties.motionDetectionSensitivityMode != 1 ? `class="collapse"` : ""}>
+											<div class="card card-body mt-2 mb-2">
+												${deviceProperties.motionDetectionSensitivityAdvancedA !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.name, deviceProperties.motionDetectionSensitivityAdvancedA, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.default)}` : ""}
+												${deviceProperties.motionDetectionSensitivityAdvancedB !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.name, deviceProperties.motionDetectionSensitivityAdvancedB, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.default)}` : ""}
+												${deviceProperties.motionDetectionSensitivityAdvancedC !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.name, deviceProperties.motionDetectionSensitivityAdvancedC, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedC.default)}` : ""}
+												${deviceProperties.motionDetectionSensitivityAdvancedD !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.name, deviceProperties.motionDetectionSensitivityAdvancedD, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedD.default)}` : ""}
+												${deviceProperties.motionDetectionSensitivityAdvancedE !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.name, deviceProperties.motionDetectionSensitivityAdvancedE, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedE.default)}` : ""}
+												${deviceProperties.motionDetectionSensitivityAdvancedF !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.name, deviceProperties.motionDetectionSensitivityAdvancedF, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.default)}` : ""}
+												${deviceProperties.motionDetectionSensitivityAdvancedG !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedF.name, deviceProperties.motionDetectionSensitivityAdvancedF, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedG.default)}` : ""}
+												${deviceProperties.motionDetectionSensitivityAdvancedH !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.name, deviceProperties.motionDetectionSensitivityAdvancedH, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedH.default)}` : ""}
+											</div>
+										</div>`;
+				}
 
 			}
 			if(deviceProperties.motionDetectionType !== undefined || deviceProperties.motionDetectionTypeHuman !== undefined || deviceProperties.motionDetectionTypeHumanRecognition !== undefined || deviceProperties.motionDetectionTypePet !== undefined || deviceProperties.motionDetectionTypeVehicle !== undefined || deviceProperties.motionDetectionTypeAllOtherMotions !== undefined)
@@ -1085,8 +1095,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponsePhoneNotification.name, deviceProperties.loiteringCustomResponsePhoneNotification, setEventHandler)}
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponseAutoVoiceResponse.name, deviceProperties.loiteringCustomResponseAutoVoiceResponse, setEventHandler)}
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponseAutoVoiceResponseVoice.name, deviceProperties.loiteringCustomResponseAutoVoiceResponseVoice, setEventHandler, devicePropertiesMetadata.loiteringCustomResponseAutoVoiceResponseVoice.states)}
-										${generateElementTimePicker("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponseTimeFrom.name, deviceProperties.loiteringCustomResponseTimeFrom, setEventHandler)}
-										${generateElementTimePicker("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponseTimeTo.name, deviceProperties.loiteringCustomResponseTimeTo, setEventHandler)}
+										${generateElementTimePickerStartEnd("Device", deviceProperties.serialNumber, "loiteringCustomResponseTimespan", deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponseTimeFrom.name, deviceProperties.loiteringCustomResponseTimeFrom, setEventHandler, deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponseTimeFrom.name, deviceProperties.loiteringCustomResponseTimeFrom, setEventHandler)}
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringCustomResponseHomeBaseNotification.name, deviceProperties.loiteringCustomResponseHomeBaseNotification, setEventHandler)}`;
 		}
 		deviceModal += `
@@ -1112,8 +1121,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>Paketschutz</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuarding.name, deviceProperties.deliveryGuardPackageGuarding, setEventHandler)}
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingVoiceResponseVoice.name, deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice, setEventHandler, devicePropertiesMetadata.deliveryGuardPackageGuardingVoiceResponseVoice.states)}
-										${generateElementTimePicker("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingActivatedTimeFrom.name, deviceProperties.deliveryGuardPackageGuardingActivatedTimeFrom, setEventHandler)}
-										${generateElementTimePicker("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingActivatedTimeTo.name, deviceProperties.deliveryGuardPackageGuardingActivatedTimeTo, setEventHandler)}`;
+										${generateElementTimePickerStartEnd("Device", deviceProperties.serialNumber, "deliveryGuardPackageGuardingActivatedTimespan", deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingActivatedTimeFrom.name, deviceProperties.deliveryGuardPackageGuardingActivatedTimeFrom, setEventHandler, deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingActivatedTimeTo.name, deviceProperties.deliveryGuardPackageGuardingActivatedTimeTo, setEventHandler)}`;
 			}
 			if(deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlertTimeToCheck)
 			{
@@ -1154,8 +1162,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>automatische Sprachausgabe</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringAutoResponseVoiceResponse.name, deviceProperties.ringAutoResponseVoiceResponse, setEventHandler)}
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringAutoResponseVoiceResponseVoice.name, deviceProperties.ringAutoResponseVoiceResponseVoice, setEventHandler, devicePropertiesMetadata.ringAutoResponseVoiceResponseVoice.states)}
-										${generateElementTimePicker("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringAutoResponseTimeFrom.name, deviceProperties.ringAutoResponseTimeFrom, setEventHandler)}
-										${generateElementTimePicker("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringAutoResponseTimeTo.name, deviceProperties.ringAutoResponseTimeTo, setEventHandler)}`;
+										${generateElementTimePickerStartEnd("Device", deviceProperties.serialNumber, "ringAutoResponseTimespan", deviceProperties.name, devicePropertiesMetadata.ringAutoResponseTimeFrom.name, deviceProperties.ringAutoResponseTimeFrom, setEventHandler, deviceProperties.name, devicePropertiesMetadata.ringAutoResponseTimeTo.name, deviceProperties.ringAutoResponseTimeTo, setEventHandler)}`;
 			}
 		}
 		deviceModal += `
@@ -1237,7 +1244,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.powerSource.name, deviceProperties.powerSource, setEventHandler, devicePropertiesMetadata.powerSource.states)}
 										<label>aktueller Status: ${getDeviceStateValueInGerman(devicePropertiesMetadata.chargingStatus.states[deviceProperties.chargingStatus])}</label>`;
 		}
-		if((deviceProperties.lastChargingDays !== undefined && deviceProperties.lastChargingTotalEvents !== undefined && deviceProperties.lastChargingRecordedEvents !== undefined) || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined))
+		if((deviceProperties.lastChargingDays !== undefined && deviceProperties.lastChargingDays > -1 && deviceProperties.lastChargingTotalEvents !== undefined && deviceProperties.lastChargingRecordedEvents !== undefined) || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined))
 		{
 			deviceModal += `
 										${deviceProperties.powerWorkingMode !== undefined || deviceProperties.powerSource !== undefined ? `<hr />` : ``}
@@ -1319,6 +1326,13 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${devicePropertiesMetadata.nightvision === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.nightvision.name, deviceProperties.nightvision, setEventHandler, devicePropertiesMetadata.nightvision.states)}
 										${devicePropertiesMetadata.lightSettingsBrightnessManual === undefined ? "" : generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessManual.name, deviceProperties.lightSettingsBrightnessManual, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessManual.unit, devicePropertiesMetadata.lightSettingsBrightnessManual.min, devicePropertiesMetadata.lightSettingsBrightnessManual.max, devicePropertiesMetadata.lightSettingsBrightnessManual.default)}`;
 		}
+		if(deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined ? `<hr />` : ``}
+										<h5>HDR</h5>
+										${devicePropertiesMetadata.videoWdr === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.videoWdr.name, deviceProperties.videoWdr, setEventHandler)}`;
+		}
 		deviceModal += `
 									</div>
 								</div>`;
@@ -1364,11 +1378,72 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 				}
 			}
 		}
+		if(deviceProperties.ringtoneVolume !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined ? `<hr />` : ``}
+										<h5>Klingeltonlautstärke der Türklingel</h5>
+										${devicePropertiesMetadata.speaker === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.speaker.name, deviceProperties.speaker, setEventHandler)}`;
+			if(devicePropertiesMetadata.ringtoneVolume)
+			{
+				if(devicePropertiesMetadata.ringtoneVolume.states === undefined)
+				{
+					deviceModal += `
+										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringtoneVolume.name, deviceProperties.ringtoneVolume, setEventHandler, devicePropertiesMetadata.ringtoneVolume.unit, devicePropertiesMetadata.ringtoneVolume.min, devicePropertiesMetadata.ringtoneVolume.max, devicePropertiesMetadata.ringtoneVolume.default)}`;
+				}
+				else
+				{
+					deviceModal += `
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringtoneVolume.name, deviceProperties.ringtoneVolume, setEventHandler, devicePropertiesMetadata.ringtoneVolume.states)}`;
+				}
+			}
+		}
 		deviceModal += `
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.notificationType !== undefined || deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined)
+	if(deviceProperties.dualCamWatchViewMode !== undefined)
+	{
+		deviceModal += `
+								<div class="card mb-3" id="cardDeviceDualCamWatchViewModeSettings">
+									<h5 class="card-header">Anzeige der beiden Kameras</h5>
+									<div class="card-body">`;
+		if(deviceProperties.dualCamWatchViewMode !== undefined)
+		{
+			deviceModal += `
+										<h5>Anzeige der beiden Kameras</h5>
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.dualCamWatchViewMode.name, deviceProperties.dualCamWatchViewMode, setEventHandler, devicePropertiesMetadata.dualCamWatchViewMode.states)}`;
+		}
+		deviceModal += `
+									</div>
+								</div>`;
+	}
+	if(deviceProperties.chimeIndoor !== undefined || deviceProperties.chimeHomebase !== undefined)
+	{
+		deviceModal += `
+								<div class="card mb-3" id="cardDeviceChimeSettings">
+									<h5 class="card-header">Klingeleinstellungen</h5>
+									<div class="card-body">`;
+		if(deviceProperties.chimeIndoor !== undefined)
+		{
+			deviceModal += `
+										<h5>Eufy USB Dongle als Klingel nutzen</h5>
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeIndoor.name, deviceProperties.chimeIndoor, setEventHandler)}`;
+		}
+		if(deviceProperties.chimeHomebase !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.chimeIndoor !== undefined ? `<hr />` : ``}
+										<h5>HomeBase als Klingel nutzen</h5>
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeHomebase.name, deviceProperties.chimeHomebase, setEventHandler)}
+										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.name, deviceProperties.chimeHomebaseRingtoneVolume, setEventHandler, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.unit, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.min, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.max, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.default)}
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeHomebaseRingtoneType.name, deviceProperties.chimeHomebaseRingtoneType, setEventHandler, devicePropertiesMetadata.chimeHomebaseRingtoneType.states)}`;
+		}
+		deviceModal += `
+									</div>
+								</div>`;
+	}
+	if(deviceProperties.notificationType !== undefined || deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined)
 	{
 		deviceModal += `
 								<div class="card" id="cardDeviceNotificationSettings">
@@ -1377,7 +1452,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>Art der Benachrichtigung</h5>
 										${createMessageContainer("alert alert-warning", "Hinweise zur Nutzung von Clouddiensten.", "Bei einigen Modi werden Informationen vorübergehend in der Cloud gespeichert.", "Weitere Hinweise finden Sie in der App.")}
 										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationType.name, deviceProperties.notificationType, setEventHandler, devicePropertiesMetadata.notificationType.states)}`;
-		if(deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined)
+		if(deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined)
 		{
 			deviceModal += `
 										
@@ -1387,7 +1462,10 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${deviceProperties.notificationPet !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationPet.name, deviceProperties.notificationPet, setEventHandler)}` : ""}
 										${deviceProperties.notificationAllOtherMotion !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllOtherMotion.name, deviceProperties.notificationAllOtherMotion, setEventHandler)}` : ""}
 										${deviceProperties.notificationCrying !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationCrying.name, deviceProperties.notificationCrying, setEventHandler)}` : ""}
-										${deviceProperties.notificationAllSound !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllSound.name, deviceProperties.notificationAllSound, setEventHandler)}` : ""}`;
+										${deviceProperties.notificationAllSound !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllSound.name, deviceProperties.notificationAllSound, setEventHandler)}` : ""}
+										${deviceProperties.notificationRing !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationRing.name, deviceProperties.notificationRing, setEventHandler)}` : ""}
+										${deviceProperties.notificationMotion !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationMotion.name, deviceProperties.notificationMotion, setEventHandler)}` : ""}
+										${deviceProperties.notificationRadarDetector !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationRadarDetector.name, deviceProperties.notificationRadarDetector, setEventHandler)}` : ""}`;
 		}
 		deviceModal += `
 									</div>
@@ -1412,17 +1490,18 @@ function isStationOrDevicesKnown(modell)
 		case "T8002":
 		case "T8010":
 		case "T8030":
-		//Devices
+		//eufyCams
 		case "T8112":
 		case "T8113":
 		case "T8114":
 		case "T8142":
 		case "T8160":
 		case "T8161":
+		//IndoorCams
 		case "T8400":
 		case "T8410":
 		//Doorbells
-		//case "T8213":
+		case "T8213":
 			return true;
 		default:
 			return false;
@@ -1506,6 +1585,22 @@ function generateElementTimePicker(type, serialNumber, name, propertyName, value
 	return `<div><label class="mb-2" for="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><input type="time" id="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-control mb-2" value="${value}" ${setEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)"` : ""}></div>`;
 }
 
+function generateElementTimePickerStartEnd(type, serialNumber, caption, startName, startPropertyName, startValue, startSetEventHandler, endName, endPropertyName, endValue, endSetEventHandler)
+{
+	return `${getPropertyNameInGerman(caption)}
+			<div class="row align-items-center">
+				<div class="col">
+					<label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${getPropertyNameInGerman("captionTimeFrom")}</label><input type="time" id="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}" class="form-control mb-2" value="${startValue}" ${startSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${startName}', '${startPropertyName}', this.value)"` : ""}>
+				</div>
+				<div class="col text-center"">
+					${getPropertyNameInGerman("timeUntil")}
+				</div>
+				<div class="col">
+				<label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${getPropertyNameInGerman("captionTimeTo")}</label><input type="time" id="tp${endPropertyName.charAt(0).toUpperCase() + endPropertyName.slice(1)}" class="form-control mb-2" value="${endValue}" ${endSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${endName}', '${endPropertyName}', this.value)"` : ""}>
+				</div>
+			</div>`;
+}
+
 function getPropertyNameInGerman(propertyName)
 {
 	switch(propertyName)
@@ -1574,6 +1669,8 @@ function getPropertyNameInGerman(propertyName)
 			return "Lautsprecher aktivieren";
 		case "speakerVolume":
 			return "Lautstärke";
+		case "ringtoneVolume":
+			return "Klingeltonlautstärke";
 		case "notificationPerson":
 			return "wenn Menschen erkannt";
 		case "notificationPet":
@@ -1582,6 +1679,12 @@ function getPropertyNameInGerman(propertyName)
 			return "wenn Weinen erkannt";
 		case "notificationAllSound":
 			return "bei allen Geräuschen";
+		case "notificationRing":
+			return "wenn Türklingel betätigt";
+		case "notificationMotion":
+			return "wenn Bewegung erkannt";
+		case "notificationRadarDetector":
+			return "wenn Bewegung durch Radar erkannt";
 		case "notificationAllOtherMotion":
 			return "bei allen anderen Bewegungen";
 		case "alarmTone":
@@ -1614,6 +1717,8 @@ function getPropertyNameInGerman(propertyName)
 			return "verfügbarer Speicher";
 		case "rebootStation":
 			return "Station neu starten";
+		case "motionDetectionSensitivityMode":
+			return "Erkennungsempflindlichkeit konfigurieren";
 		case "motionDetectionSensitivityStandard":
 			return "Erkennungsempfindlichkeit - Standard";
 		case "motionDetectionSensitivityAdvancedA":
@@ -1632,6 +1737,12 @@ function getPropertyNameInGerman(propertyName)
 			return "Erkennungsempfindlichkeit - Erweitert - Bereich G";
 		case "motionDetectionSensitivityAdvancedH":
 			return "Erkennungsempfindlichkeit - Erweitert - Bereich H";
+		case "captionTimeFrom":
+			return "Startzeitpunkt";
+		case "captionTimeTo":
+			return "Endzeitpunkt";
+		case "timeUntil":
+			return "bis";
 		case "loiteringDetection":
 			return "Erkennung von verdächtigem Verhalten aktiviert";
 		case "loiteringDetectionRange":
@@ -1644,6 +1755,8 @@ function getPropertyNameInGerman(propertyName)
 			return "automatische Sprachausgabe aktivieren";
 		case "loiteringCustomResponseAutoVoiceResponseVoice":
 			return "Ansage der automatischen Sprachausgabe";
+		case "loiteringCustomResponseTimespan":
+			return "Zeitraum der automatischen Sprachausgabe";
 		case "loiteringCustomResponseTimeFrom":
 			return "Startzeitpunkt der automatischen Sprachausgabe";
 		case "loiteringCustomResponseTimeTo":
@@ -1656,6 +1769,8 @@ function getPropertyNameInGerman(propertyName)
 			return "Paketschutz aktivieren";
 		case "deliveryGuardPackageGuardingVoiceResponseVoice":
 			return "Ansage des Paketschutzes";
+		case "deliveryGuardPackageGuardingActivatedTimespan":
+			return "Zeitraum des Paketschutzes";
 		case "deliveryGuardPackageGuardingActivatedTimeFrom":
 			return "Startzeitpunkt des Paketschutzes";
 		case "deliveryGuardPackageGuardingActivatedTimeTo":
@@ -1672,10 +1787,24 @@ function getPropertyNameInGerman(propertyName)
 			return "automatische Sprachausgabe aktivieren";
 		case "ringAutoResponseVoiceResponseVoice":
 			return "Ansage der automatischen Sprachausgabe";
+		case "ringAutoResponseTimespan":
+			return "Zeitraum der automatischen Sprachausgabe";
 		case "ringAutoResponseTimeFrom":
 			return "Startzeitpunkt der automatischen Sprachausgabe";
 		case "ringAutoResponseTimeTo":
 			return "Endzeitpunkt der automatischen Sprachausgabe";
+		case "videoWdr":
+			return "HDR aktivieren";
+		case "chimeIndoor":
+			return "USB Dongle als Klingel nutzen";
+		case "chimeHomebase":
+			return "HomeBase als Klingel nutzen";
+		case "chimeHomebaseRingtoneVolume":
+			return "Klingellautstärke der HomeBase";
+		case "chimeHomebaseRingtoneType":
+			return "Klingelton der HomeBase";
+		case "dualCamWatchViewMode":
+			return "Anzeige der beiden Kameras in der Liveanzeige und bei Aufnahmen";
 		default:
 			return propertyName;
 	}
@@ -1817,9 +1946,16 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 		case "Most Efficient":
 			return "am effizientesten";
 		case "Include Thumbnail":
+		case "With Thumbnail":
 			return "mit Miniaturansicht";
 		case "Full Effect":
 			return "komplett";
+		case "Text Only":
+			return "ohne Miniaturansicht";
+		case "Standard":
+			return "Standard";
+		case "Advanced":
+			return "Erweitert";
 		case "Alarm sound 1":
 			return "Alarmton 1";
 		case "Alarm sound 2":
@@ -1840,6 +1976,52 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 			return "Bitte stellen Sie es an der Tür ab";
 		case "We will be right there":
 			return "Ich bin gleich da";
+		case "Auto / Low Encoding":
+			return "Streaming: automatisch; Video: niedrige Komprimierung";
+		case "Low / Low Encoding":
+			return "Streaming: niedrig; Video: niedrige Komprimierung";
+		case "Medium / Low Encoding":
+			return "Streaming: mittel; Video: niedrige Komprimierung";
+		case "High / Low Encoding":
+			return "Streaming: hoch; Video: niedrige Komprimierung";
+		case "Auto / High Encoding":
+			return "Streaming: automatisch; Video: hohe Komprimierung";
+		case "Low / High Encoding":
+			return "Streaming: niedrig; Video: hohe Komprimierung";
+		case "Medium / High Encoding":
+			return "Streaming: mittel; Video: hohe Komprimierung";
+		case "High / High Encoding":
+			return "Streaming: hoch; Video: hohe Komprimierung";
+		case "Default":
+			return "Standard";
+		case "Silent":
+			return "Stumm";
+		case "Beacon":
+			return "Beacon";
+		case "Chord":
+			return "Akkord";
+		case "Christmas":
+			return "Weihnachten";
+		case "Circuit":
+			return "Schaltkreis";
+		case "Clock":
+			return "Uhr";
+		case "Ding":
+			return "Klingel";
+		case "Hillside":
+			return "Berge";
+		case "Presto":
+			return "Presto";
+		case "Top-Left Picture-in-Picture":
+			return "Bild-in-Bild: oben links";
+		case "Top-Right Picture-in-Picture":
+			return "Bild-in-Bild: oben rechts";
+		case "Bottom-Left Picture-in-Picture":
+			return "Bild-in-Bild: unten links";
+		case "Bottom-Left Picture-in-Picture":
+			return "Bild-in-Bild: unten rechts";
+		case "Split-view":
+			return "geteilte Ansicht";
 		default:
 			return state;
 	}
@@ -2168,7 +2350,7 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
-	if(isStationOrDevicesKnown(stationProperties.model.slice(0,6)) == false)
+	if(isStationOrDevicesKnown(stationProperties.model.slice(0,5)) == false)
 	{
 		setEventHandler = false;
 		stationModal += `
