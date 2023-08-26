@@ -180,6 +180,10 @@ class ApiServer
                                 {
                                     json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
+                                if(json.data.picture !== undefined)
+                                {
+                                    json.data.picture = "REMOVED DUE TO PRIVACY REASONS.";
+                                }
                             }
                             responseData = JSON.stringify(json);
                         }
