@@ -1427,7 +1427,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.chimeIndoor !== undefined)
 		{
 			deviceModal += `
-										<h5>Eufy USB Dongle als Klingel nutzen</h5>
+										<h5>USB Dongle als Klingel nutzen</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeIndoor.name, deviceProperties.chimeIndoor, setEventHandler)}`;
 		}
 		if(deviceProperties.chimeHomebase !== undefined)
