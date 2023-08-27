@@ -1,11 +1,11 @@
 /**
  * Javascript for eufySecurity Addon
- * 20230720
+ * 20230827
  */
 action = "";
 port = "";
 redirectTarget = "";
-version = "2.2.0";
+version = "2.2.2";
 
 /**
  * common used java script functions
@@ -1271,7 +1271,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			{
 				deviceModal += `
 											${deviceProperties.powerWorkingMode !== undefined ? `<hr />` : ""}
-											<h5>${deviceProperties.powerWorkingMode !== undefined ? "Benutzerdefinierte Einstellungen" : "Power Manager "}Einstellungen</h5>`;
+											<h5>${deviceProperties.powerWorkingMode !== undefined ? "Benutzerdefinierte " : "Power Manager "}Einstellungen</h5>`;
 				if(deviceProperties.recordingClipLength !== undefined)
 				{
 					deviceModal += `
