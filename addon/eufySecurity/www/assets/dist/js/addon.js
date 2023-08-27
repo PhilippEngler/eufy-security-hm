@@ -333,9 +333,16 @@ function getGuardModeAsString(guardMode)
 	}
 }
 
-function getWifiSignalLevelIcon(wifiSignalLevel)
+function getWifiSignalLevelIcon(wifiSignalLevel, wifiRssi)
 {
-	return wifiSignalLevel == 0 ? "bi-reception-0" : wifiSignalLevel == 1 ? "bi-reception-1" : wifiSignalLevel == 2 ? "bi-reception-2" : wifiSignalLevel == 3 ? "bi-reception-3" : wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off";
+	if(wifiSignalLevel !== undefined)
+	{
+		return wifiSignalLevel == 0 ? "bi-reception-0" : wifiSignalLevel == 1 ? "bi-reception-1" : wifiSignalLevel == 2 ? "bi-reception-2" : wifiSignalLevel == 3 ? "bi-reception-3" : wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off";
+	}
+	else
+	{
+		return wifiRssi >= 0 ? "bi-reception-0" : wifiRssi >=-64 ? "bi-reception-1" : wifiRssi >=-75 ? "bi-reception-2" : wifiSignalLevel >=-85 ? "bi-reception-3" : wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off";
+	}
 }
 
 function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterText)
@@ -527,7 +534,7 @@ function createCardDevice(device)
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
-	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>&nbsp;&nbsp;` : ""}${device.state === 2 ? `<i class="bi-exclamation-triangle" title="Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert."></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
+	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>&nbsp;&nbsp;` : ""}${device.state === 2 ? `<i class="bi-exclamation-triangle" title="Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert."></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel, device.wifiRssi)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('test')`}"></i></h5></span></div></div>`;
 
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
@@ -535,7 +542,24 @@ function createCardDevice(device)
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
-	card += `<div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus == 1 ? "bi-battery-charging" : device.chargingStatus == 4 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery, "%")}${generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.state === 2 ? `---` : device.batteryTemperature, "&deg;C")}</div>`;
+	card += `<div class="row g-0">`;
+	if(device.softwareVersion !== undefined)
+	{
+		card += generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", device.softwareVersion);
+	}
+	if(device.battery !== undefined || device.batteryLow !== undefined)
+	{
+		card += generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus === 1 || device.chargingStatus === 4 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", device.battery !== undefined ? device.battery : device.batteryLow, device.battery !== undefined ? "%" : "");
+	}
+	if(device.batteryTemperature !== undefined)
+	{
+		card += generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", device.state === 2 ? `---` : device.batteryTemperature, "&deg;C");
+	}
+	if(device.sensorOpen !== undefined)
+	{
+		card += generateColumnForProperty("col mb-0 pe-1", "spnSensorState", "text-nowrap", "", "", device.sensorOpen === true ? "bi-door-open" : "bi-door-closed", "Status", device.sensorOpen === true ? `offen` : `zu`, "");
+	}
+	card += `</div>`;
 	card += `</div></div></div>`;
 	card += `<div class="card-footer"><small class="text-muted">${getDeviceLastEventTime(device)}</small></div>`;
 	card += `</div></div>`;
@@ -557,17 +581,31 @@ function createDeviceTypeCardsContainer(typeName, firendlyTypeName, cards)
 
 function getDeviceLastEventTime(device)
 {
-	if(device.pictureTime !== undefined && device.pictureTime != "" && device.pictureTime != "n/a" && device.pictureTime != "n/d" && device.pictureTime != "0")
+	if(device.type === 2)
 	{
-		return `letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(device.pictureTime)))} | <a href="javascript:generateDeviceImageModal('${device.serialNumber}','${device.name}');">Standbild</a>`;
-	}
-	else if(device.pictureTime === undefined || device.pictureTime == "n/a")
-	{
-		return "keine Aufnahme verfügbar";
+		if(device.sensorChangeTime !== undefined)
+		{
+			return `letzte Änderung: ${makeDateTimeString(new Date(parseInt(device.sensorChangeTime)))}`;
+		}
+		else
+		{
+			return `letzte Änderung: nicht verfügbar`;
+		}
 	}
 	else
 	{
-		return "letzte Aufnahme: nicht verfügbar";
+		if(device.pictureTime !== undefined && device.pictureTime != "" && device.pictureTime != "n/a" && device.pictureTime != "n/d" && device.pictureTime != "0")
+		{
+			return `letzte Aufnahme: ${makeDateTimeString(new Date(parseInt(device.pictureTime)))} | <a href="javascript:generateDeviceImageModal('${device.serialNumber}','${device.name}');">Standbild</a>`;
+		}
+		else if(device.pictureTime === undefined || device.pictureTime == "n/a")
+		{
+			return "keine Aufnahme verfügbar";
+		}
+		else
+		{
+			return "letzte Aufnahme: nicht verfügbar";
+		}
 	}
 }
 
@@ -580,6 +618,16 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 	switch (imageName)
 	{
 		case "bi-battery":
+			if(value === true)
+			{
+				imageName = imageName + " text-danger";
+				break;
+			}
+			if(value === false)
+			{
+				imageName = "bi-battery-full";
+				break;
+			}
 			if(value < 20)
 			{
 				imageName = "bi-battery";
@@ -595,6 +643,7 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 			if(value < 6)
 			{
 				imageName = imageName + " text-danger";
+				break;
 			}
 			else if(value < 16)
 			{
@@ -620,7 +669,7 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 			}
 			break;
 	}
-	return `<div class="${divClass}${value === `---` ? ` text-muted` : ""}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
+	return `<div class="${divClass}${value === `---` ? ` text-muted` : ""}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value === false ? "OK" : value === true ? "niedrig" : value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
 }
 
 function generateStationDeviceSettingsSelectionModal(deviceId, deviceName)
@@ -870,7 +919,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
 							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
-								<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div>${deviceProperties.wifiSignalLevel !== undefined ? `<div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel)}" title="WiFi Empfangsstärke: ${deviceProperties.wifiRssi}dB"></i></span></h5></div>` : ""}
+								<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div>${deviceProperties.wifiSignalLevel !== undefined || deviceProperties.wifiRssi !== undefined ? `<div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel, deviceProperties.wifiRssi)}" title="WiFi Empfangsstärke: ${deviceProperties.wifiRssi}dB"></i></span></h5></div>` : ""}
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
@@ -912,15 +961,20 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 													${generateColumnForProperty("col", "spnFimware", "text-nowrap", "", "", "bi-gear-wide-connected", "Firmwareversion", deviceProperties.softwareVersion)}`;
 		}
-		if(deviceProperties.battery !== undefined)
+		if(deviceProperties.battery !== undefined || deviceProperties.batteryLow !== undefined)
 		{
 			deviceModal += `
-													${generateColumnForProperty("col", "spnBattery", "text-nowrap", "", "", deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", deviceProperties.battery, "%")}`;
+													${generateColumnForProperty("col", "spnBattery", "text-nowrap", "", "", deviceProperties.chargingStatus == 1 || deviceProperties.chargingStatus == 4 ? "bi-battery-charging" : "bi-battery", "Ladezustand des Akkus", deviceProperties.battery !== undefined ? deviceProperties.battery : deviceProperties.batteryLow, deviceProperties.battery !== undefined ? "%" : "")}`;
 		}
 		if(deviceProperties.batteryTemperature !== undefined && deviceProperties.batteryTemperature > -99 && deviceProperties.batteryTemperature < 99)
 		{
 			deviceModal += `
 													${generateColumnForProperty("col", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", "Temperatur", deviceProperties.state === 2 ? `---` : deviceProperties.batteryTemperature, "&deg;C")}`;
+		}
+		if(deviceProperties.sensorOpen !== undefined)
+		{
+			deviceModal += `
+													${generateColumnForProperty("col", "spnSensorState", "text-nowrap", "", "", deviceProperties.sensorOpen === true ? "bi-door-open" : "bi-door-closed", "Status", deviceProperties.sensorOpen === true ? `offen` : deviceProperties.sensorOpen === false ? `zu` : ``)}`;
 		}
 		deviceModal +=     `
 												</div>
@@ -1103,7 +1157,6 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	
 	if(deviceProperties.deliveryGuard !== undefined || deviceProperties.deliveryGuardPackageGuarding !== undefined || deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardPackageLiveCheckAssistance !== undefined)
 	{
 		deviceModal += `
@@ -1144,7 +1197,6 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-
 	if(deviceProperties.ringAutoResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined)
 	{
 		deviceModal += `
@@ -1170,7 +1222,6 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	
 	if(deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionSensitivity !== undefined || deviceProperties.soundDetectionType !== undefined)
 	{
 		deviceModal += `
@@ -1486,6 +1537,27 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
+	if(deviceProperties.chirpTone !== undefined || deviceProperties.chirpVolume !== undefined)
+	{
+		deviceModal += `
+								<div class="card mb-3" id="cardDeviceChirpSettings">
+									<h5 class="card-header">Toneinstellungen</h5>
+									<div class="card-body">`;
+		if(deviceProperties.chirpTone !== undefined)
+		{
+			deviceModal += `
+										<h5>Bestätigungston</h5>
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chirpTone.name, deviceProperties.chirpTone, setEventHandler, devicePropertiesMetadata.chirpTone.states)}`;
+		}
+		if(deviceProperties.chirpVolume !== undefined)
+		{
+			deviceModal += `
+										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chirpVolume.name, deviceProperties.chirpVolume, setEventHandler, devicePropertiesMetadata.chirpVolume.unit, devicePropertiesMetadata.chirpVolume.min, devicePropertiesMetadata.chirpVolume.max, devicePropertiesMetadata.chirpVolume.default)}`;
+		}
+		deviceModal += `
+									</div>
+								</div>`;
+	}
 	if(deviceProperties.notification !== undefined || deviceProperties.notificationType !== undefined || deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined)
 	{
 		deviceModal += `
@@ -1558,6 +1630,8 @@ function isStationOrDevicesKnown(modell)
 		case "T8213":
 		//WallLightCams
 		case "T84A1":
+		//Sensors
+		case "T8900":
 			return true;
 		default:
 			return false;
@@ -1872,6 +1946,10 @@ function getPropertyNameInGerman(propertyName)
 			return "Anzeige der beiden Kameras in der Liveanzeige und bei Aufnahmen";
 		case "notification":
 			return "Benachrichtigungen aktivieren";
+		case "chirpTone":
+			return "Benachrichtigungston auswählen"
+		case "chirpVolume":
+			return "Lautstärke Bestätigungstons"
 		default:
 			return propertyName;
 	}
@@ -2179,6 +2257,14 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 			return "in der Nacht";
 		case "All day":
 			return "am ganzen Tag";
+		case "None":
+			return "keiner";
+		case "Water":
+			return "Wasser";
+		case "Classic":
+			return "klassisch";
+		case "Light":
+			return "einfach";
 		default:
 			return state;
 	}
