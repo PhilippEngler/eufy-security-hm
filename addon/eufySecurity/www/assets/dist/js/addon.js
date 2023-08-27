@@ -967,12 +967,13 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.antitheftDetection.name, deviceProperties.antitheftDetection, setEventHandler)}
 											</div>`;
 		}
-		if(deviceProperties.statusLed !== undefined)
+		if(deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "boolean")
 		{
 			deviceModal += `
 											<div class="col">
 												<h5>Status LED</h5>
-												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed, setEventHandler)}
+												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed, setEventHandler)}`;
+			deviceModal += `
 											</div>`;
 		}
 		if(deviceProperties.imageMirrored !== undefined)
@@ -1006,15 +1007,15 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>Erkennungsempfindlichkeit</h5>
 										${deviceProperties.motionDetectionSensitivity !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivity.unit, devicePropertiesMetadata.motionDetectionSensitivity.min, devicePropertiesMetadata.motionDetectionSensitivity.max, devicePropertiesMetadata.motionDetectionSensitivity.default)}` : ""}
 										${deviceProperties.motionDetectionSensitivityMode !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityMode.name, deviceProperties.motionDetectionSensitivityMode, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityMode.states)}` : ``}`;
-				if(deviceProperties.motionDetectionSensitivityMode !== undefined && deviceProperties.motionDetectionSensitivityMode == 0)
+				if(deviceProperties.motionDetectionSensitivityMode !== undefined)
 				{
 					deviceModal += `
-										<div id="collapseStandard" ${deviceProperties.motionDetectionSensitivityMode != 0 ? `class="collapse"` : ""}>
+										<div id="divMotionDetectionSensitivityStandard" ${deviceProperties.motionDetectionSensitivityMode == 0 ? "" : ` class="collapse"`}>
 											<div class="card card-body mt-2 mb-2">
 												${deviceProperties.motionDetectionSensitivityStandard !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityStandard.name, deviceProperties.motionDetectionSensitivityStandard, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityStandard.unit, devicePropertiesMetadata.motionDetectionSensitivityStandard.min, devicePropertiesMetadata.motionDetectionSensitivityStandard.max, devicePropertiesMetadata.motionDetectionSensitivityStandard.default)}` : ""}
 											</div>
 										</div>
-										<div id="collapseAdvanced" ${deviceProperties.motionDetectionSensitivityMode != 1 ? `class="collapse"` : ""}>
+										<div id="divMotionDetectionSensitivityAdvanced" ${deviceProperties.motionDetectionSensitivityMode == 1 ? "" : ` class="collapse"`}>
 											<div class="card card-body mt-2 mb-2">
 												${deviceProperties.motionDetectionSensitivityAdvancedA !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.name, deviceProperties.motionDetectionSensitivityAdvancedA, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedA.default)}` : ""}
 												${deviceProperties.motionDetectionSensitivityAdvancedB !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.name, deviceProperties.motionDetectionSensitivityAdvancedB, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.unit, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.min, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.max, devicePropertiesMetadata.motionDetectionSensitivityAdvancedB.default)}` : ""}
@@ -1297,15 +1298,22 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.watermark !== undefined || deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined)
+	if((deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number") || deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined || deviceProperties.videoWdr !== undefined)
 	{
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceVideoSettings">
 									<h5 class="card-header">Videoeinstellungen</h5>
 									<div class="card-body">`;
+		if(deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number")
+		{
+			deviceModal += `
+										<h5>Status LED</h5>
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed, setEventHandler, devicePropertiesMetadata.statusLed.states)}`;
+		}
 		if(deviceProperties.watermark !== undefined)
 		{
 			deviceModal += `
+										${deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number" ? `<hr />` : ``}
 										<h5>Wasserzeichen</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.watermark.name, deviceProperties.watermark, setEventHandler, devicePropertiesMetadata.watermark.states)}`;
 		}
@@ -1433,14 +1441,14 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.chimeIndoor !== undefined)
 		{
 			deviceModal += `
-										<h5>USB Dongle als Klingel nutzen</h5>
+										<h5>USB Dongle als Klingel</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeIndoor.name, deviceProperties.chimeIndoor, setEventHandler)}`;
 		}
 		if(deviceProperties.chimeHomebase !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.chimeIndoor !== undefined ? `<hr />` : ``}
-										<h5>HomeBase als Klingel nutzen</h5>
+										<h5>HomeBase als Klingel</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeHomebase.name, deviceProperties.chimeHomebase, setEventHandler)}
 										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.name, deviceProperties.chimeHomebaseRingtoneVolume, setEventHandler, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.unit, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.min, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.max, devicePropertiesMetadata.chimeHomebaseRingtoneVolume.default)}
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeHomebaseRingtoneType.name, deviceProperties.chimeHomebaseRingtoneType, setEventHandler, devicePropertiesMetadata.chimeHomebaseRingtoneType.states)}`;
@@ -1630,23 +1638,12 @@ function makeButtonElement(buttonId, buttonClass, buttonOnClick, description, en
 
 function generateElementTimePicker(type, serialNumber, name, propertyName, value, setEventHandler)
 {
-	return `<div><label class="mb-2" for="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><input type="time" id="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-control mb-2" value="${value}" ${setEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)"` : ""}></div>`;
+	return `<div class="row align-items-center"><label class="mb-2" for="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${getPropertyNameInGerman(propertyName)}</label><div class="col"><input type="time" id="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-control mb-2" value="${value}" ${setEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value)"` : ""}></div><div class="col"></div><div class="col"></div></div>`;
 }
 
 function generateElementTimePickerStartEnd(type, serialNumber, caption, startName, startPropertyName, startValue, startSetEventHandler, endName, endPropertyName, endValue, endSetEventHandler)
 {
-	return `${getPropertyNameInGerman(caption)}
-			<div class="row align-items-center">
-				<div class="col">
-					<label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${getPropertyNameInGerman("captionTimeFrom")}</label><input type="time" id="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}" class="form-control mb-2" value="${startValue}" ${startSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${startName}', '${startPropertyName}', this.value)"` : ""}>
-				</div>
-				<div class="col text-center"">
-					${getPropertyNameInGerman("timeUntil")}
-				</div>
-				<div class="col">
-				<label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${getPropertyNameInGerman("captionTimeTo")}</label><input type="time" id="tp${endPropertyName.charAt(0).toUpperCase() + endPropertyName.slice(1)}" class="form-control mb-2" value="${endValue}" ${endSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${endName}', '${endPropertyName}', this.value)"` : ""}>
-				</div>
-			</div>`;
+	return `${getPropertyNameInGerman(caption)}<div class="row align-items-center"><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${getPropertyNameInGerman("captionTimeFrom")}</label><input type="time" id="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}" class="form-control mb-2" value="${startValue}" ${startSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${startName}', '${startPropertyName}', this.value)"` : ""}></div><div class="col text-center"">${getPropertyNameInGerman("timeUntil")}</div><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${getPropertyNameInGerman("captionTimeTo")}</label><input type="time" id="tp${endPropertyName.charAt(0).toUpperCase() + endPropertyName.slice(1)}" class="form-control mb-2" value="${endValue}" ${endSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${endName}', '${endPropertyName}', this.value)"` : ""}></div></div>`;
 }
 
 function getPropertyNameInGerman(propertyName)
@@ -1654,15 +1651,15 @@ function getPropertyNameInGerman(propertyName)
 	switch(propertyName)
 	{
 		case "enabled":
-			return "Gerät aktiviert";
+			return "Gerät aktivieren";
 		case "antitheftDetection":
-			return "Diebstahlerkennung aktiviert";
+			return "Diebstahlerkennung aktivieren";
 		case "statusLed":
-			return "Status LED aktiviert";
+			return "Status LED aktivieren";
 		case "imageMirrored":
-			return "Bild spiegeln aktiviert";
+			return "Bild spiegeln aktivieren";
 		case "motionDetection":
-			return "Bewegungserkennung aktiviert";
+			return "Bewegungserkennung aktivieren";
 		case "motionDetectionSensitivity":
 			return "Erkennungsempfindlichkeit";
 		case "motionDetectionType":
@@ -1680,21 +1677,21 @@ function getPropertyNameInGerman(propertyName)
 		case "rotationSpeed":
 			return "Bewegungsgeschwindigkeit";
 		case "motionTracking":
-			return "Bewegungsverfolgung aktiviert"
+			return "Bewegungsverfolgung aktivieren"
 		case "soundDetection":
-			return "Geräuscherkennung aktiviert";
+			return "Geräuscherkennung aktivieren";
 		case "soundDetectionSensitivity":
 			return "Erkennungsempfindlichkeit";
 		case "recordingClipLength":
-			return "Cliplänge";
+			return "Länge der Aufzeichung";
 		case "recordingRetriggerInterval":
 			return "Intervall für erneutes Auslösen";
 		case "recordingEndClipMotionStops":
-			return "Clip frühzeitiger beenden wenn Bewegung stoppt";
+			return "Aufzeichung frühzeitiger beenden wenn Bewegung stoppt";
 		case "powerSource":
 			return "Energiequelle";
 		case "continuousRecording":
-			return "Daueraufzeichnung aktiviert";
+			return "Daueraufzeichnung aktivieren";
 		case "continuousRecordingType":
 			return "Art der Daueraufzeichnung";
 		case "watermark":
@@ -1812,7 +1809,7 @@ function getPropertyNameInGerman(propertyName)
 		case "timeUntil":
 			return "bis";
 		case "loiteringDetection":
-			return "Erkennung von verdächtigem Verhalten aktiviert";
+			return "Erkennung von verdächtigem Verhalten aktivieren";
 		case "loiteringDetectionRange":
 			return "Größe des Erfassungsbereichs";
 		case "loiteringDetectionLength":
@@ -1864,9 +1861,9 @@ function getPropertyNameInGerman(propertyName)
 		case "videoWdr":
 			return "HDR aktivieren";
 		case "chimeIndoor":
-			return "USB Dongle als Klingel nutzen";
+			return "USB Dongle als Klingel aktivieren";
 		case "chimeHomebase":
-			return "HomeBase als Klingel nutzen";
+			return "HomeBase als Klingel aktivieren";
 		case "chimeHomebaseRingtoneVolume":
 			return "Klingellautstärke der HomeBase";
 		case "chimeHomebaseRingtoneType":
@@ -1943,6 +1940,8 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 					return "aus";
 				case "nightvision":
 					return "keine Nachtsicht";
+				case "statusLed":
+					return "aus";
 				default:
 					return state;
 			}
@@ -2176,6 +2175,10 @@ function getDeviceStateValueInGerman(state, propertyName, value)
 				case "lightSettingsMotionActivationMode":
 					return "intelligent";
 			}
+		case "At night":
+			return "in der Nacht";
+		case "All day":
+			return "am ganzen Tag";
 		default:
 			return state;
 	}
