@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { existsSync, readFileSync } from 'fs';
 import { EufySecurityApi } from './eufySecurityApi';
 
@@ -18,38 +18,72 @@ export class HomematicApi
     }
 
     /**
-     * Get the vaulue of a given system variable.
-     * @param variableName The name of the system variable to get.
+     * Performs a request to the given url with given data and config.
+     * @param url The url to get information from.
+     * @param data The data for the request.
+     * @param requestConfig The config.
      */
-    public async getSystemVariable(variableName : string) : Promise<string>
+    private async request(url : string, data : string, requestConfig? : AxiosRequestConfig) : Promise<AxiosResponse>
     {
-        var data = "";
-        this.getSystemVariables();
-        
-        var response = await axios.post("http://localhost:8181/esapi.exe", "string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='" + variableName + "'){result=svObject.Value();break;}}svName='null';svObject=null;", { headers : {'Content-Type': 'text/plain' } });
-
-        data = response.data;
-        data = data.substring(data.indexOf("<result>"));
-        data = data.substring(8, data.indexOf("</result>"));
-
-        return data;
+        return await axios.post(url, data, requestConfig)
     }
 
     /**
      * Get the vaulue of a given system variable.
      * @param variableName The name of the system variable to get.
      */
-    public async getSystemVariable1(variableName : string) : Promise<string>
+    public async getSystemVariable(variableName : string) : Promise<string | undefined>
     {
+        var url = "http://localhost:8181/esapi.exe";
+        var requestData = "string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='" + variableName + "'){result=svObject.Value();break;}}svName='null';svObject=null;";
+        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+
         var data = "";
-        
-        var response = await axios.get("http://localhost:8181/esapi.exe?result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()");
+        this.getSystemVariables();
 
-        data = response.data;
-        data = data.substring(data.indexOf("<result>"));
-        data = data.substring(8, data.indexOf("</result>"));
+        try{
+            var response = await this.request(url, requestData, requestConfig);
+            data = response.data;
+            data = data.substring(data.indexOf("<result>"));
+            data = data.substring(8, data.indexOf("</result>"));
 
-        return data;
+            return data;
+        }
+        catch(error : any)
+        {
+            this.api.logError(`CCU request error on getSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            this.api.logDebug(`CCU request error on getSystemVariable():`, JSON.stringify(error));
+            return undefined;
+        }
+    }
+
+    /**
+     * Get the vaulue of a given system variable.
+     * @param variableName The name of the system variable to get.
+     */
+    public async getSystemVariable1(variableName : string) : Promise<string | undefined>
+    {
+        var url = "http://localhost:8181/esapi.exe";
+        var requestData = "result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()";
+        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+
+        var data = "";
+
+        try
+        {
+            var response = await this.request(url, requestData, requestConfig);
+            data = response.data;
+            data = data.substring(data.indexOf("<result>"));
+            data = data.substring(8, data.indexOf("</result>"));
+
+            return data;
+        }
+        catch(error : any)
+        {
+            this.api.logError(`CCU request error on getSystemVariable1(): code: ${error.code}; message: ${error.message}`);
+            this.api.logDebug(`CCU request error on getSystemVariable1():`, JSON.stringify(error));
+            return undefined;
+        }
     }
 
     /**
@@ -59,50 +93,73 @@ export class HomematicApi
      */
     public async setSystemVariable(variableName : string, value : string) : Promise<void>
     {
-        var data = "";
-        
-        var response = await axios.post("http://localhost:8181/esapi.exe", "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')", { headers : {'Content-Type': 'text/plain' } });
-        
-        data = response.data;
-        data = data.substring(data.indexOf("<result>"));
-        data = data.substring(8, data.indexOf("</result>"));
+        var url = "http://localhost:8181/esapi.exe";
+        var requestData = "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')";
+        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
-        //return data;
+        var data = "";
+
+        try
+        {
+            var response = await this.request(url, requestData, requestConfig);
+            data = response.data;
+            data = data.substring(data.indexOf("<result>"));
+            data = data.substring(8, data.indexOf("</result>"));
+            
+            //return data;
+        }
+        catch(error : any)
+        {
+            this.api.logError(`CCU request error on setSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            this.api.logDebug(`CCU request error on setSystemVariable():`, JSON.stringify(error));
+            //return undefined;
+        }
     }
 
     /**
      * Get all system variables available as array.
      * @returns An array containg all system variables.
      */
-    public async getSystemVariables(variableStartstring? : string) : Promise<string[]>
+    public async getSystemVariables(variableStartstring? : string) : Promise<string[] | undefined>
     {
+        var url = "http://localhost:8181/esapi.exe";
+        var requestData = "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();";
+        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+
         var data = "";
-        var res : string[];
-        
-        var response = await axios.post("http://localhost:8181/esapi.exe", "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();", { headers : {'Content-Type': 'text/plain' } });
+        var res : string[] | undefined;
 
-        data = response.data;
-        data = data.substring(data.indexOf("<result>"));
-        data = data.substring(8, data.indexOf("</result>"));
+        try
+        {
+            var response = await this.request(url, requestData, requestConfig);
+            data = response.data;
+            data = data.substring(data.indexOf("<result>"));
+            data = data.substring(8, data.indexOf("</result>"));
 
-        res = data.split("\t");
-        
-        if(variableStartstring === undefined)
-        {
-            return res;
-        }
-        else
-        {
-            for (var i = 0; i < res.length; i++)
+            res = data.split("\t");
+
+            if(variableStartstring === undefined)
             {
-                if(!(res[i].startsWith(variableStartstring)))
-                {
-                    res.splice(i, 1);
-                    i--;
-                }
+                return res;
             }
-
-            return res;
+            else
+            {
+                for (var i = 0; i < res.length; i++)
+                {
+                    if(!(res[i].startsWith(variableStartstring)))
+                    {
+                        res.splice(i, 1);
+                        i--;
+                    }
+                }
+                return res;
+            }
+        }
+        catch(error : any)
+        {
+            this.api.logError(`CCU request error on getSystemVariables(): code: ${error.code}; message: ${error.message}`);
+            this.api.logDebug(`CCU request error on getSystemVariables():`, JSON.stringify(error));
+            res = undefined;
         }
     }
 
@@ -111,17 +168,29 @@ export class HomematicApi
      * @param variableName The name of the system variable to create.
      * @param variableInfo The info of the system variable to create.
      */
-    public async createSystemVariable(variableName : string, variableInfo : string) : Promise<string>
+    public async createSystemVariable(variableName : string, variableInfo : string) : Promise<string | undefined>
     {
+        var url = "http://localhost:8181/esapi.exe";
+        var requestData = "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);";
+        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+
         var data = "";
-        
-        var response = await axios.post("http://localhost:8181/esapi.exe", "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);", { headers : {'Content-Type': 'text/plain' } });
 
-        data = response.data;
-        data = data.substring(data.indexOf("<svObj>"));
-        data = data.substring(7, data.indexOf("</svObj>"));
+        try
+        {
+            var response = await this.request(url, requestData, requestConfig);
+            data = response.data;
+            data = data.substring(data.indexOf("<svObj>"));
+            data = data.substring(7, data.indexOf("</svObj>"));
 
-        return data;
+            return data;
+        }
+        catch(error : any)
+        {
+            this.api.logError(`CCU request error on createSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            this.api.logDebug(`CCU request error on createSystemVariable():`, JSON.stringify(error));
+            return undefined;
+        }
     }
 
     /**
@@ -129,17 +198,29 @@ export class HomematicApi
      * @param variableName The name of the system variable to remove.
      * @param variableInfo The info of the system variable to remove.
      */
-    public async removeSystemVariable(variableName : string) : Promise<string>
+    public async removeSystemVariable(variableName : string) : Promise<string | undefined>
     {
+        var url = "http://localhost:8181/esapi.exe";
+        var requestData = "string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '" + variableName + "'){dom.DeleteObject(svObject);result='true';break;}}";
+        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+
         var data = "";
-        
-        var response = await axios.post("http://localhost:8181/esapi.exe", "string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '" + variableName + "'){dom.DeleteObject(svObject);result='true';break;}}", { headers : {'Content-Type': 'text/plain' } });
 
-        data = response.data;
-        data = data.substring(data.indexOf("<result>"));
-        data = data.substring(8, data.indexOf("</result>"));
+        try
+        {
+            var response = await this.request(url, requestData, requestConfig);
+            data = response.data;
+            data = data.substring(data.indexOf("<result>"));
+            data = data.substring(8, data.indexOf("</result>"));
 
-        return data;
+            return data;
+        }
+        catch(error : any)
+        {
+            this.api.logError(`CCU request error on removeSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            this.api.logDebug(`CCU request error on removeSystemVariable():`, JSON.stringify(error));
+            return undefined;
+        }
     }
 
     /**
@@ -195,6 +276,6 @@ export class HomematicApi
      */
     public getHomematicApiVersion() : string
     {
-        return "2.2.0";
+        return "2.3.0";
     }
 }
