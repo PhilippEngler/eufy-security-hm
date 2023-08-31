@@ -2358,23 +2358,7 @@ function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 
 function updateSliderValue(element, value)
 {
-	var displayText = "";
-	switch(element)
-	{
-		case "spnRecordingClipLengthValue":
-			displayText = `${value}`;
-			break;
-		case "spnDeviceCustomRecordingSettingsRetriggerIntervallValue":
-			displayText = `${value}`;
-			break;
-		case "spnAlarmVolumeValue":
-			displayText = `${value}`;
-			break;
-		case "spnPromptVolumeValue":
-			displayText = `${value}`;
-			break;
-	}
-	document.getElementById(element).innerHTML = displayText;
+	document.getElementById(element).innerHTML = value;
 }
 
 function generateStationSettingsModal(stationId, stationName)
@@ -2644,8 +2628,17 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 		{
 			stationModal +=  `
 											<h5>Alarmton</h5>
-											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmTone.name, stationProperties.alarmTone, setEventHandler, stationPropertiesMetadata.alarmTone.states)}
+											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmTone.name, stationProperties.alarmTone, setEventHandler, stationPropertiesMetadata.alarmTone.states)}`;
+			if(stationPropertiesMetadata.alarmVolume.min !== undefined)
+			{
+				stationModal +=  `
 											${generateElementRange("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmVolume.name, stationProperties.alarmVolume, setEventHandler, stationPropertiesMetadata.alarmVolume.unit, stationPropertiesMetadata.alarmVolume.min, stationPropertiesMetadata.alarmVolume.max, stationPropertiesMetadata.alarmVolume.default)}`;
+			}
+			else if(stationPropertiesMetadata.alarmVolume.states !== undefined)
+			{
+				stationModal +=  `
+											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmVolume.name, stationProperties.alarmVolume, setEventHandler, stationPropertiesMetadata.alarmVolume.states)}`;
+			}
 		}
 		if(stationPropertiesMetadata.promptVolume !== undefined)
 		{
