@@ -7,7 +7,7 @@ import { ParamType } from "./types";
 
 export class ParameterHelper {
 
-    public static readValue(type: number, value: string, log: Logger): string | undefined {
+    public static readValue(type: number, value: string, serial: string, log: Logger): string | undefined {
         if (value) {
             if (type === ParamType.SNOOZE_MODE ||
                 type === ParamType.CAMERA_MOTION_ZONES ||
@@ -28,7 +28,7 @@ export class ParameterHelper {
                 if (typeof value === "string") {
                     const parsedValue = parseJSON(decodeBase64(value).toString("utf8"), log);
                     if (parsedValue === undefined) {
-                        log.warn("Non-parsable parameter value received from eufy cloud. Will be ignored.", { type: type, value: value });
+                        log.debug("Non-parsable parameter value received from eufy cloud. Will be ignored.", { serial: serial, type: type, value: value });
                     }
                     return parsedValue;
                 } else {
@@ -48,7 +48,7 @@ export class ParameterHelper {
                 if (typeof value === "string") {
                     const parsedValue = parseJSON(value, log);
                     if (parsedValue === undefined) {
-                        log.warn("Non-parsable parameter value received from eufy cloud. Will be ignored.", { type: type, value: value });
+                        log.debug("Non-parsable parameter value received from eufy cloud. Will be ignored.", { serial: serial, type: type, value: value });
                     }
                     return parsedValue;
                 } else {
