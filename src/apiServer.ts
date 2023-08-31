@@ -164,6 +164,16 @@ class ApiServer
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "getDeviceParams":
+                        if(url.length == 3)
+                        {
+                            responseData = await api.getDeviceParams(url[2]);
+                        }
+                        else
+                        {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getDevicePropertiesTruncated":
                         if(url.length == 3)
                         {
@@ -250,6 +260,16 @@ class ApiServer
                         if(url.length == 3)
                         {
                             responseData = await api.getStationPropertiesAsJson(url[2]);
+                        }
+                        else
+                        {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationParams":
+                        if(url.length == 3)
+                        {
+                            responseData = await api.getStationParams(url[2]);
                         }
                         else
                         {

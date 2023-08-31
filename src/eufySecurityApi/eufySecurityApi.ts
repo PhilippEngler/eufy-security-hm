@@ -1177,6 +1177,51 @@ export class EufySecurityApi
     }
 
     /**
+     * Returns a JSON string with the device params.
+     * @param deviceSerial The device serial for the device.
+     * @returns JSON string with all params.
+     */
+    public async getDeviceParams(deviceSerial : string) : Promise<string>
+    {
+        var json : any = {};
+        try
+        {
+            if(this.devices)
+            {
+                //await this.httpService.refreshStationData();
+                //await this.httpService.refreshDeviceData();
+
+                //await this.updateDeviceData();
+                //await this.devices.loadDevices();
+
+                var device = (await this.getDevices())[deviceSerial];
+                if(device)
+                {
+                    json = device.getRawDevice()
+                    this.setLastConnectionInfo(true);
+                }
+                else
+                {
+                    json = {"success":false, "reason":`The device with serial ${deviceSerial} does not exists.`};
+                    this.setLastConnectionInfo(false);
+                }
+            }
+            else
+            {
+                json = {"success":false, "reason":"No connection to eufy."};
+            }
+        }
+        catch (e : any)
+        {
+            this.logError(`Error occured at getDeviceParams(). Error: ${e.message}`);
+            this.setLastConnectionInfo(false);
+            json = {"success":false, "reason":e.message};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
      * Set a given value to a given property for a given device.
      * @param deviceSerial The serial of the device.
      * @param propertyName The name of the property.
@@ -1429,6 +1474,51 @@ export class EufySecurityApi
         catch (e : any)
         {
             this.logError(`Error occured at getStationPropertiesAsJson(). Error: ${e.message}`);
+            this.setLastConnectionInfo(false);
+            json = {"success":false, "reason":e.message};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Returns a JSON string with the station params.
+     * @param stationSerial The device serial for the station.
+     * @returns JSON string with all params.
+     */
+    public async getStationParams(stationSerial : string) : Promise<string>
+    {
+        var json : any = {};
+        try
+        {
+            if(this.stations)
+            {
+                //await this.httpService.refreshStationData();
+                //await this.httpService.refreshDeviceData();
+
+                //await this.stations.loadStations();
+
+                var station = await this.getStation(stationSerial);
+
+                if(station)
+                {
+                    json = station.getRawStation();
+                    this.setLastConnectionInfo(true);
+                }
+                else
+                {
+                    json = {"success":false, "reason":`No station with serial ${stationSerial} found.`};
+                    this.setLastConnectionInfo(false);
+                }
+            }
+            else
+            {
+                json = {"success":false, "reason":"No connection to eufy."};
+            }
+        }
+        catch (e : any)
+        {
+            this.logError(`Error occured at getStationParams(). Error: ${e.message}`);
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -3181,7 +3271,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.2.1-b4";
+        return "2.2.1-b5";
     }
 
     /**
