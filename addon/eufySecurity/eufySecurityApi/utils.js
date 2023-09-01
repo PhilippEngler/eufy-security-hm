@@ -23,9 +23,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getShortUrl = exports.waitForEvent = exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = void 0;
+exports.getShortUrl = exports.waitForEvent = exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = exports.getError = void 0;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
+const getError = function (error) {
+    return {
+        message: `${error.name}: ${error.message}`,
+        stacktrace: error.stack
+    };
+};
+exports.getError = getError;
 const removeLastChar = function (text, char) {
     const strArr = [...text];
     strArr.splice(text.lastIndexOf(char), 1);
@@ -148,7 +155,7 @@ const parseJSON = function (data, log) {
     }
     catch (err) {
         const error = (0, error_1.ensureError)(err);
-        log.error("JSON parse error", { data: data, error: error });
+        log.debug("JSON parse error", { error: (0, exports.getError)(error), data: data });
     }
     return undefined;
 };

@@ -26,7 +26,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RGBColorToDecimal = exports.DecimalToRGBColor = exports.getLockV12P2PCommand = exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.paddingP2PData = exports.decryptP2PData = exports.encryptP2PData = exports.getP2PCommandEncryptionKey = exports.isP2PCommandEncrypted = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.getNullTerminatedString = exports.RGBColorToDecimal = exports.DecimalToRGBColor = exports.getLockV12P2PCommand = exports.getLockP2PCommand = void 0;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const CryptoJS = __importStar(require("crypto-js"));
 const crypto_1 = require("crypto");
@@ -75,6 +76,39 @@ const p2pDidToBuffer = (p2pDid) => {
     const buf3 = stringWithLength(p2pArray[2], 8);
     return Buffer.concat([buf1, buf2, buf3], 20);
 };
+const isP2PCommandEncrypted = function (cmd) {
+    return [1001, 1002, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1015, 1017, 1019, 1035, 1045, 1056, 1145, 1146, 1152, 1200, 1207, 1210, 1213, 1214, 1226, 1227, 1229, 1230, 1233, 1236, 1240, 1241, 1243, 1246, 1272, 1273, 1275, 1400, 1401, 1402, 1403, 1408, 1409, 1410, 1412, 1413, 1506, 1507, 1607, 1609, 1610, 1611, 1702, 1703, 1704, 1705, 1706, 1707, 1708, 1709, 1013, 1202, 1205, 1206, 1024, 1025, 1132, 1215, 1216, 1217, 1414, 1026, 1164, 1201, 1027, 1047, 1048, 1029, 1034, 1036, 1043, 1057, 1203, 1218, 1219, 1220, 1221, 1222, 1223, 1224, 1232, 1234, 1235, 1237, 1238, 1248, 1253, 1257, 1269, 1800, 1037, 1040, 1038, 1049, 1050, 1051, 1054, 1060, 1204, 1254, 1255, 1256, 1258, 1259, 1260, 1261, 1262, 1264, 1271, 1350, 1404, 1101, 1106, 1108, 1110, 1111, 1112, 1113, 1114, 1116, 1117, 1118, 1119, 1121, 1103, 1129, 1211, 1228, 1231, 1242, 1249, 1250, 1251, 1252, 1405, 1406, 1407, 1700].includes(cmd);
+};
+exports.isP2PCommandEncrypted = isP2PCommandEncrypted;
+const getP2PCommandEncryptionKey = function (serialNumber, p2pDid) {
+    return `${serialNumber.slice(-7)}${p2pDid.substring(p2pDid.indexOf("-"), p2pDid.indexOf("-") + 9)}`;
+};
+exports.getP2PCommandEncryptionKey = getP2PCommandEncryptionKey;
+const encryptP2PData = (data, key) => {
+    const cipher = (0, crypto_1.createCipheriv)("aes-128-ecb", key, null);
+    cipher.setAutoPadding(false);
+    return Buffer.concat([
+        cipher.update(data),
+        cipher.final()
+    ]);
+};
+exports.encryptP2PData = encryptP2PData;
+const decryptP2PData = (data, key) => {
+    const decipher = (0, crypto_1.createDecipheriv)("aes-128-ecb", key, null);
+    decipher.setAutoPadding(false);
+    return Buffer.concat([
+        decipher.update(data),
+        decipher.final()
+    ]);
+};
+exports.decryptP2PData = decryptP2PData;
+const paddingP2PData = (data, blocksize = 16) => {
+    const bufferSize = data.byteLength < blocksize ? blocksize : Math.ceil(data.byteLength / blocksize) * blocksize;
+    const result = Buffer.alloc(bufferSize);
+    data.copy(result);
+    return result;
+};
+exports.paddingP2PData = paddingP2PData;
 const buildLookupWithKeyPayload = (socket, p2pDid, dskKey) => {
     const p2pDidBuffer = p2pDidToBuffer(p2pDid);
     const addressInfo = socket.address();
@@ -128,51 +162,62 @@ const buildCheckCamPayload2 = (p2pDid, data) => {
     return Buffer.concat([data, p2pDidBuffer, magic]);
 };
 exports.buildCheckCamPayload2 = buildCheckCamPayload2;
-const buildIntCommandPayload = (value, strValue = "", channel = 255) => {
+const buildIntCommandPayload = (encryptionType, encryptionKey, serialNumber, p2pDid, commandType, value, strValue = "", channel = 255) => {
     const emptyBuffer = Buffer.from([0x00, 0x00]);
     const magicBuffer = Buffer.from([0x01, 0x00]);
-    const channelBuffer = Buffer.from([channel, 0x00]);
+    const encrypted = (0, exports.isP2PCommandEncrypted)(commandType) && encryptionType !== types_1.EncryptionType.NONE && encryptionKey !== undefined;
+    const channelBuffer = Buffer.from([channel, encrypted ? encryptionType : 0]);
     const valueBuffer = Buffer.allocUnsafe(4);
     valueBuffer.writeUInt32LE(value, 0);
     const headerBuffer = Buffer.allocUnsafe(2);
     const strValueBuffer = strValue.length === 0 ? Buffer.from([]) : stringWithLength(strValue);
-    headerBuffer.writeUInt16LE(valueBuffer.length + strValueBuffer.length, 0);
+    const tmpDataBuffer = Buffer.concat([
+        valueBuffer,
+        strValueBuffer
+    ]);
+    const dataBuffer = encrypted ? (0, exports.paddingP2PData)(tmpDataBuffer) : tmpDataBuffer;
+    headerBuffer.writeUInt16LE(dataBuffer.length, 0);
     return Buffer.concat([
         headerBuffer,
         emptyBuffer,
         magicBuffer,
         channelBuffer,
         emptyBuffer,
-        valueBuffer,
-        strValueBuffer
+        encrypted ? (0, exports.encryptP2PData)(dataBuffer, encryptionKey) : dataBuffer
     ]);
 };
 exports.buildIntCommandPayload = buildIntCommandPayload;
-const buildStringTypeCommandPayload = (strValue, strValueSub, channel = 255) => {
+const buildStringTypeCommandPayload = (encryptionType, encryptionKey, serialNumber, p2pDid, commandType, strValue, strValueSub, channel = 255) => {
     const emptyBuffer = Buffer.from([0x00, 0x00]);
     const magicBuffer = Buffer.from([0x01, 0x00]);
-    const channelBuffer = Buffer.from([channel, 0x00]);
+    const encrypted = (0, exports.isP2PCommandEncrypted)(commandType) && encryptionType !== types_1.EncryptionType.NONE && encryptionKey !== undefined;
+    const channelBuffer = Buffer.from([channel, encrypted ? encryptionType : 0]);
     const someBuffer = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00]);
     const strValueBuffer = stringWithLength(strValue);
     const strValueSubBuffer = stringWithLength(strValueSub);
     const headerBuffer = Buffer.allocUnsafe(2);
-    headerBuffer.writeUInt16LE(someBuffer.length + strValueBuffer.length + strValueSubBuffer.length, 0);
+    const tmpDataBuffer = Buffer.concat([
+        someBuffer,
+        strValueBuffer,
+        strValueSubBuffer
+    ]);
+    const dataBuffer = encrypted ? (0, exports.paddingP2PData)(tmpDataBuffer) : tmpDataBuffer;
+    headerBuffer.writeUInt16LE(dataBuffer.length, 0);
     return Buffer.concat([
         headerBuffer,
         emptyBuffer,
         magicBuffer,
         channelBuffer,
         emptyBuffer,
-        someBuffer,
-        strValueBuffer,
-        strValueSubBuffer
+        encrypted ? (0, exports.encryptP2PData)(dataBuffer, encryptionKey) : dataBuffer
     ]);
 };
 exports.buildStringTypeCommandPayload = buildStringTypeCommandPayload;
-const buildIntStringCommandPayload = (value, valueSub = 0, strValue = "", strValueSub = "", channel = 0) => {
+const buildIntStringCommandPayload = (encryptionType, encryptionKey, serialNumber, p2pDid, commandType, value, valueSub = 0, strValue = "", strValueSub = "", channel = 0) => {
     const emptyBuffer = Buffer.from([0x00, 0x00]);
     const magicBuffer = Buffer.from([0x01, 0x00]);
-    const channelBuffer = Buffer.from([channel, 0x00]);
+    const encrypted = (0, exports.isP2PCommandEncrypted)(commandType) && encryptionType !== types_1.EncryptionType.NONE && encryptionKey !== undefined;
+    const channelBuffer = Buffer.from([channel, encrypted ? encryptionType : 0]);
     const someintBuffer = Buffer.allocUnsafe(4);
     someintBuffer.writeUInt32LE(valueSub, 0);
     const valueBuffer = Buffer.allocUnsafe(4);
@@ -180,17 +225,21 @@ const buildIntStringCommandPayload = (value, valueSub = 0, strValue = "", strVal
     const strValueBuffer = strValue.length === 0 ? Buffer.from([]) : stringWithLength(strValue);
     const strValueSubBuffer = strValueSub.length === 0 ? Buffer.from([]) : stringWithLength(strValueSub);
     const headerBuffer = Buffer.allocUnsafe(2);
-    headerBuffer.writeUInt16LE(someintBuffer.length + valueBuffer.length + strValueBuffer.length + strValueSubBuffer.length, 0);
+    const tmpDataBuffer = Buffer.concat([
+        someintBuffer,
+        valueBuffer,
+        strValueBuffer,
+        strValueSubBuffer
+    ]);
+    const dataBuffer = encrypted ? (0, exports.paddingP2PData)(tmpDataBuffer) : tmpDataBuffer;
+    headerBuffer.writeUInt16LE(dataBuffer.length, 0);
     return Buffer.concat([
         headerBuffer,
         emptyBuffer,
         magicBuffer,
         channelBuffer,
         emptyBuffer,
-        someintBuffer,
-        valueBuffer,
-        strValueBuffer,
-        strValueSubBuffer
+        encrypted ? (0, exports.encryptP2PData)(dataBuffer, encryptionKey) : dataBuffer
     ]);
 };
 exports.buildIntStringCommandPayload = buildIntStringCommandPayload;
@@ -230,22 +279,21 @@ const buildCommandHeader = (seqNumber, commandType, p2pDataTypeHeader = null) =>
     return Buffer.concat([dataTypeBuffer, seqAsBuffer, magicString, commandTypeBuffer]);
 };
 exports.buildCommandHeader = buildCommandHeader;
-const buildCommandWithStringTypePayload = (value, channel = 0) => {
-    // type = 6
-    //setCommandWithString()
+const buildCommandWithStringTypePayload = (encryptionType, encryptionKey, serialNumber, p2pDid, commandType, value, channel = 0) => {
     const headerBuffer = Buffer.allocUnsafe(2);
     const emptyBuffer = Buffer.from([0x00, 0x00]);
     const magicBuffer = Buffer.from([0x01, 0x00]);
-    const channelBuffer = Buffer.from([channel, 0x00]);
-    const jsonBuffer = Buffer.from(value);
-    headerBuffer.writeUInt16LE(jsonBuffer.length, 0);
+    const encrypted = (0, exports.isP2PCommandEncrypted)(commandType) && encryptionType !== types_1.EncryptionType.NONE && encryptionKey !== undefined;
+    const channelBuffer = Buffer.from([channel, encrypted ? encryptionType : 0]);
+    const dataBuffer = encrypted ? (0, exports.paddingP2PData)(Buffer.from(value)) : Buffer.from(value);
+    headerBuffer.writeUInt16LE(dataBuffer.length, 0);
     return Buffer.concat([
         headerBuffer,
         emptyBuffer,
         magicBuffer,
         channelBuffer,
         emptyBuffer,
-        jsonBuffer,
+        encrypted ? (0, exports.encryptP2PData)(dataBuffer, encryptionKey) : dataBuffer
     ]);
 };
 exports.buildCommandWithStringTypePayload = buildCommandWithStringTypePayload;
@@ -261,6 +309,9 @@ const sortP2PMessageParts = (messages) => {
 exports.sortP2PMessageParts = sortP2PMessageParts;
 const getRSAPrivateKey = (pem) => {
     const key = new node_rsa_1.default();
+    if (pem.indexOf("\n") !== -1) {
+        pem = pem.replaceAll("\n", "");
+    }
     if (pem.startsWith("-----BEGIN RSA PRIVATE KEY-----")) {
         pem = pem.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
     }
@@ -456,7 +507,7 @@ const buildVoidCommandPayload = (channel = 255) => {
 };
 exports.buildVoidCommandPayload = buildVoidCommandPayload;
 function isP2PQueueMessage(type) {
-    return type.payload !== undefined;
+    return type.p2pCommand !== undefined;
 }
 exports.isP2PQueueMessage = isP2PQueueMessage;
 const encryptPayloadData = (data, key, iv) => {
@@ -663,3 +714,8 @@ const RGBColorToDecimal = function (color) {
     return (color.red << 16) + (color.green << 8) + (color.blue);
 };
 exports.RGBColorToDecimal = RGBColorToDecimal;
+const getNullTerminatedString = function (data, encoding) {
+    const index = data.indexOf(0);
+    return data.toString(encoding, 0, index === -1 ? data.length : index);
+};
+exports.getNullTerminatedString = getNullTerminatedString;

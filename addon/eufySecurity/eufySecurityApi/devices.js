@@ -19,7 +19,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
     devicesLastEvent = {};
     loadingEmitter = new events_1.default();
-    devicesLoaded;
+    devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
     deviceSnoozeTimeout = {};
     deviceImageLoadTimeout = {};
     /**
@@ -40,6 +40,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param devices The devices object with all devices.
      */
     async handleDevices(devices) {
+        this.api.logDebug("Got devices", { devices: devices });
         const resDevices = devices;
         const deviceSNs = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
@@ -55,7 +56,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     this.updateDevice(resDevices[deviceSerial]);
                 }
                 else {
-                    this.devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
+                    if (this.devicesLoaded === undefined) {
+                        this.devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
+                    }
                     let new_device;
                     if (http_1.Device.isIndoorCamera(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial]);
@@ -133,7 +136,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                         }
                         catch (err) {
                             const error = (0, error_1.ensureError)(err);
-                            this.api.logError("HandleDevices Error", error);
+                            this.api.logError("HandleDevices Error", { error: (0, utils_1.getError)(error), deviceSN: device.getSerial() });
                         }
                         return device;
                     }));
@@ -148,7 +151,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }).catch((err) => {
                         const error = (0, error_1.ensureError)(err);
-                        this.api.logError("Error trying to connect to station after device loaded", error);
+                        this.api.logError("Error trying to connect to station after device loaded", { error: (0, utils_1.getError)(error), deviceSN: device.getSerial() });
                     });
                 });
                 this.loadingEmitter.emit("devices loaded");
@@ -164,7 +167,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                         this.removeDevice(device);
                     }).catch((err) => {
                         const error = (0, error_1.ensureError)(err);
-                        this.api.logError("Error removing device", error);
+                        this.api.logError("Error removing device", { error: (0, utils_1.getError)(error), deviceSN: deviceSN });
                     });
                 }
             }
@@ -216,7 +219,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             await this.devicesLoaded;
         }
         if (Object.keys(this.devices).includes(device.device_sn)) {
-            this.devices[device.device_sn].update(device, stations[device.station_sn] !== undefined && !stations[device.station_sn].isIntegratedDevice() && stations[device.station_sn].isConnected());
+            this.devices[device.device_sn].update(device);
         }
         else {
             throw new error_1.DeviceNotFoundError(`Device with this serial ${device.device_sn} doesn't exists and couldn't be updated!`);
@@ -662,29 +665,26 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = (0, error_1.ensureError)(err);
-                    this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                    this.api.logError(`Device property changed error - station enable rtsp`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                 });
             }
             else if (name === http_1.PropertyName.DeviceRTSPStream && value === false) {
                 device.setCustomPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl, "");
             }
             else if (name === http_1.PropertyName.DevicePictureUrl && value !== "") {
-                const picture = device.getPropertyValue(http_1.PropertyName.DevicePicture);
-                if (picture === undefined || picture === null || (picture && picture.data?.length === 0)) {
-                    this.api.getStation(device.getStationSerial()).then((station) => {
-                        if (station.hasCommand(http_1.CommandName.StationDownloadImage)) {
-                            station.downloadImage(value);
-                        }
-                    }).catch((err) => {
-                        const error = (0, error_1.ensureError)(err);
-                        this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station download image (station: ${device.getStationSerial()} image_path: ${value})`, error);
-                    });
-                }
+                this.api.getStation(device.getStationSerial()).then((station) => {
+                    if (station.hasCommand(http_1.CommandName.StationDownloadImage)) {
+                        station.downloadImage(value);
+                    }
+                }).catch((err) => {
+                    const error = (0, error_1.ensureError)(err);
+                    this.api.logError(`Device property changed error - station download image`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+                });
             }
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name})`, error);
+            this.api.logError(`Device property changed error`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
         }
     }
     /**
@@ -807,13 +807,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = (0, error_1.ensureError)(err);
-                    this.api.logError(`Device ready error (device: ${device.getSerial()}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                    this.api.logError(`Device ready error - station enable rtsp`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
                 });
             }
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Device ready error (device: ${device.getSerial()})`, error);
+            this.api.logError(`Device ready error`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
         }
     }
     /**
@@ -944,15 +944,12 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param values The raw values.
      */
     async updateDeviceProperties(deviceSerial, values) {
-        if (this.devicesLoaded) {
-            await this.devicesLoaded;
-        }
-        if (this.devices[deviceSerial] !== undefined) {
-            this.devices[deviceSerial].updateRawProperties(values);
-        }
-        else {
-            this.api.logError(`Error on update device properties. Device ${deviceSerial} does not exists. (${JSON.stringify(values)})`);
-        }
+        this.getDevice(deviceSerial).then((device) => {
+            device.updateRawProperties(values);
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
+            this.api.logError("Update device properties error", { error: (0, utils_1.getError)(error), deviceSN: deviceSerial, values: values });
+        });
     }
     /**
      * Add a given event result to the local store if the event is not already stored.
@@ -1050,7 +1047,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             }
         }
         catch (error) {
-            this.api.logError("No Device getDeviceLastEvent.");
+            this.api.logError("Error at getDeviceLastEvent: ", error);
         }
     }
     /**
@@ -1115,7 +1112,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             }
         }
         catch (error) {
-            this.api.logError("No Device downloadLatestImageForDevice.");
+            this.api.logError("Error at downloadLatestImageForDevice: ", error);
         }
     }
     /**

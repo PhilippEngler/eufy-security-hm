@@ -72,6 +72,7 @@ var DeviceType;
     DeviceType[DeviceType["SMART_TRACK_LINK"] = 157] = "SMART_TRACK_LINK";
     DeviceType[DeviceType["SMART_TRACK_CARD"] = 159] = "SMART_TRACK_CARD";
     DeviceType[DeviceType["LOCK_8502"] = 180] = "LOCK_8502";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     DeviceType[DeviceType["LOCK_8506"] = 180] = "LOCK_8506";
     DeviceType[DeviceType["WALL_LIGHT_CAM_81A0"] = 10005] = "WALL_LIGHT_CAM_81A0";
 })(DeviceType || (exports.DeviceType = DeviceType = {}));
@@ -172,8 +173,8 @@ var ResponseErrorCode;
 (function (ResponseErrorCode) {
     ResponseErrorCode[ResponseErrorCode["CODE_CONNECT_ERROR"] = 997] = "CODE_CONNECT_ERROR";
     ResponseErrorCode[ResponseErrorCode["CODE_ERROR_PIN"] = 36006] = "CODE_ERROR_PIN";
-    ResponseErrorCode[ResponseErrorCode["CODE_IS_OPEN"] = 25074] = "CODE_IS_OPEN";
-    ResponseErrorCode[ResponseErrorCode["CODE_IS_OPEN_OTHERS"] = 25080] = "CODE_IS_OPEN_OTHERS";
+    //CODE_IS_OPEN = 25074,
+    //CODE_IS_OPEN_OTHERS = 25080,
     ResponseErrorCode[ResponseErrorCode["CODE_MULTI_ALARM"] = 36002] = "CODE_MULTI_ALARM";
     ResponseErrorCode[ResponseErrorCode["CODE_NEED_VERIFY_CODE"] = 26052] = "CODE_NEED_VERIFY_CODE";
     ResponseErrorCode[ResponseErrorCode["CODE_NETWORK_ERROR"] = 998] = "CODE_NETWORK_ERROR";
@@ -720,8 +721,10 @@ var PropertyName;
     PropertyName["StationCurrentMode"] = "currentMode";
     PropertyName["StationTimeFormat"] = "timeFormat";
     PropertyName["StationTimeZone"] = "timeZone";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     PropertyName["StationAlarmVolume"] = "alarmVolume";
     PropertyName["StationAlarmTone"] = "alarmTone";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     PropertyName["StationPromptVolume"] = "promptVolume";
     PropertyName["StationNotificationSwitchModeSchedule"] = "notificationSwitchModeSchedule";
     PropertyName["StationNotificationSwitchModeGeofence"] = "notificationSwitchModeGeofence";
@@ -1101,8 +1104,17 @@ exports.DeviceStatusLedIndoorFloodProperty = {
     key: types_1.CommandType.CMD_INDOOR_LED_SWITCH,
 };
 exports.DeviceStatusLedBatteryDoorbellProperty = {
-    ...exports.DeviceStatusLedProperty,
     key: types_1.CommandType.CMD_BAT_DOORBELL_SET_LED_ENABLE,
+    name: PropertyName.DeviceStatusLed,
+    label: "Status LED",
+    readable: true,
+    writeable: true,
+    type: "number",
+    states: {
+        0: "Off",
+        1: "All day",
+        2: "At night",
+    },
 };
 exports.DeviceStatusLedDoorbellProperty = {
     ...exports.DeviceStatusLedProperty,
@@ -4615,7 +4627,7 @@ exports.DeviceProperties = {
         [PropertyName.DeviceAutoNightvision]: exports.DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: exports.DeviceMotionDetectionIndoorSoloFloodProperty,
         [PropertyName.DeviceWatermark]: exports.DeviceWatermarkIndoorFloodProperty,
-        [PropertyName.DeviceMotionDetected]: exports.DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceMotionDetected]: exports.DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: exports.DevicePersonDetectedProperty,
         [PropertyName.DeviceStatusLed]: exports.DeviceStatusLedIndoorFloodProperty,
         [PropertyName.DevicePicture]: exports.DevicePictureProperty,
@@ -4652,7 +4664,7 @@ exports.DeviceProperties = {
         [PropertyName.DeviceAutoNightvision]: exports.DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: exports.DeviceMotionDetectionIndoorSoloFloodProperty,
         [PropertyName.DeviceWatermark]: exports.DeviceWatermarkSoloWiredDoorbellProperty,
-        [PropertyName.DeviceMotionDetected]: exports.DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceMotionDetected]: exports.DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: exports.DevicePersonDetectedProperty,
         [PropertyName.DeviceStatusLed]: exports.DeviceStatusLedProperty,
         [PropertyName.DevicePicture]: exports.DevicePictureProperty,
@@ -4704,7 +4716,7 @@ exports.DeviceProperties = {
         [PropertyName.DeviceAutoNightvision]: exports.DeviceAutoNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: exports.DeviceMotionDetectionIndoorSoloFloodProperty,
         [PropertyName.DeviceWatermark]: exports.DeviceWatermarkIndoorFloodProperty,
-        [PropertyName.DeviceMotionDetected]: exports.DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceMotionDetected]: exports.DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: exports.DevicePersonDetectedProperty,
         [PropertyName.DeviceStatusLed]: exports.DeviceStatusLedIndoorFloodProperty,
         [PropertyName.DevicePicture]: exports.DevicePictureProperty,
@@ -4728,8 +4740,8 @@ exports.DeviceProperties = {
         [PropertyName.DeviceVideoStreamingQuality]: exports.DeviceVideoStreamingQualityProperty,
         [PropertyName.DeviceNotificationType]: exports.DeviceNotificationTypeIndoorFloodlightProperty,
         [PropertyName.DeviceVideoRecordingQuality]: exports.DeviceVideoRecordingQualityIndoorProperty,
-        [PropertyName.DeviceWifiRSSI]: exports.DeviceWifiRSSIProperty,
-        [PropertyName.DeviceWifiSignalLevel]: exports.DeviceWifiSignalLevelProperty,
+        //[PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
+        //[PropertyName.DeviceWifiSignalLevel]: DeviceWifiSignalLevelProperty,
         [PropertyName.DeviceSnooze]: exports.DeviceSnoozeProperty,
         [PropertyName.DeviceSnoozeTime]: exports.DeviceSnoozeTimeProperty,
         [PropertyName.DeviceSnoozeStartTime]: exports.DeviceSnoozeStartTimeProperty,
@@ -6249,6 +6261,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6259,6 +6272,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6283,6 +6297,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6293,6 +6308,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6303,6 +6319,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6313,6 +6330,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6323,6 +6341,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6333,6 +6352,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
     },
     [DeviceType.DOORBELL_SOLO]: {
         ...exports.BaseStationProperties,
@@ -6341,6 +6361,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
     },
     [DeviceType.CAMERA_FG]: {
         ...exports.BaseStationProperties,
@@ -6349,6 +6370,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
         //[PropertyName.StationNotificationSwitchModeSchedule]: StationNotificationSwitchModeScheduleProperty,
@@ -6361,6 +6383,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6371,6 +6394,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6381,6 +6405,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6391,6 +6416,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6401,6 +6427,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6411,6 +6438,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6421,6 +6449,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6431,6 +6460,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6441,6 +6471,7 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
     },
@@ -6451,9 +6482,13 @@ exports.StationProperties = {
         [PropertyName.StationGuardMode]: exports.StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: exports.StationCurrentModeProperty,
         [PropertyName.StationTimeFormat]: exports.StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: exports.StationTimeZoneProperty,
         [PropertyName.StationAlarm]: exports.StationAlarmProperty,
         [PropertyName.StationAlarmType]: exports.StationAlarmTypeProperty,
         [PropertyName.StationAlarmVolume]: exports.StationAlarmVolumeWalllightProperty,
+        [PropertyName.StationSdStatus]: exports.StationSdStatusProperty,
+        [PropertyName.StationSdCapacity]: exports.StationSdCapacityProperty,
+        [PropertyName.StationSdCapacityAvailable]: exports.StationSdAvailableCapacityProperty,
     },
     [DeviceType.CAMERA_GARAGE_T8452]: {
         ...exports.BaseStationProperties,

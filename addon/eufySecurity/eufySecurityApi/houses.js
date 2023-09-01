@@ -26,7 +26,7 @@ class EufyHouses extends tiny_typed_emitter_1.TypedEmitter {
      * @param houses The houses object.
      */
     handleHouses(houses) {
-        this.api.logDebug("Got houses:", houses);
+        this.api.logDebug("Got houses", { houses: houses });
         //TODO: Finish implementation
         this.houses = houses;
     }

@@ -4,6 +4,7 @@ exports.MqttService = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const service_1 = require("./mqtt/service");
 const error_1 = require("./error");
+const utils_1 = require("./utils");
 class MqttService extends tiny_typed_emitter_1.TypedEmitter {
     api;
     config;
@@ -42,7 +43,7 @@ class MqttService extends tiny_typed_emitter_1.TypedEmitter {
                 if (error instanceof error_1.DeviceNotFoundError) {
                 }
                 else {
-                    this.logger.error("Lock MQTT Message Error", error);
+                    this.logger.error("Lock MQTT Message Error", { error: (0, utils_1.getError)(error) });
                 }
             }).finally(() => {
                 this.emit("mqtt lock message", message);

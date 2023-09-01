@@ -99,12 +99,12 @@ class EufySecurityApi {
             this.httpService.setTokenExpiration(new Date(this.getTokenExpire() * 1000));
             if (this.config.getOpenudid() == "") {
                 this.config.setOpenudid((0, utils_1.generateUDID)());
-                this.logger.debug("Generated new openudid:", this.config.getOpenudid());
+                this.logger.debug("Generated new openudid", { openudid: this.config.getOpenudid() });
             }
             this.httpService.setOpenUDID(this.config.getOpenudid());
             if (this.config.getSerialNumber() == "") {
                 this.config.setSerialNumber((0, utils_1.generateSerialnumber)(12));
-                this.logger.debug("Generated new serial_number:", this.config.getSerialNumber());
+                this.logger.debug("Generated new serial_number", { serialnumber: this.config.getSerialNumber() });
             }
             this.httpService.setSerialNumber(this.config.getSerialNumber());
             if (this.config.getPushServiceActive() == true) {
@@ -269,7 +269,7 @@ class EufySecurityApi {
         })
             .catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.logger.error("Connect Error", error);
+            this.logger.error("Connect Error", { error: (0, utils_1.getError)(error), options: options });
         });
     }
     /**
@@ -617,12 +617,12 @@ class EufySecurityApi {
         if (this.config.getAcceptInvitations()) {
             await this.processInvitations().catch(err => {
                 const error = (0, error_1.ensureError)(err);
-                this.logError("Error in processing invitations", error);
+                this.logError("Error in processing invitations", { error: (0, utils_1.getError)(error) });
             });
         }
         await this.httpService.refreshAllData().catch(err => {
             const error = (0, error_1.ensureError)(err);
-            this.logger.error("Error during API data refreshing", error);
+            this.logger.error("Error during API data refreshing", { error: (0, utils_1.getError)(error) });
         });
         if (this.refreshEufySecurityCloudTimeout !== undefined) {
             clearTimeout(this.refreshEufySecurityCloudTimeout);
@@ -909,6 +909,40 @@ class EufySecurityApi {
         return JSON.stringify(json);
     }
     /**
+     * Returns a JSON string with the device params.
+     * @param deviceSerial The device serial for the device.
+     * @returns JSON string with all params.
+     */
+    async getDeviceParams(deviceSerial) {
+        var json = {};
+        try {
+            if (this.devices) {
+                //await this.httpService.refreshStationData();
+                //await this.httpService.refreshDeviceData();
+                //await this.updateDeviceData();
+                //await this.devices.loadDevices();
+                var device = (await this.getDevices())[deviceSerial];
+                if (device) {
+                    json = device.getRawDevice();
+                    this.setLastConnectionInfo(true);
+                }
+                else {
+                    json = { "success": false, "reason": `The device with serial ${deviceSerial} does not exists.` };
+                    this.setLastConnectionInfo(false);
+                }
+            }
+            else {
+                json = { "success": false, "reason": "No connection to eufy." };
+            }
+        }
+        catch (e) {
+            this.logError(`Error occured at getDeviceParams(). Error: ${e.message}`);
+            this.setLastConnectionInfo(false);
+            json = { "success": false, "reason": e.message };
+        }
+        return JSON.stringify(json);
+    }
+    /**
      * Set a given value to a given property for a given device.
      * @param deviceSerial The serial of the device.
      * @param propertyName The name of the property.
@@ -1098,6 +1132,39 @@ class EufySecurityApi {
         }
         catch (e) {
             this.logError(`Error occured at getStationPropertiesAsJson(). Error: ${e.message}`);
+            this.setLastConnectionInfo(false);
+            json = { "success": false, "reason": e.message };
+        }
+        return JSON.stringify(json);
+    }
+    /**
+     * Returns a JSON string with the station params.
+     * @param stationSerial The device serial for the station.
+     * @returns JSON string with all params.
+     */
+    async getStationParams(stationSerial) {
+        var json = {};
+        try {
+            if (this.stations) {
+                //await this.httpService.refreshStationData();
+                //await this.httpService.refreshDeviceData();
+                //await this.stations.loadStations();
+                var station = await this.getStation(stationSerial);
+                if (station) {
+                    json = station.getRawStation();
+                    this.setLastConnectionInfo(true);
+                }
+                else {
+                    json = { "success": false, "reason": `No station with serial ${stationSerial} found.` };
+                    this.setLastConnectionInfo(false);
+                }
+            }
+            else {
+                json = { "success": false, "reason": "No connection to eufy." };
+            }
+        }
+        catch (e) {
+            this.logError(`Error occured at getStationParams(). Error: ${e.message}`);
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1980,71 +2047,76 @@ class EufySecurityApi {
     async checkSystemVariables() {
         var json = {};
         var availableSystemVariables = await this.homematicApi.getSystemVariables("eufy");
-        try {
-            if (this.config.getSystemVariableActive() == true) {
-                if (this.stations && this.devices) {
-                    await this.loadData();
-                    var station;
-                    var device;
-                    var stations = await this.getStations();
-                    var devices = await this.getDevices();
-                    var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime", "eufyLastModeChangeTime"];
-                    var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus", "Zeitpunkt des letzten Moduswechsels"];
-                    json = { "success": true, "data": [] };
-                    var i = 0;
-                    for (var sv of commonSystemVariablesName) {
-                        json.data.push({ "sysVarName": sv, "sysVarInfo": commonSystemVariablesInfo[i], "sysVarAvailable": availableSystemVariables.includes(sv), "sysVarCurrent": true });
-                        if (availableSystemVariables.includes(sv)) {
-                            availableSystemVariables.splice(availableSystemVariables.indexOf(sv), 1);
+        if (availableSystemVariables === undefined) {
+            json = { "success": false, "reason": "Faild retrieving system variables from CCU." };
+        }
+        else {
+            try {
+                if (this.config.getSystemVariableActive() == true) {
+                    if (this.stations && this.devices) {
+                        await this.loadData();
+                        var station;
+                        var device;
+                        var stations = await this.getStations();
+                        var devices = await this.getDevices();
+                        var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime", "eufyLastModeChangeTime"];
+                        var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus", "Zeitpunkt des letzten Moduswechsels"];
+                        json = { "success": true, "data": [] };
+                        var i = 0;
+                        for (var sv of commonSystemVariablesName) {
+                            json.data.push({ "sysVarName": sv, "sysVarInfo": commonSystemVariablesInfo[i], "sysVarAvailable": availableSystemVariables.includes(sv), "sysVarCurrent": true });
+                            if (availableSystemVariables.includes(sv)) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(sv), 1);
+                            }
+                            i = i + 1;
                         }
-                        i = i + 1;
+                        for (var stationSerial in stations) {
+                            station = stations[stationSerial];
+                            json.data.push({ "sysVarName": `eufyCentralState${station.getSerial()}`, "sysVarInfo": `aktueller Status der Basis ${station.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCentralState" + station.getSerial()), "sysVarCurrent": true });
+                            if (availableSystemVariables.includes("eufyCentralState" + station.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralState${station.getSerial()}`), 1);
+                            }
+                            json.data.push({ "sysVarName": `eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo": `Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()), "sysVarCurrent": true });
+                            if (availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyLastModeChangeTime${station.getSerial()}`), 1);
+                            }
+                        }
+                        for (var deviceSerial in devices) {
+                            device = devices[deviceSerial];
+                            if (availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())) {
+                                json.data.push({ "sysVarName": `eufyCameraImageURL${device.getSerial()}`, "sysVarInfo": `Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()), "sysVarCurrent": false });
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraImageURL${device.getSerial()}`), 1);
+                            }
+                            json.data.push({ "sysVarName": `eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo": `Zeitpunkt des letzten Videos der Kamera ${device.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial()), "sysVarCurrent": true });
+                            if (availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoTime${device.getSerial()}`), 1);
+                            }
+                            json.data.push({ "sysVarName": `eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo": `letztes Video der Kamera ${device.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial()), "sysVarCurrent": true });
+                            if (availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoURL${device.getSerial()}`), 1);
+                            }
+                        }
+                        if (availableSystemVariables.length > 0) {
+                            for (let i = 0; i < availableSystemVariables.length; i++) {
+                                json.data.push({ "sysVarName": `${availableSystemVariables[i]}`, "sysVarInfo": `unbekannte Variable`, "sysVarAvailable": true, "sysVarCurrent": false });
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(availableSystemVariables[i]), 1);
+                                i--;
+                            }
+                        }
                     }
-                    for (var stationSerial in stations) {
-                        station = stations[stationSerial];
-                        json.data.push({ "sysVarName": `eufyCentralState${station.getSerial()}`, "sysVarInfo": `aktueller Status der Basis ${station.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCentralState" + station.getSerial()), "sysVarCurrent": true });
-                        if (availableSystemVariables.includes("eufyCentralState" + station.getSerial())) {
-                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralState${station.getSerial()}`), 1);
-                        }
-                        json.data.push({ "sysVarName": `eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo": `Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()), "sysVarCurrent": true });
-                        if (availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial())) {
-                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyLastModeChangeTime${station.getSerial()}`), 1);
-                        }
-                    }
-                    for (var deviceSerial in devices) {
-                        device = devices[deviceSerial];
-                        if (availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())) {
-                            json.data.push({ "sysVarName": `eufyCameraImageURL${device.getSerial()}`, "sysVarInfo": `Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()), "sysVarCurrent": false });
-                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraImageURL${device.getSerial()}`), 1);
-                        }
-                        json.data.push({ "sysVarName": `eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo": `Zeitpunkt des letzten Videos der Kamera ${device.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial()), "sysVarCurrent": true });
-                        if (availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial())) {
-                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoTime${device.getSerial()}`), 1);
-                        }
-                        json.data.push({ "sysVarName": `eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo": `letztes Video der Kamera ${device.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial()), "sysVarCurrent": true });
-                        if (availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())) {
-                            availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoURL${device.getSerial()}`), 1);
-                        }
-                    }
-                    if (availableSystemVariables.length > 0) {
-                        for (let i = 0; i < availableSystemVariables.length; i++) {
-                            json.data.push({ "sysVarName": `${availableSystemVariables[i]}`, "sysVarInfo": `unbekannte Variable`, "sysVarAvailable": true, "sysVarCurrent": false });
-                            availableSystemVariables.splice(availableSystemVariables.indexOf(availableSystemVariables[i]), 1);
-                            i--;
-                        }
+                    else {
+                        json = { "success": false, "reason": "No connection to eufy." };
                     }
                 }
                 else {
-                    json = { "success": false, "reason": "No connection to eufy." };
+                    json = { "success": false, "reason": "System variables in config disabled." };
                 }
             }
-            else {
-                json = { "success": false, "reason": "System variables in config disabled." };
+            catch (e) {
+                this.logError(`Error occured at checkSystemVariables(). Error: ${e.message}`);
+                this.setLastConnectionInfo(false);
+                json = { "success": false, "reason": e.message };
             }
-        }
-        catch (e) {
-            this.logError(`Error occured at checkSystemVariables(). Error: ${e.message}`);
-            this.setLastConnectionInfo(false);
-            json = { "success": false, "reason": e.message };
         }
         return JSON.stringify(json);
     }
@@ -2055,11 +2127,14 @@ class EufySecurityApi {
      */
     async createSystemVariable(variableName, variableInfo) {
         var res = await this.homematicApi.createSystemVariable(variableName, variableInfo);
-        if (res == variableName) {
+        if (res !== undefined && res == variableName) {
             return `{"success":true,"message":"System variable created."}`;
         }
+        else if (res === undefined) {
+            return `{"success":false, "reason":"Error while creating system variable: faild to communicate with CCU."}`;
+        }
         else {
-            return `{"success":true,"message":"Error while creating system variable."}`;
+            return `{"success":false,"message":"Error while creating system variable."}`;
         }
     }
     /**
@@ -2068,8 +2143,11 @@ class EufySecurityApi {
      */
     async removeSystemVariable(variableName) {
         var res = await this.homematicApi.removeSystemVariable(variableName);
-        if (res == "true") {
+        if (res !== undefined && res === "true") {
             return `{"success":true,"message":"System variable removed."}`;
+        }
+        else if (res === undefined) {
+            return `{"success":false, "reason":"Error while removing system variable: faild to communicate with CCU."}`;
         }
         else {
             return `{"success":true,"message":"Error while removing system variable."}`;
@@ -2372,7 +2450,7 @@ class EufySecurityApi {
         let refreshCloud = false;
         const invites = await this.httpService.getInvites().catch(err => {
             const error = (0, error_1.ensureError)(err);
-            this.logError("processInvitations - getInvites - Error", error);
+            this.logError("Error getting invites from cloud", { error: (0, utils_1.getError)(error) });
             return error;
         });
         if (Object.keys(invites).length > 0) {
@@ -2393,7 +2471,7 @@ class EufySecurityApi {
             if (confirmInvites.length > 0) {
                 const result = await this.httpService.confirmInvites(confirmInvites).catch(err => {
                     const error = (0, error_1.ensureError)(err);
-                    this.logError("processInvitations - confirmInvites - Error", error);
+                    this.logError("Error in confirmation of invitations", { error: (0, utils_1.getError)(error), confirmInvites: confirmInvites });
                     return error;
                 });
                 if (result) {
@@ -2404,18 +2482,18 @@ class EufySecurityApi {
         }
         const houseInvites = await this.httpService.getHouseInviteList().catch(err => {
             const error = (0, error_1.ensureError)(err);
-            this.logError("processInvitations - getHouseInviteList - Error", error);
+            this.logError("Error getting house invites from cloud", { error: (0, utils_1.getError)(error) });
             return error;
         });
         if (Object.keys(houseInvites).length > 0) {
             for (const invite of Object.values(houseInvites)) {
                 const result = await this.httpService.confirmHouseInvite(invite.house_id, invite.id).catch(err => {
                     const error = (0, error_1.ensureError)(err);
-                    this.logError("processInvitations - confirmHouseInvite - Error", error);
+                    this.logError("Error in confirmation of house invitations", { error: (0, utils_1.getError)(error) });
                     return error;
                 });
                 if (result) {
-                    this.logInfo(`Accepted received house invitation from ${invite.action_user_email}`, invite);
+                    this.logInfo(`Accepted received house invitation from ${invite.action_user_email}`, { invite: invite });
                     refreshCloud = true;
                 }
             }
@@ -2429,14 +2507,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "2.2.0";
+        return "2.2.1";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "2.7.0";
+        return "2.8.1";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.SmartSafeByteWriter = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
+exports.isPrioritySourceType = exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.SmartSafeByteWriter = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
 const crypto_1 = require("crypto");
 const const_1 = require("./const");
 const md5_1 = __importDefault(require("crypto-js/md5"));
@@ -495,3 +495,11 @@ const getImage = async function (api, serial, url) {
     };
 };
 exports.getImage = getImage;
+const isPrioritySourceType = function (current, update) {
+    if (((current === "http" || current === "p2p" || current === "push" || current === "mqtt" || current === undefined) && (update === "p2p" || update === "push" || update === "mqtt")) ||
+        ((current === "http" || current === undefined) && update === "http")) {
+        return true;
+    }
+    return false;
+};
+exports.isPrioritySourceType = isPrioritySourceType;

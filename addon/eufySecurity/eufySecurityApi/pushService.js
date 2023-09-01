@@ -5,6 +5,7 @@ const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const service_1 = require("./push/service");
 const types_1 = require("./push/types");
 const _1 = require(".");
+const utils_1 = require("./utils");
 class PushService extends tiny_typed_emitter_1.TypedEmitter {
     api;
     config;
@@ -125,7 +126,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
     async onPushMessage(message) {
         this.emit("push message", message);
         try {
-            this.logger.debug("Received push message", message);
+            this.logger.debug("Received push message", { message: message });
             try {
                 if ((message.type === types_1.ServerPushEvent.INVITE_DEVICE || message.type === types_1.ServerPushEvent.HOUSE_INVITE) && this.config.getAcceptInvitations()) {
                     this.api.processInvitations();
@@ -133,7 +134,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
             }
             catch (err) {
                 const error = (0, _1.ensureError)(err);
-                this.logger.error(`Error processing server push notification for device invitation`, error);
+                this.logger.error(`Error processing server push notification for device invitation`, { error: (0, utils_1.getError)(error), message: message });
             }
             try {
                 if (message.type === types_1.ServerPushEvent.REMOVE_DEVICE || message.type === types_1.ServerPushEvent.REMOVE_HOMEBASE || message.type === types_1.ServerPushEvent.HOUSE_REMOVE) {
@@ -142,7 +143,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
             }
             catch (err) {
                 const error = (0, _1.ensureError)(err);
-                this.logger.error(`Error processing server push notification for device/station/house removal`, error);
+                this.logger.error(`Error processing server push notification for device/station/house removal`, { error: (0, utils_1.getError)(error), message: message });
             }
             try {
                 var rawStations = await this.api.getRawStations();
@@ -153,13 +154,13 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     catch (err) {
                         const error = (0, _1.ensureError)(err);
-                        this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
+                        this.logger.error(`Error processing push notification for station`, { error: (0, utils_1.getError)(error), stationSN: stationSerial, message: message });
                     }
                 }
             }
             catch (err) {
                 const error = (0, _1.ensureError)(err);
-                this.api.logError("Process push notification for stations", error);
+                this.api.logError("Process push notification for stations", { error: (0, utils_1.getError)(error), message: message });
             }
             try {
                 var rawDevices = await this.api.getRawDevices();
@@ -170,17 +171,18 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     catch (err) {
                         const error = (0, _1.ensureError)(err);
-                        this.logger.error(`Error processing push notification for device ${deviceSerial}`, error);
+                        this.logger.error(`Error processing push notification for device`, { error: (0, utils_1.getError)(error), deviceSN: deviceSerial, message: message });
                     }
                 }
             }
             catch (err) {
                 const error = (0, _1.ensureError)(err);
-                this.api.logError("Process push notification for devices", error);
+                this.api.logError("Process push notification for devices", { error: (0, utils_1.getError)(error), message: message });
             }
         }
-        catch (error) {
-            this.logger.error("Generic Error:", error);
+        catch (err) {
+            const error = (0, _1.ensureError)(err);
+            this.logger.error("OnPushMessage Generic Error", { error: (0, utils_1.getError)(error), message: message });
         }
     }
 }

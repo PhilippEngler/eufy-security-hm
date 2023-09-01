@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CalibrateGarageType = exports.FilterDetectType = exports.FeatureTag = exports.FilterEventType = exports.FilterStorageType = exports.P2PStorageType = exports.DatabaseReturnCode = exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.ChargingType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting5 = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.TFCardStatus = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
+exports.InternalP2PCommandType = exports.EncryptionType = exports.CalibrateGarageType = exports.FilterDetectType = exports.FeatureTag = exports.FilterEventType = exports.FilterStorageType = exports.P2PStorageType = exports.DatabaseReturnCode = exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.ChargingType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting5 = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.TFCardStatus = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
 exports.RequestMessageType = {
     STUN: Buffer.from([0xF1, 0x00]),
     LOOKUP: Buffer.from([0xF1, 0x20]),
@@ -417,6 +417,7 @@ var CommandType;
     CommandType[CommandType["P2P_CALIBRATE_LOCK"] = 1960] = "P2P_CALIBRATE_LOCK";
     CommandType[CommandType["P2P_DELETE_FINGER"] = 1953] = "P2P_DELETE_FINGER";
     CommandType[CommandType["P2P_DELETE_USER"] = 1951] = "P2P_DELETE_USER";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     CommandType[CommandType["P2P_ENTER_OTA"] = 1238] = "P2P_ENTER_OTA";
     CommandType[CommandType["P2P_GET_FINGER_PW_USAGE"] = 1963] = "P2P_GET_FINGER_PW_USAGE";
     CommandType[CommandType["P2P_GET_LOCK_PARAM"] = 1959] = "P2P_GET_LOCK_PARAM";
@@ -425,6 +426,7 @@ var CommandType;
     CommandType[CommandType["P2P_PULL_BLE"] = 1962] = "P2P_PULL_BLE";
     CommandType[CommandType["P2P_QUERY_PW"] = 1954] = "P2P_QUERY_PW";
     CommandType[CommandType["P2P_QUERY_STATUS_IN_LOCK"] = 1955] = "P2P_QUERY_STATUS_IN_LOCK";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     CommandType[CommandType["P2P_RESET"] = 1040] = "P2P_RESET";
     CommandType[CommandType["P2P_SET_LOCK_PARAM"] = 1958] = "P2P_SET_LOCK_PARAM";
     CommandType[CommandType["P2P_UPDATE_PW"] = 1957] = "P2P_UPDATE_PW";
@@ -501,6 +503,7 @@ var CommandType;
     CommandType[CommandType["CMD_SMARTSAFE_REMOTE_OPEN_TYPE"] = 1946165266] = "CMD_SMARTSAFE_REMOTE_OPEN_TYPE";
     CommandType[CommandType["CMD_SMARTSAFE_RSSI"] = 1946165259] = "CMD_SMARTSAFE_RSSI";
     CommandType[CommandType["CMD_SMARTSAFE_VOLUME"] = 1946165249] = "CMD_SMARTSAFE_VOLUME";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     CommandType[CommandType["CMD_SMARTSAFE_PARAM_BASE"] = 1946165248] = "CMD_SMARTSAFE_PARAM_BASE";
     CommandType[CommandType["CMD_SMARTSAFE_SETTINGS"] = 1946157056] = "CMD_SMARTSAFE_SETTINGS";
     CommandType[CommandType["CMD_SMARTSAFE_STATUS_UPDATE"] = 1946157057] = "CMD_SMARTSAFE_STATUS_UPDATE";
@@ -1050,6 +1053,7 @@ var FilterDetectType;
     FilterDetectType[FilterDetectType["SOUND"] = 128] = "SOUND";
     FilterDetectType[FilterDetectType["CRYING"] = 256] = "CRYING";
     FilterDetectType[FilterDetectType["PACKAGE"] = 512] = "PACKAGE";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     FilterDetectType[FilterDetectType["PACKAGE_PICK_UP"] = 512] = "PACKAGE_PICK_UP";
     FilterDetectType[FilterDetectType["PACKAGE_DELIVERED"] = 1024] = "PACKAGE_DELIVERED";
 })(FilterDetectType || (exports.FilterDetectType = FilterDetectType = {}));
@@ -1059,3 +1063,17 @@ var CalibrateGarageType;
     CalibrateGarageType[CalibrateGarageType["SECTIONAL_DOOR"] = 2] = "SECTIONAL_DOOR";
     CalibrateGarageType[CalibrateGarageType["TILT_DOOR"] = 3] = "TILT_DOOR";
 })(CalibrateGarageType || (exports.CalibrateGarageType = CalibrateGarageType = {}));
+var EncryptionType;
+(function (EncryptionType) {
+    EncryptionType[EncryptionType["NONE"] = 0] = "NONE";
+    EncryptionType[EncryptionType["LEVEL_1"] = 1] = "LEVEL_1";
+    EncryptionType[EncryptionType["LEVEL_2"] = 2] = "LEVEL_2";
+})(EncryptionType || (exports.EncryptionType = EncryptionType = {}));
+var InternalP2PCommandType;
+(function (InternalP2PCommandType) {
+    InternalP2PCommandType[InternalP2PCommandType["WithIntString"] = 0] = "WithIntString";
+    InternalP2PCommandType[InternalP2PCommandType["WithInt"] = 1] = "WithInt";
+    InternalP2PCommandType[InternalP2PCommandType["WithStringPayload"] = 2] = "WithStringPayload";
+    InternalP2PCommandType[InternalP2PCommandType["WithString"] = 3] = "WithString";
+    InternalP2PCommandType[InternalP2PCommandType["WithoutData"] = 4] = "WithoutData";
+})(InternalP2PCommandType || (exports.InternalP2PCommandType = InternalP2PCommandType = {}));

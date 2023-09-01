@@ -92,7 +92,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
                 this.onGotMessageBytes();
                 break;
             default:
-                this.log.warn("Unknown state", { state: this.state });
+                this.log.warn("Push Parser - Unknown state", { state: this.state });
                 break;
         }
     }
@@ -164,7 +164,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("message", { tag: this.messageTag, object: object });
         if (this.messageTag === models_1.MessageTag.LoginResponse) {
             if (this.handshakeComplete) {
-                this.log.error("Unexpected login response!");
+                this.log.error("Push Parser - Unexpected login response!");
             }
             else {
                 this.handshakeComplete = true;

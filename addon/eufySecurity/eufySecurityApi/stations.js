@@ -25,7 +25,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     skipNextModeChangeEvent = {};
     lastGuardModeChangeTimeForStations = {};
     loadingEmitter = new events_1.default();
-    stationsLoaded;
+    stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
     P2P_REFRESH_INTERVAL_MIN = 720;
     cameraMaxLivestreamSeconds = 30;
     cameraStationLivestreamTimeout = new Map();
@@ -51,7 +51,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param hubs The object containing the stations.
      */
     async handleHubs(hubs) {
-        this.api.logDebug("Got hubs:", hubs);
+        this.api.logDebug("Got hubs", { hubs: hubs });
         const resStations = hubs;
         const stationsSerials = Object.keys(this.stations);
         const promises = [];
@@ -65,7 +65,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 await this.updateStation(resStations[stationSerial]);
             }
             else {
-                this.stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
+                if (this.stationsLoaded === undefined) {
+                    this.stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
+                }
                 let new_station = http_1.Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
@@ -122,7 +124,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     catch (err) {
                         const error = (0, error_1.ensureError)(err);
-                        this.api.logError("HandleHubs Error", error);
+                        this.api.logError("HandleHubs Error", { error: (0, utils_2.getError)(error), stationSN: station.getSerial() });
                     }
                     return station;
                 }));
@@ -142,7 +144,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     this.removeStation(station);
                 }).catch((err) => {
                     const error = (0, error_1.ensureError)(err);
-                    this.api.logError("Error removing station", error);
+                    this.api.logError("Error removing station", { error: (0, utils_2.getError)(error), stationSN: stationSerial });
                 });
             }
         }
@@ -190,7 +192,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             await this.stationsLoaded;
         }
         if (Object.keys(this.stations).includes(hub.station_sn)) {
-            this.stations[hub.station_sn].update(hub, this.stations[hub.station_sn] !== undefined && !this.stations[hub.station_sn].isIntegratedDevice() && this.stations[hub.station_sn].isConnected());
+            this.stations[hub.station_sn].update(hub);
             if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
                 this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 this.stations[hub.station_sn].connect();
@@ -513,7 +515,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     }
     /**
      * Wait for the GuardModeEvent after changing guardMode for a given base.
-     * @param station The sation for waiting for the GuardMode event.
+     * @param station The station for waiting for the GuardMode event.
      * @param guardMode The guard mode to set.
      * @param timeout The timespan in ms maximal to wait for the event.
      * @returns Returns true or false.
@@ -533,7 +535,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 reject(false);
             }, timeout);
             try {
-                await this.setStationProperty(station.getSerial(), http_1.PropertyName.StationGuardMode, guardMode);
+                this.setStationProperty(station.getSerial(), http_1.PropertyName.StationGuardMode, guardMode);
             }
             catch (e) {
                 station.removeListener("guard mode", funcListener);
@@ -568,7 +570,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError("getStorageInfo Error", error);
+            this.api.logError("getStorageInfo Error", { error: (0, utils_2.getError)(error), stationSN: stationSerial });
         }
     }
     /**
@@ -607,7 +609,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
-                station.on("livestream error", (station, channel) => this.onStationLivestreamError(station, channel));
+                station.on("livestream error", (station, channel, error) => this.onStationLivestreamError(station, channel, error));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
@@ -1034,23 +1036,24 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async onStationConnect(station) {
         this.api.logDebug(`Event "Connect": station: ${station.getSerial()}`);
         this.emit("station connect", station);
-        if ((http_1.Device.isCamera(station.getDeviceType()) && !http_1.Device.isWiredDoorbell(station.getDeviceType()) || http_1.Device.isSmartSafe(station.getDeviceType()))) {
+        if (http_1.Station.isStation(station.getDeviceType()) || (http_1.Device.isCamera(station.getDeviceType()) && !http_1.Device.isWiredDoorbell(station.getDeviceType()) || http_1.Device.isSmartSafe(station.getDeviceType()))) {
             station.getCameraInfo().catch(err => {
                 const error = (0, error_1.ensureError)(err);
-                this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                this.api.logError(`Error during station p2p data refreshing`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial() });
             });
             if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
                 clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
                 delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
             }
-            if (!station.isEnergySavingDevice()) {
-                this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                    station.getCameraInfo().catch(err => {
-                        const error = (0, error_1.ensureError)(err);
-                        this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
-                    });
-                }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
-            }
+            //if (!station.isEnergySavingDevice())
+            //{
+            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+                station.getCameraInfo().catch(err => {
+                    const error = (0, error_1.ensureError)(err);
+                    this.api.logError(`Error during scheduled station p2p data refreshing`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial() });
+                });
+            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+            //}
         }
     }
     /**
@@ -1079,7 +1082,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 }
             }).catch((err) => {
                 const error = (0, error_1.ensureError)(err);
-                this.api.logError(`Station ${station.getSerial()} - Error:`, error);
+                this.api.logError(`Station close Error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial() });
             });
         }
     }
@@ -1106,7 +1109,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station livestream start", station, device, metadata, videoStream, audioStream);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station start livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station start livestream error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
     }
     /**
@@ -1120,7 +1123,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station livestream stop", station, device);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station stop livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station stop livestream error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1128,13 +1131,16 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    async onStationLivestreamError(station, channel) {
+    async onStationLivestreamError(station, channel, origError) {
         this.api.logDebug(`Event "LivestreamError": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
-            station.stopLivestream(device);
+            station.stopLivestream(device).catch((err) => {
+                const error = (0, error_1.ensureError)(err);
+                this.api.logError(`Station stop livestream error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, origError: (0, utils_2.getError)(origError) });
+            });
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station livestream error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
+            this.api.logError(`Station livestream error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, origError: (0, utils_2.getError)(origError) });
         });
     }
     /**
@@ -1151,7 +1157,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station download start", station, device, metadata, videoStream, audioStream);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station start download error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station start download error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
     }
     /**
@@ -1165,7 +1171,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station download finish", station, device);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station finish download error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station finish download error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1182,7 +1188,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 catch (err) {
                     const error = (0, error_1.ensureError)(err);
-                    this.api.logError(`Station command result (station: ${station.getSerial()}) - onSuccess callback error`, error);
+                    this.api.logError(`Station command result - onSuccess callback error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), result: result });
                 }
             }
             this.api.getStationDevice(station.getSerial(), result.channel).then((device) => {
@@ -1220,7 +1226,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                         this.api.setDeviceSnooze(device, timeoutMS);
                     }).catch(err => {
                         const error = (0, error_1.ensureError)(err);
-                        this.api.logError("Error during API data refreshing", error);
+                        this.api.logError("Error during API data refreshing", { error: (0, utils_2.getError)(error) });
                     });
                 }
             }).catch((err) => {
@@ -1231,7 +1237,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 else {
-                    this.api.logError(`Station command result error (station: ${station.getSerial()})`, error);
+                    this.api.logError(`Station command result error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), result: result });
                 }
             });
             if (station.isIntegratedDevice() && result.command_type === p2p_1.CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== http_1.DeviceType.DOORBELL) {
@@ -1245,7 +1251,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 catch (err) {
                     const error = (0, error_1.ensureError)(err);
-                    this.api.logError(`Station command result (station: ${station.getSerial()}) - onFailure callback error`, error);
+                    this.api.logError(`Station command result - onFailure callback error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), result: result });
                 }
             }
         }
@@ -1338,7 +1344,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 else {
-                    this.api.logError(`Station secondary command result error (station: ${station.getSerial()})`, error);
+                    this.api.logError(`Station secondary command result error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), result: result });
                 }
             });
         }
@@ -1386,7 +1392,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station rtsp livestream start", station, device);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station start rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station start rtsp livestream error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1400,7 +1406,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station rtsp livestream stop", station, device);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station stop rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station stop rtsp livestream error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1415,7 +1421,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             device.setCustomPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl, value);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station rtsp url error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station rtsp url error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, url: value });
         });
     }
     /**
@@ -1460,15 +1466,15 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceBattery)) {
                 const metadataBattery = device.getPropertyMetadata(http_1.PropertyName.DeviceBattery);
-                device.updateRawProperty(metadataBattery.key, batteryLevel.toString());
+                device.updateRawProperty(metadataBattery.key, batteryLevel.toString(), "p2p");
             }
             if (device.hasProperty(http_1.PropertyName.DeviceBatteryTemp)) {
                 const metadataBatteryTemperature = device.getPropertyMetadata(http_1.PropertyName.DeviceBatteryTemp);
-                device.updateRawProperty(metadataBatteryTemperature.key, temperature.toString());
+                device.updateRawProperty(metadataBatteryTemperature.key, temperature.toString(), "p2p");
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station runtime state error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station runtime state error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, batteryLevel: batteryLevel, temperature: temperature });
         });
     }
     /**
@@ -1483,16 +1489,17 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceBattery)) {
                 const metadataBattery = device.getPropertyMetadata(http_1.PropertyName.DeviceBattery);
-                if (chargeType !== p2p_1.ChargingType.PLUGGED && batteryLevel > 0)
-                    device.updateRawProperty(metadataBattery.key, batteryLevel.toString());
+                if (chargeType !== p2p_1.ChargingType.PLUGGED && batteryLevel > 0) {
+                    device.updateRawProperty(metadataBattery.key, batteryLevel.toString(), "p2p");
+                }
             }
             if (device.hasProperty(http_1.PropertyName.DeviceChargingStatus)) {
                 const metadataChargingStatus = device.getPropertyMetadata(http_1.PropertyName.DeviceChargingStatus);
-                device.updateRawProperty(metadataChargingStatus.key, chargeType.toString());
+                device.updateRawProperty(metadataChargingStatus.key, chargeType.toString(), "p2p");
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station charging state error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station charging state error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, chargeType: p2p_1.ChargingType[chargeType], batteryLevel: batteryLevel });
         });
     }
     /**
@@ -1506,11 +1513,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceWifiRSSI)) {
                 const metadataWifiRssi = device.getPropertyMetadata(http_1.PropertyName.DeviceWifiRSSI);
-                device.updateRawProperty(metadataWifiRssi.key, rssi.toString());
+                device.updateRawProperty(metadataWifiRssi.key, rssi.toString(), "p2p");
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station wifi rssi error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station wifi rssi error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, rssi: rssi });
         });
     }
     /**
@@ -1524,11 +1531,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceLight)) {
                 const metadataLight = device.getPropertyMetadata(http_1.PropertyName.DeviceLight);
-                device.updateRawProperty(metadataLight.key, enabled === true ? "1" : "0");
+                device.updateRawProperty(metadataLight.key, enabled === true ? "1" : "0", "p2p");
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station floodlight manual switch error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station floodlight manual switch error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, enabled: enabled });
         });
     }
     /**
@@ -1552,7 +1559,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station talkback start", station, device, talkbackStream);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station talkback start error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station talkback start error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1566,7 +1573,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("station talkback stop", station, device);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station talkback stop error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station talkback stop error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1575,13 +1582,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param channel The channel to define the device.
      * @param error The error object.
      */
-    async onStationTalkbackError(station, channel, error) {
-        this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
+    async onStationTalkbackError(station, channel, origError) {
+        this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${origError}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             station.stopTalkback(device);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station talkback error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
+            this.api.logError(`Station talkback error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel, origError: (0, utils_2.getError)(origError) });
         });
     }
     /**
@@ -1611,7 +1618,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 device.shakeEvent(event, this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`onStationShakeAlarm device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceShakeAlarm error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSerial, event: p2p_1.SmartSafeShakeAlarmEvent[event] });
         });
     }
     /**
@@ -1626,7 +1633,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 device.alarm911Event(event, this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`onStation911Alarm device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDevice911Alarm error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSerial, event: p2p_1.SmartSafeAlarm911Event[event] });
         });
     }
     /**
@@ -1640,7 +1647,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 device.jammedEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`onStationDeviceJammed device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceJammed error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSerial });
         });
     }
     /**
@@ -1654,7 +1661,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 device.lowBatteryEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`onStationDeviceLowBattery device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceLowBattery error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSerial });
         });
     }
     /**
@@ -1668,7 +1675,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 device.wrongTryProtectAlarmEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`onStationDeviceWrongTryProtectAlarm device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceWrongTryProtectAlarm error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSerial });
         });
     }
     /**
@@ -1682,7 +1689,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("device pin verified", device, successfull);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`onStationDevicePinVerified device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDevicePinVerified error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSerial, successfull: successfull });
         });
     }
     /**
@@ -1734,7 +1741,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 return;
             }
             for (const device of devices) {
-                //if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file && (device.getPropertyValue(PropertyName.DevicePicture) === undefined || device.getPropertyValue(PropertyName.DevicePicture) === null)) {
+                //if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file) {
                 if (device.getSerial() === station.getSerial() || (device.getStationSerial() === station.getSerial() && device.getChannel() === channel)) {
                     this.api.logDebug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
                     device.updateProperty(http_1.PropertyName.DevicePicture, picture);
@@ -1743,7 +1750,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`onStationImageDownload - Set first picture error`, error);
+            this.api.logError(`onStationImageDownload - Set first picture error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), file: file });
         });
     }
     /**
@@ -1767,7 +1774,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                         device.update(raw);
                     }).catch((err) => {
                         const error = (0, error_1.ensureError)(err);
-                        this.api.logError("onStationDatabaseQueryLatest Error:", error);
+                        this.api.logError("onStationDatabaseQueryLatest Error", { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), returnCode: returnCode });
                     });
                 }
             }
@@ -1811,11 +1818,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
             if (device.hasProperty(http_1.PropertyName.DeviceSensorOpen)) {
                 const metadataSensorOpen = device.getPropertyMetadata(http_1.PropertyName.DeviceSensorOpen);
-                device.updateRawProperty(metadataSensorOpen.key, status.toString());
+                device.updateRawProperty(metadataSensorOpen.key, status.toString(), "p2p");
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station sensor status error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station sensor status error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1827,10 +1834,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     onStationGarageDoorStatus(station, channel, doorId, status) {
         this.api.getStationDevice(station.getSerial(), channel).then((device) => {
-            device.updateRawProperty(p2p_1.CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS, status.toString());
+            device.updateRawProperty(p2p_1.CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS, status.toString(), "p2p");
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Station garage door status error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station garage door status error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
     }
     /**
@@ -1941,7 +1948,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`addUser device ${deviceSN} error`, error);
+            this.api.logError(`addUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new error_1.AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
         }
     }
@@ -1977,7 +1984,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`deleteUser device ${deviceSN} error`, error);
+            this.api.logError(`deleteUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new error_1.DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
         }
     }
@@ -2019,7 +2026,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`updateUser device ${deviceSN} error`, error);
+            this.api.logError(`updateUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
             this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
         }
     }
@@ -2055,7 +2062,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`updateUserPasscode device ${deviceSN} error`, error);
+            this.api.logError(`updateUserPasscode error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
         }
     }
@@ -2091,7 +2098,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`updateUserSchedule device ${deviceSN} error`, error);
+            this.api.logError(`updateUserSchedule error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));
         }
     }

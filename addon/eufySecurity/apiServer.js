@@ -134,6 +134,14 @@ class ApiServer {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "getDeviceParams":
+                        if (url.length == 3) {
+                            responseData = await api.getDeviceParams(url[2]);
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getDevicePropertiesTruncated":
                         if (url.length == 3) {
                             var json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
@@ -145,6 +153,9 @@ class ApiServer {
                                 }
                                 if (json.data.pictureUrl !== undefined) {
                                     json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                                }
+                                if (json.data.picture !== undefined) {
+                                    json.data.picture = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
                             }
                             responseData = JSON.stringify(json);
@@ -200,6 +211,14 @@ class ApiServer {
                     case "getStationProperties":
                         if (url.length == 3) {
                             responseData = await api.getStationPropertiesAsJson(url[2]);
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "getStationParams":
+                        if (url.length == 3) {
+                            responseData = await api.getStationParams(url[2]);
                         }
                         else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
