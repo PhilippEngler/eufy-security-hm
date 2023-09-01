@@ -5,7 +5,7 @@ import { EufySecurityApi } from './eufySecurityApi';
 import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, DynamicLighting, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
-import { parseValue, waitForEvent } from "./utils";
+import { getError, parseValue, waitForEvent } from "./utils";
 import { CameraEvent } from "./utils/utils";
 
 /**
@@ -47,6 +47,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async handleDevices(devices : FullDevices) : Promise<void>
     {
+        this.api.logDebug("Got devices", { devices: devices });
+        
         const resDevices = devices;
 
         const deviceSNs: string[] = Object.keys(this.devices);
@@ -169,7 +171,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         }
                         catch (err) {
                             const error = ensureError(err);
-                            this.api.logError("HandleDevices Error", error);
+                            this.api.logError("HandleDevices Error", { error: getError(error), deviceSN: device.getSerial() });
                         }
                         return device;
                     }));
@@ -186,7 +188,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         }
                     }).catch((err) => {
                         const error = ensureError(err);
-                        this.api.logError("Error trying to connect to station after device loaded", error);
+                        this.api.logError("Error trying to connect to station after device loaded", { error: getError(error), deviceSN: device.getSerial() });
                     });
                 });
                 this.loadingEmitter.emit("devices loaded");
@@ -207,7 +209,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         this.removeDevice(device);
                     }).catch((err) => {
                         const error = ensureError(err);
-                        this.api.logError("Error removing device", error);
+                        this.api.logError("Error removing device", { error: getError(error), deviceSN: deviceSN });
                     });
                 }
             }
@@ -779,7 +781,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = ensureError(err);
-                    this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                    this.api.logError(`Device property changed error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                 });
             }
             else if (name === PropertyName.DeviceRTSPStream && (value as boolean) === false)
@@ -796,14 +798,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     }
                 }).catch((err) => {
                     const error = ensureError(err);
-                    this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name}) - station download image (station: ${device.getStationSerial()} image_path: ${value})`, error);
+                    this.api.logError(`Device property changed error - station download image`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                 });
             }
         }
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`Device property changed error (device: ${device.getSerial()} name: ${name})`, error);
+            this.api.logError(`Device property changed error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
         }
     }
     
@@ -956,14 +958,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = ensureError(err);
-                    this.api.logError(`Device ready error (device: ${device.getSerial()}) - station enable rtsp (station: ${device.getStationSerial()})`, error);
+                    this.api.logError(`Device ready error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
                 });
             }
         }
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`Device ready error (device: ${device.getSerial()})`, error);
+            this.api.logError(`Device ready error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
         }
     }
 
@@ -1122,18 +1124,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async updateDeviceProperties(deviceSerial : string, values : RawValues) : Promise<void>
     {
-        if (this.devicesLoaded)
-        {
-            await this.devicesLoaded;
-        }
-        if(this.devices[deviceSerial] !== undefined)
-        {
-            this.devices[deviceSerial].updateRawProperties(values);
-        }
-        else
-        {
-            this.api.logError(`Error on update device properties. Device ${deviceSerial} does not exists. (${JSON.stringify(values)})`);
-        }
+        this.getDevice(deviceSerial).then((device: Device) => {
+            device.updateRawProperties(values);
+        }).catch((err) => {
+            const error = ensureError(err);
+            this.api.logError("Update device properties error", { error: getError(error), deviceSN: deviceSerial, values: values });
+        });
     }
 
     /**

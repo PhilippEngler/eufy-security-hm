@@ -79,7 +79,7 @@ export class PushClientParser extends TypedEmitter<PushClientParserEvents> {
                 this.onGotMessageBytes();
                 break;
             default:
-                this.log.warn("Unknown state", { state: this.state });
+                this.log.warn("Push Parser - Unknown state", { state: this.state });
                 break;
         }
     }
@@ -162,7 +162,7 @@ export class PushClientParser extends TypedEmitter<PushClientParserEvents> {
 
         if (this.messageTag === MessageTag.LoginResponse) {
             if (this.handshakeComplete) {
-                this.log.error("Unexpected login response!");
+                this.log.error("Push Parser - Unexpected login response!");
             } else {
                 this.handshakeComplete = true;
             }

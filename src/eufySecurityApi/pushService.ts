@@ -9,6 +9,7 @@ import { CheckinResponse, Credentials, FidInstallationResponse, GcmRegisterRespo
 import { Logger } from './utils/logging';
 import { ServerPushEvent } from "./push/types";
 import { ensureError } from ".";
+import { getError } from "./utils";
 
 export class PushService extends TypedEmitter<EufySecurityEvents>
 {
@@ -164,7 +165,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
         try
         {
-            this.logger.debug("Received push message", message);
+            this.logger.debug("Received push message", { message: message });
             try
             {
                 if ((message.type === ServerPushEvent.INVITE_DEVICE || message.type === ServerPushEvent.HOUSE_INVITE) && this.config.getAcceptInvitations())
@@ -175,7 +176,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             catch(err)
             {
                 const error = ensureError(err);
-                this.logger.error(`Error processing server push notification for device invitation`, error);
+                this.logger.error(`Error processing server push notification for device invitation`, { error: getError(error), message: message });
             }
             try
             {
@@ -187,7 +188,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             catch(err)
             {
                 const error = ensureError(err);
-                this.logger.error(`Error processing server push notification for device/station/house removal`, error);
+                this.logger.error(`Error processing server push notification for device/station/house removal`, { error: getError(error), message: message });
             }
 
             try
@@ -203,14 +204,14 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                     catch(err)
                     {
                         const error = ensureError(err);
-                        this.logger.error(`Error processing push notification for station ${stationSerial}`, error);
+                        this.logger.error(`Error processing push notification for station`, { error: getError(error), stationSN: stationSerial, message: message });
                     }
                 }
             }
             catch(err)
             {
                 const error = ensureError(err);
-                this.api.logError("Process push notification for stations", error);
+                this.api.logError("Process push notification for stations", { error: getError(error), message: message });
             }
 
             try
@@ -226,19 +227,20 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                     catch(err)
                     {
                         const error = ensureError(err);
-                        this.logger.error(`Error processing push notification for device ${deviceSerial}`, error);
+                        this.logger.error(`Error processing push notification for device`, { error: getError(error), deviceSN: deviceSerial, message: message });
                     }
                 }
             }
             catch(err)
             {
                 const error = ensureError(err);
-                this.api.logError("Process push notification for devices", error);
+                this.api.logError("Process push notification for devices", { error: getError(error), message: message });
             }
         }
-        catch(error)
+        catch(err)
         {
-            this.logger.error("Generic Error:", error);
+            const error = ensureError(err);
+            this.logger.error("OnPushMessage Generic Error", { error: getError(error), message: message });
         }
     }
 }

@@ -5,7 +5,7 @@ import { Logger } from './utils/logging';
 
 import { PushService } from './pushService';
 import { MqttService } from './mqttService';
-import { generateUDID, generateSerialnumber } from './utils';
+import { generateUDID, generateSerialnumber, getError } from './utils';
 import { Devices } from './devices'
 import { Stations } from './stations';
 import { DatabaseQueryLatestInfo, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from './p2p';
@@ -119,14 +119,14 @@ export class EufySecurityApi
             if (this.config.getOpenudid() == "")
             {
                 this.config.setOpenudid(generateUDID());
-                this.logger.debug("Generated new openudid:", this.config.getOpenudid());
+                this.logger.debug("Generated new openudid", { openudid: this.config.getOpenudid() });
             }
             this.httpService.setOpenUDID(this.config.getOpenudid());
     
             if (this.config.getSerialNumber() == "")
             {
                 this.config.setSerialNumber(generateSerialnumber(12));
-                this.logger.debug("Generated new serial_number:", this.config.getSerialNumber());
+                this.logger.debug("Generated new serial_number", { serialnumber: this.config.getSerialNumber() });
             }
             this.httpService.setSerialNumber(this.config.getSerialNumber());
 
@@ -347,7 +347,7 @@ export class EufySecurityApi
             })
             .catch((err) => {
                 const error = ensureError(err);
-                this.logger.error("Connect Error", error);
+                this.logger.error("Connect Error", { error: getError(error), options: options });
             });
     }
 
@@ -789,13 +789,13 @@ export class EufySecurityApi
         {
             await this.processInvitations().catch(err => {
                 const error = ensureError(err);
-                this.logError("Error in processing invitations", error);
+                this.logError("Error in processing invitations", { error: getError(error) });
             });
         }
         
         await this.httpService.refreshAllData().catch(err => {
             const error = ensureError(err);
-            this.logger.error("Error during API data refreshing", error);
+            this.logger.error("Error during API data refreshing", { error: getError(error) });
         });
 
         if (this.refreshEufySecurityCloudTimeout !== undefined)
@@ -3203,7 +3203,7 @@ export class EufySecurityApi
 
         const invites = await this.httpService.getInvites().catch(err => {
             const error = ensureError(err);
-            this.logError("processInvitations - getInvites - Error", error);
+            this.logError("Error getting invites from cloud", { error: getError(error) });
             return error;
         });
         if(Object.keys(invites).length > 0)
@@ -3228,7 +3228,7 @@ export class EufySecurityApi
             {
                 const result = await this.httpService.confirmInvites(confirmInvites).catch(err => {
                     const error = ensureError(err);
-                    this.logError("processInvitations - confirmInvites - Error", error);
+                    this.logError("Error in confirmation of invitations", { error: getError(error), confirmInvites: confirmInvites });
                     return error;
                 });
                 if(result)
@@ -3241,7 +3241,7 @@ export class EufySecurityApi
 
         const houseInvites = await this.httpService.getHouseInviteList().catch(err => {
             const error = ensureError(err);
-            this.logError("processInvitations - getHouseInviteList - Error", error);
+            this.logError("Error getting house invites from cloud", { error: getError(error) });
             return error;
         });
         if(Object.keys(houseInvites).length > 0)
@@ -3249,12 +3249,12 @@ export class EufySecurityApi
             for(const invite of Object.values(houseInvites) as HouseInviteListResponse[]) {
                 const result = await this.httpService.confirmHouseInvite(invite.house_id, invite.id).catch(err => {
                     const error = ensureError(err);
-                    this.logError("processInvitations - confirmHouseInvite - Error", error);
+                    this.logError("Error in confirmation of house invitations", { error: getError(error) });
                     return error;
                 });
                 if(result)
                 {
-                    this.logInfo(`Accepted received house invitation from ${invite.action_user_email}`, invite);
+                    this.logInfo(`Accepted received house invitation from ${invite.action_user_email}`, { invite: invite });
                     refreshCloud = true;
                 }
             }
@@ -3271,7 +3271,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.2.1-b5";
+        return "2.2.1-b6";
     }
 
     /**
@@ -3280,6 +3280,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.8.1-b340";
+        return "2.8.1";
     }
 }

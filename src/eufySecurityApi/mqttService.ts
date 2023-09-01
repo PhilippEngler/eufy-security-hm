@@ -7,6 +7,7 @@ import { EufySecurityEvents } from './interfaces';
 import { MQTTService } from "./mqtt/service";
 import { Logger } from './utils/logging';
 import { DeviceNotFoundError } from "./error";
+import { getError } from "./utils";
 
 export class MqttService extends TypedEmitter<EufySecurityEvents>
 {
@@ -51,7 +52,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
             }).catch((error) => {
                 if (error instanceof DeviceNotFoundError) {
                 } else {
-                    this.logger.error("Lock MQTT Message Error", error);
+                    this.logger.error("Lock MQTT Message Error", { error: getError(error) });
                 }
             }).finally(() => {
                 this.emit("mqtt lock message", message);

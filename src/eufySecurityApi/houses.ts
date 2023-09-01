@@ -34,7 +34,7 @@ export class EufyHouses extends TypedEmitter<EufySecurityEvents>
      */
     private handleHouses(houses: Houses) : void
     {
-        this.api.logDebug("Got houses:", houses);
+        this.api.logDebug("Got houses", { houses: houses });
         //TODO: Finish implementation
         this.houses = houses;
     }

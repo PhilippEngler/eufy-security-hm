@@ -9,7 +9,7 @@ import EventEmitter from "events";
 import imageType from "image-type";
 import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
-import { parseValue, waitForEvent } from "./utils";
+import { getError, parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
 import path from "path";
 
@@ -63,7 +63,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async handleHubs(hubs: Hubs) : Promise<void>
     {
-        this.api.logDebug("Got hubs:", hubs);
+        this.api.logDebug("Got hubs", { hubs: hubs });
         const resStations = hubs;
 
         const stationsSerials : string[] = Object.keys(this.stations);
@@ -147,7 +147,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         station.initialize();
                     } catch (err) {
                         const error = ensureError(err);
-                        this.api.logError("HandleHubs Error", error);
+                        this.api.logError("HandleHubs Error", { error: getError(error), stationSN: station.getSerial() });
                     }
                     return station;
                 }));
@@ -173,7 +173,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeStation(station);
                 }).catch((err: any) => {
                     const error = ensureError(err);
-                    this.api.logError("Error removing station", error);
+                    this.api.logError("Error removing station", { error: getError(error), stationSN: stationSerial });
                 });
             }
         }
@@ -718,7 +718,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         catch (err) {
             const error = ensureError(err);
-            this.api.logError("getStorageInfo Error", error);
+            this.api.logError("getStorageInfo Error", { error: getError(error), stationSN: stationSerial });
         }
     }
 
@@ -761,7 +761,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
-                station.on("livestream error", (station : Station, channel : number) => this.onStationLivestreamError(station, channel));
+                station.on("livestream error", (station : Station, channel : number, error: Error) => this.onStationLivestreamError(station, channel, error));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
@@ -1200,7 +1200,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         {
             station.getCameraInfo().catch(err => {
                 const error = ensureError(err);
-                this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                this.api.logError(`Error during station p2p data refreshing`, { error: getError(error), stationSN: station.getSerial() });
             });
             if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined)
             {
@@ -1212,7 +1212,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
                     station.getCameraInfo().catch(err => {
                         const error = ensureError(err);
-                        this.api.logError(`Error during station ${station.getSerial()} p2p data refreshing`, error);
+                        this.api.logError(`Error during scheduled station p2p data refreshing`, { error: getError(error), stationSN: station.getSerial() });
                     });
                 }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
             //}
@@ -1253,7 +1253,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }
             }).catch((err) => {
                 const error = ensureError(err);
-                this.api.logError(`Station ${station.getSerial()} - Error:`, error);
+                this.api.logError(`Station close Error`, { error: getError(error), stationSN: station.getSerial() });
             });
         }
     }
@@ -1284,7 +1284,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station livestream start", station, device, metadata, videoStream, audioStream);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station start livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station start livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
     }
 
@@ -1300,7 +1300,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station livestream stop", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station stop livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station stop livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1309,14 +1309,17 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationLivestreamError(station : Station, channel : number) : Promise<void>
+    private async onStationLivestreamError(station : Station, channel : number, origError : Error) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamError": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
-            station.stopLivestream(device);
+            station.stopLivestream(device).catch((err) => {
+                const error = ensureError(err);
+                this.api.logError(`Station stop livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
+            });
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station livestream error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
+            this.api.logError(`Station livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
         });
     }
 
@@ -1335,7 +1338,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station download start", station, device, metadata, videoStream, audioStream);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station start download error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station start download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
     }
 
@@ -1351,7 +1354,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station download finish", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station finish download error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station finish download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1368,7 +1371,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     result.customData.onSuccess();
                 } catch (err) {
                     const error = ensureError(err);
-                    this.api.logError(`Station command result (station: ${station.getSerial()}) - onSuccess callback error`, error);
+                    this.api.logError(`Station command result - onSuccess callback error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             }
             this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
@@ -1403,7 +1406,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         this.api.setDeviceSnooze(device, timeoutMS);
                     }).catch(err => {
                         const error = ensureError(err);
-                        this.api.logError("Error during API data refreshing", error);
+                        this.api.logError("Error during API data refreshing", { error: getError(error) });
                     });
                 }
             }).catch((err) => {
@@ -1413,7 +1416,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
                 } else {
-                    this.api.logError(`Station command result error (station: ${station.getSerial()})`, error);
+                    this.api.logError(`Station command result error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             });
             if (station.isIntegratedDevice() && result.command_type === CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL) {
@@ -1425,7 +1428,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     result.customData.onFailure();
                 } catch (err) {
                     const error = ensureError(err);
-                    this.api.logError(`Station command result (station: ${station.getSerial()}) - onFailure callback error`, error);
+                    this.api.logError(`Station command result - onFailure callback error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             }
         }
@@ -1527,7 +1530,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }
                 else
                 {
-                    this.api.logError(`Station secondary command result error (station: ${station.getSerial()})`, error);
+                    this.api.logError(`Station secondary command result error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             });
         }
@@ -1585,7 +1588,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station rtsp livestream start", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station start rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station start rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1601,7 +1604,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station rtsp livestream stop", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station stop rtsp livestream error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station stop rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1618,7 +1621,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, value);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station rtsp url error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station rtsp url error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, url: value });
         });
     }
 
@@ -1683,7 +1686,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station runtime state error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station runtime state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, batteryLevel: batteryLevel, temperature: temperature });
         });
     }
 
@@ -1713,7 +1716,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station charging state error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station charging state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, chargeType: ChargingType[chargeType], batteryLevel: batteryLevel });
         });
     }
 
@@ -1734,7 +1737,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station wifi rssi error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station wifi rssi error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, rssi: rssi });
         });
     }
 
@@ -1754,7 +1757,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station floodlight manual switch error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station floodlight manual switch error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, enabled: enabled });
         });
     }
 
@@ -1782,7 +1785,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station talkback start", station, device, talkbackStream);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station talkback start error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station talkback start error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1798,7 +1801,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("station talkback stop", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station talkback stop error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station talkback stop error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1808,14 +1811,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param error The error object.
      */
-    private async onStationTalkbackError(station : Station, channel : number, error : Error) : Promise<void>
+    private async onStationTalkbackError(station : Station, channel : number, origError: Error) : Promise<void>
     {
-        this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${error}`);
+        this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${origError}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             station.stopTalkback(device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station talkback error (station: ${station.getSerial()} channel: ${channel} error: ${error}})`, error);
+            this.api.logError(`Station talkback error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
         });
     }
 
@@ -1851,7 +1854,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 (device as SmartSafe).shakeEvent(event, this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationShakeAlarm device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceShakeAlarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeShakeAlarmEvent[event] });
         });
     }
 
@@ -1868,7 +1871,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 (device as SmartSafe).alarm911Event(event, this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStation911Alarm device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDevice911Alarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeAlarm911Event[event] });
         });
     }
 
@@ -1884,7 +1887,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 (device as SmartSafe).jammedEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDeviceJammed device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceJammed error`, { error: getError(error), deviceSN: deviceSerial });
         });
     }
 
@@ -1900,7 +1903,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 (device as SmartSafe).lowBatteryEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDeviceLowBattery device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceLowBattery error`, { error: getError(error), deviceSN: deviceSerial });
         });
     }
 
@@ -1916,7 +1919,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 (device as SmartSafe).wrongTryProtectAlarmEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDeviceWrongTryProtectAlarm device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDeviceWrongTryProtectAlarm error`, { error: getError(error), deviceSN: deviceSerial });
         });
     }
 
@@ -1931,7 +1934,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.emit("device pin verified", device, successfull);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDevicePinVerified device ${deviceSerial} error`, error);
+            this.api.logError(`onStationDevicePinVerified error`, { error: getError(error), deviceSN: deviceSerial, successfull: successfull });
         });
     }
 
@@ -2002,7 +2005,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationImageDownload - Set first picture error`, error);
+            this.api.logError(`onStationImageDownload - Set first picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
         });
     }
 
@@ -2033,7 +2036,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         device.update(raw);
                     }).catch((err) => {
                         const error = ensureError(err);
-                        this.api.logError("onStationDatabaseQueryLatest Error:", error);
+                        this.api.logError("onStationDatabaseQueryLatest Error", { error: getError(error), stationSN: station.getSerial(), returnCode: returnCode });
                     });
                 }
             }
@@ -2088,7 +2091,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station sensor status error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station sensor status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -2105,7 +2108,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             device.updateRawProperty(CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS, status.toString(), "p2p");
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station garage door status error (station: ${station.getSerial()} channel: ${channel})`, error);
+            this.api.logError(`Station garage door status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -2238,7 +2241,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`addUser device ${deviceSN} error`, error);
+            this.api.logError(`addUser error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
         }
     }
@@ -2286,7 +2289,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`deleteUser device ${deviceSN} error`, error);
+            this.api.logError(`deleteUser error`, { error: getError(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
         }
     }
@@ -2342,7 +2345,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`updateUser device ${deviceSN} error`, error);
+            this.api.logError(`updateUser error`, { error: getError(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
             this.emit("user error", device, username, new UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
         }
     }
@@ -2390,7 +2393,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`updateUserPasscode device ${deviceSN} error`, error);
+            this.api.logError(`updateUserPasscode error`, { error: getError(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
         }
     }
@@ -2438,7 +2441,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`updateUserSchedule device ${deviceSN} error`, error);
+            this.api.logError(`updateUserSchedule error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));
         }
     }

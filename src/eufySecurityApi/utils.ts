@@ -2,10 +2,18 @@ import * as crypto from "crypto";
 import { Config } from "./config";
 import EventEmitter from "events";
 
+import { ErrorObject } from "./interfaces";
 import { InvalidPropertyValueError, ensureError } from "./error";
 import { PropertyMetadataAny, PropertyMetadataNumeric, PropertyMetadataObject, PropertyMetadataString } from "./http/interfaces";
 
 import { Logger } from "./utils/logging";
+
+export const getError = function(error: Error): ErrorObject {
+    return {
+        message: `${error.name}: ${error.message}`,
+        stacktrace: error.stack
+    };
+}
 
 export const removeLastChar = function(text: string, char: string): string {
     const strArr = [...text];
@@ -118,7 +126,7 @@ export const parseJSON = function(data: string, log: Logger): any {
         return JSON.parse(data.replace(/[\0]+$/g, ""));
     } catch(err) {
         const error = ensureError(err);
-        log.debug("JSON parse error", { data: data, error: error });
+        log.debug("JSON parse error", { error: getError(error), data: data });
     }
     return undefined;
 }
