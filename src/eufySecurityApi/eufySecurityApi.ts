@@ -1,5 +1,5 @@
 import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera, Picture } from './http';
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera, Picture, WallLightCam, GarageCamera } from './http';
 import { HomematicApi } from './homematicApi';
 import { Logger } from './utils/logging';
 
@@ -2212,13 +2212,18 @@ export class EufySecurityApi
                             case "floodlight":
                                 device = devices[deviceSerial] as FloodlightCamera;
                                 break;
+                            case "walllightcamera":
+                                device = devices[deviceSerial] as WallLightCam;
+                                break;
+                            case "garagecamera":
+                                device = devices[deviceSerial] as GarageCamera;
+                                break;
                             default:
                                 device = undefined;
                         }
                         if(device !== undefined)
                         {
                             json.data.push({"deviceSerial":deviceSerial, "pictureTime":this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
-                            this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
                         }
                     }
                     this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
