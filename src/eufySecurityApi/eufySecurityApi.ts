@@ -2676,7 +2676,7 @@ export class EufySecurityApi
     public async checkSystemVariables() : Promise<string>
     {
         var json : any = {};
-        var availableSystemVariables = await this.homematicApi.getSystemVariables("eufy");
+        var availableSystemVariables = await this.homematicApi.getSystemVariables("localhost", false, "eufy");
         if(availableSystemVariables === undefined)
         {
             json = {"success":false, "reason":"Faild retrieving system variables from CCU."};
@@ -2787,7 +2787,7 @@ export class EufySecurityApi
      */
     public async createSystemVariable(variableName : string, variableInfo : string) : Promise<string>
     {
-        var res = await this.homematicApi.createSystemVariable(variableName, variableInfo);
+        var res = await this.homematicApi.createSystemVariable("localhost", false, variableName, variableInfo);
 
         if(res !== undefined && res == variableName)
         {
@@ -2809,7 +2809,7 @@ export class EufySecurityApi
      */
     public async removeSystemVariable(variableName : string) : Promise<string>
     {
-        var res = await this.homematicApi.removeSystemVariable(variableName);
+        var res = await this.homematicApi.removeSystemVariable("localhost", false, variableName);
 
         if(res !== undefined && res === "true")
         {
@@ -2864,7 +2864,7 @@ export class EufySecurityApi
     {
         if(this.config.getSystemVariableActive() == true)
         {
-            this.homematicApi.setSystemVariable(systemVariable, newValue);
+            this.homematicApi.setSystemVariable("localhost", false, systemVariable, newValue);
         }
     }
 

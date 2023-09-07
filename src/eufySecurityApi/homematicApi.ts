@@ -7,12 +7,12 @@ import { EufySecurityApi } from './eufySecurityApi';
  */
 export class HomematicApi
 {
-    private api : EufySecurityApi;
+    private api: EufySecurityApi;
     
     /**
      * Create the api object.
      */
-    constructor(api : EufySecurityApi)
+    constructor(api: EufySecurityApi)
     {
         this.api = api;
     }
@@ -23,23 +23,25 @@ export class HomematicApi
      * @param data The data for the request.
      * @param requestConfig The config.
      */
-    private async request(url : string, data : string, requestConfig? : AxiosRequestConfig) : Promise<AxiosResponse>
+    private async request(url: string, data: string, requestConfig?: AxiosRequestConfig): Promise<AxiosResponse>
     {
         return await axios.post(url, data, requestConfig)
     }
 
     /**
      * Get the vaulue of a given system variable.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get.
      */
-    public async getSystemVariable(variableName : string) : Promise<string | undefined>
+    public async getSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var url = "http://localhost:8181/esapi.exe";
+        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='" + variableName + "'){result=svObject.Value();break;}}svName='null';svObject=null;";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
         var data = "";
-        this.getSystemVariables();
+        this.getSystemVariables(hostName, useHttps);
 
         try{
             var response = await this.request(url, requestData, requestConfig);
@@ -59,11 +61,13 @@ export class HomematicApi
 
     /**
      * Get the vaulue of a given system variable.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get.
      */
-    public async getSystemVariable1(variableName : string) : Promise<string | undefined>
+    public async getSystemVariable1(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var url = "http://localhost:8181/esapi.exe";
+        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -88,12 +92,14 @@ export class HomematicApi
 
     /**
      * Set the given variable to the given value.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to set.
      * @param value The value to set.
      */
-    public async setSystemVariable(variableName : string, value : string) : Promise<void>
+    public async setSystemVariable(hostName: string, useHttps: boolean, variableName: string, value: string): Promise<void>
     {
-        var url = "http://localhost:8181/esapi.exe";
+        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -118,11 +124,14 @@ export class HomematicApi
 
     /**
      * Get all system variables available as array.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
+     * @param variablePrefix The string the variables to be retrieved should start with.
      * @returns An array containg all system variables.
      */
-    public async getSystemVariables(variableStartstring? : string) : Promise<string[] | undefined>
+    public async getSystemVariables(hostName: string, useHttps: boolean, variablePrefix?: string): Promise<string[] | undefined>
     {
-        var url = "http://localhost:8181/esapi.exe";
+        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -138,7 +147,7 @@ export class HomematicApi
 
             res = data.split("\t");
 
-            if(variableStartstring === undefined)
+            if(variablePrefix === undefined)
             {
                 return res;
             }
@@ -146,7 +155,7 @@ export class HomematicApi
             {
                 for (var i = 0; i < res.length; i++)
                 {
-                    if(!(res[i].startsWith(variableStartstring)))
+                    if(!(res[i].startsWith(variablePrefix)))
                     {
                         res.splice(i, 1);
                         i--;
@@ -165,12 +174,14 @@ export class HomematicApi
 
     /**
      * Create a system variable in the CCU.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to create.
      * @param variableInfo The info of the system variable to create.
      */
-    public async createSystemVariable(variableName : string, variableInfo : string) : Promise<string | undefined>
+    public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined>
     {
-        var url = "http://localhost:8181/esapi.exe";
+        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -195,12 +206,13 @@ export class HomematicApi
 
     /**
      * Remove a system variable from the CCU.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to remove.
-     * @param variableInfo The info of the system variable to remove.
      */
-    public async removeSystemVariable(variableName : string) : Promise<string | undefined>
+    public async removeSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var url = "http://localhost:8181/esapi.exe";
+        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '" + variableName + "'){dom.DeleteObject(svObject);result='true';break;}}";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -226,7 +238,7 @@ export class HomematicApi
     /**
      * Returns the content of the logile.
      */
-    public async getLogFileContent() : Promise<string>
+    public async getLogFileContent(): Promise<string>
     {
         if(existsSync('/var/log/eufySecurity.log') == true)
         {
@@ -250,7 +262,7 @@ export class HomematicApi
     /**
      * Returns the content of the errorfile.
      */
-    public async getErrorFileContent() : Promise<string>
+    public async getErrorFileContent(): Promise<string>
     {
         if(existsSync('/var/log/eufySecurity.err') == true)
         {
@@ -274,7 +286,7 @@ export class HomematicApi
     /**
      * Returns the version info of the homematic api.
      */
-    public getHomematicApiVersion() : string
+    public getHomematicApiVersion(): string
     {
         return "2.3.0";
     }
