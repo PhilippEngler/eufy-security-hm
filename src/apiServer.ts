@@ -1,5 +1,6 @@
 import { createServer as createServerHttp, IncomingMessage, ServerResponse } from 'http';
 import { createServer as createServerHttps } from 'https';
+import os from 'os';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
@@ -38,7 +39,8 @@ class ApiServer
     public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string, logger : Logger)
     {
         logger.logInfoBasic(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
-        logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
+        logger.logInfoBasic(`  Host: ${os.hostname}`);
+        logger.logInfoBasic(`  Platform: ${os.platform}_${os.arch}`);
         logger.logInfoBasic(`  Node: ${process.version}`);
         if(httpActive == true)
         {
@@ -512,18 +514,17 @@ class ApiServer
                         api.writeConfig();
                         responseData = readFileSync('config.json', 'utf-8');
                         contentType = "text/json";
-                        var dateTime = new Date();
-                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth()+1).toString ().padStart(2, '0') + dateTime.getDate().toString ().padStart(2, '0') + "-" + dateTime.getHours().toString ().padStart(2, '0') + dateTime.getMinutes().toString ().padStart(2, '0') + dateTime.getSeconds().toString ().padStart(2, '0') + ".json";
+                        fileName = `config_${os.hostname}_${getDateTimeAsString(new Date())}.json`;
                         break;
                     case "downloadLogFile":
                         responseData = readFileSync('/var/log/eufySecurity.log', 'utf-8');
                         contentType = "text/plain";
-                        fileName = "eufySecurity.log";
+                        fileName = `eufySecurity_${os.hostname}.log`;
                         break;
                     case "downloadErrFile":
                         responseData = readFileSync('/var/log/eufySecurity.err', 'utf-8');
                         contentType = "text/plain";
-                        fileName = "eufySecurity.err";
+                        fileName = `eufySecurity_${os.hostname}.err`;
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
@@ -1209,6 +1210,11 @@ process.on('SIGINT', async () => {
 function replaceLastChars(input : string, char : string, numberOfChars : number)
 {
     return input.slice(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
+}
+
+function getDateTimeAsString(dateTime: Date)
+{
+    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth()+1).toString().padStart(2, '0')}${dateTime.getDate().toString().padStart(2, '0')}-${dateTime.getHours().toString().padStart(2, '0')}${dateTime.getMinutes().toString().padStart(2, '0')}${dateTime.getSeconds().toString().padStart(2, '0')}`;
 }
 
 main();
