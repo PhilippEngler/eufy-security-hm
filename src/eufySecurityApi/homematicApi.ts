@@ -19,13 +19,24 @@ export class HomematicApi
 
     /**
      * Performs a request to the given url with given data and config.
-     * @param url The url to get information from.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param data The data for the request.
      * @param requestConfig The config.
      */
-    private async request(url: string, data: string, requestConfig?: AxiosRequestConfig): Promise<AxiosResponse>
+    private async request(hostName: string, useHttps: boolean, data: string, requestConfig?: AxiosRequestConfig): Promise<AxiosResponse>
     {
-        return await axios.post(url, data, requestConfig)
+        return await axios.post(this.getUrl(hostName, useHttps), data, requestConfig)
+    }
+
+    /**
+     * Generate the url to connect to the ccu.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
+     */
+    private getUrl(hostName: string, useHttps: boolean): string
+    {
+        return `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
     }
 
     /**
@@ -36,7 +47,6 @@ export class HomematicApi
      */
     public async getSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='" + variableName + "'){result=svObject.Value();break;}}svName='null';svObject=null;";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -44,7 +54,7 @@ export class HomematicApi
         this.getSystemVariables(hostName, useHttps);
 
         try{
-            var response = await this.request(url, requestData, requestConfig);
+            var response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -67,7 +77,6 @@ export class HomematicApi
      */
     public async getSystemVariable1(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -75,7 +84,7 @@ export class HomematicApi
 
         try
         {
-            var response = await this.request(url, requestData, requestConfig);
+            var response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -99,7 +108,6 @@ export class HomematicApi
      */
     public async setSystemVariable(hostName: string, useHttps: boolean, variableName: string, value: string): Promise<void>
     {
-        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -107,7 +115,7 @@ export class HomematicApi
 
         try
         {
-            var response = await this.request(url, requestData, requestConfig);
+            var response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -131,7 +139,6 @@ export class HomematicApi
      */
     public async getSystemVariables(hostName: string, useHttps: boolean, variablePrefix?: string): Promise<string[] | undefined>
     {
-        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -140,7 +147,7 @@ export class HomematicApi
 
         try
         {
-            var response = await this.request(url, requestData, requestConfig);
+            var response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -181,7 +188,6 @@ export class HomematicApi
      */
     public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined>
     {
-        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -189,7 +195,7 @@ export class HomematicApi
 
         try
         {
-            var response = await this.request(url, requestData, requestConfig);
+            var response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<svObj>"));
             data = data.substring(7, data.indexOf("</svObj>"));
@@ -212,7 +218,6 @@ export class HomematicApi
      */
     public async removeSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var url = `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
         var requestData = "string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '" + variableName + "'){dom.DeleteObject(svObject);result='true';break;}}";
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
@@ -220,7 +225,7 @@ export class HomematicApi
 
         try
         {
-            var response = await this.request(url, requestData, requestConfig);
+            var response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -288,6 +293,6 @@ export class HomematicApi
      */
     public getHomematicApiVersion(): string
     {
-        return "2.3.0";
+        return "2.3.1";
     }
 }
