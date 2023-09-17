@@ -1,11 +1,11 @@
 /**
  * Javascript for eufySecurity Addon
- * 20230907
+ * 20230917
  */
 action = "";
 port = "";
 redirectTarget = "";
-version = "2.2.2";
+version = "2.2.3";
 
 /**
  * common used java script functions
@@ -1627,6 +1627,7 @@ function isStationOrDevicesKnown(modell)
 		case "T8400":
 		case "T8410":
 		//Doorbells
+		case "T8210":
 		case "T8213":
 		//WallLightCams
 		case "T84A1":
