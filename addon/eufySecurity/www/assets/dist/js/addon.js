@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20230827
+ * 20230907
  */
 action = "";
 port = "";
@@ -224,7 +224,7 @@ function getCaptchaImage(page)
 					document.getElementById("captchaImage").innerHTML = `<label class="my-2" for="txtCaptchaCode">Captcha.</label><br /><img src="${objResp.captcha.captcha}" alt="Captcha Image">`;
 					document.getElementById("captchaCode").innerHTML = `<label class="my-2" for="txtCaptchaCode">Zeichenfolge, die in dem Captcha dargestellt wird.</label><input type="text" class="form-control" id="txtCaptchaCode">`;
 					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode('${page}')" class="btn btn-primary" type="button" value="Login fortsetzen">`;
-					document.getElementById("btnCloseModalDeviceSettingsBottom").setAttribute("disabled", true)
+					document.getElementById("btnCloseModalDeviceSettingsBottom").setAttribute("disabled", true);
 				}
 				else
 				{
@@ -2697,10 +2697,6 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 		{
 			conversionFactor = 1024;
 		}
-		var sdCapacity = (stationProperties.sdCapacity/conversionFactor).toFixed(2);
-		var sdCapacityAvailable = (stationProperties.sdCapacityAvailable/conversionFactor).toFixed(2);
-		var sdCapacityUsed = (sdCapacity - sdCapacityAvailable).toFixed(2);
-		var sdCapacityUsedPercent = (sdCapacityUsed/sdCapacity*100).toFixed(0);
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationStorageSettings">
 										<h5 class="card-header">Speicherinformationen</h5>
@@ -2710,7 +2706,14 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 			stationModal +=  `
 											<h5>interner Speicher</h5>
 											<label class="mb-1">Status</label>
-											${stationProperties.sdStatus == 0 ? createMessageContainer("alert alert-success", "", getSdStatusMessageText(stationProperties.sdStatus), "") : createMessageContainer("alert alert-warning", "", `Es ist folgendes Problem mit dem internen Speicher aufgetreten:<br />${getSdStatusMessageText(stationProperties.sdStatus)}`, "Bitte überprüfen Sie die Einstellungen für den internen Speicher in der App.")}
+											${stationProperties.sdStatus == 0 ? createMessageContainer("alert alert-success", "", getSdStatusMessageText(stationProperties.sdStatus), "") : createMessageContainer("alert alert-warning", "", `Es ist folgendes Problem mit dem internen Speicher aufgetreten:<br />${getSdStatusMessageText(stationProperties.sdStatus)}`, "Bitte überprüfen Sie die Einstellungen für den internen Speicher in der App.")}`;
+			if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity >= 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable >= 0)
+			{
+				var sdCapacity = (stationProperties.sdCapacity/conversionFactor).toFixed(2);
+				var sdCapacityAvailable = (stationProperties.sdCapacityAvailable/conversionFactor).toFixed(2);
+				var sdCapacityUsed = (sdCapacity - sdCapacityAvailable).toFixed(2);
+				var sdCapacityUsedPercent = (sdCapacityUsed/sdCapacity*100).toFixed(0);
+				stationModal += `
 											${generateElementProgress("sdUsage", sdCapacityUsedPercent)}
 											<div class="row gap-3">
 												<div class="col">
@@ -2726,6 +2729,12 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 													${getPropertyNameInGerman(stationPropertiesMetadata.sdCapacityAvailable.name)}
 												</div>
 											</div>`;
+			}
+			else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0)
+			{
+				stationModal += `
+											${createMessageContainer("alert alert-warning", "", `Fehler beim Abrufen der Speicherauslastung.`, "Bitte überprüfen Sie die Speicherauslastung des internen Speichers in der App.")}`;
+			}
 		}
 		stationModal +=  `
 										</div>
