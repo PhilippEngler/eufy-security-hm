@@ -20,12 +20,10 @@ export class EventInteractions
         var temp = this.config.getInteractions();
         if(temp === "")
         {
-            api.logInfoBasic(`interactions: empty "${temp}"`);
             this.interactions = null;
         }
         else
         {
-            api.logInfoBasic(`interactions: not empty "${temp}"`);
             this.interactions = JSON.parse(temp);
         }
     }

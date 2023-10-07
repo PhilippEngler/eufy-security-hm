@@ -916,8 +916,6 @@ class ApiServer
                         request.on("end", async function(){
                             try
                             {
-                                logger.logInfoBasic(postData);
-
                                 var resJson = JSON.parse(postData);
                                 result = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
 
