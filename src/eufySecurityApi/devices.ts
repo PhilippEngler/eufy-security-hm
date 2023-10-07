@@ -7,6 +7,9 @@ import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, DynamicLighting, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, parseValue, waitForEvent } from "./utils";
 import { CameraEvent } from "./utils/utils";
+import { DeviceInteractions, EventInteraction } from "./utils/models";
+import { EventInteractionType } from "./utils/types";
+import { EventInteractions } from "./eventInteractions";
 
 /**
  * Represents all the Devices in the account.
@@ -15,6 +18,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 {
     private api : EufySecurityApi;
     private httpService : HTTPApi;
+    private eventInteractions: EventInteractions;
     private devices : { [deviceSerial : string] : any } = {};
     //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
     private devicesLastEvent : { [deviceSerial : string] : CameraEvent | null } = {};
@@ -25,6 +29,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
     /**
      * Create the Devices objects holding all devices in the account.
+     * @param api  The api.
      * @param httpService The httpService.
      */
     constructor(api : EufySecurityApi, httpService : HTTPApi)
@@ -32,6 +37,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         super();
         this.api = api;
         this.httpService = httpService;
+        this.eventInteractions = new EventInteractions(this.api);
 
         if(this.api.getApiUsePushService() == false)
         {
@@ -889,6 +895,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onMotionDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        if(state === true)
+        {
+            var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
+            if(deviceEventInteraction !== null)
+            {
+                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+            }
+        }
         if(state === false)
         {
             this.loadDeviceImage(device.getSerial());
@@ -921,6 +935,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         this.api.logDebug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
         //this.setLastVideoTimeNow(device.getSerial());
+        var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
+        if(deviceEventInteraction !== null)
+        {
+            this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+        }
     }
 
     /**
@@ -1360,6 +1379,46 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             return result.start_time.valueOf();
         }
         return undefined;
+    }
+
+    /**
+     * Retrieve the interactions for a given device.
+     * @param deviceSerial The serial of the device.
+     */
+    public getDeviceInteractions(deviceSerial: string): DeviceInteractions | null
+    {
+        return this.eventInteractions.getDeviceInteractions(deviceSerial);
+    }
+
+    /**
+     * Retrieve the interaction for a given eventInteractionType for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    public getDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): EventInteraction | null
+    {
+        return this.eventInteractions.getDeviceEventInteraction(deviceSerial, eventInteractionType);
+    }
+
+    /**
+     * Updates a interaction for a given eventInteractionType for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     * @param deviceEventInteraction The eventIntegration data.
+     */
+    public setDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType, deviceEventInteraction: EventInteraction): boolean
+    {
+        return this.eventInteractions.setDeviceInteraction(deviceSerial, eventInteractionType, deviceEventInteraction);
+    }
+
+    /**
+     * Delete a specified interaction for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    public deleteDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): boolean
+    {
+        return this.eventInteractions.deleteDeviceEventInteraction(deviceSerial, eventInteractionType);
     }
 
     /**

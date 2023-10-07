@@ -241,6 +241,28 @@ export class HomematicApi
     }
 
     /**
+     * Send a command to the CCU.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
+     * @param command The command to be executed.
+     */
+    public async sendInteractionCommand(hostName: string, useHttps: boolean, command: string): Promise<void>
+    {
+        var requestData = command;
+        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+
+        try
+        {
+            await this.request(hostName, useHttps, requestData, requestConfig);
+        }
+        catch(error : any)
+        {
+            this.api.logError(`CCU request error on sendInteractionCommand(): code: ${error.code}; message: ${error.message}`);
+            this.api.logDebug(`CCU request error on sendInteractionCommand():`, JSON.stringify(error));
+        }
+    }
+
+    /**
      * Returns the content of the logile.
      */
     public async getLogFileContent(): Promise<string>

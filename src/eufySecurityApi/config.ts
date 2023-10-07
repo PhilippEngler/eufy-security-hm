@@ -107,7 +107,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 14;
+        return 15;
     }
 
     /**
@@ -209,6 +209,9 @@ export class Config
         var devicePublicKeys : [] = [];
         config.devicePublicKeys = devicePublicKeys;
 
+        var interactions = "null";
+        config.interactions = interactions;
+
         return config;
     }
 
@@ -282,6 +285,16 @@ export class Config
                 {
                     this.logger.logInfoBasic(" adding 'serverPublicKey'.");
                     configJson.accountData.serverPublicKey = "";
+                }
+                updated = true;
+            }
+            if(configJson.configVersion < 15)
+            {
+                this.logger.logInfoBasic("Configfile needs Stage2 update to version 15...");
+                if(configJson.interactions === undefined)
+                {
+                    this.logger.logInfoBasic(" adding 'interactions'.");
+                    configJson.interactions = "null";
                 }
                 updated = true;
             }
@@ -2104,6 +2117,32 @@ export class Config
         if(this.configJson.accountData.language != language)
         {
             this.configJson.accountData.language = language;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Retrieves the interactions from the config.
+     * @returns The integrations.
+     */
+    public getInteractions(): string
+    {
+        if(this.configJson.interactions !== undefined)
+        {
+            return this.configJson.interactions;
+        }
+        return "";
+    }
+
+    /**
+     * Set the integrations.
+     * @param interactions The interactions to set.
+     */
+    public setInteractions(interactions: string): void
+    {
+        if(this.configJson.interactions !== interactions)
+        {
+            this.configJson.interactions = interactions;
             this.hasChanged = true;
         }
     }

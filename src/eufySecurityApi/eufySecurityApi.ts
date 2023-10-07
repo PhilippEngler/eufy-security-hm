@@ -17,6 +17,7 @@ import { PhoneModels, timeZoneData } from './http/const';
 import { getModelName, makeDateTimeString } from './utils/utils';
 import { countryData } from './utils/const';
 import path from 'path';
+import { EventInteractionType } from './utils/types';
 
 export class EufySecurityApi
 {
@@ -1152,7 +1153,12 @@ export class EufySecurityApi
                 var device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
-                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "data":device.getProperties()};
+                    var temp = this.devices.getDeviceInteractions(device.getSerial());
+                    if(temp === undefined || temp === null)
+                    {
+                        temp = null;
+                    }
+                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "data":device.getProperties(), "interactions":temp};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -2871,6 +2877,106 @@ export class EufySecurityApi
         {
             this.homematicApi.setSystemVariable("localhost", false, systemVariable, newValue);
         }
+    }
+
+    /**
+     * Send the interaction to the target.
+     * @param hostName The hostname.
+     * @param useHttps true if use https, otherwise false.
+     * @param command The command to be executed.
+     */
+    public async sendInteractionCommand(hostName: string, useHttps: boolean, command: string): Promise<void>
+    {
+        await this.homematicApi.sendInteractionCommand(hostName, useHttps, command);
+    }
+
+    /**
+     * Set the interaction.
+     * @param serialNumber The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     * @param target the target.
+     * @param useHttps true if use https, otherwise false.
+     * @param command The command to be executed.
+     */
+    public setInteraction(serialNumber: string, eventInteractionType: EventInteractionType, target: string, useHttps: boolean, command: string): string
+    {
+        var json = {};
+        try
+        {
+            if(serialNumber !== "" && eventInteractionType >= 0 && eventInteractionType <= 12 && target !== "" && command !== "")
+            {
+                var res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, {target: target, useHttps: useHttps, command: command});
+                if(res === true)
+                {
+                    json = {"success":true, "data":`Interaction has been added successfully.`};
+                }
+                else
+                {
+                    json = {"success":false, "reason":"Interaction not been added."};
+                }
+            }
+            else
+            {
+                json = {"success":false, "reason":"One or more arguments not given."};
+            }
+        }
+        catch (error: any)
+        {
+            json = {"success":false, "reason":`${error.message}`};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Test the interaction.
+     * @param serialNumber The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    public async testInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string>
+    {
+        var json = {};
+        var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+        if(deviceInteraction !== null)
+        {
+            await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.command);
+            json = {"success":true, "data":`Sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+        }
+        else
+        {
+            json = {"success":false, "data":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Delete the interaction.
+     * @param serialNumber The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    public async deleteInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string>
+    {
+        var json = {};
+        var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+        try
+        {
+            if(deviceInteraction !== null)
+            {
+                this.devices.deleteDeviceInteraction(serialNumber, eventInteractionType);
+                json = {"success":true, "data":`Delete interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+            }
+            else
+            {
+                json = {"success":false, "data":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+            }
+        }
+        catch (error: any)
+        {
+            json = {"success":false, "reason":`${error.message}`};
+        }
+
+        return JSON.stringify(json);
     }
 
     /**

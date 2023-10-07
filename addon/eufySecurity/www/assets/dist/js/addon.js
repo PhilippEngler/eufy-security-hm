@@ -868,7 +868,7 @@ function getDeviceProperties(deviceId, devicePropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.data);
+					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.data, objResp.interactions);
 				}
 				else
 				{
@@ -913,7 +913,7 @@ function generateDeviceModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, deviceProperties)
+function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, deviceProperties, deviceInteractions)
 {
 	var setEventHandler = true;
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
@@ -1597,6 +1597,65 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
+	if(deviceProperties.motionDetected !== undefined || deviceProperties.ringing !== undefined)
+	{
+		deviceModal += `
+								<div class="card mt-3" id="cardDeviceInteraction">
+									<h5 class="card-header">Interaktion mit der CCU</h5>
+									<div class="card-body">`;
+		if(deviceProperties.motionDetected !== undefined)
+		{
+			deviceModal += `
+										<h5>Reaktion auf Bewegung</h5>
+										${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventTarget", "motionEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].target !== "" ? deviceInteractions.eventInteractions[0].target : ""}`, false, false)}
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventUseHttps", false, false)}
+										${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "motionEventCommand", "motionEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].command !== "" ? atob(deviceInteractions.eventInteractions[0].command) : ""}`, false, false)}
+										<div class="btn-group" role="group">
+											${makeButtonElement("btnMotionSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-check2" title="Save"></i> Save`, true, undefined, undefined, true)}`;
+			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].target !== "" && deviceInteractions.eventInteractions[0].command !== ""))
+			{
+				deviceModal += `
+											${makeButtonElement("btnMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-play" title="Test"></i> Test`, true, undefined, undefined, true)}
+											${makeButtonElement("btnMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-trash3" title="Delete"></i> Delete`, true, undefined, undefined, true)}`;
+			}
+			else
+			{
+				deviceModal += `
+											${makeButtonElement("btnMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-play" title="Test"></i> Test`, false, undefined, undefined, true)}
+											${makeButtonElement("btnMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-trash3" title="Delete"></i> Delete`, false, undefined, undefined, true)}`;
+			}
+			deviceModal += `
+										</div>`;
+		}
+		if(deviceProperties.ringing !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.motionDetected !== undefined ? `<hr />` : ``}
+										<h5>Reaktion auf Klingel</h5>
+										${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventTarget", "ringEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].target !== "" ? deviceInteractions.eventInteractions[12].target : ""}`, false, false)}
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventUseHttps", false, false)}
+										${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "ringEventCommand", "ringEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].command !== "" ? atob(deviceInteractions.eventInteractions[12].command) : ""}`, false, false)}
+										<div class="btn-group" role="group">
+											${makeButtonElement("btnRingSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-check2" title="Save"></i> Save`, true, undefined, undefined, true)}`;
+			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].target !== "" && deviceInteractions.eventInteractions[12].command !== ""))
+			{
+				deviceModal += `
+											${makeButtonElement("btnRingTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-play" title="Test"></i> Test`, true, undefined, undefined, true)}
+											${makeButtonElement("btnRingDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-trash3" title="Delete"></i> Delete`, true, undefined, undefined, true)}`;
+			}
+			else
+			{
+				deviceModal += `
+											${makeButtonElement("btnRingTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-play" title="Test"></i> Test`, false, undefined, undefined, true)}
+											${makeButtonElement("btnRingDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-trash3" title="Delete"></i> Delete`, false, undefined, undefined, true)}`;
+			}
+			deviceModal += `
+										</div>`;
+		}
+		deviceModal += `
+									</div>
+								</div>`;
+	}
 	deviceModal += `
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
@@ -1606,6 +1665,200 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 					</div>`;
 
 	document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
+}
+
+function saveEventInteraction(deviceId, deviceName, serialNumber, event)
+{
+	var eventInteraction;
+
+	switch(event)
+	{
+		case "motion":
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 0, "target": "${document.getElementById("txtBoxMotionEventTarget").value}", "useHttps": ${document.getElementById("chkMotionEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaMotionEventCommand").value)}"}`;
+			break;
+		case "ring":
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 12, "target": "${document.getElementById("txtBoxRingEventTarget").value}", "useHttps": ${document.getElementById("chkRingEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaRingEventCommand").value)}"}`;
+			break;
+		default:
+			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion speichern.";
+			document.getElementById("toastPropertyUpdateFailedText").innerHTML = "Der Typ der Interaktion ist unbekannt.";
+			toast.show();
+			return;
+	}
+
+	var xmlHttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/setInteraction`;
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.addEventListener("load", function(event)
+	{
+		//
+	});
+	xmlHttp.addEventListener("error", function(event)
+	{
+		//
+	});
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = "Interaktion speichern.";
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = "Die Interaktion wurde erfolgreich gespeichert.";
+					toast.show();
+					generateDeviceSettingsModal(deviceId, deviceName)
+				}
+				else
+				{
+					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion speichern.";
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = "Die Interaktion konnte nicht gespeichert werden.";
+					toast.show();
+				}
+			}
+			catch (e)
+			{
+				alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+		}
+		else
+		{
+			//
+		}
+	};
+	xmlHttp.open("POST", url);
+	xmlHttp.send(eventInteraction);
+}
+
+function testEventInteraction(deviceId, deviceName, serialNumber, event)
+{
+	var eventType;
+
+	switch(event)
+	{
+		case "motion":
+			eventType = 0;
+			break;
+		case "ring":
+			eventType = 12;
+			break;
+		default:
+			return;
+	}
+	
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/testInteraction/${serialNumber}/${eventType}`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = "Interaktion testen.";
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = "Die Interaktion wurde ausgeführt.";
+					toast.show();
+					generateDeviceSettingsModal(deviceId, deviceName)
+				}
+				else
+				{
+					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion testen.";
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = "Die Interaktion konnte nicht getestet werden.";
+					toast.show();
+				}
+			}
+			catch (e)
+			{
+				alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			//
+		}
+		else
+		{
+			//
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+
+function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
+{
+	var eventType;
+
+	switch(event)
+	{
+		case "motion":
+			eventType = 0;
+			break;
+		case "ring":
+			eventType = 12;
+			break;
+		default:
+			return;
+	}
+	
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/deleteInteraction/${serialNumber}/${eventType}`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = "Interaktion löschen.";
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = "Die Interaktion wurde entfernt.";
+					toast.show();
+					generateDeviceSettingsModal(deviceId, deviceName)
+				}
+				else
+				{
+					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion löschen.";
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = "Die Interaktion konnte nicht entfernt werden.";
+					toast.show();
+				}
+			}
+			catch (e)
+			{
+				alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			//
+		}
+		else
+		{
+			//
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
 }
 
 function isStationOrDevicesKnown(modell)
@@ -1637,6 +1890,24 @@ function isStationOrDevicesKnown(modell)
 		default:
 			return false;
 	}
+}
+
+function generateElementTextBox(type, serialNumber, name, propertyName, hint, placeholder, value, disabled, readonly)
+{
+	return `<div class="mb-2">
+		<label for="txtBox${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label">${getPropertyNameInGerman(propertyName)}</label>
+		<input class="form-control" type="text"${placeholder !== undefined || placeholder !== "" ? ` placeholder="${placeholder}"` : ""} aria-label="" id="txtBox${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value}"${disabled == true ? " disabled" : ""}${readonly == true ? " readonly" : ""}>
+		${hint !== undefined || hint !== "" ? `<div id="passwordHelpBlock" class="form-text">${getPropertyNameInGerman(hint)}</div>` : ""}
+	</div>`;
+}
+
+function generateElementTextArea(type, serialNumber, name, rows, propertyName, hint, placeholder, value, disabled, readonly)
+{
+	return `<div class="mb-2">
+		<label for="txtArea${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label">${getPropertyNameInGerman(propertyName)}</label>
+		<textarea class="form-control" id="txtArea${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" rows="${rows}"${disabled == true ? " disabled" : ""}${readonly == true ? " readonly" : ""} style="font-family:monospace;">${value}</textarea>
+		${hint !== undefined || hint !== "" ? `<div id="passwordHelpBlock" class="form-text">${getPropertyNameInGerman(hint)}</div>` : ""} 
+	</div>`;
 }
 
 function generateElementSwitch(type, serialNumber, name, propertyName, value, setEventHandler)
@@ -1948,9 +2219,24 @@ function getPropertyNameInGerman(propertyName)
 		case "notification":
 			return "Benachrichtigungen aktivieren";
 		case "chirpTone":
-			return "Benachrichtigungston auswählen"
+			return "Benachrichtigungston auswählen";
 		case "chirpVolume":
-			return "Lautstärke Bestätigungstons"
+			return "Lautstärke Bestätigungstons";
+		case "motionEventTarget":
+		case "ringEventTarget":
+			return "CCU, auf der die Interaktion ausgeführt werden soll";
+		case "motionEventTargetHint":
+		case "ringEventTargetHint":
+			return "Bitte entweder 'localhost', die IP-Adresse oder den DNS-Namen der Ziel-CCU eingeben, ohne die Angabe von 'http://' oder 'https://'.";
+		case "motionEventUseHttps":
+		case "ringEventUseHttps":
+			return "Verbindung über HTTPS herstellen";
+		case "motionEventCommand":
+		case "ringEventCommand":
+			return "Befehl, der ausgeführt werden soll";
+		case "motionEventCommandHint":
+		case "ringEventCommandHint":
+			return "Der hier einzugebende Befehl kann im Vorfeld auch über die Skript-Testen-Funktion der CCU getestet werden.";
 		default:
 			return propertyName;
 	}
