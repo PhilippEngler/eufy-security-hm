@@ -83,10 +83,10 @@
 								<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0">Inhalt der Protokolldatei</h5></div>
 								<div style="text-align:right;">
 									<span class="text-nowrap">
-										<h5 class="mb-0">
-											<a id="lnkDeleteLogfileData" href="javascript:void(0);" onclick="emptyLogfile('log')" class="link-primary me-3"><i class="bi-trash" title="Entferne alle Einträge"></i></a>
-											<a id="lnkDownloadLogfile" href="javascript:void(0);" onclick="downloadFile('log')" class="link-primary"><i class="bi-download" title="Download"></i></a>
-										</h5>
+										<div class="btn-group mb-0 py-0" role="group">
+											<button id="btnDeleteLogfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="emptyLogfile('log')" disabled><i class="bi-trash" title="Entferne alle Einträge"></i></button>
+											<button id="btnDownloadLogfile" type="button" class="btn btn-link btn-sm mb-0 py-0 pe-0" onclick="downloadFile('log')" disabled><i class="bi-download" title="Download"></i></button>
+										</div>
 									</span>
 								</div>
 							</div>
@@ -107,10 +107,10 @@
 								<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0">Inhalt der Fehlerprotokolldatei</h5></div>
 								<div style="text-align:right;">
 									<span class="text-nowrap">
-										<h5 class="mb-0">
-											<a id="lnkDeleteErrorfileData" href="javascript:void(0);" onclick="emptyLogfile('err')" class="link-primary me-3"><i class="bi-trash" title="Entferne alle Einträge"></i></a>
-											<a id="lnkDownloadErrorfile" href="javascript:void(0);" onclick="downloadFile('err')" class="link-primary"><i class="bi-download" title="Download"></i></a>
-										</h5>
+										<div class="btn-group mb-0" role="group">
+											<button id="btnDeleteErrorfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="emptyLogfile('err')" disabled><i class="bi-trash" title="Entferne alle Einträge"></i></button>
+											<button id="btnDownloadErrorfile" type="button" class="btn btn-link btn-sm mb-0 py-0 pe-0" onclick="downloadFile('err')" disabled><i class="bi-download" title="Download"></i></button>
+										</div>
 									</span>
 								</div>
 							</div>

@@ -4719,7 +4719,7 @@ function loadLogfile(logfiletype, showLoading)
 		case "index":
 			break;
 		case "log":
-			url = `${location.protocol}//${location.hostname}:${port}/getLogFileContent`;
+			url=`${location.protocol}//${location.hostname}:${port}/getLogFileContent`;
 			break;
 		case "err":
 			url=`${location.protocol}//${location.hostname}:${port}/getErrorFileContent`;
@@ -4739,9 +4739,19 @@ function loadLogfile(logfiletype, showLoading)
 			{
 				case "log":
 					document.getElementById("log").innerHTML = `<code>${log}</code>`;
+					if(log !== "Die Datei '/var/log/eufySecurity.log' ist leer.")
+					{
+						document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
+						document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
+					}
 					break;
 				case "err":
 					document.getElementById("err").innerHTML = `<code>${log}</code>`;
+					if(log !== "Die Datei '/var/log/eufySecurity.err' ist leer.")
+					{
+						document.getElementById("btnDeleteErrorfileData").removeAttribute("disabled");
+						document.getElementById("btnDownloadErrorfile").removeAttribute("disabled");
+					}
 					break;
 			}
 		}
