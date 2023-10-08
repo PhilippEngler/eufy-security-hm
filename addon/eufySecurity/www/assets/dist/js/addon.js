@@ -4739,7 +4739,12 @@ function loadLogfile(logfiletype, showLoading)
 			{
 				case "log":
 					document.getElementById("log").innerHTML = `<code>${log}</code>`;
-					if(log !== "Die Datei '/var/log/eufySecurity.log' ist leer.")
+					if(log === "Die Datei '/var/log/eufySecurity.log' ist leer.")
+					{
+						document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
+						document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
+					}
+					else
 					{
 						document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
 						document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
@@ -4747,7 +4752,12 @@ function loadLogfile(logfiletype, showLoading)
 					break;
 				case "err":
 					document.getElementById("err").innerHTML = `<code>${log}</code>`;
-					if(log !== "Die Datei '/var/log/eufySecurity.err' ist leer.")
+					if(log === "Die Datei '/var/log/eufySecurity.err' ist leer.")
+					{
+						document.getElementById("btnDeleteErrorfileData").setAttribute("disabled", true);
+						document.getElementById("btnDownloadErrorfile").setAttribute("disabled", true);
+					}
+					else
 					{
 						document.getElementById("btnDeleteErrorfileData").removeAttribute("disabled");
 						document.getElementById("btnDownloadErrorfile").removeAttribute("disabled");
