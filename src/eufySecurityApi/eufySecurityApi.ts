@@ -2935,16 +2935,23 @@ export class EufySecurityApi
      */
     public async testInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string>
     {
-        var json = {};
-        var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
-        if(deviceInteraction !== null)
+        try
         {
-            await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.command);
-            json = {"success":true, "data":`Sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+            var json = {};
+            var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+            if(deviceInteraction !== null)
+            {
+                await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.command);
+                json = {"success":true, "data":`Sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+            }
+            else
+            {
+                json = {"success":false, "data":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+            }
         }
-        else
+        catch (error: any)
         {
-            json = {"success":false, "data":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+            json = {"success":false, "reason":`${error.message}`};
         }
 
         return JSON.stringify(json);
@@ -2957,10 +2964,10 @@ export class EufySecurityApi
      */
     public async deleteInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string>
     {
-        var json = {};
-        var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
         try
         {
+            var json = {};
+            var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
             if(deviceInteraction !== null)
             {
                 this.devices.deleteDeviceInteraction(serialNumber, eventInteractionType);

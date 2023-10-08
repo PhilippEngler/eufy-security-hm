@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20230917
+ * 20231008
  */
 action = "";
 port = "";

@@ -897,11 +897,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
         if(state === true)
         {
-            var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
-            if(deviceEventInteraction !== null)
+            try
             {
-                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
             }
+            catch {}
         }
         if(state === false)
         {
@@ -935,11 +939,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         this.api.logDebug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
         //this.setLastVideoTimeNow(device.getSerial());
-        var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
-        if(deviceEventInteraction !== null)
+        try
         {
-            this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+            var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
+            if(deviceEventInteraction !== null)
+            {
+                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+            }
         }
+        catch {}
     }
 
     /**

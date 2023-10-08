@@ -78,12 +78,19 @@ export class EventInteractions
     {
         if(this.interactions !== null)
         {
-            var eventInteraction = JSON.parse(JSON.stringify(this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType]));
-            if(eventInteraction !== null)
+            try
             {
-                eventInteraction.command = Buffer.from(eventInteraction.command, 'base64').toString();
+                var eventInteraction = JSON.parse(JSON.stringify(this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType]));
+                if(eventInteraction !== null)
+                {
+                    eventInteraction.command = Buffer.from(eventInteraction.command, 'base64').toString();
+                }
+                return eventInteraction;
             }
-            return eventInteraction;
+            catch (error: any)
+            {
+                throw new Error(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
+            }
         }
         return null;
     }
