@@ -115,7 +115,7 @@ export class EufySecurityApi
             this.httpService.on("connection error", (error: Error) => this.onAPIConnectionError(error));
 
             this.httpService.setToken(this.getToken());
-            this.httpService.setTokenExpiration(new Date(this.getTokenExpire()*1000));
+            this.httpService.setTokenExpiration(new Date(this.getTokenExpire()));
             
             if (this.config.getOpenudid() == "")
             {
@@ -764,7 +764,7 @@ export class EufySecurityApi
         {
             this.logger.debug("Save cloud token and token expiration", { token: token, tokenExpiration: token_expiration });
             this.config.setToken(token);
-            this.config.setTokenExpire(token_expiration.getTime() / 1000);
+            this.config.setTokenExpire(token_expiration.getTime());
         }
     }
 
@@ -2991,7 +2991,25 @@ export class EufySecurityApi
      */
     public async getLogFileContent() : Promise<string>
     {
-        return await this.homematicApi.getLogFileContent();
+        var json = {};
+        try
+        {
+            var errorContent = await this.homematicApi.getLogFileContent();
+            if(errorContent === "")
+            {
+                json = {"success":true, "hasData": false};
+            }
+            else
+            {
+                json = {"success":true, "hasData": true, "data": encodeURIComponent(errorContent)};
+            }
+        }
+        catch(error: any)
+        {
+            json = {"success":false, "reason":`${error.message}`};
+        }
+
+        return JSON.stringify(json);
     }
 
     /**
@@ -2999,7 +3017,25 @@ export class EufySecurityApi
      */
     public async getErrorFileContent() : Promise<string>
     {
-        return await this.homematicApi.getErrorFileContent();
+        var json = {};
+        try
+        {
+            var errorContent = await this.homematicApi.getErrorFileContent();
+            if(errorContent === "")
+            {
+                json = {"success":true, "hasData": false};
+            }
+            else
+            {
+                json = {"success":true, "hasData": true, "data": encodeURIComponent(errorContent)};
+            }
+        }
+        catch(error: any)
+        {
+            json = {"success":false, "reason":`${error.message}`};
+        }
+
+        return JSON.stringify(json);
     }
 
     /**
@@ -3389,7 +3425,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.9.0-b347";
+        return "2.5.0";
     }
 
     /**
@@ -3398,6 +3434,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.8.1";
+        return "2.9.0-b347";
     }
 }
