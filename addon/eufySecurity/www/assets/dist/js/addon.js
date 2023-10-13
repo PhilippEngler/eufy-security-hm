@@ -1,11 +1,11 @@
 /**
  * Javascript for eufySecurity Addon
- * 20231008
+ * 20231013
  */
 action = "";
 port = "";
 redirectTarget = "";
-version = "2.2.3";
+version = "2.5.0";
 
 /**
  * common used java script functions
@@ -220,9 +220,9 @@ function getCaptchaImage(page)
 			{
 				if(objResp.captchaNeeded == true)
 				{
-					document.getElementById("captchaHint").innerHTML = `Bitte geben Sie in das Textfeld den String aus dem Captcha ein.`;
+					document.getElementById("captchaHint").innerHTML = `Bitte geben Sie in das Textfeld die Zeichenkette ein, die in dem Captcha dargestellt wird.`;
 					document.getElementById("captchaImage").innerHTML = `<label class="my-2" for="txtCaptchaCode">Captcha.</label><br /><img src="${objResp.captcha.captcha}" alt="Captcha Image">`;
-					document.getElementById("captchaCode").innerHTML = `<label class="my-2" for="txtCaptchaCode">Zeichenfolge, die in dem Captcha dargestellt wird.</label><input type="text" class="form-control" id="txtCaptchaCode">`;
+					document.getElementById("captchaCode").innerHTML = `<label class="my-2" for="txtCaptchaCode">Zeichenkette, die in dem Captcha dargestellt wird.</label><input type="text" class="form-control" id="txtCaptchaCode">`;
 					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode('${page}')" class="btn btn-primary" type="button" value="Login fortsetzen">`;
 					document.getElementById("btnCloseModalDeviceSettingsBottom").setAttribute("disabled", true);
 				}
@@ -234,12 +234,12 @@ function getCaptchaImage(page)
 			}
 			else
 			{
-				document.getElementById("captchaHint").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Captcha Status.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
+				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", "Fehler beim Laden des Captcha Status.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			document.getElementById("captchaHint").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Captcha Status.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
+			document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", "Fehler beim Laden des Captcha Status.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
 		}
 		else
 		{
@@ -267,16 +267,16 @@ function setCaptchaCode(page)
 			}
 			else
 			{
-				//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
+				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", "Fehler beim Senden der Captcha Zeichenkette.", "", `Es ist folgender Fehler aufgetreten: ${objResp.reason}`)}`;
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			//document.getElementById("stations").innerHTML = `<h4>Stationen</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden der Station.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
+			document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", "Fehler beim Senden der Captcha Zeichenkette.", "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.", `Rückgabewert 'Status' ist '${this.status}'. Rückgabewert 'ReadyState' ist '4'.`)}`;
 		}
 		else
 		{
-			//document.getElementById("stations").innerHTML = createWaitMessage("Lade verfügbare Stationen...");
+			document.getElementById("captchaHint").innerHTML = createWaitMessage("Sende Captcha Zeichenkette...");
 		}
 	};
 	xmlhttp.open("GET", url, true);
@@ -351,7 +351,7 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 
 	card += `<div class="col"><div class="card">`;
 	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
-	card += `${showSettingsIcon == true ? `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${station.isP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>&nbsp;&nbsp;` : ""}<i class="bi-gear" title="Einstellungen" onclick="generateStationSettingsModal('${station.serialNumber}')"></i></h5></span></div>` : ""}`;
+	card += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${station.isP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>` : ""}${station.isP2PConnected === false && showSettingsIcon === true ? `&nbsp;&nbsp;` : ""}${showSettingsIcon === true ? `<i class="bi-gear" title="Einstellungen" onclick="generateStationSettingsModal('${station.serialNumber}')"></i>` : ""}</h5></span></div>`;
 	card += `</div>`;
 	
 	card += `<div class="card-body p-0"><div class="row g-0">`;
@@ -534,7 +534,7 @@ function createCardDevice(device)
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
-	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>&nbsp;&nbsp;` : ""}${device.state === 2 ? `<i class="bi-exclamation-triangle" title="Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert."></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel, device.wifiRssi)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
+	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="Es besteht keine P2P-Verbindung zu diesem Gerät."></i>` : ""}${device.isStationP2PConnected === false && (device.state === 2 || device.wifiSignalLevel === undefined || device.wifiRssi === undefined) ? `&nbsp;&nbsp;` : ""}${device.state === 2 ? `<i class="bi-exclamation-triangle" title="Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert."></i>` : ""}${device.state === 2 && (device.wifiSignalLevel === undefined || device.wifiRssi === undefined) ? `&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel, device.wifiRssi)}" title="WiFi Empfangsstärke: ${device.wifiRssi}dB"></i>`}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `&nbsp;&nbsp;`}<i class="bi-gear" title="Einstellungen" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
 
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
@@ -845,9 +845,7 @@ function getDevicePropertiesMetadata(deviceId)
 			document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage("Fehler beim Laden der DevicePropertiesMetadata.");
 		}
 		else
-		{
-			//document.getElementById("divModalDeviceSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
-		}
+		{ }
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
@@ -885,9 +883,7 @@ function getDeviceProperties(deviceId, devicePropertiesMetadata)
 			document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage("Fehler beim Laden der DeviceProperties.");
 		}
 		else
-		{
-			//document.getElementById("divModalDeviceSettingsContent").innerHTML = createWaitMessage("Lade Einstellungen des Geräts...");</strong></div>`;
-		}
+		{ }
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
@@ -1723,17 +1719,21 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 			}
 			catch (e)
 			{
-				alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion speichern.";
+				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `Die Interaktion konnte nicht gespeichert werden.<br />Status: ${this.status}<br />Error: ${e}`;
+				toast.show();
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion speichern.";
+			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `Die Interaktion konnte nicht gespeichert werden.<br />Status: ${this.status} | ReadyState: ${this.readyState}`;
+			toast.show();
 		}
 		else
-		{
-			//
-		}
+		{ }
 	};
 	xmlHttp.open("POST", url);
 	xmlHttp.send(eventInteraction);
@@ -1784,17 +1784,21 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 			}
 			catch (e)
 			{
-				alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion testen.";
+				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `Die Interaktion konnte nicht getestet werden.<br />Status: ${this.status}<br />>Error: ${e}`;
+				toast.show();
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			//
+			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion speichern.";
+			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `Die Interaktion konnte nicht getestet werden.<br />Status: ${this.status} | ReadyState: ${this.readyState}`;
+			toast.show();
 		}
 		else
-		{
-			//
-		}
+		{ }
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
@@ -1845,17 +1849,21 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 			}
 			catch (e)
 			{
-				alert(`ReadyState: ${this.readyState} | Status: ${this.status} | Error: ${e}`)
+				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion löschen.";
+				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `Die Interaktion konnte nicht entfernt werden.<br />Status: ${this.status}<br />>Error: ${e}`;
+				toast.show();
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			//
+			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Interaktion löschen.";
+			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `Die Interaktion konnte nicht entfernt werden.<br />Status: ${this.status} | ReadyState: ${this.readyState}`;
+			toast.show();
 		}
 		else
-		{
-			//
-		}
+		{ }
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
@@ -2632,7 +2640,10 @@ function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 		}
 		else if(this.readyState == 4)
 		{
-			//document.getElementById("divModalDeviceSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.", "", "")}`;
+			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = "Einstellungen speichern.";
+				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `Die Einstellungen konnten nicht gespeichert werden.<br>Status ${this.status} | ReadyState: ${this.readyState}`;
+				toast.show();
 		}
 		else
 		{
@@ -2744,9 +2755,7 @@ function getTimeZones(stationId)
 			document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage("Fehler beim Laden der Zeitzoneninformationen.");
 		}
 		else
-		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade Zeitzoneninformationen...");</strong></div>`;
-		}
+		{ }
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
@@ -2784,9 +2793,7 @@ function getStationPropertiesMetadata(stationId, timeZones)
 			document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage("Fehler beim Laden der StationPropertiesMetadata.");
 		}
 		else
-		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade StationPropertiesMetadata...");</strong></div>`;
-		}
+		{ }
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
@@ -2824,9 +2831,7 @@ function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 			document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage("Fehler beim Laden der StationProperties.");
 		}
 		else
-		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = createWaitMessage("Lade StationProperties...");</strong></div>`;
-		}
+		{ }
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
@@ -3085,7 +3090,7 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 		}
 		else if(this.readyState == 4)
 		{
-			//document.getElementById("divModalStationSettingsContent").innerHTML = `<h4>Geräte</h4>${createMessageContainer("alert alert-danger", "Fehler beim Laden des Geräts.", "", "")}`;
+			
 		}
 		else
 		{
@@ -4713,7 +4718,7 @@ function clearInputField(elementName)
 //#region logfiles.html
 function loadLogfile(logfiletype, showLoading)
 {
-	var xmlHttp, url;
+	var xmlHttp, url, objResp, logData;
 	switch(logfiletype)
 	{
 		case "index":
@@ -4724,6 +4729,8 @@ function loadLogfile(logfiletype, showLoading)
 		case "err":
 			url=`${location.protocol}//${location.hostname}:${port}/getErrorFileContent`;
 			break;
+		default:
+			return;
 	}
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
@@ -4731,38 +4738,66 @@ function loadLogfile(logfiletype, showLoading)
 	{
 		if(this.readyState == 4 && this.status == 200)
 		{
-			var log = this.responseText;
-			log = log.replace(/  /g, " &nbsp;");
-			log = log.replace(/<[^>]*>/g, '');
-			log = log.replace(/\n/g, "<br />");
-			switch(logfiletype)
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success === true)
 			{
-				case "log":
-					document.getElementById("log").innerHTML = `<code>${log}</code>`;
-					if(log === "Die Datei '/var/log/eufySecurity.log' ist leer.")
-					{
+				if(objResp.hasData === true)
+				{
+					logData = decodeURIComponent(objResp.data);
+					
+					logData = logData.replace(/ /g, "&nbsp;");
+					logData = logData.replace(/>/g, '&gt;');
+					logData = logData.replace(/</g, '&lt;');
+					logData = logData.replace(/\n/g, "<br />");
+				}
+
+				switch(logfiletype)
+				{
+					case "log":
+						if(objResp.hasData === true)
+						{
+							document.getElementById("log").innerHTML = `<code>${logData}</code>`;
+							document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
+							document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("log").innerHTML = `<code>Die Datei '/var/log/eufySecurity.log' ist leer.</code>`;
+							document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
+							document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
+						}
+						break;
+					case "err":
+						if(objResp.hasData === true)
+						{
+							document.getElementById("err").innerHTML = `<code>${logData}</code>`;
+							document.getElementById("btnDeleteErrorfileData").removeAttribute("disabled");
+							document.getElementById("btnDownloadErrorfile").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("err").innerHTML = `<code>Die Datei '/var/log/eufySecurity.err' ist leer.</code>`;
+							document.getElementById("btnDeleteErrorfileData").setAttribute("disabled", true);
+							document.getElementById("btnDownloadErrorfile").setAttribute("disabled", true);
+						}
+						break;
+				}
+			}
+			else
+			{
+				switch(logfiletype)
+				{
+					case "log":
+						document.getElementById("log").innerHTML = `<code>${objResp.reason}</code>`;
 						document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
 						document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
-					}
-					else
-					{
-						document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
-						document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
-					}
-					break;
-				case "err":
-					document.getElementById("err").innerHTML = `<code>${log}</code>`;
-					if(log === "Die Datei '/var/log/eufySecurity.err' ist leer.")
-					{
+						break;
+					case "err":
+						document.getElementById("err").innerHTML = `<code>${objResp.reason}</code>`;
 						document.getElementById("btnDeleteErrorfileData").setAttribute("disabled", true);
 						document.getElementById("btnDownloadErrorfile").setAttribute("disabled", true);
-					}
-					else
-					{
-						document.getElementById("btnDeleteErrorfileData").removeAttribute("disabled");
-						document.getElementById("btnDownloadErrorfile").removeAttribute("disabled");
-					}
-					break;
+						break;
+				}
 			}
 		}
 		else if(this.readyState == 4)
