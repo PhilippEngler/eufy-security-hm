@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'fs';
 import { EufySecurityApi } from './eufySecurityApi';
 
 /**
- * Working with the CCU.
+ * Interacting with the CCU.
  */
 export class HomematicApi
 {
@@ -47,7 +47,7 @@ export class HomematicApi
      */
     public async getSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var requestData = "string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='" + variableName + "'){result=svObject.Value();break;}}svName='null';svObject=null;";
+        var requestData = `string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='${variableName}'){result=svObject.Value();break;}}svName='null';svObject=null;`;
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
         var data = "";
@@ -77,7 +77,7 @@ export class HomematicApi
      */
     public async getSystemVariable1(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var requestData = "result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').Value()";
+        var requestData = `result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').Value()`;
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
         var data = "";
@@ -108,7 +108,7 @@ export class HomematicApi
      */
     public async setSystemVariable(hostName: string, useHttps: boolean, variableName: string, value: string): Promise<void>
     {
-        var requestData = "dom.GetObject(ID_SYSTEM_VARIABLES).Get('" + variableName + "').State('" + value + "')";
+        var requestData = `dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').State('${value}')`;
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
         var data = "";
@@ -126,7 +126,6 @@ export class HomematicApi
         {
             this.api.logError(`CCU request error on setSystemVariable(): code: ${error.code}; message: ${error.message}`);
             this.api.logDebug(`CCU request error on setSystemVariable():`, JSON.stringify(error));
-            //return undefined;
         }
     }
 
@@ -188,7 +187,7 @@ export class HomematicApi
      */
     public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined>
     {
-        var requestData = "object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('" + variableName + "');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('" + variableInfo + "');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);";
+        var requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('${variableName}');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('${variableInfo}');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);`;
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
         var data = "";
@@ -218,7 +217,7 @@ export class HomematicApi
      */
     public async removeSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var requestData = "string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '" + variableName + "'){dom.DeleteObject(svObject);result='true';break;}}";
+        var requestData = `string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '${variableName}'){dom.DeleteObject(svObject);result='true';break;}}`;
         var requestConfig = { headers : {'Content-Type': 'text/plain' } };
 
         var data = "";
@@ -270,19 +269,12 @@ export class HomematicApi
         if(existsSync('/var/log/eufySecurity.log') == true)
         {
             var fileContent = readFileSync('/var/log/eufySecurity.log', 'utf-8');
-            if(fileContent == "")
-            {
-                return "Die Datei '/var/log/eufySecurity.log' ist leer.";
-            }
-            else
-            {
-                return fileContent;
-            }
+            return fileContent;
         }
         else
         {
-            this.api.logError("File '/var/log/eufySecurity.log' not found.");
-            return "Datei '/var/log/eufySecurity.log' wurde nicht gefunden.";
+            this.api.logError("File not found. File: '/var/log/eufySecurity.log'");
+            throw new Error(`File not found. File: '/var/log/eufySecurity.log'`);
         }
     }
 
@@ -294,19 +286,12 @@ export class HomematicApi
         if(existsSync('/var/log/eufySecurity.err') == true)
         {
             var fileContent = readFileSync('/var/log/eufySecurity.err', 'utf-8');
-            if(fileContent == "")
-            {
-                return "Die Datei '/var/log/eufySecurity.err' ist leer.";
-            }
-            else
-            {
-                return fileContent;
-            }
+            return fileContent;
         }
         else
         {
-            this.api.logError("File '/var/log/eufySecurity.err' not found.");
-            return "Datei '/var/log/eufySecurity.err' wurde nicht gefunden.";
+            this.api.logError("File not found. File: '/var/log/eufySecurity.err'");
+            throw new Error(`File not found. Fiel: '/var/log/eufySecurity.err'`);
         }
     }
 
@@ -315,6 +300,6 @@ export class HomematicApi
      */
     public getHomematicApiVersion(): string
     {
-        return "2.3.1";
+        return "2.5.0";
     }
 }

@@ -392,7 +392,7 @@ export class EufySecurityApi
         this.connected = false;
         //this.emit("close");
 
-        if (this.retries < 1)
+        if (this.retries < 3)
         {
             this.retries++;
             await this.connect()
@@ -3389,7 +3389,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.2.1";
+        return "2.9.0-b347";
     }
 
     /**
