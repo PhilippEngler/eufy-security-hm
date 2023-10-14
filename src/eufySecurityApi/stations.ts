@@ -2023,6 +2023,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             {
                 if ((element.device_sn !== "" && !station.isStation()) || (station.isStation() && element.device_sn !== station.getSerial()))
                 {
+                    if(!this.api.existDevice(element.device_sn))
+                    {
+                        continue;
+                    }
                     this.api.getDevice(element.device_sn).then((device) => {
                         const raw = device.getRawDevice();
                         if ("crop_local_path" in element)

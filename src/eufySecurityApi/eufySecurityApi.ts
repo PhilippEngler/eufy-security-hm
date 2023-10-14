@@ -600,6 +600,11 @@ export class EufySecurityApi
                 {
                     var response = data[i] as DatabaseQueryLatestInfoLocal;
 
+                    if(response.device_sn === undefined || !(this.devices.existDevice(response.device_sn)))
+                    {
+                        continue;
+                    }
+
                     if(response.crop_local_path === "")
                     {
                         this.logError("DatabaseQueryLatest: Empty path detected.", JSON.stringify(response));
@@ -720,6 +725,16 @@ export class EufySecurityApi
     public async getStationDevice(stationSerial : string, channel : number) : Promise<Device>
     {
         return this.devices.getDeviceByStationAndChannel(stationSerial, channel);
+    }
+
+    /**
+     * Checks if a device with the given serial exists.
+     * @param deviceSerial The deviceSerial of the device to check.
+     * @returns True if device exists, otherwise false.
+     */
+    public existDevice(deviceSerial : string) : boolean
+    {
+        return this.devices.existDevice(deviceSerial);
     }
 
     /**
