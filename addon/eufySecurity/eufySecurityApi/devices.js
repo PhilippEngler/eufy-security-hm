@@ -9,12 +9,15 @@ const events_1 = __importDefault(require("events"));
 const error_1 = require("./error");
 const http_1 = require("./http");
 const utils_1 = require("./utils");
+const types_1 = require("./utils/types");
+const eventInteractions_1 = require("./eventInteractions");
 /**
  * Represents all the Devices in the account.
  */
 class Devices extends tiny_typed_emitter_1.TypedEmitter {
     api;
     httpService;
+    eventInteractions;
     devices = {};
     //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
     devicesLastEvent = {};
@@ -24,12 +27,14 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     deviceImageLoadTimeout = {};
     /**
      * Create the Devices objects holding all devices in the account.
+     * @param api  The api.
      * @param httpService The httpService.
      */
     constructor(api, httpService) {
         super();
         this.api = api;
         this.httpService = httpService;
+        this.eventInteractions = new eventInteractions_1.EventInteractions(this.api);
         if (this.api.getApiUsePushService() == false) {
             this.api.logInfoBasic("Retrieving last video event times disabled in settings.");
         }
@@ -752,6 +757,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onMotionDetected(device, state) {
         this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.MOTION);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
         if (state === false) {
             this.loadDeviceImage(device.getSerial());
         }
@@ -778,6 +792,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     async onRings(device, state) {
         this.api.logDebug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
         //this.setLastVideoTimeNow(device.getSerial());
+        try {
+            var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RING);
+            if (deviceEventInteraction !== null) {
+                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+            }
+        }
+        catch { }
     }
     /**
      * The action to be one when event Locked is fired.
@@ -1145,6 +1166,38 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             return result.start_time.valueOf();
         }
         return undefined;
+    }
+    /**
+     * Retrieve the interactions for a given device.
+     * @param deviceSerial The serial of the device.
+     */
+    getDeviceInteractions(deviceSerial) {
+        return this.eventInteractions.getDeviceInteractions(deviceSerial);
+    }
+    /**
+     * Retrieve the interaction for a given eventInteractionType for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    getDeviceInteraction(deviceSerial, eventInteractionType) {
+        return this.eventInteractions.getDeviceEventInteraction(deviceSerial, eventInteractionType);
+    }
+    /**
+     * Updates a interaction for a given eventInteractionType for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     * @param deviceEventInteraction The eventIntegration data.
+     */
+    setDeviceInteraction(deviceSerial, eventInteractionType, deviceEventInteraction) {
+        return this.eventInteractions.setDeviceInteraction(deviceSerial, eventInteractionType, deviceEventInteraction);
+    }
+    /**
+     * Delete a specified interaction for a given device.
+     * @param deviceSerial The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    deleteDeviceInteraction(deviceSerial, eventInteractionType) {
+        return this.eventInteractions.deleteDeviceEventInteraction(deviceSerial, eventInteractionType);
     }
     /**
      * Set the given property for the given device to the given value.

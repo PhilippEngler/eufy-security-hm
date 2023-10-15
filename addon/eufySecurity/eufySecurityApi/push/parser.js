@@ -98,7 +98,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
     }
     onGotVersion() {
         const version = this.data.readInt8(0);
-        this.data = this.data.slice(1);
+        this.data = this.data.subarray(1);
         if (version < 41 && version !== 38) {
             throw new error_2.MCSProtocolVersionError("Got wrong protocol version", { context: { version: version } });
         }
@@ -107,7 +107,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
     }
     onGotMessageTag() {
         this.messageTag = this.data.readInt8(0);
-        this.data = this.data.slice(1);
+        this.data = this.data.subarray(1);
         this.onGotMessageSize();
     }
     onGotMessageSize() {
@@ -131,7 +131,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
             this.waitForData();
             return;
         }
-        this.data = this.data.slice(reader.pos);
+        this.data = this.data.subarray(reader.pos);
         this.sizePacketSoFar = 0;
         if (this.messageSize > 0) {
             this.state = models_1.ProcessingState.MCS_PROTO_BYTES;
@@ -153,8 +153,8 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
             this.waitForData();
             return;
         }
-        const buffer = this.data.slice(0, this.messageSize);
-        this.data = this.data.slice(this.messageSize);
+        const buffer = this.data.subarray(0, this.messageSize);
+        this.data = this.data.subarray(this.messageSize);
         const message = protobuf.decode(buffer);
         const object = protobuf.toObject(message, {
             longs: String,

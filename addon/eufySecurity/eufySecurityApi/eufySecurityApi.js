@@ -96,7 +96,7 @@ class EufySecurityApi {
             this.httpService.on("tfa request", () => this.onTfaRequest());
             this.httpService.on("connection error", (error) => this.onAPIConnectionError(error));
             this.httpService.setToken(this.getToken());
-            this.httpService.setTokenExpiration(new Date(this.getTokenExpire() * 1000));
+            this.httpService.setTokenExpiration(new Date(this.getTokenExpire()));
             if (this.config.getOpenudid() == "") {
                 this.config.setOpenudid((0, utils_1.generateUDID)());
                 this.logger.debug("Generated new openudid", { openudid: this.config.getOpenudid() });
@@ -302,7 +302,7 @@ class EufySecurityApi {
         }
         this.connected = false;
         //this.emit("close");
-        if (this.retries < 1) {
+        if (this.retries < 3) {
             this.retries++;
             await this.connect();
         }
@@ -468,8 +468,12 @@ class EufySecurityApi {
             for (let i = 0; i < data.length; i++) {
                 try {
                     var response = data[i];
+                    if (response.device_sn === undefined || !(this.devices.existDevice(response.device_sn))) {
+                        this.logDebug(`StationDatabaseQueryLatest: Device with this serial ${response.device_sn} doesn't exists.`);
+                        continue;
+                    }
                     if (response.crop_local_path === "") {
-                        this.logError("DatabaseQueryLatest: Empty path detected.", JSON.stringify(response));
+                        this.logDebug("StationDatabaseQueryLatest: Empty path detected.", JSON.stringify(response));
                         continue;
                     }
                     var file = "";
@@ -490,7 +494,7 @@ class EufySecurityApi {
                         }
                     }
                     else {
-                        this.logError("DatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
+                        this.logError("StationDatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
                         continue;
                     }
                     this.devices.addLastEventForDevice(response.device_sn, file, new Date(Number.parseInt(timeString.substring(0, 4)), Number.parseInt(timeString.substring(4, 6)) - 1, Number.parseInt(timeString.substring(6, 8)), Number.parseInt(timeString.substring(8, 10)), Number.parseInt(timeString.substring(10, 12)), Number.parseInt(timeString.substring(12, 14))));
@@ -564,6 +568,14 @@ class EufySecurityApi {
         return this.devices.getDeviceByStationAndChannel(stationSerial, channel);
     }
     /**
+     * Checks if a device with the given serial exists.
+     * @param deviceSerial The deviceSerial of the device to check.
+     * @returns True if device exists, otherwise false.
+     */
+    existDevice(deviceSerial) {
+        return this.devices.existDevice(deviceSerial);
+    }
+    /**
      * Returns all houses of the account.
      * @returns The houses object.
      */
@@ -596,7 +608,7 @@ class EufySecurityApi {
         if (!!token && !!token_expiration) {
             this.logger.debug("Save cloud token and token expiration", { token: token, tokenExpiration: token_expiration });
             this.config.setToken(token);
-            this.config.setTokenExpire(token_expiration.getTime() / 1000);
+            this.config.setTokenExpire(token_expiration.getTime());
         }
     }
     /**
@@ -889,7 +901,11 @@ class EufySecurityApi {
                 //await this.devices.loadDevices();
                 var device = (await this.getDevices())[deviceSerial];
                 if (device) {
-                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "data": device.getProperties() };
+                    var temp = this.devices.getDeviceInteractions(device.getSerial());
+                    if (temp === undefined || temp === null) {
+                        temp = null;
+                    }
+                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "data": device.getProperties(), "interactions": temp };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1680,12 +1696,17 @@ class EufySecurityApi {
                             case "floodlight":
                                 device = devices[deviceSerial];
                                 break;
+                            case "walllightcamera":
+                                device = devices[deviceSerial];
+                                break;
+                            case "garagecamera":
+                                device = devices[deviceSerial];
+                                break;
                             default:
                                 device = undefined;
                         }
                         if (device !== undefined) {
                             json.data.push({ "deviceSerial": deviceSerial, "pictureTime": this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial), "videoUrl": device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL() });
-                            this.setSystemVariableString("eufyCameraImageURL" + deviceSerial, this.config.getCameraDefaultImage());
                         }
                     }
                     this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
@@ -2046,7 +2067,7 @@ class EufySecurityApi {
      */
     async checkSystemVariables() {
         var json = {};
-        var availableSystemVariables = await this.homematicApi.getSystemVariables("eufy");
+        var availableSystemVariables = await this.homematicApi.getSystemVariables("localhost", false, "eufy");
         if (availableSystemVariables === undefined) {
             json = { "success": false, "reason": "Faild retrieving system variables from CCU." };
         }
@@ -2126,7 +2147,7 @@ class EufySecurityApi {
      * @param variableInfo The Info for the system variable to create.
      */
     async createSystemVariable(variableName, variableInfo) {
-        var res = await this.homematicApi.createSystemVariable(variableName, variableInfo);
+        var res = await this.homematicApi.createSystemVariable("localhost", false, variableName, variableInfo);
         if (res !== undefined && res == variableName) {
             return `{"success":true,"message":"System variable created."}`;
         }
@@ -2142,7 +2163,7 @@ class EufySecurityApi {
      * @param variableName The name of the system variable to create.
      */
     async removeSystemVariable(variableName) {
-        var res = await this.homematicApi.removeSystemVariable(variableName);
+        var res = await this.homematicApi.removeSystemVariable("localhost", false, variableName);
         if (res !== undefined && res === "true") {
             return `{"success":true,"message":"System variable removed."}`;
         }
@@ -2183,20 +2204,128 @@ class EufySecurityApi {
      */
     setSystemVariableString(systemVariable, newValue) {
         if (this.config.getSystemVariableActive() == true) {
-            this.homematicApi.setSystemVariable(systemVariable, newValue);
+            this.homematicApi.setSystemVariable("localhost", false, systemVariable, newValue);
         }
+    }
+    /**
+     * Send the interaction to the target.
+     * @param hostName The hostname.
+     * @param useHttps true if use https, otherwise false.
+     * @param command The command to be executed.
+     */
+    async sendInteractionCommand(hostName, useHttps, command) {
+        await this.homematicApi.sendInteractionCommand(hostName, useHttps, command);
+    }
+    /**
+     * Set the interaction.
+     * @param serialNumber The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     * @param target the target.
+     * @param useHttps true if use https, otherwise false.
+     * @param command The command to be executed.
+     */
+    setInteraction(serialNumber, eventInteractionType, target, useHttps, command) {
+        var json = {};
+        try {
+            if (serialNumber !== "" && eventInteractionType >= 0 && eventInteractionType <= 12 && target !== "" && command !== "") {
+                var res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, { target: target, useHttps: useHttps, command: command });
+                if (res === true) {
+                    json = { "success": true, "data": `Interaction has been added successfully.` };
+                }
+                else {
+                    json = { "success": false, "reason": "Interaction not been added." };
+                }
+            }
+            else {
+                json = { "success": false, "reason": "One or more arguments not given." };
+            }
+        }
+        catch (error) {
+            json = { "success": false, "reason": `${error.message}` };
+        }
+        return JSON.stringify(json);
+    }
+    /**
+     * Test the interaction.
+     * @param serialNumber The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    async testInteraction(serialNumber, eventInteractionType) {
+        try {
+            var json = {};
+            var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+            if (deviceInteraction !== null) {
+                await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.command);
+                json = { "success": true, "data": `Sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.` };
+            }
+            else {
+                json = { "success": false, "data": `No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.` };
+            }
+        }
+        catch (error) {
+            json = { "success": false, "reason": `${error.message}` };
+        }
+        return JSON.stringify(json);
+    }
+    /**
+     * Delete the interaction.
+     * @param serialNumber The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    async deleteInteraction(serialNumber, eventInteractionType) {
+        try {
+            var json = {};
+            var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+            if (deviceInteraction !== null) {
+                this.devices.deleteDeviceInteraction(serialNumber, eventInteractionType);
+                json = { "success": true, "data": `Delete interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.` };
+            }
+            else {
+                json = { "success": false, "data": `No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.` };
+            }
+        }
+        catch (error) {
+            json = { "success": false, "reason": `${error.message}` };
+        }
+        return JSON.stringify(json);
     }
     /**
      * returns the content of the logfile.
      */
     async getLogFileContent() {
-        return await this.homematicApi.getLogFileContent();
+        var json = {};
+        try {
+            var errorContent = await this.homematicApi.getLogFileContent();
+            if (errorContent === "") {
+                json = { "success": true, "hasData": false };
+            }
+            else {
+                json = { "success": true, "hasData": true, "data": encodeURIComponent(errorContent) };
+            }
+        }
+        catch (error) {
+            json = { "success": false, "reason": `${error.message}` };
+        }
+        return JSON.stringify(json);
     }
     /**
      * Returns the content of the errorfile
      */
     async getErrorFileContent() {
-        return await this.homematicApi.getErrorFileContent();
+        var json = {};
+        try {
+            var errorContent = await this.homematicApi.getErrorFileContent();
+            if (errorContent === "") {
+                json = { "success": true, "hasData": false };
+            }
+            else {
+                json = { "success": true, "hasData": true, "data": encodeURIComponent(errorContent) };
+            }
+        }
+        catch (error) {
+            json = { "success": false, "reason": `${error.message}` };
+        }
+        return JSON.stringify(json);
     }
     /**
      * Converts the guard mode to a string.
@@ -2507,14 +2636,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "2.2.1";
+        return "2.5.0";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "2.8.1";
+        return "2.9.0-b347";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

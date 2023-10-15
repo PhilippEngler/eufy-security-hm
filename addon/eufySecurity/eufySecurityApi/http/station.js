@@ -744,7 +744,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         });
     }
     async onAlarmMode(mode) {
-        this.log.info(`Station alarm mode changed`, { stationSN: this.getSerial(), mode: mode });
+        this.log.debug(`Station alarm mode changed`, { stationSN: this.getSerial(), mode: mode });
         this.updateRawProperty(types_2.CommandType.CMD_GET_ALARM_MODE, mode.toString(), "p2p");
         const armDelay = this.getArmDelay(mode);
         if (armDelay > 0) {
@@ -3923,7 +3923,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     mValue3: types_2.CommandType.CMD_DOWNLOAD_VIDEO,
                     payload: {
                         filepath: path,
-                        key: rsa_key?.exportKey("components-public").n.slice(1).toString("hex").toUpperCase(),
+                        key: rsa_key?.exportKey("components-public").n.subarray(1).toString("hex").toUpperCase(),
                     }
                 }),
                 channel: device.getChannel()
@@ -3932,7 +3932,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             });
         }
         else if (cipher_id !== undefined) {
-            const cipher = await this.api.getCipher(cipher_id, this.rawStation.member.admin_user_id);
+            const cipher = await this.api.getCipher(/*this.rawStation.station_sn, */ cipher_id, this.rawStation.member.admin_user_id);
             if (Object.keys(cipher).length > 0) {
                 this.p2pSession.setDownloadRSAPrivateKeyPem(cipher.private_key);
                 await this.p2pSession.sendCommandWithString({
@@ -3957,16 +3957,26 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             }
         }
         else {
+            await this.p2pSession.sendCommandWithString({
+                commandType: types_2.CommandType.CMD_DOWNLOAD_VIDEO,
+                strValue: path,
+                strValueSub: this.rawStation.member.admin_user_id,
+                channel: device.getChannel()
+            }, {
+                command: commandData
+            });
+        }
+        /* else {
             this.log.warn(`Cancelled download of video "${path}" from Station ${this.getSerial()}, because cipher_id is missing`);
             this.emit("command result", this, {
                 channel: device.getChannel(),
-                command_type: types_2.CommandType.CMD_DOWNLOAD_VIDEO,
-                return_code: types_2.ErrorCode.ERROR_INVALID_PARAM,
+                command_type: CommandType.CMD_DOWNLOAD_VIDEO,
+                return_code: ErrorCode.ERROR_INVALID_PARAM,
                 customData: {
                     command: commandData
                 }
             });
-        }
+        }*/
     }
     async cancelDownload(device) {
         const commandData = {
@@ -4012,7 +4022,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     "commandType": types_1.ParamType.COMMAND_START_LIVESTREAM,
                     "data": {
                         "accountId": this.rawStation.member.admin_user_id,
-                        "encryptkey": rsa_key?.exportKey("components-public").n.slice(1).toString("hex"),
+                        "encryptkey": rsa_key?.exportKey("components-public").n.subarray(1).toString("hex"),
                         "streamtype": videoCodec
                     }
                 }),
@@ -4029,7 +4039,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     "commandType": types_1.ParamType.COMMAND_START_LIVESTREAM,
                     "data": {
                         "account_id": this.rawStation.member.admin_user_id,
-                        "encryptkey": rsa_key?.exportKey("components-public").n.slice(1).toString("hex"),
+                        "encryptkey": rsa_key?.exportKey("components-public").n.subarray(1).toString("hex"),
                         "streamtype": videoCodec
                     }
                 }),
@@ -4044,7 +4054,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 await this.p2pSession.sendCommandWithInt({
                     commandType: types_2.CommandType.CMD_START_REALTIME_MEDIA,
                     value: device.getChannel(),
-                    strValue: rsa_key?.exportKey("components-public").n.slice(1).toString("hex"),
+                    strValue: rsa_key?.exportKey("components-public").n.subarray(1).toString("hex"),
                     channel: device.getChannel()
                 }, {
                     command: commandData
@@ -4060,7 +4070,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                         "mValue3": types_2.CommandType.CMD_START_REALTIME_MEDIA,
                         "payload": {
                             "ClientOS": "Android",
-                            "key": rsa_key?.exportKey("components-public").n.slice(1).toString("hex"),
+                            "key": rsa_key?.exportKey("components-public").n.subarray(1).toString("hex"),
                             "streamtype": videoCodec === types_2.VideoCodec.H264 ? 1 : 2,
                         }
                     }),

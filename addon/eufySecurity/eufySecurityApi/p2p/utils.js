@@ -345,12 +345,12 @@ exports.decryptAESData = decryptAESData;
 const findStartCode = (data) => {
     if (data !== undefined && data.length > 0) {
         if (data.length >= 4) {
-            const startcode = [...data.slice(0, 4)];
+            const startcode = [...data.subarray(0, 4)];
             if ((startcode[0] === 0 && startcode[1] === 0 && startcode[2] === 1) || (startcode[0] === 0 && startcode[1] === 0 && startcode[2] === 0 && startcode[3] === 1))
                 return true;
         }
         else if (data.length === 3) {
-            const startcode = [...data.slice(0, 3)];
+            const startcode = [...data.subarray(0, 3)];
             if ((startcode[0] === 0 && startcode[1] === 0 && startcode[2] === 1))
                 return true;
         }
@@ -362,7 +362,7 @@ const isIFrame = (data) => {
     const validValues = [64, 66, 68, 78, 101, 103];
     if (data !== undefined && data.length > 0) {
         if (data.length >= 5) {
-            const startcode = [...data.slice(0, 5)];
+            const startcode = [...data.subarray(0, 5)];
             if (validValues.includes(startcode[3]) || validValues.includes(startcode[4]))
                 return true;
         }
@@ -472,7 +472,7 @@ const getVideoCodec = (data) => {
     if (data !== undefined && data.length > 0) {
         if (data.length >= 5) {
             const h265Values = [38, 64, 66, 68, 78];
-            const startcode = [...data.slice(0, 5)];
+            const startcode = [...data.subarray(0, 5)];
             if (h265Values.includes(startcode[3]) || h265Values.includes(startcode[4])) {
                 return types_1.VideoCodec.H265;
             }
@@ -538,7 +538,7 @@ const eufyKDF = (key) => {
         const digest = (0, crypto_1.createHmac)("sha256", key).update(Buffer.concat([tmpBuffer, staticBuffer])).digest();
         digest.copy(buffer, hash_length * step);
     }
-    return buffer.slice(0, digest_length);
+    return buffer.subarray(0, digest_length);
 };
 exports.eufyKDF = eufyKDF;
 const getAdvancedLockKey = (key, publicKey) => {
@@ -547,8 +547,8 @@ const getAdvancedLockKey = (key, publicKey) => {
     const secret = ecdh.computeSecret(Buffer.concat([Buffer.from("04", "hex"), Buffer.from(publicKey, "hex")]));
     const randomValue = (0, crypto_1.randomBytes)(16);
     const derivedKey = (0, exports.eufyKDF)(secret);
-    const encryptedData = (0, exports.encryptPayloadData)(key, derivedKey.slice(0, 16), randomValue);
-    const hmac = (0, crypto_1.createHmac)("sha256", derivedKey.slice(16));
+    const encryptedData = (0, exports.encryptPayloadData)(key, derivedKey.subarray(0, 16), randomValue);
+    const hmac = (0, crypto_1.createHmac)("sha256", derivedKey.subarray(16));
     hmac.update(randomValue);
     hmac.update(encryptedData);
     const hmacDigest = hmac.digest();
@@ -561,8 +561,8 @@ const getLockV12Key = (key, publicKey) => {
     const secret = ecdh.computeSecret(Buffer.concat([Buffer.from("04", "hex"), Buffer.from(publicKey, "hex")]));
     const randomValue = (0, crypto_1.randomBytes)(16);
     const derivedKey = (0, exports.eufyKDF)(secret);
-    const encryptedData = (0, exports.encryptPayloadData)(Buffer.from(key, "hex"), derivedKey.slice(0, 16), randomValue);
-    const hmac = (0, crypto_1.createHmac)("sha256", derivedKey.slice(16));
+    const encryptedData = (0, exports.encryptPayloadData)(Buffer.from(key, "hex"), derivedKey.subarray(0, 16), randomValue);
+    const hmac = (0, crypto_1.createHmac)("sha256", derivedKey.subarray(16));
     hmac.update(randomValue);
     hmac.update(encryptedData);
     const hmacDigest = hmac.digest();

@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = require("http");
 const https_1 = require("https");
+const os_1 = __importDefault(require("os"));
 const fs_1 = require("fs");
 const process_1 = require("process");
 const eufySecurityApi_1 = require("./eufySecurityApi/eufySecurityApi");
@@ -34,7 +38,8 @@ class ApiServer {
      */
     async startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
         logger.logInfoBasic(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
-        logger.logInfoBasic(`  Platform: ${process.platform}_${process.arch}`);
+        logger.logInfoBasic(`  Host: ${os_1.default.hostname}`);
+        logger.logInfoBasic(`  Platform: ${os_1.default.platform}_${os_1.default.arch}`);
         logger.logInfoBasic(`  Node: ${process.version}`);
         if (httpActive == true) {
             logger.logInfoBasic("Starting http server...");
@@ -419,6 +424,32 @@ class ApiServer {
                     case "generateNewTrustedDeviceName":
                         responseData = api.generateNewTrustedDeviceNameJson();
                         break;
+                    case "testInteraction":
+                        if (url.length == 4) {
+                            try {
+                                responseData = await api.testInteraction(url[2], Number.parseInt(url[3]));
+                            }
+                            catch (error) {
+                                responseData = `{"success":false,"message":"Error occured. Error: ${error.message}"}`;
+                            }
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "deleteInteraction":
+                        if (url.length == 4) {
+                            try {
+                                responseData = await api.deleteInteraction(url[2], Number.parseInt(url[3]));
+                            }
+                            catch (error) {
+                                responseData = `{"success":false,"message":"Error occured. Error: ${error.message}"}`;
+                            }
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "clearLogFile":
                         emptyLogFile();
                         responseData = `{"success":true}`;
@@ -435,18 +466,17 @@ class ApiServer {
                         api.writeConfig();
                         responseData = (0, fs_1.readFileSync)('config.json', 'utf-8');
                         contentType = "text/json";
-                        var dateTime = new Date();
-                        fileName = "config_" + dateTime.getFullYear().toString() + (dateTime.getMonth() + 1).toString().padStart(2, '0') + dateTime.getDate().toString().padStart(2, '0') + "-" + dateTime.getHours().toString().padStart(2, '0') + dateTime.getMinutes().toString().padStart(2, '0') + dateTime.getSeconds().toString().padStart(2, '0') + ".json";
+                        fileName = `config_${os_1.default.hostname}_${getDateTimeAsString(new Date())}.json`;
                         break;
                     case "downloadLogFile":
                         responseData = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
                         contentType = "text/plain";
-                        fileName = "eufySecurity.log";
+                        fileName = `eufySecurity_${os_1.default.hostname}.log`;
                         break;
                     case "downloadErrFile":
                         responseData = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
                         contentType = "text/plain";
-                        fileName = "eufySecurity.err";
+                        fileName = `eufySecurity_${os_1.default.hostname}.err`;
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
@@ -689,6 +719,28 @@ class ApiServer {
                                 }
                             }
                             catch (e) {
+                            }
+                        });
+                        break;
+                    case "setInteraction":
+                        var postData = "";
+                        var result;
+                        var isDataOK = true;
+                        request.on("data", function (chunk) {
+                            postData += chunk.toString();
+                        });
+                        request.on("end", async function () {
+                            try {
+                                var resJson = JSON.parse(postData);
+                                result = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
+                                responseData = result;
+                                response.setHeader('Access-Control-Allow-Origin', '*');
+                                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                                response.writeHead(200);
+                                response.end(responseData);
+                            }
+                            catch (e) {
+                                logger.logErrorBasis(e.message);
                             }
                         });
                         break;
@@ -962,6 +1014,14 @@ process.on('SIGINT', async () => {
  * @returns The result string.
  */
 function replaceLastChars(input, char, numberOfChars) {
-    return input.slice(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
+    return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
+}
+/**
+ * Returns the sting representation of a Date object as YYYYMMDD-HHMMSS.
+ * @param dateTime The date as Date object.
+ * @returns The date and time as string.
+ */
+function getDateTimeAsString(dateTime) {
+    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth() + 1).toString().padStart(2, '0')}${dateTime.getDate().toString().padStart(2, '0')}-${dateTime.getHours().toString().padStart(2, '0')}${dateTime.getMinutes().toString().padStart(2, '0')}${dateTime.getSeconds().toString().padStart(2, '0')}`;
 }
 main();

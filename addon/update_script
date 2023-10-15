@@ -11,6 +11,13 @@ if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
   exit 13
 fi
 
+# check for unsupported CCU1 and CCU2
+if [ "$1" = "" ]; then
+  exit 14
+elif [ "$1" = "CCU2" ]; then
+  exit 14
+fi
+
 # mount /usr/local if not already mounted
 mount | grep /usr/local 2>&1 >/dev/null
 if [ $? -eq 1 ]; then

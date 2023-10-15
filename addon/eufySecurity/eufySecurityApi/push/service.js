@@ -535,7 +535,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     normalized_message.station_guard_mode = push_data.arming;
                     normalized_message.station_current_mode = push_data.mode;
                     normalized_message.person_name = push_data.f;
-                    normalized_message.sensor_open = push_data.e !== undefined ? push_data.e === "1" ? true : false : undefined;
+                    normalized_message.sensor_open = push_data.e !== undefined ? push_data.e == "1" ? true : false : undefined;
                     normalized_message.device_online = push_data.m !== undefined ? push_data.m === 1 ? true : false : undefined;
                     try {
                         normalized_message.fetch_id = push_data.i !== undefined ? Number.parseInt(push_data.i) : undefined;

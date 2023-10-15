@@ -83,7 +83,7 @@ class Config {
      * @returns The expected version of the config file.
      */
     getConfigFileTemplateVersion() {
-        return 14;
+        return 15;
     }
     /**
      * Load the config from the given file and returns the config.
@@ -160,6 +160,8 @@ class Config {
         config.stations = stations;
         var devicePublicKeys = [];
         config.devicePublicKeys = devicePublicKeys;
+        var interactions = "null";
+        config.interactions = interactions;
         return config;
     }
     /**
@@ -217,6 +219,14 @@ class Config {
                 if (configJson.accountData.serverPublicKey === undefined) {
                     this.logger.logInfoBasic(" adding 'serverPublicKey'.");
                     configJson.accountData.serverPublicKey = "";
+                }
+                updated = true;
+            }
+            if (configJson.configVersion < 15) {
+                this.logger.logInfoBasic("Configfile needs Stage2 update to version 15...");
+                if (configJson.interactions === undefined) {
+                    this.logger.logInfoBasic(" adding 'interactions'.");
+                    configJson.interactions = "null";
                 }
                 updated = true;
             }
@@ -1593,6 +1603,26 @@ class Config {
     setLanguage(language) {
         if (this.configJson.accountData.language != language) {
             this.configJson.accountData.language = language;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Retrieves the interactions from the config.
+     * @returns The integrations.
+     */
+    getInteractions() {
+        if (this.configJson.interactions !== undefined) {
+            return this.configJson.interactions;
+        }
+        return "";
+    }
+    /**
+     * Set the integrations.
+     * @param interactions The interactions to set.
+     */
+    setInteractions(interactions) {
+        if (this.configJson.interactions !== interactions) {
+            this.configJson.interactions = interactions;
             this.hasChanged = true;
         }
     }

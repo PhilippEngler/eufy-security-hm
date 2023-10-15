@@ -173,13 +173,13 @@ const calculateCellularSignalLevel = function (rssi) {
 };
 exports.calculateCellularSignalLevel = calculateCellularSignalLevel;
 const encryptAPIData = (data, key) => {
-    const cipher = (0, crypto_1.createCipheriv)("aes-256-cbc", key, key.slice(0, 16));
+    const cipher = (0, crypto_1.createCipheriv)("aes-256-cbc", key, key.subarray(0, 16));
     return (cipher.update(data, "utf8", "base64") +
         cipher.final("base64"));
 };
 exports.encryptAPIData = encryptAPIData;
 const decryptAPIData = (data, key) => {
-    const cipher = (0, crypto_1.createDecipheriv)("aes-256-cbc", key, key.slice(0, 16));
+    const cipher = (0, crypto_1.createDecipheriv)("aes-256-cbc", key, key.subarray(0, 16));
     return Buffer.concat([
         cipher.update(data, "base64"),
         cipher.final()
@@ -458,14 +458,14 @@ const getImageKey = function (serialnumber, p2pDid, code) {
 exports.getImageKey = getImageKey;
 const decodeImage = function (p2pDid, data) {
     if (data.length >= 12) {
-        const header = data.slice(0, 12).toString();
+        const header = data.subarray(0, 12).toString();
         if (header === "eufysecurity") {
-            const serialnumber = data.slice(13, 29).toString();
-            const code = data.slice(30, 40).toString();
+            const serialnumber = data.subarray(13, 29).toString();
+            const code = data.subarray(30, 40).toString();
             const imageKey = (0, exports.getImageKey)(serialnumber, p2pDid, code);
-            const otherData = data.slice(41);
-            const encryptedData = otherData.slice(0, 256);
-            const cipher = (0, crypto_1.createDecipheriv)("aes-128-ecb", Buffer.from(imageKey, "utf-8").slice(0, 16), null);
+            const otherData = data.subarray(41);
+            const encryptedData = otherData.subarray(0, 256);
+            const cipher = (0, crypto_1.createDecipheriv)("aes-128-ecb", Buffer.from(imageKey, "utf-8").subarray(0, 16), null);
             cipher.setAutoPadding(false);
             const decryptedData = Buffer.concat([
                 cipher.update(encryptedData),

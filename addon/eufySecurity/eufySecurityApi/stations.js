@@ -1763,6 +1763,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         if (returnCode === p2p_1.DatabaseReturnCode.SUCCESSFUL) {
             for (const element of data) {
                 if ((element.device_sn !== "" && !station.isStation()) || (station.isStation() && element.device_sn !== station.getSerial())) {
+                    if (!this.api.existDevice(element.device_sn)) {
+                        continue;
+                    }
                     this.api.getDevice(element.device_sn).then((device) => {
                         const raw = device.getRawDevice();
                         if ("crop_local_path" in element) {
