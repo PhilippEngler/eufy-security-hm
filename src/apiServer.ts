@@ -1271,9 +1271,14 @@ process.on('SIGINT', async () => {
  */
 function replaceLastChars(input : string, char : string, numberOfChars : number)
 {
-    return input.slice(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
+    return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
 }
 
+/**
+ * Returns the sting representation of a Date object as YYYYMMDD-HHMMSS.
+ * @param dateTime The date as Date object.
+ * @returns The date and time as string.
+ */
 function getDateTimeAsString(dateTime: Date)
 {
     return `${dateTime.getFullYear().toString()}${(dateTime.getMonth()+1).toString().padStart(2, '0')}${dateTime.getDate().toString().padStart(2, '0')}-${dateTime.getHours().toString().padStart(2, '0')}${dateTime.getMinutes().toString().padStart(2, '0')}${dateTime.getSeconds().toString().padStart(2, '0')}`;

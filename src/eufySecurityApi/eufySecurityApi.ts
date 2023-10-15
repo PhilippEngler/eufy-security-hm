@@ -602,12 +602,13 @@ export class EufySecurityApi
 
                     if(response.device_sn === undefined || !(this.devices.existDevice(response.device_sn)))
                     {
+                        this.logDebug(`StationDatabaseQueryLatest: Device with this serial ${response.device_sn} doesn't exists.`);
                         continue;
                     }
 
                     if(response.crop_local_path === "")
                     {
-                        this.logError("DatabaseQueryLatest: Empty path detected.", JSON.stringify(response));
+                        this.logDebug("StationDatabaseQueryLatest: Empty path detected.", JSON.stringify(response));
                         continue;
                     }
 
@@ -636,7 +637,7 @@ export class EufySecurityApi
                     }
                     else
                     {
-                        this.logError("DatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
+                        this.logError("StationDatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
                         continue;
                     }
                     this.devices.addLastEventForDevice(response.device_sn, file, new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14))));
