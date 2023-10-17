@@ -36,6 +36,7 @@ class EventInteractions {
             return true;
         }
         catch (error) {
+            this.api.logError(`Error while adding integration to config. Error: ${error.message}`);
             throw new Error(`Error while adding integration to config. Error: ${error.message}`);
         }
     }
@@ -66,6 +67,7 @@ class EventInteractions {
                 return eventInteraction;
             }
             catch (error) {
+                this.api.logError(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
                 throw new Error(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
             }
         }
@@ -96,6 +98,7 @@ class EventInteractions {
             throw new Error(`No interactions for device ${deviceSerial}.`);
         }
         catch (error) {
+            this.api.logError(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
             throw new Error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
         }
     }
@@ -108,12 +111,22 @@ class EventInteractions {
      */
     setDeviceInteraction(deviceSerial, eventInteractionType, deviceEventInteraction) {
         try {
-            if (this.interactions !== null) {
-                deviceEventInteraction.command = Buffer.from(deviceEventInteraction.command).toString('base64');
-                this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType] = deviceEventInteraction;
+            if (this.interactions === undefined || this.interactions === null) {
+                this.interactions = { deviceInteractions: { [deviceSerial]: { eventInteractions: { [eventInteractionType]: { target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString('base64') } } } } };
             }
             else {
-                this.interactions = { deviceInteractions: { [deviceSerial]: { eventInteractions: { [eventInteractionType]: { target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString('base64') } } } } };
+                if (this.interactions.deviceInteractions[deviceSerial] === undefined) {
+                    this.interactions.deviceInteractions[deviceSerial] = { eventInteractions: { [eventInteractionType]: { target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString('base64') } } };
+                }
+                else {
+                    if (this.interactions.deviceInteractions[deviceSerial].eventInteractions === undefined) {
+                        this.interactions.deviceInteractions[deviceSerial].eventInteractions = { [eventInteractionType]: { target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString('base64') } };
+                    }
+                    else {
+                        deviceEventInteraction.command = Buffer.from(deviceEventInteraction.command).toString('base64');
+                        this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType] = deviceEventInteraction;
+                    }
+                }
             }
             var res = this.saveInteractions();
             if (res === true) {
@@ -124,6 +137,7 @@ class EventInteractions {
             }
         }
         catch (error) {
+            this.api.logError(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
             throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
         }
     }

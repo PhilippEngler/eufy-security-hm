@@ -20,7 +20,6 @@ const path_1 = __importDefault(require("path"));
 class Stations extends tiny_typed_emitter_1.TypedEmitter {
     api;
     httpService;
-    serialNumbers;
     stations = {};
     skipNextModeChangeEvent = {};
     lastGuardModeChangeTimeForStations = {};
@@ -40,7 +39,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         super();
         this.api = api;
         this.httpService = httpService;
-        this.serialNumbers = [];
         if (this.api.getStateUpdateEventActive() == false) {
             this.api.logInfoBasic("Retrieving last guard mode change times disabled in settings.");
         }
@@ -71,7 +69,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 let new_station = http_1.Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
-                this.serialNumbers.push(stationSerial);
                 promises.push(new_station.then((station) => {
                     try {
                         if (this.api.getStateUpdateEventActive()) {

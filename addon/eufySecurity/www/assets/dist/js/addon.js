@@ -1,11 +1,11 @@
 /**
  * Javascript for eufySecurity Addon
- * 20231013
+ * 20231017
  */
 action = "";
 port = "";
 redirectTarget = "";
-version = "2.5.0";
+version = "2.5.1";
 
 /**
  * common used java script functions
@@ -1571,7 +1571,6 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 										${deviceProperties.notification !== undefined ? `<hr />` : ``}
 										<h5>Art der Benachrichtigung</h5>
-										${createMessageContainer("alert alert-warning", "Hinweise zur Nutzung von Clouddiensten.", "Bei einigen Modi werden Informationen vorübergehend in der Cloud gespeichert.", "Weitere Hinweise finden Sie in der App.")}
 										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationType.name, deviceProperties.notificationType, setEventHandler, devicePropertiesMetadata.notificationType.states)}`;
 			if(deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined)
 			{
@@ -1602,6 +1601,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.motionDetected !== undefined)
 		{
 			deviceModal += `
+										${createMessageContainer("alert alert-warning", "Hinweise zur Interaktion mit der CCU.", "Die Interaktionen werden nur dann ausgeführt, wenn eine P2P-Verbindung zur Basis sowie eine Internetverbindung besteht. Besteht eine dieser Verbindungen nicht, kann eine Interaktion mit der CCU nicht sichergestellt werden.", "")}
 										<h5>Reaktion auf Bewegung</h5>
 										${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventTarget", "motionEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].target !== "" ? deviceInteractions.eventInteractions[0].target : ""}`, false, false)}
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventUseHttps", false, false)}
@@ -2259,7 +2259,7 @@ function getPropertyNameInGerman(propertyName)
 			return "Befehl, der ausgeführt werden soll";
 		case "motionEventCommandHint":
 		case "ringEventCommandHint":
-			return "Der hier einzugebende Befehl kann im Vorfeld auch über die Skript-Testen-Funktion der CCU getestet werden.";
+			return "Der hier einzugebende Befehl sollte im Vorfeld über die Skript-Testen-Funktion der CCU getestet werden.";
 		default:
 			return propertyName;
 	}
@@ -4760,7 +4760,7 @@ function loadLogfile(logfiletype, showLoading)
 				{
 					logData = decodeURIComponent(objResp.data);
 					
-					logData = logData.replace(/ /g, "&nbsp;");
+					logData = logData.replace(/ /g, "&#160;");
 					logData = logData.replace(/>/g, '&gt;');
 					logData = logData.replace(/</g, '&lt;');
 					logData = logData.replace(/\n/g, "<br />");
@@ -4778,8 +4778,8 @@ function loadLogfile(logfiletype, showLoading)
 						else
 						{
 							document.getElementById("log").innerHTML = `<code>Die Datei '/var/log/eufySecurity.log' ist leer.</code>`;
-							document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
-							document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
+							document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
+							document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
 						}
 						break;
 					case "err":
