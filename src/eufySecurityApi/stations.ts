@@ -20,7 +20,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 {
     private api : EufySecurityApi;
     private httpService : HTTPApi;
-    private serialNumbers : string[];
     private stations : { [stationSerial : string ] : Station } = {};
     private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
     private lastGuardModeChangeTimeForStations : { [stationSerial : string] : number | undefined } = {};
@@ -47,7 +46,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         super();
         this.api = api;
         this.httpService = httpService;
-        this.serialNumbers = [];
 
         if(this.api.getStateUpdateEventActive() == false)
         {
@@ -90,7 +88,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 let new_station = Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
-                this.serialNumbers.push(stationSerial);
                 
                 promises.push(new_station.then((station: Station) => {
                     try
