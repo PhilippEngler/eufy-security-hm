@@ -708,7 +708,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         try
         {
             const station = await this.getStation(stationSerial);
-            if (station.isStation() || (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE))
+            if (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE)
             {
                 await station.getStorageInfoEx();
             }
