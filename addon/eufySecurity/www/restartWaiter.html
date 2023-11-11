@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" class="h-100">
+<html class="h-100">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -41,29 +41,29 @@
 		<header>
 			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
 				<div class="container-fluid">
-					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security für HomeMatic</a>
+					<a id="niMain" class="navbar-brand" href="/addons/eufySecurity">{niMain}</a>
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Seitennavigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link disabled" aria-current="page" href="/addons/eufySecurity">Home</a>
+								<a id="niHome" class="nav-link disabled" aria-current="page" href="/addons/eufySecurity">{niHome}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkDevices" class="nav-link disabled" href="devices.html">Geräte</a>
+								<a id="niDevices" class="nav-link disabled" href="devices.html">{niDevices}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkStatechange" class="nav-link disabled" href="statechange.html">Statusänderung</a>
+								<a id="niStateChange" class="nav-link disabled" href="statechange.html">{niStateChange}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkSettings" class="nav-link disabled" href="settings.html">Einstellungen</a>
+								<a id="niSettings" class="nav-link disabled" href="settings.html">{niSettings}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkLogfiles" class="nav-link disabled" href="logfiles.html">Logdateien</a>
+								<a id="niLogfiles" class="nav-link disabled" href="logfiles.html">{niLogfiles}</a>
 							</li>
 							<li class="nav-item active">
-								<a id="lnkInfo" class="nav-link disabled" href="info.html">Über</a>
+								<a id="niInfo" class="nav-link disabled" href="info.html">{niInfo}</a>
 							</li>
 						</ul>
 					</div>
@@ -74,11 +74,11 @@
 		<main class="container-fluid">
 			<div id="loadApiSettingsError"></div>
 			<div id="content">
-				<div id="divHeading"></div>
-                <div id="divContentText"></div>
+				<div id="divHeading"><h2 id="headerApiSettingsError"></h2></div>
+                <div id="divContentText"><p id="messageApiSettingsError"></p></div>
                 
-                <div class="d-flex align-items-center" id="serviceRestart"><div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><strong>Warte auf Start des Services...</strong></div>
-                <div class="d-flex align-items-center" id="serviceInit"><i class="bi-circle fs-2 my-3 mx-4 float-left text-muted" title="Einstellungen"></i><div class="fw-bold text-muted">Warte auf Initialisierung des Services...</div></div>
+                <div class="d-flex align-items-center" id="serviceRestart"><div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><strong id="lblWaitServiceStart">{lblWaitServiceStart}</strong></div>
+                <div class="d-flex align-items-center" id="serviceInit"><i class="bi-circle fs-2 my-3 mx-4 float-left text-muted"></i><div class="fw-bold text-muted" id="lblWaitServiceInit">{lblWaitServiceInit}</div></div>
 			</div>
 		</main>
 
@@ -90,36 +90,37 @@
 
 		<div id="toastSaveConfigOKRestart" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Speicherung der Einstellungen.</strong>
+				<strong class="me-auto" id="headerSaveConfigOKRestart">{headerSaveConfigOKRestart}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Die Einstellungen wurden erfolgreich gespeichert. Der Service wird neu gestartet.
+			<div class="toast-body text-white" id="divSaveConfigOKRestart">
+				{divSaveConfigOKRestart}
 			</div>
 		</div>
 		
 		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Tokendaten löschen.</strong>
+				<strong class="me-auto" id="headerRemoveTokenOK">{headerRemoveTokenOK}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Die Tokendaten wurden erfolgreich gelöscht.
+			<div class="toast-body text-white" id="divRemoveTokenOK">
+				{divRemoveTokenOK}
 			</div>
 		</div>
 
 		<div id="toastRestartOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Service neu starten.</strong>
+				<strong class="me-auto" id="headerRestartOK">{headerRestartOK}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Der Service wird neu gestartet.
+			<div class="toast-body text-white" id="divRestartOK">
+				{divRestartOK}
 			</div>
 		</div>
 		
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
+		<script src="assets/dist/js/lang.js"></script>
 		<script>
 			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" class="h-100">
+<html class="h-100">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -41,29 +41,29 @@
 		<header>
 			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
 				<div class="container-fluid">
-					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security für HomeMatic</a>
+					<a id="niMain" class="navbar-brand" href="/addons/eufySecurity">{niMain}</a>
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
+								<a id="niHome" class="nav-link" href="/addons/eufySecurity">{niHome}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
+								<a id="niDevices" class="nav-link" href="devices.html">{niDevices}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkStatechange" class="nav-link active" aria-current="page" href="statechange.html">Statusänderung</a>
+								<a id="niStateChange" class="nav-link active" aria-current="page" href="statechange.html">{niStateChange}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkSettings" class="nav-link" href="settings.html">Einstellungen</a>
+								<a id="niSettings" class="nav-link" href="settings.html">{niSettings}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
+								<a id="niLogfiles" class="nav-link" href="logfiles.html">{niLogfiles}</a>
 							</li>
 							<li class="nav-item active">
-								<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
+								<a id="niInfo" class="nav-link" href="info.html">{niInfo}</a>
 							</li>
 						</ul>
 					</div>
@@ -75,26 +75,26 @@
 			<div id="loadApiSettingsError"></div>
 			<div id="content">
 				<div id="captchaMessage"></div>
-				<h3>Statusänderung</h3>
-				<p>Hier finden Sie den aktuellen Status Ihrer Stationen und können diesen entweder für eine Station oder für alle Stationen ändern.</p>
+				<h3 id="divStateChangeIntroHeader">{divStateChangeIntroHeader}</h3>
+				<p id="divStateChangeIntroMessage">{divStateChangeIntroMessage}</p>
 				<div class="row row-cols-1 row-cols-sm-1 row-cols-md-1 row-cols-lg-2 row-cols-xl-2 g-3 mb-3" id="allstations">
 					<div class="col">
 						<div class="card">
-							<h5 class="card-header">alle Stationen</h5>
+							<h5 class="card-header" id="divStateChangeAllStationsHeader">{divStateChangeAllStationsHeader}</h5>
 							<div class="card-body">
-								<h6 class="card-text text-muted">Ändern des Status aller Stationen</h6>
+								<h6 class="card-text text-muted" id="divStateChangeAllStationsDesc">{divStateChangeAllStationsDesc}</h6>
 								<div class="row g-2">
 									<div class="col-sm-3">
-										<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary col-12 h-100" disabled>ab&shy;we&shy;send</button>
+										<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnArmAll}</button>
 									</div>
 									<div class="col-sm-3">
-										<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary col-12 h-100" disabled>zu Hause</button>
+										<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnHomeAll}</button>
 									</div>
 									<div class="col-sm-3">
-										<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary col-12 h-100" disabled>Zeit&shy;steu&shy;e&shy;rung</button>
+										<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnScheduleAll}</button>
 									</div>
 									<div class="col-sm-3">
-										<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary col-12 h-100" disabled>de&shy;ak&shy;ti&shy;viert</button>
+										<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnDisarmAll}</button>
 									</div>
 								</div>
 							</div>
@@ -114,20 +114,20 @@
 		
 		<div id="toastOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Änderung des Status.</strong>
+				<strong class="me-auto" id="divStateChangeToastOkHeader">{divStateChangeToastOkHeader}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Die Änderung des Status wurde erfolgreich durchgeführt.
+			<div class="toast-body text-white" id="divStateChangeToastOkMessage">
+				{divStateChangeToastOkMessage}
 			</div>
 		</div>
 		<div id="toastFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Änderung des Status.</strong>
+				<strong class="me-auto" id="divStateChangeToastFailedHeader">{divStateChangeToastFailedHeader}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Bei der Änderung des Status ist ein Fehler aufgetreten.
+			<div class="toast-body text-white" id="divStateChangeToastFailedMessage">
+				{divStateChangeToastFailedMessage}
 			</div>
 		</div>
 
@@ -135,6 +135,7 @@
 		
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
+		<script src="assets/dist/js/lang.js"></script>
 		<script>
 			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)

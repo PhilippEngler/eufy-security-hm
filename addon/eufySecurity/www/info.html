@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" class="h-100">
+<html class="h-100">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -41,29 +41,29 @@
 		<header>
 			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
 				<div class="container-fluid">
-					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security für HomeMatic</a>
+					<a id="niMain" class="navbar-brand" href="/addons/eufySecurity">{niMain}</a>
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Seitennavigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
+								<a id="niHome" class="nav-link" href="/addons/eufySecurity">{niHome}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
+								<a id="niDevices" class="nav-link" href="devices.html">{niDevices}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
+								<a id="niStateChange" class="nav-link" href="statechange.html">{niStateChange}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkSettings" class="nav-link" href="settings.html">Einstellungen</a>
+								<a id="niSettings" class="nav-link" href="settings.html">{niSettings}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
+								<a id="niLogfiles" class="nav-link" href="logfiles.html">{niLogfiles}</a>
 							</li>
 							<li class="nav-item active">
-								<a id="lnkInfo" class="nav-link active" aria-current="page" href="info.html">Über</a>
+								<a id="niInfo" class="nav-link active" aria-current="page" href="info.html">{niInfo}</a>
 							</li>
 						</ul>
 					</div>
@@ -75,74 +75,73 @@
 			<div id="loadApiSettingsError"></div>
 			<div id="content">
 				<div id="captchaMessage"></div>
-				<h3>Über eufy Security AddOn für HomeMatic</h3>
-				<h4>Versionsinformationen</h4>
+				<h3 id="aboutIntroHeader">{aboutIntroHeader}</h3>
+				<h4 id="headerVersionInfo">{headerVersionInfo}</h4>
 				<p>
 					<div id="versionInfo"></div>
 				</p>
-				<h4>Hinweise zur Nutzung</h4>
-				<p>Die API stellt derzeit folgende Funktionen bereit:</p>
+				<h4 id="headerUsage">{headerUsage}</h4>
+				<p id="textUsage">{textUsage}</p>
 				<ul>
-					<li><code>/getStations</code>: Liefert alle Stationen des Accounts als JSON-String zurück.</li>
-					<li><code>/getDevices</code>: Liefert alle Geräte des Accounts als JSON-String zurück.</li>
-					<li><code>/getHouses</code>: Liefert alle Hausobjekte des Accounts als JSON-String zurück.</li>
-					<li><code>/getMode</code>: Liefert den Status aller Stationen als JSON-String zurück.</li>
-					<li><code>/getMode/<i>STATION_SERIAL</i></code>: Liefert den Status der Station mit der Seriennummer <i>STATION_SERIAL</i> als JSON-String zurück.</li>
-					<li><code>/setMode/<i>MODE</i></code>: Ändert den Status aller Stationen auf <i>MODE</i>. <i>MODE</i> kann einer der folgenden Werte sein. Die Antwort ist ein JSON-String.</li>
+					<li id="entryGetStations">{entryGetStations}</li>
+					<li id="entryGetDevices">{entryGetDevices}</li>
+					<li id="entryGetHouses">{entryGetHouses}</li>
+					<li id="entryGetMode">{entryGetMode}</li>
+					<li id="entryGetModeStation">{entryGetModeStation}</li>
+					<li id="entrySetMode">{entrySetMode}</li>
 					<ul>
-						<li><code>away</code>: abwesend</li>
-						<li><code>custom1</code>: Benutzerdefiniert 1</li>
-						<li><code>custom2</code>: Benutzerdefiniert 2</li>
-						<li><code>custom3</code>: Benutzerdefiniert 3</li>
-						<li><code>disarmed</code>: deaktiviert</li>
-						<li><code>geo</code>: Geofencing</li>
-						<li><code>home</code>: zu Hause</li>
-						<li><code>off</code>: ausgeschaltet</li>
-						<li><code>schedule</code>: Zeitplan</li>
-						<li><code>privacyOn</code>: Indoorcam ausschalten</li>
-						<li><code>privacyOff</code>: Indoorcam einschalten</li>
+						<li id="entryModeAway">{entryModeAway}</li>
+						<li id="entryModeCustom1">{entryModeCustom1}</li>
+						<li id="entryModeCustom2">{entryModeCustom2}</li>
+						<li id="entryModeCustom3">{entryModeCustom3}</li>
+						<li id="entryModeDisarmed">{entryModeDisarmed}</li>
+						<li id="entryModeGeo">{entryModeGeo}</li>
+						<li id="entryModeHome">{entryModeHome}</li>
+						<li id="entryModeOff">{entryModeOff}</li>
+						<li id="entryModeSchedule">{entryModeSchedule}</li>
+						<li id="entryModePrivacyOn">{entryModePrivacyOn}</li>
+						<li id="entryModePrivacyOff">{entryModePrivacyOff}</li>
 					</ul>
-					<li><code>/setMode/<i>STATION_SERIAL</i>/<i>MODE</i></code>: Ändert den Status der Station mit der Seriennummer <i>STATION_SERIAL</i> auf <i>MODE</i>. <i>MODE</i> kann einer der oben genannten Werte sein. Die Antwort ist ein JSON-String.</li>
-					<li><code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.</li>
-					<li><code>/getDeviceImage/<i>DEVICE_SERIAL</i></code>: Gibt das letzte Bild des Gerätes mit der Seriennummer <i>DEVICE_SERIAL</i> als Bild zurück.</li>
+					<li id="entrySetModeStation">{entrySetModeStation}</li>
+					<li id="entryGetLibrary">{entryGetLibrary}</li>
+					<li id="entryGetDeviceImage">{entryGetDeviceImage}</li>
 				</ul>
-				<p>Bitte beachten Sie, dass einige Modi nur mit bestimmten Gerätetypen genutzt werden könnnen. Sollten Sie einen vom Gerät nicht unterstützen Modus setzten wollen, erhalten Sie eine entsprechende Meldung.</p>
-				<p>Über Skripte können Sie die API abfragen. Dazu haben Sie zwei Möglichkeiten:</p>
+				<p id="hintModeNotSupported">{hintModeNotSupported}</p>
+				<p id="textUseApi">{textUseApi}</p>
 				<ul>
-					<li>Möchten Sie die Antwort nicht auswerten, können Sie folgenden Code verwenden, um die Anfrage im Hintergrund (d.h. nicht-blockierend) auszuführen:<br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code><br /></li>
-					<li>Möchten Sie die Antwort auswerten, können Sie folgenden Code verwenden:<br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><br />Die JSON-Antwort finden Sie im String <code>res</code>.</li>
+					<li id="entryApiBackground">{entryApiBackground}</li>
+					<li id="entryApiReturnValues">{entryApiReturnValues}</li>
 				</ul>
-				<p>Bei beiden Varianten werden die entsprechenden Systemvariablen automatisch gesetzt, wenn in den Einstellungen die Option "Systemvariablen bei API Aktionen automatisch aktualisieren" aktiviert wurde.</p>
-				<p>Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.</p>
-				<p>Die Angabe <code>max-time 20</code> bedeutet, dass die Ausführung nach 20 Sekunden abgebrochen wird. Die API-Funktion <code>/setMode</code> kann je Station eine maximale Laufzeit von ca. 10 Sekunden haben. Aus diesem Grund muss der Wert für <code>max-time</code> bei der API-Funktion <code>/setMode</code> entsprechend der Anzahl der Stationen angepasst werden.</p>
-				<p>Die Zeitstempel der letzten Ereignisse werden nur in folgenden Fällen gesetzt und aktualisiert:</p>
+				<p id="descApiSystemVariables">{descApiSystemVariables}</p>
+				<p id="descApiIpAddress">{descApiIpAddress}</p>
+				<p id="descApiTimeout">{descApiTimeout}</p>
+				<p id="hintApiTimestamps">{hintApiTimestamps}</p>
 				<ul>
-					<li>Zeitpunkt der Änderung des Modus bei Stationen: die Einstellung "Modus automatisch durch von der Station gesendete Ereignisse aktualisieren" muss aktiviert sein</li>
-					<li>Zeitpunkt des letzten Videoevents bei Kameras: die Einstellung "Pushbenachrichtigungen aktivieren" muss aktiviert sein</li>
+					<li id="descTimestampStation">{descTimestampStation}</li>
+					<li id="descTimestampVideo">{descTimestampVideo}</li>
 				</ul>
-				<p>Ist die entsprechende Einstellung nicht aktiviert, wird bei Stationen "letzter Statuswechsel: unbekannt" und bei Kameras "letzte Aufnahme nicht verfügbar" angezeigt.</p>
-				<h4>Informationen zum Projekt</h4>
-				<p>Alle Informationen und Dateien zu diesem AddOn finden Sie auf der <a href="https://github.com/PhilippEngler/eufy-security-hm" target="_blank">GitHub-Seite des AddOns</a>.<br />
-				Gefällt Ihnen dieses Addon? Dann unterstützen Sie die Entwickung dieses Addons mit einer Spende über <a href="https://www.paypal.me/EnglerPhilipp" target="_blank"><i class="bi-paypal" title="PayPal Logo"></i> PayPal</a>. Vielen Dank!</p>
-				<p>Dieses Projekt enstand auf der Grundlage von diversen Projekten. Weiterhin trug die HomeMatic-Forum Community zu der Erstellung bei. Nachfolgend finden sich Personen und Projekte, die die Grundlage für dieses Projekt bildeten und ohne deren Vorarbeit es dieses Projekt nicht gegeben hätte.</p>
-				<h5>eufy Security API:</h5>
+				<p id="descTimestampNoValue">{descTimestampNoValue}</p>
+				<h4 id="headerProjectInfo">{headerProjectInfo}</h4>
+				<p id="textProjectInfoGitHub">{textProjectInfoGitHub}</p>
+				<p id="textProjectDonation">{textProjectDonation}</p>
+				<p id="textProjectInspiration">{textProjectInspiration}</p>
+				<h5 id="headerAboutEufySecurityApi">{headerAboutEufySecurityApi}</h5>
 				<ul>
 					<li>bropat <a href="https://github.com/bropat/eufy-security-client" target="_blank">eufy-security-client</a></li>
-					<li>bropat <a href="https://github.com/bropat/ioBroker.eusec" target="_blank">ioBroker.eusec</a></li>
 					<li>Jan Löbel (JanLoebel) <a href="https://github.com/JanLoebel/eufy-node-client" target="_blank">eufy-security-client</a></li>
 					<li>fuzzy (FuzzyMistborn) <a href="https://github.com/FuzzyMistborn/python-eufy-security" target="_blank">python-eufy-security</a></li>
 					<li>Keshav Varma (keshavdv) <a href="https://github.com/keshavdv/python-eufy-security/tree/p2p" target="_blank">python-eufy-security</a></li>
 				</ul>
-				<h5>Webseite:</h5>
+				<h5 id="headerAboutWebsite">{headerAboutWebsite}</h5>
 				<ul>
 					<li><a href="https://getbootstrap.com" target="_blank">Bootstrap</a></li>
 					<li><a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a></li>
 				</ul>
-				<h5>CCU AddOn:</h5>
+				<h5 id="headerAboutAddOn">{headerAboutAddOn}</h5>
 				<ul>
 					<li>Jens Maus (jens-maus) <a href="https://github.com/jens-maus" target=_blank">GitHub</a></li>
 					<li>Sebastian Raff (hobbyquaker) <a href="https://github.com/hobbyquaker" target="_blank">GitHub</a></li>
-					<li>sowie die vielen Hinweise der <a href="https://www.homematic-forum.de" target="_blank">HomeMatic-Forum Community</a></li>
+					<li>HomeMatic-Forum Community <a href="https://www.homematic-forum.de" target="_blank">HomeMatic-Forum</a></li>
 				</ul>
 			</div>
 		</main>
@@ -157,6 +156,7 @@
 		
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
+		<script src="assets/dist/js/lang.js"></script>
 		<script>
 			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)

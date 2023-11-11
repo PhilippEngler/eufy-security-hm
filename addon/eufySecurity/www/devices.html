@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" class="h-100">
+<html class="h-100">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -41,29 +41,29 @@
 		<header>
 			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
 				<div class="container-fluid">
-					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security für HomeMatic</a>
+					<a id="niMain" class="navbar-brand" href="/addons/eufySecurity">{niMain}</a>
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Seitennavigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
+								<a id="niHome" class="nav-link" href="/addons/eufySecurity">{niHome}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkDevices" class="nav-link active" aria-current="page" href="devices.html">Geräte</a>
+								<a id="niDevices" class="nav-link active" aria-current="page" href="devices.html">{niDevices}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
+								<a id="niStateChange" class="nav-link" href="statechange.html">{niStateChange}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkSettings" class="nav-link" href="settings.html">Einstellungen</a>
+								<a id="niSettings" class="nav-link" href="settings.html">{niSettings}s</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
+								<a id="niLogfiles" class="nav-link" href="logfiles.html">{niLogfiles}</a>
 							</li>
 							<li class="nav-item active">
-								<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
+								<a id="niInfo" class="nav-link" href="info.html">{niInfo}</a>
 							</li>
 						</ul>
 					</div>
@@ -75,8 +75,10 @@
 			<div id="loadApiSettingsError"></div>
 			<div id="content">
 				<div id="captchaMessage"></div>
-				<h3>Geräte</h3>
-				<p>Hier finden Sie alle Geräte, die dem angegebenen Account zugeordnet sind.</p>
+				<div id="divDevicesIntro">
+					<h3 id="divDevicesIntroHeader">{divDevicesIntroHeader}</h3>
+					<p id="divDevicesIntroMessage">{divDevicesIntroMessage}</p>
+				</div>
 				<div id="stations"></div>
 				<div id="devices"></div>
 			</div>
@@ -118,6 +120,7 @@
 		
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
+		<script src="assets/dist/js/lang.js"></script>
 		<script>
 			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)

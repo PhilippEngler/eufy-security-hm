@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" class="h-100">
+<html class="h-100">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -41,29 +41,29 @@
 		<header>
 			<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
 				<div class="container-fluid">
-					<a id="lnkMain" class="navbar-brand" href="/addons/eufySecurity">eufy Security für HomeMatic</a>
+					<a id="niMain" class="navbar-brand" href="/addons/eufySecurity">{niMain}</a>
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Seitennavigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					<div class="collapse navbar-collapse" id="navbarCollapse">
 						<ul class="navbar-nav me-auto mb-2 mb-md-0">
 							<li class="nav-item">
-								<a id="lnkHome" class="nav-link" href="/addons/eufySecurity">Home</a>
+								<a id="niHome" class="nav-link" href="/addons/eufySecurity">{niHome}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkDevices" class="nav-link" href="devices.html">Geräte</a>
+								<a id="niDevices" class="nav-link" href="devices.html">{niDevices}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkStatechange" class="nav-link" href="statechange.html">Statusänderung</a>
+								<a id="niStateChange" class="nav-link" href="statechange.html">{niStateChange}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkSettings" class="nav-link active" aria-current="page" href="settings.html">Einstellungen</a>
+								<a id="niSettings" class="nav-link active" aria-current="page" href="settings.html">{niSettings}</a>
 							</li>
 							<li class="nav-item">
-								<a id="lnkLogfiles" class="nav-link" href="logfiles.html">Logdateien</a>
+								<a id="niLogfiles" class="nav-link" href="logfiles.html">{niLogfiles}</a>
 							</li>
 							<li class="nav-item active">
-								<a id="lnkInfo" class="nav-link" href="info.html">Über</a>
+								<a id="niInfo" class="nav-link" href="info.html">{niInfo}</a>
 							</li>
 						</ul>
 					</div>
@@ -76,7 +76,7 @@
 			<div id="content">
 				<div id="captchaMessage"></div>
 				<form class="needs-validation" novalidate action="javascript:saveConfig();" method="post" id="configform">
-					<h3>Einstellungen</h3>
+					<h3 id="settingsIntroHeader">{settingsIntroHeader}</h3>
 					<p>
 						<div id="resultLoading"></div>
 						<div id="resultMessage"></div>
@@ -84,65 +84,65 @@
 					<div class="row">
 						<div class="col">
 							<div class="card mb-3 collapse" id="cardEufySecurityAccountData">
-								<h5 class="card-header"><i class="bi-person-circle"></i>&nbsp;&nbsp;eufy Security Account</h5>
+								<h5 class="card-header" id="settingsCardHeaderEufySecurityAccountData"><i class="bi-person-circle"></i>&nbsp;&nbsp;{settingsCardHeaderEufySecurityAccountData}</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
-											<h5>Zugangsdaten</h5>
+											<h5 id="settingsHeaderAccountData">{settingsHeaderAccountData}</h5>
 											<div class="alert alert-warning alert-dismissible fade show" role="alert">
-												<h5 class="mb-1 alert-heading">Bitte erzeugen Sie einen eigenen eufy Security Account für dieses AddOn.</h5>
-												<p class="mb-0">Zur problemlosen Nutzung dieses Addons erzeugen Sie einen neuen eufy Security Account in der App und geben Sie dessen Zugangsdaten hier ein.</p>
+												<h5 class="mb-1 alert-heading" id="settingsAccountDataHintHeader">{settingsAccountDataHintHeader}</h5>
+												<p class="mb-0" id="settingsAccountDataHintMessage">{settingsAccountDataHintMessage}</p>
 												<hr>
-												<p class="my-0 form-text text-muted">Wenn Sie keinen eigenen Account für dieses AddOn anlegen, werden Sie jedes mal in Ihrer App abgemeldet, wenn dieses AddOn mit eufy Security kommuniziert bzw. das AddOn wird abgemeldet, wenn Sie Ihre App nutzen.</p>
+												<p class="my-0 form-text text-muted" id="settingsAccountDataHintSubText">{settingsAccountDataHintSubText}</p>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="txtUsername">Benutzername des angelegten eufy Security Accounts.</label>
-												<input type="email" name="username" id="txtUsername" class="form-control" placeholder="eMail-Adresse" required> <!--autofocus-->
-												<small class="form-text text-muted">Der Benutzername ist die eMail-Adresse, mit der Sie den eufy Security Account angelegt haben.</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie die eMail-Adresse des eufy Security Accounts ein.
+												<label class="mb-2" for="txtUsername" id="lblUsername">{lblUsername}</label>
+												<input type="email" name="username" id="txtUsername" class="form-control" placeholder="{txtUsername}" required> <!--autofocus-->
+												<small class="form-text text-muted" id="hintUsername">{hintUsername}</small>
+												<div class="invalid-feedback" id="divUsernameError">
+													{divUsernameError}
 												</div>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="my-2" for="txtPassword">Passwort des angelegten eufy Security Accounts.</label>
-												<input type="password" name="password" id="txtPassword" class="form-control" placeholder="Password" required>
-												<small class="form-text text-muted">Das Passwort, dass Sie für den eufy Security Account angelegt haben.</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie das Passwort des eufy Security Accounts ein.
+												<label class="my-2" for="txtPassword" id="lblPassword">{lblPassword}</label>
+												<input type="password" name="password" id="txtPassword" class="form-control" placeholder="{txtPassword}" required>
+												<small class="form-text text-muted" id="hintPassword"">{hintPassword}</small>
+												<div class="invalid-feedback" id="divPasswordError">
+													{divPasswordError}
 												</div>
 											</div>
 											<hr>
-											<h5>Weitere Einstellungen</h5>
+											<h5 id="settingsHeaderAccountMoreSettings">{settingsHeaderAccountMoreSettings}</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="cbCountry">Land des eufy Security Accounts.</label>
+												<label class="mb-2" for="cbCountry" id="lblCountry">{lblCountry}</label>
 												<div id="devCountrySelection">
 													<div id="countrySelectionMessage">
 
 													</div>
 													<select name="country" id="cbCountry" class="form-select" required>
-														<option disabled selected value style="display: none;">Bitte auswählen...</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
 													</select>
 												</div>
-												<small class="form-text text-muted">Das Land, für den Sie den eufy Security Account erstellt haben.</small>
+												<small class="form-text text-muted" id="hintCountry">{hintCountry}</small>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="my-2" for="cbLanguage">Sprache des eufy Security Accounts.</label>
+												<label class="my-2" for="cbLanguage" id="lblLanguage">{lblLanguage}</label>
 												<select name="language" id="cbLanguage" class="form-select" required>
-													<option disabled selected value style="display: none;">Bitte auswählen...</option>
+													<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
 													<option value="de">deutsch</option>
-													<option value="en">englisch</option>
+													<option value="en">english</option>
 												</select>
-												<small class="form-text text-muted">Die Sprache, die für den eufy Security Account genutzt wird.</small>
+												<small class="form-text text-muted" id="hintLanguage">{hintLanguage}</small>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="my-2" for="txtTrustedDeviceName">Name des Gerätes.</label>
+												<label class="my-2" for="txtTrustedDeviceName" id="lblTrustedDeviceName">{lblTrustedDeviceName}</label>
 												<div class="input-group">
-													<input type="text" name="trustedDeviceName" id="txtTrustedDeviceName" class="form-control" placeholder="Name des Gerätes" pattern="^((?!eufyclient).)*$" required>
-													<button class="btn btn-secondary" type="button" id="btnGenerateNewTrustedDeviceName" onclick="generateNewTrustedDeviceName()">neuen Gerätenamen generieren</button>
+													<input type="text" name="trustedDeviceName" id="txtTrustedDeviceName" class="form-control" placeholder="{txtTrustedDeviceName}" pattern="^((?!eufyclient).)*$" required>
+													<button class="btn btn-secondary" type="button" id="btnGenerateNewTrustedDeviceName" onclick="generateNewTrustedDeviceName()">{btnGenerateNewTrustedDeviceName}</button>
 												</div>
-												<small class="form-text text-muted">Der Name des Gerätes wird für die Verbing mit eufy benötigt. Bitte keinen Hinweis auf die Nutzung des eufy-security-client geben.</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie einen Gerätenamen ein. Die Zeichenkette 'eufyclient' darf nicht enthalten sein.
+												<small class="form-text text-muted" id="hintTrustedDeviceName">{hintTrustedDeviceName}</small>
+												<div class="invalid-feedback" id="divTrustedDeviceNameError">
+													{divTrustedDeviceNameError}
 												</div>
 											</div>
 										</div>
@@ -151,163 +151,163 @@
 							</div>
 
 							<div class="card mb-3 collapse" id="cardEufySecurityConfig">
-								<h5 class="card-header"><i class="bi-sliders"></i>&nbsp;&nbsp;Konfiguration des AddOns</h5>
+								<h5 class="card-header" id="settingsCardHeaderEufySecurityConfig"><i class="bi-sliders"></i>&nbsp;&nbsp;{settingsCardHeaderEufySecurityConfig}</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
-											<h5>Einstellungen für HTTP</h5>
+											<h5 id="settingsHeaderConfigHttpSettings">{settingsHeaderConfigHttpSettings}</h5>
 											<div class="form-check form-switch mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useHttp" id="chkUseHttp" onchange="changeValue(useHttp)">
-												<label class="form-check-label" for="chkUseHttp">HTTP aktiv</label>
+												<label class="form-check-label" for="chkUseHttp" id="lblUseHttp">{lblUseHttp}</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mt-1 mb-2" for="txtPortHttp">Port über den die eufy Security API über HTTP erreichbar sein soll.</label>
-												<input type="text" name="httpPort" id="txtPortHttp" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
-												<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie eine Zahl zwischen 1 und 65535 ein.
+												<label class="mt-1 mb-2" for="txtPortHttp" id="lblPortHttp">{lblPortHttp}</label>
+												<input type="text" name="httpPort" id="txtPortHttp" class="form-control" placeholder="{txtPortHttp}" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
+												<small class="form-text text-muted" id="hintPortHttp">{hintPortHttp}</small>
+												<div class="invalid-feedback" id="divPortHttpError">
+													{divPortHttpError}
 												</div>
 											</div>
 											<hr>
-											<h5>Einstellungen für HTTPS</h5>
+											<h5 id="settingsHeaderConfigHttpsSettings">{settingsHeaderConfigHttpsSettings}</h5>
 											<div class="form-check form-switch" class="mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useHttps" id="chkUseHttps" onchange="changeValue(useHttps)">
-												<label class="form-check-label" for="chkUseHttps">HTTPS aktiv</label>
+												<label class="form-check-label" for="chkUseHttps" id="lblUseHttps">{lblUseHttps}</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mt-1 mb-2" for="portHttpsport">Port über den die eufy Security API über HTTPS erreichbar sein soll.</label>
-												<input type="text" name="httpsPort" id="txtPortHttps" class="form-control" placeholder="API-Port" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
-												<small class="form-text text-muted">Der angegebene Port darf nicht in Verwendung sein.</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie eine Zahl zwischen 1 und 65535 ein.
+												<label class="mt-1 mb-2" for="txtPortHttps" id="lblPortHttps">{lblPortHttps}</label>
+												<input type="text" name="httpsPort" id="txtPortHttps" class="form-control" placeholder="{txtPortHttps}" pattern="^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$" required>
+												<small class="form-text text-muted" id="hintPortHttps">{hintPortHttps}</small>
+												<div class="invalid-feedback" id="divPortHttpsError">
+													{divPortHttpsError}
 												</div>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="my-2" for="txtHttpsKeyFile">Speicherort der Datei mit dem privaten Schlüssel des Zertifikats.</label>
-												<input type="text" name="httpsKeyFile" id="txtHttpsKeyFile" class="form-control" placeholder="Schlüsseldatei" required>
-												<small class="form-text text-muted">Speicherort der Schlüsseldatei auf der CCU.</small>
+												<label class="my-2" for="txtHttpsKeyFile" id="lblHttpsKeyFile">{lblHttpsKeyFile}</label>
+												<input type="text" name="httpsKeyFile" id="txtHttpsKeyFile" class="form-control" placeholder="{txtHttpsKeyFile}" required>
+												<small class="form-text text-muted" id="hintHttpsKeyFile">{hintHttpsKeyFile}</small>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="my-2" for="txtHttpsCertFile">Speicherort des Zertifikats.</label>
-												<input type="text" name="httpsCertFile" id="txtHttpsCertFile" class="form-control" placeholder="Zertifikatsdatei" required>
-												<small class="form-text text-muted">Speicherort der Zertifikatsdatei auf der CCU.</small>
+												<label class="my-2" for="txtHttpsCertFile" id="lblHttpsCertFile">{lblHttpsCertFile}</label>
+												<input type="text" name="httpsCertFile" id="txtHttpsCertFile" class="form-control" placeholder="{txtHttpsCertFile}" required>
+												<small class="form-text text-muted" id="hintHttpsCertFile">{hintHttpsCertFile}</small>
 											</div>
 											<hr>
-											<h5>Einstellungen für die Hausverwaltungsfunktion</h5>
+											<h5 id="settingsHeaderConfigHouseAdministration">{settingsHeaderConfigHouseAdministration}</h5>
 											<div class="form-check form-switch" class="mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="acceptInvitations" id="chkAcceptInvitations">
-												<label class="form-check-label" for="chkAcceptInvitations">Einladungen automatisch akzeptieren</label>
+												<label class="form-check-label" for="chkAcceptInvitations" id="lblAcceptInvitations">{lblAcceptInvitations}</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mt-1 mb-2" for="cbConnectionType">Stationen und Geräte angezeigen.</label>
+												<label class="mt-1 mb-2" for="cbHouseSelection" id="lblHouseSelection">{lblHouseSelection}</label>
 												<div id="houseSelection">
 													<div id="houseSelectionMessage"></div>
 													<select name="house" id="cbHouseSelection" class="form-select" required>
-														<option disabled selected value style="display: none;">Bitte auswählen...</option>
-														<option value="all">alle Stationen und Geräte des Accounts</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+														<option value="all" id="optAllStationsDevices">{optAllStationsDevices}</option>
 													</select>
-													<small class="form-text text-muted mb-2">Bei der Einstellunge 'alle Stationen und Geräte des Accounts' werden alle Geräte angezeigt. Wird ein Haus ausgewählt, werden nur Geräte angezeigt, die diesem Haus zugeordnet wurden.</small>
+													<small class="form-text text-muted mb-2" id="hintHouseSelection">{hintHouseSelection}</small>
 												</div>
 											</div>
 											<hr>
-											<h5>Einstellungen für die Verbindung zu den Stationen</h5>
+											<h5 id="settingsHeaderConfigConnectionToStationSettings">{settingsHeaderConfigConnectionToStationSettings}</h5>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="cbConnectionType">Herstellen der Verbindung zu den Stationen.</label>
+												<label class="mb-2" for="cbConnectionType" id="lblConnectionType">{lblConnectionType}</label>
 												<select name="connectionType" id="cbConnectionType" class="form-select" required>
-													<option disabled selected value style="display: none;">Bitte auswählen...</option>
-													<option value="1">nur lokale Verbindung</option>
-													<option value="2">schnellste Verbindung</option>
+													<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+													<option value="1" id="optConnectionTypeLocal">{optConnectionTypeLocal}</option>
+													<option value="2" id="optConnectionTypeFastest">{optConnectionTypeFastest}</option>
 												</select>
-												<small class="form-text text-muted mb-2">Diese Einstellung wird für alle Basisstationen genutzt.</small>
+												<small class="form-text text-muted mb-2" id="hintConnectionType">{hintConnectionType}</small>
 											</div>
 											<div class="form-check form-switch mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUdpStaticPorts" id="chkUseUdpStaticPorts" onchange="changeValue(useUdpStaticPorts)">
-												<label class="form-check-label" for="chkUseUdpStaticPorts">Verbindung zu den Station über feste Ports aufbauen</label>
+												<label class="form-check-label" for="chkUseUdpStaticPorts" id="lblUseUdpStaticPorts">{lblUseUdpStaticPorts}</label>
 											</div>
 											<div id="useUDPStaticPortsStations">
 												
 											</div>
 											<hr>
-											<h5>Einstellungen für die Aktualisierung der Systemvariablen</h5>
+											<h5 id="settingsHeaderConfigUpdateSystemVariables">{settingsHeaderConfigUpdateSystemVariables}</h5>
 											<div class="form-check form-switch">
 												<input class="form-check-input" type="checkbox" role="switch" name="useSystemVariables" id="chkUseSystemVariables" onchange="changeValue(useSystemVariables)">
-												<label class="form-check-label" for="chkUseSystemVariables">Systemvariablen bei API Aktionen automatisch aktualisieren</label>
+												<label class="form-check-label" for="chkUseSystemVariables" id="lblUseSystemVariables">{lblUseSystemVariables}</label>
 											</div>
 											<hr>
-											<h5>Einstellungen für Standardbild der Kameras</h5>
+											<h5 id="settingsHeaderConfigDefaultImageSettings">{settingsHeaderConfigDefaultImageSettings}</h5>
 											<div class="form-label-group" class="container-fluid">
-												<label class="mb-2" for="txtDefaultImagePath">Standardbild für Kameras.</label>
-												<input type="text" name="defaultImagePath" id="txtDefaultImagePath" class="form-control" placeholder="Link zum Standardbild.">
-												<small class="form-text text-muted">Wenn die für die jeweilige Kamera kein Standbild zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+												<label class="mb-2" for="txtDefaultImagePath" id="lblDefaultImagePath">{lblDefaultImagePath}</label>
+												<input type="text" name="defaultImagePath" id="txtDefaultImagePath" class="form-control" placeholder="{txtDefaultImagePath}">
+												<small class="form-text text-muted" id="hintDefaultImagePath">{hintDefaultImagePath}</small>
 											</div>
 											<hr>
-											<h5>Einstellungen für Standardvideo der Kameras</h5>
+											<h5 id="settingsHeaderConfigDefaultVideoSettings">{settingsHeaderConfigDefaultVideoSettings}</h5>
 											<div class="form-label-group" class="container-fluid">
-												<label class="mb-2" for="txtDefaultVideoPath">Standardvideo für Kameras.</label>
-												<input type="text" name="defaultVideoPath" id="txtDefaultVideoPath" class="form-control" placeholder="Link zum Standardvideo.">
-												<small class="form-text text-muted">Wenn die für die jeweilige Kamera kein Video zur Verfügung steht, wird dieser Link in der entsprechenden Systemvariable gesetzt.</small>
+												<label class="mb-2" for="txtDefaultVideoPath" id="lblDefaultVideoPath">{lblDefaultVideoPath}</label>
+												<input type="text" name="defaultVideoPath" id="txtDefaultVideoPath" class="form-control" placeholder="{txtDefaultVideoPath}">
+												<small class="form-text text-muted" id="hintDefaultVideoPath">{hintDefaultVideoPath}</small>
 											</div>
 											<hr>
-											<h5>Einstellungen für regelmäßige Aktualisierung des Modus</h5>
+											<h5 id="settingsHeaderConfigUpdateState">{settingsHeaderConfigUpdateState}</h5>
 											<div class="form-check form-switch my-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateEvent" id="chkUpdateStateEvent" onchange="changeValue(useUpdateStateEvent)">
-												<label class="form-check-label" for="chkUpdateStateEvent">Modus automatisch durch von der Station gesendete Ereignisse aktualisieren</label>
+												<label class="form-check-label" for="chkUpdateStateEvent" id="lblUpdateStateEvent">{lblUpdateStateEvent}</label>
 												<!--<small class="form-text text-muted">Statusänderungen werden von der Station direkt nach einer externen Änderung gemeldet und aktualisiert.</small>-->
 											</div>
 											<div class="form-check form-switch mb-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateStateIntervall" id="chkUpdateStateIntervall" onchange="changeValue(useUpdateStateIntervall)">
-												<label class="form-check-label" for="chkUpdateStateIntervall">Modus regelmäßig intervallbasierend aktualisieren</label>
+												<label class="form-check-label" for="chkUpdateStateIntervall" id="lblUpdateStateIntervall">{lblUpdateStateIntervall}</label>
 												<!--<small class="form-text text-muted">Status wird in regelmäßigen Abständen abgerufen.</small>-->
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="txtUpdateStateIntervallTimespan">Zeit zwischen den Aktualisierungen.</label>
-												<input type="text" name="updateStateIntervallTimespan" id="txtUpdateStateIntervallTimespan" class="form-control" placeholder="Intervall zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
-												<small class="form-text text-muted">Intervall in Minuten.</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie ein Intervall zwischen 15 und 240 Minuten ein.
+												<label class="mb-2" for="txtUpdateStateIntervallTimespan" id="lblUpdateStateIntervallTimespan">{lblUpdateStateIntervallTimespan}</label>
+												<input type="text" name="updateStateIntervallTimespan" id="txtUpdateStateIntervallTimespan" class="form-control" placeholder="{txtUpdateStateIntervallTimespan}" pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
+												<small class="form-text text-muted" id="hintStateIntervallTimespan">{hintStateIntervallTimespan}</small>
+												<div class="invalid-feedback" id="divStateIntervallError">
+													{divStateIntervallError}
 												</div>
 											</div>
 											<hr>
-											<h5>Einstellungen für regelmäßige Aktualisierung der Links</h5>
+											<h5 id="settingsHeaderConfigUpdateLinks">{settingsHeaderConfigUpdateLinks}</h5>
 											<div class="form-check form-switch my-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateLinksIntervall" id="chkUseUpdateLinksIntervall" onchange="changeValue(useUpdateLinksIntervall)">
-												<label class="form-check-label" for="chkUseUpdateLinksIntervall">Links regelmäßig aktualisieren</label>
+												<label class="form-check-label" for="chkUseUpdateLinksIntervall" id="lblUseUpdateLinksIntervall">{lblUseUpdateLinksIntervall}</label>
 											</div>
 											<div class="form-check form-switch mb-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="useUpdateLinksOnlyWhenActive" id="chkUpdateLinksOnlyWhenActive">
-												<label class="form-check-label" for="chkUpdateLinksOnlyWhenActive">Links nur regelmäßig aktualisieren, wenn System aktiv ist</label>
+												<label class="form-check-label" for="chkUpdateLinksOnlyWhenActive" id="lblUpdateLinksOnlyWhenActive">{lblUpdateLinksOnlyWhenActive}</label>
 											</div>
 											<div class="form-label-group was-validated" class="container-fluid">
-												<label class="mb-2" for="txtUpdateLinksIntervallTimespan">Zeit zwischen den Aktualisierungen.</label>
-												<input type="text" name="updateLinksIntervallTimespan" id="txtUpdateLinksIntervallTimespan" class="form-control" placeholder="Intervall zwischen Aktualisierungen." pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
-												<small class="form-text text-muted">Intervall in Minuten.</small>
-												<div class="invalid-feedback">
-													Bitte geben Sie ein Intervall zwischen 15 und 240 Minuten ein.
+												<label class="mb-2" for="txtUpdateLinksIntervallTimespan" id="lblUpdateLinksIntervallTimespan">{lblUpdateLinksIntervallTimespan}</label>
+												<input type="text" name="updateLinksIntervallTimespan" id="txtUpdateLinksIntervallTimespan" class="form-control" placeholder="{txtUpdateLinksIntervallTimespan}" pattern="^(1[5-9]|[2-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$" required>
+												<small class="form-text text-muted" id="hintLinksIntervallTimespan">{hintLinksIntervallTimespan}</small>
+												<div class="invalid-feedback" id="divLinksIntervallTimespanError">
+													{divLinksIntervallTimespanError}
 												</div>
 											</div>
 											<hr>
-											<h5>Einstellungen für Pushbenachrichtigungen</h5>
+											<h5 id="settingsHeaderConfigPushService">{settingsHeaderConfigPushService}</h5>
 											<div class="form-check form-switch mt-2">
 												<input class="form-check-input" type="checkbox" role="switch" name="usePushService" id="chkUsePushService">
-												<label class="form-check-label" for="chkUsePushService">Pushbenachrichtigungen aktivieren</label>
+												<label class="form-check-label" for="chkUsePushService" id="lblUsePushService">{lblUsePushService}</label>
 											</div>
-											<small class="form-text text-muted">Pushbenachrichtigungen werden z.B. für die Ermittlung der Zeitangabe der letzten Ereignisse für die Kameras benötigt.</small>
+											<small class="form-text text-muted" id="hintUsePushService">{hintUsePushService}</small>
 											<hr>
-											<h5>Einstellungen für Protokollierung</h5>
+											<h5 id="settingsHeaderConfigLogLevel">{settingsHeaderConfigLogLevel}</h5>
 											<div class="form-label-group" class="container-fluid">
-												<label class="mb-2" for="cbLogLevel">Umfang der Protokollierung.</label>
+												<label class="mb-2" for="cbLogLevel" id="lblLogLevel">{lblLogLevel}</label>
 												<div id="alertLogLevel">
 												</div>
 												<select name="logLevel" id="cbLogLevel" class="form-select" oninput="checkLogLevel(this.value);" required>
-													<option disabled selected value style="display: none;">Bitte auswählen...</option>
-													<option value="0">grundlegende Informationen</option>
-													<option value="1">alle Informationen</option>
-													<option value="2">alle Informationen, alle Fehler</option>
-													<option value="3">alle Informationen, alle Fehler, alle Debuginformationen</option>
+													<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+													<option value="0" id="optLogLevel0">{optLogLevel0}</option>
+													<option value="1" id="optLogLevel1">{optLogLevel1}</option>
+													<option value="2" id="optLogLevel2">{optLogLevel2}</option>
+													<option value="3" id="optLogLevel3">{optLogLevel3}</option>
 												</select>
-												<small class="form-text text-muted">Legt den Umfang der Protokollierung fest. Fehler werden unabhängig dieser Einstellung beim Auftreten immer in der Fehlerprotokolldatei 'eufySecurity.err' protokolliert.</small>
-												<div class="invalid-feedback">
-													Bitte wählen Sie eine Protokollierungsstufe aus.
+												<small class="form-text text-muted" id="hintLogLevel">{hintLogLevel}</small>
+												<div class="invalid-feedback" id="divLogLevelError">
+													{divLogLevelError}
 												</div>
 											</div>
 										</div>
@@ -316,11 +316,11 @@
 							</div>
 
 							<div class="mb-3 collapse" id="containerBtnSave">
-								<button type="submit" class="btn btn-primary">Einstellungen speichern</button><br />
+								<button type="submit" class="btn btn-primary" id="btnSave">{btnSave}</button><br />
 							</div>
 
 							<div class="card mb-3 collapse" id="cardSystemVariables">
-								<h5 class="card-header"><i class="bi-table"></i>&nbsp;&nbsp;Systemvariablen</h5>
+								<h5 class="card-header" id="settingsCardHeaderSystemvariables"><i class="bi-table"></i>&nbsp;&nbsp;{settingsCardHeaderSystemvariables}</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body">
@@ -334,43 +334,48 @@
 							</div>
 
 							<div class="card mb-3">
-								<h5 class="card-header"><i class="bi-tools"></i>&nbsp;&nbsp;Fehlerbehebung</h5>
+								<h5 class="card-header" id="settingsCardHeaderErrorHandling"><i class="bi-tools"></i>&nbsp;&nbsp;{settingsCardHeaderErrorHandling}</h5>
 								<div class="row no-gutters">
 									<div class="col-md-12">
 										<div class="card-body" >
 											<div class="alert alert-warning fade show" role="alert">
 												<div class="row align-items-center">
 													<div class="col-xs-12 col-sm-4 col-md-3 col-lg-2 col-xl-2">
-														<div id="enableTS" class="d-grid"><button id="btnEnableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">Fehlerbehebung aktivieren</button></div>
+														<div id="enableTS" class="d-grid"><button id="btnEnableTroubleShooting" onclick="enableButtons(true)" type="button" class="btn btn-outline-warning btn-block">{btnEnableTroubleShooting}</button></div>
 													</div>
 													<div class="col-xs-12 col-sm-8 col-md-9 col-lg-10 col-xl-10">
-														<h5 class="mb-1 alert-heading">Erweiterte Funktionen zur Fehlerbehebung</h5>
-														<span class="mb-0">Mit den folgenden Buttons können Sie verschiedene Aufgaben ausführen, um die Funktionsfähigkeit des AddOns wiederherzustellen. Um ungewollte Änderungen zu vermeiden, müssen Sie die Bearbeitung für einige Aufgaben zuerst freischalten.</span>
+														<h5 class="mb-1 alert-heading" id="settingsHintHeaderErrorHandling">{settingsHintHeaderErrorHandling}</h5>
+														<span class="mb-0" id="settingsHintMessageErrorHandling">{settingsHintMessageErrorHandling}</span>
 														<hr>
-														<small class="mt-0 form-text text-muted">Bitte beachten Sie, dass einige der Funktionen Daten und Einstellungen verändern oder löschen.</small>
+														<small class="mt-0 form-text text-muted" id="settingsHintSubTextErrorHandling">{settingsHintSubTextErrorHandling}</small>
 													</div>
 												</div>
 											</div>
 											<div class="form-label-group" class="container-fluid">
-												<label for="btnDownloadConfigFile" class="mb-2">Konfiguration sichern<br /><small class="form-text text-muted">Bitte beachten Sie, dass diese Datei Ihre Zugangsdaten im Klartext enthält.</small></label><br />
-												<button id="btnDownloadConfigFile" onclick="downloadFile('conf')" type="button" class="btn btn-outline-primary">Konfiguration herunterladen</button>
+												<h6 id="headerSaveConfig">{headerSaveConfig}</h6>
+												<small id="hintSaveConfig" class="form-text text-muted mt-0 mb-2">{hintSaveConfig}</small><br>
+												<button id="btnDownloadConfigFile" onclick="downloadFile('conf')" type="button" class="btn btn-outline-primary mt-2">{btnDownloadConfigFile}</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
-												<label for="btnSelectConfigFile" class="form-label">Konfiguration wiederherstellen<br /><small class="form-text text-muted">Die Datei wird nach dem Hochladen überprüft. Wenn die Überprüfung erfolgreich ist, wird das AddOn neu gestartet um die neuen Einstellungen zu übernehmen.</small></label><br />
-												<input class="form-control mb-2" type="file" id="btnSelectConfigFile" onchange="selectedFile('conf')">
-												<button id="btnUploadConfigFile" onclick="uploadFile('conf')" type="button" class="btn btn-outline-primary mt-2" disabled>Konfiguration hochladen</button>
+												<h6 id="headerUploadConfig">{headerUploadConfig}</h6>
+												<small id="hintUploadConfig" class="form-text text-muted mt-0">{hintUploadConfig}</small><br>
+												<input class="form-control mt-2 mb-2" type="file" id="btnSelectConfigFile" onchange="selectedFile('conf')">
+												<button id="btnUploadConfigFile" onclick="uploadFile('conf')" type="button" class="btn btn-outline-primary mt-2" disabled>{btnUploadConfigFile}</button>
 												<div class="mt-3" id="resultUploadMessage"></div>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
-												<label id="lblDeleteTokenData" for="btnDeleteTokenData" class="text-muted">Token löschen<br /><small class="form-text text-muted"><span id="spnToken"></span>Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.</small></label><br />
-												<button id="btnDeleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-outline-primary mt-2" disabled>Token löschen</button>
+												<h6 id="headerDeleteTokenData" class="text-muted">{headerDeleteTokenData}</h6>
+												<small class="form-text text-muted my-0" id="hintTokenData"></small>
+												<small class="form-text text-muted mt-0 mb-2" id="hintDeleteToken">{hintDeleteToken}</small><br />
+												<button id="btnDeleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnDeleteTokenData}</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
-												<label id="lblRestartService" for="btnRestartService" class="text-muted">Service neu starten<br /><small class="form-text text-muted">Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.</small></label><br />
-												<button id="btnRestartService" onclick="restartService()" type="button" class="btn btn-outline-primary mt-2" disabled>Service neu starten</button>
+												<h6 id="headerRestartService" class="text-muted">{headerRestartService}</h6>
+												<small class="form-text text-muted" id="hintRestartService">{hintRestartService}</small><br />
+												<button id="btnRestartService" onclick="restartService()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnRestartService}</button>
 											</div>
 										</div>
 									</div>
@@ -390,81 +395,81 @@
 		
 		<div id="toastCheckConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Überprüfung der Eingaben.</strong>
+				<strong class="me-auto" id="headerCheckConfigFailed">{headerCheckConfigFailed}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Die Überprüfung der Eingaben ist fehlgeschlagen. Bitte überprüfen Sie die rot markierten Eingabefelder und beachten Sie die Hinweise.
+			<div class="toast-body text-white" id="divCheckConfigFailed">
+				{divCheckConfigFailed}
 			</div>
 		</div>
 
 		<div id="toastSaveConfigOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Speicherung der Einstellungen.</strong>
+				<strong class="me-auto" id="headerSaveConfigOK">{headerSaveConfigOK}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Die Einstellungen wurden erfolgreich gespeichert.
+			<div class="toast-body text-white" id="divSaveConfigOK">
+				{divSaveConfigOK}
 			</div>
 		</div>
 		
 		<div id="toastSaveConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Speicherung der Einstellungen.</strong>
+				<strong class="me-auto" id="headerSaveConfigFailed">{headerSaveConfigFailed}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.
+			<div class="toast-body text-white" id="divSaveConfigFailed">
+				{divSaveConfigFailed}
 			</div>
 		</div>
 
 		<div id="toastUploadConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Upload der Konfigurationsdatei.</strong>
+				<strong class="me-auto" id="headerUploadConfigFailed">{headerUploadConfigFailed}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Bei dem Hochladen der Konfigrationsdatei ist ein Fehler aufgetreten.
+			<div class="toast-body text-white" id="divUploadConfigFailed">
+				{divUploadConfigFailed}
 			</div>
 		</div>
 		
 		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Tokendaten löschen.</strong>
+				<strong class="me-auto" id="headerRemoveTokenOK">{headerRemoveTokenOK}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Die Tokendaten wurden erfolgreich gelöscht.
+			<div class="toast-body text-white" id="divRemoveTokenOK">
+				{divRemoveTokenOK}
 			</div>
 		</div>
 		
 		<div id="toastRemoveTokenFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Tokendaten löschen.</strong>
+				<strong class="me-auto" id="headerRemoveTokenFailed">{headerRemoveTokenFailed}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Bei dem Löschen der Tokendaten ist ein Fehler aufgetreten.
+			<div class="toast-body text-white" id="divRemoveTokenFailed">
+				{divRemoveTokenFailed}
 			</div>
 		</div>
 
 		<div id="toastRestartOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Service neu starten.</strong>
+				<strong class="me-auto" id="headerRestartOK">{headerRestartOK}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Der Service wird neu gestartet.
+			<div class="toast-body text-white" id="divRestartOK">
+				{divRestartOK}
 			</div>
 		</div>
 		
 		<div id="toastRestartFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto">Service neu starten.</strong>
+				<strong class="me-auto" id="headerRestartFailed">{headerRestartFailed}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white">
-				Bei dem Neustart des Services ist ein Fehler aufgetreten.
+			<div class="toast-body text-white" id="divRestartFailed">
+				{divRestartFailed}
 			</div>
 		</div>
 
@@ -472,14 +477,13 @@
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header text-bg-danger">
-						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
+						<h5 class="modal-title" id="lblModalAtLeastOneNeedsActivationTitle">{lblModalAtLeastOneNeedsActivationTitle}</h5>
 					</div>
-					<div class="modal-body">
-						Um die Erreichbarkeit der API zu gewährleisten, muss mindestens eine der beiden Optionen ('HTTP aktiv' oder 'HTTPS aktiv') aktiviert sein.<br /><br />
-						Mit 'OK' wird die zuletzt deaktivierte Option wieder aktiviert.
+					<div class="modal-body" id="lblModalAtLeastOneNeedsActivationMessage">
+						{lblModalAtLeastOneNeedsActivationMessage}
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-						<button type="button" id="modalAtLeastOneNeedsActivationBtnOK" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+						<button type="button" id="modalAtLeastOneNeedsActivationBtnOK" class="btn btn-primary" data-bs-dismiss="modal">{modalAtLeastOneNeedsActivationBtnOK}</button>
 					</div>
 				</div>
 			</div>
@@ -489,14 +493,13 @@
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header text-bg-danger">
-						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
+						<h5 class="modal-title" id="lblModaStateEventOrIntervalllTitle">{lblModaStateEventOrIntervalllTitle}</h5>
 					</div>
-					<div class="modal-body">
-						Es kann nicht gleichzeitig die Option "Modus automatisch durch von der Station gesendete Ereignisse aktualisieren" und die Option "Modus regelmäßig intervallbasierend aktualisieren" aktiviert werden.<br /><br />
-						Mit 'OK' wird die zuletzt aktivierte Option deaktiviert.
+					<div class="modal-body" id="lblModaStateEventOrIntervalllMessage">
+						{lblModaStateEventOrIntervalllMessage}
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-						<button type="button" id="modalStateEventOrIntervallBtnOK" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+						<button type="button" id="modalStateEventOrIntervallBtnOK" class="btn btn-primary" data-bs-dismiss="modal">{modalStateEventOrIntervallBtnOK}</button>
 					</div>
 				</div>
 			</div>
@@ -506,13 +509,13 @@
 			<div class="modal-dialog modal-dialog-centered">
 				<div class="modal-content">
 					<div class="modal-header text-bg-danger">
-						<h5 class="modal-title" id="lblModalTitle">Einstellungen überprüfen.</h5>
+						<h5 class="modal-title" id="lblModalUDPPortsEqualWrongTitle">{lblModalUDPPortsEqualWrongTitle}</h5>
 					</div>
 					<div class="modal-body" id="modalUDPPortsEqualWrongMessage">
 						
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-						<button type="button" id="modalUDPPortsEqualWrongBtnOK" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+						<button type="button" id="modalUDPPortsEqualWrongBtnOK" class="btn btn-primary" data-bs-dismiss="modal">{modalUDPPortsEqualWrongBtnOK}</button>
 					</div>
 				</div>
 			</div>
@@ -522,6 +525,7 @@
 		
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
+		<script src="assets/dist/js/lang.js"></script>
 		<script>
 			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)
