@@ -209,7 +209,7 @@ export class Config
         var devicePublicKeys : [] = [];
         config.devicePublicKeys = devicePublicKeys;
 
-        var interactions = "null";
+        var interactions = null;
         config.interactions = interactions;
 
         return config;
@@ -294,7 +294,7 @@ export class Config
                 if(configJson.interactions === undefined)
                 {
                     this.logger.logInfoBasic(" adding 'interactions'.");
-                    configJson.interactions = "null";
+                    configJson.interactions = null;
                 }
                 updated = true;
             }
@@ -2125,7 +2125,7 @@ export class Config
      * Retrieves the interactions from the config.
      * @returns The integrations.
      */
-    public getInteractions(): string
+    public getInteractions(): string | null
     {
         if(this.configJson.interactions !== undefined)
         {
@@ -2138,7 +2138,7 @@ export class Config
      * Set the integrations.
      * @param interactions The interactions to set.
      */
-    public setInteractions(interactions: string): void
+    public setInteractions(interactions: string | null): void
     {
         if(this.configJson.interactions !== interactions)
         {
