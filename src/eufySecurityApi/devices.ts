@@ -234,7 +234,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private addDevice(device : Device) : void
     {
-        const serial = device.getSerial()
+        const serial = device.getSerial();
         if (serial && !Object.keys(this.devices).includes(serial))
         {
             this.devices[serial] = device;
@@ -260,7 +260,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private removeDevice(device : Device) : void
     {
-        const serial = device.getSerial()
+        const serial = device.getSerial();
         if (serial && Object.keys(this.devices).includes(serial))
         {
             delete this.devices[serial];
@@ -279,8 +279,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async updateDevice(device : DeviceListResponse) : Promise<void>
     {
-        var stations = await this.api.getStations();
-
         if (this.devicesLoaded)
         {
             await this.devicesLoaded;
@@ -927,6 +925,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPersonDetected(device : Device, state : boolean, person : string) : Promise<void>
     {
         this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PERSON);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
         if(state === false)
         {
             this.loadDeviceImage(device.getSerial());
