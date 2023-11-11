@@ -3,14 +3,16 @@ import { Config } from "./config";
 import EventEmitter from "events";
 
 import { ErrorObject } from "./interfaces";
-import { InvalidPropertyValueError, ensureError } from "./error";
+import { BaseError, InvalidPropertyValueError, ensureError } from "./error";
 import { PropertyMetadataAny, PropertyMetadataNumeric, PropertyMetadataObject, PropertyMetadataString } from "./http/interfaces";
 
 import { Logger } from "./utils/logging";
 
-export const getError = function(error: Error): ErrorObject {
+export const getError = function(error: BaseError): ErrorObject {
     return {
+        cause: error.cause,
         message: `${error.name}: ${error.message}`,
+        context: error.context,
         stacktrace: error.stack
     };
 }

@@ -1,5 +1,4 @@
 import { Config } from "./config";
-import { Devices } from "./devices";
 import { EufySecurityApi } from "./eufySecurityApi";
 import { DeviceInteractions, EventInteraction, Interactions } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
@@ -18,7 +17,7 @@ export class EventInteractions
         this.api = api;
         this.config = this.api.getConfig();
         var temp = this.config.getInteractions();
-        if(temp === "")
+        if(temp === null || temp === "")
         {
             this.interactions = null;
         }
@@ -123,7 +122,7 @@ export class EventInteractions
                     this.saveInteractions();
                     return true;
                 }
-                throw new Error(`No interaction for eventInteractionType ${eventInteractionType}.`);
+                throw new Error(`No interaction for eventInteractionType ${eventInteractionType} at device ${deviceSerial}.`);
             }
             throw new Error(`No interactions for device ${deviceSerial}.`);
         }

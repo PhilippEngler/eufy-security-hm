@@ -1,5 +1,5 @@
 import { DynamicLighting, RGBColor } from "../p2p";
-import { CommandType } from "../p2p/types";
+import { CommandType, TrackerCommandType, IndoorSoloSmartdropCommandType } from "../p2p/types";
 import { Commands, IndexedProperty, Properties, PropertyMetadataBoolean, PropertyMetadataNumeric, PropertyMetadataObject, PropertyMetadataString } from "./interfaces";
 
 export type SourceType = "p2p" | "http" | "push" | "mqtt";
@@ -47,6 +47,7 @@ export enum DeviceType {
     SOLO_CAMERA_SPOTLIGHT_1080 = 60,
     SOLO_CAMERA_SPOTLIGHT_2K = 61,
     SOLO_CAMERA_SPOTLIGHT_SOLAR = 62,
+    SOLO_CAMERA_SOLAR = 63,
     SMART_DROP = 90,
     BATTERY_DOORBELL_PLUS = 91,
     DOORBELL_SOLO = 93,
@@ -436,6 +437,20 @@ export enum GarageDoorState {
     UNKNOWN = 0,
 }
 
+export enum TrackerType {
+    TRACKER = 0,
+    KEY = 1,
+    WALLET = 2,
+    BAG = 3,
+    REMOTE = 4,
+    CAMERA = 5,
+    HEADPHONES = 6,
+    TOY = 7,
+    SUITCASE = 8,
+    HANDBAG = 9,
+}
+
+
 export interface EventFilterType {
     deviceSN?: string;
     stationSN?: string;
@@ -721,6 +736,12 @@ export enum PropertyName {
     DeviceDoorSensor2LowBattery = "doorSensor2LowBattery",
     DeviceDoorSensor1BatteryLevel = "doorSensor1BatteryLevel",
     DeviceDoorSensor2BatteryLevel = "doorSensor2BatteryLevel",
+    DeviceLocationCoordinates = "locationCoordinates",
+    DeviceLocationAddress = "locationAddress",
+    DeviceLocationLastUpdate = "locationLastUpdate",
+    DeviceTrackerType = "trackerType",
+    DeviceLeftBehindAlarm = "leftBehindAlarm",
+    DeviceFindPhone = "findPhone",
 
     DeviceHiddenMotionDetectionSensitivity = "hidden-motionDetectionSensitivity",
     DeviceHiddenMotionDetectionMode = "hidden-motionDetectionMode",
@@ -923,6 +944,11 @@ export const DeviceBatteryLockProperty: PropertyMetadataNumeric = {
     max: 100,
 }
 
+export const DeviceBatteryTrackerProperty: PropertyMetadataNumeric = {
+    ...DeviceBatteryProperty,
+    key: TrackerCommandType.COMMAND_BATTERY,
+};
+
 export const DeviceBatteryLowMotionSensorProperty: PropertyMetadataBoolean = {
     key: CommandType.CMD_MOTION_SENSOR_BAT_STATE,
     name: PropertyName.DeviceBatteryLow,
@@ -988,6 +1014,12 @@ export const DeviceAutoNightvisionWiredDoorbellProperty: PropertyMetadataBoolean
 
 export const DeviceAutoNightvisionWalllightProperty: PropertyMetadataBoolean = {
     ...DeviceAutoNightvisionProperty,
+    commandId: CommandType.CMD_SET_NIGHT_VISION_TYPE,
+}
+
+export const DeviceAutoNightvisionSoloProperty: PropertyMetadataBoolean = {
+    ...DeviceAutoNightvisionProperty,
+    key: CommandType.CMD_SET_NIGHT_VISION_TYPE,
     commandId: CommandType.CMD_SET_NIGHT_VISION_TYPE,
 }
 
@@ -2223,6 +2255,16 @@ export const DeviceVideoRecordingQualityCamera3Property: PropertyMetadataNumeric
         2: "Full HD (1080P)",
         3: "Ultra 4K",
     },
+}
+
+export const DeviceVideoRecordingQualitySoloProperty: PropertyMetadataNumeric = {
+    ...DeviceVideoRecordingQualityIndoorProperty,
+    key: IndoorSoloSmartdropCommandType.CMD_VIDEO_RECORD_QUALITY,
+    states: {
+        2: "Full HD (1080P)",
+        3: "2K HD",
+    },
+    commandId: CommandType.CMD_SET_RECORD_QUALITY,
 }
 
 export const DeviceWDRProperty: PropertyMetadataBoolean = {
@@ -4280,6 +4322,77 @@ export const DeviceDoorSensor2BatteryLevelProperty: PropertyMetadataNumeric = {
     default: 0
 }
 
+export const DeviceLocationCoordinatesProperty: PropertyMetadataString = {
+    key: TrackerCommandType.COMMAND_NEW_LOCATION,
+    name: PropertyName.DeviceLocationCoordinates,
+    label: "Location Coordinates",
+    readable: true,
+    writeable: false,
+    type: "string",
+    default: "",
+}
+
+export const DeviceLocationAddressProperty: PropertyMetadataString = {
+    key: TrackerCommandType.LOCATION_NEW_ADDRESS,
+    name: PropertyName.DeviceLocationAddress,
+    label: "Location Address",
+    readable: true,
+    writeable: false,
+    type: "string",
+    default: "",
+}
+
+export const DeviceLocationLastUpdateProperty: PropertyMetadataNumeric = {
+    key: TrackerCommandType.COMMAND_NEW_LOCATION,
+    name: PropertyName.DeviceLocationLastUpdate,
+    label: "Location Last Update",
+    readable: true,
+    writeable: false,
+    type: "number",
+    default: 0
+}
+
+export const DeviceTrackerTypeProperty: PropertyMetadataNumeric = {
+    key: TrackerCommandType.TYPE_ICON_INDEX,
+    name: PropertyName.DeviceTrackerType,
+    label: "Tracker Type",
+    readable: true,
+    writeable: true,
+    type: "number",
+    states: {
+        0: "Tracker",
+        1: "Key",
+        2: "Wallet",
+        3: "Bag",
+        4: "Remote",
+        5: "Camera",
+        6: "Headphones",
+        7: "Toy",
+        8: "Suitcase",
+        9: "Handbag",
+    }
+}
+
+export const DeviceLeftBehindAlarmProperty: PropertyMetadataBoolean = {
+    key: TrackerCommandType.COMMAND_ANTILOST,
+    name: PropertyName.DeviceLeftBehindAlarm,
+    label: "Left Behind Alarm",
+    readable: true,
+    writeable: true,
+    type: "boolean",
+    default: false,
+}
+
+export const DeviceFindPhoneProperty: PropertyMetadataBoolean = {
+    key: TrackerCommandType.COMMAND_TYPE_FINDMYPHONE,
+    name: PropertyName.DeviceFindPhone,
+    label: "Find Phone",
+    readable: true,
+    writeable: true,
+    type: "boolean",
+    default: false,
+}
+
 export const FloodlightT8420XDeviceProperties: IndexedProperty = {
     ...GenericDeviceProperties,
     [PropertyName.DeviceEnabled]: DeviceEnabledStandaloneProperty,
@@ -5702,6 +5815,45 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceSnoozeStartTime]: DeviceSnoozeStartTimeProperty,
         [PropertyName.DevicePersonName]: DevicePersonNameProperty,
     },
+    [DeviceType.SOLO_CAMERA_SOLAR]: {
+        ...GenericDeviceProperties,
+        [PropertyName.DeviceEnabled]: DeviceEnabledSoloProperty,
+        [PropertyName.DeviceBattery]: DeviceBatteryProperty,
+        [PropertyName.DeviceBatteryTemp]: DeviceBatteryTempProperty,
+        [PropertyName.DeviceAutoNightvision]: DeviceAutoNightvisionSoloProperty,
+        [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceWatermark]: DeviceWatermarkProperty,
+        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
+        [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
+        [PropertyName.DeviceStatusLed]: DeviceStatusLedProperty,
+        [PropertyName.DevicePicture]: DevicePictureProperty,
+        [PropertyName.DevicePictureUrl]: DevicePictureUrlProperty,
+        [PropertyName.DeviceMicrophone]: DeviceMicrophoneProperty,
+        [PropertyName.DeviceSpeaker]: DeviceSpeakerProperty,
+        [PropertyName.DeviceSpeakerVolume]: DeviceSpeakerVolumeSoloProperty,
+        [PropertyName.DeviceAudioRecording]: DeviceAudioRecordingIndoorSoloFloodlightProperty,
+        //[PropertyName.DeviceMotionDetectionTypeHuman]: DeviceMotionHB3DetectionTypeHumanProperty,                         //TODO: Finish implementation ({"account_id":"____","cmd":1298,"mChannel":0,"mValue3":0,"payload":{"ai_detect_type":3,"channel":0}})
+        //[PropertyName.DeviceMotionDetectionTypeAllOtherMotions]: DeviceMotionHB3DetectionTypeAllOhterMotionsProperty,     //TODO: Finish implementation ({"account_id":"____","cmd":1298,"mChannel":0,"mValue3":0,"payload":{"ai_detect_type":32771,"channel":0}})
+        [PropertyName.DevicePowerWorkingMode]: DevicePowerWorkingModeProperty,
+        [PropertyName.DeviceRecordingClipLength]: DeviceRecordingClipLengthProperty,
+        [PropertyName.DeviceRecordingRetriggerInterval]: DeviceRecordingRetriggerIntervalProperty,
+        [PropertyName.DeviceRecordingEndClipMotionStops]: DeviceRecordingEndClipMotionStopsProperty,
+        [PropertyName.DeviceVideoStreamingQuality]: DeviceVideoStreamingQualitySoloProperty,
+        [PropertyName.DeviceVideoRecordingQuality]: DeviceVideoRecordingQualitySoloProperty,
+        [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
+        [PropertyName.DeviceWifiSignalLevel]: DeviceWifiSignalLevelProperty,
+        [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivitySoloProperty,
+        [PropertyName.DeviceLastChargingDays]: DeviceLastChargingDaysProperty,
+        [PropertyName.DeviceLastChargingRecordedEvents]: DeviceLastChargingRecordedEventsProperty,
+        [PropertyName.DeviceLastChargingTotalEvents]: DeviceLastChargingTotalEventsProperty,
+        [PropertyName.DeviceBatteryUsageLastWeek]: DeviceBatteryUsageLastWeekProperty,
+        [PropertyName.DeviceState]: DeviceStateProperty,
+        [PropertyName.DeviceChargingStatus]: DeviceChargingStatusCamera3Property,
+        [PropertyName.DeviceSnooze]: DeviceSnoozeProperty,
+        [PropertyName.DeviceSnoozeTime]: DeviceSnoozeTimeProperty,
+        [PropertyName.DeviceSnoozeStartTime]: DeviceSnoozeStartTimeProperty,
+        [PropertyName.DevicePersonName]: DevicePersonNameProperty,
+    },
     [DeviceType.KEYPAD]: {
         ...GenericDeviceProperties,
         [PropertyName.DeviceBatteryLow]: DeviceBatteryLowKeypadProperty,
@@ -6195,6 +6347,26 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceRTSPStream]: DeviceRTSPStreamProperty,
         [PropertyName.DeviceRTSPStreamUrl]: DeviceRTSPStreamUrlProperty,
         [PropertyName.DeviceVideoTypeStoreToNAS]: DeviceVideoTypeStoreToNASProperty,
+    },
+    [DeviceType.SMART_TRACK_CARD]: {
+        ...GenericDeviceProperties,
+        [PropertyName.DeviceLocationCoordinates]: DeviceLocationCoordinatesProperty,
+        [PropertyName.DeviceLocationAddress]: DeviceLocationAddressProperty,
+        [PropertyName.DeviceLocationLastUpdate]: DeviceLocationLastUpdateProperty,
+        [PropertyName.DeviceBattery]: DeviceBatteryTrackerProperty,
+        [PropertyName.DeviceTrackerType]: DeviceTrackerTypeProperty,
+        [PropertyName.DeviceLeftBehindAlarm]: DeviceLeftBehindAlarmProperty,
+        [PropertyName.DeviceFindPhone]: DeviceFindPhoneProperty,
+    },
+    [DeviceType.SMART_TRACK_LINK]: {
+        ...GenericDeviceProperties,
+        [PropertyName.DeviceLocationCoordinates]: DeviceLocationCoordinatesProperty,
+        [PropertyName.DeviceLocationAddress]: DeviceLocationAddressProperty,
+        [PropertyName.DeviceLocationLastUpdate]: DeviceLocationLastUpdateProperty,
+        [PropertyName.DeviceBattery]: DeviceBatteryTrackerProperty,
+        [PropertyName.DeviceTrackerType]: DeviceTrackerTypeProperty,
+        [PropertyName.DeviceLeftBehindAlarm]: DeviceLeftBehindAlarmProperty,
+        [PropertyName.DeviceFindPhone]: DeviceFindPhoneProperty,
     },
 }
 
@@ -6835,6 +7007,17 @@ export const StationProperties: Properties = {
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
     },
+    [DeviceType.SOLO_CAMERA_SOLAR]: {
+        ...BaseStationProperties,
+        [PropertyName.StationLANIpAddress]: StationLanIpAddressStandaloneProperty,
+        [PropertyName.StationMacAddress]: StationMacAddressProperty,
+        [PropertyName.StationGuardMode]: StationGuardModeProperty,
+        [PropertyName.StationCurrentMode]: StationCurrentModeProperty,
+        [PropertyName.StationTimeFormat]: StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: StationTimeZoneProperty,
+        [PropertyName.StationAlarm]: StationAlarmProperty,
+        [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+    },
     [DeviceType.FLOODLIGHT]: {
         ...BaseStationProperties,
         [PropertyName.StationLANIpAddress]: StationLanIpAddressStandaloneProperty,
@@ -6934,6 +7117,12 @@ export const StationProperties: Properties = {
         ...BaseStationProperties,
     },
     [DeviceType.SMART_SAFE_7403]: {
+        ...BaseStationProperties,
+    },
+    [DeviceType.SMART_TRACK_CARD]: {
+        ...BaseStationProperties,
+    },
+    [DeviceType.SMART_TRACK_LINK]: {
         ...BaseStationProperties,
     },
 }
@@ -7233,6 +7422,15 @@ export const DeviceCommands: Commands = {
         CommandName.DeviceStopTalkback,
         CommandName.DeviceSnooze,
     ],
+    [DeviceType.SOLO_CAMERA_SOLAR]: [
+        CommandName.DeviceStartLivestream,
+        CommandName.DeviceStopLivestream,
+        CommandName.DeviceStartDownload,
+        CommandName.DeviceCancelDownload,
+        CommandName.DeviceStartTalkback,
+        CommandName.DeviceStopTalkback,
+        CommandName.DeviceSnooze,
+    ],
     [DeviceType.FLOODLIGHT]: [
         CommandName.DeviceStartLivestream,
         CommandName.DeviceStopLivestream,
@@ -7363,6 +7561,8 @@ export const DeviceCommands: Commands = {
         CommandName.DeviceUnlock,
         CommandName.DeviceVerifyPIN,
     ],
+    [DeviceType.SMART_TRACK_CARD]: [],
+    [DeviceType.SMART_TRACK_LINK]: [],
 }
 
 export const StationCommands: Commands = {
@@ -7518,6 +7718,15 @@ export const StationCommands: Commands = {
         CommandName.StationDatabaseCountByDate,
         CommandName.StationDatabaseDelete,
     ],
+    [DeviceType.SOLO_CAMERA_SOLAR]: [
+        CommandName.StationReboot,
+        CommandName.StationTriggerAlarmSound,
+        CommandName.StationDownloadImage,
+        CommandName.StationDatabaseQueryLatestInfo,
+        CommandName.StationDatabaseQueryLocal,
+        CommandName.StationDatabaseCountByDate,
+        CommandName.StationDatabaseDelete,
+    ],
     [DeviceType.FLOODLIGHT]: [
         CommandName.StationReboot,
         CommandName.StationTriggerAlarmSound,
@@ -7604,4 +7813,6 @@ export const StationCommands: Commands = {
     [DeviceType.LOCK_BLE_NO_FINGER]: [],
     [DeviceType.LOCK_WIFI]: [],
     [DeviceType.LOCK_WIFI_NO_FINGER]: [],
+    [DeviceType.SMART_TRACK_CARD]: [],
+    [DeviceType.SMART_TRACK_LINK]: [],
 }

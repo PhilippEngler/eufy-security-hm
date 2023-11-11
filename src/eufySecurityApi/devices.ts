@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera, Tracker } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, DynamicLighting, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, parseValue, waitForEvent } from "./utils";
@@ -135,6 +135,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     else if (Device.isSmartSafe(resDevices[deviceSerial].device_type))
                     {
                         new_device = SmartSafe.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (Device.isSmartTrack(resDevices[deviceSerial].device_type))
+                    {
+                        new_device = Tracker.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
                     else
                     {
@@ -1923,6 +1927,30 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             case PropertyName.DeviceDoor2Open:
                 await station.openDoor(device, value as boolean, 2);
                 break;
+            case PropertyName.DeviceLeftBehindAlarm: {
+                const tracker = device as Tracker;
+                const result = await tracker.setLeftBehindAlarm(value as boolean);
+                if (result) {
+                    device.updateProperty(name, value as boolean)
+                }
+                break;
+            }
+            case PropertyName.DeviceFindPhone: {
+                const tracker = device as Tracker;
+                const result = await tracker.setFindPhone(value as boolean);
+                if (result) {
+                    device.updateProperty(name, value as boolean)
+                }
+                break;
+            }
+            case PropertyName.DeviceTrackerType: {
+                const tracker = device as Tracker;
+                const result = await tracker.setTrackerType(value as number);
+                if (result) {
+                    device.updateProperty(name, value as number)
+                }
+                break;
+            }
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
                 {
