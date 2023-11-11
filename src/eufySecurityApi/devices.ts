@@ -1434,6 +1434,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * Remove all integrations.
+     * @returns true, if all integrations deleted, otherwise false.
+     */
+    public removeInteractions(): any
+    {
+        return this.eventInteractions.removeIntegrations();
+    }
+
+    /**
      * Set the given property for the given device to the given value.
      * @param deviceSerial The serial of the device the property is to change.
      * @param name The name of the property.

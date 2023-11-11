@@ -2346,6 +2346,14 @@ export class EufySecurityApi
     }
 
     /**
+     * Remove all interactions from the config.
+     */
+    public removeInteractions() : any
+    {
+        return this.devices.removeInteractions();
+    }
+
+    /**
      * Save the new token and token expire to the config.
      * @param token The token.
      * @param tokenExpire The time the token exprire.
@@ -2353,7 +2361,7 @@ export class EufySecurityApi
     public setTokenData(token : string | undefined, tokenExpire : number | undefined) : string
     {
         var res;
-        var json = "";
+        var json : any = {};
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
         res = this.config.writeCurrentConfig();

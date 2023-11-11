@@ -185,4 +185,32 @@ export class EventInteractions
             throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`)
         }
     }
+
+    /**
+     * Remove all integrations.
+     * @returns true, if all integrations deleted, otherwise false.
+     */
+    public removeIntegrations(): any
+    {
+        var json : any = {};
+
+        if(this.interactions === null)
+        {
+            json = `{"success":false,"interactionsRemoved":true,"description":"No interactions in the config."}`;
+        }
+        else
+        {
+            this.interactions = null;
+            var res = this.saveInteractions();
+            if(res === true)
+            {
+                json = `{"success":true,"interactionsRemoved":true}`;
+            }
+            else
+            {
+                json = `{"success":false,"interactionsRemoved":false}`;
+            }
+        }
+        return json;
+    }
 }

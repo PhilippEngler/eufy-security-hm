@@ -2146,4 +2146,12 @@ export class Config
             this.hasChanged = true;
         }
     }
+
+    /**
+     * Remove all integrations.
+     */
+    public removeInteractions(): void
+    {
+        this.configJson.interactions = null;
+    }
 }
