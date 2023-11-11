@@ -1004,7 +1004,7 @@ function translateString(content)
 		case "strInitFinished":
 			return "Service wurde initializiert. Sie werden nun weitergeleitet...";
 		case "strLanguageFile":
-			return "Sprachdatei der Webseite";
+			return "Sprache";
 		case "strVersion":
 			return "Version";
 		default:
