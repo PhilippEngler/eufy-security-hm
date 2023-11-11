@@ -176,6 +176,9 @@ function translateStaticPageContent(page)
             translateInnerHtml("divSaveConfigFailed");
             translateInnerHtml("headerUploadConfigFailed");
             translateInnerHtml("divUploadConfigFailed");
+            translateInnerHtml("headerRemoveInteractions");
+            translateInnerHtml("hintRemoveInteractions");
+            translateInnerHtml("btnRemoveInteractions");
             translateInnerHtml("headerRemoveTokenOK");
             translateInnerHtml("divRemoveTokenOK");
             translateInnerHtml("headerRemoveTokenFailed");

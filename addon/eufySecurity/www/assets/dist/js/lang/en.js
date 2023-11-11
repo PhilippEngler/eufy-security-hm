@@ -270,6 +270,12 @@ function translateStaticContentElement(element)
 			return "The file is checked after uploading. If the check is successful, the add-on is restarted to apply the new settings.";
 		case "btnUploadConfigFile":
 			return "Upload configuration";
+		case "headerRemoveInteractions":
+			return "Delete Interactions";
+		case "hintRemoveInteractions":
+			return "All interactions will be deleted in the settings.";
+		case "btnRemoveInteractions":
+			return "Delete Interactions";
 		case "headerDeleteTokenData":
 			return "Delete token";
 		case "hintDeleteToken":

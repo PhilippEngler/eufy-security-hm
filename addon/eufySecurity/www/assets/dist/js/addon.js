@@ -3781,6 +3781,46 @@ async function uploadFile(filetype)
 	xmlHttp.send(objFD);
 }
 
+function removeInteractions()
+{
+	var xmlHttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/removeInteractions`;
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.overrideMimeType('application/json');
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true && objResp.interactionsRemoved == true)
+				{
+					const toast = new bootstrap.Toast(toastSaveConfigOK);
+					toast.show();
+					return;
+				}
+				else
+				{
+					const toast = new bootstrap.Toast(toastSaveConfigFailed);
+					toast.show();
+				}
+			}
+			catch (e)
+			{
+				const toast = new bootstrap.Toast(toastSaveConfigFailed);
+				toast.show();
+			}
+		}
+		else if(this.readyState == 4)
+		{}
+		else
+		{}
+	};
+	xmlHttp.open("GET", url, true);
+	xmlHttp.send();
+}
+
 function removeTokenData()
 {
 	var xmlHttp, objResp;
@@ -3870,6 +3910,8 @@ function enableButtons(enable)
 		document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(false)");
 		document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-warning btn-block");
 		document.getElementById("btnEnableTroubleShooting").innerHTML = translateContent("lblSettingsTroubleShootingDisable");
+		document.getElementById("headerRemoveInteractions").removeAttribute("class");
+		document.getElementById("btnRemoveInteractions").removeAttribute("disabled");
 		document.getElementById("headerDeleteTokenData").removeAttribute("class");
 		document.getElementById("btnDeleteTokenData").removeAttribute("disabled");
 		document.getElementById("headerRestartService").removeAttribute("class");
@@ -3880,6 +3922,8 @@ function enableButtons(enable)
 		document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(true)");
 		document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-outline-warning btn-block");
 		document.getElementById("btnEnableTroubleShooting").innerHTML = translateContent("lblSettingsTroubleShootingEnable");
+		document.getElementById("headerRemoveInteractions").setAttribute("class", "text-muted");
+		document.getElementById("btnRemoveInteractions").setAttribute("disabled", true);
 		document.getElementById("headerDeleteTokenData").setAttribute("class", "text-muted");
 		document.getElementById("btnDeleteTokenData").setAttribute("disabled", true);
 		document.getElementById("headerRestartService").setAttribute("class", "text-muted");

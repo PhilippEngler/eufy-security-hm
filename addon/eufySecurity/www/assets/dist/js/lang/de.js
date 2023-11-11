@@ -270,6 +270,12 @@ function translateStaticContentElement(element)
 			return "Die Datei wird nach dem Hochladen überprüft. Wenn die Überprüfung erfolgreich ist, wird das AddOn neu gestartet um die neuen Einstellungen zu übernehmen.";
 		case "btnUploadConfigFile":
 			return "Konfiguration hochladen";
+		case "headerRemoveInteractions":
+			return "Interaktionen löschen";
+		case "hintRemoveInteractions":
+			return "Es werden alle Interaktionen aus den Einstellungen gelöscht.";
+		case "btnRemoveInteractions":
+			return "Interaktionen löschen";
 		case "headerDeleteTokenData":
 			return "Token löschen";
 		case "hintDeleteToken":
