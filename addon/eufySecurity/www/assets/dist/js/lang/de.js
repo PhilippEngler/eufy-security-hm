@@ -1007,6 +1007,10 @@ function translateString(content)
 			return "Sprache";
 		case "strVersion":
 			return "Version";
+		case "strEditInteractionStart":
+			return "zur Bearbeitung ausklappen";
+		case "strEditInteractionEnd":
+			return "einklappen";
 		default:
 			return `{${content}}`;
 	}
