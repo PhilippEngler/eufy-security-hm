@@ -1589,16 +1589,16 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.motionDetected !== undefined || deviceProperties.ringing !== undefined)
+	if(deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.ringing !== undefined)
 	{
 		deviceModal += `
 								<div class="card mt-3" id="cardDeviceInteraction">
 									<h5 class="card-header">${translateContent("lblHeaderInteractionCCU")}</h5>
-									<div class="card-body">`;
+									<div class="card-body">
+										${createMessageContainer("alert alert-warning", translateMessages("messageInteractionHintHeader"), translateMessages("messageInteractionHintMessage"), "")}`;
 		if(deviceProperties.motionDetected !== undefined)
 		{
 			deviceModal += `
-										${createMessageContainer("alert alert-warning", translateMessages("messageInteractionHintHeader"), translateMessages("messageInteractionHintMessage"), "")}
 										<h5>${translateContent("lblInteractionMotion")}</h5>
 										${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventTarget", "motionEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].target !== "" ? deviceInteractions.eventInteractions[0].target : ""}`, false, false)}
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventUseHttps", false, false)}
@@ -1620,10 +1620,35 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 										</div>`;
 		}
-		if(deviceProperties.ringing !== undefined)
+		if(deviceProperties.personDetected !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.motionDetected !== undefined ? `<hr />` : ``}
+										<h5>${translateContent("lblInteractionPerson")}</h5>
+										${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "personEventTarget", "personEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[2] !== undefined && deviceInteractions.eventInteractions[2].target !== "" ? deviceInteractions.eventInteractions[2].target : ""}`, false, false)}
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "personEventUseHttps", false, false)}
+										${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "personEventCommand", "personEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[2] !== undefined && deviceInteractions.eventInteractions[2].command !== "" ? atob(deviceInteractions.eventInteractions[2].command) : ""}`, false, false)}
+										<div class="btn-group" role="group">
+											${makeButtonElement("btnPersonSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-check2" title="Save"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
+			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[2] !== undefined && deviceInteractions.eventInteractions[2].target !== "" && deviceInteractions.eventInteractions[2].command !== ""))
+			{
+				deviceModal += `
+											${makeButtonElement("btnPersonTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-play" title="Test"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
+											${makeButtonElement("btnPersonDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-trash3" title="Delete"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
+			}
+			else
+			{
+				deviceModal += `
+											${makeButtonElement("btnPersonTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-play" title="Test"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
+											${makeButtonElement("btnPersonDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-trash3" title="Delete"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
+			}
+			deviceModal += `
+										</div>`;
+		}
+		if(deviceProperties.ringing !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.personDetected !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblInteractionRinging")}</h5>
 										${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventTarget", "ringEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].target !== "" ? deviceInteractions.eventInteractions[12].target : ""}`, false, false)}
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventUseHttps", false, false)}
@@ -1668,6 +1693,9 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 	{
 		case "motion":
 			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 0, "target": "${document.getElementById("txtBoxMotionEventTarget").value}", "useHttps": ${document.getElementById("chkMotionEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaMotionEventCommand").value)}"}`;
+			break;
+		case "person":
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 2, "target": "${document.getElementById("txtBoxMotionEventTarget").value}", "useHttps": ${document.getElementById("chkMotionEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaMotionEventCommand").value)}"}`;
 			break;
 		case "ring":
 			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 12, "target": "${document.getElementById("txtBoxRingEventTarget").value}", "useHttps": ${document.getElementById("chkRingEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaRingEventCommand").value)}"}`;

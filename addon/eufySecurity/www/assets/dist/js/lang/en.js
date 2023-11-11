@@ -828,6 +828,8 @@ function translateContent(content, ...options)
 			return "Interacting with the CCU";
 		case "lblInteractionMotion":
 			return "Response to Motion";
+		case "lblInteractionPerson":
+			return "Response to Detected Persons"
 		case "lblInteractionRinging":
 			return "Response to Ringing";
 		case "lblNotSupportedStationHeading":
@@ -1268,18 +1270,23 @@ function translatePropertyName(propertyName)
 		case "chirpVolume":
 			return "Chirp Volume";
 		case "motionEventTarget":
+		case "personEventTarget":
 		case "ringEventTarget":
 			return "CCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
+		case "personEventTargetHint":
 		case "ringEventTargetHint":
 			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
+		case "personEventUseHttps":
 		case "ringEventUseHttps":
 			return "Establish connection via HTTPS";
 		case "motionEventCommand":
+		case "personEventCommand":
 		case "ringEventCommand":
 			return "Command to be executed";
 		case "motionEventCommandHint":
+		case "personEventCommandHint":
 		case "ringEventCommandHint":
 			return "The command to be entered here should be tested in advance using the script test function of the CCU.";
 		default:

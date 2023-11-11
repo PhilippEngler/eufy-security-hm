@@ -828,6 +828,8 @@ function translateContent(content, ...options)
 			return "Interaktion mit der CCU";
 		case "lblInteractionMotion":
 			return "Reaktion auf Bewegung";
+		case "lblInteractionPerson":
+			return "Reaktion auf erkannte Personen"
 		case "lblInteractionRinging":
 			return "Reaktion auf Klingel";
 		case "lblNotSupportedStationHeading":
@@ -1268,18 +1270,23 @@ function translatePropertyName(propertyName)
 		case "chirpVolume":
 			return "Lautstärke Bestätigungstons";
 		case "motionEventTarget":
+		case "personEventTarget":
 		case "ringEventTarget":
 			return "CCU, auf der die Interaktion ausgeführt werden soll";
 		case "motionEventTargetHint":
+		case "personEventTargetHint":
 		case "ringEventTargetHint":
 			return "Bitte entweder 'localhost', die IP-Adresse oder den DNS-Namen der Ziel-CCU eingeben, ohne die Angabe von 'http://' oder 'https://'.";
 		case "motionEventUseHttps":
+		case "personEventUseHttps":
 		case "ringEventUseHttps":
 			return "Verbindung über HTTPS herstellen";
 		case "motionEventCommand":
+		case "personEventCommand":
 		case "ringEventCommand":
 			return "Befehl, der ausgeführt werden soll";
 		case "motionEventCommandHint":
+		case "personEventCommandHint":
 		case "ringEventCommandHint":
 			return "Der hier einzugebende Befehl sollte im Vorfeld über die Skript-Testen-Funktion der CCU getestet werden.";
 		default:
