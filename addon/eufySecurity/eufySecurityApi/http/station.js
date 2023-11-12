@@ -733,15 +733,20 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             channel: Station.CHANNEL
         });
     }
-    async getStorageInfoEx() {
+    getStorageInfoEx() {
         this.log.debug(`Station send get storage info command`, { stationSN: this.getSerial() });
-        await this.p2pSession.sendCommandWithIntString({
-            commandType: types_2.CommandType.CMD_SDINFO_EX,
-            value: 0,
-            valueSub: 0,
-            channel: 255,
-            strValue: this.rawStation.member.admin_user_id
-        });
+        if (this.isStation() && (0, utils_1.isGreaterEqualMinVersion)("3.3.0.0", this.getSoftwareVersion())) {
+            this.p2pSession.sendCommandWithoutData(types_2.CommandType.CMD_SDINFO_EX, Station.CHANNEL);
+        }
+        else {
+            this.p2pSession.sendCommandWithIntString({
+                commandType: types_2.CommandType.CMD_SDINFO_EX,
+                value: 0,
+                valueSub: 0,
+                channel: Station.CHANNEL,
+                strValue: this.rawStation.member.admin_user_id
+            });
+        }
     }
     async onAlarmMode(mode) {
         this.log.debug(`Station alarm mode changed`, { stationSN: this.getSerial(), mode: mode });

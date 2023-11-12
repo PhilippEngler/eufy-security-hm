@@ -561,7 +561,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async getStorageInfoStation(stationSerial) {
         try {
             const station = await this.getStation(stationSerial);
-            if (station.hasProperty(http_1.PropertyName.StationSdStatus) && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== p2p_1.TFCardStatus.REMOVE) {
+            if (station.isStation() || (station.hasProperty(http_1.PropertyName.StationSdStatus) && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== p2p_1.TFCardStatus.REMOVE)) {
                 await station.getStorageInfoEx();
             }
         }
