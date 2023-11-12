@@ -1785,13 +1785,19 @@ class EufySecurityApi {
         return this.config.getTokenExpire();
     }
     /**
+     * Remove all interactions from the config.
+     */
+    removeInteractions() {
+        return this.devices.removeInteractions();
+    }
+    /**
      * Save the new token and token expire to the config.
      * @param token The token.
      * @param tokenExpire The time the token exprire.
      */
     setTokenData(token, tokenExpire) {
         var res;
-        var json = "";
+        var json = {};
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
         res = this.config.writeCurrentConfig();
@@ -2636,14 +2642,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "2.5.1";
+        return "2.6.0";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "2.9.0-b347";
+        return "2.9.1";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

@@ -28,7 +28,9 @@ const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const getError = function (error) {
     return {
+        cause: error.cause,
         message: `${error.name}: ${error.message}`,
+        context: error.context,
         stacktrace: error.stack
     };
 };

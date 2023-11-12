@@ -160,7 +160,7 @@ class Config {
         config.stations = stations;
         var devicePublicKeys = [];
         config.devicePublicKeys = devicePublicKeys;
-        var interactions = "null";
+        var interactions = null;
         config.interactions = interactions;
         return config;
     }
@@ -226,7 +226,7 @@ class Config {
                 this.logger.logInfoBasic("Configfile needs Stage2 update to version 15...");
                 if (configJson.interactions === undefined) {
                     this.logger.logInfoBasic(" adding 'interactions'.");
-                    configJson.interactions = "null";
+                    configJson.interactions = null;
                 }
                 updated = true;
             }
@@ -1625,6 +1625,12 @@ class Config {
             this.configJson.interactions = interactions;
             this.hasChanged = true;
         }
+    }
+    /**
+     * Remove all integrations.
+     */
+    removeInteractions() {
+        this.configJson.interactions = null;
     }
 }
 exports.Config = Config;

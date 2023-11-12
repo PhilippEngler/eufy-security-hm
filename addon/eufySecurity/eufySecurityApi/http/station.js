@@ -196,7 +196,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
     updateRawProperty(type, value, source) {
-        const parsedValue = parameter_1.ParameterHelper.readValue(type, value, this.getSerial(), this.log);
+        const parsedValue = parameter_1.ParameterHelper.readValue(this.getSerial(), type, value, this.log);
         if (parsedValue !== undefined &&
             ((this.rawProperties[type] !== undefined && this.rawProperties[type].value !== parsedValue && (0, utils_1.isPrioritySourceType)(this.rawProperties[type].source, source)) || this.rawProperties[type] === undefined)) {
             this.rawProperties[type] = {
@@ -611,7 +611,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
     }
     onParameter(channel, param, value) {
         const params = {};
-        const parsedValue = parameter_1.ParameterHelper.readValue(param, value, this.getSerial(), this.log);
+        const parsedValue = parameter_1.ParameterHelper.readValue(this.getSerial(), param, value, this.log);
         if (parsedValue !== undefined) {
             params[param] = {
                 value: parsedValue,
@@ -870,7 +870,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     if (!devices[device_sn]) {
                         devices[device_sn] = {};
                     }
-                    const parsedValue = parameter_1.ParameterHelper.readValue(param.param_type, param.param_value, this.getSerial(), this.log);
+                    const parsedValue = parameter_1.ParameterHelper.readValue(device_sn, param.param_type, param.param_value, this.log);
                     if (parsedValue !== undefined) {
                         devices[device_sn][param.param_type] = {
                             value: parsedValue,
@@ -885,7 +885,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     if (!devices[device_sn]) {
                         devices[device_sn] = {};
                     }
-                    const parsedValue = parameter_1.ParameterHelper.readValue(param.param_type, param.param_value, this.getSerial(), this.log);
+                    const parsedValue = parameter_1.ParameterHelper.readValue(device_sn, param.param_type, param.param_value, this.log);
                     if (parsedValue !== undefined) {
                         devices[device_sn][param.param_type] = {
                             value: parsedValue,
@@ -1251,7 +1251,24 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         this.log.debug(`Station set motion detection - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isIndoorCamera() || (device.isFloodLight() && device.getDeviceType() !== types_1.DeviceType.FLOODLIGHT) || device.isFloodLightT8420X() || device.isWiredDoorbellT8200X() || device.isStarlight4GLTE() || device.isGarageCamera()) {
+        if (device.isSoloCameraSolar()) {
+            await this.p2pSession.sendCommandWithStringPayload({
+                commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
+                value: JSON.stringify({
+                    "commandType": types_2.CommandType.CMD_INDOOR_DET_SET_MOTION_DETECT_ENABLE,
+                    "data": {
+                        "enable": 0,
+                        "quality": 0,
+                        "status": value === true ? 1 : 0,
+                        "value": 0,
+                    }
+                }),
+                channel: device.getChannel()
+            }, {
+                property: propertyData
+            });
+        }
+        else if (device.isIndoorCamera() || (device.isFloodLight() && device.getDeviceType() !== types_1.DeviceType.FLOODLIGHT) || device.isFloodLightT8420X() || device.isWiredDoorbellT8200X() || device.isStarlight4GLTE() || device.isGarageCamera() || device.isSoloCamera()) {
             await this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1271,19 +1288,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isSoloCameras()) {
-            await this.p2pSession.sendCommandWithStringPayload({
-                commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
-                value: JSON.stringify({
-                    "commandType": types_2.CommandType.CMD_INDOOR_DET_SET_MOTION_DETECT_ENABLE,
-                    "data": value === true ? 1 : 0,
-                }),
-                channel: device.getChannel()
-            }, {
-                property: propertyData
-            });
-        }
-        else if (device.isWallLightCam()) {
+        else if (device.isSoloCameras() || device.isWallLightCam()) {
             await this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3758,7 +3763,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         this.log.debug(`Station set watermark - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isCamera2Product() || device.isCamera3Product()) {
+        if (device.isCamera2Product() || device.isCamera3Product() || device.isSoloCameraSolar()) {
             if (!Object.values(types_2.WatermarkSetting3).includes(value)) {
                 this.log.error(`The device ${device.getSerial()} accepts only this type of values:`, types_2.WatermarkSetting3);
                 return;

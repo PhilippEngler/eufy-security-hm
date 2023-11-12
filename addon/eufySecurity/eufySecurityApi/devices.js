@@ -104,6 +104,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     else if (http_1.Device.isSmartSafe(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.SmartSafe.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
+                    else if (http_1.Device.isSmartTrack(resDevices[deviceSerial].device_type)) {
+                        new_device = http_1.Tracker.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
                     else {
                         new_device = http_1.UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
@@ -219,7 +222,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param device The device object to update.
      */
     async updateDevice(device) {
-        var stations = await this.api.getStations();
         if (this.devicesLoaded) {
             await this.devicesLoaded;
         }
@@ -779,6 +781,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onPersonDetected(device, state, person) {
         this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PERSON);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
         if (state === false) {
             this.loadDeviceImage(device.getSerial());
         }
@@ -1198,6 +1209,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     deleteDeviceInteraction(deviceSerial, eventInteractionType) {
         return this.eventInteractions.deleteDeviceEventInteraction(deviceSerial, eventInteractionType);
+    }
+    /**
+     * Remove all integrations.
+     * @returns true, if all integrations deleted, otherwise false.
+     */
+    removeInteractions() {
+        return this.eventInteractions.removeIntegrations();
     }
     /**
      * Set the given property for the given device to the given value.
@@ -1686,6 +1704,30 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             case http_1.PropertyName.DeviceDoor2Open:
                 await station.openDoor(device, value, 2);
                 break;
+            case http_1.PropertyName.DeviceLeftBehindAlarm: {
+                const tracker = device;
+                const result = await tracker.setLeftBehindAlarm(value);
+                if (result) {
+                    device.updateProperty(name, value);
+                }
+                break;
+            }
+            case http_1.PropertyName.DeviceFindPhone: {
+                const tracker = device;
+                const result = await tracker.setFindPhone(value);
+                if (result) {
+                    device.updateProperty(name, value);
+                }
+                break;
+            }
+            case http_1.PropertyName.DeviceTrackerType: {
+                const tracker = device;
+                const result = await tracker.setTrackerType(value);
+                if (result) {
+                    device.updateProperty(name, value);
+                }
+                break;
+            }
             default:
                 if (!Object.values(http_1.PropertyName).includes(name)) {
                     throw new error_1.ReadOnlyPropertyError("Property is read only", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });

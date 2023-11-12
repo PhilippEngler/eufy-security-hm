@@ -418,6 +418,9 @@ class ApiServer {
                     case "getErrorFileContent":
                         responseData = await api.getErrorFileContent();
                         break;
+                    case "removeInteractions":
+                        responseData = api.removeInteractions();
+                        break;
                     case "removeTokenData":
                         responseData = api.setTokenData("", 0);
                         break;

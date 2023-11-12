@@ -12,7 +12,7 @@ class EventInteractions {
         this.api = api;
         this.config = this.api.getConfig();
         var temp = this.config.getInteractions();
-        if (temp === "") {
+        if (temp === null || temp === "") {
             this.interactions = null;
         }
         else {
@@ -93,7 +93,7 @@ class EventInteractions {
                     this.saveInteractions();
                     return true;
                 }
-                throw new Error(`No interaction for eventInteractionType ${eventInteractionType}.`);
+                throw new Error(`No interaction for eventInteractionType ${eventInteractionType} at device ${deviceSerial}.`);
             }
             throw new Error(`No interactions for device ${deviceSerial}.`);
         }
@@ -140,6 +140,27 @@ class EventInteractions {
             this.api.logError(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
             throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
         }
+    }
+    /**
+     * Remove all integrations.
+     * @returns true, if all integrations deleted, otherwise false.
+     */
+    removeIntegrations() {
+        var json = {};
+        if (this.interactions === null) {
+            json = `{"success":false,"interactionsRemoved":true,"description":"No interactions in the config."}`;
+        }
+        else {
+            this.interactions = null;
+            var res = this.saveInteractions();
+            if (res === true) {
+                json = `{"success":true,"interactionsRemoved":true}`;
+            }
+            else {
+                json = `{"success":false,"interactionsRemoved":false}`;
+            }
+        }
+        return json;
     }
 }
 exports.EventInteractions = EventInteractions;

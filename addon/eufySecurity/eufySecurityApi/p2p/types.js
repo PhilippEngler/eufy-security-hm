@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InternalP2PCommandType = exports.EncryptionType = exports.CalibrateGarageType = exports.FilterDetectType = exports.FeatureTag = exports.FilterEventType = exports.FilterStorageType = exports.P2PStorageType = exports.DatabaseReturnCode = exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.ChargingType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting5 = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.TFCardStatus = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
+exports.TrackerCommandType = exports.InternalP2PCommandType = exports.EncryptionType = exports.CalibrateGarageType = exports.FilterDetectType = exports.FeatureTag = exports.FilterEventType = exports.FilterStorageType = exports.P2PStorageType = exports.DatabaseReturnCode = exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.ChargingType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting5 = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.TFCardStatus = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
 exports.RequestMessageType = {
     STUN: Buffer.from([0xF1, 0x00]),
     LOOKUP: Buffer.from([0xF1, 0x20]),
@@ -1077,3 +1077,19 @@ var InternalP2PCommandType;
     InternalP2PCommandType[InternalP2PCommandType["WithString"] = 3] = "WithString";
     InternalP2PCommandType[InternalP2PCommandType["WithoutData"] = 4] = "WithoutData";
 })(InternalP2PCommandType || (exports.InternalP2PCommandType = InternalP2PCommandType = {}));
+var TrackerCommandType;
+(function (TrackerCommandType) {
+    TrackerCommandType[TrackerCommandType["COMMAND_ANTILOST"] = 1001] = "COMMAND_ANTILOST";
+    TrackerCommandType[TrackerCommandType["COMMAND_AUDIO_SETTING"] = 999] = "COMMAND_AUDIO_SETTING";
+    TrackerCommandType[TrackerCommandType["COMMAND_BATTERY"] = 1003] = "COMMAND_BATTERY";
+    TrackerCommandType[TrackerCommandType["COMMAND_LOCATION"] = 1002] = "COMMAND_LOCATION";
+    TrackerCommandType[TrackerCommandType["COMMAND_LOST_MODE"] = 998] = "COMMAND_LOST_MODE";
+    TrackerCommandType[TrackerCommandType["COMMAND_NEW_LOCATION"] = 1008] = "COMMAND_NEW_LOCATION";
+    TrackerCommandType[TrackerCommandType["COMMAND_NOTIFICATION"] = 1004] = "COMMAND_NOTIFICATION";
+    TrackerCommandType[TrackerCommandType["COMMAND_OPEN_ANTI_TOUCH"] = 1010] = "COMMAND_OPEN_ANTI_TOUCH";
+    TrackerCommandType[TrackerCommandType["COMMAND_TYPE_FINDMYPHONE"] = 1000] = "COMMAND_TYPE_FINDMYPHONE";
+    TrackerCommandType[TrackerCommandType["DISTURB_LOCATION_LIST"] = 1007] = "DISTURB_LOCATION_LIST";
+    TrackerCommandType[TrackerCommandType["LOCATION_ADDRESS"] = 1006] = "LOCATION_ADDRESS";
+    TrackerCommandType[TrackerCommandType["LOCATION_NEW_ADDRESS"] = 1009] = "LOCATION_NEW_ADDRESS";
+    TrackerCommandType[TrackerCommandType["TYPE_ICON_INDEX"] = 1005] = "TYPE_ICON_INDEX";
+})(TrackerCommandType || (exports.TrackerCommandType = TrackerCommandType = {}));
