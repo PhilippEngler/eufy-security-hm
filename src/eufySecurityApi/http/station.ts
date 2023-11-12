@@ -799,15 +799,19 @@ export class Station extends TypedEmitter<StationEvents> {
         });
     }
 
-    public async getStorageInfoEx(): Promise<void> {
+    public getStorageInfoEx(): void {
         this.log.debug(`Station send get storage info command`, { stationSN: this.getSerial() });
-        await this.p2pSession.sendCommandWithIntString({
-            commandType: CommandType.CMD_SDINFO_EX,
-            value: 0,
-            valueSub: 0,
-            channel: 255,
-            strValue: this.rawStation.member.admin_user_id
-        });
+        if (this.isStation() && isGreaterEqualMinVersion("3.3.0.0", this.getSoftwareVersion())) {
+            this.p2pSession.sendCommandWithoutData(CommandType.CMD_SDINFO_EX, Station.CHANNEL);
+        } else {
+            this.p2pSession.sendCommandWithIntString({
+                commandType: CommandType.CMD_SDINFO_EX,
+                value: 0,
+                valueSub: 0,
+                channel: Station.CHANNEL,
+                strValue: this.rawStation.member.admin_user_id
+            });
+        }
     }
 
     private async onAlarmMode(mode: AlarmMode): Promise<void> {
