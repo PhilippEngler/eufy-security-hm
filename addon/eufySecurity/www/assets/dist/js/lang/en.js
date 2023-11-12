@@ -505,12 +505,16 @@ function translateMessages(message, ...options)
 			return "The interaction could not be saved.";
 		case "messageTestInteractionHeader":
 			return "Test interaction.";
+		case "messageTestInteractionUnknownInteractionMessage":
+			return `The type of interaction to be tested is unknown ('${options[0]}').`;
 		case "messageTestInteractionOkMessage":
 			return "The interaction was executed.";
 		case "messageTestInteractionFailedMessage":
 			return "The interaction could not be tested.";
 		case "messageDeleteInteractionHeader":
 			return "Delete interaction.";
+		case "messageDeleteInteractionUnknownInteractionMessage":
+			return `The type of interaction to be deleted is unknown ('${options[0]}').`;
 		case "messageDeleteInteractionOkMessage":
 			return "The interaction has been removed.";
 		case "messageDeleteInteractionFailedMessage":
