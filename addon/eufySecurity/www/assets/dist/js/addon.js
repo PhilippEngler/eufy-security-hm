@@ -1835,6 +1835,10 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 			eventType = 12;
 			break;
 		default:
+			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+			document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionUnknownInteractionMessage", event);
+			toast.show();
 			return;
 	}
 	
@@ -1906,6 +1910,10 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 			eventType = 12;
 			break;
 		default:
+			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+			document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageDeleteInteractionUnknownInteractionMessage", event);
+			toast.show();
 			return;
 	}
 	
