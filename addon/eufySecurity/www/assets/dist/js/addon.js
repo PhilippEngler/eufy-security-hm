@@ -1865,7 +1865,7 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 				{
 					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
 					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateContent("messageTestInteractionFailedMessage");
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionFailedMessage");
 					toast.show();
 				}
 			}
@@ -1873,7 +1873,7 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 			{
 				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
 				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateContent("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 				toast.show();
 			}
 		}
@@ -1881,7 +1881,7 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 		{
 			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
 			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateContent("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
 			toast.show();
 		}
 		else
