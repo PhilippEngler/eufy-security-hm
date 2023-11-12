@@ -417,17 +417,17 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 				}
 				else
 				{
-					document.getElementById("stations").innerHTML = `<h4>translateContent("lblStations")</h4>${createMessageContainer("alert alert-primary", translateMessages("messageNoStationsFoundHeader"), translateMessages("messageNoStationsFoundMessage"), translateMessages("messageNoStationsFoundSubText"))}`;
+					document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-primary", translateMessages("messageNoStationsFoundHeader"), translateMessages("messageNoStationsFoundMessage"), translateMessages("messageNoStationsFoundSubText"))}`;
 				}
 			}
 			else
 			{
-				document.getElementById("stations").innerHTML = `<h4>translateContent("lblStations")</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingStationsHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
+				document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingStationsHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			document.getElementById("stations").innerHTML = `<h4>translateContent("lblStations")</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingStationsHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+			document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingStationsHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
 		}
 		else
 		{
@@ -1589,7 +1589,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.ringing !== undefined)
+	if(deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.ringing !== undefined)
 	{
 		deviceModal += `
 								<div class="card mt-3" id="cardDeviceInteraction">
@@ -1652,7 +1652,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.cryingDetected !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.personDetected !== undefined ? `<hr />` : ``}
+										${deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined ? `<hr />` : ``}
 										<h5 onclick="toggleInteractionDiv('divInteractionCrying', 'imgToggleInteractionCrying')"><i id="imgToggleInteractionCrying" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionCrying")}</h5>
 										<div id="divInteractionCrying" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "cryingEventTarget", "cryingEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[5] !== undefined && deviceInteractions.eventInteractions[5].target !== "" ? deviceInteractions.eventInteractions[5].target : ""}`, false, false)}
@@ -1679,7 +1679,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.ringing !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.cryingDetected !== undefined ? `<hr />` : ``}
+										${deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.cryingDetected !== undefined ? `<hr />` : ``}
 										<h5 onclick="toggleInteractionDiv('divInteractionRinging', 'imgToggleInteractionRinging')"><i id="imgToggleInteractionRinging" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionRinging")}</h5>
 										<div id="divInteractionRinging" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventTarget", "ringEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].target !== "" ? deviceInteractions.eventInteractions[12].target : ""}`, false, false)}
@@ -1741,13 +1741,16 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 	switch(event)
 	{
 		case "motion":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 0, "target": "${document.getElementById("txtBoxMotionEventTarget").value}", "useHttps": ${document.getElementById("chkMotionEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaMotionEventCommand").value)}"}`;
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 0, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 			break;
 		case "person":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 2, "target": "${document.getElementById("txtBoxMotionEventTarget").value}", "useHttps": ${document.getElementById("chkMotionEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaMotionEventCommand").value)}"}`;
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 2, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
+			break;
+		case "crying":
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 5, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 			break;
 		case "ring":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 12, "target": "${document.getElementById("txtBoxRingEventTarget").value}", "useHttps": ${document.getElementById("chkRingEventUseHttps").checked}, "command": "${encodeURIComponent(document.getElementById("txtAreaRingEventCommand").value)}"}`;
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 12, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 			break;
 		default:
 			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
