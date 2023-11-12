@@ -711,6 +711,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onCryingDetected(device, state) {
         this.api.logDebug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.CRYING);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
         if (state === false) {
             this.loadDeviceImage(device.getSerial());
         }

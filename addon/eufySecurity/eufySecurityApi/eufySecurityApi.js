@@ -2642,7 +2642,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "2.6.1";
+        return "2.6.2";
     }
     /**
      * Return the version of the library used for communicating with eufy.

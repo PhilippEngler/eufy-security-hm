@@ -3449,7 +3449,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.6.1";
+        return "2.6.2";
     }
 
     /**
