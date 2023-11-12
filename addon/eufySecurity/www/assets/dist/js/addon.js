@@ -1825,6 +1825,12 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 		case "motion":
 			eventType = 0;
 			break;
+		case "person":
+			eventType = 2;
+			break;
+		case "crying":
+			eventType = 5;
+			break;
 		case "ring":
 			eventType = 12;
 			break;
@@ -1889,6 +1895,12 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 	{
 		case "motion":
 			eventType = 0;
+			break;
+		case "person":
+			eventType = 2;
+			break;
+		case "crying":
+			eventType = 5;
 			break;
 		case "ring":
 			eventType = 12;
