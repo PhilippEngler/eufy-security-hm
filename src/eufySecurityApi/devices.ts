@@ -837,6 +837,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onCryingDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CRYING);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
         if(state === false)
         {
             this.loadDeviceImage(device.getSerial());
