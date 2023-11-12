@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v1
-20231019
+Schema v2
+20231112
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20231019 (v1)";
+var languageVersion = "20231112 (v2)";
 
 function translateNavbarElement(element)
 {
@@ -827,11 +827,13 @@ function translateContent(content, ...options)
 		case "lblHeaderInteractionCCU":
 			return "Interaktion mit der CCU";
 		case "lblInteractionMotion":
-			return "Reaktion auf Bewegung";
+			return "Reaktion bei Bewegung";
 		case "lblInteractionPerson":
-			return "Reaktion auf erkannte Personen"
+			return "Reaktion bei erkannten Personen";
+		case "lblInteractionCrying":
+			return "Reaktion bei Weinen";
 		case "lblInteractionRinging":
-			return "Reaktion auf Klingel";
+			return "Reaktion bei Klingelbetätigung";
 		case "lblNotSupportedStationHeading":
 			return "Dieses Gerät wird nicht vollständig unterstützt.";
 		case "lblNotSupportedStationMessage":
@@ -1275,22 +1277,27 @@ function translatePropertyName(propertyName)
 			return "Lautstärke Bestätigungstons";
 		case "motionEventTarget":
 		case "personEventTarget":
+		case "cryingEventTarget":
 		case "ringEventTarget":
 			return "CCU, auf der die Interaktion ausgeführt werden soll";
 		case "motionEventTargetHint":
 		case "personEventTargetHint":
+		case "cryingEventTargetHint":
 		case "ringEventTargetHint":
 			return "Bitte entweder 'localhost', die IP-Adresse oder den DNS-Namen der Ziel-CCU eingeben, ohne die Angabe von 'http://' oder 'https://'.";
 		case "motionEventUseHttps":
 		case "personEventUseHttps":
+		case "cryingEventUseHttps":
 		case "ringEventUseHttps":
 			return "Verbindung über HTTPS herstellen";
 		case "motionEventCommand":
 		case "personEventCommand":
+		case "cryingEventCommand":
 		case "ringEventCommand":
 			return "Befehl, der ausgeführt werden soll";
 		case "motionEventCommandHint":
 		case "personEventCommandHint":
+		case "cryingEventCommandHint":
 		case "ringEventCommandHint":
 			return "Der hier einzugebende Befehl sollte im Vorfeld über die Skript-Testen-Funktion der CCU getestet werden.";
 		default:

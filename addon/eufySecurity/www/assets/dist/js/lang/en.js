@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v1
-20231019
+Schema v2
+20231112
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20231019 (v1)";
+var languageVersion = "20231112 (v2)";
 
 function translateNavbarElement(element)
 {
@@ -827,11 +827,13 @@ function translateContent(content, ...options)
 		case "lblHeaderInteractionCCU":
 			return "Interacting with the CCU";
 		case "lblInteractionMotion":
-			return "Response to Motion";
+			return "Response on Motion";
 		case "lblInteractionPerson":
-			return "Response to Detected Persons"
+			return "Response on Detected Persons";
+		case "lblInteractionCrying":
+			return "Response on Crying";
 		case "lblInteractionRinging":
-			return "Response to Ringing";
+			return "Response on Ringing";
 		case "lblNotSupportedStationHeading":
 			return "This device is not fully supported.";
 		case "lblNotSupportedStationMessage":
@@ -1275,22 +1277,27 @@ function translatePropertyName(propertyName)
 			return "Chirp Volume";
 		case "motionEventTarget":
 		case "personEventTarget":
+		case "cryingEventTarget":
 		case "ringEventTarget":
 			return "CCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
 		case "personEventTargetHint":
+			case "cryingEventTargetHint":
 		case "ringEventTargetHint":
 			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
 		case "personEventUseHttps":
+		case "cryingEventUseHttps":
 		case "ringEventUseHttps":
 			return "Establish connection via HTTPS";
 		case "motionEventCommand":
 		case "personEventCommand":
+		case "cryingEventCommand":
 		case "ringEventCommand":
 			return "Command to be executed";
 		case "motionEventCommandHint":
 		case "personEventCommandHint":
+		case "cryingEventCommandHint":
 		case "ringEventCommandHint":
 			return "The command to be entered here should be tested in advance using the script test function of the CCU.";
 		default:
