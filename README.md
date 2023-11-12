@@ -20,7 +20,7 @@ Theoretically, most of the eufy security devices should be compatible. There mig
 * eufyCam: eufyCam E (T8112), eufyCam 2C (T8113), eufyCam 2 (T8114), eufyCam 2C Pro (T8142), eufyCam 2 Pro (T8140), eufyCam 3 (T8160) and eufyCam 3C (T8161)
 * IndoorCam: IndoorCam C24 (T8400) and IndoorCam P24 (T8410)
 * Doorbell: Video Doorbell 2K (T8210) and Video Doorbell Dual (T8213)
-* WallLightCam: Wall Light Cam S210 (T84A1)
+* WallLightCam: Wall Light Cam S100 (T84A1)
 
 ## Installation
 To install this addon on your CCU follow these steps:
