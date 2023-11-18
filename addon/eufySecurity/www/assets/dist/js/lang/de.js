@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v2
-20231112
+Schema v3
+20231117
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20231112 (v2)";
+var languageVersion = "20231117 (v3)";
 
 function translateNavbarElement(element)
 {
@@ -864,6 +864,10 @@ function translateContent(content, ...options)
 			return "Speicherinformationen";
 		case "lblInternalStorage":
 			return "interner Speicher";
+		case "lblInternalEmmcStorage":
+			return "internes EMMC Laufwerk";
+		case "lblHddStorage":
+			return "Festplatte"
 		case "lblLastStateChange":
 			return "letzer Statuswechsel";
 		case "lblHouseManagementStationsAndDevicesOfHome":
@@ -906,6 +910,24 @@ function translateContent(content, ...options)
 			return "Service wird neu gestartet";
 		case "lblMessageApiSettingsError":
 			return "Bitte warten Sie, wärend der Service neu gestartet wird. Sie werden anschließend auf die vorherige Seite weitergeleitet.";
+		case "emmcCapacity":
+		case "hddCapacity":
+			return "Speicherkapazität";
+		case "emmcCapacityUsed":
+		case "hddCapacityUsed":
+			return "belegter Speicher";
+		case "emmcCapacityAvailable":
+		case "hddCapacityAvailable":
+			return "verfügbarer Speicher";
+		case "emmcVideoUsed":
+		case "hddVideoUsed":
+			return "von Videos belegter Speicher";
+		case "emmcHealthState":
+			return "Laufwerkszustand";
+		case "hddHddType":
+			return "Laufwerkstyp";
+		case "hddCurrentTemperature":
+			return "aktuelle Temperatur";
 		default:
 			return `{${content}}`;
 	}
@@ -1175,7 +1197,9 @@ function translatePropertyName(propertyName)
 			return "Zeitzone auswählen";
 		case "timeFormat":
 			return "Zeitformat auswählen";
-		case "sdUsage":
+		case "sdCapacityUsedPercent":
+		case "emmcCapacityUsedPercent":
+		case "hddCapacityUsedPercent":
 			return "Speicherauslastung";
 		case "sdCapacity":
 			return "Speicherkapazität";

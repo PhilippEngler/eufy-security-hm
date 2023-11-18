@@ -2042,7 +2042,7 @@ function generateElementRange(type, serialNumber, name, propertyName, value, set
 
 function generateElementProgress(propertyName, value)
 {
-	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="Speicherauslastung" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
+	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
 }
 
 function generateElementSelect(type, serialNumber, name, propertyName, value, setEventHandler, states)
@@ -2492,19 +2492,133 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 				var sdCapacityUsed = (sdCapacity - sdCapacityAvailable).toFixed(2);
 				var sdCapacityUsedPercent = (sdCapacityUsed/sdCapacity*100).toFixed(0);
 				stationModal += `
-											${generateElementProgress("sdUsage", sdCapacityUsedPercent)}
+											${generateElementProgress("sdCapacityUsedPercent", sdCapacityUsedPercent)}
 											<div class="row gap-3">
 												<div class="col">
-													<h5>${stationProperties.sdCapacity !== undefined ? sdCapacity : ""} GB</h5>
+													<h5>${stationProperties.sdCapacity !== undefined ? `${sdCapacity} GB` : ""}</h5>
 													${translatePropertyName(stationPropertiesMetadata.sdCapacity.name)}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.sdCapacity !== undefined && stationProperties.sdCapacityAvailable !== undefined ? sdCapacityUsed : ""} GB</h5>
+													<h5>${stationProperties.sdCapacity !== undefined && stationProperties.sdCapacityAvailable !== undefined ? `${sdCapacityUsed} GB` : ""}</h5>
 													${translatePropertyName("sdCapacityUsed")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.sdCapacityAvailable !== undefined ? sdCapacityAvailable : ""} GB</h5>
+													<h5>${stationProperties.sdCapacityAvailable !== undefined ? `${sdCapacityAvailable} GB` : ""}</h5>
 													${translatePropertyName(stationPropertiesMetadata.sdCapacityAvailable.name)}
+												</div>
+											</div>`;
+			}
+			else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0)
+			{
+				stationModal += `
+											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
+			}
+		}
+		stationModal +=  `
+										</div>
+									</div>`;
+	}
+	if(stationPropertiesMetadata.storageInfoEmmc !== undefined || stationPropertiesMetadata.storageInfoHdd !== undefined)
+	{
+		var conversionFactor = 1024;
+		stationModal +=  `
+									<div class="card mb-3" id="cardStationStorageSettings">
+										<h5 class="card-header">${translateContent("lblStorageInfoHeader")}</h5>
+										<div class="card-body">`;
+		if(stationPropertiesMetadata.storageInfoEmmc !== undefined)
+		{
+			stationModal +=  `
+											<h5>${translateContent("lblInternalEmmcStorage")}</h5>
+											<label class="mb-1">Status</label>
+											${stationProperties.storageInfoEmmc.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoEmmc.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoEmmc.health)}`, translateMessages("messageStorageErrorSubText"))}`;
+			if(stationProperties.storageInfoEmmc.disk_size !== undefined && stationProperties.storageInfoEmmc.system_size >= 0 && stationProperties.storageInfoEmmc.disk_used !== undefined && stationProperties.storageInfoEmmc.data_used_percent !== undefined && stationProperties.storageInfoEmmc.video_size !== undefined && stationProperties.storageInfoEmmc.video_used !== undefined && stationProperties.storageInfoEmmc.data_partition_size !== undefined)
+			{
+				var emmcCapacity = (stationProperties.storageInfoEmmc.disk_size/conversionFactor).toFixed(2);
+				var emmcCapacityUsed = (stationProperties.storageInfoEmmc.disk_used/conversionFactor).toFixed(2);
+				var emmcCapacityAvailable = ((stationProperties.storageInfoEmmc.disk_size-stationProperties.storageInfoEmmc.disk_used)/conversionFactor).toFixed(2);
+				var emmcCapacityUsedPercent = (stationProperties.storageInfoEmmc.disk_used/stationProperties.storageInfoEmmc.disk_size*100).toFixed(0);
+				var emmcVideoUsed = (stationProperties.storageInfoEmmc.video_used/conversionFactor).toFixed(2);
+				var emmcHealthState = 100 - stationProperties.storageInfoEmmc.eol_percent;
+				stationModal += `
+											${generateElementProgress("emmcCapacityUsedPercent", emmcCapacityUsedPercent)}
+											<div class="row gap-3">
+												<div class="col">
+													<h5>${stationProperties.storageInfoEmmc.data_partition_size !== undefined ? `${emmcCapacity} GB` : ""}</h5>
+													${translateContent("emmcCapacity")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoEmmc.disk_used !== undefined ? `${emmcCapacityUsed} GB` : ""}</h5>
+													${translateContent("emmcCapacityUsed")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoEmmc.data_partition_size !== undefined && stationProperties.storageInfoEmmc.disk_used !== undefined !== undefined ? `${emmcCapacityAvailable} GB` : ""}</h5>
+													${translateContent("emmcCapacityAvailable")}
+												</div>
+											</div>
+											<div class="mt-3 row gap-3">
+												<div class="col">
+													<h5>${stationProperties.storageInfoEmmc.video_used !== undefined ? `${emmcVideoUsed} GB` : ""}</h5>
+													${translateContent("emmcVideoUsed")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoEmmc.eol_percent !== undefined ? `${emmcHealthState} %` : ""}</h5>
+													${translateContent("emmcHealthState")}
+												</div>
+												<div class="col">
+													
+												</div>
+											</div>`;
+			}
+			else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0)
+			{
+				stationModal += `
+											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
+			}
+		}
+		if(stationPropertiesMetadata.storageInfoHdd !== undefined)
+		{
+			stationModal +=  `
+											<hr>
+											<h5>${translateContent("lblHddStorage")}</h5>
+											<label class="mb-1">Status</label>
+											${stationProperties.storageInfoHdd.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoHdd.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoHdd.health)}`, translateMessages("messageStorageErrorSubText"))}`;
+			if(stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.system_size >= 0 && stationProperties.storageInfoHdd.disk_used !== undefined &&  stationProperties.storageInfoHdd.video_size !== undefined && stationProperties.storageInfoHdd.video_used !== undefined)
+			{
+				var hddCapacity = (stationProperties.storageInfoHdd.disk_size/conversionFactor).toFixed(2);
+				var hddCapacityUsed = (stationProperties.storageInfoHdd.disk_used/conversionFactor).toFixed(2);
+				var hddCapacityAvailable = ((stationProperties.storageInfoHdd.disk_size-stationProperties.storageInfoHdd.disk_used)/conversionFactor).toFixed(2);
+				var hddCapacityUsedPercent = (stationProperties.storageInfoHdd.disk_used/stationProperties.storageInfoHdd.disk_size*100).toFixed(0);
+				var hddVideoUsed = (stationProperties.storageInfoHdd.video_used/conversionFactor).toFixed(2);
+				var hddHddType = stationProperties.storageInfoHdd.hdd_type;
+				var hddCurrentTemperature = stationProperties.storageInfoHdd.cur_temperate;
+				stationModal += `
+											${generateElementProgress("hddCapacityUsedPercent", hddCapacityUsedPercent)}
+											<div class="row gap-3">
+												<div class="col">
+													<h5>${stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.system_size !== undefined ? `${hddCapacity} GB` : ""}</h5>
+													${translateContent("hddCapacity")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoHdd.disk_used !== undefined ? `${hddCapacityUsed} GB` : ""}</h5>
+													${translateContent("hddCapacityUsed")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.system_size !== undefined && stationProperties.storageInfoHdd.disk_used !== undefined !== undefined ? `${hddCapacityAvailable} GB` : ""}</h5>
+													${translateContent("hddCapacityAvailable")}
+												</div>
+											</div>
+											<div class="mt-3 row gap-3">
+												<div class="col">
+													<h5>${stationProperties.storageInfoHdd.video_used !== undefined ? `${hddVideoUsed} GB` : ""}</h5>
+													${translateContent("hddVideoUsed")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoHdd.hdd_type !== undefined ? `${hddHddType === 0 ? "HDD" : hddHddType === 1 ? "SDD" : `unbekannt (${hddHddType})`}` : ""}</h5>
+													${translateContent("hddHddType")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoHdd.cur_temperate !== undefined ? `${hddCurrentTemperature} °C` : ""}</h5>
+													${translateContent("hddCurrentTemperature")}
 												</div>
 											</div>`;
 			}

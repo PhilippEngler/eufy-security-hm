@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v2
-20231112
+Schema v3
+20231117
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20231112 (v2)";
+var languageVersion = "20231117 (v3)";
 
 function translateNavbarElement(element)
 {
@@ -864,6 +864,10 @@ function translateContent(content, ...options)
 			return "Storage Information";
 		case "lblInternalStorage":
 			return "Internal Storage";
+		case "lblInternalEmmcStorage":
+			return "Internal EMMC Storage";
+		case "lblHddStorage":
+			return "Harddrive Storage"
 		case "lblLastStateChange":
 			return "Last State Change";
 		case "lblHouseManagementStationsAndDevicesOfHome":
@@ -906,6 +910,24 @@ function translateContent(content, ...options)
 			return "Service will be restarted";
 		case "lblMessageApiSettingsError":
 			return "Please wait while the service is restarted. You will then be redirected to the previous page.";
+		case "emmcCapacity":
+		case "hddCapacity":
+			return "Storage Capacity";
+		case "emmcCapacityUsed":
+		case "hddCapacityUsed":
+			return "Used Storage Capacity";
+		case "emmcCapacityAvailable":
+		case "hddCapacityAvailable":
+			return "Available Storage Capacity";
+		case "emmcVideoUsed":
+		case "hddVideoUsed":
+			return "Used Storage Capacity by Videos";
+		case "emmcHealthState":
+			return "Health State";
+		case "hddHddType":
+			return "Harddrive Type";
+		case "hddCurrentTemperature":
+			return "Current Temperature";
 		default:
 			return `{${content}}`;
 	}
@@ -1177,7 +1199,9 @@ function translatePropertyName(propertyName)
 			return "Select Time Format";
 		case "sdUsage":
 			return "Storage usage";
-		case "sdCapacity":
+		case "sdCapacityUsedPercent":
+		case "emmcCapacityUsedPercent":
+		case "hddCapacityUsedPercent":
 			return "Storage capacity";
 		case "sdCapacityUsed":
 			return "Used storage capacity";
