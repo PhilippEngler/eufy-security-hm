@@ -7,7 +7,7 @@ import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, 
 import internal from "stream";
 import EventEmitter from "events";
 import imageType from "image-type";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StreamMetadata, TFCardStatus } from "./p2p";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { getError, parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
@@ -139,6 +139,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         this.addEventListener(station, "DatabaseDelete", false);
                         this.addEventListener(station, "SensorStatus", false);
                         this.addEventListener(station, "GarageDoorStatus", false);
+                        this.addEventListener(station, "StorageInfoHb3", false);
 
                         this.addStation(station);
                         station.initialize();
@@ -335,6 +336,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeEventListener(this.stations[stationSerial], "DatabaseDelete");
                     this.removeEventListener(this.stations[stationSerial], "SensorStatus");
                     this.removeEventListener(this.stations[stationSerial], "GarageDoorStatus");
+                    this.removeEventListener(this.stations[stationSerial], "StorageInfoHb3");
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
@@ -905,6 +907,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.on("garage door status", (station: Station, channel: number, doorId: number, status: number) => this.onStationGarageDoorStatus(station, channel, doorId, status));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
+            case "StorageInfoHb3":
+                station.on("storage info hb3", (station: Station, channel: number, storageInfo: StorageInfoBodyHB3) => this.onStorageInfoHb3(station, channel, storageInfo));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -1091,6 +1097,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeAllListeners("garage door status");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
+            case "StorageInfoHb3":
+                station.removeAllListeners("storage info hb3");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("storage info hb3")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -1181,6 +1191,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 return station.listenerCount("image download");
             case "DatabaseQueryLocal":
                 return station.listenerCount("database query local");
+            case "DatabaseQueryLatest":
+                return station.listenerCount("database query latest");
+            case "DatabaseQueryLocal":
+                return station.listenerCount("database query local");
+            case "DatabaseCountByDate":
+                return station.listenerCount("database count by date");
+            case "DatabaseDelete":
+                return station.listenerCount("database delete");
+            case "SensorStatus":
+                return station.listenerCount("sensor status");
+            case "GarageDoorStatus":
+                return station.listenerCount("garage door status");
+            case "StorageInfoHb3":
+                return station.listenerCount("storage info hb3");
         }
         return -1;
     }
@@ -2111,6 +2135,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             const error = ensureError(err);
             this.api.logError(`Station garage door status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
+    }
+
+    private onStorageInfoHb3(station: Station, channel: number, storageInfo: StorageInfoBodyHB3) {
+        if(station.hasProperty(PropertyName.StationStorageInfoEmmc)) {
+            station.updateProperty(PropertyName.StationStorageInfoEmmc, storageInfo.emmc_info);
+        }
+        if(station.hasProperty(PropertyName.StationStorageInfoHdd)) {
+            station.updateProperty(PropertyName.StationStorageInfoHdd, storageInfo.hdd_info);
+        }
     }
 
     /**
