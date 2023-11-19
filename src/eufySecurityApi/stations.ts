@@ -1102,7 +1102,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("storage info hb3")} Listener.`);
                 break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
+                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be removed.`);
         }
     }
 
@@ -1193,8 +1193,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 return station.listenerCount("database query local");
             case "DatabaseQueryLatest":
                 return station.listenerCount("database query latest");
-            case "DatabaseQueryLocal":
-                return station.listenerCount("database query local");
             case "DatabaseCountByDate":
                 return station.listenerCount("database count by date");
             case "DatabaseDelete":
@@ -1205,6 +1203,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 return station.listenerCount("garage door status");
             case "StorageInfoHb3":
                 return station.listenerCount("storage info hb3");
+            default:
+                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be count.`);
         }
         return -1;
     }
