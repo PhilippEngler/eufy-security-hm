@@ -57,7 +57,9 @@ export class Device extends TypedEmitter<DeviceEvents> {
         const metadata = this.getPropertiesMetadata(true);
         for (const property of Object.values(metadata)) {
             if (this.rawDevice[property.key] !== undefined && typeof property.key === "string") {
-                this.updateProperty(property.name, property.key === "cover_path" ? getImagePath(this.rawDevice[property.key]) : this.rawDevice[property.key] as PropertyValue);
+                if(property.key !== "cover_path") {
+                    this.updateProperty(property.name, this.rawDevice[property.key] as PropertyValue);
+                }
             } else if (this.properties[property.name] === undefined && property.default !== undefined && !this.ready) {
                 this.updateProperty(property.name, property.default);
             }
