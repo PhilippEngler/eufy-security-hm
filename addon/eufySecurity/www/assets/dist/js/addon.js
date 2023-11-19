@@ -2042,7 +2042,7 @@ function generateElementRange(type, serialNumber, name, propertyName, value, set
 
 function generateElementProgress(propertyName, value)
 {
-	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
+	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}: ${value} %</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
 }
 
 function generateElementSelect(type, serialNumber, name, propertyName, value, setEventHandler, states)
@@ -2483,7 +2483,6 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 		{
 			stationModal +=  `
 											<h5>${translateContent("lblInternalStorage")}</h5>
-											<label class="mb-1">Status</label>
 											${stationProperties.sdStatus == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.sdStatus), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.sdStatus)}`, translateMessages("messageStorageErrorSubText"))}`;
 			if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity >= 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable >= 0)
 			{
@@ -2529,7 +2528,6 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 		{
 			stationModal +=  `
 											<h5>${translateContent("lblInternalEmmcStorage")}</h5>
-											<label class="mb-1">Status</label>
 											${stationProperties.storageInfoEmmc.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoEmmc.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoEmmc.health)}`, translateMessages("messageStorageErrorSubText"))}`;
 			if(stationProperties.storageInfoEmmc.disk_size !== undefined && stationProperties.storageInfoEmmc.system_size >= 0 && stationProperties.storageInfoEmmc.disk_used !== undefined && stationProperties.storageInfoEmmc.data_used_percent !== undefined && stationProperties.storageInfoEmmc.video_size !== undefined && stationProperties.storageInfoEmmc.video_used !== undefined && stationProperties.storageInfoEmmc.data_partition_size !== undefined)
 			{
@@ -2580,7 +2578,6 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 			stationModal +=  `
 											<hr>
 											<h5>${translateContent("lblHddStorage")}</h5>
-											<label class="mb-1">Status</label>
 											${stationProperties.storageInfoHdd.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoHdd.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoHdd.health)}`, translateMessages("messageStorageErrorSubText"))}`;
 			if(stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.system_size >= 0 && stationProperties.storageInfoHdd.disk_used !== undefined &&  stationProperties.storageInfoHdd.video_size !== undefined && stationProperties.storageInfoHdd.video_used !== undefined)
 			{
