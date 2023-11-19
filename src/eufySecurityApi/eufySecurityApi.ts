@@ -615,6 +615,7 @@ export class EufySecurityApi
                     var file = "";
                     var fileName = "";
                     var timeString = "";
+                    var timestamp : Date;
 
                     file = response.crop_local_path;
                     fileName = path.parse(file).name + path.parse(file).ext;
@@ -640,7 +641,9 @@ export class EufySecurityApi
                         this.logError("StationDatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
                         continue;
                     }
-                    this.devices.addLastEventForDevice(response.device_sn, file, new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14))));
+                    timestamp = new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14)));
+                    this.updateCameraEventTimeSystemVariable(response.device_sn, timestamp.valueOf());
+                    this.devices.addLastEventForDevice(response.device_sn, file, timestamp);
                     this.devices.downloadLatestImageForDevice(response.device_sn);
                 }
                 catch (error)
