@@ -89,7 +89,6 @@ export class EventInteractions
             }
             catch (error: any)
             {
-                this.api.logError(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
                 throw new Error(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
             }
         }
