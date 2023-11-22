@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v3
-20231117
+Schema v4
+20231122
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20231117 (v3)";
+var languageVersion = "20231122 (v4)";
 
 function translateNavbarElement(element)
 {
@@ -926,8 +926,16 @@ function translateContent(content, ...options)
 			return "Laufwerkszustand";
 		case "hddHddType":
 			return "Laufwerkstyp";
+		case "hddIsHdd":
+			return "HDD";
+		case "hddIsSsd":
+			return "SSD";
+		case "hddIsUnknown":
+			return "unbekannt";
 		case "hddCurrentTemperature":
 			return "aktuelle Temperatur";
+		case "titleDeviceDisabled":
+			return "Gerät deaktiviert";
 		default:
 			return `{${content}}`;
 	}

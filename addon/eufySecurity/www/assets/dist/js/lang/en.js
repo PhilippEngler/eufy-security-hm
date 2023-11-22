@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v3
-20231117
+Schema v4
+20231122
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20231117 (v3)";
+var languageVersion = "20231122 (v4)";
 
 function translateNavbarElement(element)
 {
@@ -926,8 +926,16 @@ function translateContent(content, ...options)
 			return "Health State";
 		case "hddHddType":
 			return "Harddrive Type";
+		case "hddIsHdd":
+			return "HDD";
+		case "hddIsSsd":
+			return "SSD";
+		case "hddIsUnknown":
+			return "unknown";
 		case "hddCurrentTemperature":
 			return "Current Temperature";
+		case "titleDeviceDisabled":
+			return "Device disabled";
 		default:
 			return `{${content}}`;
 	}
