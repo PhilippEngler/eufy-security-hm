@@ -916,18 +916,26 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
-	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,5)) == false)
+	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,5)) === false && modelName !== "unknown")
 	{
 		setEventHandler = false;
 		deviceModal += `
-									${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedDeviceHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedDeviceSubText"))} ${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedDeviceNoSaving"), "", "")}`;
+									${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedDeviceHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedDeviceSubText"))}
+									${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedDeviceNoSaving"), "", "")}`;
+	}
+	else if (modelName === "unknown")
+	{
+		setEventHandler = false;
+		deviceModal += `
+									${createMessageContainer("alert alert-warning", translateContent("lblUnknownDeviceHeading"), translateContent("lblUnknownDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`), translateContent("lblUnknownDeviceSubText"))}
+									${createMessageContainer("alert alert-primary", translateContent("lblUnknownDeviceNoSaving"), "", "")}`;
 	}
 	deviceModal +=     `
 								</div>
 								<div class="row text-center">
 									<div class="col">
 										<span id="lblDeviceModel">
-											<h5 class="card-subtitle mb-2">${modelName} <span class="text-muted">(${deviceProperties.model})</span></h5>
+											<h5 class="card-subtitle mb-2">${modelName === "unknown" ? translateString("strUnknownDevice") : modelName} <span class="text-muted">(${deviceProperties.model})</span></h5>
 										</span>
 									</div>
 									<div class="col">
@@ -2355,18 +2363,26 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
-	if(isStationOrDevicesKnown(stationProperties.model.slice(0,5)) == false)
+	if(isStationOrDevicesKnown(stationProperties.model.slice(0,5)) == false && modelName !== "unknown")
 	{
 		setEventHandler = false;
 		stationModal += `
-										${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedStationHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedStationSubText"))} ${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedStationNoSaving"), "", "")}`;
+										${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedStationHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedStationSubText"))}
+										${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedStationNoSaving"), "", "")}`;
+	}
+	else if (modelName === "unknown")
+	{
+		setEventHandler = false;
+		stationModal += `
+										${createMessageContainer("alert alert-warning", translateContent("lblUnknownStationHeading"), translateContent("lblUnknownStationMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`), translateContent("lblUnknownStationSubText"))}
+										${createMessageContainer("alert alert-primary", translateContent("lblUnknownStationNoSaving"), "", "")}`;
 	}
 	stationModal +=     `
 									</div>
 									<div class="row text-center">
 										<div class="col">
 											<span id="lblStationModel">
-												<h5 class="card-subtitle mb-2">${modelName} <span class="text-muted">(${stationProperties.model})</span></h5>
+												<h5 class="card-subtitle mb-2">${modelName === "unknown" ? translateString("strUnknownDevice") : modelName} <span class="text-muted">(${stationProperties.model})</span></h5>
 											</span>
 										</div>
 										<div class="col">

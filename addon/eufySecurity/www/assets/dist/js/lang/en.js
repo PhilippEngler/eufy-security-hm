@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v4
-20231122
+Schema v5
+20231125
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20231122 (v4)";
+var languageVersion = "20231125 (v5)";
 
 function translateNavbarElement(element)
 {
@@ -706,6 +706,14 @@ function translateContent(content, ...options)
 			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
 		case "lblNotSupportedDeviceNoSaving":
 			return "It is currently not possible to save the settings.";
+		case "lblUnknownDeviceHeading":
+			return "This device is not supported.";
+		case "lblUnknownDeviceMessage":
+			return `The device is either unknown or not yet fully implemented in the add-on. In the latter case, you can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
+		case "lblUnknownDeviceSubText":
+			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
+		case "lblUnknownDeviceNoSaving":
+			return "It is currently not possible to save the settings.";
 		case "lblHeaderCommon":
 			return "Common";
 		case "lblEnabled":
@@ -845,6 +853,14 @@ function translateContent(content, ...options)
 		case "lblNotSupportedStationSubText":
 			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
 		case "lblNotSupportedStationNoSaving":
+			return "It is currently not possible to save the settings.";
+		case "lblUnknownStationHeading":
+			return "This device is not supported.";
+		case "lblUnknownStationMessage":
+			return `The device is either unknown or not yet fully implemented in the add-on. In the latter case, you can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
+		case "lblUnknownStationSubText":
+			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
+		case "lblUnknownStationNoSaving":
 			return "It is currently not possible to save the settings.";
 		case "lblAlarmTone":
 			return "Alarm Tone";
@@ -1047,6 +1063,8 @@ function translateString(content)
 			return "Expand for editing";
 		case "strEditInteractionEnd":
 			return "Collapse";
+		case "strUnknownDevice":
+			return "unknown Device";
 		default:
 			return `{${content}}`;
 	}

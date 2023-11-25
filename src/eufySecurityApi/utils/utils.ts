@@ -128,7 +128,7 @@ export const getModelName = function(modelNumber : string) : string
         case "T8910":
             return "Motion Sensor";
         default:
-            return "unbekanntes Gerät";
+            return "unknown";
     }
 }
 

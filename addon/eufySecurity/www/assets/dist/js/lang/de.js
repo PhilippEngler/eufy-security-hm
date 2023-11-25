@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v4
-20231122
+Schema v5
+20231125
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20231122 (v4)";
+var languageVersion = "20231125 (v5)";
 
 function translateNavbarElement(element)
 {
@@ -706,6 +706,14 @@ function translateContent(content, ...options)
 			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
 		case "lblNotSupportedDeviceNoSaving":
 			return "Das Speichern der Einstellungen ist zur Zeit nicht möglich.";
+		case "lblUnknownDeviceHeading":
+			return "Dieses Gerät wird nicht unterstützt.";
+		case "lblUnknownDeviceMessage":
+			return `Das Gerät ist entweder unbekannt oder noch nicht komplett in das Addon implementiert. Im letzteren Fall können Sie bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
+		case "lblUnknownDeviceSubText":
+			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
+		case "lblUnknownDeviceNoSaving":
+			return "Das Speichern der Einstellungen ist zur Zeit nicht möglich.";
 		case "lblHeaderCommon":
 			return "Allgemeines";
 		case "lblEnabled":
@@ -845,6 +853,14 @@ function translateContent(content, ...options)
 		case "lblNotSupportedStationSubText":
 			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
 		case "lblNotSupportedStationNoSaving":
+			return "Das Speichern der Einstellungen ist zur Zeit nicht möglich.";
+		case "lblUnknownStationHeading":
+			return "Dieses Gerät wird nicht unterstützt.";
+		case "lblUnknownStationMessage":
+			return `Das Gerät ist entweder unbekannt oder noch nicht komplett in das Addon implementiert. Im letzteren Fall können Sie bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
+		case "lblUnknownStationSubText":
+			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
+		case "lblUnknownStationNoSaving":
 			return "Das Speichern der Einstellungen ist zur Zeit nicht möglich.";
 		case "lblAlarmTone":
 			return "Alarmton";
@@ -1047,6 +1063,8 @@ function translateString(content)
 			return "zur Bearbeitung ausklappen";
 		case "strEditInteractionEnd":
 			return "einklappen";
+		case "strUnknownDevice":
+			return "unbekanntes Gerät";
 		default:
 			return `{${content}}`;
 	}
