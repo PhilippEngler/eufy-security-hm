@@ -2405,8 +2405,12 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 		if(stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined)
 		{
 			stationModal +=  `
-											<h5>${translateContent("lblAlarmTone")}</h5>
+											<h5>${translateContent("lblAlarmTone")}</h5>`;
+			if(stationPropertiesMetadata.alarmTone !== undefined)
+			{
+				stationModal +=  `
 											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmTone.name, stationProperties.alarmTone, setEventHandler, stationPropertiesMetadata.alarmTone.states)}`;
+			}
 			if(stationPropertiesMetadata.alarmVolume.min !== undefined)
 			{
 				stationModal +=  `
