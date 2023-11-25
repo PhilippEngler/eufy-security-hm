@@ -2042,7 +2042,7 @@ function generateElementRange(type, serialNumber, name, propertyName, value, set
 
 function generateElementProgress(propertyName, value)
 {
-	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}: ${value} %</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
+	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}: ${value}%</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
 }
 
 function generateElementSelect(type, serialNumber, name, propertyName, value, setEventHandler, states)
@@ -2559,7 +2559,7 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 													${translateContent("emmcVideoUsed")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.storageInfoEmmc.eol_percent !== undefined ? `${emmcHealthState} %` : ""}</h5>
+													<h5>${stationProperties.storageInfoEmmc.eol_percent !== undefined ? `${emmcHealthState}%` : ""}</h5>
 													${translateContent("emmcHealthState")}
 												</div>
 												<div class="col">
@@ -2614,7 +2614,7 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 													${translateContent("hddHddType")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.storageInfoHdd.cur_temperate !== undefined ? `${hddCurrentTemperature} °C` : ""}</h5>
+													<h5>${stationProperties.storageInfoHdd.cur_temperate !== undefined ? `${hddCurrentTemperature}°C` : ""}</h5>
 													${translateContent("hddCurrentTemperature")}
 												</div>
 											</div>`;
