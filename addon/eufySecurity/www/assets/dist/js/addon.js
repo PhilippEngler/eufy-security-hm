@@ -2308,7 +2308,7 @@ function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.isP2PConnected, objResp.data);
+					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.isP2PConnected, objResp.data);
 				}
 				else
 				{
@@ -2351,7 +2351,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, isP2PConnected, stationProperties)
+function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, isDeviceKnownByClient, isP2PConnected, stationProperties)
 {
 	var setEventHandler = true;
 	var stationModal =  `
