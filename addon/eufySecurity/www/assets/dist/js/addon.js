@@ -1989,6 +1989,7 @@ function isStationOrDevicesKnown(modell)
 		case "T8142":
 		case "T8160":
 		case "T8161":
+		case "T8600":
 		//IndoorCams
 		case "T8400":
 		case "T8410":
