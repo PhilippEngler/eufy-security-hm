@@ -709,9 +709,7 @@ function translateContent(content, ...options)
 		case "lblUnknownDeviceHeading":
 			return "Dieses Gerät wird nicht unterstützt.";
 		case "lblUnknownDeviceMessage":
-			return `Das Gerät ist entweder unbekannt oder noch nicht komplett in das Addon implementiert. Im letzteren Fall können Sie bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
-		case "lblUnknownDeviceSubText":
-			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
+			return `Das Gerät ist unbekannt. Sie können sich unter Angabe der Modellnummer (${options[0]}) sowie der Bezeichnung des Gerätes an den Entwickler wenden, so dass das Gerät eventuell implementiert werden kann.`
 		case "lblUnknownDeviceNoSaving":
 			return "Das Speichern der Einstellungen ist zur Zeit nicht möglich.";
 		case "lblHeaderCommon":
@@ -857,9 +855,7 @@ function translateContent(content, ...options)
 		case "lblUnknownStationHeading":
 			return "Dieses Gerät wird nicht unterstützt.";
 		case "lblUnknownStationMessage":
-			return `Das Gerät ist entweder unbekannt oder noch nicht komplett in das Addon implementiert. Im letzteren Fall können Sie bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
-		case "lblUnknownStationSubText":
-			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
+			return `Das Gerät ist unbekannt. Sie können sich unter Angabe der Modellnummer (${options[0]}) sowie der Bezeichnung des Gerätes an den Entwickler wenden, so dass das Gerät eventuell implementiert werden kann.`
 		case "lblUnknownStationNoSaving":
 			return "Das Speichern der Einstellungen ist zur Zeit nicht möglich.";
 		case "lblAlarmTone":

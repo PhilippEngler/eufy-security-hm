@@ -709,9 +709,7 @@ function translateContent(content, ...options)
 		case "lblUnknownDeviceHeading":
 			return "This device is not supported.";
 		case "lblUnknownDeviceMessage":
-			return `The device is either unknown or not yet fully implemented in the add-on. In the latter case, you can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
-		case "lblUnknownDeviceSubText":
-			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
+			return `The device is unknown. You can contact the developer, stating the model number (${options[0]}) and the name of the device, so that the device can possibly be implemented.`
 		case "lblUnknownDeviceNoSaving":
 			return "It is currently not possible to save the settings.";
 		case "lblHeaderCommon":
@@ -857,9 +855,7 @@ function translateContent(content, ...options)
 		case "lblUnknownStationHeading":
 			return "This device is not supported.";
 		case "lblUnknownStationMessage":
-			return `The device is either unknown or not yet fully implemented in the add-on. In the latter case, you can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
-		case "lblUnknownStationSubText":
-			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
+			return `The device is unknown. You can contact the developer, stating the model number (${options[0]}) and the name of the device, so that the device can possibly be implemented.`
 		case "lblUnknownStationNoSaving":
 			return "It is currently not possible to save the settings.";
 		case "lblAlarmTone":

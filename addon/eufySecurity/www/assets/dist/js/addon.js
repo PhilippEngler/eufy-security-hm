@@ -863,7 +863,7 @@ function getDeviceProperties(deviceId, devicePropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.data, objResp.interactions);
+					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.data, objResp.interactions);
 				}
 				else
 				{
@@ -906,7 +906,7 @@ function generateDeviceModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, deviceProperties, deviceInteractions)
+function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, isDeviceKnownByClient, deviceProperties, deviceInteractions)
 {
 	var setEventHandler = true;
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
@@ -916,18 +916,18 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
-	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,5)) === false && modelName !== "unknown")
+	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,5)) === false && isDeviceKnownByClient === true)
 	{
 		setEventHandler = false;
 		deviceModal += `
 									${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedDeviceHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedDeviceSubText"))}
 									${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedDeviceNoSaving"), "", "")}`;
 	}
-	else if (modelName === "unknown")
+	else if (isDeviceKnownByClient === false)
 	{
 		setEventHandler = false;
 		deviceModal += `
-									${createMessageContainer("alert alert-warning", translateContent("lblUnknownDeviceHeading"), translateContent("lblUnknownDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`), translateContent("lblUnknownDeviceSubText"))}
+									${createMessageContainer("alert alert-warning", translateContent("lblUnknownDeviceHeading"), translateContent("lblUnknownDeviceMessage", deviceProperties.model), "")}
 									${createMessageContainer("alert alert-primary", translateContent("lblUnknownDeviceNoSaving"), "", "")}`;
 	}
 	deviceModal +=     `
@@ -2363,18 +2363,18 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
-	if(isStationOrDevicesKnown(stationProperties.model.slice(0,5)) == false && modelName !== "unknown")
+	if(isStationOrDevicesKnown(stationProperties.model.slice(0,5)) == false && isDeviceKnownByClient === true)
 	{
 		setEventHandler = false;
 		stationModal += `
 										${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedStationHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedStationSubText"))}
 										${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedStationNoSaving"), "", "")}`;
 	}
-	else if (modelName === "unknown")
+	else if (isDeviceKnownByClient === false)
 	{
 		setEventHandler = false;
 		stationModal += `
-										${createMessageContainer("alert alert-warning", translateContent("lblUnknownStationHeading"), translateContent("lblUnknownStationMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`), translateContent("lblUnknownStationSubText"))}
+										${createMessageContainer("alert alert-warning", translateContent("lblUnknownStationHeading"), translateContent("lblUnknownStationMessage", stationProperties.model), "")}
 										${createMessageContainer("alert alert-primary", translateContent("lblUnknownStationNoSaving"), "", "")}`;
 	}
 	stationModal +=     `
