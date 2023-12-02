@@ -1330,35 +1330,35 @@ function translatePropertyName(propertyName)
 		case "chirpVolume":
 			return "Chirp Volume";
 		case "motionEventTarget":
-		case "radarMotionEventTarget":
+		case "radarEventTarget":
 		case "personEventTarget":
 		case "petEventTarget":
 		case "cryingEventTarget":
 		case "ringEventTarget":
 			return "CCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
-		case "radarMotionEventTargetHint":
+		case "radarEventTargetHint":
 		case "personEventTargetHint":
 		case "petEventTargetHint":
 		case "cryingEventTargetHint":
 		case "ringEventTargetHint":
 			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
-		case "radarMotionEventUseHttps":
+		case "radarEventUseHttps":
 		case "personEventUseHttps":
 		case "cryingEventUseHttps":
 		case "petEventUseHttps":
 		case "ringEventUseHttps":
 			return "Establish connection via HTTPS";
 		case "motionEventCommand":
-		case "radarMotionEventCommand":
+		case "radarEventCommand":
 		case "personEventCommand":
 		case "petEventCommand":
 		case "cryingEventCommand":
 		case "ringEventCommand":
 			return "Command to be executed";
 		case "motionEventCommandHint":
-		case "radarMotionEventCommandHint":
+		case "radarEventCommandHint":
 		case "personEventCommandHint":
 		case "petEventCommandHint":
 		case "cryingEventCommandHint":

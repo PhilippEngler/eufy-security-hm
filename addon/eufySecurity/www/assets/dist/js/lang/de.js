@@ -1330,35 +1330,35 @@ function translatePropertyName(propertyName)
 		case "chirpVolume":
 			return "Lautstärke Bestätigungstons";
 		case "motionEventTarget":
-		case "radarMotionEventTarget":
+		case "radarEventTarget":
 		case "personEventTarget":
 		case "petEventTarget":
 		case "cryingEventTarget":
 		case "ringEventTarget":
 			return "CCU, auf der die Interaktion ausgeführt werden soll";
 		case "motionEventTargetHint":
-		case "radarMotionEventTargetHint":
+		case "radarEventTargetHint":
 		case "personEventTargetHint":
 		case "petEventTargetHint":
 		case "cryingEventTargetHint":
 		case "ringEventTargetHint":
 			return "Bitte entweder 'localhost', die IP-Adresse oder den DNS-Namen der Ziel-CCU eingeben, ohne die Angabe von 'http://' oder 'https://'.";
 		case "motionEventUseHttps":
-		case "radarMotionEventUseHttps":
+		case "radarEventUseHttps":
 		case "personEventUseHttps":
 		case "petEventUseHttps":
 		case "cryingEventUseHttps":
 		case "ringEventUseHttps":
 			return "Verbindung über HTTPS herstellen";
 		case "motionEventCommand":
-		case "radarMotionEventCommand":
+		case "radarEventCommand":
 		case "personEventCommand":
 		case "petEventCommand":
 		case "cryingEventCommand":
 		case "ringEventCommand":
 			return "Befehl, der ausgeführt werden soll";
 		case "motionEventCommandHint":
-		case "radarMotionEventCommandHint":
+		case "radarEventCommandHint":
 		case "personEventCommandHint":
 		case "petEventCommandHint":
 		case "cryingEventCommandHint":
