@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v5
-20231125
+Schema v6
+20231202
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20231125 (v5)";
+var languageVersion = "20231202 (v6)";
 
 function translateNavbarElement(element)
 {
@@ -838,8 +838,12 @@ function translateContent(content, ...options)
 			return "Interacting with the CCU";
 		case "lblInteractionMotion":
 			return "Response on Motion";
+		case "lblInteractionRadarMotion":
+			return "Response on Radar detected Motion";
 		case "lblInteractionPerson":
-			return "Response on Detected Persons";
+			return "Response on Detected Person";
+		case "lblInteractionPet":
+			return "Response on Detected Pet";
 		case "lblInteractionCrying":
 			return "Response on Crying";
 		case "lblInteractionRinging":
@@ -1326,27 +1330,37 @@ function translatePropertyName(propertyName)
 		case "chirpVolume":
 			return "Chirp Volume";
 		case "motionEventTarget":
+		case "radarMotionEventTarget":
 		case "personEventTarget":
+		case "petEventTarget":
 		case "cryingEventTarget":
 		case "ringEventTarget":
 			return "CCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
+		case "radarMotionEventTargetHint":
 		case "personEventTargetHint":
-			case "cryingEventTargetHint":
+		case "petEventTargetHint":
+		case "cryingEventTargetHint":
 		case "ringEventTargetHint":
 			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
+		case "radarMotionEventUseHttps":
 		case "personEventUseHttps":
 		case "cryingEventUseHttps":
+		case "petEventUseHttps":
 		case "ringEventUseHttps":
 			return "Establish connection via HTTPS";
 		case "motionEventCommand":
+		case "radarMotionEventCommand":
 		case "personEventCommand":
+		case "petEventCommand":
 		case "cryingEventCommand":
 		case "ringEventCommand":
 			return "Command to be executed";
 		case "motionEventCommandHint":
+		case "radarMotionEventCommandHint":
 		case "personEventCommandHint":
+		case "petEventCommandHint":
 		case "cryingEventCommandHint":
 		case "ringEventCommandHint":
 			return "The command to be entered here should be tested in advance using the script test function of the CCU.";

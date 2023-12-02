@@ -1597,7 +1597,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.ringing !== undefined)
+	if(deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.ringing !== undefined)
 	{
 		deviceModal += `
 								<div class="card mt-3" id="cardDeviceInteraction">
@@ -1630,10 +1630,37 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 											</div>
 										</div>`;
 		}
-		if(deviceProperties.personDetected !== undefined)
+		if(deviceProperties.radarMotionDetected !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.motionDetected !== undefined ? `<hr />` : ``}
+										<h5 onclick="toggleInteractionDiv('divInteractionRadarMotion', 'imgToggleInteractionRadarMotion')"><i id="imgToggleInteractionRadarMotion" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionRadarMotion")}</h5>
+										<div id="divInteractionRadarMotion" class="collapse">
+											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "radarEventTarget", "radarMotionEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[1] !== undefined && deviceInteractions.eventInteractions[0].target !== "" ? deviceInteractions.eventInteractions[1].target : ""}`, false, false)}
+											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "radarEventUseHttps", false, false)}
+											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "radarEventCommand", "radarMotionEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[1] !== undefined && deviceInteractions.eventInteractions[1].command !== "" ? atob(deviceInteractions.eventInteractions[1].command) : ""}`, false, false)}
+											<div class="btn-group" role="group">
+												${makeButtonElement("btnRadarMotionSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
+			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[1] !== undefined && deviceInteractions.eventInteractions[1].target !== "" && deviceInteractions.eventInteractions[1].command !== ""))
+			{
+				deviceModal += `
+												${makeButtonElement("btnRadarMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnRadarMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
+			}
+			else
+			{
+				deviceModal += `
+												${makeButtonElement("btnRadarMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnRadarMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
+			}
+			deviceModal += `
+											</div>
+										</div>`;
+		}
+		if(deviceProperties.personDetected !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined ? `<hr />` : ``}
 										<h5 onclick="toggleInteractionDiv('divInteractionPerson', 'imgToggleInteractionPerson')"><i id="imgToggleInteractionPerson" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionPerson")}</h5>
 										<div id="divInteractionPerson" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "personEventTarget", "personEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[2] !== undefined && deviceInteractions.eventInteractions[2].target !== "" ? deviceInteractions.eventInteractions[2].target : ""}`, false, false)}
@@ -1657,10 +1684,37 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 											</div>
 										</div>`;
 		}
+		if(deviceProperties.petDetected !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined ? `<hr />` : ``}
+										<h5 onclick="toggleInteractionDiv('divInteractionPet', 'imgToggleInteractionPet')"><i id="imgToggleInteractionPet" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionPet")}</h5>
+										<div id="divInteractionPet" class="collapse">
+											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "petEventTarget", "petEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[3] !== undefined && deviceInteractions.eventInteractions[3].target !== "" ? deviceInteractions.eventInteractions[3].target : ""}`, false, false)}
+											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "petEventUseHttps", false, false)}
+											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "petEventCommand", "petEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[3] !== undefined && deviceInteractions.eventInteractions[3].command !== "" ? atob(deviceInteractions.eventInteractions[3].command) : ""}`, false, false)}
+											<div class="btn-group" role="group">
+												${makeButtonElement("btnPetSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'pet')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
+			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[3] !== undefined && deviceInteractions.eventInteractions[3].target !== "" && deviceInteractions.eventInteractions[3].command !== ""))
+			{
+				deviceModal += `
+												${makeButtonElement("btnPetTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'pet')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnPetDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'pet')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
+			}
+			else
+			{
+				deviceModal += `
+												${makeButtonElement("btnPetTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnPetDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
+			}
+			deviceModal += `
+											</div>
+										</div>`;
+		}
 		if(deviceProperties.cryingDetected !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined ? `<hr />` : ``}
+										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined ? `<hr />` : ``}
 										<h5 onclick="toggleInteractionDiv('divInteractionCrying', 'imgToggleInteractionCrying')"><i id="imgToggleInteractionCrying" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionCrying")}</h5>
 										<div id="divInteractionCrying" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "cryingEventTarget", "cryingEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[5] !== undefined && deviceInteractions.eventInteractions[5].target !== "" ? deviceInteractions.eventInteractions[5].target : ""}`, false, false)}
@@ -1687,7 +1741,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.ringing !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.cryingDetected !== undefined ? `<hr />` : ``}
+										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined ? `<hr />` : ``}
 										<h5 onclick="toggleInteractionDiv('divInteractionRinging', 'imgToggleInteractionRinging')"><i id="imgToggleInteractionRinging" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionRinging")}</h5>
 										<div id="divInteractionRinging" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventTarget", "ringEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].target !== "" ? deviceInteractions.eventInteractions[12].target : ""}`, false, false)}
@@ -1751,8 +1805,14 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 		case "motion":
 			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 0, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 			break;
+		case "radar":
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 1, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
+			break;
 		case "person":
 			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 2, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
+			break;
+		case "pet":
+			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 3, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 			break;
 		case "crying":
 			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 5, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
@@ -1833,8 +1893,14 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 		case "motion":
 			eventType = 0;
 			break;
+		case "radar":
+			eventType = 1;
+			break;
 		case "person":
 			eventType = 2;
+			break;
+		case "pet":
+			eventType = 3;
 			break;
 		case "crying":
 			eventType = 5;
@@ -1908,8 +1974,14 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 		case "motion":
 			eventType = 0;
 			break;
+		case "radar":
+			eventType = 1;
+			break;
 		case "person":
 			eventType = 2;
+			break;
+		case "pet":
+			eventType = 3;
 			break;
 		case "crying":
 			eventType = 5;
