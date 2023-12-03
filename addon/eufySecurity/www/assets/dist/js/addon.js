@@ -1047,7 +1047,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	if(deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionType !== undefined)
 	{
 		deviceModal += `
-								<div class="card mb-3" id="cardDevicePowerManagerSettings">
+								<div class="card mb-3" id="cardDeviceMotionDetectionSettings">
 									<h5 class="card-header">${translateContent("lblHeaderMotionDetection")}</h5>
 									<div class="card-body">`;
 		if(deviceProperties.motionDetection !== undefined)
