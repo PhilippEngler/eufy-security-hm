@@ -1736,6 +1736,16 @@ function getEventId(event)
 			return 4;
 		case "crying":
 			return 5;
+		case "strangerPerson":
+			return 7;
+		case "vehicle":
+			return 8;
+		case "dog":
+			return 9;
+		case "dogLick":
+			return 10;
+		case "dogPoop":
+			return 11;
 		case "ring":
 			return 12;
 		default:
