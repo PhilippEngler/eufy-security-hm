@@ -1607,163 +1607,37 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.motionDetected !== undefined)
 		{
 			deviceModal += `
-										<h5 onclick="toggleInteractionDiv('divInteractionMotion', 'imgToggleInteractionMotion')"><i id="imgToggleInteractionMotion" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionMotion")}</h5>
-										<div id="divInteractionMotion" class="collapse">
-											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventTarget", "motionEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].target !== "" ? deviceInteractions.eventInteractions[0].target : ""}`, false, false)}
-											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "motionEventUseHttps", false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "motionEventCommand", "motionEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].command !== "" ? atob(deviceInteractions.eventInteractions[0].command) : ""}`, false, false)}
-											<div class="btn-group" role="group">
-												${makeButtonElement("btnMotionSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
-			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[0] !== undefined && deviceInteractions.eventInteractions[0].target !== "" && deviceInteractions.eventInteractions[0].command !== ""))
-			{
-				deviceModal += `
-												${makeButtonElement("btnMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
-			}
-			else
-			{
-				deviceModal += `
-												${makeButtonElement("btnMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'motion')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
-			}
-			deviceModal += `
-											</div>
-										</div>`;
+										${generateInteractionExpander("motion", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.radarMotionDetected !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.motionDetected !== undefined ? `<hr />` : ``}
-										<h5 onclick="toggleInteractionDiv('divInteractionRadarMotion', 'imgToggleInteractionRadarMotion')"><i id="imgToggleInteractionRadarMotion" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionRadarMotion")}</h5>
-										<div id="divInteractionRadarMotion" class="collapse">
-											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "radarEventTarget", "radarEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[1] !== undefined && deviceInteractions.eventInteractions[0].target !== "" ? deviceInteractions.eventInteractions[1].target : ""}`, false, false)}
-											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "radarEventUseHttps", false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "radarEventCommand", "radarEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[1] !== undefined && deviceInteractions.eventInteractions[1].command !== "" ? atob(deviceInteractions.eventInteractions[1].command) : ""}`, false, false)}
-											<div class="btn-group" role="group">
-												${makeButtonElement("btnRadarMotionSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
-			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[1] !== undefined && deviceInteractions.eventInteractions[1].target !== "" && deviceInteractions.eventInteractions[1].command !== ""))
-			{
-				deviceModal += `
-												${makeButtonElement("btnRadarMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnRadarMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
-			}
-			else
-			{
-				deviceModal += `
-												${makeButtonElement("btnRadarMotionTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnRadarMotionDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'radar')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
-			}
-			deviceModal += `
-											</div>
-										</div>`;
+										${generateInteractionExpander("radarMotion", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.personDetected !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined ? `<hr />` : ``}
-										<h5 onclick="toggleInteractionDiv('divInteractionPerson', 'imgToggleInteractionPerson')"><i id="imgToggleInteractionPerson" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionPerson")}</h5>
-										<div id="divInteractionPerson" class="collapse">
-											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "personEventTarget", "personEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[2] !== undefined && deviceInteractions.eventInteractions[2].target !== "" ? deviceInteractions.eventInteractions[2].target : ""}`, false, false)}
-											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "personEventUseHttps", false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "personEventCommand", "personEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[2] !== undefined && deviceInteractions.eventInteractions[2].command !== "" ? atob(deviceInteractions.eventInteractions[2].command) : ""}`, false, false)}
-											<div class="btn-group" role="group">
-												${makeButtonElement("btnPersonSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
-			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[2] !== undefined && deviceInteractions.eventInteractions[2].target !== "" && deviceInteractions.eventInteractions[2].command !== ""))
-			{
-				deviceModal += `
-												${makeButtonElement("btnPersonTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnPersonDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
-			}
-			else
-			{
-				deviceModal += `
-												${makeButtonElement("btnPersonTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnPersonDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
-			}
-			deviceModal += `
-											</div>
-										</div>`;
+										${generateInteractionExpander("person", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.petDetected !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined ? `<hr />` : ``}
-										<h5 onclick="toggleInteractionDiv('divInteractionPet', 'imgToggleInteractionPet')"><i id="imgToggleInteractionPet" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionPet")}</h5>
-										<div id="divInteractionPet" class="collapse">
-											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "petEventTarget", "petEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[3] !== undefined && deviceInteractions.eventInteractions[3].target !== "" ? deviceInteractions.eventInteractions[3].target : ""}`, false, false)}
-											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "petEventUseHttps", false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "petEventCommand", "petEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[3] !== undefined && deviceInteractions.eventInteractions[3].command !== "" ? atob(deviceInteractions.eventInteractions[3].command) : ""}`, false, false)}
-											<div class="btn-group" role="group">
-												${makeButtonElement("btnPetSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'pet')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
-			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[3] !== undefined && deviceInteractions.eventInteractions[3].target !== "" && deviceInteractions.eventInteractions[3].command !== ""))
-			{
-				deviceModal += `
-												${makeButtonElement("btnPetTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'pet')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnPetDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'pet')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
-			}
-			else
-			{
-				deviceModal += `
-												${makeButtonElement("btnPetTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnPetDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'person')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
-			}
-			deviceModal += `
-											</div>
-										</div>`;
+										${generateInteractionExpander("pet", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.cryingDetected !== undefined)
 		{
 			deviceModal += `
 										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined ? `<hr />` : ``}
-										<h5 onclick="toggleInteractionDiv('divInteractionCrying', 'imgToggleInteractionCrying')"><i id="imgToggleInteractionCrying" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionCrying")}</h5>
-										<div id="divInteractionCrying" class="collapse">
-											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "cryingEventTarget", "cryingEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[5] !== undefined && deviceInteractions.eventInteractions[5].target !== "" ? deviceInteractions.eventInteractions[5].target : ""}`, false, false)}
-											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "cryingEventUseHttps", false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "cryingEventCommand", "cryingEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[5] !== undefined && deviceInteractions.eventInteractions[5].command !== "" ? atob(deviceInteractions.eventInteractions[5].command) : ""}`, false, false)}
-											<div class="btn-group" role="group">
-												${makeButtonElement("btnCryingSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'crying')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
-			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[5] !== undefined && deviceInteractions.eventInteractions[5].target !== "" && deviceInteractions.eventInteractions[5].command !== ""))
-			{
-				deviceModal += `
-												${makeButtonElement("btnCryingTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'crying')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnCryingDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'crying')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
-			}
-			else
-			{
-				deviceModal += `
-												${makeButtonElement("btnCryingTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'crying')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnCryingDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'crying')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
-			}
-			deviceModal += `
-											</div>
-										</div>`;
+										${generateInteractionExpander("crying", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.ringing !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined ? `<hr />` : ``}
-										<h5 onclick="toggleInteractionDiv('divInteractionRinging', 'imgToggleInteractionRinging')"><i id="imgToggleInteractionRinging" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i>&nbsp;&nbsp;${translateContent("lblInteractionRinging")}</h5>
-										<div id="divInteractionRinging" class="collapse">
-											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventTarget", "ringEventTargetHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].target !== "" ? deviceInteractions.eventInteractions[12].target : ""}`, false, false)}
-											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, "ringEventUseHttps", false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, "ringEventCommand", "ringEventCommandHint", "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].command !== "" ? atob(deviceInteractions.eventInteractions[12].command) : ""}`, false, false)}
-											<div class="btn-group" role="group">
-												${makeButtonElement("btnRingSaveEventInteraction", "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
-			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[12] !== undefined && deviceInteractions.eventInteractions[12].target !== "" && deviceInteractions.eventInteractions[12].command !== ""))
-			{
-				deviceModal += `
-												${makeButtonElement("btnRingTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnRingDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
-			}
-			else
-			{
-				deviceModal += `
-												${makeButtonElement("btnRingTestEventInteraction", "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
-												${makeButtonElement("btnRingDeleteEventInteraction", "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', 'ring')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
-			}
-			deviceModal += `
-											</div>
-										</div>`;
+										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.soundDetected !== undefined ? `<hr />` : ``}
+										${generateInteractionExpander("ring", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		deviceModal += `
 									</div>
@@ -1796,37 +1670,41 @@ function toggleInteractionDiv(divElementId, imgElementId)
 	}
 }
 
-function saveEventInteraction(deviceId, deviceName, serialNumber, event)
+function getEventId(event)
 {
-	var eventInteraction;
-
 	switch(event)
 	{
 		case "motion":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 0, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
-			break;
-		case "radar":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 1, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
-			break;
+			return 0;
+		case "radarMotion":
+			return 1;
 		case "person":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 2, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
-			break;
+			return 2;
 		case "pet":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 3, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
-			break;
+			return 3;
 		case "crying":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 5, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
-			break;
+			return 5;
 		case "ring":
-			eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": 12, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
-			break;
+			return 12;
 		default:
-			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-			document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveInteractionUnknownInteractionMessage", event);
-			toast.show();
-			return;
+			return -1;
 	}
+}
+
+function saveEventInteraction(deviceId, deviceName, serialNumber, event)
+{
+	var eventInteraction;
+	var eventType = getEventId(event);
+	if(eventType == -1)
+	{
+		const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+		document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+		document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveInteractionUnknownInteractionMessage", event);
+		toast.show();
+		return;
+	}
+
+	eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": ${eventType}, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 
 	var xmlHttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/setInteraction`;
@@ -1887,35 +1765,16 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 function testEventInteraction(deviceId, deviceName, serialNumber, event)
 {
 	var eventType;
-
-	switch(event)
+	var eventType = getEventId(event);
+	if(eventType == -1)
 	{
-		case "motion":
-			eventType = 0;
-			break;
-		case "radar":
-			eventType = 1;
-			break;
-		case "person":
-			eventType = 2;
-			break;
-		case "pet":
-			eventType = 3;
-			break;
-		case "crying":
-			eventType = 5;
-			break;
-		case "ring":
-			eventType = 12;
-			break;
-		default:
-			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-			document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionUnknownInteractionMessage", event);
-			toast.show();
-			return;
+		const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+		document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+		document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionUnknownInteractionMessage", event);
+		toast.show();
+		return;
 	}
-	
+
 	var xmlhttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/testInteraction/${serialNumber}/${eventType}`;
 	xmlhttp = new XMLHttpRequest();
@@ -1968,35 +1827,16 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 {
 	var eventType;
-
-	switch(event)
+	var eventType = getEventId(event);
+	if(eventType == -1)
 	{
-		case "motion":
-			eventType = 0;
-			break;
-		case "radar":
-			eventType = 1;
-			break;
-		case "person":
-			eventType = 2;
-			break;
-		case "pet":
-			eventType = 3;
-			break;
-		case "crying":
-			eventType = 5;
-			break;
-		case "ring":
-			eventType = 12;
-			break;
-		default:
-			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-			document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageDeleteInteractionUnknownInteractionMessage", event);
-			toast.show();
-			return;
+		const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+		document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+		document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageDeleteInteractionUnknownInteractionMessage", event);
+		toast.show();
+		return;
 	}
-	
+
 	var xmlhttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/deleteInteraction/${serialNumber}/${eventType}`;
 	xmlhttp = new XMLHttpRequest();
@@ -2176,6 +2016,34 @@ function generateElementTimePicker(type, serialNumber, name, propertyName, value
 function generateElementTimePickerStartEnd(type, serialNumber, caption, startName, startPropertyName, startValue, startSetEventHandler, endName, endPropertyName, endValue, endSetEventHandler)
 {
 	return `${translatePropertyName(caption)}<div class="row align-items-center"><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${translatePropertyName("captionTimeFrom")}</label><input type="time" id="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}" class="form-control mb-2" value="${startValue}" ${startSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${startName}', '${startPropertyName}', this.value)"` : ""}></div><div class="col text-center"">${translatePropertyName("timeUntil")}</div><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${translatePropertyName("captionTimeTo")}</label><input type="time" id="tp${endPropertyName.charAt(0).toUpperCase() + endPropertyName.slice(1)}" class="form-control mb-2" value="${endValue}" ${endSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${endName}', '${endPropertyName}', this.value)"` : ""}></div></div>`;
+}
+
+function generateInteractionExpander(event, deviceProperties, deviceInteractions, deviceId, setEventHandler)
+{
+	var interactionExpander = `
+										<h5 onclick="toggleInteractionDiv('divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}', 'imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}')"><div class="row"><div class="col col-auto me-0 pe-0"><i id="imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i></div><div class="col">${translateContent(`lblInteraction${event.charAt(0).toUpperCase() + event.slice(1)}`)}</div></div></h5>
+										<div id="divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="collapse">
+											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventTarget`, `${event}EventTargetHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" ? deviceInteractions.eventInteractions[`${getEventId(event)}`].target : ""}`, false, false)}
+											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, false, false)}
+											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, `${event}EventCommand`, `${event}EventCommandHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "" ? atob(deviceInteractions.eventInteractions[`${getEventId(event)}`].command) : ""}`, false, false)}
+											<div class="btn-group" role="group">
+												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}SaveEventInteraction`, "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
+	if(deviceInteractions !== null && (deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== ""))
+	{
+		interactionExpander += `
+												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
+												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
+	}
+	else
+	{
+		interactionExpander += `
+												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
+												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
+	}
+	interactionExpander += `
+											</div>
+										</div>`;
+	return interactionExpander;
 }
 
 function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
