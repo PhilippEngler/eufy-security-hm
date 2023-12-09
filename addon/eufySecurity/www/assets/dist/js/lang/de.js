@@ -853,7 +853,7 @@ function translateContent(content, ...options)
 		case "lblInteractionVehicle":
 			return "Reaktion bei erkanntem Fahrzeug";
 		case "lblInteractionDog":
-			return "Reaktion bei erkannter Hund";
+			return "Reaktion bei erkanntem Hund";
 		case "lblInteractionDogLick":
 			return "Reaktion bei erkanntem Hundelecken";
 		case "lblInteractionDogPoop":
