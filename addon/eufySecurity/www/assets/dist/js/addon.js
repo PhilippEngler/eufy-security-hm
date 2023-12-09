@@ -1597,8 +1597,9 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.ringing !== undefined)
+	if(deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.soundDetected !== undefined || deviceProperties.strangerPersonDetected !== undefined || deviceProperties.vehicleDetected !== undefined || deviceProperties.dogDetected !== undefined || deviceProperties.dogLickDetected !== undefined || deviceProperties.dogPoopDetected !== undefined || deviceProperties.ringing !== undefined)
 	{
+		var isFirstElement = true;
 		deviceModal += `
 								<div class="card mt-3" id="cardDeviceInteraction">
 									<h5 class="card-header">${translateContent("lblHeaderInteractionCCU")}</h5>
@@ -1607,37 +1608,86 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.motionDetected !== undefined)
 		{
 			deviceModal += `
+										${isFirstElement === false ? `<hr />` : ``}
 										${generateInteractionExpander("motion", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
 		}
 		if(deviceProperties.radarMotionDetected !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined ? `<hr />` : ``}
+										${isFirstElement === false ? `<hr />` : ``}
 										${generateInteractionExpander("radarMotion", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
 		}
 		if(deviceProperties.personDetected !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined ? `<hr />` : ``}
+										${isFirstElement === false ? `<hr />` : ``}
 										${generateInteractionExpander("person", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
 		}
 		if(deviceProperties.petDetected !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined ? `<hr />` : ``}
+										${isFirstElement === false ? `<hr />` : ``}
 										${generateInteractionExpander("pet", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
 		}
 		if(deviceProperties.cryingDetected !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined ? `<hr />` : ``}
+										${isFirstElement === false ? `<hr />` : ``}
 										${generateInteractionExpander("crying", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
+		}
+		if(deviceProperties.soundDetected !== undefined)
+		{
+			deviceModal += `
+										${isFirstElement === false ? `<hr />` : ``}
+										${generateInteractionExpander("sound", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
+		}
+		if(deviceProperties.strangerPersonDetected !== undefined)
+		{
+			deviceModal += `
+										${isFirstElement === false ? `<hr />` : ``}
+										${generateInteractionExpander("strangerPerson", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
+		}
+		if(deviceProperties.vehicleDetected !== undefined)
+		{
+			deviceModal += `
+										${isFirstElement === false ? `<hr />` : ``}
+										${generateInteractionExpander("vehicle", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
+		}
+		if(deviceProperties.dogDetected !== undefined)
+		{
+			deviceModal += `
+										${isFirstElement === false ? `<hr />` : ``}
+										${generateInteractionExpander("dog", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
+		}
+		if(deviceProperties.dogLickDetected !== undefined)
+		{
+			deviceModal += `
+										${isFirstElement === false ? `<hr />` : ``}
+										${generateInteractionExpander("dogLick", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
+		}
+		if(deviceProperties.dogPoopDetected !== undefined)
+		{
+			deviceModal += `
+										${isFirstElement === false ? `<hr />` : ``}
+										${generateInteractionExpander("dogPoop", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
 		}
 		if(deviceProperties.ringing !== undefined)
 		{
 			deviceModal += `
-										${deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.soundDetected !== undefined ? `<hr />` : ``}
+										${isFirstElement === false ? `<hr />` : ``}
 										${generateInteractionExpander("ring", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+			isFirstElement = false;
 		}
 		deviceModal += `
 									</div>
@@ -1682,6 +1732,8 @@ function getEventId(event)
 			return 2;
 		case "pet":
 			return 3;
+		case "sound":
+			return 4;
 		case "crying":
 			return 5;
 		case "ring":
@@ -2021,7 +2073,7 @@ function generateElementTimePickerStartEnd(type, serialNumber, caption, startNam
 function generateInteractionExpander(event, deviceProperties, deviceInteractions, deviceId, setEventHandler)
 {
 	var interactionExpander = `
-										<h5 onclick="toggleInteractionDiv('divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}', 'imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}')"><div class="row"><div class="col col-auto me-0 pe-0"><i id="imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i></div><div class="col">${translateContent(`lblInteraction${event.charAt(0).toUpperCase() + event.slice(1)}`)}</div></div></h5>
+										<h5 onclick="toggleInteractionDiv('divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}', 'imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}')"><div class="row"><div class="col-auto me-0 pe-0"><i id="imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i></div><div class="col">${translateContent(`lblInteraction${event.charAt(0).toUpperCase() + event.slice(1)}`)}</div></div></h5>
 										<div id="divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventTarget`, `${event}EventTargetHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" ? deviceInteractions.eventInteractions[`${getEventId(event)}`].target : ""}`, false, false)}
 											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, false, false)}

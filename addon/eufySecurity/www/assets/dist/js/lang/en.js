@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v6
-20231202
+Schema v7
+20231209
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20231202 (v6)";
+var languageVersion = "20231209 (v7)";
 
 function translateNavbarElement(element)
 {
@@ -846,7 +846,19 @@ function translateContent(content, ...options)
 			return "Response on Detected Pet";
 		case "lblInteractionCrying":
 			return "Response on Crying";
-		case "lblInteractionRinging":
+		case "lblInteractionSound":
+			return "Response on Sound";
+		case "lblInteractionStrangerPerson":
+			return "Response on Detected Stranger Person";
+		case "lblInteractionVehicle":
+			return "Response on Detected Vehicle";
+		case "lblInteractionDog":
+			return "Response on Detected Dog";
+		case "lblInteractionDogLick":
+			return "Response on Detected DogLick";
+		case "lblInteractionDogPoop":
+			return "Response on Detected DogPoop";
+		case "lblInteractionRing":
 			return "Response on Ringing";
 		case "lblNotSupportedStationHeading":
 			return "This device is not fully supported.";
@@ -1333,35 +1345,65 @@ function translatePropertyName(propertyName)
 		case "radarEventTarget":
 		case "personEventTarget":
 		case "petEventTarget":
+		case "soundEventTarget":
 		case "cryingEventTarget":
+		case "strangerPersonEventTarget":
+		case "vehicleEventTarget":
+		case "dogEventTarget":
+		case "dogLickEventTarget":
+		case "dogPoopEventTarget":
 		case "ringEventTarget":
 			return "CCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
 		case "radarEventTargetHint":
 		case "personEventTargetHint":
 		case "petEventTargetHint":
+		case "soundEventTargetHint":
 		case "cryingEventTargetHint":
+		case "strangerPersonEventTargetHint":
+		case "vehicleEventTargetHint":
+		case "dogEventTargetHint":
+		case "dogLickEventTargetHint":
+		case "dogPoopEventTargetHint":
 		case "ringEventTargetHint":
 			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
 		case "radarEventUseHttps":
 		case "personEventUseHttps":
-		case "cryingEventUseHttps":
 		case "petEventUseHttps":
+		case "soundEventUseHttps":
+		case "cryingEventUseHttps":
+		case "strangerPersonEventUseHttps":
+		case "vehicleEventUseHttps":
+		case "dogEventUseHttps":
+		case "dogLickEventUseHttps":
+		case "dogPoopEventUseHttps":
 		case "ringEventUseHttps":
 			return "Establish connection via HTTPS";
 		case "motionEventCommand":
 		case "radarEventCommand":
 		case "personEventCommand":
 		case "petEventCommand":
+		case "soundEventCommand":
 		case "cryingEventCommand":
+		case "strangerPersonEventCommand":
+		case "vehicleEventCommand":
+		case "dogEventCommand":
+		case "dogLickEventCommand":
+		case "dogPoopEventCommand":
 		case "ringEventCommand":
 			return "Command to be executed";
 		case "motionEventCommandHint":
 		case "radarEventCommandHint":
 		case "personEventCommandHint":
 		case "petEventCommandHint":
+		case "soundEventCommandHint":
 		case "cryingEventCommandHint":
+		case "strangerPersonEventCommandHint":
+		case "vehicleEventCommandHint":
+		case "dogEventCommandHint":
+		case "dogLickEventCommandHint":
+		case "dogPoopEventCommandHint":
 		case "ringEventCommandHint":
 			return "The command to be entered here should be tested in advance using the script test function of the CCU.";
 		default:
