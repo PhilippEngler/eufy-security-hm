@@ -1573,6 +1573,16 @@ function translateDeviceStateValue(state, propertyName, value)
 			return "innerhalb 2,4m";
 		case "within 10ft":
 			return "innerhalb 3,0m";
+		case "3ft":
+			return "0,9m";
+		case "6ft":
+			return "1,8m";
+		case "10ft":
+			return "3,0m";
+		case "15ft":
+			return "4,6m";
+		case "20ft":
+			return "6,1m";
 		case "Excuse me, can I help you":
 			return "Entschuldigung, kann ich Ihnen helfen";
 		case "Please leave it at the door":
