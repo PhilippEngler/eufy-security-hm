@@ -1989,11 +1989,11 @@ function generateElementTextBox(type, serialNumber, name, propertyName, hint, pl
 	</div>`;
 }
 
-function generateElementTextArea(type, serialNumber, name, rows, propertyName, hint, placeholder, value, disabled, readonly)
+function generateElementTextArea(type, serialNumber, name, maxLength, rows, propertyName, hint, placeholder, value, disabled, readonly)
 {
 	return `<div class="mb-2">
 		<label for="txtArea${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label">${translatePropertyName(propertyName)}</label>
-		<textarea class="form-control" id="txtArea${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" rows="${rows}"${disabled == true ? " disabled" : ""}${readonly == true ? " readonly" : ""} style="font-family:monospace;">${value}</textarea>
+		<textarea class="form-control" id="txtArea${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" maxlength="${maxLength}" rows="${rows}"${disabled == true ? " disabled" : ""}${readonly == true ? " readonly" : ""} style="font-family:monospace;">${value}</textarea>
 		${hint !== undefined || hint !== "" ? `<div id="passwordHelpBlock" class="form-text">${translatePropertyName(hint)}</div>` : ""} 
 	</div>`;
 }
@@ -2087,7 +2087,7 @@ function generateInteractionExpander(event, deviceProperties, deviceInteractions
 										<div id="divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventTarget`, `${event}EventTargetHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" ? deviceInteractions.eventInteractions[`${getEventId(event)}`].target : ""}`, false, false)}
 											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 2, `${event}EventCommand`, `${event}EventCommandHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "" ? atob(deviceInteractions.eventInteractions[`${getEventId(event)}`].command) : ""}`, false, false)}
+											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 100, 2, `${event}EventCommand`, `${event}EventCommandHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "" ? atob(deviceInteractions.eventInteractions[`${getEventId(event)}`].command) : ""}`, false, false)}
 											<div class="btn-group" role="group">
 												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}SaveEventInteraction`, "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-check2" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
 	if(deviceInteractions !== null && (deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== ""))
