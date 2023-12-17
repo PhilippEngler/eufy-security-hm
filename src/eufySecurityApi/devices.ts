@@ -864,6 +864,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onSoundDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.SOUND);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
         if(state === false)
         {
             this.loadDeviceImage(device.getSerial());
@@ -879,6 +891,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPetDetected(device : Device, state : boolean) : Promise<void>
     {
         this.api.logDebug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PET);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
         if(state === false)
         {
             this.loadDeviceImage(device.getSerial());
@@ -894,6 +918,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private onVehicleDetected(device: Device, state: boolean): void
     {
         this.api.logDebug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.VEHICLE);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
         if(state === false)
         {
             this.loadDeviceImage(device.getSerial());
@@ -1070,6 +1106,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private onDeviceRadarMotionDetected(device : Device, state : boolean) : void
     {
         this.emit("device radar motion detected", device, state);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RADAR_MOTION);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
     }
 
     /**
@@ -1141,6 +1189,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceStrangerPersonDetected(device: Device, state: boolean): void {
         this.emit("device stranger person detected", device, state);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.STRANGER_PERSON);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
     }
 
     /**
@@ -1150,6 +1210,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceDogDetected(device: Device, state: boolean): void {
         this.emit("device dog detected", device, state);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
     }
 
     /**
@@ -1159,6 +1231,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceDogLickDetected(device: Device, state: boolean): void {
         this.emit("device dog lick detected", device, state);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_LICK);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
     }
 
     /**
@@ -1168,6 +1252,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceDogPoopDetected(device: Device, state: boolean): void {
         this.emit("device dog poop detected", device, state);
+        if(state === true)
+        {
+            try
+            {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_POOP);
+                if(deviceEventInteraction !== null)
+                {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
     }
 
     /**
