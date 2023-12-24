@@ -2512,23 +2512,54 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 											${stationProperties.sdStatus == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.sdStatus), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.sdStatus)}`, translateMessages("messageStorageErrorSubText"))}`;
 			if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity >= 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable >= 0)
 			{
-				var sdCapacity = (stationProperties.sdCapacity/conversionFactor).toFixed(2);
-				var sdCapacityAvailable = (stationProperties.sdCapacityAvailable/conversionFactor).toFixed(2);
-				var sdCapacityUsed = (sdCapacity - sdCapacityAvailable).toFixed(2);
+				var capacityUnits = ["", "", ""];
+				var rawTempValue = stationProperties.sdCapacity/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var sdCapacity = (rawTempValue/1024).toFixed(2);
+					capacityUnits[0] = "TB";
+				}
+				else
+				{
+					var sdCapacity = (rawTempValue).toFixed(2);
+					capacityUnits[0] = "GB";
+				}
+				rawTempValue = stationProperties.sdCapacityAvailable/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var sdCapacityAvailable = (rawTempValue/1024).toFixed(2);
+					capacityUnits[1] = "TB";
+				}
+				else
+				{
+					var sdCapacityAvailable = (rawTempValue).toFixed(2);
+					capacityUnits[1] = "GB";
+				}
+				rawTempValue = (stationProperties.sdCapacity/conversionFactor) - (stationProperties.sdCapacityAvailable/conversionFactor);
+				if(rawTempValue >= 1024)
+				{
+					var sdCapacityUsed = (rawTempValue/1024).toFixed(2);
+					capacityUnits[2] = "TB";
+				}
+				else
+				{
+					var sdCapacityUsed = (rawTempValue).toFixed(2);
+					capacityUnits[2] = "GB";
+				}
 				var sdCapacityUsedPercent = (sdCapacityUsed/sdCapacity*100).toFixed(0);
 				stationModal += `
 											${generateElementProgress("sdCapacityUsedPercent", sdCapacityUsedPercent)}
 											<div class="row gap-3">
 												<div class="col">
-													<h5>${stationProperties.sdCapacity !== undefined ? `${sdCapacity} GB` : ""}</h5>
+													<h5>${stationProperties.sdCapacity !== undefined ? `${sdCapacity} ${capacityUnits[0]}` : ""}</h5>
 													${translatePropertyName(stationPropertiesMetadata.sdCapacity.name)}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.sdCapacity !== undefined && stationProperties.sdCapacityAvailable !== undefined ? `${sdCapacityUsed} GB` : ""}</h5>
+													<h5>${stationProperties.sdCapacity !== undefined && stationProperties.sdCapacityAvailable !== undefined ? `${sdCapacityUsed} ${capacityUnits[1]}` : ""}</h5>
 													${translatePropertyName("sdCapacityUsed")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.sdCapacityAvailable !== undefined ? `${sdCapacityAvailable} GB` : ""}</h5>
+													<h5>${stationProperties.sdCapacityAvailable !== undefined ? `${sdCapacityAvailable} ${capacityUnits[2]}` : ""}</h5>
 													${translatePropertyName(stationPropertiesMetadata.sdCapacityAvailable.name)}
 												</div>
 											</div>`;
@@ -2557,31 +2588,72 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 											${stationProperties.storageInfoEmmc.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoEmmc.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoEmmc.health)}`, translateMessages("messageStorageErrorSubText"))}`;
 			if(stationProperties.storageInfoEmmc.disk_size !== undefined && stationProperties.storageInfoEmmc.disk_size > 0 && stationProperties.storageInfoEmmc.system_size !== undefined && stationProperties.storageInfoEmmc.system_size >= 0 && stationProperties.storageInfoEmmc.disk_used !== undefined && stationProperties.storageInfoEmmc.disk_used >= 0 && stationProperties.storageInfoEmmc.data_used_percent !== undefined && stationProperties.storageInfoEmmc.data_used_percent >= 0 && stationProperties.storageInfoEmmc.video_size !== undefined && stationProperties.storageInfoEmmc.video_size >= 0 && stationProperties.storageInfoEmmc.video_used !== undefined && stationProperties.storageInfoEmmc.video_used >= 0 && stationProperties.storageInfoEmmc.data_partition_size !== undefined && stationProperties.storageInfoEmmc.data_partition_size >= 0 && stationProperties.storageInfoEmmc.eol_percent !== undefined && stationProperties.storageInfoEmmc.eol_percent >= 0)
 			{
-				var emmcCapacity = (stationProperties.storageInfoEmmc.disk_size/conversionFactor).toFixed(2);
-				var emmcCapacityUsed = (stationProperties.storageInfoEmmc.disk_used/conversionFactor).toFixed(2);
-				var emmcCapacityAvailable = ((stationProperties.storageInfoEmmc.disk_size-stationProperties.storageInfoEmmc.disk_used)/conversionFactor).toFixed(2);
+				var capacityUnits = ["", "", "", ""];
+				var rawTempValue = stationProperties.storageInfoEmmc.disk_size/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var emmcCapacity = (rawTempValue/1024).toFixed(2);
+					capacityUnits[0] = "TB";
+				}
+				else
+				{
+					var emmcCapacity = (rawTempValue).toFixed(2);
+					capacityUnits[0] = "GB";
+				}
+				rawTempValue = stationProperties.storageInfoEmmc.disk_used/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var emmcCapacityUsed = (rawTempValue/1024).toFixed(2);
+					capacityUnits[1] = "TB";
+				}
+				else
+				{
+					var emmcCapacityUsed = (rawTempValue).toFixed(2);
+					capacityUnits[1] = "GB";
+				}
+				rawTempValue = (stationProperties.storageInfoEmmc.disk_size-stationProperties.storageInfoEmmc.disk_used)/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var emmcCapacityAvailable = (rawTempValue/1024).toFixed(2);
+					capacityUnits[2] = "TB";
+				}
+				else
+				{
+					var emmcCapacityAvailable = (rawTempValue).toFixed(2);
+					capacityUnits[2] = "GB";
+				}
 				var emmcCapacityUsedPercent = (stationProperties.storageInfoEmmc.disk_used/stationProperties.storageInfoEmmc.disk_size*100).toFixed(0);
-				var emmcVideoUsed = (stationProperties.storageInfoEmmc.video_used/conversionFactor).toFixed(2);
+				rawTempValue = (stationProperties.storageInfoEmmc.video_used/conversionFactor)/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var emmcVideoUsed = (rawTempValue/1024).toFixed(2);
+					capacityUnits[3] = "TB";
+				}
+				else
+				{
+					var emmcVideoUsed = (rawTempValue).toFixed(2);
+					capacityUnits[3] = "GB";
+				}
 				var emmcHealthState = 100 - stationProperties.storageInfoEmmc.eol_percent;
 				stationModal += `
 											${generateElementProgress("emmcCapacityUsedPercent", emmcCapacityUsedPercent)}
 											<div class="row gap-3">
 												<div class="col">
-													<h5>${stationProperties.storageInfoEmmc.data_partition_size !== undefined ? `${emmcCapacity} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoEmmc.data_partition_size !== undefined ? `${emmcCapacity} ${capacityUnits[0]}` : ""}</h5>
 													${translateContent("emmcCapacity")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.storageInfoEmmc.disk_used !== undefined ? `${emmcCapacityUsed} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoEmmc.disk_used !== undefined ? `${emmcCapacityUsed} ${capacityUnits[1]}` : ""}</h5>
 													${translateContent("emmcCapacityUsed")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.storageInfoEmmc.disk_size !== undefined && stationProperties.storageInfoEmmc.disk_used !== undefined !== undefined ? `${emmcCapacityAvailable} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoEmmc.disk_size !== undefined && stationProperties.storageInfoEmmc.disk_used !== undefined !== undefined ? `${emmcCapacityAvailable} ${capacityUnits[2]}` : ""}</h5>
 													${translateContent("emmcCapacityAvailable")}
 												</div>
 											</div>
 											<div class="mt-3 row gap-3">
 												<div class="col">
-													<h5>${stationProperties.storageInfoEmmc.video_used !== undefined ? `${emmcVideoUsed} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoEmmc.video_used !== undefined ? `${emmcVideoUsed} ${capacityUnits[3]}` : ""}</h5>
 													${translateContent("emmcVideoUsed")}
 												</div>
 												<div class="col">
@@ -2607,32 +2679,73 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 											${stationProperties.storageInfoHdd.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoHdd.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoHdd.health)}`, translateMessages("messageStorageErrorSubText"))}`;
 			if(stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.disk_size > 0 && stationProperties.storageInfoHdd.system_size !== undefined && stationProperties.storageInfoHdd.system_size >= 0 && stationProperties.storageInfoHdd.disk_used !== undefined &&  stationProperties.storageInfoHdd.disk_used >= 0 && stationProperties.storageInfoHdd.video_size !== undefined && stationProperties.storageInfoHdd.video_size >= 0 && stationProperties.storageInfoHdd.video_used !== undefined && stationProperties.storageInfoHdd.video_used >= 0)
 			{
-				var hddCapacity = (stationProperties.storageInfoHdd.disk_size/conversionFactor).toFixed(2);
-				var hddCapacityUsed = (stationProperties.storageInfoHdd.disk_used/conversionFactor).toFixed(2);
-				var hddCapacityAvailable = ((stationProperties.storageInfoHdd.disk_size-stationProperties.storageInfoHdd.disk_used)/conversionFactor).toFixed(2);
+				var capacityUnits = ["", "", "", ""];
+				var rawTempValue = stationProperties.storageInfoHdd.disk_size/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var hddCapacity = (rawTempValue/1024).toFixed(2);
+					capacityUnits[0] = "TB";
+				}
+				else
+				{
+					var hddCapacity = (rawTempValue).toFixed(2);
+					capacityUnits[0] = "GB";
+				}
+				rawTempValue = stationProperties.storageInfoHdd.disk_used/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var hddCapacityUsed = (rawTempValue/1024).toFixed(2);
+					capacityUnits[1] = "TB";
+				}
+				else
+				{
+					var hddCapacityUsed = (rawTempValue).toFixed(2);
+					capacityUnits[1] = "GB";
+				}
+				rawTempValue = (stationProperties.storageInfoHdd.disk_size-stationProperties.storageInfoHdd.disk_used)/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var hddCapacityAvailable = (rawTempValue/1024).toFixed(2);
+					capacityUnits[2] = "TB";
+				}
+				else
+				{
+					var hddCapacityAvailable = (rawTempValue).toFixed(2);
+					capacityUnits[2] = "GB";
+				}
 				var hddCapacityUsedPercent = (stationProperties.storageInfoHdd.disk_used/stationProperties.storageInfoHdd.disk_size*100).toFixed(0);
-				var hddVideoUsed = (stationProperties.storageInfoHdd.video_used/conversionFactor).toFixed(2);
+				rawTempValue = stationProperties.storageInfoHdd.video_used/conversionFactor;
+				if(rawTempValue >= 1024)
+				{
+					var hddVideoUsed = (rawTempValue/1024).toFixed(2);
+					capacityUnits[3] = "TB";
+				}
+				else
+				{
+					var hddVideoUsed = (rawTempValue).toFixed(2);
+					capacityUnits[3] = "GB";
+				}
 				var hddHddType = stationProperties.storageInfoHdd.hdd_type;
 				var hddCurrentTemperature = stationProperties.storageInfoHdd.cur_temperate;
 				stationModal += `
 											${generateElementProgress("hddCapacityUsedPercent", hddCapacityUsedPercent)}
 											<div class="row gap-3">
 												<div class="col">
-													<h5>${stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.system_size !== undefined ? `${hddCapacity} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.system_size !== undefined ? `${hddCapacity} ${capacityUnits[0]}` : ""}</h5>
 													${translateContent("hddCapacity")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.storageInfoHdd.disk_used !== undefined ? `${hddCapacityUsed} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoHdd.disk_used !== undefined ? `${hddCapacityUsed} ${capacityUnits[1]}` : ""}</h5>
 													${translateContent("hddCapacityUsed")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.disk_used !== undefined !== undefined ? `${hddCapacityAvailable} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.disk_used !== undefined !== undefined ? `${hddCapacityAvailable} ${capacityUnits[2]}` : ""}</h5>
 													${translateContent("hddCapacityAvailable")}
 												</div>
 											</div>
 											<div class="mt-3 row gap-3">
 												<div class="col">
-													<h5>${stationProperties.storageInfoHdd.video_used !== undefined ? `${hddVideoUsed} GB` : ""}</h5>
+													<h5>${stationProperties.storageInfoHdd.video_used !== undefined ? `${hddVideoUsed} ${capacityUnits[3]}` : ""}</h5>
 													${translateContent("hddVideoUsed")}
 												</div>
 												<div class="col">
