@@ -1118,6 +1118,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             }
             catch {}
         }
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
 
     /**
@@ -1201,6 +1205,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             }
             catch {}
         }
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
 
     /**
@@ -1221,6 +1229,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
             }
             catch {}
+        }
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1243,6 +1255,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             }
             catch {}
         }
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
 
     /**
@@ -1263,6 +1279,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
             }
             catch {}
+        }
+        if(state === false)
+        {
+            this.loadDeviceImage(device.getSerial());
         }
     }
 
