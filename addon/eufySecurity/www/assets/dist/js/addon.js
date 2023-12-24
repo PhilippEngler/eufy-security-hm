@@ -1612,84 +1612,84 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("motion", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("motion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.radarMotionDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("radarMotion", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("radarMotion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.personDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("person", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("person", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.petDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("pet", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("pet", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.cryingDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("crying", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("crying", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.soundDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("sound", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("sound", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.strangerPersonDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("strangerPerson", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("strangerPerson", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.vehicleDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("vehicle", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("vehicle", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.dogDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("dog", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("dog", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.dogLickDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("dogLick", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("dogLick", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.dogPoopDetected !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("dogPoop", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("dogPoop", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		if(deviceProperties.ringing !== undefined)
 		{
 			deviceModal += `
 										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("ring", deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+										${generateInteractionExpander("ring", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 			isFirstElement = false;
 		}
 		deviceModal += `
@@ -2083,10 +2083,10 @@ function generateElementTimePickerStartEnd(type, serialNumber, caption, startNam
 	return `${translatePropertyName(caption)}<div class="row align-items-center"><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${translatePropertyName("captionTimeFrom")}</label><input type="time" id="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}" class="form-control mb-2" value="${startValue}" ${startSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${startName}', '${startPropertyName}', this.value)"` : ""}></div><div class="col text-center"">${translatePropertyName("timeUntil")}</div><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${translatePropertyName("captionTimeTo")}</label><input type="time" id="tp${endPropertyName.charAt(0).toUpperCase() + endPropertyName.slice(1)}" class="form-control mb-2" value="${endValue}" ${endSetEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${endName}', '${endPropertyName}', this.value)"` : ""}></div></div>`;
 }
 
-function generateInteractionExpander(event, deviceProperties, deviceInteractions, deviceId, setEventHandler)
+function generateInteractionExpander(event, enabled, deviceProperties, deviceInteractions, deviceId, setEventHandler)
 {
 	var interactionExpander = `
-										<h5 onclick="toggleInteractionDiv('divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}', 'imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}')"><div class="row"><div class="col-auto me-0 pe-0"><i id="imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="bi-chevron-down" title="${translateString("strEditInteractionStart")}"></i></div><div class="col">${translateContent(`lblInteraction${event.charAt(0).toUpperCase() + event.slice(1)}`)}</div></div></h5>
+										<h5 ${enabled === true ? `onclick="toggleInteractionDiv('divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}', 'imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}')"` : `class="text-muted"`}><div class="row"><div class="col-auto me-0 pe-0"><i id="imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="${enabled === true ? `bi-chevron-down` : `bi-chevron-right`}" title="${translateString("strEditInteractionStart")}"></i></div><div class="col">${translateContent(`lblInteraction${event.charAt(0).toUpperCase() + event.slice(1)}`)}</div></div></h5>
 										<div id="divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="collapse">
 											${generateElementTextBox("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventTarget`, `${event}EventTargetHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" ? deviceInteractions.eventInteractions[`${getEventId(event)}`].target : ""}`, false, false)}
 											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, false, false)}
