@@ -549,7 +549,7 @@ export class EufySecurityApi
         }
         catch (error : any)
         {
-            this.logInfo(`Error occured: ${error.message}`);
+            this.logError(`StationImageDownload: Error occured: ${error.message}`);
         }*/
     }
 
@@ -602,7 +602,7 @@ export class EufySecurityApi
 
                     if(response.device_sn === undefined || !(this.devices.existDevice(response.device_sn)))
                     {
-                        this.logDebug(`StationDatabaseQueryLatest: Device with this serial ${response.device_sn} doesn't exists.`);
+                        this.logDebug(`StationDatabaseQueryLatest: Station ${station.getSerial()} has no device with serial ${response.device_sn}.`);
                         continue;
                     }
 
@@ -646,8 +646,9 @@ export class EufySecurityApi
                     this.devices.addLastEventForDevice(response.device_sn, file, timestamp);
                     this.devices.downloadLatestImageForDevice(response.device_sn);
                 }
-                catch (error)
+                catch (error: any)
                 {
+                    this.logError(`StationDatabaseQueryLatest: Error occured: ${error.message}`);
                     continue;
                 }
             }
