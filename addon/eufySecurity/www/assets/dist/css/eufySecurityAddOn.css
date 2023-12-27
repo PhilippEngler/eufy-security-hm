@@ -1,6 +1,6 @@
-/*!
- * Modifications for eufySecurity AddOn
- * Copyright 2021-2022 Philipp Engler
+/*
+ * Modifications of bootstrap css for eufySecurity AddOn
+ * Copyright 2021-2023 Philipp Engler
  */
 
 small,
@@ -136,5 +136,10 @@ code {
 
 /* show toast over modal */
 .toast {
-  z-index: 1056
+  z-index: 1056;
+}
+
+/* auto word wrapping in buttons */
+.btn {
+  hyphens: auto;
 }
