@@ -84,6 +84,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         this.p2pSession.on("database delete", (returnCode, failedIds) => this.onDatabaseDelete(returnCode, failedIds));
         this.p2pSession.on("sensor status", (channel, status) => this.onSensorStatus(channel, status));
         this.p2pSession.on("garage door status", (channel, doorId, status) => this.onGarageDoorStatus(channel, doorId, status));
+        this.p2pSession.on("storage info hb3", (channel, storageInfo) => this.onStorageInfoHB3(channel, storageInfo));
     }
     initializeState() {
         this.update(this.rawStation);
@@ -735,8 +736,23 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
     }
     getStorageInfoEx() {
         this.log.debug(`Station send get storage info command`, { stationSN: this.getSerial() });
-        if (this.isStation() && (0, utils_1.isGreaterEqualMinVersion)("3.3.0.0", this.getSoftwareVersion())) {
+        if (this.isStation() && this.rawStation.device_type !== types_1.DeviceType.HB3 && (0, utils_1.isGreaterEqualMinVersion)("3.3.0.0", this.getSoftwareVersion())) {
             this.p2pSession.sendCommandWithoutData(types_2.CommandType.CMD_SDINFO_EX, Station.CHANNEL);
+        }
+        else if (this.rawStation.device_type === types_1.DeviceType.HB3) {
+            this.p2pSession.sendCommandWithStringPayload({
+                commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+                value: JSON.stringify({
+                    "account_id": this.rawStation.member.admin_user_id,
+                    "cmd": types_2.CommandType.CMD_STORAGE_INFO_HB3,
+                    "mChannel": 0,
+                    "mValue3": 0,
+                    "payload": {
+                        "version": 0.0,
+                        "cmd": 11001.0,
+                    }
+                }),
+            });
         }
         else {
             this.p2pSession.sendCommandWithIntString({
@@ -8177,6 +8193,9 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         else {
             throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name } });
         }
+    }
+    onStorageInfoHB3(channel, storageInfo) {
+        this.emit("storage info hb3", this, channel, storageInfo);
     }
 }
 exports.Station = Station;

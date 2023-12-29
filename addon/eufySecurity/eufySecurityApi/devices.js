@@ -732,6 +732,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onSoundDetected(device, state) {
         this.api.logDebug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.SOUND);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
         if (state === false) {
             this.loadDeviceImage(device.getSerial());
         }
@@ -744,6 +753,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onPetDetected(device, state) {
         this.api.logDebug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PET);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
         if (state === false) {
             this.loadDeviceImage(device.getSerial());
         }
@@ -756,6 +774,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onVehicleDetected(device, state) {
         this.api.logDebug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.VEHICLE);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
         if (state === false) {
             this.loadDeviceImage(device.getSerial());
         }
@@ -896,6 +923,18 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onDeviceRadarMotionDetected(device, state) {
         this.emit("device radar motion detected", device, state);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RADAR_MOTION);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
     /**
      * The action to be one when event Device911Alarm is fired.
@@ -954,6 +993,18 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onDeviceStrangerPersonDetected(device, state) {
         this.emit("device stranger person detected", device, state);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.STRANGER_PERSON);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
     /**
      * The action to be one when event DeviceDogDetected is fired.
@@ -962,6 +1013,18 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onDeviceDogDetected(device, state) {
         this.emit("device dog detected", device, state);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
     /**
      * The action to be one when event DeviceDogLickDetected is fired.
@@ -970,6 +1033,18 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onDeviceDogLickDetected(device, state) {
         this.emit("device dog lick detected", device, state);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_LICK);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
     /**
      * The action to be one when event DeviceDogPoopDetected is fired.
@@ -978,6 +1053,18 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     onDeviceDogPoopDetected(device, state) {
         this.emit("device dog poop detected", device, state);
+        if (state === true) {
+            try {
+                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_POOP);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
+        if (state === false) {
+            this.loadDeviceImage(device.getSerial());
+        }
     }
     /**
      * Update the raw values for a given device.

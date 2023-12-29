@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v7
-20231209
+Schema v8
+20231229
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20231209 (v7)";
+var languageVersion = "20231229 (v8)";
 
 function translateNavbarElement(element)
 {

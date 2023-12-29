@@ -727,7 +727,6 @@ class ApiServer {
                         break;
                     case "setInteraction":
                         var postData = "";
-                        var result;
                         var isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
@@ -735,8 +734,7 @@ class ApiServer {
                         request.on("end", async function () {
                             try {
                                 var resJson = JSON.parse(postData);
-                                result = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
-                                responseData = result;
+                                responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
                                 response.setHeader('Access-Control-Allow-Origin', '*');
                                 response.setHeader('Content-Type', 'application/json; charset=UTF-8');
                                 response.writeHead(200);
@@ -763,7 +761,7 @@ class ApiServer {
                 response.end(responseData);
             }
         }
-        // Be polite and give a answer even we know that there is noting to answer...
+        // Be polite and give an answer even we know that there is nothing to answer...
         else {
             responseData = `{"success":false,"message":"Unknown command."}`;
             response.setHeader('Access-Control-Allow-Origin', '*');

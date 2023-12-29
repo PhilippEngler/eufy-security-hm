@@ -17,6 +17,8 @@ const getModelName = function (modelNumber) {
             return "HomeBase E";
         case "T8010":
             return "HomeBase 2";
+        case "T8023":
+            return "MiniBase Chime";
         case "T8030":
             return "HomeBase 3";
         //eufyCams
@@ -36,6 +38,8 @@ const getModelName = function (modelNumber) {
             return "eufyCam 3";
         case "T8161":
             return "eufyCam 3C";
+        case "T8600":
+            return "eufyCam E330 (Professional)";
         //IndoorCams
         case "T8400":
             return "IndoorCam C24";
@@ -47,6 +51,8 @@ const getModelName = function (modelNumber) {
             return "IndoorCam P22";
         case "T8414":
             return "IndoorCam Mini 2k";
+        case "T8416":
+            return "IndoorCam S350";
         //SoloCams
         case "T8122":
             return "SoloCam L20";
@@ -58,8 +64,20 @@ const getModelName = function (modelNumber) {
             return "SoloCam E20";
         case "T8131":
             return "SoloCam E40";
+        case "T8134":
+            return "SoloCam S220";
+        case "T8170":
+            return "SoloCam S340";
+        case "T8B00":
+            return "SoloCam C210";
+        //StarlightCams
         case "T8150":
+        case "T8151":
+        case "T8152":
+        case "T8153":
             return "4G Starlight Camera";
+        case "T86P2":
+            return "4G LTE Camera (4K)";
         //OutdoorCams
         case "T8441":
             return "OutdoorCam Pro";
@@ -81,6 +99,8 @@ const getModelName = function (modelNumber) {
             return "Video Doorbell 2C";
         case "T8213":
             return "Video Doorbell Dual 2K";
+        case "T8214":
+            return "Video Doorbell Dual E340";
         case "T8220":
             return "Video Doorbell 1080p Slim";
         case "T8221":
@@ -96,11 +116,18 @@ const getModelName = function (modelNumber) {
             return "FloodlightCam 2 Pro";
         case "T8424":
             return "FloodlightCam 2k";
+        case "T8425":
+            return "Floodlight Cam E340";
         //WallLightCam
         case "T84A0":
             return "Solar WallLightCam S120";
         case "T84A1":
             return "WallLightCam S100";
+        //GarageCams
+        case "T8452":
+            return "Garage-Control Cam";
+        case "T8453":
+            return "Garage-Control Cam Plus";
         //Lock
         case "T8500":
             return "Smart Lock Front Door";
@@ -115,7 +142,9 @@ const getModelName = function (modelNumber) {
         case "T8520":
             return "Smart Lock Touch und Wi-Fi";
         case "T8530":
-            return "Video Smart Lock";
+            return "Video Smart Lock S330";
+        case "T8531":
+            return "Video Smart Lock E330";
         //Bridges
         case "T8021":
             return "Wi-Fi Bridge und Doorbell Chime";
@@ -128,7 +157,7 @@ const getModelName = function (modelNumber) {
         case "T8910":
             return "Motion Sensor";
         default:
-            return "unbekanntes Gerät";
+            return "unknown";
     }
 };
 exports.getModelName = getModelName;

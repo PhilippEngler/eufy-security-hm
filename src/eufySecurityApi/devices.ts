@@ -477,7 +477,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public getDeviceTypeAsString(device : Device) : string
     {
-        if(device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247())
+        if(device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro() || device.isCamera3() || device.isCamera3C())
         {
             return "camera";
         }

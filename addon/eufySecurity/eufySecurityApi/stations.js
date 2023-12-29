@@ -116,6 +116,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                         this.addEventListener(station, "DatabaseDelete", false);
                         this.addEventListener(station, "SensorStatus", false);
                         this.addEventListener(station, "GarageDoorStatus", false);
+                        this.addEventListener(station, "StorageInfoHb3", false);
                         this.addStation(station);
                         station.initialize();
                     }
@@ -275,6 +276,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     this.removeEventListener(this.stations[stationSerial], "DatabaseDelete");
                     this.removeEventListener(this.stations[stationSerial], "SensorStatus");
                     this.removeEventListener(this.stations[stationSerial], "GarageDoorStatus");
+                    this.removeEventListener(this.stations[stationSerial], "StorageInfoHb3");
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
                 }
@@ -753,6 +755,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.on("garage door status", (station, channel, doorId, status) => this.onStationGarageDoorStatus(station, channel, doorId, status));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
+            case "StorageInfoHb3":
+                station.on("storage info hb3", (station, channel, storageInfo) => this.onStorageInfoHb3(station, channel, storageInfo));
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
+                break;
             default:
                 this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
@@ -936,8 +942,12 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.removeAllListeners("garage door status");
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
+            case "StorageInfoHb3":
+                station.removeAllListeners("storage info hb3");
+                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("storage info hb3")} Listener.`);
+                break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
+                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be removed.`);
         }
     }
     /**
@@ -1023,6 +1033,20 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 return station.listenerCount("image download");
             case "DatabaseQueryLocal":
                 return station.listenerCount("database query local");
+            case "DatabaseQueryLatest":
+                return station.listenerCount("database query latest");
+            case "DatabaseCountByDate":
+                return station.listenerCount("database count by date");
+            case "DatabaseDelete":
+                return station.listenerCount("database delete");
+            case "SensorStatus":
+                return station.listenerCount("sensor status");
+            case "GarageDoorStatus":
+                return station.listenerCount("garage door status");
+            case "StorageInfoHb3":
+                return station.listenerCount("storage info hb3");
+            default:
+                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be count.`);
         }
         return -1;
     }
@@ -1839,6 +1863,14 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             const error = (0, error_1.ensureError)(err);
             this.api.logError(`Station garage door status error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), channel: channel });
         });
+    }
+    onStorageInfoHb3(station, channel, storageInfo) {
+        if (station.hasProperty(http_1.PropertyName.StationStorageInfoEmmc)) {
+            station.updateProperty(http_1.PropertyName.StationStorageInfoEmmc, storageInfo.emmc_info);
+        }
+        if (station.hasProperty(http_1.PropertyName.StationStorageInfoHdd)) {
+            station.updateProperty(http_1.PropertyName.StationStorageInfoHdd, storageInfo.hdd_info);
+        }
     }
     /**
      * Set the last guard mode change time to the array.

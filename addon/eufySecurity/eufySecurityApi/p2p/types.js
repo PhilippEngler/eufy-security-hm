@@ -559,6 +559,7 @@ var CommandType;
     CommandType[CommandType["CMD_CAMERA_GARAGE_DOOR_CALIBRATE"] = 7505] = "CMD_CAMERA_GARAGE_DOOR_CALIBRATE";
     //CMD_CAMERA_GARAGE_DOOR_UNKNOWN3 = 7506,
     CommandType[CommandType["CMD_CAMERA_GARAGE_DOOR_SENSORS"] = 7503] = "CMD_CAMERA_GARAGE_DOOR_SENSORS";
+    CommandType[CommandType["CMD_STORAGE_INFO_HB3"] = 1307] = "CMD_STORAGE_INFO_HB3";
 })(CommandType || (exports.CommandType = CommandType = {}));
 var MessageType;
 (function (MessageType) {

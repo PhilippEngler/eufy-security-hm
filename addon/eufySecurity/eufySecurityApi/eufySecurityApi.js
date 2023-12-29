@@ -425,7 +425,7 @@ class EufySecurityApi {
         }
         catch (error : any)
         {
-            this.logInfo(`Error occured: ${error.message}`);
+            this.logError(`StationImageDownload: Error occured: ${error.message}`);
         }*/
     }
     /**
@@ -469,7 +469,7 @@ class EufySecurityApi {
                 try {
                     var response = data[i];
                     if (response.device_sn === undefined || !(this.devices.existDevice(response.device_sn))) {
-                        this.logDebug(`StationDatabaseQueryLatest: Device with this serial ${response.device_sn} doesn't exists.`);
+                        this.logDebug(`StationDatabaseQueryLatest: Station ${station.getSerial()} has no device with serial ${response.device_sn}.`);
                         continue;
                     }
                     if (response.crop_local_path === "") {
@@ -479,6 +479,7 @@ class EufySecurityApi {
                     var file = "";
                     var fileName = "";
                     var timeString = "";
+                    var timestamp;
                     file = response.crop_local_path;
                     fileName = path_1.default.parse(file).name + path_1.default.parse(file).ext;
                     if (fileName.includes("_c")) {
@@ -497,10 +498,13 @@ class EufySecurityApi {
                         this.logError("StationDatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
                         continue;
                     }
-                    this.devices.addLastEventForDevice(response.device_sn, file, new Date(Number.parseInt(timeString.substring(0, 4)), Number.parseInt(timeString.substring(4, 6)) - 1, Number.parseInt(timeString.substring(6, 8)), Number.parseInt(timeString.substring(8, 10)), Number.parseInt(timeString.substring(10, 12)), Number.parseInt(timeString.substring(12, 14))));
+                    timestamp = new Date(Number.parseInt(timeString.substring(0, 4)), Number.parseInt(timeString.substring(4, 6)) - 1, Number.parseInt(timeString.substring(6, 8)), Number.parseInt(timeString.substring(8, 10)), Number.parseInt(timeString.substring(10, 12)), Number.parseInt(timeString.substring(12, 14)));
+                    this.updateCameraEventTimeSystemVariable(response.device_sn, timestamp.valueOf());
+                    this.devices.addLastEventForDevice(response.device_sn, file, timestamp);
                     this.devices.downloadLatestImageForDevice(response.device_sn);
                 }
                 catch (error) {
+                    this.logError(`StationDatabaseQueryLatest: Error occured: ${error.message}`);
                     continue;
                 }
             }
@@ -744,7 +748,7 @@ class EufySecurityApi {
     makeJsonObjectForDevice(device, isStationP2PConnected) {
         var properties = device.getProperties();
         var json = {};
-        json = { "eufyDeviceId": device.getId(), "isStationP2PConnected": isStationP2PConnected, "deviceType": this.devices.getDeviceTypeAsString(device), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "name": device.getName(), "hardwareVersion": device.getHardwareVersion(), "softwareVersion": device.getSoftwareVersion(), "stationSerialNumber": device.getStationSerial() };
+        json = { "eufyDeviceId": device.getId(), "isStationP2PConnected": isStationP2PConnected, "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": this.devices.getDeviceTypeAsString(device), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "name": device.getName(), "hardwareVersion": device.getHardwareVersion(), "softwareVersion": device.getSoftwareVersion(), "stationSerialNumber": device.getStationSerial() };
         for (var property in properties) {
             switch (property) {
                 case http_1.PropertyName.Model:
@@ -867,7 +871,7 @@ class EufySecurityApi {
                 //await this.devices.loadDevices();
                 var device = (await this.getDevices())[deviceSerial];
                 if (device) {
-                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "data": device.getPropertiesMetadata() };
+                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "data": device.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -905,7 +909,7 @@ class EufySecurityApi {
                     if (temp === undefined || temp === null) {
                         temp = null;
                     }
-                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "data": device.getProperties(), "interactions": temp };
+                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "data": device.getProperties(), "interactions": temp };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1019,7 +1023,7 @@ class EufySecurityApi {
                 }
             }
         }
-        json = { "eufyDeviceId": station.getId(), "deviceType": station.getDeviceTypeString(), "wanIpAddress": station.getIPAddress(), "isP2PConnected": station.isConnected() };
+        json = { "eufyDeviceId": station.getId(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": station.getDeviceTypeString(), "wanIpAddress": station.getIPAddress(), "isP2PConnected": station.isConnected() };
         for (var property in properties) {
             switch (property) {
                 case http_1.PropertyName.Model:
@@ -1101,7 +1105,7 @@ class EufySecurityApi {
                 //await this.stations.loadStations();
                 var station = await this.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "data": station.getPropertiesMetadata() };
+                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "data": station.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1134,7 +1138,7 @@ class EufySecurityApi {
                 //await this.stations.loadStations();
                 var station = await this.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "data": station.getProperties() };
+                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "data": station.getProperties() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -2642,14 +2646,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "2.6.2";
+        return "2.6.3";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "2.9.1";
+        return "2.9.1-ext1";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;
