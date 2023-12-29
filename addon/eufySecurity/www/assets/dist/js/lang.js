@@ -6,7 +6,16 @@ function getLanguageInfo()
 }
 function getLanguage()
 {
-    var lang = navigator.language.slice(0,2);
+    var lang = "en";
+    var urlParams = new URLSearchParams(window.location.search);
+    if(getParameterFromURLSearchParams(urlParams, "lang"))
+	{
+		lang = urlParams.get(lang);
+	}
+    else
+    {
+        lang = navigator.language.slice(0,2);
+    }
     if(supportedLanguages.includes(lang))
     {
         document.documentElement.setAttribute('lang',lang);
