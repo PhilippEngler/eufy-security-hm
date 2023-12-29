@@ -382,7 +382,7 @@ function createWaitMessage(messageText)
 
 function createMessageContainer(classText, messageHeader, messageText, messageSubText)
 {
-	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="mb-0">${messageText}</p>` : ""}${messageSubText != "" ? `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>` : ""}</div>`;
+	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="mb-0">${messageText}</p>` : ""}${messageSubText === undefined || messageSubText === "" ? "" : `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>`}</div>`;
 }
 //#endregion
 
@@ -1347,7 +1347,8 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 										${deviceProperties.continuousRecording !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblContinuousRecordingType")}</h5>
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.continuousRecordingType.name, deviceProperties.continuousRecordingType, setEventHandler, devicePropertiesMetadata.continuousRecordingType.states)}`;
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.continuousRecordingType.name, deviceProperties.continuousRecordingType, setEventHandler, devicePropertiesMetadata.continuousRecordingType.states)}
+										${deviceProperties.continuousRecordingType === 0 ? "" : createMessageContainer("alert alert-warning mb-0", translateMessages("messageContinuousRecordingSheduleHint"), translateMessages("messageContinuousRecordingSheduleMessage"))}`;
 		}
 		deviceModal += `
 									</div>

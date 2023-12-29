@@ -491,6 +491,10 @@ function translateMessages(message, ...options)
 			return `No device found. ${options[0]} could not be loaded.`;
 		case "messageErrorLoadDeviceForGetInfo":
 			return `Error loading the ${options[0]}.`;
+		case "messageContinuousRecordingSheduleHint":
+			return "Schedule must be configured.";
+		case "messageContinuousRecordingSheduleMessage":
+			return "The schedule for this function must currently be configured in the app.";
 		case "messageInteractionHintHeader":
 			return "Notes on interacting with the CCU.";
 		case "messageInteractionHintMessage":

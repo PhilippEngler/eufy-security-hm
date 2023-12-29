@@ -491,6 +491,10 @@ function translateMessages(message, ...options)
 			return `Kein Gerät gefunden. ${options[0]} konnte nicht geladen werden.`;
 		case "messageErrorLoadDeviceForGetInfo":
 			return `Fehler beim Laden der ${options[0]}.`;
+		case "messageContinuousRecordingSheduleHint":
+			return "Zeitplan muss konfiguriert werden.";
+		case "messageContinuousRecordingSheduleMessage":
+			return "Der Zeitplan für diese Funktion muss derzeit in der App konfiguriert werden.";
 		case "messageInteractionHintHeader":
 			return "Hinweise zur Interaktion mit der CCU.";
 		case "messageInteractionHintMessage":
