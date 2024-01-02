@@ -46,7 +46,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
      */
     private async initialize() : Promise<void>
     {
-        this.pushService = new PushNotificationService(this.logger);
+        this.pushService = await PushNotificationService.initialize(this.logger);
 
         if(this.config.hasPushCredentials())
         {

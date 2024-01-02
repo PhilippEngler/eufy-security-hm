@@ -30,14 +30,15 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private readonly MAX_RETRIES = 10;
     private readonly MAX_COMMAND_RESULT_WAIT = 30 * 1000;
     private readonly MAX_AKNOWLEDGE_TIMEOUT = 15 * 1000;
-    private readonly MAX_LOOKUP_TIMEOUT = 15 * 1000;
+    private readonly MAX_LOOKUP_TIMEOUT = 20 * 1000;
     private readonly LOOKUP_RETRY_TIMEOUT = 3 * 1000;
-    private readonly LOOKUP2_TIMEOUT = 5 * 1000;
+    private readonly LOOKUP2_TIMEOUT = 3 * 1000;
+    private readonly LOOKUP2_RETRY_TIMEOUT = 3 * 1000;
     private readonly MAX_EXPECTED_SEQNO_WAIT = 20 * 1000;
     private readonly HEARTBEAT_INTERVAL = 5 * 1000;
     private readonly MAX_COMMAND_QUEUE_TIMEOUT = 120 * 1000;
     private readonly AUDIO_CODEC_ANALYZE_TIMEOUT = 650;
-    private readonly KEEPALIVE_INTERVAL = 5 * 1000;
+    private readonly KEEPALIVE_INTERVAL = 2 * 1000;
     private readonly ESD_DISCONNECT_TIMEOUT = 30 * 1000;
     private readonly MAX_STREAM_DATA_WAIT = 5 * 1000;
     private readonly RESEND_NOT_ACKNOWLEDGED_COMMAND = 100;
@@ -64,7 +65,12 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private connected = false;
     private connecting = false;
     private terminating = false;
-    private handshake_UNKNOWN71 = false;
+    private p2pTurn: {
+        [host: string]: {
+            initialized: boolean;
+            confirmed: boolean;
+        }
+    } = {};
 
     private seqNumber = 0;
     private offsetDataSeqNumber = 0;
@@ -95,6 +101,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private lookupTimeout?: NodeJS.Timeout;
     private lookupRetryTimeout?: NodeJS.Timeout;
     private lookup2Timeout?: NodeJS.Timeout;
+    private lookup2RetryTimeout?: NodeJS.Timeout;
     private heartbeatTimeout?: NodeJS.Timeout;
     private keepaliveTimeout?: NodeJS.Timeout;
     private esdDisconnectTimeout?: NodeJS.Timeout;
@@ -177,7 +184,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         let rsaKey: NodeRSA | null;
 
         this.connected = false;
-        this.handshake_UNKNOWN71 = false;
+        this.p2pTurn = {};
         this.connecting = false;
         this.lastPong = null;
         this.lastPongData = undefined;
@@ -301,6 +308,11 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         this.lookupRetryTimeout = undefined;
     }
 
+    private _clearLookup2RetryTimeout(): void {
+        this._clearTimeout(this.lookup2RetryTimeout);
+        this.lookup2RetryTimeout = undefined;
+    }
+
     private _clearLookup2Timeout(): void {
         this._clearTimeout(this.lookup2Timeout);
         this.lookup2Timeout = undefined;
@@ -384,6 +396,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private cloudLookup(): void {
         this.cloudAddresses.map((address) => this.cloudLookupByAddress(address));
+        this._clearLookup2Timeout();
         this.lookup2Timeout = setTimeout(() => {
             this.cloudLookup2();
         }, this.LOOKUP2_TIMEOUT);
@@ -391,10 +404,15 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private cloudLookup2(): void {
         this.cloudAddresses.map((address) => this.cloudLookupByAddress2(address));
+        this._clearLookup2RetryTimeout();
+        this.lookup2RetryTimeout = setTimeout(() => {
+            this.lookup2RetryTimeout = undefined;
+            this.cloudAddresses.map((address) => this.cloudLookupByAddress2(address));
+        }, this.LOOKUP2_RETRY_TIMEOUT);
     }
 
-    private cloudLookup3(origAddress: Address, data: Buffer): void {
-        this.cloudAddresses.map((address) => this.cloudLookupByAddress3(address, origAddress, data));
+    private cloudLookupWithTurnServer(origAddress: Address, data: Buffer): void {
+        this.cloudAddresses.map((address) => this.cloudLookupByAddressWithTurnServer(address, origAddress, data));
     }
 
     private async localLookupByAddress(address: Address): Promise<void> {
@@ -418,11 +436,11 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         await this.sendMessage(`Cloud lookup addresses (2)`, address, msgId, payload);
     }
 
-    private async cloudLookupByAddress3(address: Address, origAddress: Address, data: Buffer): Promise<void> {
+    private async cloudLookupByAddressWithTurnServer(address: Address, origAddress: Address, data: Buffer): Promise<void> {
         // Send lookup message3
-        const msgId = RequestMessageType.LOOKUP_WITH_KEY3;
+        const msgId = RequestMessageType.TURN_LOOKUP_WITH_KEY;
         const payload = buildLookupWithKeyPayload3(this.rawStation.p2p_did, origAddress, data);
-        await this.sendMessage(`Cloud lookup addresses (3)`, address, msgId, payload);
+        await this.sendMessage(`Cloud lookup addresses with turn server`, address, msgId, payload);
     }
 
     public isConnected(): boolean {
@@ -439,8 +457,12 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private _connect(address: Address, p2p_did: string): void {
         this.log.debug(`Connecting to host ${address.host} on port ${address.port} (CHECK_CAM)`, { stationSN: this.rawStation.station_sn, address: address, p2pDid: p2p_did });
-        for (let i = 0; i < 4; i++)
-            this.sendCamCheck(address, p2p_did);
+
+        this.sendCamCheck(address, p2p_did);
+        for (let i = address.port - 3; i < address.port; i++)
+            this.sendCamCheck({ host: address.host, port: i }, p2p_did);
+        for (let i = address.port + 1; i <= address.port + 3; i++)
+            this.sendCamCheck({ host: address.host, port: i }, p2p_did);
 
         this._startConnectTimeout();
     }
@@ -833,11 +855,12 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     this._connect({ host: ip, port: port }, this.rawStation.p2p_did);
                 }
             }
-        } else if (hasHeader(msg, ResponseMessageType.CAM_ID) || hasHeader(msg, ResponseMessageType.CAM_ID2)) {
+        } else if (hasHeader(msg, ResponseMessageType.CAM_ID) || hasHeader(msg, ResponseMessageType.TURN_SERVER_CAM_ID)) {
             // Answer from the device to a CAM_CHECK message
             if (!this.connected) {
                 this.log.debug(`Received message - CAM_ID - Connected to station ${this.rawStation.station_sn} on host ${rinfo.address} port ${rinfo.port}`);
                 this._clearLookupRetryTimeout();
+                this._clearLookup2RetryTimeout();
                 this._clearLookupTimeout();
                 this._clearConnectTimeout();
                 this._clearLookup2Timeout();
@@ -1092,6 +1115,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
                 this._clearLookupTimeout();
                 this._clearLookupRetryTimeout();
+                this._clearLookup2RetryTimeout();
 
                 this.log.debug(`Received message - LOOKUP_ADDR2 - Got response`, { stationSN: this.rawStation.station_sn, remoteAddress: rinfo.address, remotePort: rinfo.port, response: { ip: ip, port: port, data: data.toString("hex") }});
                 this.log.debug(`Connecting to host ${ip} on port ${port} (CHECK_CAM2)...`, { stationSN: this.rawStation.station_sn, ip: ip, port: port, data: data.toString("hex") });
@@ -1100,23 +1124,34 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     this.sendCamCheck2({ host: ip, port: port }, data);
 
                 this._startConnectTimeout();
-                this.sendMessage(`Send UNKNOWN_70`, { host: ip, port: port }, RequestMessageType.UNKNOWN_70);
+                if (this.p2pTurn[ip] === undefined) {
+                    this.p2pTurn[ip] = {
+                        initialized: true,
+                        confirmed: false
+                    };
+                    this.sendMessage(`Send TURN_SERVER_INIT`, { host: ip, port: port }, RequestMessageType.TURN_SERVER_INIT);
+                }
             }
-        } else if (hasHeader(msg, ResponseMessageType.UNKNOWN_71)) {
-            if (!this.connected && !this.handshake_UNKNOWN71) {
-                this.log.debug(`Received message - UNKNOWN_71 - Got response`, { stationSN: this.rawStation.station_sn, remoteAddress: rinfo.address, remotePort: rinfo.port, response: { message: msg.toString("hex"), length: msg.length }});
-                this.sendMessage(`Send UNKNOWN_71`, { host: rinfo.address, port: rinfo.port }, RequestMessageType.UNKNOWN_71);
-                this.handshake_UNKNOWN71 = true;
+        } else if (hasHeader(msg, ResponseMessageType.TURN_SERVER_OK)) {
+            if (!this.connected && !this.p2pTurn[rinfo.address]?.confirmed) {
+                this.log.debug(`Received message - TURN_SERVER_OK - Got response`, { stationSN: this.rawStation.station_sn, remoteAddress: rinfo.address, remotePort: rinfo.port, response: { message: msg.toString("hex"), length: msg.length }});
+                this.sendMessage(`Send TURN_CLIENT_OK`, { host: rinfo.address, port: rinfo.port }, RequestMessageType.TURN_CLIENT_OK);
+                this.p2pTurn[rinfo.address].confirmed = true;
             }
-        } else if (hasHeader(msg, ResponseMessageType.UNKNOWN_73)) {
+        } else if (hasHeader(msg, ResponseMessageType.TURN_SERVER_TOKEN)) {
             if (!this.connected) {
+                const ip = `${msg[7]}.${msg[6]}.${msg[5]}.${msg[4]}`;
                 const port = msg.subarray(8, 10).readUInt16BE();
-                const data = msg.subarray(4, 8);
+                const binaryIP = msg.subarray(4, 8);
 
-                this.log.debug(`Received message - UNKNOWN_73 - Got response`, { stationSN: this.rawStation.station_sn, remoteAddress: rinfo.address, remotePort: rinfo.port, response: { port: port, data: data.toString("hex") }});
-                this.cloudLookup3({ host: rinfo.address, port: port }, data);
+                this.log.debug(`Connecting to host ${ip} on port ${port} (CHECK_CAM2)...`, { stationSN: this.rawStation.station_sn, ip: ip, port: port, binaryIP: binaryIP.toString("hex") });
+                for (let i = 0; i < 4; i++)
+                    this.sendCamCheck2({ host: rinfo.address, port: port }, binaryIP);
+
+                this.log.debug(`Received message - TURN_SERVER_TOKEN - Got response`, { stationSN: this.rawStation.station_sn, remoteAddress: rinfo.address, remotePort: rinfo.port, response: { port: port, binaryIP: binaryIP.toString("hex") }});
+                this.cloudLookupWithTurnServer({ host: rinfo.address, port: port }, binaryIP);
             }
-        } else if (hasHeader(msg, ResponseMessageType.UNKNOWN_81) || hasHeader(msg, ResponseMessageType.UNKNOWN_83)) {
+        } else if (hasHeader(msg, ResponseMessageType.TURN_SERVER_LOOKUP_OK) || hasHeader(msg, ResponseMessageType.UNKNOWN_83) || hasHeader(msg, ResponseMessageType.TURN_SERVER_LIST)) {
             // Do nothing / ignore
         } else if (hasHeader(msg, ResponseMessageType.LOOKUP_RESP)) {
             if (!this.connected) {
@@ -1854,7 +1889,6 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                 this.log.debug(`Handle DATA ${P2PDataType[message.dataType]} - CMD_NOTIFY_PAYLOAD StorageInfo HB3 update`, { stationSN: this.rawStation.station_sn, body: payload?.body });
                                 if (payload) {
                                     this.emit("storage info hb3", message.channel, payload.body);
-                                    //this.log.info(`STORAGE_HB3:`, message.channel, payload.body);
                                 }
                             } else {
                                 this.log.debug(`Handle DATA ${P2PDataType[message.dataType]} - CMD_NOTIFY_PAYLOAD - Not implemented`, { stationSN: this.rawStation.station_sn, commandIdName: CommandType[json.cmd], commandId: json.cmd, message: data.toString() });

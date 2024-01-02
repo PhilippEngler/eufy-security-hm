@@ -165,7 +165,7 @@ export class EufySecurityApi
      */
     public setServiceState(state : string)
     {
-        if(state == "init" || state == "ok" || state == "shutdown")
+        if(state == "init" || state == "ok" || state == "disconnected" || state == "shutdown")
         {
             this.serviceState = state;
         }
@@ -390,6 +390,7 @@ export class EufySecurityApi
         }
 
         this.connected = false;
+        this.setServiceState("disconnected");
         //this.emit("close");
 
         if (this.retries < 3)
@@ -465,7 +466,7 @@ export class EufySecurityApi
     {
         //this.emit("connection error", error);
         this.logError(`APIConnectionError occured. Error: ${error}`);
-        this.setServiceState("ok");
+        this.setServiceState("disconnected");
     }
 
     /**
@@ -3453,7 +3454,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "2.6.3";
+        return "3.0.0-b1";
     }
 
     /**
@@ -3462,6 +3463,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "2.9.1-ext1";
+        return "3.0.0-b03a48bb";
     }
 }

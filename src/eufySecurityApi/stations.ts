@@ -6,7 +6,6 @@ import { sleep } from './push/utils';
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError, ensureError } from "./error";
 import internal from "stream";
 import EventEmitter from "events";
-import imageType from "image-type";
 import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { getError, parseValue, waitForEvent } from "./utils";
@@ -30,7 +29,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
     private cameraMaxLivestreamSeconds = 30;
     private cameraStationLivestreamTimeout: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
-    private cameraCloudLivestreamTimeout: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
 
     private refreshEufySecurityP2PTimeout : {
         [dataType : string] : NodeJS.Timeout;
@@ -227,7 +225,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async updateStation(hub : StationListResponse) : Promise<void>
     {
-        if (!this.stationsLoaded)
+        if (this.stationsLoaded)
         {
             await this.stationsLoaded;
         }
@@ -271,10 +269,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         for (const device_sn of this.cameraStationLivestreamTimeout.keys())
         {
             this.stopStationLivestream(device_sn);
-        }
-        for (const device_sn of this.cameraCloudLivestreamTimeout.keys())
-        {
-            this.stopCloudLivestream(device_sn);
         }
 
         await this.closeP2PConnections();
@@ -416,46 +410,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Start the livestream from cloud for a given device.
-     * @param deviceSerial The serial of the device.
-     */
-    public async startCloudLivestream(deviceSerial : string) : Promise<void>
-    {
-        const device = await this.api.getDevice(deviceSerial);
-        const station = await this.getStation(device.getStationSerial());
-
-        if(!device.hasCommand(CommandName.DeviceStartLivestream))
-        {
-            throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: CommandName.DeviceStartLivestream } });
-        }
-
-        const camera = device as Camera;
-        if(!camera.isStreaming())
-        {
-            const url = await camera.startStream();
-            if (url !== "")
-            {
-                if (this.cameraMaxLivestreamSeconds > 0)
-                {
-                    this.cameraCloudLivestreamTimeout.set(deviceSerial, setTimeout(() => {
-                        this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                        this.stopCloudLivestream(deviceSerial);
-                    }, this.cameraMaxLivestreamSeconds * 1000));
-                }
-                this.emit("cloud livestream start", station, camera, url);
-            }
-            else
-            {
-                this.api.logError(`Failed to start cloud stream for the device ${deviceSerial}`);
-            }
-        }
-        else
-        {
-            this.api.logWarn(`The cloud stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
-        }
-    }
-
-    /**
      * Stop the livestream from station for a given device.
      * @param deviceSerial The serial of the device.
      */
@@ -471,7 +425,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         if(station.isConnected() && station.isLiveStreaming(device))
         {
-            await station.stopLivestream(device);
+            station.stopLivestream(device);
         }
         else
         {
@@ -486,35 +440,40 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Stop the livestream from cloud for a given device.
+     * Start the download from station for a given device.
      * @param deviceSerial The serial of the device.
+     * @param path The path of the file.
+     * @param cipherID The cipher id.
      */
-    public async stopCloudLivestream(deviceSerial: string): Promise<void>
-    {
+    public async startStationDownload(deviceSerial: string, path: string, cipherID: number): Promise<void> {
         const device = await this.api.getDevice(deviceSerial);
         const station = await this.getStation(device.getStationSerial());
 
-        if(!device.hasCommand(CommandName.DeviceStopLivestream))
-        {
-            throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: CommandName.DeviceStopLivestream } });
-        }
+        if (!device.hasCommand(CommandName.DeviceStartDownload))
+            throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: CommandName.DeviceStartDownload, path: path, cipherID: cipherID } });
 
-        const camera = device as Camera;
-        if(camera.isStreaming())
-        {
-            await camera.stopStream();
-            this.emit("cloud livestream stop", station, camera);
+        if (!station.isDownloading(device)) {
+            await station.startDownload(device, path, cipherID);
+        } else {
+            this.api.logWarn(`The station is already downloading a video for the device ${deviceSerial}!`);
         }
-        else
-        {
-            this.api.logWarn(`The cloud stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
-        }
+    }
 
-        const timeout = this.cameraCloudLivestreamTimeout.get(deviceSerial);
-        if(timeout)
-        {
-            clearTimeout(timeout);
-            this.cameraCloudLivestreamTimeout.delete(deviceSerial);
+    /**
+     * Cancel the download from station for a given device.
+     * @param deviceSerial The serial of the device.
+     */
+    public async cancelStationDownload(deviceSerial: string): Promise<void> {
+        const device = await this.api.getDevice(deviceSerial);
+        const station = await this.getStation(device.getStationSerial());
+
+        if (!device.hasCommand(CommandName.DeviceCancelDownload))
+            throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: CommandName.DeviceCancelDownload } });
+
+        if (station.isConnected() && station.isDownloading(device)) {
+            station.cancelDownload(device);
+        } else {
+            this.api.logWarn(`The station isn't downloading a video for the device ${deviceSerial}!`);
         }
     }
 
@@ -712,7 +671,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             const station = await this.getStation(stationSerial);
             if (station.isStation() || (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE))
             {
-                await station.getStorageInfoEx();
+                station.getStorageInfoEx();
             }
         }
         catch (err) {
@@ -752,15 +711,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw device property changed")} Listener.`);
                 break;
             case "LivestreamStart":
-                station.on("livestream start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationLivestreamStart(station, channel, metadata, videoStream, audioStream));
+                station.on("livestream start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStartStationLivestream(station, channel, metadata, videoStream, audioStream));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream start")} Listener.`);
                 break;
             case "LivestreamStop":
-                station.on("livestream stop", (station : Station, channel : number) => this.onStationLivestreamStop(station, channel));
+                station.on("livestream stop", (station : Station, channel : number) => this.onStopStationLivestream(station, channel));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
-                station.on("livestream error", (station : Station, channel : number, error: Error) => this.onStationLivestreamError(station, channel, error));
+                station.on("livestream error", (station : Station, channel : number, error: Error) => this.onErrorStationLivestream(station, channel, error));
                 this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
@@ -1215,28 +1174,16 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationConnect(station : Station) : Promise<void>
     {
-        this.api.logDebug(`Event "Connect": station: ${station.getSerial()}`);
         this.emit("station connect", station);
-        if (Station.isStation(station.getDeviceType()) || (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType())))
-        {
-            station.getCameraInfo().catch(err => {
-                const error = ensureError(err);
-                this.api.logError(`Error during station p2p data refreshing`, { error: getError(error), stationSN: station.getSerial() });
-            });
-            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined)
-            {
+        if (Station.isStation(station.getDeviceType()) || (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType()))) {
+            station.getCameraInfo();
+            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
                 clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
                 delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
             }
-            //if (!station.isEnergySavingDevice())
-            //{
-                this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                    station.getCameraInfo().catch(err => {
-                        const error = ensureError(err);
-                        this.api.logError(`Error during scheduled station p2p data refreshing`, { error: getError(error), stationSN: station.getSerial() });
-                    });
-                }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
-            //}
+            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+                station.getCameraInfo();
+            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
         }
     }
 
@@ -1298,7 +1245,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param videoStream The videoStream.
      * @param audioStream  The audioStream.
      */
-    private async onStationLivestreamStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
+    private async onStartStationLivestream(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
@@ -1314,7 +1261,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationLivestreamStop(station : Station, channel : number) : Promise<void>
+    private async onStopStationLivestream(station : Station, channel : number) : Promise<void>
     {
         this.api.logDebug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
@@ -1330,14 +1277,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationLivestreamError(station : Station, channel : number, origError : Error) : Promise<void>
+    private async onErrorStationLivestream(station : Station, channel : number, origError : Error) : Promise<void>
     {
-        this.api.logDebug(`Event "LivestreamError": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
-            station.stopLivestream(device).catch((err) => {
-                const error = ensureError(err);
-                this.api.logError(`Station stop livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
-            });
+            station.stopLivestream(device);
         }).catch((err) => {
             const error = ensureError(err);
             this.api.logError(`Station livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
@@ -1979,18 +1922,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * The action to be performed when event station image download is fired.
+     * Update the device picture for the given device  with the given picture.
      * @param station The station as Station object.
      * @param file The file name.
-     * @param image The image.
+     * @param picture: The picture.
      */
-    private onStationImageDownload(station: Station, file: string, image: Buffer): void
-    {
-        const type = imageType(image);
-        const picture: Picture = {
-            data: image,
-            type: type !== null ? type : { ext: "unknown", mime: "application/octet-stream" }
-        };
+    private _emitStationImageDownload(station: Station, file: string, picture: Picture): void {
         this.emit("station image download", station, file, picture);
 
         this.api.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
@@ -2026,7 +1963,35 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationImageDownload - Set first picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
+            this.api.logDebug(`onStationImageDownload - Set first picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
+        });
+    }
+
+    /**
+     * The action to be performed when event station image download is fired.
+     * @param station The station as Station object.
+     * @param file The file name.
+     * @param image The image.
+     */
+    private onStationImageDownload(station: Station, file: string, image: Buffer): void {
+        import("image-type").then(({ default: imageType }) => {
+            imageType(image).then((type) => {
+                const picture: Picture = {
+                    data: image,
+                    type: type !== null && type !== undefined ? type : { ext: "unknown", mime: "application/octet-stream" }
+                };
+                this._emitStationImageDownload(station, file, picture);
+            }).catch(() => {
+                this._emitStationImageDownload(station, file, {
+                    data: image,
+                    type: { ext: "unknown", mime: "application/octet-stream" }
+                });
+            });
+        }).catch(() => {
+            this._emitStationImageDownload(station, file, {
+                data: image,
+                type: { ext: "unknown", mime: "application/octet-stream" }
+            });
         });
     }
 
@@ -2061,7 +2026,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         device.update(raw);
                     }).catch((err) => {
                         const error = ensureError(err);
-                        this.api.logError("onStationDatabaseQueryLatest Error", { error: getError(error), stationSN: station.getSerial(), returnCode: returnCode });
+                        if (!(error instanceof DeviceNotFoundError)) {
+                            this.api.logError("onStationDatabaseQueryLatest Error", { error: getError(error), stationSN: station.getSerial(), returnCode: returnCode });
+                        }
                     });
                 }
             }
@@ -2193,52 +2160,49 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         value = parseValue(metadata, value);
 
-        switch (name)
-        {
+        switch (name) {
             case PropertyName.StationGuardMode:
-                await station.setGuardMode(value as number);
+                station.setGuardMode(value as number);
                 break;
             case PropertyName.StationAlarmTone:
-                await station.setStationAlarmTone(value as number);
+                station.setStationAlarmTone(value as number);
                 break;
             case PropertyName.StationAlarmVolume:
-                await station.setStationAlarmRingtoneVolume(value as number);
+                station.setStationAlarmRingtoneVolume(value as number);
                 break;
             case PropertyName.StationPromptVolume:
-                await station.setStationPromptVolume(value as number);
+                station.setStationPromptVolume(value as number);
                 break;
             case PropertyName.StationNotificationSwitchModeApp:
-                await station.setStationNotificationSwitchMode(NotificationSwitchMode.APP, value as boolean);
+                station.setStationNotificationSwitchMode(NotificationSwitchMode.APP, value as boolean);
                 break;
             case PropertyName.StationNotificationSwitchModeGeofence:
-                await station.setStationNotificationSwitchMode(NotificationSwitchMode.GEOFENCE, value as boolean);
+                station.setStationNotificationSwitchMode(NotificationSwitchMode.GEOFENCE, value as boolean);
                 break;
             case PropertyName.StationNotificationSwitchModeSchedule:
-                await station.setStationNotificationSwitchMode(NotificationSwitchMode.SCHEDULE, value as boolean);
+                station.setStationNotificationSwitchMode(NotificationSwitchMode.SCHEDULE, value as boolean);
                 break;
             case PropertyName.StationNotificationSwitchModeKeypad:
-                await station.setStationNotificationSwitchMode(NotificationSwitchMode.KEYPAD, value as boolean);
+                station.setStationNotificationSwitchMode(NotificationSwitchMode.KEYPAD, value as boolean);
                 break;
             case PropertyName.StationNotificationStartAlarmDelay:
-                await station.setStationNotificationStartAlarmDelay(value as boolean);
+                station.setStationNotificationStartAlarmDelay(value as boolean);
                 break;
             case PropertyName.StationTimeFormat:
-                await station.setStationTimeFormat(value as number);
+                station.setStationTimeFormat(value as number);
                 break;
             case PropertyName.StationSwitchModeWithAccessCode:
-                await station.setStationSwitchModeWithAccessCode(value as boolean);
+                station.setStationSwitchModeWithAccessCode(value as boolean);
                 break;
             case PropertyName.StationAutoEndAlarm:
-                await station.setStationAutoEndAlarm(value as boolean);
+                station.setStationAutoEndAlarm(value as boolean);
                 break;
             case PropertyName.StationTurnOffAlarmWithButton:
-                await station.setStationTurnOffAlarmWithButton(value as boolean);
+                station.setStationTurnOffAlarmWithButton(value as boolean);
                 break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
-                {
                     throw new ReadOnlyPropertyError("Property is read only", { context: { station: stationSerial, propertyName: name, propertyValue: value } });
-                }
                 throw new InvalidPropertyError("Station has no writable property", { context: { station: stationSerial, propertyName: name, propertyValue: value } });
         }
     }
@@ -2265,7 +2229,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             const addUserResponse = await this.httpService.addUser(deviceSN, username, device.getStationSerial());
             if (addUserResponse !== null)
             {
-                await station.addUser(device, username, addUserResponse.short_user_id, passcode, schedule);
+                station.addUser(device, username, addUserResponse.short_user_id, passcode, schedule);
             }
             else
             {
@@ -2305,7 +2269,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 {
                     if (user.user_name === username)
                     {
-                        await station.deleteUser(device, user. user_name, user.short_user_id);
+                        station.deleteUser(device, user. user_name, user.short_user_id);
                         found = true;
                         break;
                     }
@@ -2410,7 +2374,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 {
                     if (user.user_name === username)
                     {
-                        await station.updateUserPasscode(device, user.user_name, user.short_user_id, passcode);
+                        station.updateUserPasscode(device, user.user_name, user.short_user_id, passcode);
                         found = true;
                     }
                 }
@@ -2458,7 +2422,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 {
                     if (user.user_name === username)
                     {
-                        await station.updateUserSchedule(device, user.user_name, user.short_user_id, schedule);
+                        station.updateUserSchedule(device, user.user_name, user.short_user_id, schedule);
                         found = true;
                     }
                 }
