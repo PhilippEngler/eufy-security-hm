@@ -2100,6 +2100,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 }
                 break;
             }
+            case PropertyName.DeviceImageMirrored:
+                station.setMirrorMode(device, value as boolean);
+                break;
+            case PropertyName.DeviceFlickerAdjustment:
+                station.setFlickerAdjustment(device, value as number);
+                break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
                     throw new ReadOnlyPropertyError("Property is read only", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });

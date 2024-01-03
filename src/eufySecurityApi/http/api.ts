@@ -58,7 +58,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     };
 
     private headers: Record<string, string | undefined> = {
-        "user-agent": undefined,
+        "User-Agent": undefined,
         App_version: "v4.6.0_1630",
         Os_type: "android",
         Os_version: "31",
@@ -270,7 +270,11 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     private invalidateToken(): void {
         this.token = null;
-        this.requestEufyCloud.defaults.options.headers["X-Auth-Token"] = undefined;
+        this.requestEufyCloud.defaults.options.merge({
+            headers: {
+                "X-Auth-Token": undefined
+            }
+        });
         this.tokenExpiration = null;
         this.clearScheduleRenewAuthToken();
         this.emit("auth token invalidated");
@@ -395,7 +399,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         } else if (!this.connected) {
             try {
                 const profile = await this.getPassportProfile();
-                if (profile !== null) {
+                if (profile !== null && !this.connected) {
                     this.connected = true;
                     this.emit("connect");
                     this.scheduleRenewAuthToken();
@@ -870,7 +874,11 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     public setToken(token: string): void {
         this.token = token;
-        this.requestEufyCloud.defaults.options.headers["X-Auth-Token"] = token;
+        this.requestEufyCloud.defaults.options.merge({
+            headers: {
+                "X-Auth-Token": token
+            }
+        });
     }
 
     public setTokenExpiration(tokenExpiration: Date): void {

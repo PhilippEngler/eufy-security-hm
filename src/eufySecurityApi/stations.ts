@@ -6,7 +6,7 @@ import { sleep } from './push/utils';
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError, ensureError } from "./error";
 import internal from "stream";
 import EventEmitter from "events";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
+import { AlarmEvent, ChargingType, CommandResult, CommandType, CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { getError, parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
@@ -351,10 +351,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         Object.values(this.stations).forEach(async (station: Station) => {
             if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
             {
-                await station.getCameraInfo().catch(err => {
-                    const error = ensureError(err);
-                    this.api.logError(`Error occured at updateDeviceData while station ${station.getSerial()} p2p data refreshing.`, error);
-                });
+                station.getCameraInfo();
             }
         });
     }
@@ -2199,6 +2196,21 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 break;
             case PropertyName.StationTurnOffAlarmWithButton:
                 station.setStationTurnOffAlarmWithButton(value as boolean);
+                break;
+            case PropertyName.StationCrossCameraTracking:
+                station.setCrossCameraTracking(value as boolean);
+                break;
+            case PropertyName.StationContinuousTrackingTime:
+                station.setContinuousTrackingTime(value as number);
+                break;
+            case PropertyName.StationTrackingAssistance:
+                station.setTrackingAssistance(value as boolean);
+                break;
+            case PropertyName.StationCrossTrackingCameraList:
+                station.setCrossTrackingCameraList(value as Array<string>);
+                break;
+            case PropertyName.StationCrossTrackingGroupList:
+                station.setCrossTrackingGroupList(value as Array<CrossTrackingGroupEntry>);
                 break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
