@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v8
-20231229
+Schema v9
+20240103
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20231229 (v8)";
+var languageVersion = "20240103 (v9)";
 
 function translateNavbarElement(element)
 {
@@ -666,6 +666,10 @@ function translateContent(content, ...options)
 			return "Devices";
 		case "lblWaitMessageLoadDevices":
 			return "Load available devices...";
+		case "titleDeactivatedOffline":
+			return "This device is currently offline.";
+		case "titleDeactivatedOfflineHint":
+			return "To be able to make settings for this device, bring the device back into the reception range of the HomeBase or the WLAN.";
 		case "titleDeactivatedLowBattery":
 			return "This device has been deactivated due to low battery power.";
 		case "titleDeactivatedLowBatteryHint":

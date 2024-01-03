@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v8
-20231229
+Schema v9
+20240103
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20231229 (v8)";
+var languageVersion = "20240103 (v9)";
 
 function translateNavbarElement(element)
 {
@@ -666,6 +666,10 @@ function translateContent(content, ...options)
 			return "Geräte";
 		case "lblWaitMessageLoadDevices":
 			return "Lade verfügbare Geräte...";
+		case "titleDeactivatedOffline":
+			return "Dieses Gerät wurde ist derzeit nicht erreichbar.";
+		case "titleDeactivatedOfflineHint":
+			return "Um Einstellungen für dieses Gerät vornehmen zu können, bringen Sie das Gerät wieder in den Empfangsbereichs der HomeBase beziehungsweise des WLANs.";
 		case "titleDeactivatedLowBattery":
 			return "Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert.";
 		case "titleDeactivatedLowBatteryHint":

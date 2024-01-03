@@ -1,11 +1,11 @@
 /**
  * Javascript for eufySecurity Addon
- * 20231017
+ * 20240103
  */
 action = "";
 port = "";
 redirectTarget = "";
-version = "2.5.1";
+version = "3.0.0";
 
 /**
  * common used java script functions
@@ -985,10 +985,24 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	deviceModal +=     `
 									</div>
 								</div>`;
-	if(deviceProperties.state === 2)
+	if(deviceProperties.state === 0)
 	{
 		deviceModal += `
-									${createMessageContainer("alert alert-warning", translateContent("titleDeactivatedLowBattery"), translateContent("titleDeactivatedLowBatteryHint"), "")}
+									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedOffline"), translateContent("titleDeactivatedOfflineHint"), "")}
+								</div>
+							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, translateContent("btnClose"), true, "modal", undefined, setEventHandler)}
+							</div>
+						</div>
+					</div>`;
+
+		document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
+		return;
+	}
+	if(deviceProperties.state === 3)
+	{
+		deviceModal += `
+									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedLowBattery"), translateContent("titleDeactivatedLowBatteryHint"), "")}
 								</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
 								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, translateContent("btnClose"), true, "modal", undefined, setEventHandler)}
