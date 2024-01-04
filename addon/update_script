@@ -99,17 +99,11 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   #if [ -e ${ADDON_DIR}/node_modules/cacheable-request ]; then
   #  rm -r ${ADDON_DIR}/node_modules/cacheable-request
   #fi
-  #if [ -e ${ADDON_DIR}/node_modules/clone-response ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/clone-response
-  #fi
   #if [ -e ${ADDON_DIR}/node_modules/decompress-response ]; then
   #  rm -r ${ADDON_DIR}/node_modules/decompress-response
   #fi
   #if [ -e ${ADDON_DIR}/node_modules/defer-to-connect ]; then
   #  rm -r ${ADDON_DIR}/node_modules/defer-to-connect
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/end-of-stream ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/end-of-stream
   #fi
   if [ -e ${ADDON_DIR}/node_modules/fs-extra ]; then
     rm -r ${ADDON_DIR}/node_modules/fs-extra
@@ -155,9 +149,6 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   #fi
   #if [ -e ${ADDON_DIR}/node_modules/p-cancelable ]; then
   #  rm -r ${ADDON_DIR}/node_modules/p-cancelable
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/pump ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/pump
   #fi
   #if [ -e ${ADDON_DIR}/node_modules/quick-lru ]; then
   #  rm -r ${ADDON_DIR}/node_modules/quick-lru
@@ -266,10 +257,47 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   fi
   # remove unused node_modules files from versions lower than 2.1
   if [ -e ${ADDON_DIR}/node_modules/js-sdsl ]; then
-    rm ${ADDON_DIR}/node_modules/js-sdsl
+    rm -r ${ADDON_DIR}/node_modules/js-sdsl
   fi
   if [ -e ${ADDON_DIR}/node_modules/protobuf-typescript ]; then
-    rm ${ADDON_DIR}/node_modules/protobuf-typescript
+    rm -r ${ADDON_DIR}/node_modules/protobuf-typescript
+  fi
+  # remove unused node_modules files from version lower than v3.0.0
+  if [ -e ${ADDON_DIR}/node_modules/clone-response ]; then
+    rm -r ${ADDON_DIR}/node_modules/clone-response
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/concat-map ]; then
+    rm -r ${ADDON_DIR}/node_modules/concat-map
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/duplexify ]; then
+    rm -r ${ADDON_DIR}/node_modules/duplexify
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/end-of-stream ]; then
+    rm -r ${ADDON_DIR}/node_modules/end-of-stream
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/has ]; then
+    rm -r ${ADDON_DIR}/node_modules/has
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/leven ]; then
+    rm -r ${ADDON_DIR}/node_modules/leven
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/minimatch ]; then
+    rm -r ${ADDON_DIR}/node_modules/minimatch
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/path-is-absolute ]; then
+    rm -r ${ADDON_DIR}/node_modules/path-is-absolute
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/pump ]; then
+    rm -r ${ADDON_DIR}/node_modules/pump
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/stream-shift ]; then
+    rm -r ${ADDON_DIR}/node_modules/stream-shift
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/xtend ]; then
+    rm -r ${ADDON_DIR}/node_modules/xtend
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/yallist ]; then
+    rm -r ${ADDON_DIR}/node_modules/yallist
   fi
   # remove unused asset files
   if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css ]; then
