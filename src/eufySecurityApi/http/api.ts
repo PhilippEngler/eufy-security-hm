@@ -269,6 +269,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     }
 
     private invalidateToken(): void {
+        this.connected = false;
         this.token = null;
         this.requestEufyCloud.defaults.options.merge({
             headers: {
@@ -276,6 +277,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
             }
         });
         this.tokenExpiration = null;
+        this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
         this.clearScheduleRenewAuthToken();
         this.emit("auth token invalidated");
     }
@@ -399,10 +401,12 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         } else if (!this.connected) {
             try {
                 const profile = await this.getPassportProfile();
-                if (profile !== null && !this.connected) {
-                    this.connected = true;
-                    this.emit("connect");
-                    this.scheduleRenewAuthToken();
+                if (profile !== null) {
+                    if (!this.connected) {
+                        this.connected = true;
+                        this.emit("connect");
+                        this.scheduleRenewAuthToken();
+                    }
                 } else {
                     this.emit("connection error", new ApiInvalidResponseError(`Invalid passport profile response`));
                 }
@@ -1110,7 +1114,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
                 decryptedData = decryptAPIData(data, this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex")));
             } catch (err) {
                 const error = ensureError(err);
-                this.log.error("Data decryption error, invalidating session data and reconnecting...", { error: getError(error) });
+                this.log.error("Data decryption error, invalidating session data and reconnecting...", { error: getError(error), serverPublicKey: this.persistentData.serverPublicKey });
                 this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
                 this.invalidateToken();
                 this.emit("close");
