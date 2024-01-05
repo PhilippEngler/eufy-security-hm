@@ -22,12 +22,10 @@ import { getError, validValue } from "../utils";
 import { TalkbackStream } from "../p2p/talkback";
 import { start } from "repl";
 
-import { EufySecurityApi } from "../eufySecurityApi";
 import { Logger } from "../utils/logging";
 
 export class Station extends TypedEmitter<StationEvents> {
 
-    private eufySecurityApi: EufySecurityApi;
     private api: HTTPApi;
     private rawStation: StationListResponse;
     private log: Logger;
@@ -49,16 +47,15 @@ export class Station extends TypedEmitter<StationEvents> {
 
     private pinVerified = false;
 
-    protected constructor(eufySecurityApi: EufySecurityApi, api: HTTPApi, station: StationListResponse, ipAddress?: string, publicKey = "") {
+    protected constructor(api: HTTPApi, station: StationListResponse, ipAddress?: string, udpPort?: number, connectionType?: P2PConnectionType, publicKey = "") {
         super();
-        this.eufySecurityApi = eufySecurityApi;
         this.api = api;
         this.rawStation = station;
         this.lockPublicKey = publicKey;
         this.log = api.getLog();
         this.update(this.rawStation);
 
-        this.p2pSession = new P2PClientProtocol(this.eufySecurityApi.getP2PConnectionType(), this.rawStation, this.api, this.getLANIPAddress() as string, this.eufySecurityApi.getLocalStaticUdpPortForStation(this.rawStation.station_sn), this.lockPublicKey);
+        this.p2pSession = new P2PClientProtocol(this.rawStation, this.api, this.getLANIPAddress() as string, udpPort, connectionType, this.lockPublicKey);
         this.p2pSession.on("connect", (address: Address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
         this.p2pSession.on("timeout", () => this.onTimeout());
@@ -114,12 +111,12 @@ export class Station extends TypedEmitter<StationEvents> {
         this.initializeState();
     }
 
-    static async getInstance(eufySecurityApi: EufySecurityApi, api: HTTPApi, stationData: StationListResponse, ipAddress?: string): Promise<Station> {
+    static async getInstance(api: HTTPApi, stationData: StationListResponse, ipAddress?: string, udpPort?: number, connectionType?: P2PConnectionType): Promise<Station> {
         let publicKey: string | undefined;
         if (Device.isLock(stationData.device_type)) {
             publicKey = await api.getPublicKey(stationData.station_sn, PublicKeyType.LOCK);
         }
-        return new Station(eufySecurityApi, api, stationData, ipAddress, publicKey);
+        return new Station(api, stationData, ipAddress, udpPort, connectionType, publicKey);
     }
 
     //TODO: To remove

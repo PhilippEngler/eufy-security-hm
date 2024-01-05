@@ -134,16 +134,16 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private encryption: EncryptionType = EncryptionType.NONE;
     private p2pKey?: Buffer;
 
-    constructor(connectionType: P2PConnectionType, rawStation: StationListResponse, api: HTTPApi, ipAddress?: string, preferredUdpPort?: number | null, publicKey = "") {
+    constructor(rawStation: StationListResponse, api: HTTPApi, ipAddress?: string, preferredUdpPort?: number | null, connectionType?: P2PConnectionType, publicKey = "") {
         super();
-        this.connectionType = connectionType;
         this.api = api;
         this.lockPublicKey = publicKey;
         this.preferredIPAddress = ipAddress;
-        if(preferredUdpPort === undefined || preferredUdpPort === null) {
-            this.preferredUdpPort = 0;
-        } else {
+        if(preferredUdpPort !== undefined && preferredUdpPort !== null) {
             this.preferredUdpPort = preferredUdpPort;
+        }
+        if(connectionType !== undefined && connectionType !== null) {
+            this.connectionType = connectionType;
         }
         this.log = api.getLog();
         this.cloudAddresses = decodeP2PCloudIPs(rawStation.app_conn);

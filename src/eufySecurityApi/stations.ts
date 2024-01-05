@@ -83,7 +83,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 {
                     this.stationsLoaded = waitForEvent<void>(this.loadingEmitter, "stations loaded");
                 }
-                let new_station = Station.getInstance(this.api, this.httpService, resStations[stationSerial]);
+                let udpPort : number | undefined | null = this.api.getLocalStaticUdpPortForStation(stationSerial);
+                if(udpPort === null)
+                {
+                    udpPort = undefined;
+                }
+                let new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, this.api.getP2PConnectionType());
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 
