@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
 Schema v9
-20240103
+20240105
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240103 (v9)";
+var languageVersion = "20240105 (v9)";
 
 function translateNavbarElement(element)
 {
@@ -896,6 +896,12 @@ function translateContent(content, ...options)
 			return "Time Zone";
 		case "lblTimeFormat":
 			return "Time Format";
+		case "lblCrossCameraTracking":
+			return "Cross Camera Surveillance";
+		case "lblContinuousTrackingTime":
+			return "Cross Camera Surveillance Lenghth";
+		case "lblTrackingAssistance":
+			return "Cross Camera Surveillance Assistance";
 		case "lblStorageInfoHeader":
 			return "Storage Information";
 		case "lblInternalStorage":
@@ -1243,6 +1249,12 @@ function translatePropertyName(propertyName)
 			return "Select Time Zone";
 		case "timeFormat":
 			return "Select Time Format";
+		case "crossCameraTracking":
+			return "Enable Cross Camera Surveillance";
+		case "continuousTrackingTime":
+			return "Cross Camera Surveillance Assistance Length";
+		case "trackingAssistance":
+			return "Enable Cross Camera Surveillance Assistance";
 		case "sdUsage":
 			return "Storage usage";
 		case "sdCapacityUsedPercent":

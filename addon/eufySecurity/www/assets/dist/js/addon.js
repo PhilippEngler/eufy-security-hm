@@ -2509,6 +2509,36 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 										</div>
 									</div>`;
 	}
+	if(stationPropertiesMetadata.crossCameraTracking !== undefined || stationPropertiesMetadata.continuousTrackingTime !== undefined || stationPropertiesMetadata.trackingAssistance !== undefined || stationPropertiesMetadata.crossTrackingCameraList !== undefined || stationPropertiesMetadata.crossTrackingGroupList !== undefined)
+	{
+		stationModal +=  `
+									<div class="card mb-3 collapse" id="cardStationCrossCameraTracking">
+										<h5 class="card-header">${translateContent("lblCrossCameraTracking")}</h5>
+										<div class="card-body">`;
+		if(stationPropertiesMetadata.crossCameraTracking !== undefined)
+		{
+			stationModal +=  `
+											<h5>${translateContent("lblCrossCameraTracking")}</h5>
+											${generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.crossCameraTracking.name, stationProperties.crossCameraTracking, setEventHandler)}`;
+		}
+		if(stationPropertiesMetadata.continuousTrackingTime !== undefined)
+		{
+			stationModal +=  `
+											${stationPropertiesMetadata.crossCameraTracking !== undefined ? `<hr />`: ``}
+											<h5>${translateContent("lblContinuousTrackingTime")}</h5>
+											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.continuousTrackingTime.name, stationProperties.continuousTrackingTime, setEventHandler, stationPropertiesMetadata.continuousTrackingTime.states)}`;
+		}
+		if(stationPropertiesMetadata.trackingAssistance !== undefined)
+		{
+			stationModal +=  `
+											${stationPropertiesMetadata.crossCameraTracking !== undefined || stationPropertiesMetadata.continuousTrackingTime !== undefined ? `<hr />`: ``}
+											<h5>${translateContent("lblTrackingAssistance")}</h5>
+											${generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.trackingAssistance.name, stationProperties.trackingAssistance, setEventHandler)}`;
+		}
+		stationModal +=  `
+										</div>
+									</div>`;
+	}
 	if(stationPropertiesMetadata.sdCapacity !== undefined || stationPropertiesMetadata.sdCapacityAvailable !== undefined)
 	{
 		var conversionFactor = 1000;

@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
 Schema v9
-20240103
+20240105
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240103 (v9)";
+var languageVersion = "20240105 (v9)";
 
 function translateNavbarElement(element)
 {
@@ -896,6 +896,12 @@ function translateContent(content, ...options)
 			return "Zeitzone";
 		case "lblTimeFormat":
 			return "Zeitformat";
+		case "lblCrossCameraTracking":
+			return "Kameraübergreifende Überwachung";
+		case "lblContinuousTrackingTime":
+			return "Dauer des kameraübergreifenden Trackings";
+		case "lblTrackingAssistance":
+			return "Assistent für kameraübergreifende Überwachung";
 		case "lblStorageInfoHeader":
 			return "Speicherinformationen";
 		case "lblInternalStorage":
@@ -1243,6 +1249,12 @@ function translatePropertyName(propertyName)
 			return "Zeitzone auswählen";
 		case "timeFormat":
 			return "Zeitformat auswählen";
+		case "crossCameraTracking":
+			return "Kameraübergreifende Überwachung aktivieren";
+		case "continuousTrackingTime":
+			return "Dauer des kameraübergreifenden Trackings auswählen";
+		case "trackingAssistance":
+			return "Assistent für kameraübergreifende Überwachung aktivieren";
 		case "sdCapacityUsedPercent":
 		case "emmcCapacityUsedPercent":
 		case "hddCapacityUsedPercent":
