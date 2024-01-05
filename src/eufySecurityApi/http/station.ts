@@ -455,7 +455,7 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     public static isStation(type: number): boolean {
-        return type === DeviceType.STATION || type === DeviceType.HB3;
+        return type === DeviceType.STATION || type === DeviceType.HB3 || type === DeviceType.MINIBASE_CHIME;
     }
 
     public isStation(): boolean {
@@ -508,8 +508,7 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     public getDeviceTypeString() : string {
-        switch (this.rawStation.device_type)
-        {
+        switch (this.rawStation.device_type) {
             case DeviceType.STATION:
             case DeviceType.HB3:
                 return `station`;
