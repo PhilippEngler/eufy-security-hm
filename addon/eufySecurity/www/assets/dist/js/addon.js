@@ -2075,7 +2075,7 @@ function makeSelectElement(propertyName, value, valueNumber, state)
 
 function makeSelectElementTimeZone(propertyName, value, state)
 {
-	return `<option value="${state.timeZoneGMT}.${state.timeSn}" id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${state.timeSn}"${value === `${state.timeZoneGMT}|1.${state.timeSn}` ? " selected" : ""}>${translateDeviceStateValue(state.timeId, propertyName, state.timeZoneGMT)}</option>`;
+	return `<option value="${state.timeZoneGMT}|1.${state.timeSn}" id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${state.timeSn}"${value === `${state.timeZoneGMT}|1.${state.timeSn}` ? " selected" : ""}>${translateDeviceStateValue(state.timeId, propertyName, state.timeZoneGMT)}</option>`;
 }
 
 function generateElementButton(type, serialNumber, name, propertyName, setEventHandler, buttonClass, setToDefault, value, enabled)
