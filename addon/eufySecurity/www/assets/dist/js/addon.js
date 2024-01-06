@@ -2062,7 +2062,7 @@ function generateElementSelectTimeZone(type, serialNumber, name, propertyName, v
 	var selectElement = `<div><label class="mb-2" for="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}</label><select class="form-select mb-2" id="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${setEventHandler == true ? ` onchange="change${type}Property('${serialNumber}', '${name}', '${propertyName}', this.value) ` : ""}" disabled>`;
 	for(var state in states)
 	{
-		selectElement += makeSelectElementTimeZone(propertyName, value, `"${states[state].timeZoneGMT}"`, states[state])
+		selectElement += makeSelectElementTimeZone(propertyName, value, states[state]);
 	}
 	selectElement += `</select></div>`;
 	return selectElement;
@@ -2070,12 +2070,12 @@ function generateElementSelectTimeZone(type, serialNumber, name, propertyName, v
 
 function makeSelectElement(propertyName, value, valueNumber, state)
 {
-	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${translateDeviceStateValue(state, propertyName, valueNumber)}</option>`;
+	return `<option value="${valueNumber}" id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${translateDeviceStateValue(state, propertyName, valueNumber)}</option>`;
 }
 
-function makeSelectElementTimeZone(propertyName, value, valueNumber, state)
+function makeSelectElementTimeZone(propertyName, value, state)
 {
-	return `<option value=${valueNumber} id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == state.timeZoneGMT || value ==  state.timeZoneGMT + "|1." + state.timeSn ? " selected" : ""}>${translateDeviceStateValue(state.timeId, propertyName, valueNumber)}</option>`;
+	return `<option value="${state.timeZoneGMT}.${state.timeSn}" id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${state.timeSn}"${value === `${state.timeZoneGMT}|1.${state.timeSn}` ? " selected" : ""}>${translateDeviceStateValue(state.timeId, propertyName, state.timeZoneGMT)}</option>`;
 }
 
 function generateElementButton(type, serialNumber, name, propertyName, setEventHandler, buttonClass, setToDefault, value, enabled)
