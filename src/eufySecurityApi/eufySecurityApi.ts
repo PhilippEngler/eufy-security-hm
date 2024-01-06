@@ -3463,6 +3463,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "3.0.0-b_645281f";
+        return "3.0.0-b_5a40afd";
     }
 }
