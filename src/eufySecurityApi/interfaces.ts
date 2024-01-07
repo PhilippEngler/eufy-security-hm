@@ -15,35 +15,6 @@ export interface StationIPAddresses {
     [index: string]: string;
 }
 
-export interface EufySecurityConfig {
-    username: string;
-    password: string;
-    country?: string;
-    language?: string;
-    trustedDeviceName?: string;
-    persistentDir?: string;
-    persistentData?: string;
-    p2pConnectionSetup: number;
-    pollingIntervalMinutes: number;
-    eventDurationSeconds: number;
-    acceptInvitations?: boolean;
-    stationIPAddresses?: StationIPAddresses;
-}
-
-export interface EufySecurityPersistentData {
-    country: string;
-    login_hash: string;
-    openudid: string;
-    serial_number: string;
-    cloud_token?: string;
-    cloud_token_expiration?: number;
-    push_credentials: Credentials | undefined;
-    push_persistentIds: string[];
-    version: string;
-    httpApi?: HTTPApiPersistentData;
-    fallbackTrustedDeviceName?: string;
-}
-
 export interface EufySecurityEvents {
     "device added": (device: Device) => void;
     "device removed": (device: Device) => void;
