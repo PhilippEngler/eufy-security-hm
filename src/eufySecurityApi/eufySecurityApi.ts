@@ -39,7 +39,6 @@ export class EufySecurityApi
     private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
     private taskUpdateLinks !: NodeJS.Timeout;
-    private taskUpdateLinks24 !: NodeJS.Timeout;
     private waitUpdateState !: NodeJS.Timeout;
     private refreshEufySecurityCloudTimeout?: NodeJS.Timeout;
     
@@ -3285,22 +3284,33 @@ export class EufySecurityApi
         if(task)
         {
             this.logger.logInfoBasic(`Remove scheduling for ${name}.`);
-            clearInterval(this.taskUpdateLinks);
+            switch (name)
+            {
+                case "updateDeviceData":
+                    clearInterval(this.taskUpdateDeviceInfo);
+                    break;
+                case "getState":
+                    clearInterval(this.taskUpdateState);
+                    break;
+                case "getLibrary":
+                    clearInterval(this.taskUpdateLinks);
+                    break;
+            }
         }
-        if(name == "updateDeviceData")
+        switch (name)
         {
-            task = setInterval(async() => { await this.updateDeviceData(); }, (5 * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
-        }
-        else if(name == "getState")
-        {
-            task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
-        }
-        else if(name == "getLibrary")
-        {
-            task = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getUpdateLinksTimespan() * 60 * 1000));
-            this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getUpdateLinksTimespan()} minutes${this.config.getUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
+            case "updateDeviceData":
+                task = setInterval(async() => { await this.updateDeviceData(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
+                this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
+                break;
+            case "getState":
+                task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
+                this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
+                break;
+            case "getLibrary":
+                task = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getUpdateLinksTimespan() * 60 * 1000));
+                this.logger.logInfoBasic(`${name} scheduled (runs every ${this.config.getUpdateLinksTimespan()} minutes${this.config.getUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
+                break;
         }
     }
 
