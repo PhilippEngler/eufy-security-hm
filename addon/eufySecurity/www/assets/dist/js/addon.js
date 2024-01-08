@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240103
+ * 20240108
  */
 action = "";
 port = "";
@@ -1416,6 +1416,13 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblVideoWdr")}</h5>
 										${devicePropertiesMetadata.videoWdr === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.videoWdr.name, deviceProperties.videoWdr, setEventHandler)}`;
+		}
+		if(deviceProperties.flickerAdjustment !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined || deviceProperties.videoWdr !== undefined ? `<hr />` : ``}
+										<h5>${translateContent("lblFlickerAdjustment")}</h5>
+										${devicePropertiesMetadata.flickerAdjustment === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.flickerAdjustment.name, deviceProperties.flickerAdjustment, setEventHandler, deviceProperties.flickerAdjustment.states)}`;
 		}
 		deviceModal += `
 									</div>

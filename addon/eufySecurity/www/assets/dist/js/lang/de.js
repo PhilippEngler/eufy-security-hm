@@ -7,7 +7,7 @@ createdBy: PhilippEngler
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240105 (v9)";
+var languageVersion = "20240108 (v9)";
 
 function translateNavbarElement(element)
 {
@@ -804,6 +804,8 @@ function translateContent(content, ...options)
 			return "Nachtsicht";
 		case "lblVideoWdr":
 			return "HDR";
+		case "lblFlickerAdjustment":
+			return "Bildwiederholrate";
 		case "lblHeaderAudioSettings":
 			return "Audioeinstellungen";
 		case "lblMicrophone":
@@ -1181,6 +1183,8 @@ function translatePropertyName(propertyName)
 			return "automatische Nachtsicht aktivieren";
 		case "nightvision":
 			return "Art der Nachtsicht";
+		case "flickerAdjustment":
+			return "Bildwiederholrate";
 		case "lightSettingsBrightnessManual":
 		case "lightSettingsBrightnessSchedule":
 		case "lightSettingsBrightnessMotion":
