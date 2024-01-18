@@ -709,7 +709,7 @@ function translateContent(content, ...options)
 		case "lblNotSupportedDeviceHeading":
 			return "This device is not fully supported.";
 		case "lblNotSupportedDeviceMessage":
-			return `You can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[0]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
+			return `You can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[1]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
 		case "lblNotSupportedDeviceSubText":
 			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
 		case "lblNotSupportedDeviceNoSaving":
