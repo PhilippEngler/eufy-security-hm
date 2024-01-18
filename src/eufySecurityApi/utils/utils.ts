@@ -1,3 +1,5 @@
+import { Device, DeviceType, Station } from "../http";
+
 export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
 export const pathToTemp = "/var/tmp/eufySecurity";
 
@@ -6,10 +8,8 @@ export const pathToTemp = "/var/tmp/eufySecurity";
  * @param modelNumber The model number of the station or device.
  * @returns A string with the model name of the station or device.
  */
-export const getModelName = function(modelNumber : string) : string
-{
-    switch (modelNumber.substring(0,5))
-    {
+export const getModelName = function(modelNumber: string): string {
+    switch (modelNumber.substring(0,5)) {
         //HomeBases
         case "T8001":
             return "HomeBase";
@@ -162,11 +162,112 @@ export const getModelName = function(modelNumber : string) : string
 }
 
 /**
+ * Returns a string with the type of the device.
+ * @param device The device.
+ * @returns A string with the type of the device.
+ */
+export const getDeviceTypeAsString = function(device: Device): string {
+    if(device.isFirstCamera() || device.isCameraE() || device.isCamera2Product() || device.isCamera3Product()) {
+        return "camera";
+    } else if(device.isDoorbell()) {
+        return "doorbell";
+    } else if(device.isIndoorCamera()) {
+        return "indoorcamera";
+    } else if(device.isSoloCameras()) {
+        return "solocamera";
+    } else if(device.isFloodLight()) {
+        return "floodlight";
+    } else if(device.isWallLightCam()) {
+        return "walllightcamera";
+    } else if(device.isGarageCamera()) {
+        return "garagecamera";
+    } else if(device.isStarlight4GLTE()) {
+        return "starlight4glte"
+    } else if(device.isLock()) {
+        return "lock";
+    } else if(device.isEntrySensor()) {
+        return "sensor";
+    } else if(device.isKeyPad()) {
+        return "keypad";
+    } else {
+        return `unknown(${device.getRawDevice().device_type})`;
+    }
+}
+
+/**
+ * Returns a string with the type of the station.
+ * @param station Rhe station.
+ * @returns A string with the type of the station.
+ */
+export const getStationTypeString = function(station: Station): string {
+    switch (station.getDeviceType()) {
+        case DeviceType.STATION:
+        case DeviceType.HB3:
+        case DeviceType.MINIBASE_CHIME:
+            return `station`;
+        case DeviceType.DOORBELL:
+        case DeviceType.DOORBELL_SOLO:
+        case DeviceType.BATTERY_DOORBELL:
+        case DeviceType.BATTERY_DOORBELL_2:
+        case DeviceType.BATTERY_DOORBELL_PLUS:
+        case DeviceType.BATTERY_DOORBELL_PLUS_E340:
+            return `doorbell`;
+        case DeviceType.INDOOR_CAMERA:
+        case DeviceType.INDOOR_CAMERA_1080:
+        case DeviceType.INDOOR_COST_DOWN_CAMERA:
+        case DeviceType.INDOOR_OUTDOOR_CAMERA_1080P:
+        case DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT:
+        case DeviceType.INDOOR_OUTDOOR_CAMERA_2K:
+        case DeviceType.INDOOR_PT_CAMERA:
+        case DeviceType.INDOOR_PT_CAMERA_1080:
+        case DeviceType.INDOOR_PT_CAMERA_S350:
+            return `indoorcamera`;
+        case DeviceType.SOLO_CAMERA:
+        case DeviceType.SOLO_CAMERA_PRO:
+        case DeviceType.SOLO_CAMERA_SPOTLIGHT_1080:
+        case DeviceType.SOLO_CAMERA_SPOTLIGHT_2K:
+        case DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
+        case DeviceType.SOLO_CAMERA_SOLAR:
+        case DeviceType.SOLO_CAMERA_C210:
+        case DeviceType.OUTDOOR_PT_CAMERA:
+            return `solocamera`;
+        case DeviceType.FLOODLIGHT:
+        case DeviceType.FLOODLIGHT_CAMERA_8422:
+        case DeviceType.FLOODLIGHT_CAMERA_8423:
+        case DeviceType.FLOODLIGHT_CAMERA_8424:
+        case DeviceType.FLOODLIGHT_CAMERA_8425:
+            return `floodlight`;
+        case DeviceType.WALL_LIGHT_CAM:
+        case DeviceType.WALL_LIGHT_CAM_81A0:
+            return "walllightcam";
+        case DeviceType.CAMERA_GARAGE_T8452:
+        case DeviceType.CAMERA_GARAGE_T8453:
+        case DeviceType.CAMERA_GARAGE_T8453_COMMON:
+            return "garagecamera";
+        case DeviceType.CAMERA_FG:
+            return "starlight4glte";
+        case DeviceType.LOCK_8503:
+        case DeviceType.LOCK_8504:
+        case DeviceType.LOCK_8530:
+        case DeviceType.LOCK_8592:
+        case DeviceType.LOCK_85A3:
+        case DeviceType.LOCK_BLE:
+        case DeviceType.LOCK_BLE_NO_FINGER:
+        case DeviceType.LOCK_WIFI:
+        case DeviceType.LOCK_WIFI_NO_FINGER:
+        case DeviceType.LOCK_8502:
+        case DeviceType.LOCK_8506:
+            return `lock`;
+        default:
+            return `unknown(${station.getDeviceType()})`;
+    }
+}
+
+/**
  * Converts the given timestamp to the german dd.mm.yyyy hh:mm string.
  * @param timestamp The timestamp as number.
  */
-export const makeDateTimeString = function(timestamp : number) : string
-{
+export const makeDateTimeString = function(timestamp: number): string {
     var dateTime = new Date(timestamp);
     return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}`);
 }
@@ -177,10 +278,8 @@ export const makeDateTimeString = function(timestamp : number) : string
  * @param timeStampType The timestamp type.
  * @returns The timestamp in milliseconds.
  */
-export const convertTimeStampToTimeStampMs = function(timeStamp : number, timeStampType : string) : number | undefined
-{
-    switch (timeStampType)
-    {
+export const convertTimeStampToTimeStampMs = function(timeStamp: number, timeStampType: string): number | undefined {
+    switch (timeStampType) {
         case "sec":
             return timeStamp * 1000;
         case "ms":
@@ -188,20 +287,4 @@ export const convertTimeStampToTimeStampMs = function(timeStamp : number, timeSt
         default:
             return undefined;
         }
-}
-
-/**
- * The interface for EufyCountry
- */
-export interface EufyCountry
-{
-    countryName: string;
-    countryPhoneCode: string;
-    countryCode: string;
-}
-
-export interface CameraEvent
-{
-    path: string;
-    start_time: Date;
 }

@@ -14,7 +14,7 @@ import { EufyHouses } from './houses';
 import { NotSupportedError, ReadOnlyPropertyError, ensureError } from './error';
 import { randomNumber } from './http/utils';
 import { PhoneModels, timeZoneData } from './http/const';
-import { getModelName, makeDateTimeString } from './utils/utils';
+import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString } from './utils/utils';
 import { countryData } from './utils/const';
 import path from 'path';
 import { EventInteractionType } from './utils/types';
@@ -965,7 +965,7 @@ export class EufySecurityApi
         var properties = device.getProperties();
         var json : any = {};
 
-        json = {"eufyDeviceId":device.getId(), "isStationP2PConnected":isStationP2PConnected, "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":this.devices.getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
+        json = {"eufyDeviceId":device.getId(), "isStationP2PConnected":isStationP2PConnected, "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
 
         for(var property in properties)
         {
@@ -1128,7 +1128,7 @@ export class EufySecurityApi
                 var device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
-                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "data":device.getPropertiesMetadata()};
+                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getPropertiesMetadata()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1178,7 +1178,7 @@ export class EufySecurityApi
                     {
                         temp = null;
                     }
-                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "data":device.getProperties(), "interactions":temp};
+                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getProperties(), "interactions":temp};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1328,7 +1328,7 @@ export class EufySecurityApi
             }
         }
 
-        json = {"eufyDeviceId":station.getId(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":station.getDeviceTypeString(), "wanIpAddress":station.getIPAddress(), "isP2PConnected":station.isConnected()};
+        json = {"eufyDeviceId":station.getId(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "wanIpAddress":station.getIPAddress(), "isP2PConnected":station.isConnected()};
         for (var property in properties)
         {
             switch (property)
@@ -1438,7 +1438,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "data":station.getPropertiesMetadata()};
+                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "data":station.getPropertiesMetadata()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1483,7 +1483,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "data":station.getProperties()};
+                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "data":station.getProperties()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -2221,7 +2221,7 @@ export class EufySecurityApi
                     for (var deviceSerial in devices)
                     {
                         device = devices[deviceSerial];
-                        switch (this.devices.getDeviceTypeAsString(device))
+                        switch (getDeviceTypeAsString(device))
                         {
                             case "camera":
                                 device = devices[deviceSerial] as Camera;
@@ -3464,7 +3464,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "3.0.0-b1";
+        return "3.0.0-b2";
     }
 
     /**
@@ -3473,6 +3473,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "3.0.0-b_4321576";
+        return "3.0.0-b_8170c27";
     }
 }

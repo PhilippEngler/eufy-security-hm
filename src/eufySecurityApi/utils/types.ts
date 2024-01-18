@@ -1,3 +1,6 @@
+/**
+ * The enum for event interaction type.
+ */
 export enum EventInteractionType {
     MOTION = 0,
     RADAR_MOTION = 1,

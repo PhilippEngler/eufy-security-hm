@@ -508,60 +508,6 @@ export class Station extends TypedEmitter<StationEvents> {
         return this.rawStation.station_id;
     }
 
-    public getDeviceTypeString() : string {
-        switch (this.rawStation.device_type) {
-            case DeviceType.STATION:
-            case DeviceType.HB3:
-                return `station`;
-            case DeviceType.FLOODLIGHT:
-            case DeviceType.FLOODLIGHT_CAMERA_8422:
-            case DeviceType.FLOODLIGHT_CAMERA_8423:
-            case DeviceType.FLOODLIGHT_CAMERA_8424:
-                return `floodlight`;
-            case DeviceType.INDOOR_CAMERA:
-            case DeviceType.INDOOR_CAMERA_1080:
-            case DeviceType.INDOOR_COST_DOWN_CAMERA:
-            case DeviceType.INDOOR_OUTDOOR_CAMERA_1080P:
-            case DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT:
-            case DeviceType.INDOOR_OUTDOOR_CAMERA_2K:
-            case DeviceType.INDOOR_PT_CAMERA:
-            case DeviceType.INDOOR_PT_CAMERA_1080:
-            case DeviceType.INDOOR_PT_CAMERA_S350:
-                return `indoorcamera`;
-            case DeviceType.WALL_LIGHT_CAM:
-            case DeviceType.WALL_LIGHT_CAM_81A0:
-                return "walllightcam";
-            case DeviceType.SOLO_CAMERA:
-            case DeviceType.SOLO_CAMERA_PRO:
-            case DeviceType.SOLO_CAMERA_SPOTLIGHT_1080:
-            case DeviceType.SOLO_CAMERA_SPOTLIGHT_2K:
-            case DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
-            case DeviceType.SOLO_CAMERA_SOLAR:
-                return `solocamera`;
-            case DeviceType.DOORBELL:
-            case DeviceType.DOORBELL_SOLO:
-            case DeviceType.BATTERY_DOORBELL:
-            case DeviceType.BATTERY_DOORBELL_2:
-            case DeviceType.BATTERY_DOORBELL_PLUS:
-            case DeviceType.BATTERY_DOORBELL_PLUS_E340:
-                return `doorbell`;
-            case DeviceType.LOCK_8503:
-            case DeviceType.LOCK_8504:
-            case DeviceType.LOCK_8530:
-            case DeviceType.LOCK_8592:
-            case DeviceType.LOCK_85A3:
-            case DeviceType.LOCK_BLE:
-            case DeviceType.LOCK_BLE_NO_FINGER:
-            case DeviceType.LOCK_WIFI:
-            case DeviceType.LOCK_WIFI_NO_FINGER:
-            case DeviceType.LOCK_8502:
-            case DeviceType.LOCK_8506:
-                return `lock`;
-            default:
-                return `unknown(${this.rawStation.device_type})`;
-        }
-    }
-
     public getSoftwareVersion(): string {
         return this.rawStation.main_sw_version;
     }

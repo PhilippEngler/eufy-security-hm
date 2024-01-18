@@ -6,8 +6,7 @@ import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, Floo
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, parseValue, waitForEvent } from "./utils";
-import { CameraEvent } from "./utils/utils";
-import { DeviceInteractions, EventInteraction } from "./utils/models";
+import { CameraEvent, DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 import { EventInteractions } from "./eventInteractions";
 
@@ -468,63 +467,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             }
             delete this.deviceSnoozeTimeout[device.getSerial()];
         }, timeoutMS);
-    }
-
-    /**
-     * Returns a string with the type of the device.
-     * @param device The device.
-     * @returns A string with the type of the device.
-     */
-    public getDeviceTypeAsString(device : Device) : string
-    {
-        if(device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro() || device.isCamera3() || device.isCamera3C())
-        {
-            return "camera";
-        }
-        else if(device.isDoorbell())
-        {
-            return "doorbell";
-        }
-        else if(device.isIndoorCamera())
-        {
-            return "indoorcamera";
-        }
-        else if(device.isSoloCameras())
-        {
-            return "solocamera";
-        }
-        else if(device.isFloodLight())
-        {
-            return "floodlight";
-        }
-        else if(device.isWallLightCam())
-        {
-            return "walllightcamera";
-        }
-        else if(device.isGarageCamera())
-        {
-            return "garagecamera";
-        }
-        else if(device.isStarlight4GLTE())
-        {
-            return "starlight4glte"
-        }
-        else if(device.isLock())
-        {
-            return "lock";
-        }
-        else if(device.isEntrySensor())
-        {
-            return "sensor";
-        }
-        else if(device.isKeyPad())
-        {
-            return "keypad";
-        }
-        else
-        {
-            return `unknown(${device.getRawDevice().device_type})`;
-        }
     }
 
     /**

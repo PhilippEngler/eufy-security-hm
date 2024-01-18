@@ -1,4 +1,4 @@
-import { EufyCountry } from "./utils";
+import { EufyCountry } from "./models";
 
 /**
  * The countries can be used for eufy login.
