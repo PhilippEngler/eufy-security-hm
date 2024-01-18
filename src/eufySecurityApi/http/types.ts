@@ -21,10 +21,10 @@ export enum DeviceType {
     CAMERA2C_PRO = 15,
     BATTERY_DOORBELL_2 = 16,
     HB3 = 18,
-    MINIBASE_CHIME = 25,
     CAMERA3 = 19,
     CAMERA3C = 23,
     PROFESSIONAL_247 = 24, // T8600
+    MINIBASE_CHIME = 25,
     INDOOR_CAMERA = 30,
     INDOOR_PT_CAMERA = 31,
     SOLO_CAMERA = 32,
@@ -60,6 +60,7 @@ export enum DeviceType {
     INDOOR_COST_DOWN_CAMERA = 100,
     CAMERA_GUN = 101,
     CAMERA_SNAIL = 102,
+    INDOOR_PT_CAMERA_S350 = 104,
     CAMERA_FG = 110, //T8150
     CAMERA_GARAGE_T8453_COMMON = 131,
     CAMERA_GARAGE_T8452 = 132,
@@ -72,10 +73,8 @@ export enum DeviceType {
     SMART_TRACK_LINK = 157, //T87B0
     SMART_TRACK_CARD = 159, //T87B2
     LOCK_8502 = 180,
-    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     LOCK_8506 = 184,
-    WALL_LIGHT_CAM_81A0 = 10005,
-    INDOOR_PT_CAMERA_S350 = 104,
+    WALL_LIGHT_CAM_81A0 = 10005,    
 }
 
 export enum ParamType {
@@ -912,6 +911,8 @@ export const GenericTypeProperty: PropertyMetadataNumeric = {
         18: "HomeBase S380 (HomeBase 3; T8030)",
         19: "eufyCam S330 (eufyCam 3)",
         23: "eufyCam S300 (eufyCam 3C)",
+        24: "eufyCam E330 (Professional)",
+        25: "MiniBase Chime",
         30: "Indoor Camera",
         31: "Indoor Camera PT",
         32: "Solo Camera",
@@ -924,6 +925,8 @@ export const GenericTypeProperty: PropertyMetadataNumeric = {
         44: "Outdoor Camera 1080P No Light",
         45: "Outdoor Camera 2k",
         46: "Outdoor Camera 1080P",
+        47: "Floodlight Camera E340",
+        48: "Solo Camera S340",
         50: "Lock Basic",
         51: "Lock Advanced",
         52: "Lock Basic No Finger",
@@ -936,6 +939,8 @@ export const GenericTypeProperty: PropertyMetadataNumeric = {
         60: "Solo Camera Spotlight 1080p",
         61: "Solo Camera Spotlight 2k",
         62: "Solo Camera Spotlight Solar",
+        63: "Solo Camera S230",
+        64: "Solo Camera C210",
         90: "Smart Drop S300 (T8790)",
         91: "Video Doorbell Dual",
         93: "Video Doorbell Dual (Wired)",
@@ -943,6 +948,7 @@ export const GenericTypeProperty: PropertyMetadataNumeric = {
         100: "Indoor Cost Down Camera",
         101: "Camera Gun",
         102: "Camera Snail",
+        104: "Indoor Camera S350",
         110: "Starlight 4G LTE", //T8150
         131: "Camera Garage T8453 Common",
         132: "Garage-Control Cam E110 (T8452)",
@@ -954,7 +960,8 @@ export const GenericTypeProperty: PropertyMetadataNumeric = {
         151: "Wired Wall Light Cam S100 (T84A1)",
         157: "SmartTrack Link (T87B0)",
         159: "SmartTrack Card (T87B2)",
-        180: "Lock T8502 / T8506",
+        180: "Lock C210",
+        184: "Lock C220",
         10005: "Solar Wall Light Cam S120 (T81A0)",
     },
 }
