@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9
-20240105
+Schema v9.1
+20240117
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240108 (v9)";
+var languageVersion = "20240117 (v9.1)";
 
 function translateNavbarElement(element)
 {
@@ -873,7 +873,7 @@ function translateContent(content, ...options)
 		case "lblNotSupportedStationHeading":
 			return "Dieses Gerät wird nicht vollständig unterstützt.";
 		case "lblNotSupportedStationMessage":
-			return `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" und "<a href="${options[0]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
+			return `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" und "<a href="${options[1]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
 		case "lblNotSupportedStationSubText":
 			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
 		case "lblNotSupportedStationNoSaving":

@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9
-20240105
+Schema v9.1
+20240117
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240108 (v9)";
+var languageVersion = "20240117 (v9.1)";
 
 function translateNavbarElement(element)
 {
@@ -873,7 +873,7 @@ function translateContent(content, ...options)
 		case "lblNotSupportedStationHeading":
 			return "This device is not fully supported.";
 		case "lblNotSupportedStationMessage":
-			return `You can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" and "<a href="${options[0]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" available to the developer.`
+			return `You can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" and "<a href="${options[1]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" available to the developer.`
 		case "lblNotSupportedStationSubText":
 			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
 		case "lblNotSupportedStationNoSaving":
@@ -1259,11 +1259,11 @@ function translatePropertyName(propertyName)
 			return "Cross Camera Surveillance Assistance Length";
 		case "trackingAssistance":
 			return "Enable Cross Camera Surveillance Assistance";
-		case "sdUsage":
-			return "Storage usage";
 		case "sdCapacityUsedPercent":
 		case "emmcCapacityUsedPercent":
 		case "hddCapacityUsedPercent":
+			return "Storage usage";
+		case "sdCapacity":
 			return "Storage capacity";
 		case "sdCapacityUsed":
 			return "Used storage capacity";

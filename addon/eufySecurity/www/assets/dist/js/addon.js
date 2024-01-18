@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240108
+ * 20240118
  */
 action = "";
 port = "";
@@ -2050,7 +2050,7 @@ function generateElementRange(type, serialNumber, name, propertyName, value, set
 
 function generateElementProgress(propertyName, value)
 {
-	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}: ${value}%</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
+	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}: ${isNaN(value) ? `${translateContent("lblUnknown")}` : `${value}%`}</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
 }
 
 function generateElementSelect(type, serialNumber, name, propertyName, value, setEventHandler, states)
