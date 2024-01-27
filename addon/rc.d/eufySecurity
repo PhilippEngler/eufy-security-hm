@@ -119,7 +119,7 @@ case "$1" in
         echo "Version: $VER"
         echo "Info: <b>eufy Security AddOn</b><br>"
 		echo "Info: Erm&ouml;glicht die Steuerung des eufy Security Systems.<br>"
-        echo "Info: &copy; 2020-2023 Philipp Engler<br>"
+        echo "Info: &copy; 2020-2024 Philipp Engler<br>"
         echo "Info: <a href='https://github.com/PhilippEngler/eufy-security-hm'>Projektseite</a>"
         echo "Name: eufy SECURITY"
         echo "Operations: uninstall restart"
