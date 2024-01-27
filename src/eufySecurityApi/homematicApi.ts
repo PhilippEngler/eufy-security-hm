@@ -291,7 +291,7 @@ export class HomematicApi
         else
         {
             this.api.logError("File not found. File: '/var/log/eufySecurity.err'");
-            throw new Error(`File not found. Fiel: '/var/log/eufySecurity.err'`);
+            throw new Error(`File not found. File: '/var/log/eufySecurity.err'`);
         }
     }
 
