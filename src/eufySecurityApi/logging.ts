@@ -1,7 +1,7 @@
 import { LogLevel as Level } from "typescript-logging";
 import { CategoryProvider } from "typescript-logging-category-style";
 
-export type LoggingCategories = "all" | "main" | "http" | "p2p" | "push" | "mqtt";
+export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt";
 export const LogLevel = Level;
 
 export interface Logger {
@@ -31,12 +31,19 @@ const getMethodName = function(): string | undefined {
 
 const provider = CategoryProvider.createProvider("EufySecurityClientProvider", {
     level: LogLevel.Off,
+    dateFormatter: formatDate,
     channel: {
         type: "RawLogChannel",
         write: (msg, _formatArg) => {
             const methodName = getMethodName();
             const method = methodName ? `[${methodName}] ` : "";
-            switch(msg.level) {
+            const logLevel = `${LogLevel[msg.level].toUpperCase()}`.padEnd(5, " ")
+            const logNames = `[${msg.logNames}]`.padEnd(7, " ");
+            if (msg.args)
+                console.log(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${msg.message}`, ...msg.args);
+            else
+                console.log(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${msg.message}`);
+            /*switch(msg.level) {
                 case LogLevel.Trace:
                     if (msg.args)
                         InternalLogger.logger?.trace(`[${msg.logNames}] ${method}${msg.message}`, ...msg.args);
@@ -74,12 +81,13 @@ const provider = CategoryProvider.createProvider("EufySecurityClientProvider", {
                         else
                             InternalLogger.logger.fatal(`[${msg.logNames}] ${method}${msg.message}`);
                     break;
-            }
+            }*/
         },
     },
 });
 
 export const rootMainLogger = provider.getCategory("main");
+export const rootAddonLogger = provider.getCategory("addon");
 export const rootHTTPLogger = provider.getCategory("http");
 export const rootMQTTLogger = provider.getCategory("mqtt");
 export const rootPushLogger = provider.getCategory("push");
@@ -94,6 +102,11 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
             break;
         case "main":
             provider.updateRuntimeSettingsCategory(rootMainLogger, {
+                level: level
+            });
+            break;
+        case "addon":
+            provider.updateRuntimeSettingsCategory(rootAddonLogger, {
                 level: level
             });
             break;
@@ -119,3 +132,15 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
             break;
     }
 }
+
+export function formatDate(millisSinceEpoch: number): string {
+    const date = new Date(millisSinceEpoch);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    const millis = date.getMilliseconds().toString().padStart(3, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds},${millis}`;
+  }

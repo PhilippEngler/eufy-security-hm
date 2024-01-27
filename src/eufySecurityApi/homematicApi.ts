@@ -1,6 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { existsSync, readFileSync } from 'fs';
 import { EufySecurityApi } from './eufySecurityApi';
+import { rootAddonLogger } from "./logging";
 
 /**
  * Interacting with the CCU.
@@ -63,8 +64,8 @@ export class HomematicApi
         }
         catch(error : any)
         {
-            this.api.logError(`CCU request error on getSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            this.api.logDebug(`CCU request error on getSystemVariable():`, JSON.stringify(error));
+            rootAddonLogger.error(`CCU request error on getSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariable():`, JSON.stringify(error));
             return undefined;
         }
     }
@@ -93,8 +94,8 @@ export class HomematicApi
         }
         catch(error : any)
         {
-            this.api.logError(`CCU request error on getSystemVariable1(): code: ${error.code}; message: ${error.message}`);
-            this.api.logDebug(`CCU request error on getSystemVariable1():`, JSON.stringify(error));
+            rootAddonLogger.error(`CCU request error on getSystemVariable1(): code: ${error.code}; message: ${error.message}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariable1():`, JSON.stringify(error));
             return undefined;
         }
     }
@@ -124,8 +125,8 @@ export class HomematicApi
         }
         catch(error : any)
         {
-            this.api.logError(`CCU request error on setSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            this.api.logDebug(`CCU request error on setSystemVariable():`, JSON.stringify(error));
+            rootAddonLogger.error(`CCU request error on setSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            rootAddonLogger.debug(`CCU request error on setSystemVariable():`, JSON.stringify(error));
         }
     }
 
@@ -172,8 +173,8 @@ export class HomematicApi
         }
         catch(error : any)
         {
-            this.api.logError(`CCU request error on getSystemVariables(): code: ${error.code}; message: ${error.message}`);
-            this.api.logDebug(`CCU request error on getSystemVariables():`, JSON.stringify(error));
+            rootAddonLogger.error(`CCU request error on getSystemVariables(): code: ${error.code}; message: ${error.message}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariables():`, JSON.stringify(error));
             res = undefined;
         }
     }
@@ -203,8 +204,8 @@ export class HomematicApi
         }
         catch(error : any)
         {
-            this.api.logError(`CCU request error on createSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            this.api.logDebug(`CCU request error on createSystemVariable():`, JSON.stringify(error));
+            rootAddonLogger.error(`CCU request error on createSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            rootAddonLogger.debug(`CCU request error on createSystemVariable():`, JSON.stringify(error));
             return undefined;
         }
     }
@@ -233,8 +234,8 @@ export class HomematicApi
         }
         catch(error : any)
         {
-            this.api.logError(`CCU request error on removeSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            this.api.logDebug(`CCU request error on removeSystemVariable():`, JSON.stringify(error));
+            rootAddonLogger.error(`CCU request error on removeSystemVariable(): code: ${error.code}; message: ${error.message}`);
+            rootAddonLogger.debug(`CCU request error on removeSystemVariable():`, JSON.stringify(error));
             return undefined;
         }
     }
@@ -256,8 +257,8 @@ export class HomematicApi
         }
         catch(error : any)
         {
-            this.api.logError(`CCU request error on sendInteractionCommand(): code: ${error.code}; message: ${error.message}`);
-            this.api.logDebug(`CCU request error on sendInteractionCommand():`, JSON.stringify(error));
+            rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${error.code}; message: ${error.message}`);
+            rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(error));
         }
     }
 
@@ -273,7 +274,7 @@ export class HomematicApi
         }
         else
         {
-            this.api.logError("File not found. File: '/var/log/eufySecurity.log'");
+            rootAddonLogger.error("File not found. File: '/var/log/eufySecurity.log'");
             throw new Error(`File not found. File: '/var/log/eufySecurity.log'`);
         }
     }
@@ -290,7 +291,7 @@ export class HomematicApi
         }
         else
         {
-            this.api.logError("File not found. File: '/var/log/eufySecurity.err'");
+            rootAddonLogger.error("File not found. File: '/var/log/eufySecurity.err'");
             throw new Error(`File not found. File: '/var/log/eufySecurity.err'`);
         }
     }

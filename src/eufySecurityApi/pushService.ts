@@ -6,7 +6,7 @@ import { HTTPApi } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { PushNotificationService } from "./push/service";
 import { CheckinResponse, Credentials, FidInstallationResponse, GcmRegisterResponse, PushMessage } from "./push/models";
-import { Logger } from './utils/logging';
+import { rootPushLogger } from './logging';
 import { ServerPushEvent } from "./push/types";
 import { ensureError } from ".";
 import { getError } from "./utils";
@@ -15,7 +15,6 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 {
     private api : EufySecurityApi;
     private config : Config;
-    private logger : Logger;
     private httpService !: HTTPApi;
     private pushService !: PushNotificationService;
     private pushCloudRegistered = false;
@@ -30,13 +29,12 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
      * @param config The Config.
      * @param logger The Logger.
      */
-    constructor(api : EufySecurityApi, httpService : HTTPApi, config : Config, logger : Logger)
+    constructor(api : EufySecurityApi, httpService : HTTPApi, config : Config)
     {
         super();
         this.api = api;
         this.httpService = httpService;
         this.config = config;
-        this.logger = logger;
         
         this.initialize();
     }
@@ -46,7 +44,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
      */
     private async initialize() : Promise<void>
     {
-        this.pushService = await PushNotificationService.initialize(this.logger);
+        this.pushService = await PushNotificationService.initialize();
 
         if(this.config.hasPushCredentials())
         {
@@ -66,12 +64,12 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
             if (this.pushCloudRegistered && this.pushCloudChecked)
             {
-                this.logger.logInfoBasic("Push notification connection successfully established.");
+                rootPushLogger.info("Push notification connection successfully established.");
                 this.emit("push connect");
             }
             else
             {
-                this.logger.logInfoBasic("Push notification connection closed.");
+                rootPushLogger.info("Push notification connection closed.");
                 this.emit("push close");
             }
         });
@@ -81,7 +79,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
         });
         this.pushService.on("message", (message: PushMessage) => this.onPushMessage(message));
         this.pushService.on("close", () => {
-            this.logger.logInfoBasic("Push notification connection closed.");
+            rootPushLogger.info("Push notification connection closed.");
             this.emit("push close");
         });
     }
@@ -165,7 +163,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
         try
         {
-            this.logger.debug("Received push message", { message: message });
+            rootPushLogger.debug("Received push message", { message: message });
             try
             {
                 if ((message.type === ServerPushEvent.INVITE_DEVICE || message.type === ServerPushEvent.HOUSE_INVITE) && this.config.getAcceptInvitations())
@@ -176,7 +174,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             catch(err)
             {
                 const error = ensureError(err);
-                this.logger.error(`Error processing server push notification for device invitation`, { error: getError(error), message: message });
+                rootPushLogger.error(`Error processing server push notification for device invitation`, { error: getError(error), message: message });
             }
             try
             {
@@ -188,7 +186,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             catch(err)
             {
                 const error = ensureError(err);
-                this.logger.error(`Error processing server push notification for device/station/house removal`, { error: getError(error), message: message });
+                rootPushLogger.error(`Error processing server push notification for device/station/house removal`, { error: getError(error), message: message });
             }
 
             try
@@ -204,14 +202,14 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                     catch(err)
                     {
                         const error = ensureError(err);
-                        this.logger.error(`Error processing push notification for station`, { error: getError(error), stationSN: stationSerial, message: message });
+                        rootPushLogger.error(`Error processing push notification for station`, { error: getError(error), stationSN: stationSerial, message: message });
                     }
                 }
             }
             catch(err)
             {
                 const error = ensureError(err);
-                this.api.logError("Process push notification for stations", { error: getError(error), message: message });
+                rootPushLogger.error("Process push notification for stations", { error: getError(error), message: message });
             }
 
             try
@@ -227,20 +225,20 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                     catch(err)
                     {
                         const error = ensureError(err);
-                        this.logger.error(`Error processing push notification for device`, { error: getError(error), deviceSN: deviceSerial, message: message });
+                        rootPushLogger.error(`Error processing push notification for device`, { error: getError(error), deviceSN: deviceSerial, message: message });
                     }
                 }
             }
             catch(err)
             {
                 const error = ensureError(err);
-                this.api.logError("Process push notification for devices", { error: getError(error), message: message });
+                rootPushLogger.error("Process push notification for devices", { error: getError(error), message: message });
             }
         }
         catch(err)
         {
             const error = ensureError(err);
-            this.logger.error("OnPushMessage Generic Error", { error: getError(error), message: message });
+            rootPushLogger.error("OnPushMessage Generic Error", { error: getError(error), message: message });
         }
     }
 }

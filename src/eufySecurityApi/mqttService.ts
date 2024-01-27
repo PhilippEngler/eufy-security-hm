@@ -5,7 +5,7 @@ import { Config } from './config';
 import { Device, Lock } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { MQTTService } from "./mqtt/service";
-import { Logger } from './utils/logging';
+import { rootMQTTLogger } from './logging';
 import { DeviceNotFoundError } from "./error";
 import { getError } from "./utils";
 
@@ -13,7 +13,6 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
 {
     private api : EufySecurityApi;
     private config : Config;
-    private logger : Logger;
     private mqttService!: MQTTService;
 
     /**
@@ -22,12 +21,11 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      * @param config The Config.
      * @param logger The Logger.
      */
-    constructor(api : EufySecurityApi, config : Config, logger : Logger)
+    constructor(api : EufySecurityApi, config : Config)
     {
         super();
         this.api = api;
         this.config = config;
-        this.logger = logger;
         
         this.initialize();
     }
@@ -37,13 +35,13 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      */
     private async initialize() : Promise<void>
     {
-        this.mqttService = await MQTTService.init(this.logger);
+        this.mqttService = await MQTTService.init();
         this.mqttService.on("connect", () => {
-            this.logger.logInfoBasic("MQTT connection successfully established");
+            rootMQTTLogger.info("MQTT connection successfully established");
             this.emit("mqtt connect");
         });
         this.mqttService.on("close", () => {
-            this.logger.logInfoBasic("MQTT connection closed");
+            rootMQTTLogger.info("MQTT connection closed");
             this.emit("mqtt close");
         });
         this.mqttService.on("lock message", (message) => {
@@ -51,7 +49,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
                 (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
             }).catch((error) => {
                 if (!(error instanceof DeviceNotFoundError)) {
-                    this.logger.error("Lock MQTT Message Error", { error: getError(error) });
+                    rootMQTTLogger.error("Lock MQTT Message Error", { error: getError(error) });
                 }
             }).finally(() => {
                 this.emit("mqtt lock message", message);

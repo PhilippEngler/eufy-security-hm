@@ -1,5 +1,6 @@
 import { Config } from "./config";
 import { EufySecurityApi } from "./eufySecurityApi";
+import { rootAddonLogger } from "./logging";
 import { DeviceInteractions, EventInteraction, Interactions } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 
@@ -49,7 +50,7 @@ export class EventInteractions
         }
         catch (error: any)
         {
-            this.api.logError(`Error while adding integration to config. Error: ${error.message}`);
+            rootAddonLogger.error(`Error while adding integration to config. Error: ${error.message}`);
             throw new Error(`Error while adding integration to config. Error: ${error.message}`)
         }
     }
@@ -127,7 +128,7 @@ export class EventInteractions
         }
         catch(error: any)
         {
-            this.api.logError(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
+            rootAddonLogger.error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
             throw new Error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`)
         }
     }
@@ -180,7 +181,7 @@ export class EventInteractions
         }
         catch(error: any)
         {
-            this.api.logError(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
+            rootAddonLogger.error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
             throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`)
         }
     }

@@ -1,20 +1,18 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from './push/models';
-import { Logger } from './utils/logging';
+import { rootAddonLogger } from './logging';
 
 export class Config
 {
     private configJson : any;
     private hasChanged : boolean;
-    private logger : Logger;
     private taskSaveConfig24h !: NodeJS.Timeout;
     
     /**
      * Constructor, read the config file and provide values to the variables.
      */
-    constructor(logger : Logger)
+    constructor()
     {
-        this.logger = logger;
         this.hasChanged = false;
         if(this.isConfigFileAvailable() == false)
         {
@@ -28,7 +26,7 @@ export class Config
                 this.configJson = this.checkConfigFile(this.loadConfigJson("./config.json.upload"));
                 this.hasChanged = true;
                 unlinkSync('./config.json.upload');
-                this.logger.logInfoBasic("Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
+                rootAddonLogger.info("Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
             }
             catch
             {
@@ -36,7 +34,7 @@ export class Config
                 {
                     unlinkSync('./config.json.upload');
                 }
-                this.logger.logInfoBasic("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
+                rootAddonLogger.info("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
                 if(this.isConfigFileAvailable() == false)
                 {
                     this.configJson = this.createEmptyConfigJson();
@@ -70,7 +68,7 @@ export class Config
     {
         if(this.taskSaveConfig24h)
         {
-            this.logger.logInfoBasic(`Remove scheduling for saveConfig24h.`);
+            rootAddonLogger.info(`Remove scheduling for saveConfig24h.`);
             clearInterval(this.taskSaveConfig24h);
         }
     }
@@ -107,7 +105,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 15;
+        return 16;
     }
 
     /**
@@ -130,7 +128,7 @@ export class Config
         }
         catch (ENOENT)
         {
-            this.logger.logErrorBasis(`No '${filePath}' available.`);
+            rootAddonLogger.error(`No '${filePath}' available.`);
         }
         return resConfigJson;
     }
@@ -143,7 +141,7 @@ export class Config
     {
         if(filecontent.indexOf("config_file_version") == -1)
         {
-            this.logger.logInfoBasic("Configfile needs Stage1 update. Adding 'config_file_version'.");
+            rootAddonLogger.info("Configfile needs Stage1 update. Adding 'config_file_version'.");
             filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
         }
         return filecontent;
@@ -200,8 +198,11 @@ export class Config
         var pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        var apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false, "logLevel": 0};
+        var apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false};
         config.apiConfig = apiConfig;
+
+        var logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
+        config.logConfig = logConfig;
 
         var stations : [] = [];
         config.stations = stations;
@@ -235,66 +236,80 @@ export class Config
      */
     private updateConfig(configJson : any) : any
     {
+        rootAddonLogger.info(configJson.configVersion);
+        rootAddonLogger.info(this.getConfigFileTemplateVersion().toString());
         if(configJson.configVersion < this.getConfigFileTemplateVersion())
         {
             var updated = false;
             if(configJson.configVersion < 12)
             {
-                this.logger.logInfoBasic("Configfile needs Stage2 update to version 12...");
+                rootAddonLogger.info("Configfile needs Stage2 update to version 12...");
                 if(configJson.apiConfig.updateCloudInfoIntervall === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'updateCloudInfoIntervall'.");
+                    rootAddonLogger.info(" adding 'updateCloudInfoIntervall'.");
                     configJson.apiConfig.updateCloudInfoIntervall = 10;
                 }
                 if(configJson.apiConfig.updateDeviceDataIntervall === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'updateDeviceDataIntervall'.");
+                    rootAddonLogger.info(" adding 'updateDeviceDataIntervall'.");
                     configJson.apiConfig.updateDeviceDataIntervall = 10;
                 }
                 updated = true;
             }
             if(configJson.configVersion < 13)
             {
-                this.logger.logInfoBasic("Configfile needs Stage2 update to version 13...");
+                rootAddonLogger.info("Configfile needs Stage2 update to version 13...");
                 if(configJson.apiConfig.houseId === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'houseId'.");
+                    rootAddonLogger.info(" adding 'houseId'.");
                     configJson.apiConfig.houseId = "all";
                 }
                 updated = true;
             }
             if(configJson.configVersion < 14)
             {
-                this.logger.logInfoBasic("Configfile needs Stage2 update to version 14...");
+                rootAddonLogger.info("Configfile needs Stage2 update to version 14...");
                 if(configJson.accountData.userId === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'userId'.");
+                    rootAddonLogger.info(" adding 'userId'.");
                     configJson.accountData.userId = "";
                 }
                 if(configJson.accountData.nickName === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'nickName'.");
+                    rootAddonLogger.info(" adding 'nickName'.");
                     configJson.accountData.nickName = "";
                 }
                 if(configJson.accountData.clientPrivateKey === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'clientPrivateKey'.");
+                    rootAddonLogger.info(" adding 'clientPrivateKey'.");
                     configJson.accountData.clientPrivateKey = "";
                 }
                 if(configJson.accountData.serverPublicKey === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'serverPublicKey'.");
+                    rootAddonLogger.info(" adding 'serverPublicKey'.");
                     configJson.accountData.serverPublicKey = "";
                 }
                 updated = true;
             }
             if(configJson.configVersion < 15)
             {
-                this.logger.logInfoBasic("Configfile needs Stage2 update to version 15...");
+                rootAddonLogger.info("Configfile needs Stage2 update to version 15...");
                 if(configJson.interactions === undefined)
                 {
-                    this.logger.logInfoBasic(" adding 'interactions'.");
+                    rootAddonLogger.info(" adding 'interactions'.");
                     configJson.interactions = null;
+                }
+                updated = true;
+            }
+            if(configJson.configVersion < 16)
+            {
+                rootAddonLogger.info("Configfile needs Stage2 update to version 16...");
+                if(configJson.logConfig === undefined)
+                {
+                    rootAddonLogger.info(" adding 'logConfig'.");
+                    configJson.logConfig = null;
+                    var logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
+                    configJson.logConfig = logConfig;
                 }
                 updated = true;
             }
@@ -321,188 +336,224 @@ export class Config
             newConfigJson.configVersion = configJson.configVersion;
         }
 
-        if(configJson.accountData.eMail !== undefined)
+        if(configJson.accountData !== undefined)
         {
-            newConfigJson.accountData.eMail = configJson.accountData.eMail;
-        }
-        if(configJson.accountData.password !== undefined)
-        {
-            newConfigJson.accountData.password = configJson.accountData.password;
-        }
-        if(configJson.accountData.encryptedPassword !== undefined)
-        {
-            newConfigJson.accountData.encryptedPassword = configJson.accountData.encryptedPassword;
-        }
-        if(configJson.accountData.userId !== undefined)
-        {
-            newConfigJson.accountData.userId = configJson.accountData.userId;
-        }
-        if(configJson.accountData.nickName !== undefined)
-        {
-            newConfigJson.accountData.nickName = configJson.accountData.nickName;
-        }
-        if(configJson.accountData.clientPrivateKey !== undefined)
-        {
-            newConfigJson.accountData.clientPrivateKey = configJson.accountData.clientPrivateKey;
-        }
-        if(configJson.accountData.serverPublicKey !== undefined)
-        {
-            newConfigJson.accountData.serverPublicKey = configJson.accountData.serverPublicKey;
-        }
-        if(configJson.accountData.country !== undefined)
-        {
-            newConfigJson.accountData.country = configJson.accountData.country;
-        }
-        if(configJson.accountData.language !== undefined)
-        {
-            newConfigJson.accountData.language = configJson.accountData.language;
+            if(configJson.accountData.eMail !== undefined)
+            {
+                newConfigJson.accountData.eMail = configJson.accountData.eMail;
+            }
+            if(configJson.accountData.password !== undefined)
+            {
+                newConfigJson.accountData.password = configJson.accountData.password;
+            }
+            if(configJson.accountData.encryptedPassword !== undefined)
+            {
+                newConfigJson.accountData.encryptedPassword = configJson.accountData.encryptedPassword;
+            }
+            if(configJson.accountData.userId !== undefined)
+            {
+                newConfigJson.accountData.userId = configJson.accountData.userId;
+            }
+            if(configJson.accountData.nickName !== undefined)
+            {
+                newConfigJson.accountData.nickName = configJson.accountData.nickName;
+            }
+            if(configJson.accountData.clientPrivateKey !== undefined)
+            {
+                newConfigJson.accountData.clientPrivateKey = configJson.accountData.clientPrivateKey;
+            }
+            if(configJson.accountData.serverPublicKey !== undefined)
+            {
+                newConfigJson.accountData.serverPublicKey = configJson.accountData.serverPublicKey;
+            }
+            if(configJson.accountData.country !== undefined)
+            {
+                newConfigJson.accountData.country = configJson.accountData.country;
+            }
+            if(configJson.accountData.language !== undefined)
+            {
+                newConfigJson.accountData.language = configJson.accountData.language;
+            }
         }
         
-        if(configJson.tokenData.token !== undefined)
+        if(configJson.tokenData !== undefined)
         {
-            newConfigJson.tokenData.token = configJson.tokenData.token;
-        }
-        if(configJson.tokenData.tokenExpires !== undefined)
-        {
-            newConfigJson.tokenData.tokenExpires = configJson.tokenData.tokenExpires;
+            if(configJson.tokenData.token !== undefined)
+            {
+                newConfigJson.tokenData.token = configJson.tokenData.token;
+            }
+            if(configJson.tokenData.tokenExpires !== undefined)
+            {
+                newConfigJson.tokenData.tokenExpires = configJson.tokenData.tokenExpires;
+            }
         }
 
-        if(configJson.pushData.trustedDeviceName !== undefined)
+        if(configJson.pushData !== undefined)
         {
-            newConfigJson.pushData.trustedDeviceName = configJson.pushData.trustedDeviceName;
-        }
-        if(configJson.pushData.serialNumber !== undefined)
-        {
-            newConfigJson.pushData.serialNumber = configJson.pushData.serialNumber;
-        }
-        if(configJson.pushData.eventDurationSeconds !== undefined)
-        {
-            newConfigJson.pushData.eventDurationSeconds = configJson.pushData.eventDurationSeconds;
-        }
-        if(configJson.pushData.acceptInvitations !== undefined)
-        {
-            newConfigJson.pushData.acceptInvitations = configJson.pushData.acceptInvitations;
-        }
-        if(configJson.pushData.openUdid !== undefined)
-        {
-            newConfigJson.pushData.openUdid = configJson.pushData.openUdid;
-        }
-        if(configJson.pushData.fidResponse !== undefined)
-        {
-            newConfigJson.pushData.fidResponse = configJson.pushData.fidResponse;
-        }
-        if(configJson.pushData.checkinResponse !== undefined)
-        {
-            newConfigJson.pushData.checkinResponse = configJson.pushData.checkinResponse;
-        }
-        if(configJson.pushData.gcmResponseToken !== undefined)
-        {
-            newConfigJson.pushData.gcmResponseToken = configJson.pushData.gcmResponseToken;
-        }
-        if(configJson.pushData.persistentIds !== undefined)
-        {
-            newConfigJson.pushData.persistentIds = configJson.pushData.persistentIds;
+            if(configJson.pushData.trustedDeviceName !== undefined)
+            {
+                newConfigJson.pushData.trustedDeviceName = configJson.pushData.trustedDeviceName;
+            }
+            if(configJson.pushData.serialNumber !== undefined)
+            {
+                newConfigJson.pushData.serialNumber = configJson.pushData.serialNumber;
+            }
+            if(configJson.pushData.eventDurationSeconds !== undefined)
+            {
+                newConfigJson.pushData.eventDurationSeconds = configJson.pushData.eventDurationSeconds;
+            }
+            if(configJson.pushData.acceptInvitations !== undefined)
+            {
+                newConfigJson.pushData.acceptInvitations = configJson.pushData.acceptInvitations;
+            }
+            if(configJson.pushData.openUdid !== undefined)
+            {
+                newConfigJson.pushData.openUdid = configJson.pushData.openUdid;
+            }
+            if(configJson.pushData.fidResponse !== undefined)
+            {
+                newConfigJson.pushData.fidResponse = configJson.pushData.fidResponse;
+            }
+            if(configJson.pushData.checkinResponse !== undefined)
+            {
+                newConfigJson.pushData.checkinResponse = configJson.pushData.checkinResponse;
+            }
+            if(configJson.pushData.gcmResponseToken !== undefined)
+            {
+                newConfigJson.pushData.gcmResponseToken = configJson.pushData.gcmResponseToken;
+            }
+            if(configJson.pushData.persistentIds !== undefined)
+            {
+                newConfigJson.pushData.persistentIds = configJson.pushData.persistentIds;
+            }
         }
         
-        if(configJson.apiConfig.httpActive !== undefined)
+        if(configJson.apiConfig !== undefined)
         {
-            newConfigJson.apiConfig.httpActive = configJson.apiConfig.httpActive;
+            if(configJson.apiConfig.httpActive !== undefined)
+            {
+                newConfigJson.apiConfig.httpActive = configJson.apiConfig.httpActive;
+            }
+            if(configJson.apiConfig.httpPort !== undefined)
+            {
+                newConfigJson.apiConfig.httpPort = configJson.apiConfig.httpPort;
+            }
+            if(configJson.apiConfig.httpsActive !== undefined)
+            {
+                newConfigJson.apiConfig.httpsActive = configJson.apiConfig.httpsActive;
+            }
+            if(configJson.apiConfig.httpsPort !== undefined)
+            {
+                newConfigJson.apiConfig.httpsPort = configJson.apiConfig.httpsPort;
+            }
+            if(configJson.apiConfig.httpsMethod !== undefined)
+            {
+                newConfigJson.apiConfig.httpsMethod = configJson.apiConfig.httpsMethod;
+            }
+            if(configJson.apiConfig.httpsPkeyFile !== undefined)
+            {
+                newConfigJson.apiConfig.httpsPkeyFile = configJson.apiConfig.httpsPkeyFile;
+            }
+            if(configJson.apiConfig.httpsCertFile !== undefined)
+            {
+                newConfigJson.apiConfig.httpsCertFile = configJson.apiConfig.httpsCertFile;
+            }
+            if(configJson.apiConfig.httpsPkeyString !== undefined)
+            {
+                newConfigJson.apiConfig.httpsPkeyString = configJson.apiConfig.httpsPkeyString;
+            }
+            if(configJson.apiConfig.houseId !== undefined)
+            {
+                newConfigJson.apiConfig.houseId = configJson.apiConfig.houseId;
+            }
+            if(configJson.apiConfig.connectionTypeP2p !== undefined)
+            {
+                newConfigJson.apiConfig.connectionTypeP2p = configJson.apiConfig.connectionTypeP2p;
+            }
+            if(configJson.apiConfig.localStaticUdpPortsActive !== undefined)
+            {
+                newConfigJson.apiConfig.localStaticUdpPortsActive = configJson.apiConfig.localStaticUdpPortsActive;
+            }
+            if(configJson.apiConfig.systemVariableActive !== undefined)
+            {
+                newConfigJson.apiConfig.systemVariableActive = configJson.apiConfig.systemVariableActive;
+            }
+            if(configJson.apiConfig.cameraDefaultImage !== undefined)
+            {
+                newConfigJson.apiConfig.cameraDefaultImage = configJson.apiConfig.cameraDefaultImage;
+            }
+            if(configJson.apiConfig.cameraDefaultVideo !== undefined)
+            {
+                newConfigJson.apiConfig.cameraDefaultVideo = configJson.apiConfig.cameraDefaultVideo;
+            }
+            if(configJson.apiConfig.updateCloudInfoIntervall !== undefined)
+            {
+                newConfigJson.apiConfig.updateCloudInfoIntervall = configJson.apiConfig.updateCloudInfoIntervall;
+            }
+            if(configJson.apiConfig.updateDeviceDataIntervall !== undefined)
+            {
+                newConfigJson.apiConfig.updateDeviceDataIntervall = configJson.apiConfig.updateDeviceDataIntervall;
+            }
+            if(configJson.apiConfig.stateUpdateEventActive !== undefined)
+            {
+                newConfigJson.apiConfig.stateUpdateEventActive = configJson.apiConfig.stateUpdateEventActive;
+            }
+            if(configJson.apiConfig.stateUpdateIntervallActive !== undefined)
+            {
+                newConfigJson.apiConfig.stateUpdateIntervallActive = configJson.apiConfig.stateUpdateIntervallActive;
+            }
+            if(configJson.apiConfig.stateUpdateIntervallTimespan !== undefined)
+            {
+                newConfigJson.apiConfig.stateUpdateIntervallTimespan = configJson.apiConfig.stateUpdateIntervallTimespan;
+            }
+            if(configJson.apiConfig.updateLinksActive !== undefined)
+            {
+                newConfigJson.apiConfig.updateLinksActive = configJson.apiConfig.updateLinksActive;
+            }
+            if(configJson.apiConfig.updateLinksOnlyWhenArmed !== undefined)
+            {
+                newConfigJson.apiConfig.updateLinksOnlyWhenArmed = configJson.apiConfig.updateLinksOnlyWhenArmed;
+            }
+            if(configJson.apiConfig.updateLinks24hActive !== undefined)
+            {
+                newConfigJson.apiConfig.updateLinks24hActive = configJson.apiConfig.updateLinks24hActive;
+            }
+            if(configJson.apiConfig.updateLinksTimespan !== undefined)
+            {
+                newConfigJson.apiConfig.updateLinksTimespan = configJson.apiConfig.updateLinksTimespan;
+            }
+            if(configJson.apiConfig.pushServiceActive !== undefined)
+            {
+                newConfigJson.apiConfig.pushServiceActive = configJson.apiConfig.pushServiceActive;
+            }
         }
-        if(configJson.apiConfig.httpPort !== undefined)
+
+        if(configJson.logConfig !== undefined)
         {
-            newConfigJson.apiConfig.httpPort = configJson.apiConfig.httpPort;
-        }
-        if(configJson.apiConfig.httpsActive !== undefined)
-        {
-            newConfigJson.apiConfig.httpsActive = configJson.apiConfig.httpsActive;
-        }
-        if(configJson.apiConfig.httpsPort !== undefined)
-        {
-            newConfigJson.apiConfig.httpsPort = configJson.apiConfig.httpsPort;
-        }
-        if(configJson.apiConfig.httpsMethod !== undefined)
-        {
-            newConfigJson.apiConfig.httpsMethod = configJson.apiConfig.httpsMethod;
-        }
-        if(configJson.apiConfig.httpsPkeyFile !== undefined)
-        {
-            newConfigJson.apiConfig.httpsPkeyFile = configJson.apiConfig.httpsPkeyFile;
-        }
-        if(configJson.apiConfig.httpsCertFile !== undefined)
-        {
-            newConfigJson.apiConfig.httpsCertFile = configJson.apiConfig.httpsCertFile;
-        }
-        if(configJson.apiConfig.httpsPkeyString !== undefined)
-        {
-            newConfigJson.apiConfig.httpsPkeyString = configJson.apiConfig.httpsPkeyString;
-        }
-        if(configJson.apiConfig.houseId !== undefined)
-        {
-            newConfigJson.apiConfig.houseId = configJson.apiConfig.houseId;
-        }
-        if(configJson.apiConfig.connectionTypeP2p !== undefined)
-        {
-            newConfigJson.apiConfig.connectionTypeP2p = configJson.apiConfig.connectionTypeP2p;
-        }
-        if(configJson.apiConfig.localStaticUdpPortsActive !== undefined)
-        {
-            newConfigJson.apiConfig.localStaticUdpPortsActive = configJson.apiConfig.localStaticUdpPortsActive;
-        }
-        if(configJson.apiConfig.systemVariableActive !== undefined)
-        {
-            newConfigJson.apiConfig.systemVariableActive = configJson.apiConfig.systemVariableActive;
-        }
-        if(configJson.apiConfig.cameraDefaultImage !== undefined)
-        {
-            newConfigJson.apiConfig.cameraDefaultImage = configJson.apiConfig.cameraDefaultImage;
-        }
-        if(configJson.apiConfig.cameraDefaultVideo !== undefined)
-        {
-            newConfigJson.apiConfig.cameraDefaultVideo = configJson.apiConfig.cameraDefaultVideo;
-        }
-        if(configJson.apiConfig.updateCloudInfoIntervall !== undefined)
-        {
-            newConfigJson.apiConfig.updateCloudInfoIntervall = configJson.apiConfig.updateCloudInfoIntervall;
-        }
-        if(configJson.apiConfig.updateDeviceDataIntervall !== undefined)
-        {
-            newConfigJson.apiConfig.updateDeviceDataIntervall = configJson.apiConfig.updateDeviceDataIntervall;
-        }
-        if(configJson.apiConfig.stateUpdateEventActive !== undefined)
-        {
-            newConfigJson.apiConfig.stateUpdateEventActive = configJson.apiConfig.stateUpdateEventActive;
-        }
-        if(configJson.apiConfig.stateUpdateIntervallActive !== undefined)
-        {
-            newConfigJson.apiConfig.stateUpdateIntervallActive = configJson.apiConfig.stateUpdateIntervallActive;
-        }
-        if(configJson.apiConfig.stateUpdateIntervallTimespan !== undefined)
-        {
-            newConfigJson.apiConfig.stateUpdateIntervallTimespan = configJson.apiConfig.stateUpdateIntervallTimespan;
-        }
-        if(configJson.apiConfig.updateLinksActive !== undefined)
-        {
-            newConfigJson.apiConfig.updateLinksActive = configJson.apiConfig.updateLinksActive;
-        }
-        if(configJson.apiConfig.updateLinksOnlyWhenArmed !== undefined)
-        {
-            newConfigJson.apiConfig.updateLinksOnlyWhenArmed = configJson.apiConfig.updateLinksOnlyWhenArmed;
-        }
-        if(configJson.apiConfig.updateLinks24hActive !== undefined)
-        {
-            newConfigJson.apiConfig.updateLinks24hActive = configJson.apiConfig.updateLinks24hActive;
-        }
-        if(configJson.apiConfig.updateLinksTimespan !== undefined)
-        {
-            newConfigJson.apiConfig.updateLinksTimespan = configJson.apiConfig.updateLinksTimespan;
-        }
-        if(configJson.apiConfig.pushServiceActive !== undefined)
-        {
-            newConfigJson.apiConfig.pushServiceActive = configJson.apiConfig.pushServiceActive;
-        }
-        if(configJson.apiConfig.logLevel !== undefined)
-        {
-            newConfigJson.apiConfig.logLevel = configJson.apiConfig.logLevel;
+            if(configJson.logConfig.logLevelAddon !== undefined)
+            {
+                newConfigJson.logConfig.logLevelAddon = configJson.logConfig.logLevelAddon;
+            }
+            if(configJson.logConfig.logLevelMain !== undefined)
+            {
+                newConfigJson.logConfig.logLevelMain = configJson.logConfig.logLevelMain;
+            }
+            if(configJson.logConfig.logLevelHttp !== undefined)
+            {
+                newConfigJson.logConfig.logLevelHttp = configJson.logConfig.logLevelHttp;
+            }
+            if(configJson.logConfig.logLevelP2p !== undefined)
+            {
+                newConfigJson.logConfig.logLevelP2p = configJson.logConfig.logLevelP2p;
+            }
+            if(configJson.logConfig.logLevelPush !== undefined)
+            {
+                newConfigJson.logConfig.logLevelPush = configJson.logConfig.logLevelPush;
+            }
+            if(configJson.logConfig.logLevelMqtt !== undefined)
+            {
+                newConfigJson.logConfig.logLevelMqtt = configJson.logConfig.logLevelMqtt;
+            }
         }
 
         if(configJson.stations !== undefined)
@@ -518,19 +569,19 @@ export class Config
         var updated = false;
         if(this.configJson.httpActive == true && (this.configJson.httpPort < 1 || this.configJson.httpPort > 65535))
         {
-            this.logger.logInfo(1, `Set httpPort to default value "52789"`);
+            rootAddonLogger.info(`Set httpPort to default value "52789"`);
             this.configJson.httpPort = 52789;
             updated = true;
         }
         if(this.configJson.httpsActive == true && (this.configJson.httpsPort < 1 || this.configJson.httpsPort > 65535))
         {
-            this.logger.logInfo(1, `Set httpsPort to default value "52790"`);
+            rootAddonLogger.info(`Set httpsPort to default value "52790"`);
             this.configJson.httpsPort = 52790;
             updated = true;
         }
         if(this.configJson.httpActive == true && this.configJson.httpsActive == true && this.configJson.httpPort == this.configJson.httpsPort)
         {
-            this.logger.logInfo(1, `Set httpPort to default value "52789" and httpsPort to default value "52790"`);
+            rootAddonLogger.info(`Set httpPort to default value "52789" and httpsPort to default value "52790"`);
             this.configJson.httpPort = 52789;
             this.configJson.httpsPort = 52790;
             updated = true;
@@ -549,7 +600,7 @@ export class Config
                     }
                     else
                     {
-                        this.logger.logInfo(1, `Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
+                        rootAddonLogger.info(`Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
                         this.configJson.localStaticUdpPortsActive = false;
                         updated = true;
                     }
@@ -559,19 +610,19 @@ export class Config
         
         if(this.configJson.stateUpdateIntervallActive && (this.configJson.stateUpdateIntervallTimespan < 15 || this.configJson.stateUpdateIntervallTimespan > 240))
         {
-            this.logger.logInfo(1, `Set stateUpdateIntervallTimespan to default value "10"`);
+            rootAddonLogger.info(`Set stateUpdateIntervallTimespan to default value "10"`);
             this.configJson.stateUpdateIntervallTimespan = 10;
             updated = true;
         }
         if(this.configJson.updateLinksOnlyWhenArmed && (this.configJson.updateLinksTimespan < 15 || this.configJson.updateLinksTimespan > 240))
         {
-            this.logger.logInfo(1, `Set updateLinksTimespan to default value "10"`);
+            rootAddonLogger.info(`Set updateLinksTimespan to default value "10"`);
             this.configJson.updateLinksTimespan = 10;
             updated = true;
         }
-        if(this.configJson.logLevel < 0 || this.configJson.logLevel > 3)
+        if(this.configJson.logLevel < 0 || this.configJson.logLevel > 6)
         {
-            this.logger.logInfo(1, `Set logLevel to default value "0"`);
+            rootAddonLogger.info(`Set logLevel to default value "0"`);
             this.configJson.logLevel = 0;
             updated = true;
         }
@@ -584,7 +635,7 @@ export class Config
      */
     private updateWithNewStation(stationSerial : string) : boolean
     {
-        this.logger.logInfoBasic(`Adding station ${stationSerial} to settings.`);
+        rootAddonLogger.info(`Adding station ${stationSerial} to settings.`);
         var station = {"stationSerial": stationSerial, "p2pDid": null, "stationIpAddress": null, "udpPort": null};
 
         if(Array.isArray(this.configJson.stations))
@@ -1504,13 +1555,13 @@ export class Config
     }
 
     /**
-     * Returns the log level.
+     * Returns the log level for addon.
      */
-    public getLogLevel() : number
+    public getLogLevelAddon() : number
     {
-        if(this.configJson.apiConfig.logLevel !== undefined)
+        if(this.configJson.logConfig.logLevelAddon !== undefined)
         {
-            return this.configJson.apiConfig.logLevel;
+            return this.configJson.logConfig.logLevelAddon;
         }
         else
         {
@@ -1519,14 +1570,154 @@ export class Config
     }
 
     /**
-     * Set the log level.
+     * Set the log level for addon.
      * @param logLevel The log level as number to set
      */
-    public setLogLevel(logLevel : number) : void
+    public setLogLevelAddon(logLevel : number) : void
     {
-        if(this.configJson.apiConfig.logLevel != logLevel)
+        if(this.configJson.logConfig.logLevelAddon != logLevel)
         {
-            this.configJson.apiConfig.logLevel = logLevel;
+            this.configJson.logConfig.logLevelAddon = logLevel;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Returns the log level for main.
+     */
+    public getLogLevelMain() : number
+    {
+        if(this.configJson.logConfig.logLevelMain !== undefined)
+        {
+            return this.configJson.logConfig.logLevelMain;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /**
+     * Set the log level for main.
+     * @param logLevel The log level as number to set
+     */
+    public setLogLevelMain(logLevel : number) : void
+    {
+        if(this.configJson.logConfig.logLevelMain != logLevel)
+        {
+            this.configJson.logConfig.logLevelmain = logLevel;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Returns the log level for http.
+     */
+    public getLogLevelHttp() : number
+    {
+        if(this.configJson.logConfig.logLevelHttp !== undefined)
+        {
+            return this.configJson.logConfig.logLevelHttp;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /**
+     * Set the log level for http.
+     * @param logLevel The log level as number to set
+     */
+    public setLogLevelHttp(logLevel : number) : void
+    {
+        if(this.configJson.logConfig.logLevelHttp != logLevel)
+        {
+            this.configJson.logConfig.logLevelHttp = logLevel;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Returns the log level for p2p.
+     */
+    public getLogLevelP2p() : number
+    {
+        if(this.configJson.logConfig.logLevelP2p !== undefined)
+        {
+            return this.configJson.logConfig.logLevelP2p;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /**
+     * Set the log level for p2p.
+     * @param logLevel The log level as number to set
+     */
+    public setLogLevelP2p(logLevel : number) : void
+    {
+        if(this.configJson.logConfig.logLevelP2p != logLevel)
+        {
+            this.configJson.logConfig.logLevelP2p = logLevel;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Returns the log level for push.
+     */
+    public getLogLevelPush() : number
+    {
+        if(this.configJson.logConfig.logLevelPush !== undefined)
+        {
+            return this.configJson.logConfig.logLevelPush;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /**
+     * Set the log level for push.
+     * @param logLevel The log level as number to set
+     */
+    public setLogLevelPush(logLevel : number) : void
+    {
+        if(this.configJson.logConfig.logLevelPush != logLevel)
+        {
+            this.configJson.logConfig.logLevelPush = logLevel;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Returns the log level for mqtt.
+     */
+    public getLogLevelMqtt() : number
+    {
+        if(this.configJson.logConfig.logLevelMqtt !== undefined)
+        {
+            return this.configJson.logConfig.logLevelMqtt;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /**
+     * Set the log level for mqtt.
+     * @param logLevel The log level as number to set
+     */
+    public setLogLevelMqtt(logLevel : number) : void
+    {
+        if(this.configJson.logConfig.logLevelMqtt != logLevel)
+        {
+            this.configJson.logConfig.logLevelMqtt = logLevel;
             this.hasChanged = true;
         }
     }
@@ -1696,7 +1887,7 @@ export class Config
             var res;
             if(this.isStationInConfig(stationSerial) == false)
             {
-                this.logger.logInfo(1, `Station ${stationSerial} not in config. Try to create new station entry.`);
+                rootAddonLogger.info(`Station ${stationSerial} not in config. Try to create new station entry.`);
                 res = this.updateWithNewStation(stationSerial);
             }
             else
@@ -1720,11 +1911,11 @@ export class Config
                         return true;
                     }
                 }
-                this.logger.logInfo(1, `Station ${stationSerial} not in config.`);
+                rootAddonLogger.info(`Station ${stationSerial} not in config.`);
                 return false;
             }
         }
-        this.logger.logInfo(1, `Station ${stationSerial} not in config.`);
+        rootAddonLogger.info(`Station ${stationSerial} not in config.`);
         return false;
     }
 

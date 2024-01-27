@@ -9,6 +9,7 @@ import { getError, parseValue, waitForEvent } from "./utils";
 import { CameraEvent, DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 import { EventInteractions } from "./eventInteractions";
+import { rootAddonLogger } from './logging';
 
 /**
  * Represents all the Devices in the account.
@@ -40,7 +41,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
         if(this.api.getApiUsePushService() == false)
         {
-            this.api.logInfoBasic("Retrieving last video event times disabled in settings.");
+            rootAddonLogger.info("Retrieving last video event times disabled in settings.");
         }
 
         this.httpService.on("devices", (devices: FullDevices) => this.handleDevices(devices));
@@ -52,7 +53,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async handleDevices(devices : FullDevices) : Promise<void>
     {
-        this.api.logDebug("Got devices", { devices: devices });
+        rootAddonLogger.debug("Got devices", { devices: devices });
         
         const resDevices = devices;
 
@@ -68,7 +69,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             {
                 if(this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId())
                 {
-                    this.api.logDebug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
+                    rootAddonLogger.debug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
                     continue;
                 }
                 if(this.devices[deviceSerial])
@@ -180,7 +181,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         }
                         catch (err) {
                             const error = ensureError(err);
-                            this.api.logError("HandleDevices Error", { error: getError(error), deviceSN: device.getSerial() });
+                            rootAddonLogger.error("HandleDevices Error", { error: getError(error), deviceSN: device.getSerial() });
                         }
                         return device;
                     }));
@@ -197,7 +198,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         }
                     }).catch((err) => {
                         const error = ensureError(err);
-                        this.api.logError("Error trying to connect to station after device loaded", { error: getError(error), deviceSN: device.getSerial() });
+                        rootAddonLogger.error("Error trying to connect to station after device loaded", { error: getError(error), deviceSN: device.getSerial() });
                     });
                 });
                 this.loadingEmitter.emit("devices loaded");
@@ -218,7 +219,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                         this.removeDevice(device);
                     }).catch((err) => {
                         const error = ensureError(err);
-                        this.api.logError("Error removing device", { error: getError(error), deviceSN: deviceSN });
+                        rootAddonLogger.error("Error removing device", { error: getError(error), deviceSN: deviceSN });
                     });
                 }
             }
@@ -249,7 +250,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug(`Device with this serial ${device.getSerial()} exists already and couldn't be added again!`);
+            rootAddonLogger.debug(`Device with this serial ${device.getSerial()} exists already and couldn't be added again!`);
         }
     }
 
@@ -268,7 +269,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug(`Device with this serial ${device.getSerial()} doesn't exists and couldn't be removed!`);
+            rootAddonLogger.debug(`Device with this serial ${device.getSerial()} doesn't exists and couldn't be removed!`);
         }
     }
 
@@ -480,111 +481,111 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             case "PropertyChanged":
                 device.on("property changed", (device : Device, name : string, value : PropertyValue, ready: boolean) => this.onPropertyChanged(device, name, value, ready));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 device.on("raw property changed", (device : Device, type : number, value : string) => this.onRawPropertyChanged(device, type, value));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property changed")} Listener.`);
                 break;
             case "CryingDetected":
                 device.on("crying detected", (device : Device, state : boolean) => this.onCryingDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("crying detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("crying detected")} Listener.`);
                 break;
             case "SoundDetected":
                 device.on("sound detected", (device : Device, state : boolean) => this.onSoundDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("sound detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("sound detected")} Listener.`);
                 break;
             case "PetDetected":
                 device.on("pet detected", (device : Device, state : boolean) => this.onPetDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
             case "VehicleDetected":
                 device.on("vehicle detected", (device : Device, state : boolean) => this.onVehicleDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("vehicle detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("vehicle detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.on("motion detected", (device : Device, state : boolean) => this.onMotionDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
                 device.on("person detected", (device : Device, state : boolean, person : string) => this.onPersonDetected(device, state, person));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
                 break;
             case "Rings":
                 device.on("rings", (device : Device, state : boolean) => this.onRings(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("rings")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("rings")} Listener.`);
                 break;
             case "Locked":
                 device.on("locked", (device : Device, state : boolean) => this.onLocked(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("locked")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("locked")} Listener.`);
                 break;
             case "Open":
                 device.on("open", (device : Device, state : boolean) => this.onOpen(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("open")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("open")} Listener.`);
                 break;
             case "Ready":
                 device.on("ready", (device : Device) => this.onReady(device));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("ready")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("ready")} Listener.`);
                 break;
             case "PackageDelivered":
                 device.on("package delivered", (device: Device, state: boolean) => this.onDevicePackageDelivered(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package delivered")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package delivered")} Listener.`);
                 break;
             case "PackageStranded":
                 device.on("package stranded", (device: Device, state: boolean) => this.onDevicePackageStranded(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package stranded")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package stranded")} Listener.`);
                 break;
             case "PackageTaken":
                 device.on("package taken", (device: Device, state: boolean) => this.onDevicePackageTaken(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package taken")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package taken")} Listener.`);
                 break;
             case "SomeoneLoitering":
                 device.on("someone loitering", (device: Device, state: boolean) => this.onDeviceSomeoneLoitering(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("someone loitering")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("someone loitering")} Listener.`);
                 break;
             case "RadarMotionDetected":
                 device.on("radar motion detected", (device: Device, state: boolean) => this.onDeviceRadarMotionDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("radar motion detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("radar motion detected")} Listener.`);
                 break;
             case "911Alarm":
                 device.on("911 alarm", (device: Device, state: boolean, detail: SmartSafeAlarm911Event) => this.onDevice911Alarm(device, state, detail));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("911 alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("911 alarm")} Listener.`);
                 break;
             case "ShakeAlarm":
                 device.on("shake alarm", (device: Device, state: boolean, detail: SmartSafeShakeAlarmEvent) => this.onDeviceShakeAlarm(device, state, detail));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("shake alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("shake alarm")} Listener.`);
                 break;
             case "WrongTryProtectAlarm":
                 device.on("wrong try-protect alarm", (device: Device, state: boolean) => this.onDeviceWrongTryProtectAlarm(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
                 break;
             case "LongTimeNotClose":
                 device.on("long time not close", (device: Device, state: boolean) => this.onDeviceLongTimeNotClose(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("long time not close")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("long time not close")} Listener.`);
                 break;
             case "LowBattery":
                 device.on("low battery", (device: Device, state: boolean) => this.onDeviceLowBattery(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("low battery")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("low battery")} Listener.`);
                 break;
             case "Jammed":
                 device.on("jammed", (device: Device, state: boolean) => this.onDeviceJammed(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("jammed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("jammed")} Listener.`);
                 break;
             case "StrangerPersonDetected":
                 device.on("stranger person detected", (device: Device, state: boolean) => this.onDeviceStrangerPersonDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("stranger person detected")} Listener.`);
                 break;
             case "DogDetected":
                 device.on("dog detected", (device: Device, state: boolean) => this.onDeviceDogDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog detected")} Listener.`);
                 break;
             case "DogLickDetected":
                 device.on("dog lick detected", (device: Device, state: boolean) => this.onDeviceDogLickDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog lick detected")} Listener.`);
                 break;
             case "DogPoopDetected":
                 device.on("dog poop detected", (device: Device, state: boolean) => this.onDeviceDogPoopDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog poop detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog poop detected")} Listener.`);
                 break;
         }
     }
@@ -600,111 +601,111 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             case "PropertyChanged":
                 device.removeAllListeners("property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 device.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("raw property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("raw property changed")} Listener.`);
                 break;
             case "CryingDetected":
                 device.removeAllListeners("crying detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("crying detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("crying detected")} Listener.`);
                 break;
             case "SoundDetected":
                 device.removeAllListeners("sound detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("sound detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("sound detected")} Listener.`);
                 break;
             case "PetDetected":
                 device.removeAllListeners("pet detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pet detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
             case "VehicleDetected":
                 device.removeAllListeners("vehicle detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("vehicle detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("vehicle detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.removeAllListeners("motion detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("motion detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
                 device.removeAllListeners("person detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("person detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("person detected")} Listener.`);
                 break;
             case "Rings":
                 device.removeAllListeners("rings");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("rings")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("rings")} Listener.`);
                 break;
             case "Locked":
                 device.removeAllListeners("locked");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("locked")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("locked")} Listener.`);
                 break;
             case "Open":
                 device.removeAllListeners("open");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("open")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("open")} Listener.`);
                 break;
             case "Ready":
                 device.removeAllListeners("ready");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("ready")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("ready")} Listener.`);
                 break;
             case "PackageDelivered":
                 device.removeAllListeners("package delivered");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package delivered")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package delivered")} Listener.`);
                 break;
             case "PackageStranded":
                 device.removeAllListeners("package stranded");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package stranded")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package stranded")} Listener.`);
                 break;
             case "PackageTaken":
                 device.removeAllListeners("package taken");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package taken")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package taken")} Listener.`);
                 break;
             case "SomeoneLoitering":
                 device.removeAllListeners("someone loitering");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("someone loitering")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("someone loitering")} Listener.`);
                 break;
             case "RadarMotionDetected":
                 device.removeAllListeners("radar motion detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("radar motion detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("radar motion detected")} Listener.`);
                 break;
             case "911Alarm":
                 device.removeAllListeners("911 alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("911 alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("911 alarm")} Listener.`);
                 break;
             case "ShakeAlarm":
                 device.removeAllListeners("shake alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("shake alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("shake alarm")} Listener.`);
                 break;
             case "WrongTryProtectAlarm":
                 device.removeAllListeners("wrong try-protect alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
                 break;
             case "LongTimeNotClose":
                 device.removeAllListeners("long time not close");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("long time not close")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("long time not close")} Listener.`);
                 break;
             case "LowBattery":
                 device.removeAllListeners("low battery");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("low battery")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("low battery")} Listener.`);
                 break;
             case "Jammed":
                 device.removeAllListeners("jammed");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("jammed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("jammed")} Listener.`);
                 break;
             case "StrangerPersonDetected":
                 device.removeAllListeners("stranger person detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("stranger person detected")} Listener.`);
                 break;
             case "DogDetected":
                 device.removeAllListeners("dog detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog detected")} Listener.`);
                 break;
             case "DogLickDetected":
                 device.removeAllListeners("dog lick detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog lick detected")} Listener.`);
                 break;
             case "DogPoopDetected":
                 device.removeAllListeners("dog poop detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog poop detected")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog poop detected")} Listener.`);
                 break;
         }
     }
@@ -718,7 +719,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onPropertyChanged(device : Device, name : string, value : PropertyValue, ready: boolean) : Promise<void>
     {
         //this.emit("device property changed", device, name, value);
-        this.api.logDebug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
+        rootAddonLogger.debug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
         try
         {
             if (ready && !name.startsWith("hidden-"))
@@ -731,7 +732,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = ensureError(err);
-                    this.api.logError(`Device property changed error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+                    rootAddonLogger.error(`Device property changed error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                 });
             }
             else if (name === PropertyName.DeviceRTSPStream && (value as boolean) === false)
@@ -748,14 +749,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     }
                 }).catch((err) => {
                     const error = ensureError(err);
-                    this.api.logError(`Device property changed error - station download image`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+                    rootAddonLogger.error(`Device property changed error - station download image`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                 });
             }
         }
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`Device property changed error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+            rootAddonLogger.error(`Device property changed error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
         }
     }
     
@@ -768,7 +769,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async onRawPropertyChanged(device : Device, type : number, value : string) : Promise<void>
     {
         //this.emit("device raw property changed", device, type, value, modified);
-        this.api.logDebug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value}`);
+        rootAddonLogger.debug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value}`);
     }
 
     /**
@@ -778,7 +779,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onCryingDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
         if(state === true)
         {
             try
@@ -805,7 +806,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onSoundDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
         if(state === true)
         {
             try
@@ -832,7 +833,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onPetDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
         if(state === true)
         {
             try
@@ -859,7 +860,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onVehicleDetected(device: Device, state: boolean): void
     {
-        this.api.logDebug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
         if(state === true)
         {
             try
@@ -886,7 +887,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onMotionDetected(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
         if(state === true)
         {
             try
@@ -914,7 +915,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onPersonDetected(device : Device, state : boolean, person : string) : Promise<void>
     {
-        this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        rootAddonLogger.debug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
         if(state === true)
         {
             try
@@ -941,7 +942,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onRings(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
         //this.setLastVideoTimeNow(device.getSerial());
         try
         {
@@ -961,7 +962,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onLocked(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
     }
 
     /**
@@ -971,7 +972,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onOpen(device : Device, state : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
+        rootAddonLogger.debug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
     }
 
     /**
@@ -980,7 +981,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private async onReady(device : Device) : Promise<void>
     {
-        this.api.logDebug(`Event "Ready": device: ${device.getSerial()}`);
+        rootAddonLogger.debug(`Event "Ready": device: ${device.getSerial()}`);
         try
         {
             if (device.getPropertyValue(PropertyName.DeviceRTSPStream) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStream) as boolean) === true)
@@ -989,14 +990,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = ensureError(err);
-                    this.api.logError(`Device ready error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
+                    rootAddonLogger.error(`Device ready error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
                 });
             }
         }
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`Device ready error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
+            rootAddonLogger.error(`Device ready error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
         }
     }
 
@@ -1239,7 +1240,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             device.updateRawProperties(values);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError("Update device properties error", { error: getError(error), deviceSN: deviceSerial, values: values });
+            rootAddonLogger.error("Update device properties error", { error: getError(error), deviceSN: deviceSerial, values: values });
         });
     }
 
@@ -1359,7 +1360,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         catch (error)
         {
-            this.api.logError("Error at getDeviceLastEvent: ", error);
+            rootAddonLogger.error("Error at getDeviceLastEvent: ", error);
         }
     }
 
@@ -1434,7 +1435,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         catch (error)
         {
-            this.api.logError("Error at downloadLatestImageForDevice: ", error);
+            rootAddonLogger.error("Error at downloadLatestImageForDevice: ", error);
         }
     }
 

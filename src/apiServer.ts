@@ -5,15 +5,14 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { exit } from 'process';
 import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
 import { GuardMode } from './eufySecurityApi/http';
-import { Logger } from './eufySecurityApi/utils/logging';
 import { exec } from 'child_process';
+import { dummyLogger, InternalLogger, rootAddonLogger, setLoggingLevel, LogLevel } from "./eufySecurityApi/logging"
 
 process.chdir(__dirname);
 var apiServer !: ApiServer;
 var serverHttp = createServerHttp();
 var serverHttps = createServerHttps();
-var api = new EufySecurityApi();
-var logger = new Logger(api);
+var api : EufySecurityApi;
 
 class ApiServer
 {
@@ -22,8 +21,11 @@ class ApiServer
      */
     constructor()
     {
+        InternalLogger.logger = dummyLogger;
+        setLoggingLevel("all", LogLevel.Info);
+        api = new EufySecurityApi();
         apiPortFile(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort());
-        this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile(), logger);
+        this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile());
     }
 
     /**
@@ -36,24 +38,24 @@ class ApiServer
      * @param certHttps The cert for https.
      * @param logger The logger component.
      */
-    public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string, logger : Logger)
+    public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string)
     {
-        logger.logInfoBasic(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
-        logger.logInfoBasic(`  Host: ${os.hostname}`);
-        logger.logInfoBasic(`  Platform: ${os.platform}_${os.arch}`);
-        logger.logInfoBasic(`  Node: ${process.version}`);
+        rootAddonLogger.info(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
+        rootAddonLogger.info(`  Host: ${os.hostname}`);
+        rootAddonLogger.info(`  Platform: ${os.platform}_${os.arch}`);
+        rootAddonLogger.info(`  Node: ${process.version}`);
         if(httpActive == true)
         {
-            logger.logInfoBasic("Starting http server...");
+            rootAddonLogger.info("Starting http server...");
             serverHttp.on("error", this.errorListener)
             serverHttp.on("request", this.requestListener);
             serverHttp.listen(portHttp);
-            logger.logInfoBasic(`...started. http listening on port '${portHttp}'`);
+            rootAddonLogger.info(`...started. http listening on port '${portHttp}'`);
         }
 
         if(httpsActive == true)
         {
-            logger.logInfoBasic("Starting https server...");
+            rootAddonLogger.info("Starting https server...");
             if(existsSync(keyHttps) && existsSync(certHttps))
             {
                 const options = {
@@ -64,11 +66,11 @@ class ApiServer
                 serverHttps.on("error", this.errorListener)
                 serverHttps.on("request", this.requestListener);
                 serverHttps.listen(portHttps);
-                logger.logInfoBasic(`...started. https listening on port '${portHttps}'`);
+                rootAddonLogger.info(`...started. https listening on port '${portHttps}'`);
             }
             else
             {
-                logger.logErrorBasis("FAILED TO START SERVER (HTTPS): key or cert file not found.");
+                rootAddonLogger.error("FAILED TO START SERVER (HTTPS): key or cert file not found.");
             }
         }
     }
@@ -81,11 +83,11 @@ class ApiServer
     {
         if(error.code == "EADDRINUSE")
         {
-            logger.logErrorBasis(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
+            rootAddonLogger.error(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
         }
         else
         {
-            logger.logErrorBasis(`Errorcode: ${error.code}: ${error.message}`);
+            rootAddonLogger.error(`Errorcode: ${error.code}: ${error.message}`);
         }
     }
     
@@ -768,10 +770,40 @@ class ApiServer
                                 usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
                             }
 
-                            var apiloglevel = 0;
-                            if(postData.indexOf("logLevel") >= 0)
+                            var loglevelAddon = 6;
+                            if(postData.indexOf("logLevelAddon") >= 0)
                             {
-                                apiloglevel = getDataFromPOSTData(postData, "logLevel", "number");
+                                loglevelAddon = getDataFromPOSTData(postData, "logLevelAddon", "number");
+                            }
+
+                            var loglevelMain = 6;
+                            if(postData.indexOf("logLevelMain") >= 0)
+                            {
+                                loglevelMain = getDataFromPOSTData(postData, "logLevelMain", "number");
+                            }
+
+                            var loglevelHttp = 6;
+                            if(postData.indexOf("logLevelHttp") >= 0)
+                            {
+                                loglevelHttp = getDataFromPOSTData(postData, "logLevelHttp", "number");
+                            }
+
+                            var loglevelP2p = 6;
+                            if(postData.indexOf("logLevelP2p") >= 0)
+                            {
+                                loglevelP2p = getDataFromPOSTData(postData, "logLevelP2p", "number");
+                            }
+
+                            var loglevelPush = 6;
+                            if(postData.indexOf("logLevelPush") >= 0)
+                            {
+                                loglevelPush = getDataFromPOSTData(postData, "logLevelPush", "number");
+                            }
+
+                            var loglevelMqtt = 6;
+                            if(postData.indexOf("logLevelAddon") >= 0)
+                            {
+                                loglevelMqtt = getDataFromPOSTData(postData, "logLevelMqtt", "number");
                             }
 
                             if(checkNumberValue(apiporthttp, 1, 53535) == false)
@@ -793,7 +825,27 @@ class ApiServer
                             {
                                 isDataOK = false;
                             }
-                            if(checkNumberValue(apiloglevel, 0, 3) == false)
+                            if(checkNumberValue(loglevelAddon, 0, 6) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(loglevelMain, 0, 6) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(loglevelHttp, 0, 6) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(loglevelP2p, 0, 6) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(loglevelPush, 0, 6) == false)
+                            {
+                                isDataOK = false;
+                            }
+                            if(checkNumberValue(loglevelMqtt, 0, 6) == false)
                             {
                                 isDataOK = false;
                             }
@@ -810,7 +862,7 @@ class ApiServer
                             {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
-                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevelAddon, loglevelMain, loglevelHttp, loglevelP2p, loglevelPush, loglevelMqtt);
                             }
                             else
                             {
@@ -827,16 +879,16 @@ class ApiServer
 
                             if(resJson.success == true && resJson.serviceRestart == true)
                             {
-                                logger.logInfoBasic("Settings saved. Restarting apiServer.");
+                                rootAddonLogger.info("Settings saved. Restarting apiServer.");
                                 restartServer();
                             }
                             else if(resJson.success == true && resJson.serviceRestart == false)
                             {
-                                logger.logInfoBasic("Settings saved.");
+                                rootAddonLogger.info("Settings saved.");
                             }
                             else
                             {
-                                logger.logInfoBasic("Error during saving settings.");
+                                rootAddonLogger.info("Error during saving settings.");
                             }
                         });
                         break;
@@ -847,7 +899,7 @@ class ApiServer
                             postData += chunk.toString();
                             if(request.headers['content-length'] !== undefined && Number.parseInt(request.headers['content-length']?.toString()) > 500000)
                             {
-                                logger.logInfoBasic("Error during upload and saving config file: File is to large.");
+                                rootAddonLogger.info("Error during upload and saving config file: File is to large.");
                                 request.destroy(new Error("FileToLarge"));
                             }
                         });
@@ -858,7 +910,7 @@ class ApiServer
                                 responseData = "";
                                 if(checkUploadedFileMetadata(postData) == false)
                                 {
-                                    logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing.");
+                                    rootAddonLogger.info("Error during upload and saving config file: File metadata are unsopported or missing.");
                                     responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
                                 }
                                 else
@@ -868,12 +920,12 @@ class ApiServer
                                     {
                                         if(responseData == "")
                                         {
-                                            logger.logInfoBasic("Error during upload and saving config file: File content could not be determined.");
+                                            rootAddonLogger.info("Error during upload and saving config file: File content could not be determined.");
                                             responseData = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
                                         }
                                         else
                                         {
-                                            logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
+                                            rootAddonLogger.info("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
                                             responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
                                         }
                                     }
@@ -894,12 +946,12 @@ class ApiServer
 
                                 if(resJson.success == true && resJson.serviceRestart == true)
                                 {
-                                    logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
+                                    rootAddonLogger.info("Config file uploaded and saved. Restarting apiServer.");
                                     restartServer();
                                 }
                                 else
                                 {
-                                    logger.logInfoBasic("Config file was not saved.");
+                                    rootAddonLogger.info("Config file was not saved.");
                                 }
                             }
                             catch (e : any)
@@ -929,7 +981,7 @@ class ApiServer
                             }
                             catch (e : any)
                             {
-                                logger.logErrorBasis(e.message);
+                                rootAddonLogger.error(e.message);
                             }
                         });
                         break;
@@ -1199,17 +1251,17 @@ function getUploadFileContent(postData : string) : string | undefined
  */
 async function stopServer()
 {
-    logger.logInfoBasic("Set service state to shutdown...");
+    rootAddonLogger.info("Set service state to shutdown...");
     api.setServiceState("shutdown");
-    logger.logInfoBasic("Stopping scheduled tasks...");
+    rootAddonLogger.info("Stopping scheduled tasks...");
     api.clearScheduledTasks();
-    logger.logInfoBasic("Stopping EufySecurityApi...");
+    rootAddonLogger.info("Stopping EufySecurityApi...");
     await api.close();
-    logger.logInfoBasic("Write config...");
+    rootAddonLogger.info("Write config...");
     api.writeConfig();
-    logger.logInfoBasic("Stopping...");
+    rootAddonLogger.info("Stopping...");
     serverHttp.close();
-    logger.logInfoBasic("Stopped...");
+    rootAddonLogger.info("Stopped...");
 }
 
 /**
@@ -1217,7 +1269,7 @@ async function stopServer()
  */
 async function restartServer()
 {
-    logger.logInfoBasic("Going to restart with apiServerRestarter...");
+    rootAddonLogger.info("Going to restart with apiServerRestarter...");
     exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
 }
 
@@ -1249,16 +1301,16 @@ function wait10Seconds() {
 }
 
 process.on('SIGTERM', async () => {
-    logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
+    rootAddonLogger.info("SIGTERM signal received. Save config and shutdown server...");
     await stopServer();
-    logger.logInfoBasic("...done. Exiting");
+    rootAddonLogger.info("...done. Exiting");
     exit(0);
 });
 
 process.on('SIGINT', async () => {
-    logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
+    rootAddonLogger.info("SIGINT signal received. Save config and shutdown server...");
     await stopServer();
-    logger.logInfoBasic("...done. Exiting");
+    rootAddonLogger.info("...done. Exiting");
     exit(0);
 });
 

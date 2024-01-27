@@ -2,6 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
 import { HTTPApi, HouseDetail, Houses } from './http';
+import { rootAddonLogger } from "./logging";
 
 /**
  * Represents all the Houses the account has access to.
@@ -34,7 +35,7 @@ export class EufyHouses extends TypedEmitter<EufySecurityEvents>
      */
     private handleHouses(houses: Houses) : void
     {
-        this.api.logDebug("Got houses", { houses: houses });
+        rootAddonLogger.debug("Got houses", { houses: houses });
         //TODO: Finish implementation
         this.houses = houses;
     }

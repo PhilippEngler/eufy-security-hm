@@ -3377,7 +3377,12 @@ function disableUIElements()
 	document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
 	document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
 	document.getElementById("chkUsePushService").setAttribute("disabled", true);
-	document.getElementById("cbLogLevel").setAttribute("disabled", true);
+	document.getElementById("cbLogLevelAddon").setAttribute("disabled", true);
+	document.getElementById("cbLogLevelMain").setAttribute("disabled", true);
+	document.getElementById("cbLogLevelHttp").setAttribute("disabled", true);
+	document.getElementById("cbLogLevelP2p").setAttribute("disabled", true);
+	document.getElementById("cbLogLevelPush").setAttribute("disabled", true);
+	document.getElementById("cbLogLevelMqtt").setAttribute("disabled", true);
 }
 
 function activateUIElements()
@@ -3398,7 +3403,12 @@ function enableUIElements()
 	document.getElementById('txtDefaultImagePath').removeAttribute("disabled");
 	document.getElementById('txtDefaultVideoPath').removeAttribute("disabled");
 	document.getElementById("chkUsePushService").removeAttribute("disabled");
-	document.getElementById("cbLogLevel").removeAttribute("disabled");
+	document.getElementById("cbLogLevelAddon").removeAttribute("disabled");
+	document.getElementById("cbLogLevelMain").removeAttribute("disabled");
+	document.getElementById("cbLogLevelHttp").removeAttribute("disabled");
+	document.getElementById("cbLogLevelP2p").removeAttribute("disabled");
+	document.getElementById("cbLogLevelPush").removeAttribute("disabled");
+	document.getElementById("cbLogLevelMqtt").removeAttribute("disabled");
 }
 
 function validateFormSettings()
@@ -3770,13 +3780,53 @@ function loadDataSettings()
 					{
 						document.getElementById("chkUsePushService").setAttribute("checked", true);
 					}
-					if(objResp.data.logLevel === undefined || !(objResp.data.logLevel == "0" || objResp.data.logLevel == "1" || objResp.data.logLevel == "2" || objResp.data.logLevel == "3"))
+					if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6"))
 					{
-						document.getElementById("cbLogLevel").selectedIndex = 0;
+						document.getElementById("cbLogLevelAddon").selectedIndex = 3;
 					}
 					else
 					{
-						document.getElementById("cbLogLevel").selectedIndex = (Number.parseInt(objResp.data.logLevel)) + 1;
+						document.getElementById("cbLogLevelAddon").selectedIndex = (Number.parseInt(objResp.data.logLevelAddon)) + 1;
+					}
+					if(objResp.data.logLevelMain === undefined || (objResp.data.logLevelMain < "0" || objResp.data.logLevelMain > "6"))
+					{
+						document.getElementById("cbLogLevelMain").selectedIndex = 3;
+					}
+					else
+					{
+						document.getElementById("cbLogLevelMain").selectedIndex = (Number.parseInt(objResp.data.logLevelMain)) + 1;
+					}
+					if(objResp.data.logLevelHttp === undefined || (objResp.data.logLevelHttp < "0" || objResp.data.logLevelHttp > "6"))
+					{
+						document.getElementById("cbLogLevelHttp").selectedIndex = 3;
+					}
+					else
+					{
+						document.getElementById("cbLogLevelHttp").selectedIndex = (Number.parseInt(objResp.data.logLevelHttp)) + 1;
+					}
+					if(objResp.data.logLevelP2p === undefined || (objResp.data.logLevelP2p < "0" || objResp.data.logLevelP2p > "6"))
+					{
+						document.getElementById("cbLogLevelP2p").selectedIndex = 3;
+					}
+					else
+					{
+						document.getElementById("cbLogLevelP2p").selectedIndex = (Number.parseInt(objResp.data.logLevelP2p)) + 1;
+					}
+					if(objResp.data.logLevelPush === undefined || (objResp.data.logLevelPush < "0" || objResp.data.logLevelPush > "6"))
+					{
+						document.getElementById("cbLogLevelPush").selectedIndex = 3;
+					}
+					else
+					{
+						document.getElementById("cbLogLevelPush").selectedIndex = (Number.parseInt(objResp.data.logLevelPush)) + 1;
+					}
+					if(objResp.data.logLevelMqtt === undefined || (objResp.data.logLevelMqtt < "0" || objResp.data.logLevelMqtt > "6"))
+					{
+						document.getElementById("cbLogLevelMqtt").selectedIndex = 3;
+					}
+					else
+					{
+						document.getElementById("cbLogLevelMqtt").selectedIndex = (Number.parseInt(objResp.data.logLevelMqtt)) + 1;
 					}
 					if(objResp.data.tokenExpire === undefined)
 					{
@@ -3797,7 +3847,12 @@ function loadDataSettings()
 							document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenUnknown", objResp.data.tokenExpire)}.<br />`;
 						}
 					}
-					checkLogLevel(objResp.data.logLevel);
+					checkLogLevel("alertLogLevelAddon", objResp.data.logLevelAddon);
+					checkLogLevel("alertLogLevelMain", objResp.data.logLevelAddon);
+					checkLogLevel("alertLogLevelHttp", objResp.data.logLevelAddon);
+					checkLogLevel("alertLogLevelP2p", objResp.data.logLevelAddon);
+					checkLogLevel("alertLogLevelPush", objResp.data.logLevelAddon);
+					checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelAddon);
 					document.getElementById("resultLoading").innerHTML = "";
 					activateUIElements();
 					enableUIElements();
@@ -4456,20 +4511,20 @@ function changeValue(element)
 	}
 }
 
-function checkLogLevel(value)
+function checkLogLevel(elementName, value)
 {
-	if(value == "3")
+	if(value == "0" || value == "1")
 	{
-		document.getElementById("alertLogLevel").setAttribute("class", "alert alert-warning alert-dismissible fade show");
-		document.getElementById("alertLogLevel").setAttribute("role", "alert");
-		document.getElementById("alertLogLevel").innerHTML += `${translateContent("lblLogLevelToHighMessage")}<br />`;
-		document.getElementById("alertLogLevel").innerHTML += `<small class="form-text text-muted">${translateContent("lblLogLevelToHighSubText")}</small>`;
+		document.getElementById(elementName).setAttribute("class", "alert alert-warning alert-dismissible fade show");
+		document.getElementById(elementName).setAttribute("role", "alert");
+		document.getElementById(elementName).innerHTML += `${translateContent("lblLogLevelToHighMessage")}<br />`;
+		document.getElementById(elementName).innerHTML += `<small class="form-text text-muted">${translateContent("lblLogLevelToHighSubText")}</small>`;
 	}
 	else
 	{
-		document.getElementById("alertLogLevel").removeAttribute("class");
-		document.getElementById("alertLogLevel").removeAttribute("role");
-		document.getElementById("alertLogLevel").innerHTML = "";
+		document.getElementById(elementName).removeAttribute("class");
+		document.getElementById(elementName).removeAttribute("role");
+		document.getElementById(elementName).innerHTML = "";
 	}
 }
 

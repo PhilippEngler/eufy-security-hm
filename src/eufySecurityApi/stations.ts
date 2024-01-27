@@ -11,6 +11,7 @@ import { TalkbackStream } from "./p2p/talkback";
 import { getError, parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
 import path from "path";
+import { rootAddonLogger } from "./logging";
 
 /**
  * Represents all the stations in the account.
@@ -47,7 +48,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         if(this.api.getStateUpdateEventActive() == false)
         {
-            this.api.logInfoBasic("Retrieving last guard mode change times disabled in settings.");
+            rootAddonLogger.info("Retrieving last guard mode change times disabled in settings.");
         }
 
         this.httpService.on("hubs", (hubs: Hubs) => this.handleHubs(hubs));
@@ -59,7 +60,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async handleHubs(hubs: Hubs) : Promise<void>
     {
-        this.api.logDebug("Got hubs", { hubs: hubs });
+        rootAddonLogger.debug("Got hubs", { hubs: hubs });
         const resStations = hubs;
 
         const stationsSerials : string[] = Object.keys(this.stations);
@@ -70,7 +71,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         {
             if(this.api.getHouseId() !== undefined && resStations[stationSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resStations[stationSerial].house_id !== this.api.getHouseId())
             {
-                this.api.logDebug(`Station ${stationSerial} does not match houseId (got ${resStations[stationSerial].house_id} want ${this.api.getHouseId()}).`);
+                rootAddonLogger.debug(`Station ${stationSerial} does not match houseId (got ${resStations[stationSerial].house_id} want ${this.api.getHouseId()}).`);
                 continue;
             }
             if(this.stations[stationSerial])
@@ -148,7 +149,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         station.initialize();
                     } catch (err) {
                         const error = ensureError(err);
-                        this.api.logError("HandleHubs Error", { error: getError(error), stationSN: station.getSerial() });
+                        rootAddonLogger.error("HandleHubs Error", { error: getError(error), stationSN: station.getSerial() });
                     }
                     return station;
                 }));
@@ -174,7 +175,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     this.removeStation(station);
                 }).catch((err: any) => {
                     const error = ensureError(err);
-                    this.api.logError("Error removing station", { error: getError(error), stationSN: stationSerial });
+                    rootAddonLogger.error("Error removing station", { error: getError(error), stationSN: stationSerial });
                 });
             }
         }
@@ -197,7 +198,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug(`Station with this serial ${station.getSerial()} exists already and couldn't be added again!`);
+            rootAddonLogger.debug(`Station with this serial ${station.getSerial()} exists already and couldn't be added again!`);
         }
     }
 
@@ -220,7 +221,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logDebug(`Station with this serial ${station.getSerial()} doesn't exists and couldn't be removed!`);
+            rootAddonLogger.debug(`Station with this serial ${station.getSerial()} doesn't exists and couldn't be removed!`);
         }
     }
 
@@ -246,7 +247,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logError(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
+            rootAddonLogger.error(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
         }
     }
 
@@ -351,7 +352,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         await this.httpService.refreshAllData().catch(err => {
             const error = ensureError(err);
-            this.api.logError("Error occured at updateDeviceData while API data refreshing.", error);
+            rootAddonLogger.error("Error occured at updateDeviceData while API data refreshing.", error);
         });
         Object.values(this.stations).forEach(async (station: Station) => {
             if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
@@ -400,14 +401,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             if (this.cameraMaxLivestreamSeconds > 0)
             {
                 this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
-                    this.api.logInfo(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                    rootAddonLogger.info(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
                     this.stopStationLivestream(deviceSerial);
                 }, this.cameraMaxLivestreamSeconds * 1000));
             }
         }
         else
         {
-            this.api.logWarn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
+            rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
         }
     }
 
@@ -431,7 +432,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            this.api.logWarn(`The station stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
+            rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
         }
 
         const timeout = this.cameraStationLivestreamTimeout.get(deviceSerial);
@@ -457,7 +458,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         if (!station.isDownloading(device)) {
             await station.startDownload(device, path, cipherID);
         } else {
-            this.api.logWarn(`The station is already downloading a video for the device ${deviceSerial}!`);
+            rootAddonLogger.warn(`The station is already downloading a video for the device ${deviceSerial}!`);
         }
     }
 
@@ -475,7 +476,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         if (station.isConnected() && station.isDownloading(device)) {
             station.cancelDownload(device);
         } else {
-            this.api.logWarn(`The station isn't downloading a video for the device ${deviceSerial}!`);
+            rootAddonLogger.warn(`The station isn't downloading a video for the device ${deviceSerial}!`);
         }
     }
 
@@ -678,7 +679,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         catch (err) {
             const error = ensureError(err);
-            this.api.logError("getStorageInfo Error", { error: getError(error), stationSN: stationSerial });
+            rootAddonLogger.error("getStorageInfo Error", { error: getError(error), stationSN: stationSerial });
         }
     }
 
@@ -698,182 +699,182 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         {
             case "Connect":
                 station.on("connect", (station : Station) => this.onStationConnect(station));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connect")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connect")} Listener.`);
                 break;
             case "ConnectionError":
                 station.on("connection error", (station : Station, error : Error) => this.onStationConnectionError(station, error));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connection error")} Listeners.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connection error")} Listeners.`);
                 break;
             case "Close":
                 station.on("close", (station : Station) => this.onStationClose(station));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("close")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("close")} Listener.`);
                 break;
             case "RawDevicePropertyChanged":
                 station.on("raw device property changed", (deviceSerial: string, params: RawValues) => this.onStationRawDevicePropertyChanged(deviceSerial, params));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw device property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw device property changed")} Listener.`);
                 break;
             case "LivestreamStart":
                 station.on("livestream start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStartStationLivestream(station, channel, metadata, videoStream, audioStream));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream start")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream start")} Listener.`);
                 break;
             case "LivestreamStop":
                 station.on("livestream stop", (station : Station, channel : number) => this.onStopStationLivestream(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream stop")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
                 station.on("livestream error", (station : Station, channel : number, error: Error) => this.onErrorStationLivestream(station, channel, error));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream error")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
                 station.on("download start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download start")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download start")} Listener.`);
                 break;
             case "DownloadFinish":
                 station.on("download finish", (station : Station, channel : number) => this.onStationDownloadFinish(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download finish")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download finish")} Listener.`);
                 break;
             case "CommandResult":
                 station.on("command result", (station : Station, result : CommandResult) => this.onStationCommandResult(station, result));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("command result")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("command result")} Listener.`);
                 break;
             case "GuardMode":
                 station.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardMode(station, guardMode));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("guard mode")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
             case "CurrentMode":
                 station.on("current mode", (station : Station, guardMode : number) => this.onStationCurrentMode(station, guardMode));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("current mode")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("current mode")} Listener.`);
                 break;
             case "RTSPLivestreamStart":
                 station.on("rtsp livestream start", (station : Station, channel : number) => this.onStationRTSPLivestreamStart(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream start")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream start")} Listener.`);
                 break;
             case "RTSPLivestreamStop":
                 station.on("rtsp livestream stop", (station : Station, channel : number) => this.onStationRTSPLivestreamStop(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream stop")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream stop")} Listener.`);
                 break;
             case "RTSPUrl":
                 station.on("rtsp url", (station : Station, channel : number, value: string) => this.onStationRTSPURL(station, channel, value));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp url")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
                 station.on("property changed", (station : Station, name : string, value : PropertyValue, ready: boolean) => this.onStationPropertyChanged(station, name, value, ready));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 station.on("raw property changed", (station : Station, type : number, value : string) => this.onStationRawPropertyChanged(station, type, value));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw property changed")} Listener.`);
                 break;
             case "AlarmEvent":
                 station.on("alarm event", (station : Station, alarmEvent : AlarmEvent) => this.onStationAlarmEvent(station, alarmEvent));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm event")} Listener.`);
                 break;
             case "RuntimeState":
                 station.on("runtime state", (station: Station, channel: number, batteryLevel: number, temperature: number) => this.onStationRuntimeState(station, channel, batteryLevel, temperature));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("runtime state")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("runtime state")} Listener.`);
                 break;
             case "ChargingState":
                 station.on("charging state", (station: Station, channel: number, chargeType: number, batteryLevel: number) => this.onStationChargingState(station, channel, chargeType, batteryLevel));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("charging state")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("charging state")} Listener.`);
                 break;
             case "WifiRssi":
                 station.on("wifi rssi", (station: Station, channel: number, rssi: number) => this.onStationWifiRssi(station, channel, rssi));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("wifi rssi")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("wifi rssi")} Listener.`);
                 break;
             case "FloodlightManualSwitch":
                 station.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean) => this.onStationFloodlightManualSwitch(station, channel, enabled));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("floodlight manual switch")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("floodlight manual switch")} Listener.`);
                 break;
             case "AlarmDelayEvent":
                 station.on("alarm delay event", (station: Station, alarmDelayEvent: AlarmEvent, alarmDelay : number) => this.onStationAlarmDelayEvent(station, alarmDelayEvent, alarmDelay));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm delay event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm delay event")} Listener.`);
                 break;
             case "TalkbackStarted":
                 station.on("talkback started", (station: Station, channel: number, talkbackStream : TalkbackStream) => this.onStationTalkbackStarted(station, channel, talkbackStream));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback started")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback started")} Listener.`);
                 break;
             case "TalkbackStopped":
                 station.on("talkback stopped", (station: Station, channel: number) => this.onStationTalkbackStopped(station, channel));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback stopped")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback stopped")} Listener.`);
                 break;
             case "TalkbackError":
                 station.on("talkback error", (station: Station, channel: number, error : Error) => this.onStationTalkbackError(station, channel, error));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback error")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback error")} Listener.`);
                 break;
             case "AlarmArmedEvent":
                 station.on("alarm armed event", (station: Station) => this.onStationAlarmArmedEvent(station));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm armed event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm armed event")} Listener.`);
                 break;
             case "AlarmArmDelayEvent":
                 station.on("alarm arm delay event", (station: Station, alarmDelay: number) => this.onStationArmDelayEvent(station, alarmDelay));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm arm delay event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm arm delay event")} Listener.`);
                 break;
             case "SecondaryCommandResult":
                 station.on("secondary command result", (station: Station, result: CommandResult) => this.onStationSecondaryCommandResult(station, result));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("secondary command result")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("secondary command result")} Listener.`);
                 break;
             case "DeviceShakeAlarm":
                 station.on("device shake alarm", (deviceSerial: string, event: SmartSafeShakeAlarmEvent) => this.onStationDeviceShakeAlarm(deviceSerial, event));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device shake alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device shake alarm")} Listener.`);
                 break;
             case "Device911Alarm":
                 station.on("device 911 alarm", (deviceSerial: string, event: SmartSafeAlarm911Event) => this.onStationDevice911Alarm(deviceSerial, event));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device 911 alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device 911 alarm")} Listener.`);
                 break;
             case "DeviceJammed":
                 station.on("device jammed", (deviceSerial: string) => this.onStationDeviceJammed(deviceSerial));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device jammed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device jammed")} Listener.`);
                 break;
             case "DeviceLowBattery":
                 station.on("device low battery", (deviceSerial: string) => this.onStationDeviceLowBattery(deviceSerial));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device low battery")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device low battery")} Listener.`);
                 break;
             case "DeviceWrongTryProtectAlarm":
                 station.on("device wrong try-protect alarm", (deviceSerial: string) => this.onStationDeviceWrongTryProtectAlarm(deviceSerial));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
                 break;
             case "DevicePinVerified":
                 station.on("device pin verified", (deviceSN: string, successfull: boolean) => this.onStationDevicePinVerified(deviceSN, successfull));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device pin verified")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("device pin verified")} Listener.`);
                 break;
             case "SdInfoEx":
                 station.on("sd info ex", (station: Station, sdStatus: TFCardStatus, sdCapacity: number, sdCapacityAvailable: number) => this.onStationSdInfoEx(station, sdStatus, sdCapacity, sdCapacityAvailable));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sd info ex")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sd info ex")} Listener.`);
                 break;
             case "ImageDownload":
                 station.on("image download", (station: Station, file: string, image: Buffer) => this.onStationImageDownload(station, file, image));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("image download")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("image download")} Listener.`);
                 break;
             case "DatabaseQueryLatest":
                 station.on("database query latest", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>) => this.onStationDatabaseQueryLatest(station, returnCode, data));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query latest")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query latest")} Listener.`);
                 break;
             case "DatabaseQueryLocal":
                 station.on("database query local", (station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]) => this.onStationDatabaseQueryLocal(station, returnCode, data));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query local")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database query local")} Listener.`);
                 break;
             case "DatabaseCountByDate":
                 station.on("database count by date", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>) => this.onStationDatabaseCountByDate(station, returnCode, data));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database count by date")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database count by date")} Listener.`);
                 break;
             case "DatabaseDelete":
                 station.on("database delete", (station: Station, returnCode: DatabaseReturnCode, failedIds: Array<unknown>) => this.onStationDatabaseDelete(station, returnCode, failedIds));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database delete")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("database delete")} Listener.`);
                 break;
             case "SensorStatus":
                 station.on("sensor status", (station: Station, channel: number, status: number) => this.onStationSensorStatus(station, channel, status));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sensor status")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("sensor status")} Listener.`);
                 break;
             case "GarageDoorStatus":
                 station.on("garage door status", (station: Station, channel: number, doorId: number, status: number) => this.onStationGarageDoorStatus(station, channel, doorId, status));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
             case "StorageInfoHb3":
                 station.on("storage info hb3", (station: Station, channel: number, storageInfo: StorageInfoBodyHB3) => this.onStorageInfoHb3(station, channel, storageInfo));
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
+                rootAddonLogger.info(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown.`);
         }
     }
 
@@ -888,182 +889,182 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         {
             case "Connect":
                 station.removeAllListeners("connect");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connect")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connect")} Listener.`);
                 break;
             case "ConnectionError":
                 station.removeAllListeners("connection error");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connection error")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connection error")} Listener.`);
                 break;
             case "Close":
                 station.removeAllListeners("close");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("close")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("close")} Listener.`);
                 break;
             case "RawDevicePropertyChanged":
                 station.removeAllListeners("raw device property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("raw device property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("raw device property changed")} Listener.`);
                 break;
             case "LivestreamStart":
                 station.removeAllListeners("livestream start");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream start")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream start")} Listener.`);
                 break;
             case "LivestreamStop":
                 station.removeAllListeners("livestream stop");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream stop")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
                 station.removeAllListeners("livestream error");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream error")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
                 station.removeAllListeners("download start");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("download start")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("download start")} Listener.`);
                 break;
             case "DownloadFinish":
                 station.removeAllListeners("download finish");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("download finish")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("download finish")} Listener.`);
                 break;
             case "CommandResult":
                 station.removeAllListeners("command result");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("command result")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("command result")} Listener.`);
                 break;
             case "GuardMode":
                 station.removeAllListeners("guard mode");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("guard mode")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
             case "CurrentMode":
                 station.removeAllListeners("current mode");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("current mode")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("current mode")} Listener.`);
                 break;
             case "RTSPLivestreamStart":
                 station.removeAllListeners("rtsp livestream start");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp livestream start")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp livestream start")} Listener.`);
                 break;
             case "RTSPLivestreamStop":
                 station.removeAllListeners("rtsp livestream stop");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp livestream stop")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp livestream stop")} Listener.`);
                 break;
             case "RTSPUrl":
                 station.removeAllListeners("rtsp url");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp url")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
                 station.removeAllListeners("property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 station.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("raw property changed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("raw property changed")} Listener.`);
                 break;
             case "AlarmEvent":
                 station.removeAllListeners("alarm event");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm event")} Listener.`);
                 break;
             case "RuntimeState":
                 station.removeAllListeners("runtime state");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("runtime state")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("runtime state")} Listener.`);
                 break;
             case "ChargingState":
                 station.removeAllListeners("charging state");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("charging state")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("charging state")} Listener.`);
                 break;
             case "WifiRssi":
                 station.removeAllListeners("wifi rssi");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("wifi rssi")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("wifi rssi")} Listener.`);
                 break;
             case "FloodlightManualSwitch":
                 station.removeAllListeners("floodlight manual switch");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("floodlight manual switch")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("floodlight manual switch")} Listener.`);
                 break;
             case "AlarmDelayEvent":
                 station.removeAllListeners("alarm delay event");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm delay event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm delay event")} Listener.`);
                 break;
             case "TalkbackStarted":
                 station.removeAllListeners("talkback started");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback started")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback started")} Listener.`);
                 break;
             case "TalkbackStopped":
                 station.removeAllListeners("talkback stopped");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback stopped")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback stopped")} Listener.`);
                 break;
             case "TalkbackError":
                 station.removeAllListeners("talkback error");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback error")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("talkback error")} Listener.`);
                 break;
             case "AlarmArmedEvent":
                 station.removeAllListeners("alarm armed event");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm armed event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm armed event")} Listener.`);
                 break;
             case "AlarmArmDelayEvent":
                 station.removeAllListeners("alarm arm delay event");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm arm delay event")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("alarm arm delay event")} Listener.`);
                 break;
             case "SecondaryCommandResult":
                 station.removeAllListeners("secondary command result");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("secondary command result")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("secondary command result")} Listener.`);
                 break;
             case "DeviceShakeAlarm":
                 station.removeAllListeners("device shake alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device shake alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device shake alarm")} Listener.`);
                 break;
             case "Device911Alarm":
                 station.removeAllListeners("device 911 alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device 911 alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device 911 alarm")} Listener.`);
                 break;
             case "DeviceJammed":
                 station.removeAllListeners("device jammed");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device jammed")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device jammed")} Listener.`);
                 break;
             case "DeviceLowBattery":
                 station.removeAllListeners("device low battery");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device low battery")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device low battery")} Listener.`);
                 break;
             case "DeviceWrongTryProtectAlarm":
                 station.removeAllListeners("device wrong try-protect alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device wrong try-protect alarm")} Listener.`);
                 break;
             case "DevicePinVerified":
                 station.removeAllListeners("device pin verified");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device pin verified")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("device pin verified")} Listener.`);
                 break;
             case "SdInfoEx":
                 station.removeAllListeners("sd info ex");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sd info ex")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sd info ex")} Listener.`);
                 break;
             case "ImageDownload":
                 station.removeAllListeners("image download");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("image download")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("image download")} Listener.`);
                 break;
             case "DatabaseQueryLatest":
                 station.removeAllListeners("database query latest");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query latest")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query latest")} Listener.`);
                 break;
             case "DatabaseQueryLocal":
                 station.removeAllListeners("database query local");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query local")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database query local")} Listener.`);
                 break;
             case "DatabaseCountByDate":
                 station.removeAllListeners("database count by date");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database count by date")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database count by date")} Listener.`);
                 break;
             case "DatabaseDelete":
                 station.removeAllListeners("database delete");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database delete")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("database delete")} Listener.`);
                 break;
             case "SensorStatus":
                 station.removeAllListeners("sensor status");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sensor status")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("sensor status")} Listener.`);
                 break;
             case "GarageDoorStatus":
                 station.removeAllListeners("garage door status");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("garage door status")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("garage door status")} Listener.`);
                 break;
             case "StorageInfoHb3":
                 station.removeAllListeners("storage info hb3");
-                this.api.logDebug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("storage info hb3")} Listener.`);
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("storage info hb3")} Listener.`);
                 break;
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be removed.`);
+                rootAddonLogger.info(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be removed.`);
         }
     }
 
@@ -1165,7 +1166,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             case "StorageInfoHb3":
                 return station.listenerCount("storage info hb3");
             default:
-                this.api.logInfo(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be count.`);
+                rootAddonLogger.info(`The listener '${eventListenerName}' for station ${station.getSerial()} is unknown and could not be count.`);
         }
         return -1;
     }
@@ -1196,7 +1197,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationConnectionError(station : Station, error : Error) : void
     {
-        this.api.logDebug(`Event "ConnectionError": station: ${station.getSerial()}`);
+        rootAddonLogger.debug(`Event "ConnectionError": station: ${station.getSerial()}`);
         this.emit("station connection error", station, error);
     }
 
@@ -1206,7 +1207,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationClose(station : Station) : Promise<void>
     {
-        this.api.logInfo(`Event "Close": station: ${station.getSerial()}`);
+        rootAddonLogger.info(`Event "Close": station: ${station.getSerial()}`);
         this.emit("station close", station);
 
         if(this.api.getServiceState() != "shutdown")
@@ -1223,7 +1224,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }
             }).catch((err) => {
                 const error = ensureError(err);
-                this.api.logError(`Station close Error`, { error: getError(error), stationSN: station.getSerial() });
+                rootAddonLogger.error(`Station close Error`, { error: getError(error), stationSN: station.getSerial() });
             });
         }
     }
@@ -1235,7 +1236,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationRawDevicePropertyChanged(deviceSerial : string, values : RawValues) : Promise<void>
     {
-        this.api.logDebug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
+        rootAddonLogger.debug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
         this.api.updateDeviceProperties(deviceSerial, values);
     }
 
@@ -1249,12 +1250,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStartStationLivestream(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
     {
-        this.api.logDebug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station livestream start", station, device, metadata, videoStream, audioStream);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station start livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
+            rootAddonLogger.error(`Station start livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
     }
 
@@ -1265,12 +1266,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStopStationLivestream(station : Station, channel : number) : Promise<void>
     {
-        this.api.logDebug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station livestream stop", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station stop livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station stop livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1285,7 +1286,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             station.stopLivestream(device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
+            rootAddonLogger.error(`Station livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
         });
     }
 
@@ -1299,12 +1300,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationDownloadStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
     {
-        this.api.logDebug(`Event "DownloadStart": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "DownloadStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station download start", station, device, metadata, videoStream, audioStream);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station start download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
+            rootAddonLogger.error(`Station start download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
     }
 
@@ -1315,12 +1316,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationDownloadFinish(station : Station, channel : number) : Promise<void>
     {
-        this.api.logDebug(`Event "DownloadFinish": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "DownloadFinish": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station download finish", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station finish download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station finish download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1337,7 +1338,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     result.customData.onSuccess();
                 } catch (err) {
                     const error = ensureError(err);
-                    this.api.logError(`Station command result - onSuccess callback error`, { error: getError(error), stationSN: station.getSerial(), result: result });
+                    rootAddonLogger.error(`Station command result - onSuccess callback error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             }
             this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
@@ -1372,7 +1373,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         this.api.setDeviceSnooze(device, timeoutMS);
                     }).catch(err => {
                         const error = ensureError(err);
-                        this.api.logError("Error during API data refreshing", { error: getError(error) });
+                        rootAddonLogger.error("Error during API data refreshing", { error: getError(error) });
                     });
                 }
             }).catch((err) => {
@@ -1382,7 +1383,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
                 } else {
-                    this.api.logError(`Station command result error`, { error: getError(error), stationSN: station.getSerial(), result: result });
+                    rootAddonLogger.error(`Station command result error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             });
             if (station.isIntegratedDevice() && result.command_type === CommandType.CMD_SET_ARMING && station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL) {
@@ -1394,7 +1395,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     result.customData.onFailure();
                 } catch (err) {
                     const error = ensureError(err);
-                    this.api.logError(`Station command result - onFailure callback error`, { error: getError(error), stationSN: station.getSerial(), result: result });
+                    rootAddonLogger.error(`Station command result - onFailure callback error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             }
         }
@@ -1470,7 +1471,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationSecondaryCommandResult(station : Station, result : CommandResult) : void
     {
-        this.api.logDebug(`Event "SecondaryCommandResult": station: ${station.getSerial()} | result: ${result}`);
+        rootAddonLogger.debug(`Event "SecondaryCommandResult": station: ${station.getSerial()} | result: ${result}`);
         if (result.return_code === 0)
         {
             this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
@@ -1496,7 +1497,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }
                 else
                 {
-                    this.api.logError(`Station secondary command result error`, { error: getError(error), stationSN: station.getSerial(), result: result });
+                    rootAddonLogger.error(`Station secondary command result error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             });
         }
@@ -1513,12 +1514,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
-            this.api.logDebug("Event skipped due to locally forced changeGuardMode.");
+            rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
             this.skipNextModeChangeEvent[station.getSerial()] = false;
         }
         else
         {
-            this.api.logDebug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+            rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeStation(station.getSerial());
         }
     }
@@ -1532,12 +1533,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         if(this.skipNextModeChangeEvent[station.getSerial()] == true)
         {
-            this.api.logDebug("Event skipped due to locally forced changeCurrentMode.");
+            rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
             this.skipNextModeChangeEvent[station.getSerial()] = false;
         }
         else
         {
-            this.api.logDebug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+            rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeStation(station.getSerial());
         }
     }
@@ -1549,12 +1550,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationRTSPLivestreamStart(station : Station, channel : number) : Promise<void>
     {
-        this.api.logDebug(`Event "RTSPLivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "RTSPLivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp livestream start", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station start rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station start rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1565,12 +1566,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationRTSPLivestreamStop(station : Station, channel : number) : Promise<void>
     {
-        this.api.logDebug(`Event "RTSPLivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "RTSPLivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp livestream stop", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station stop rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station stop rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1581,13 +1582,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationRTSPURL(station : Station, channel : number, value : string) : Promise<void>
     {
-        this.api.logDebug(`Event "RTSPURL": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "RTSPURL": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp url", station, device, value);
             device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, value);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station rtsp url error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, url: value });
+            rootAddonLogger.error(`Station rtsp url error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, url: value });
         });
     }
 
@@ -1601,7 +1602,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         if (ready && (!name.startsWith("hidden-") && name != "guardMode" && name != "currentMode"))
         {
-            this.api.logDebug(`Event "PropertyChanged": station: ${station.getSerial()} | name: ${name} | value: ${value}`);
+            rootAddonLogger.debug(`Event "PropertyChanged": station: ${station.getSerial()} | name: ${name} | value: ${value}`);
         }
     }
 
@@ -1615,7 +1616,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
         {
-            this.api.logDebug(`Event "RawPropertyChanged": station: ${station.getSerial()} | type: ${type} | value: ${value}`);
+            rootAddonLogger.debug(`Event "RawPropertyChanged": station: ${station.getSerial()} | type: ${type} | value: ${value}`);
         }
     }
 
@@ -1626,7 +1627,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationAlarmEvent(station : Station, alarmEvent : AlarmEvent) : Promise<void>
     {
-        this.api.logDebug(`Event "AlarmEvent": station: ${station.getSerial()} | alarmEvent: ${alarmEvent}`);
+        rootAddonLogger.debug(`Event "AlarmEvent": station: ${station.getSerial()} | alarmEvent: ${alarmEvent}`);
     }
 
     /**
@@ -1638,7 +1639,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationRuntimeState(station : Station, channel : number, batteryLevel : number, temperature : number) : Promise<void>
     {
-        this.api.logDebug(`Event "RuntimeState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
+        rootAddonLogger.debug(`Event "RuntimeState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceBattery))
             {
@@ -1652,7 +1653,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station runtime state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, batteryLevel: batteryLevel, temperature: temperature });
+            rootAddonLogger.error(`Station runtime state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, batteryLevel: batteryLevel, temperature: temperature });
         });
     }
 
@@ -1665,7 +1666,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationChargingState(station : Station, channel : number, chargeType : number, batteryLevel : number) : Promise<void>
     {
-        this.api.logDebug(`Event "ChargingState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
+        rootAddonLogger.debug(`Event "ChargingState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceBattery))
             {
@@ -1682,7 +1683,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station charging state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, chargeType: ChargingType[chargeType], batteryLevel: batteryLevel });
+            rootAddonLogger.error(`Station charging state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, chargeType: ChargingType[chargeType], batteryLevel: batteryLevel });
         });
     }
 
@@ -1694,7 +1695,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationWifiRssi(station : Station, channel : number, rssi : number) : Promise<void>
     {
-        this.api.logDebug(`Event "WifiRssi": station: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
+        rootAddonLogger.debug(`Event "WifiRssi": station: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceWifiRSSI))
             {
@@ -1703,7 +1704,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station wifi rssi error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, rssi: rssi });
+            rootAddonLogger.error(`Station wifi rssi error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, rssi: rssi });
         });
     }
 
@@ -1715,7 +1716,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean) : Promise<void>
     {
-        this.api.logDebug(`Event "FloodlightManualSwitch": station: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
+        rootAddonLogger.debug(`Event "FloodlightManualSwitch": station: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceLight)) {
                 const metadataLight = device.getPropertyMetadata(PropertyName.DeviceLight);
@@ -1723,7 +1724,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station floodlight manual switch error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, enabled: enabled });
+            rootAddonLogger.error(`Station floodlight manual switch error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, enabled: enabled });
         });
     }
 
@@ -1735,7 +1736,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationAlarmDelayEvent(station : Station, alarmDelayEvent : AlarmEvent, alarmDelay : number) : Promise<void>
     {
-        this.api.logDebug(`Event "AlarmDelayEvent": station: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
+        rootAddonLogger.debug(`Event "AlarmDelayEvent": station: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
     }
 
     /**
@@ -1746,12 +1747,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationTalkbackStarted(station : Station, channel : number, talkbackStream : TalkbackStream) : Promise<void>
     {
-        this.api.logDebug(`Event "TalkbackStarted": station: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
+        rootAddonLogger.debug(`Event "TalkbackStarted": station: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station talkback start", station, device, talkbackStream);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station talkback start error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station talkback start error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1762,12 +1763,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationTalkbackStopped(station : Station, channel : number) : Promise<void>
     {
-        this.api.logDebug(`Event "TalkbackStopped": station: ${station.getSerial()} | channel: ${channel}`);
+        rootAddonLogger.debug(`Event "TalkbackStopped": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station talkback stop", station, device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station talkback stop error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station talkback stop error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -1779,12 +1780,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationTalkbackError(station : Station, channel : number, origError: Error) : Promise<void>
     {
-        this.api.logDebug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${origError}`);
+        rootAddonLogger.debug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${origError}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             station.stopTalkback(device);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station talkback error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
+            rootAddonLogger.error(`Station talkback error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
         });
     }
 
@@ -1794,7 +1795,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationAlarmArmedEvent(station : Station) : Promise<void>
     {
-        this.api.logDebug(`Event "AlarmArmedEvent": station: ${station.getSerial()}`);
+        rootAddonLogger.debug(`Event "AlarmArmedEvent": station: ${station.getSerial()}`);
     }
 
     /**
@@ -1804,7 +1805,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private async onStationArmDelayEvent(station : Station, alarmDelay : number) : Promise<void>
     {
-        this.api.logDebug(`Event "ArmDelayEvent": station: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
+        rootAddonLogger.debug(`Event "ArmDelayEvent": station: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
     }
 
     /**
@@ -1814,13 +1815,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationDeviceShakeAlarm(deviceSerial : string, event : SmartSafeShakeAlarmEvent) : void
     {
-        this.api.logDebug(`Event "DeviceShakeAlarm": device: ${deviceSerial} | event: ${event}`);
+        rootAddonLogger.debug(`Event "DeviceShakeAlarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).shakeEvent(event, this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDeviceShakeAlarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeShakeAlarmEvent[event] });
+            rootAddonLogger.error(`onStationDeviceShakeAlarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeShakeAlarmEvent[event] });
         });
     }
 
@@ -1831,13 +1832,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationDevice911Alarm(deviceSerial : string, event : SmartSafeAlarm911Event) : void
     {
-        this.api.logDebug(`Event "Device911Alarm": device: ${deviceSerial} | event: ${event}`);
+        rootAddonLogger.debug(`Event "Device911Alarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).alarm911Event(event, this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDevice911Alarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeAlarm911Event[event] });
+            rootAddonLogger.error(`onStationDevice911Alarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeAlarm911Event[event] });
         });
     }
 
@@ -1847,13 +1848,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationDeviceJammed(deviceSerial : string) : void
     {
-        this.api.logDebug(`Event "DeviceJammed": device: ${deviceSerial}`);
+        rootAddonLogger.debug(`Event "DeviceJammed": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).jammedEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDeviceJammed error`, { error: getError(error), deviceSN: deviceSerial });
+            rootAddonLogger.error(`onStationDeviceJammed error`, { error: getError(error), deviceSN: deviceSerial });
         });
     }
 
@@ -1863,13 +1864,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationDeviceLowBattery(deviceSerial : string) : void
     {
-        this.api.logInfo(`Event "DeviceLowBattery": device: ${deviceSerial}`);
+        rootAddonLogger.info(`Event "DeviceLowBattery": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).lowBatteryEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDeviceLowBattery error`, { error: getError(error), deviceSN: deviceSerial });
+            rootAddonLogger.error(`onStationDeviceLowBattery error`, { error: getError(error), deviceSN: deviceSerial });
         });
     }
 
@@ -1879,13 +1880,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     private onStationDeviceWrongTryProtectAlarm(deviceSerial : string) : void
     {
-        this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
+        rootAddonLogger.debug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).wrongTryProtectAlarmEvent(this.api.getEventDurationSeconds());
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDeviceWrongTryProtectAlarm error`, { error: getError(error), deviceSN: deviceSerial });
+            rootAddonLogger.error(`onStationDeviceWrongTryProtectAlarm error`, { error: getError(error), deviceSN: deviceSerial });
         });
     }
 
@@ -1895,12 +1896,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param successfull Result of pin verification.
      */
     private onStationDevicePinVerified(deviceSerial : string, successfull : boolean): void {
-        this.api.logDebug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
+        rootAddonLogger.debug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             this.emit("device pin verified", device, successfull);
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`onStationDevicePinVerified error`, { error: getError(error), deviceSN: deviceSerial, successfull: successfull });
+            rootAddonLogger.error(`onStationDevicePinVerified error`, { error: getError(error), deviceSN: deviceSerial, successfull: successfull });
         });
     }
 
@@ -1952,20 +1953,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
             if(channel == -1)
             {
-                this.api.logError(`onStationImageDownload - Channel could not be extracted for file '${file}' on station ${station.getSerial()}.`);
+                rootAddonLogger.error(`onStationImageDownload - Channel could not be extracted for file '${file}' on station ${station.getSerial()}.`);
                 return;
             }
             for (const device of devices) {
                 //if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file) {
                 if (device.getSerial() === station.getSerial() || (device.getStationSerial() === station.getSerial() && device.getChannel() === channel)) {
-                    this.api.logDebug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
+                    rootAddonLogger.debug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
                     device.updateProperty(PropertyName.DevicePicture, picture);
                     break;
                 }
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logDebug(`onStationImageDownload - Set first picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
+            rootAddonLogger.debug(`onStationImageDownload - Set first picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
         });
     }
 
@@ -2029,7 +2030,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     }).catch((err) => {
                         const error = ensureError(err);
                         if (!(error instanceof DeviceNotFoundError)) {
-                            this.api.logError("onStationDatabaseQueryLatest Error", { error: getError(error), stationSN: station.getSerial(), returnCode: returnCode });
+                            rootAddonLogger.error("onStationDatabaseQueryLatest Error", { error: getError(error), stationSN: station.getSerial(), returnCode: returnCode });
                         }
                     });
                 }
@@ -2085,7 +2086,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station sensor status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station sensor status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -2102,7 +2103,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             device.updateRawProperty(CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS, status.toString(), "p2p");
         }).catch((err) => {
             const error = ensureError(err);
-            this.api.logError(`Station garage door status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
+            rootAddonLogger.error(`Station garage door status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
@@ -2256,7 +2257,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`addUser error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
+            rootAddonLogger.error(`addUser error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
         }
     }
@@ -2304,7 +2305,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`deleteUser error`, { error: getError(error), deviceSN: deviceSN, username: username });
+            rootAddonLogger.error(`deleteUser error`, { error: getError(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
         }
     }
@@ -2360,7 +2361,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`updateUser error`, { error: getError(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
+            rootAddonLogger.error(`updateUser error`, { error: getError(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
             this.emit("user error", device, username, new UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
         }
     }
@@ -2408,7 +2409,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`updateUserPasscode error`, { error: getError(error), deviceSN: deviceSN, username: username });
+            rootAddonLogger.error(`updateUserPasscode error`, { error: getError(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
         }
     }
@@ -2456,7 +2457,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         catch (err)
         {
             const error = ensureError(err);
-            this.api.logError(`updateUserSchedule error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
+            rootAddonLogger.error(`updateUserSchedule error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));
         }
     }

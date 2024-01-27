@@ -295,19 +295,135 @@
 											<hr>
 											<h5 id="settingsHeaderConfigLogLevel">{settingsHeaderConfigLogLevel}</h5>
 											<div class="form-label-group" class="container-fluid">
-												<label class="mb-2" for="cbLogLevel" id="lblLogLevel">{lblLogLevel}</label>
-												<div id="alertLogLevel">
+												<div>
+													<label class="mb-2" for="cbLogLevel" id="lblLogLevel">{lblLogLevel}</label>
+													<div id="alertLogLevel">
+													</div>
+													<select name="logLevel" id="cbLogLevel" class="form-select" oninput="checkLogLevel(this.value);" required>
+														<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+														<option value="0" id="optLogLevel0">{optLogLevel0}</option>
+														<option value="1" id="optLogLevel1">{optLogLevel1}</option>
+														<option value="2" id="optLogLevel2">{optLogLevel2}</option>
+														<option value="3" id="optLogLevel3">{optLogLevel3}</option>
+													</select>
+													<small class="form-text text-muted" id="hintLogLevel">{hintLogLevel}</small>
+													<div class="invalid-feedback" id="divLogLevelError">
+														{divLogLevelError}
+													</div>
 												</div>
-												<select name="logLevel" id="cbLogLevel" class="form-select" oninput="checkLogLevel(this.value);" required>
-													<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
-													<option value="0" id="optLogLevel0">{optLogLevel0}</option>
-													<option value="1" id="optLogLevel1">{optLogLevel1}</option>
-													<option value="2" id="optLogLevel2">{optLogLevel2}</option>
-													<option value="3" id="optLogLevel3">{optLogLevel3}</option>
-												</select>
-												<small class="form-text text-muted" id="hintLogLevel">{hintLogLevel}</small>
-												<div class="invalid-feedback" id="divLogLevelError">
-													{divLogLevelError}
+												<div>
+													<label class="my-2" for="cbLogLevelAddon" id="lblLogLevelAddon">{lblLogLevelAddon}</label>
+													<div id="alertLogLevelAddon">
+													</div>
+													<select name="logLevelAddon" id="cbLogLevelAddon" class="form-select" oninput="checkLogLevel(alertLogLevelAddon, this.value);" required>
+														<option disabled selected value="-1" style="display: none;" id="optLogLevelPleaseSelectAddon">{optPleaseSelect}</option>
+														<option value="0" id="optLogLevelAddon0">{optLogLevel0}</option>
+														<option value="1" id="optLogLevelAddon1">{optLogLevel1}</option>
+														<option value="2" id="optLogLevelAddon2">{optLogLevel2}</option>
+														<option value="3" id="optLogLevelAddon3">{optLogLevel3}</option>
+														<option value="4" id="optLogLevelAddon4">{optLogLevel4}</option>
+														<option value="5" id="optLogLevelAddon5">{optLogLevel5}</option>
+														<option value="6" id="optLogLevelAddon6">{optLogLevel6}</option>
+													</select>
+													<small class="form-text text-muted" id="hintLogLevelAddon">{hintLogLevel}</small>
+													<div class="invalid-feedback" id="divLogLevelMainError">
+														{divLogLevelError}
+													</div>
+												</div>
+												<div>
+													<label class="my-2" for="cbLogLevelMain" id="lblLogLevelMain">{lblLogLevelMain}</label>
+													<div id="alertLogLevelMain">
+													</div>
+													<select name="logLevelMain" id="cbLogLevelMain" class="form-select" oninput="checkLogLevel(alertLogLevelMain, this.value);" required>
+														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectMain">{optPleaseSelect}</option>
+														<option value="0" id="optLogLevelMain0">{optLogLevel0}</option>
+														<option value="1" id="optLogLevelMain1">{optLogLevel1}</option>
+														<option value="2" id="optLogLevelMain2">{optLogLevel2}</option>
+														<option value="3" id="optLogLevelMain3">{optLogLevel3}</option>
+														<option value="4" id="optLogLevelMain4">{optLogLevel4}</option>
+														<option value="5" id="optLogLevelMain5">{optLogLevel5}</option>
+														<option value="6" id="optLogLevelMain6">{optLogLevel6}</option>
+													</select>
+													<small class="form-text text-muted" id="hintLogLevelMain">{hintLogLevel}</small>
+													<div class="invalid-feedback" id="divLogLevelMainError">
+														{divLogLevelError}
+													</div>
+												</div>
+												<div>
+													<label class="my-2" for="cbLogLevelHttp" id="lblLogLevelHttp">{lblLogLevelHttp}</label>
+													<div id="alertLogLevelHttp">
+													</div>
+													<select name="logLevelHttp" id="cbLogLevelHttp" class="form-select" oninput="checkLogLevel(alertLogLevelHttp, this.value);" required>
+														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectHttp">{optPleaseSelect}</option>
+														<option value="0" id="optLogLevelHttp0">{optLogLevel0}</option>
+														<option value="1" id="optLogLevelHttp1">{optLogLevel1}</option>
+														<option value="2" id="optLogLevelHttp2">{optLogLevel2}</option>
+														<option value="3" id="optLogLevelHttp3">{optLogLevel3}</option>
+														<option value="4" id="optLogLevelHttp4">{optLogLevel4}</option>
+														<option value="5" id="optLogLevelHttp5">{optLogLevel5}</option>
+														<option value="6" id="optLogLevelHttp6">{optLogLevel6}</option>
+													</select>
+													<small class="form-text text-muted" id="hintLogLevelHttp">{hintLogLevel}</small>
+													<div class="invalid-feedback" id="divLogLevelHttpError">
+														{divLogLevelError}
+													</div>
+												</div>
+												<div>
+													<label class="my-2" for="cbLogLevelP2p" id="lblLogLevelP2p">{lblLogLevelP2p}</label>
+													<div id="alertLogLevelP2p">
+													</div>
+													<select name="logLevelP2p" id="cbLogLevelP2p" class="form-select" oninput="checkLogLevel(alertLogLevelP2p, this.value);" required>
+														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectP2p">{optPleaseSelect}</option>
+														<option value="0" id="optLogLevelP2p0">{optLogLevel0}</option>
+														<option value="1" id="optLogLevelP2p1">{optLogLevel1}</option>
+														<option value="2" id="optLogLevelP2p2">{optLogLevel2}</option>
+														<option value="3" id="optLogLevelP2p3">{optLogLevel3}</option>
+														<option value="4" id="optLogLevelP2p4">{optLogLevel4}</option>
+														<option value="5" id="optLogLevelP2p5">{optLogLevel5}</option>
+														<option value="6" id="optLogLevelP2p6">{optLogLevel6}</option>
+													</select>
+													<small class="form-text text-muted" id="hintLogLevelP2p">{hintLogLevel}</small>
+													<div class="invalid-feedback" id="divLogLevelP2pError">
+														{divLogLevelError}
+													</div>
+												</div>
+												<div>
+													<label class="my-2" for="cbLogLevelPush" id="lblLogLevelPush">{lblLogLevelPush}</label>
+													<div id="alertLogLevelPush">
+													</div>
+													<select name="logLevelPush" id="cbLogLevelPush" class="form-select" oninput="checkLogLevel(alertLogLevelPush, this.value);" required>
+														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectPush">{optPleaseSelect}</option>
+														<option value="0" id="optLogLevelPush0">{optLogLevel0}</option>
+														<option value="1" id="optLogLevelPush1">{optLogLevel1}</option>
+														<option value="2" id="optLogLevelPush2">{optLogLevel2}</option>
+														<option value="3" id="optLogLevelPush3">{optLogLevel3}</option>
+														<option value="4" id="optLogLevelPush4">{optLogLevel4}</option>
+														<option value="5" id="optLogLevelPush5">{optLogLevel5}</option>
+														<option value="6" id="optLogLevelPush6">{optLogLevel6}</option>
+													</select>
+													<small class="form-text text-muted" id="hintLogLevelPush">{hintLogLevel}</small>
+													<div class="invalid-feedback" id="divLogLevelPushError">
+														{divLogLevelError}
+													</div>
+												</div>
+												<div>
+													<label class="my-2" for="cbLogLevelMqtt" id="lblLogLevelMqtt">{lblLogLevelMqtt}</label>
+													<div id="alertLogLevelMqtt">
+													</div>
+													<select name="logLevelMqtt" id="cbLogLevelMqtt" class="form-select" oninput="checkLogLevel(alertLogLevelMqtt, this.value);" required>
+														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectMqtt">{optPleaseSelect}</option>
+														<option value="0" id="optLogLevelMqtt0">{optLogLevel0}</option>
+														<option value="1" id="optLogLevelMqtt1">{optLogLevel1}</option>
+														<option value="2" id="optLogLevelMqtt2">{optLogLevel2}</option>
+														<option value="3" id="optLogLevelMqtt3">{optLogLevel3}</option>
+														<option value="4" id="optLogLevelMqtt4">{optLogLevel4}</option>
+														<option value="5" id="optLogLevelMqtt5">{optLogLevel5}</option>
+														<option value="6" id="optLogLevelMqtt6">{optLogLevel6}</option>
+													</select>
+													<small class="form-text text-muted" id="hintLogLevelMqtt">{hintLogLevel}</small>
+													<div class="invalid-feedback" id="divLogLevelMqttError">
+														{divLogLevelError}
+													</div>
 												</div>
 											</div>
 										</div>
