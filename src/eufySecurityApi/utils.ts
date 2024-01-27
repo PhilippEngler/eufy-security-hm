@@ -1,12 +1,11 @@
 import * as crypto from "crypto";
 import { Config } from "./config";
+import { Category } from "typescript-logging-category-style";
 import EventEmitter from "events";
 
 import { ErrorObject } from "./interfaces";
 import { BaseError, InvalidPropertyValueError, ensureError } from "./error";
 import { PropertyMetadataAny, PropertyMetadataNumeric, PropertyMetadataObject, PropertyMetadataString } from "./http/interfaces";
-
-import { Logger } from "./utils/logging";
 
 export const getError = function(error: BaseError): ErrorObject {
     return {
@@ -34,7 +33,7 @@ export const generateSerialnumber = function(length: number): string {
 export const md5 = (contents: string): string => crypto.createHash("md5").update(contents).digest("hex");
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const handleUpdate = function(config: Config, log: Logger, oldVersion: number): void {
+export const handleUpdate = function(config: Config, oldVersion: number): void {
     if (oldVersion <= 1.24) {
         config.setToken("");
         config.setTokenExpire(0);
@@ -123,7 +122,7 @@ export const parseValue = function(metadata: PropertyMetadataAny, value: unknown
     return value;
 };
 
-export const parseJSON = function(data: string, log: Logger): any {
+export const parseJSON = function(data: string, log: Category): any {
     try {
         return JSON.parse(data.replace(/[\0]+$/g, ""));
     } catch(err) {
