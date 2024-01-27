@@ -211,7 +211,12 @@ function translateStaticPageContent(page)
             translateInnerHtml("hintLogLevelP2p");
             translateInnerHtml("hintLogLevelPush");
             translateInnerHtml("hintLogLevelMqtt");
-            translateInnerHtml("divLogLevelError");
+            translateInnerHtml("divLogLevelAddonError");
+            translateInnerHtml("divLogLevelMainError");
+            translateInnerHtml("divLogLevelHttpError");
+            translateInnerHtml("divLogLevelP2pError");
+            translateInnerHtml("divLogLevelPushError");
+            translateInnerHtml("divLogLevelMqttError");
             translateInnerHtml("btnSave");
             translateInnerHtmlByReplace("settingsCardHeaderSystemvariables");
             translateInnerHtmlByReplace("settingsCardHeaderErrorHandling");

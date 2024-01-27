@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.1
-20240117
+Schema v9.2
+20240127
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240117 (v9.1)";
+var languageVersion = "20240127 (v9.2)";
 
 function translateNavbarElement(element)
 {
@@ -97,6 +97,12 @@ function translateStaticContentElement(element)
 		case "lblCountry":
 			return "Land des eufy Security Accounts.";
 		case "optPleaseSelect":
+		case "optLogLevelPleaseSelectAddon":
+		case "optLogLevelPleaseSelectMain":
+		case "optLogLevelPleaseSelectHttp":
+		case "optLogLevelPleaseSelectP2p":
+		case "optLogLevelPleaseSelectPush":
+		case "optLogLevelPleaseSelectMqtt":
 			return "Bitte auswählen...";
 		case "hintCountry":
 			return "Das Land, für den Sie den eufy Security Account erstellt haben.";
@@ -230,19 +236,80 @@ function translateStaticContentElement(element)
 			return "Pushbenachrichtigungen werden z.B. für die Ermittlung der Zeitangabe der letzten Ereignisse für die Kameras benötigt.";
 		case "settingsHeaderConfigLogLevel":
 			return "Einstellungen für Protokollierung";
-		case "lblLogLevel":
-			return "Umfang der Protokollierung.";
-		case "optLogLevel0":
-			return "grundlegende Informationen";
-		case "optLogLevel1":
-			return "alle Informationen";
-		case "optLogLevel2":
-			return "alle Informationen, alle Fehler";
-		case "optLogLevel3":
-			return "alle Informationen, alle Fehler, alle Debuginformationen";
-		case "hintLogLevel":
-			return "Legt den Umfang der Protokollierung fest. Fehler werden unabhängig dieser Einstellung beim Auftreten immer in der Fehlerprotokolldatei 'eufySecurity.err' protokolliert.";
-		case "divLogLevelError":
+		case "lblLogLevelAddon":
+			return "Umfang der Protokollierung des Addons.";
+		case "lblLogLevelMain":
+			return "Umfang der Protokollierung des Client (Rubrik Main)";
+		case "lblLogLevelHttp":
+			return "Umfang der Protokollierung des Client (Rubrik Http)";
+		case "lblLogLevelP2p":
+			return "Umfang der Protokollierung des Client (Rubrik P2P)";
+		case "lblLogLevelPush":
+			return "Umfang der Protokollierung des Client (Rubrik Push)";
+		case "lblLogLevelMqtt":
+			return "Umfang der Protokollierung des Client (Rubrik Mqtt)";
+		case "optLogLevelAddon0":
+		case "optLogLevelMain0":
+		case "optLogLevelHttp0":
+		case "optLogLevelP2p0":
+		case "optLogLevelPush0":
+		case "optLogLevelMqtt0":
+			return "Protokollierungsstrufe Trace";
+		case "optLogLevelAddon1":
+		case "optLogLevelMain1":
+		case "optLogLevelHttp1":
+		case "optLogLevelP2p1":
+		case "optLogLevelPush1":
+		case "optLogLevelMqtt1":
+			return "Protokollierungsstrufe Debug";
+		case "optLogLevelAddon2":
+		case "optLogLevelMain2":
+		case "optLogLevelHttp2":
+		case "optLogLevelP2p2":
+		case "optLogLevelPush2":
+		case "optLogLevelMqtt2":
+			return "Protokollierungsstrufe Information";
+		case "optLogLevelAddon3":
+		case "optLogLevelMain3":
+		case "optLogLevelHttp3":
+		case "optLogLevelP2p3":
+		case "optLogLevelPush3":
+		case "optLogLevelMqtt3":
+			return "Protokollierungsstrufe Warnung";
+		case "optLogLevelAddon4":
+		case "optLogLevelMain4":
+		case "optLogLevelHttp4":
+		case "optLogLevelP2p4":
+		case "optLogLevelPush4":
+		case "optLogLevelMqtt4":
+			return "Protokollierungsstrufe Fehler";
+		case "optLogLevelAddon5":
+		case "optLogLevelMain5":
+		case "optLogLevelHttp5":
+		case "optLogLevelP2p5":
+		case "optLogLevelPush5":
+		case "optLogLevelMqtt5":
+			return "Protokollierungsstrufe Fatal";
+		case "optLogLevelAddon6":
+		case "optLogLevelMain6":
+		case "optLogLevelHttp6":
+		case "optLogLevelP2p6":
+		case "optLogLevelPush6":
+		case "optLogLevelMqtt6":
+			return "keine Protokollierung";
+		case "hintLogLevelAddon":
+		case "hintLogLevelMain":
+		case "hintLogLevelHttp":
+		case "hintLogLevelP2p":
+		case "hintLogLevelPush":
+		case "hintLogLevelMqtt":
+			return `Legt den Umfang der Protokollierung fest. Jede Stufe enthält alle nachfolgenden Fehlermeldungsklassen (ohne letzte Stufe "keine Protokollierung").`;
+		case "divLogLevelErrorAddon":
+		case "divLogLevelErrorMain":
+		case "divLogLevelErrorHttp":
+		case "divLogLevelErrorP2p":
+		case "divLogLevelErrorPush":
+		case "divLogLevelErrorMqtt":
 			return "Bitte wählen Sie eine Protokollierungsstufe aus.";
 		case "btnSave":
 			return "Einstellungen speichern";

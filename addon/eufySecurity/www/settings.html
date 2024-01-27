@@ -296,23 +296,7 @@
 											<h5 id="settingsHeaderConfigLogLevel">{settingsHeaderConfigLogLevel}</h5>
 											<div class="form-label-group" class="container-fluid">
 												<div>
-													<label class="mb-2" for="cbLogLevel" id="lblLogLevel">{lblLogLevel}</label>
-													<div id="alertLogLevel">
-													</div>
-													<select name="logLevel" id="cbLogLevel" class="form-select" oninput="checkLogLevel(this.value);" required>
-														<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
-														<option value="0" id="optLogLevel0">{optLogLevel0}</option>
-														<option value="1" id="optLogLevel1">{optLogLevel1}</option>
-														<option value="2" id="optLogLevel2">{optLogLevel2}</option>
-														<option value="3" id="optLogLevel3">{optLogLevel3}</option>
-													</select>
-													<small class="form-text text-muted" id="hintLogLevel">{hintLogLevel}</small>
-													<div class="invalid-feedback" id="divLogLevelError">
-														{divLogLevelError}
-													</div>
-												</div>
-												<div>
-													<label class="my-2" for="cbLogLevelAddon" id="lblLogLevelAddon">{lblLogLevelAddon}</label>
+													<label class="mb-2" for="cbLogLevelAddon" id="lblLogLevelAddon">{lblLogLevelAddon}</label>
 													<div id="alertLogLevelAddon">
 													</div>
 													<select name="logLevelAddon" id="cbLogLevelAddon" class="form-select" oninput="checkLogLevel(alertLogLevelAddon, this.value);" required>
@@ -326,7 +310,7 @@
 														<option value="6" id="optLogLevelAddon6">{optLogLevel6}</option>
 													</select>
 													<small class="form-text text-muted" id="hintLogLevelAddon">{hintLogLevel}</small>
-													<div class="invalid-feedback" id="divLogLevelMainError">
+													<div class="invalid-feedback" id="divLogLevelAddonError">
 														{divLogLevelError}
 													</div>
 												</div>

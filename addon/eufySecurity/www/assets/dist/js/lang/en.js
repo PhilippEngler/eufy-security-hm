@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.1
-20240117
+Schema v9.2
+20240127
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240117 (v9.1)";
+var languageVersion = "20240127 (v9.2)";
 
 function translateNavbarElement(element)
 {
@@ -97,6 +97,12 @@ function translateStaticContentElement(element)
 		case "lblCountry":
 			return "Country of the eufy Security Account.";
 		case "optPleaseSelect":
+		case "optLogLevelPleaseSelectAddon":
+		case "optLogLevelPleaseSelectMain":
+		case "optLogLevelPleaseSelectHttp":
+		case "optLogLevelPleaseSelectP2p":
+		case "optLogLevelPleaseSelectPush":
+		case "optLogLevelPleaseSelectMqtt":
 			return "Please select...";
 		case "hintCountry":
 			return "The country for which you have created the eufy Security Account.";
@@ -230,19 +236,80 @@ function translateStaticContentElement(element)
 			return "Push notifications are required, for example, to determine the time of the last events for the cameras.";
 		case "settingsHeaderConfigLogLevel":
 			return "Settings for logging";
-		case "lblLogLevel":
-			return "Scope of the logging.";
-		case "optLogLevel0":
-			return "Basic information";
-		case "optLogLevel1":
-			return "All information";
-		case "optLogLevel2":
-			return "All information, all errors";
-		case "optLogLevel3":
-			return "All information, all errors, all debug information";
-		case "hintLogLevel":
-			return "Defines the scope of logging. Irrespective of this setting, errors are always logged in the error log file 'eufySecurity.err' when they occur; please select a logging level.";
-		case "divLogLevelError":
+		case "lblLogLevelAddon":
+			return "Scope of the logging for addon.";
+		case "lblLogLevelMain":
+			return "Scope of the logging for client (category main).";
+		case "lblLogLevelHttp":
+			return "Scope of the logging for client (category http)";
+		case "lblLogLevelP2p":
+			return "Scope of the logging for client (category P2P)";
+		case "lblLogLevelPush":
+			return "Scope of the logging for client (category push)";
+		case "lblLogLevelMqtt":
+			return "Scope of the logging for client (category mqtt)";
+		case "optLogLevelAddon0":
+		case "optLogLevelMain0":
+		case "optLogLevelHttp0":
+		case "optLogLevelP2p0":
+		case "optLogLevelPush0":
+		case "optLogLevelMqtt0":
+			return "Logging level trace";
+		case "optLogLevelAddon1":
+		case "optLogLevelMain1":
+		case "optLogLevelHttp1":
+		case "optLogLevelP2p1":
+		case "optLogLevelPush1":
+		case "optLogLevelMqtt1":
+			return "Logging level debug";
+		case "optLogLevelAddon2":
+		case "optLogLevelMain2":
+		case "optLogLevelHttp2":
+		case "optLogLevelP2p2":
+		case "optLogLevelPush2":
+		case "optLogLevelMqtt2":
+			return "Logging level information";
+		case "optLogLevelAddon3":
+		case "optLogLevelMain3":
+		case "optLogLevelHttp3":
+		case "optLogLevelP2p3":
+		case "optLogLevelPush3":
+		case "optLogLevelMqtt3":
+			return "Logging level warning";
+		case "optLogLevelAddon4":
+		case "optLogLevelMain4":
+		case "optLogLevelHttp4":
+		case "optLogLevelP2p4":
+		case "optLogLevelPush4":
+		case "optLogLevelMqtt4":
+			return "Logging level error";
+		case "optLogLevelAddon5":
+		case "optLogLevelMain5":
+		case "optLogLevelHttp5":
+		case "optLogLevelP2p5":
+		case "optLogLevelPush5":
+		case "optLogLevelMqtt5":
+			return "Logging level fatal";
+		case "optLogLevelAddon6":
+		case "optLogLevelMain6":
+		case "optLogLevelHttp6":
+		case "optLogLevelP2p6":
+		case "optLogLevelPush6":
+		case "optLogLevelMqtt6":
+			return "no logging";
+		case "hintLogLevelAddon":
+		case "hintLogLevelMain":
+		case "hintLogLevelHttp":
+		case "hintLogLevelP2p":
+		case "hintLogLevelPush":
+		case "hintLogLevelMqtt":
+			return `Defines the scope of logging. Each level contains all subsequent error message classes (without the last level "no logging").`;
+		case "divLogLevelErrorAddon":
+		case "divLogLevelErrorMain":
+		case "divLogLevelErrorHttp":
+		case "divLogLevelErrorP2p":
+		case "divLogLevelErrorPush":
+		case "divLogLevelErrorMqtt":
 			return "Please select a logging level.";
 		case "btnSave":
 			return "Save settings";
