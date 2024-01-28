@@ -22,7 +22,6 @@ class ApiServer
     constructor()
     {
         InternalLogger.logger = dummyLogger;
-        setLoggingLevel("all", LogLevel.Info);
         api = new EufySecurityApi();
         apiPortFile(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort());
         this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile());

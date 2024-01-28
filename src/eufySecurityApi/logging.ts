@@ -30,7 +30,7 @@ const getMethodName = function(): string | undefined {
 }
 
 const provider = CategoryProvider.createProvider("EufySecurityClientProvider", {
-    level: LogLevel.Info,
+    level: LogLevel.Off,
     dateFormatter: formatDate,
     channel: {
         type: "RawLogChannel",
