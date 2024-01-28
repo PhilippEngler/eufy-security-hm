@@ -241,13 +241,13 @@ function translateStaticContentElement(element)
 		case "lblLogLevelMain":
 			return "Scope of the logging for client (category main).";
 		case "lblLogLevelHttp":
-			return "Scope of the logging for client (category http)";
+			return "Scope of the logging for client (category http).";
 		case "lblLogLevelP2p":
-			return "Scope of the logging for client (category P2P)";
+			return "Scope of the logging for client (category P2P).";
 		case "lblLogLevelPush":
-			return "Scope of the logging for client (category push)";
+			return "Scope of the logging for client (category push).";
 		case "lblLogLevelMqtt":
-			return "Scope of the logging for client (category mqtt)";
+			return "Scope of the logging for client (category mqtt).";
 		case "optLogLevelAddon0":
 		case "optLogLevelMain0":
 		case "optLogLevelHttp0":

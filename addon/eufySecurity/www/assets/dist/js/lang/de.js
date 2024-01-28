@@ -239,15 +239,15 @@ function translateStaticContentElement(element)
 		case "lblLogLevelAddon":
 			return "Umfang der Protokollierung des Addons.";
 		case "lblLogLevelMain":
-			return "Umfang der Protokollierung des Client (Rubrik Main)";
+			return "Umfang der Protokollierung des Client (Rubrik Main).";
 		case "lblLogLevelHttp":
-			return "Umfang der Protokollierung des Client (Rubrik Http)";
+			return "Umfang der Protokollierung des Client (Rubrik Http).";
 		case "lblLogLevelP2p":
-			return "Umfang der Protokollierung des Client (Rubrik P2P)";
+			return "Umfang der Protokollierung des Client (Rubrik P2P).";
 		case "lblLogLevelPush":
-			return "Umfang der Protokollierung des Client (Rubrik Push)";
+			return "Umfang der Protokollierung des Client (Rubrik Push).";
 		case "lblLogLevelMqtt":
-			return "Umfang der Protokollierung des Client (Rubrik Mqtt)";
+			return "Umfang der Protokollierung des Client (Rubrik Mqtt).";
 		case "optLogLevelAddon0":
 		case "optLogLevelMain0":
 		case "optLogLevelHttp0":
