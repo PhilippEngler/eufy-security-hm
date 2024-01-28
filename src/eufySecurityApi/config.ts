@@ -126,9 +126,14 @@ export class Config
                 resConfigJson = this.updateConfig(resConfigJson);
             }
         }
-        catch (ENOENT)
+        catch (err : any)
         {
-            rootAddonLogger.error(`No '${filePath}' available.`);
+            var error = JSON.stringify(err);
+            if(error !== "{}")
+            {
+                //rootAddonLogger.error(`No '${filePath}' available.`);
+                rootAddonLogger.error(JSON.stringify(err));
+            }
         }
         return resConfigJson;
     }

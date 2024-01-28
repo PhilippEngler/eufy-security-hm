@@ -1,7 +1,7 @@
 import { Config } from './config';
 import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera, Picture, WallLightCam, GarageCamera, DeviceType } from './http';
 import { HomematicApi } from './homematicApi';
-import { rootAddonLogger } from './logging';
+import { rootAddonLogger, setLoggingLevel } from './logging';
 
 import { PushService } from './pushService';
 import { MqttService } from './mqttService';
@@ -47,6 +47,12 @@ export class EufySecurityApi
     constructor()
     {
         this.config = new Config();
+        setLoggingLevel("addon", this.config.getLogLevelAddon());
+        setLoggingLevel("main", this.config.getLogLevelMain());
+        setLoggingLevel("http", this.config.getLogLevelHttp());
+        setLoggingLevel("p2p", this.config.getLogLevelP2p());
+        setLoggingLevel("push", this.config.getLogLevelPush());
+        setLoggingLevel("mqtt", this.config.getLogLevelMqtt());
         this.homematicApi = new HomematicApi(this);
 
         this.initialize();
