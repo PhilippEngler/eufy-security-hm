@@ -1,14 +1,14 @@
 import { Readable } from "stream";
 
 import { Device } from "./http/device";
-import { HTTPApiPersistentData, Picture, PropertyValue, Schedule } from "./http/interfaces";
+import { Picture, PropertyValue, Schedule } from "./http/interfaces";
 import { Station } from "./http/station";
 import { DeviceSmartLockMessage } from "./mqtt/model";
 import { DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata } from "./p2p/interfaces";
 import { CommandResult } from "./p2p/models";
 import { TalkbackStream } from "./p2p/talkback";
 import { AlarmEvent, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p/types";
-import { Credentials, PushMessage } from "./push/models";
+import { PushMessage } from "./push/models";
 import { Jsonable } from ".";
 
 export interface StationIPAddresses {

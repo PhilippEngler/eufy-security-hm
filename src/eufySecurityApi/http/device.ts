@@ -983,6 +983,15 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return false;
     }
 
+    static isCamera1(type: number): boolean {
+        return DeviceType.CAMERA == type;
+    }
+
+    static isCameraE(type: number): boolean {
+        return DeviceType.CAMERA_E == type;
+    }
+
+
     static isSensor(type: number): boolean {
         if (type == DeviceType.SENSOR ||
             type == DeviceType.MOTION_SENSOR)
@@ -1223,6 +1232,10 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return DeviceType.INDOOR_COST_DOWN_CAMERA == type;
     }
 
+    static isCamera1Product(type: number): boolean {
+        return Device.isCamera1(type) || Device.isCameraE(type);
+    }
+
     static isCamera2(type: number): boolean {
         //T8114
         return DeviceType.CAMERA2 == type;
@@ -1241,14 +1254,6 @@ export class Device extends TypedEmitter<DeviceEvents> {
     static isCamera2CPro(type: number): boolean {
         //T8142
         return DeviceType.CAMERA2C_PRO == type;
-    }
-
-    static isFirstCamera(type: number): boolean {
-        return DeviceType.CAMERA == type;
-    }
-
-    static isCameraE(type: number): boolean {
-        return DeviceType.CAMERA_E == type;
     }
 
     static isCamera2Product(type: number): boolean {
@@ -1553,12 +1558,8 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return Device.isSoloCameras(this.rawDevice.device_type);
     }
 
-    public isFirstCamera(): boolean {
-        return Device.isFirstCamera(this.rawDevice.device_type);
-    }
-
-    public isCameraE(): boolean {
-        return Device.isCameraE(this.rawDevice.device_type);
+    public isCamera1Product(): boolean {
+        return Device.isCamera1Product(this.rawDevice.device_type);
     }
 
     public isCamera2(): boolean {

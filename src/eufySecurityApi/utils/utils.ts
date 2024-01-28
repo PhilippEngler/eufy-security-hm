@@ -167,7 +167,7 @@ export const getModelName = function(modelNumber: string): string {
  * @returns A string with the type of the device.
  */
 export const getDeviceTypeAsString = function(device: Device): string {
-    if(device.isFirstCamera() || device.isCameraE() || device.isCamera2Product() || device.isCamera3Product()) {
+    if(device.isCamera1Product() || device.isCamera2Product() || device.isCamera3Product()) {
         return "camera";
     } else if(device.isDoorbell()) {
         return "doorbell";
