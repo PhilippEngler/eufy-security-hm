@@ -3848,11 +3848,11 @@ function loadDataSettings()
 						}
 					}
 					checkLogLevel("alertLogLevelAddon", objResp.data.logLevelAddon);
-					checkLogLevel("alertLogLevelMain", objResp.data.logLevelAddon);
-					checkLogLevel("alertLogLevelHttp", objResp.data.logLevelAddon);
-					checkLogLevel("alertLogLevelP2p", objResp.data.logLevelAddon);
-					checkLogLevel("alertLogLevelPush", objResp.data.logLevelAddon);
-					checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelAddon);
+					checkLogLevel("alertLogLevelMain", objResp.data.logLevelMain);
+					checkLogLevel("alertLogLevelHttp", objResp.data.logLevelHttp);
+					checkLogLevel("alertLogLevelP2p", objResp.data.logLevelP2p);
+					checkLogLevel("alertLogLevelPush", objResp.data.logLevelPush);
+					checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelMqtt);
 					document.getElementById("resultLoading").innerHTML = "";
 					activateUIElements();
 					enableUIElements();
@@ -4517,7 +4517,14 @@ function checkLogLevel(elementName, value)
 	{
 		document.getElementById(elementName).setAttribute("class", "alert alert-warning alert-dismissible fade show");
 		document.getElementById(elementName).setAttribute("role", "alert");
-		document.getElementById(elementName).innerHTML += `${translateContent("lblLogLevelToHighMessage")}<br />`;
+		if(value == "0")
+		{
+			document.getElementById(elementName).innerHTML += `${translateContent("lblLogLevelToHighTraceMessage")}<br />`;
+		}
+		if(value == "1")
+		{
+			document.getElementById(elementName).innerHTML += `${translateContent("lblLogLevelToHighDebugMessage")}<br />`;
+		}
 		document.getElementById(elementName).innerHTML += `<small class="form-text text-muted">${translateContent("lblLogLevelToHighSubText")}</small>`;
 	}
 	else

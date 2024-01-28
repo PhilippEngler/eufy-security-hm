@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.2
-20240127
+Schema v9.3
+20240128
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240127 (v9.2)";
+var languageVersion = "20240128 (v9.3)";
 
 function translateNavbarElement(element)
 {
@@ -1007,8 +1007,10 @@ function translateContent(content, ...options)
 			return "Disable troubleshooting";
 		case "lblSettingsTroubleShootingEnable":
 			return "Activate troubleshooting";
-		case "lblLogLevelToHighMessage":
-			return "You have selected the scope of the logging so that DEBUG information is also logged. This can lead to a very large log file. Select a value smaller than 3 for normal operation."
+		case "lblLogLevelToHighTraceMessage":
+			return "You have selected the scope of the logging so that TRACE and DEBUG information are also logged. This can lead to a very large log file. For normal operation, select the logging level information or lower.";
+		case "lblLogLevelToHighDebugMessage":
+			return "You have selected the scope of the logging so that DEBUG information are also logged. This can lead to a very large log file. For normal operation, select the logging level information or lower.";
 		case "lblLogLevelToHighSubText":
 			return "This setting remains permanently active even after a restart of the add-on or the CCU.";
 		case "lblFileIsEmpty":

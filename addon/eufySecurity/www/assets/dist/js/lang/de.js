@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.2
-20240127
+Schema v9.3
+20240128
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240127 (v9.2)";
+var languageVersion = "20240128 (v9.3)";
 
 function translateNavbarElement(element)
 {
@@ -1007,8 +1007,10 @@ function translateContent(content, ...options)
 			return "Fehlerbehebung deaktivieren";
 		case "lblSettingsTroubleShootingEnable":
 			return "Fehlerbehebung aktivieren";
-		case "lblLogLevelToHighMessage":
-			return "Sie haben den Umfang der Protokollierung so gewählt, dass zusätzlich auch DEBUG Informationen protokolliert werden. Dies kann zu einer sehr großen Protokolldatei führen. Wählen Sie für den normalen Betrieb einen Wert kleiner als 3 aus."
+		case "lblLogLevelToHighTraceMessage":
+			return "Sie haben den Umfang der Protokollierung so gewählt, dass zusätzlich auch TRACE und DEBUG Informationen protokolliert werden. Dies kann zu einer großen Protokolldatei führen. Wählen Sie für den normalen Betrieb die Protokollierungsstufe Information oder niedriger aus.";
+		case "lblLogLevelToHighDebugMessage":
+			return "Sie haben den Umfang der Protokollierung so gewählt, dass zusätzlich auch DEBUG Informationen protokolliert werden. Dies kann zu einer großen Protokolldatei führen. Wählen Sie für den normalen Betrieb die Protokollierungsstufe Information oder niedriger aus.";
 		case "lblLogLevelToHighSubText":
 			return "Diese Einstellung bleibt dauerhaft auch nach einem Neustart des Addons oder der CCU aktiv.";
 		case "lblFileIsEmpty":
