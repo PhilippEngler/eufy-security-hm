@@ -596,7 +596,7 @@ export class Config
             this.configJson.apiConfig.httpsPort = 52790;
             updated = true;
         }
-        if(this.configJson.apiConfig.localStaticUdpPortsActive == true)
+        /*if(this.configJson.apiConfig.localStaticUdpPortsActive == true)
         {
             var udpPorts = [];
             var stations = this.configJson.stations;
@@ -616,18 +616,17 @@ export class Config
                     }
                 }
             }
-        }
-        
+        }*/        
         if(this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240))
         {
-            this.log("INFO", `Set stateUpdateIntervallTimespan to default value "10"`);
-            this.configJson.apiConfig.stateUpdateIntervallTimespan = 10;
+            this.log("INFO", `Set stateUpdateIntervallTimespan to default value "15"`);
+            this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
             updated = true;
         }
         if(this.configJson.apiConfig.updateLinksOnlyWhenArmed && (this.configJson.apiConfig.updateLinksTimespan < 15 || this.configJson.apiConfig.updateLinksTimespan > 240))
         {
-            this.log("INFO", `Set updateLinksTimespan to default value "10"`);
-            this.configJson.apiConfig.updateLinksTimespan = 10;
+            this.log("INFO", `Set updateLinksTimespan to default value "15"`);
+            this.configJson.apiConfig.updateLinksTimespan = 15;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelAddon < 0 || this.configJson.logConfig.logLevelAddon > 6)
@@ -665,6 +664,10 @@ export class Config
             this.log("INFO", `Set logLevelMqtt to default value "2"`);
             this.configJson.logConfig.logLevelMqtt = 2;
             updated = true;
+        }
+        if(updated === true)
+        {
+            this.hasChanged = true;
         }
         return updated;
     }
