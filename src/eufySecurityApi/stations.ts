@@ -6,12 +6,13 @@ import { sleep } from './push/utils';
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError, ensureError } from "./error";
 import internal from "stream";
 import EventEmitter from "events";
-import { AlarmEvent, ChargingType, CommandResult, CommandType, CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
+import { AlarmEvent, CommandResult, CommandType, CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { getError, parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
 import path from "path";
 import { rootAddonLogger } from "./logging";
+import { isCharging } from "./p2p/utils";
 
 /**
  * Represents all the stations in the account.
@@ -1342,7 +1343,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }
             }
             this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
-                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLockWifiR10() && !device.isLockWifiR20() && !device.isLockWifiVideo() && !device.isSmartSafe()) ||
+                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLockWifiR10() && !device.isLockWifiR20() && !device.isSmartSafe()) ||
                     (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS)) {
                     if (device.hasProperty(result.customData.property.name)) {
                         const metadata = device.getPropertyMetadata(result.customData.property.name);
@@ -1671,7 +1672,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             if (device.hasProperty(PropertyName.DeviceBattery))
             {
                 const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
-                if (chargeType !== ChargingType.PLUGGED && batteryLevel > 0)
+                if (isCharging(chargeType) && batteryLevel > 0)
                 {
                     device.updateRawProperty(metadataBattery.key as number, batteryLevel.toString(), "p2p");
                 }
@@ -1683,7 +1684,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            rootAddonLogger.error(`Station charging state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, chargeType: ChargingType[chargeType], batteryLevel: batteryLevel });
+            rootAddonLogger.error(`Station charging state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, chargeType: chargeType, charging: isCharging(chargeType), batteryLevel: batteryLevel });
         });
     }
 

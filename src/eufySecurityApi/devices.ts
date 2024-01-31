@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, parseValue, waitForEvent } from "./utils";
@@ -91,6 +91,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     else if(Device.isSoloCameras(resDevices[deviceSerial].device_type))
                     {
                         new_device = SoloCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (Device.isLockWifiVideo(resDevices[deviceSerial].device_type))
+                    {
+                        new_device = DoorbellLock.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
                     else if(Device.isBatteryDoorbell(resDevices[deviceSerial].device_type))
                     {
@@ -2087,6 +2091,27 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 break;
             case PropertyName.DeviceSoundDetectionType:
                 station.setSoundDetectionType(device, value as number);
+                break;
+            case PropertyName.DeviceLeavingDetection:
+                station.setLeavingDetection(device, value as boolean);
+                break;
+            case PropertyName.DeviceLeavingReactionNotification:
+                station.setLeavingReactionNotification(device, value as boolean);
+                break;
+            case PropertyName.DeviceLeavingReactionStartTime:
+                station.setLeavingReactionStartTime(device, value as string);
+                break;
+            case PropertyName.DeviceLeavingReactionEndTime:
+                station.setLeavingReactionEndTime(device, value as string);
+                break;
+            case PropertyName.DeviceBeepVolume:
+                station.setBeepVolume(device, value as number);
+                break;
+            case PropertyName.DeviceNightvisionOptimization:
+                station.setNightvisionOptimization(device, value as boolean);
+                break;
+            case PropertyName.DeviceNightvisionOptimizationSide:
+                station.setNightvisionOptimizationSide(device, value as number);
                 break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
