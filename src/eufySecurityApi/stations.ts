@@ -292,7 +292,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             {
                 if(this.stations[stationSerial])
                 {
-                    await this.stations[stationSerial].close();
+                    await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
+                        return;
+                    }, () => {
+                        rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
+                        return;
+                    });
                     
                     this.removeEventListener(this.stations[stationSerial], "GuardMode");
                     this.removeEventListener(this.stations[stationSerial], "CurrentMode");
@@ -344,6 +349,42 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }                
             }
         }
+    }
+
+    /**
+     * Wait for the P2P closed event.
+     * @param station The station for waiting for the GuardMode event.
+     * @param guardMode The guard mode to set.
+     * @param timeout The timespan in ms maximal to wait for the event.
+     * @returns Returns true or false.
+     */
+    private async waitForP2PCloseEvent(station : Station, timeout : number) : Promise<boolean>
+    {
+        return new Promise<boolean>(async (resolve, reject) => {
+            var timer : NodeJS.Timeout;
+            var funcListener = () => listener();
+
+            function listener() {
+                station.removeListener("close", funcListener);
+                clearTimeout(timer);
+                resolve(true);
+            }
+
+            station.addListener("close", funcListener);
+            timer = setTimeout(() => {
+                station.removeListener("close", funcListener);
+                reject(false);
+            }, timeout);
+            try
+            {
+                this.stations[station.getSerial()].close();
+            }
+            catch(e :any)
+            {
+                station.removeListener("close", funcListener);
+                reject(e);
+            }
+        });
     }
 
     /**
