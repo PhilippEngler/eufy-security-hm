@@ -1,5 +1,7 @@
+import { appendFileSync, closeSync, openSync } from "fs";
 import { LogLevel as Level } from "typescript-logging";
 import { CategoryProvider } from "typescript-logging-category-style";
+import { pathToClientLog } from "./utils/utils";
 
 export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt";
 export const LogLevel = Level;
@@ -39,10 +41,13 @@ const provider = CategoryProvider.createProvider("EufySecurityClientProvider", {
             const method = methodName ? `[${methodName}] ` : "";
             const logLevel = `${LogLevel[msg.level].toUpperCase()}`.padEnd(5, " ")
             const logNames = `[${msg.logNames}]`.padEnd(7, " ");
-            if (msg.args)
+            if (msg.args) {
                 console.log(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${msg.message}`, ...msg.args);
-            else
+                logMessageForClient(`${formatDate(msg.timeInMillis)} ${logLevel} [${logNames}] ${method}${msg.message}`, ...msg.args);
+            } else {
                 console.log(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${msg.message}`);
+                logMessageForClient(`${formatDate(msg.timeInMillis)} ${logLevel} [${logNames}] ${method}${msg.message}`);
+            }
             /*switch(msg.level) {
                 case LogLevel.Trace:
                     if (msg.args)
@@ -143,4 +148,22 @@ export function formatDate(millisSinceEpoch: number): string {
     const seconds = date.getSeconds().toString().padStart(2, "0");
     const millis = date.getMilliseconds().toString().padStart(3, "0");
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds},${millis}`;
-  }
+}
+
+function logMessageForClient(message: string, ...messageArgs: any[]) {
+    let fileHandle;
+    try {
+        fileHandle = openSync(pathToClientLog, 'a');
+        if(messageArgs) {
+            appendFileSync(fileHandle, message + messageArgs + "\r\n", 'utf-8');
+        } else {
+            appendFileSync(fileHandle, message + "\r\n", 'utf-8');
+        }
+    } catch (err: any) {
+        console.log(`${formatDate(Date.now())} ERROR [log]   ${err.message}`);
+    } finally {
+        if (fileHandle !== undefined) {
+            closeSync(fileHandle);
+        }
+    }
+}
