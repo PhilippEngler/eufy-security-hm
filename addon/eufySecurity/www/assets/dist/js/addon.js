@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240118
+ * 20240131
  */
 action = "";
 port = "";
@@ -4617,10 +4617,10 @@ function loadLogfile(logfiletype, showLoading)
 		case "index":
 			break;
 		case "log":
-			url=`${location.protocol}//${location.hostname}:${port}/getLogFileContent`;
+			url=`${location.protocol}//${location.hostname}/addons/eufySecurity/getAddonLogFile.cgi`;
 			break;
 		case "err":
-			url=`${location.protocol}//${location.hostname}:${port}/getErrorFileContent`;
+			url=`${location.protocol}//${location.hostname}/addons/eufySecurity/getAddonErrorFile.cgi`;
 			break;
 		default:
 			return;

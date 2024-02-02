@@ -2,6 +2,7 @@ import { Device, DeviceType, Station } from "../http";
 
 export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
 export const pathToTemp = "/var/tmp/eufySecurity";
+export const pathToClientLog = "/var/log/eufySecurityClient.log";
 
 /**
  * Retrieve the model name of a given station or device.
