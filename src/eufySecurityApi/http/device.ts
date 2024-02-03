@@ -1732,8 +1732,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
         return this.rawDevice.device_sn;
     }
 
-    public getId() : number
-    {
+    public getId() : number {
         return this.rawDevice.device_id;
     }
 
