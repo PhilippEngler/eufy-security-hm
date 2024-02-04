@@ -144,9 +144,6 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   #if [ -e ${ADDON_DIR}/node_modules/normalize-url ]; then
   #  rm -r ${ADDON_DIR}/node_modules/normalize-url
   #fi
-  #if [ -e ${ADDON_DIR}/node_modules/once ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/once
-  #fi
   #if [ -e ${ADDON_DIR}/node_modules/p-cancelable ]; then
   #  rm -r ${ADDON_DIR}/node_modules/p-cancelable
   #fi
@@ -162,9 +159,6 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/node_modules/universalify ]; then
     rm -r ${ADDON_DIR}/node_modules/universalify
   fi
-  #if [ -e ${ADDON_DIR}/node_modules/wrappy ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/wrappy
-  #fi
   if [ -e ${ADDON_DIR}/node_modules/@babel ]; then
     rm -r ${ADDON_DIR}/node_modules/@babel
   fi
@@ -298,6 +292,30 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   fi
   if [ -e ${ADDON_DIR}/node_modules/yallist ]; then
     rm -r ${ADDON_DIR}/node_modules/yallist
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/balanced-match ]; then
+    rm -r ${ADDON_DIR}/node_modules/balanced-match
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/brace-expansion ]; then
+    rm -r ${ADDON_DIR}/node_modules/brace-expansion
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/inflight ]; then
+    rm -r ${ADDON_DIR}/node_modules/inflight
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/inflight ]; then
+    rm -r ${ADDON_DIR}/node_modules/inflight
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/once ]; then
+    rm -r ${ADDON_DIR}/node_modules/once
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/wrappy ]; then
+    rm -r ${ADDON_DIR}/node_modules/wrappy
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/fs.realpath ]; then
+    rm -r ${ADDON_DIR}/node_modules/fs.realpath
+  fi
+  if [ -e ${ADDON_DIR}/node_modules/glob ]; then
+    rm -r ${ADDON_DIR}/node_modules/glob
   fi
   # remove unused asset files
   if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css ]; then
