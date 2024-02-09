@@ -43,10 +43,10 @@ const provider = CategoryProvider.createProvider("EufySecurityClientProvider", {
             const logNames = `[${msg.logNames}]`.padEnd(7, " ");
             if (msg.args) {
                 console.log(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${msg.message}`, ...msg.args);
-                logMessageForClient(`${formatDate(msg.timeInMillis)} ${logLevel} [${logNames}] ${method}${msg.message}`, ...msg.args);
+                logMessageForClient(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${method}${msg.message}`, ...msg.args);
             } else {
                 console.log(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${msg.message}`);
-                logMessageForClient(`${formatDate(msg.timeInMillis)} ${logLevel} [${logNames}] ${method}${msg.message}`);
+                logMessageForClient(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${method}${msg.message}`);
             }
             /*switch(msg.level) {
                 case LogLevel.Trace:
