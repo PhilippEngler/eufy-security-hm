@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.3
-20240128
+Schema v9.4
+20240208
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240128 (v9.3)";
+var languageVersion = "20240208 (v9.4)";
 
 function translateNavbarElement(element)
 {
@@ -734,7 +734,7 @@ function translateContent(content, ...options)
 		case "lblWaitMessageLoadDevices":
 			return "Lade verfügbare Geräte...";
 		case "titleDeactivatedOffline":
-			return "Dieses Gerät wurde ist derzeit nicht erreichbar.";
+			return "Dieses Gerät ist derzeit offline.";
 		case "titleDeactivatedOfflineHint":
 			return "Um Einstellungen für dieses Gerät vornehmen zu können, bringen Sie das Gerät wieder in den Empfangsbereichs der HomeBase beziehungsweise des WLANs.";
 		case "titleDeactivatedLowBattery":
@@ -843,6 +843,8 @@ function translateContent(content, ...options)
 			return "Erkennungsempfindlichkeit";
 		case "lblSoundDetectionType":
 			return "Erkennungsart";
+		case "soundDetectionRoundLook":
+			return "Rundumblick nach Geräuscherkennung";
 		case "lblHeaderPowerManager":
 			return "Power Manager";
 		case "lblPowerWorkingMode":
@@ -911,6 +913,8 @@ function translateContent(content, ...options)
 			return "Art der Benachrichtigung";
 		case "lblNotificationSend":
 			return "Benachrichtigung senden";
+		case "lblNotificationIntervalTime":
+			return "Zeit zwischen zwei Benachrichtigungen";
 		case "lblHeaderInteractionCCU":
 			return "Interaktion mit der CCU";
 		case "lblInteractionMotion":
@@ -1499,6 +1503,8 @@ function translatePropertyName(propertyName)
 		case "dogPoopEventCommandHint":
 		case "ringEventCommandHint":
 			return "Der hier einzugebende Befehl sollte im Vorfeld über die Skript-Testen-Funktion der CCU getestet werden.";
+		case "notificationIntervalTime":
+			return "Dauer zwischen zwei Benachrichtigungen";
 		default:
 			return propertyName;
 	}
@@ -1573,7 +1579,15 @@ function translateDeviceStateValue(state, propertyName, value)
 					return state;
 			}
 		case "On":
-			return "mit Logo";
+			switch(propertyName)
+			{
+				case "watermark":
+					return "mit Logo";
+				case "nightvision":
+					return "Nachtsicht aktivieren";
+				default:
+					return state;
+			}
 		case "Timestamp":
 			return "Zeitstempel";
 		case "Timestamp and Logo":
@@ -1728,6 +1742,10 @@ function translateDeviceStateValue(state, propertyName, value)
 			return "Bild-in-Bild: unten rechts";
 		case "Split-view":
 			return "geteilte Ansicht";
+		case "Single view":
+			return "Anzeige einer Kamera";
+		case "Double view":
+			return "Anzeige beider Kameras";
 		case "Daily":
 			switch(propertyName)
 			{
@@ -1828,6 +1846,54 @@ function translateDeviceStateValue(state, propertyName, value)
 			return "offen";
 		case "Closed":
 			return "zu";
+		case "0":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "kein Abstand";
+				default:
+					return state;
+			}
+		case "1":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "1min";
+				default:
+					return state;
+			}
+		case "2":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "2min";
+				default:
+					return state;
+			}
+		case "3":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "3min";
+				default:
+					return state;
+			}
+		case "4":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "4min";
+				default:
+					return state;
+			}
+		case "5":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "5min";
+				default:
+					return state;
+			}
 		default:
 			return state;
 	}

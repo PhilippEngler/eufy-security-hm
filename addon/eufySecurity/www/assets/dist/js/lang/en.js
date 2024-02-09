@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.3
-20240128
+Schema v9.4
+20240208
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240128 (v9.3)";
+var languageVersion = "20240208 (v9.4)";
 
 function translateNavbarElement(element)
 {
@@ -843,6 +843,8 @@ function translateContent(content, ...options)
 			return "Sound Detection Sensitivity";
 		case "lblSoundDetectionType":
 			return "Sound Detection Type";
+		case "soundDetectionRoundLook":
+			return "Round look after sound detection";
 		case "lblHeaderPowerManager":
 			return "Power Manager";
 		case "lblPowerWorkingMode":
@@ -911,6 +913,8 @@ function translateContent(content, ...options)
 			return "Notification Type";
 		case "lblNotificationSend":
 			return "Notification Send";
+		case "lblNotificationIntervalTime":
+			return "Time between Notifications";
 		case "lblHeaderInteractionCCU":
 			return "Interacting with the CCU";
 		case "lblInteractionMotion":
@@ -1499,6 +1503,8 @@ function translatePropertyName(propertyName)
 		case "dogPoopEventCommandHint":
 		case "ringEventCommandHint":
 			return "The command to be entered here should be tested in advance using the script test function of the CCU.";
+		case "notificationIntervalTime":
+			return "Duration between Notifications";
 		default:
 			return propertyName;
 	}
@@ -1573,7 +1579,15 @@ function translateDeviceStateValue(state, propertyName, value)
 					return state;
 			}
 		case "On":
-			return "With Logo";
+			switch(propertyName)
+			{
+				case "watermark":
+					return "With Logo";
+				case "nightvision":
+					return "use Nightvision";
+				default:
+					return state;
+			}
 		case "Timestamp":
 			return "Timestamp";
 		case "Timestamp and Logo":
@@ -1728,6 +1742,10 @@ function translateDeviceStateValue(state, propertyName, value)
 			return "Bottom-Right Picture-in-Picture";
 		case "Split-view":
 			return "Split-view";
+		case "Single view":
+			return "Single view";
+		case "Double view":
+			return "Dual view";
 		case "Daily":
 			switch(propertyName)
 			{
@@ -1828,6 +1846,54 @@ function translateDeviceStateValue(state, propertyName, value)
 			return "Open";
 		case "Closed":
 			return "Closed";
+		case "0":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "kein Abstand";
+				default:
+					return state;
+			}
+		case "1":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "1min";
+				default:
+					return state;
+			}
+		case "2":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "2min";
+				default:
+					return state;
+			}
+		case "3":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "3min";
+				default:
+					return state;
+			}
+		case "4":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "4min";
+				default:
+					return state;
+			}
+		case "5":
+			switch (propertyName)
+			{
+				case "notificationIntervalTime":
+					return "5min";
+				default:
+					return state;
+			}
 		default:
 			return state;
 	}

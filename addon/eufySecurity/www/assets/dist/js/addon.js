@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240131
+ * 20240208
  */
 action = "";
 port = "";
@@ -1246,7 +1246,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 								<div class="card mb-3" id="cardDeviceSoundDetectionSettings">
 									<h5 class="card-header">${translateContent("lblHeaderSoundDetection")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.soundDetection !== undefined)
+		if(deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionRoundLook !== undefined)
 		{
 			deviceModal += `
 										<h5>${translateContent("lblSoundDetection")}</h5>
@@ -1265,12 +1265,19 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>${translateContent("lblSoundDetectionType")}</h5>
 										${deviceProperties.soundDetectionType !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.soundDetectionType.name, deviceProperties.soundDetectionType, setEventHandler, devicePropertiesMetadata.soundDetectionType.states)}` : ""}`;
 			}
+			if(deviceProperties.soundDetectionRoundLook !== undefined)
+			{
+				deviceModal += `
+										${deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionSensitivity || (deviceProperties.soundDetectionType !== undefined && (deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined)) ? `<hr />`: ``}
+										<h5>${translateContent("lblSoundDetectionRoundLook")}</h5>
+										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.soundDetectionRoundLook.name, deviceProperties.soundDetectionRoundLook, setEventHandler)}`;
+			}
 		}
 		deviceModal += `
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.powerWorkingMode !== undefined || deviceProperties.recordingClipLength !== undefined || deviceProperties.recordingRetriggerInterval !== undefined || deviceProperties.recordingEndClipMotionStops !== undefined || deviceProperties.powerSource !== undefined)
+	if(deviceProperties.powerWorkingMode !== undefined || deviceProperties.recordingClipLength !== undefined || deviceProperties.recordingRetriggerInterval !== undefined || deviceProperties.recordingEndClipMotionStops !== undefined || deviceProperties.powerSource !== undefined || deviceProperties.lastChargingDays !== undefined || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined))
 	{
 		deviceModal += `
 								<div class="card mb-3" id="cardDevicePowerManagerSettings">
@@ -1443,7 +1450,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 				deviceModal += `
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.microphone.name, deviceProperties.microphone, setEventHandler)}`;
 			}
-			if(deviceProperties.audioRecording !== undefined && (deviceProperties.microphone === undefined || (deviceProperties.microphone !== undefined && deviceProperties.microphone == true)))
+			if(deviceProperties.audioRecording !== undefined && (deviceProperties.microphone === undefined || (deviceProperties.microphone !== undefined && deviceProperties.microphone === true)))
 			{
 				deviceModal += `
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.audioRecording.name, deviceProperties.audioRecording, setEventHandler)}`;
@@ -1617,6 +1624,13 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${deviceProperties.notificationMotion !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationMotion.name, deviceProperties.notificationMotion, setEventHandler)}` : ""}
 										${deviceProperties.notificationRadarDetector !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationRadarDetector.name, deviceProperties.notificationRadarDetector, setEventHandler)}` : ""}`;
 			}
+		}
+		if(deviceProperties.notificationIntervalTime !== undefined)
+		{
+			deviceModal += `
+										${deviceProperties.notification !== undefined || (deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined) ? `<hr />` : ``}
+										<h5>${translateContent("lblNotificationIntervalTime")}</h5>
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationIntervalTime.name, deviceProperties.notificationIntervalTime, setEventHandler, devicePropertiesMetadata.notificationIntervalTime.states)}`;
 		}
 		deviceModal += `
 									</div>
@@ -1992,9 +2006,11 @@ function isStationOrDevicesKnown(modell)
 		//IndoorCams
 		case "T8400":
 		case "T8410":
+		case "T8416":
 		//Doorbells
 		case "T8210":
 		case "T8213":
+		case "T8214":
 		//WallLightCams
 		case "T84A1":
 		//Sensors
@@ -2633,7 +2649,7 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 									<div class="card mb-3" id="cardStationStorageSettings">
 										<h5 class="card-header">${translateContent("lblStorageInfoHeader")}</h5>
 										<div class="card-body">`;
-		if(stationPropertiesMetadata.storageInfoEmmc !== undefined)
+		if(stationProperties.storageInfoEmmc !== undefined)
 		{
 			stationModal +=  `
 											<h5>${translateContent("lblInternalEmmcStorage")}</h5>
@@ -2723,7 +2739,7 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
 			}
 		}
-		if(stationPropertiesMetadata.storageInfoHdd !== undefined)
+		if(stationProperties.storageInfoHdd !== undefined)
 		{
 			stationModal +=  `
 											<hr>
