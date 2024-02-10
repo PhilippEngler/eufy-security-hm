@@ -355,7 +355,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Wait for the P2P closed event.
      * @param station The station for waiting for the GuardMode event.
-     * @param guardMode The guard mode to set.
      * @param timeout The timespan in ms maximal to wait for the event.
      * @returns Returns true or false.
      */
