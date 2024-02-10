@@ -143,3 +143,8 @@ code {
 .btn {
   hyphens: auto;
 }
+
+/* reduce horizontal padding for card headers */
+.card-header {
+  --bs-card-cap-padding-x: 0.75rem;
+}

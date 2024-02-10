@@ -348,12 +348,12 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 
 	card += `<div class="col"><div class="card">`;
 	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
-	card += `<div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${station.isP2PConnected === false ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${showSettingsIcon === true ? `<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="generateStationSettingsModal('${station.serialNumber}')"></i>` : ""}</h5></span></div>`;
+	card += `<div style="text-align:right;"><h5 class="mb-0">${station.isP2PConnected === false ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${showSettingsIcon === true ? `<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="generateStationSettingsModal('${station.serialNumber}')"></i>` : ""}</h5></div>`;
 	card += `</div>`;
 	
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${station.modelName} (${station.model})</div></div>`;
-	card += `<div class="col-md-8 p-3">`;
+	card += `<div class="col-md-8 px-2 py-3">`;
 	card += `${cardBodyText}`;
 	card += `</div></div>`;
 	
@@ -531,11 +531,12 @@ function createCardDevice(device)
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
-	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div><div style="text-align:right;"><span class="text-nowrap"><h5 class="mb-0">${device.enabled === false ? `<i class="bi-power" title="${translateContent("titleDeviceDisabled")}"></i>&nbsp;&nbsp;` : ""}${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${device.state === 2 ? `<i class="bi-exclamation-triangle" title="${translateContent(titleDeactivatedLowBattery)}"></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel, device.wifiRssi)}" title="${translateContent("titleWifiSignalLevel")}: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></span></div></div>`;
+	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div>`;
+	card += `<div style="text-align:right;"><h5 class="mb-0">${device.enabled === false ? `<i class="bi-power" title="${translateContent("titleDeviceDisabled")}"></i>&nbsp;&nbsp;` : ""}${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${device.state === 0 ? `<i class="bi-exclamation-triangle" title="${translateContent("titleDeactivatedOffline")}"></i>&nbsp;&nbsp;` : device.state === 2 ? `<i class="bi-exclamation-triangle" title="${translateContent("titleDeactivatedLowBattery")}"></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel, device.wifiRssi)}" title="${translateContent("titleWifiSignalLevel")}: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></div></div>`;
 
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
-	card += `<div class="col-md-8 p-3">`;
+	card += `<div class="col-md-8 px-2 py-3">`;
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
