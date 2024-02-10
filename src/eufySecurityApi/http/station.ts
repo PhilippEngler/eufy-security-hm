@@ -110,7 +110,7 @@ export class Station extends TypedEmitter<StationEvents> {
 
     static async getInstance(api: HTTPApi, stationData: StationListResponse, ipAddress?: string, udpPort?: number, connectionType?: P2PConnectionType): Promise<Station> {
         let publicKey: string | undefined;
-        if (Device.isLock(stationData.device_type)) {
+        if (Device.isLock(stationData.device_type) && !Device.isLockWifiT8506(stationData.device_type)) {
             publicKey = await api.getPublicKey(stationData.station_sn, PublicKeyType.LOCK);
         }
         return new Station(api, stationData, ipAddress, udpPort, connectionType, publicKey);
