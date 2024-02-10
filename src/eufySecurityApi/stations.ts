@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { EufySecurityApi } from './eufySecurityApi';
 import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError, Schedule, Picture } from './http';
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError, Schedule, Picture, UserPasswordType } from './http';
 import { sleep } from './push/utils';
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError, ensureError } from "./error";
 import internal from "stream";
@@ -13,6 +13,7 @@ import { convertTimeStampToTimeStampMs } from "./utils/utils";
 import path from "path";
 import { rootAddonLogger } from "./logging";
 import { isCharging } from "./p2p/utils";
+import { hexStringScheduleToSchedule } from "./http/utils";
 
 /**
  * Represents all the stations in the account.
@@ -1229,6 +1230,16 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
                 station.getCameraInfo();
             }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+        } else if (Device.isLock(station.getDeviceType())) {
+            station.getLockParameters();
+            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
+                clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
+                delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
+            }
+            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+                station.getLockParameters();
+                station.getLockStatus();
+            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
         }
     }
 
@@ -1384,8 +1395,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 }
             }
             this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
-                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLockWifiR10() && !device.isLockWifiR20() && !device.isSmartSafe()) ||
-                    (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS)) {
+                if ((result.customData !== undefined && result.customData.property !== undefined && !device.isLockWifiR10() && !device.isLockWifiR20() && !device.isSmartSafe() && !device.isLockWifiT8506()) ||
+                    (result.customData !== undefined && result.customData.property !== undefined && device.isSmartSafe() && result.command_type !== CommandType.CMD_SMARTSAFE_SETTINGS) ||
+                    (result.customData !== undefined && result.customData.property !== undefined && device.isLockWifiT8506() && result.command_type !== CommandType.CMD_DOORLOCK_SET_PUSH_MODE)) {
                     if (device.hasProperty(result.customData.property.name)) {
                         const metadata = device.getPropertyMetadata(result.customData.property.name);
                         if (typeof result.customData.property.value !== "object" || metadata.type === "object") {
@@ -2361,6 +2373,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     public async updateUser(deviceSN: string, username: string, newUsername: string): Promise<void>
     {
         const device = await this.api.getDevice(deviceSN);
+        const station = await this.getStation(device.getStationSerial());
 
         if (!device.hasCommand(CommandName.DeviceUpdateUsername))
         {
@@ -2377,6 +2390,19 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 {
                     if (user.user_name === username)
                     {
+                        if (device.isLockWifiT8506() && user.password_list.length > 0) {
+                            for (const entry of user.password_list) {
+                                if (entry.password_type === UserPasswordType.PIN) {
+                                    let schedule = entry.schedule;
+                                    if (schedule !== undefined && typeof schedule == "string") {
+                                        schedule = JSON.parse(schedule);
+                                    }
+                                    if (schedule !== undefined && schedule.endDay !== undefined && schedule.endTime !== undefined && schedule.startDay !== undefined && schedule.startTime !== undefined && schedule.week !== undefined) {
+                                        station.updateUserSchedule(device, newUsername, user.short_user_id, hexStringScheduleToSchedule(schedule.startDay, schedule.startTime, schedule.endDay, schedule.endTime, schedule.week));
+                                    }
+                                }
+                            }
+                        }
                         const result = await this.httpService.updateUser(deviceSN, device.getStationSerial(), user.short_user_id, newUsername);
                         if (result)
                         {

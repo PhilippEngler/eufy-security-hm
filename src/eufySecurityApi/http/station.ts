@@ -3,17 +3,17 @@ import { Readable } from "stream";
 import date from "date-and-time";
 
 import { HTTPApi } from "./api";
-import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty, PublicKeyType, MotionDetectionMode, VideoTypeStoreToNAS, HB3DetectionTypes, WalllightNotificationType, DailyLightingType, MotionActivationMode, BaseStationProperties, LightingActiveMode, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, MotionDetectionRangeType, ViewModeType, FloodlightT8425NotificationTypes, PresetPositionType } from "./types";
+import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty, PublicKeyType, MotionDetectionMode, VideoTypeStoreToNAS, HB3DetectionTypes, WalllightNotificationType, DailyLightingType, MotionActivationMode, BaseStationProperties, LightingActiveMode, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, MotionDetectionRangeType, ViewModeType, FloodlightT8425NotificationTypes, PresetPositionType, SmartLockNotification } from "./types";
 import { FloodlightDetectionRangeT8425Property, FloodlightLightSettingsMotionT8425Property, SnoozeDetail, StationListResponse, StationSecuritySettings } from "./models"
 import { ParameterHelper } from "./parameter";
 import { IndexedProperty, PropertyMetadataAny, PropertyValue, PropertyValues, RawValues, StationEvents, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, PropertyMetadataObject } from "./interfaces";
-import { encodePasscode, getBlocklist, getFloodLightT8425Notification, getHB3DetectionMode, getIndoorNotification, getT8170DetectionMode, hexDate, hexTime, hexWeek, isGreaterEqualMinVersion, isNotificationSwitchMode, isPrioritySourceType, switchNotificationMode } from "./utils";
-import { CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, DynamicLighting, InternalColoredLighting, InternalDynamicLighting, MotionZone, RGBColor, StreamMetadata } from "../p2p/interfaces";
+import { encodePasscode, getAdvancedLockTimezone, getBlocklist, getFloodLightT8425Notification, getHB3DetectionMode, getIndoorNotification, getT8170DetectionMode, hexDate, hexTime, hexWeek, isGreaterEqualMinVersion, isNotificationSwitchMode, isPrioritySourceType, switchNotificationMode, switchSmartLockNotification } from "./utils";
+import { CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, DynamicLighting, InternalColoredLighting, InternalDynamicLighting, MotionZone, P2PCommand, RGBColor, StreamMetadata } from "../p2p/interfaces";
 import { P2PClientProtocol } from "../p2p/session";
-import { AlarmEvent, CalibrateGarageType, CommandType, DatabaseReturnCode, ErrorCode, ESLBleCommand, ESLCommand, FilterDetectType, FilterEventType, FilterStorageType, IndoorSoloSmartdropCommandType, LockV12P2PCommand, P2PConnectionType, PanTiltDirection, SmartSafeAlarm911Event, SmartSafeCommandCode, SmartSafeShakeAlarmEvent, TFCardStatus, VideoCodec, WatermarkSetting1, WatermarkSetting2, WatermarkSetting3, WatermarkSetting4, WatermarkSetting5 } from "../p2p/types";
+import { AlarmEvent, CalibrateGarageType, CommandType, DatabaseReturnCode, ErrorCode, ESLBleCommand, ESLCommand, FilterDetectType, FilterEventType, FilterStorageType, IndoorSoloSmartdropCommandType, LockV12P2PCommand, P2PConnectionType, PanTiltDirection, SmartLockCommand, SmartSafeAlarm911Event, SmartSafeCommandCode, SmartSafeShakeAlarmEvent, TFCardStatus, VideoCodec, WatermarkSetting1, WatermarkSetting2, WatermarkSetting3, WatermarkSetting4, WatermarkSetting5 } from "../p2p/types";
 import { Address, CmdCameraInfoResponse, CommandResult, ESLStationP2PThroughData, LockAdvancedOnOffRequestPayload, AdvancedLockSetParamsType, PropertyData, CustomData, CommandData, StorageInfoBodyHB3, AdvancedLockSetParamsTypeT8520 } from "../p2p/models";
 import { Device, DoorbellCamera, Lock, SmartSafe } from "./device";
-import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand, RGBColorToDecimal, } from "../p2p/utils";
+import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand, RGBColorToDecimal, getSmartLockP2PCommand, } from "../p2p/utils";
 import { InvalidCommandValueError, InvalidPropertyValueError, NotSupportedError, RTSPPropertyNotEnabledError, WrongStationError, StationConnectTimeoutError, PinNotVerifiedError, ensureError } from "../error";
 import { PushMessage } from "../push/models";
 import { CusPushEvent } from "../push/types";
@@ -5207,6 +5207,20 @@ export class Station extends TypedEmitter<StationEvents> {
             this._sendLockV12P2PCommand(command, {
                 property: propertyData
             });
+        } else if (device.isLockWifiT8506()) {
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.ON_OFF_LOCK,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockUnlock(this.rawStation.member.admin_user_id, value, this.rawStation.member.nick_name, this.rawStation.member.short_user_id)
+            );
+            rootHTTPLogger.debug("Station lock device - Locking/unlocking device...", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
+                property: propertyData
+            });
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -6207,7 +6221,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 this.p2pSession.incLockSequenceNumber(),
                 Lock.encodeCmdCalibrate(this.rawStation.member.admin_user_id)
             );
-            rootHTTPLogger.debug("Station calibrate lock - Locking/unlocking device...", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+            rootHTTPLogger.debug("Station calibrate lock - Calibrate lock...", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
 
             this._sendLockV12P2PCommand(command, {
                 command: commandData
@@ -6227,7 +6241,21 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 command: commandData
             });
-            rootHTTPLogger.debug("Station calibrate lock - Locking/unlocking device...", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id });
+            rootHTTPLogger.debug("Station calibrate lock - Calibrate lock...", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id });
+        } else if (device.isLockWifiT8506()) {
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.ON_OFF_LOCK,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockCalibrate(this.rawStation.member.admin_user_id)
+            );
+            rootHTTPLogger.debug("Station calibrate lock - Calibrate lock...", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
+                command: commandData
+            });
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name } });
         }
@@ -7832,6 +7860,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceScramblePasscode, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceScramblePasscode, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceScramblePasscode, value);
         } else if (device.isSmartSafe()) {
             this.setSmartSafeParams(device, PropertyName.DeviceScramblePasscode, value);
         } else {
@@ -7855,6 +7885,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceWrongTryProtection, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceWrongTryProtection, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceWrongTryProtection, value);
         } else if (device.isSmartSafe()) {
             this.setSmartSafeParams(device, PropertyName.DeviceWrongTryProtection, value);
         } else {
@@ -7878,6 +7910,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceWrongTryAttempts, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceWrongTryAttempts, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceWrongTryAttempts, value);
         } else if (device.isSmartSafe()) {
             this.setSmartSafeParams(device, PropertyName.DeviceWrongTryAttempts, value);
         } else {
@@ -7901,6 +7935,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceWrongTryLockdownTime, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceWrongTryLockdownTime, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceWrongTryLockdownTime, value);
         } else if (device.isSmartSafe()) {
             this.setSmartSafeParams(device, PropertyName.DeviceWrongTryLockdownTime, value);
         } else {
@@ -8252,7 +8288,8 @@ export class Station extends TypedEmitter<StationEvents> {
                 username: username,
                 shortUserId: shortUserId,
                 passcode: passcode,
-                schedule: schedule
+                schedule: schedule,
+                deviceSN: device.getSerial()
             }
         };
         if (device.getStationSerial() !== this.getSerial()) {
@@ -8338,6 +8375,26 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 command: commandData
             });
+        } else if (device.isLockWifiT8506()) {
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.ADD_PW,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockAddUser(
+                    this.rawStation.member.admin_user_id,
+                    shortUserId,
+                    encodePasscode(passcode),
+                    username,
+                    schedule
+                )
+            );
+            rootHTTPLogger.debug("Station smart lock device - Add user...", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
+                command: commandData
+            });
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
@@ -8402,12 +8459,29 @@ export class Station extends TypedEmitter<StationEvents> {
                     "userId": shortUserId,
                 }
             };
-            rootHTTPLogger.debug(" Station delete user - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command });
+            rootHTTPLogger.debug("Station delete user - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify(command),
                 channel: device.getChannel()
             }, {
+                command: commandData
+            });
+        } else if (device.isLockWifiT8506()) {
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.DELETE_USER,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockDeleteUser(
+                    this.rawStation.member.admin_user_id,
+                    shortUserId
+                )
+            );
+            rootHTTPLogger.debug("Station delete user - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
                 command: commandData
             });
         } else {
@@ -8485,12 +8559,31 @@ export class Station extends TypedEmitter<StationEvents> {
                     "week": schedule !== undefined && schedule.week !== undefined ? hexWeek(schedule) : "ff",
                 }
             };
-            rootHTTPLogger.debug(" Station update user schedule - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command });
+            rootHTTPLogger.debug("Station update user schedule - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify(command),
                 channel: device.getChannel()
             }, {
+                command: commandData
+            });
+        } else if (device.isLockWifiT8506()) {
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.UPDATE_USER_TIME,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockUpdateSchedule(
+                    this.rawStation.member.admin_user_id,
+                    shortUserId,
+                    username,
+                    schedule
+                )
+            );
+            rootHTTPLogger.debug("Station update user schedule - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
                 command: commandData
             });
         } else {
@@ -8563,12 +8656,30 @@ export class Station extends TypedEmitter<StationEvents> {
                     "passwordId": shortUserId,
                 }
             };
-            rootHTTPLogger.debug(" Station user passcode - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command });
+            rootHTTPLogger.debug("Station update user passcode - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify(command),
                 channel: device.getChannel()
             }, {
+                command: commandData
+            });
+        } else if (device.isLockWifiT8506()) {
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.UPDATE_PW,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockModifyPassword(
+                    this.rawStation.member.admin_user_id,
+                    shortUserId,
+                    encodePasscode(passcode)
+                )
+            );
+            rootHTTPLogger.debug("Station update user passcode - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
                 command: commandData
             });
         } else {
@@ -8676,9 +8787,142 @@ export class Station extends TypedEmitter<StationEvents> {
                 device.getChannel(),
                 this.lockPublicKey,
                 this.p2pSession.incLockSequenceNumber(),
-                Lock.encodeCmdStatus(this.rawStation.member.admin_user_id)
+                payload
             );
             this._sendLockV12P2PCommand(lockCommand, {
+                property: propertyData
+            });
+        } else {
+            throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
+        }
+    }
+
+    public setSmartLockParams(device: Device, property: PropertyName, value: PropertyValue): void {
+        const propertyData: PropertyData = {
+            name: property,
+            value: value
+        };
+        if (device.getStationSerial() !== this.getSerial()) {
+            throw new WrongStationError("Device is not managed by this station", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
+        }
+        if (!device.hasProperty(propertyData.name)) {
+            throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
+        }
+        const propertyMetadata = device.getPropertyMetadata(propertyData.name);
+        validValue(propertyMetadata, value);
+
+        rootHTTPLogger.debug(`Station set smart lock settings - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), property: property, value: value });
+        if (device.isLockWifiT8506()) {
+            let payload: Buffer;
+            switch (property) {
+                case PropertyName.DeviceWrongTryProtection:
+                    payload = Lock.encodeCmdSetSmartLockParamWrongTryProtect(
+                        this.rawStation.member.admin_user_id,
+                        value as boolean,
+                        device.getPropertyValue(PropertyName.DeviceWrongTryAttempts) as number,
+                        device.getPropertyValue(PropertyName.DeviceWrongTryLockdownTime) as number
+                    );
+                    break;
+                case PropertyName.DeviceWrongTryAttempts:
+                    payload = Lock.encodeCmdSetSmartLockParamWrongTryProtect(
+                        this.rawStation.member.admin_user_id,
+                        device.getPropertyValue(PropertyName.DeviceWrongTryProtection) as boolean,
+                        value as number,
+                        device.getPropertyValue(PropertyName.DeviceWrongTryLockdownTime) as number
+                    );
+                    break;
+                case PropertyName.DeviceWrongTryLockdownTime:
+                    payload = Lock.encodeCmdSetSmartLockParamWrongTryProtect(
+                        this.rawStation.member.admin_user_id,
+                        device.getPropertyValue(PropertyName.DeviceWrongTryProtection) as boolean,
+                        device.getPropertyValue(PropertyName.DeviceWrongTryAttempts) as number,
+                        value as number
+                    );
+                    break;
+                case PropertyName.DeviceAutoLock:
+                    payload = Lock.encodeCmdSetSmartLockParamAutoLock(
+                        this.rawStation.member.admin_user_id,
+                        value as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockTimer) as number,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockSchedule) as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleStartTime) as string,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleEndTime) as string,
+                    );
+                    break;
+                case PropertyName.DeviceAutoLockTimer:
+                    payload = Lock.encodeCmdSetSmartLockParamAutoLock(
+                        this.rawStation.member.admin_user_id,
+                        device.getPropertyValue(PropertyName.DeviceAutoLock) as boolean,
+                        value as number,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockSchedule) as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleStartTime) as string,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleEndTime) as string,
+                    );
+                    break;
+                case PropertyName.DeviceAutoLockSchedule:
+                    payload = Lock.encodeCmdSetSmartLockParamAutoLock(
+                        this.rawStation.member.admin_user_id,
+                        device.getPropertyValue(PropertyName.DeviceAutoLock) as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockTimer) as number,
+                        value as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleStartTime) as string,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleEndTime) as string,
+                    );
+                    break;
+                case PropertyName.DeviceAutoLockScheduleStartTime:
+                    payload = Lock.encodeCmdSetSmartLockParamAutoLock(
+                        this.rawStation.member.admin_user_id,
+                        device.getPropertyValue(PropertyName.DeviceAutoLock) as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockTimer) as number,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockSchedule) as boolean,
+                        value as string,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleEndTime) as string,
+                    );
+                    break;
+                case PropertyName.DeviceAutoLockScheduleEndTime:
+                    payload = Lock.encodeCmdSetSmartLockParamAutoLock(
+                        this.rawStation.member.admin_user_id,
+                        device.getPropertyValue(PropertyName.DeviceAutoLock) as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockTimer) as number,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockSchedule) as boolean,
+                        device.getPropertyValue(PropertyName.DeviceAutoLockScheduleStartTime) as string,
+                        value as string,
+                    );
+                    break;
+                case PropertyName.DeviceOneTouchLocking:
+                    payload = Lock.encodeCmdSetSmartLockParamOneTouchLock(
+                        this.rawStation.member.admin_user_id,
+                        value as boolean,
+                    );
+                    break;
+                case PropertyName.DeviceScramblePasscode:
+                    payload = Lock.encodeCmdSetSmartLockParamScramblePasscode(
+                        this.rawStation.member.admin_user_id,
+                        value as boolean,
+                    );
+                    break;
+                case PropertyName.DeviceSound:
+                    payload = Lock.encodeCmdSetSmartLockParamSound(
+                        this.rawStation.member.admin_user_id,
+                        value as number,
+                    );
+                    break;
+                default:
+                    payload = Buffer.from([]);
+                    break;
+            }
+
+            rootHTTPLogger.debug(`Station set smart lock settings - payload`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), property: property, value: value, payload: payload.toString("hex") });
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.SET_LOCK_PARAM,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                payload
+            );
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
                 property: propertyData
             });
         } else {
@@ -8702,6 +8946,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceAutoLock, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceAutoLock, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceAutoLock, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8723,6 +8969,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceAutoLockSchedule, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceAutoLockSchedule, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceAutoLockSchedule, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8744,6 +8992,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceAutoLockScheduleStartTime, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceAutoLockScheduleStartTime, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceAutoLockScheduleStartTime, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8765,6 +9015,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceAutoLockScheduleEndTime, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceAutoLockScheduleEndTime, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceAutoLockScheduleEndTime, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8786,6 +9038,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceAutoLockTimer, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceAutoLockTimer, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceAutoLockTimer, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8807,6 +9061,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceOneTouchLocking, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceOneTouchLocking, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceOneTouchLocking, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8828,6 +9084,8 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceSound, value);
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             this.setLockV12Params(device, PropertyName.DeviceSound, value);
+        } else if (device.isLockWifiT8506()) {
+            this.setSmartLockParams(device, PropertyName.DeviceSound, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8861,6 +9119,34 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 property: propertyData
             });
+        } else if (device.isLockWifiT8506()) {
+            let oldvalue = 0;
+            const rawproperty = device.getRawProperty(CommandType.CMD_DOORLOCK_SET_PUSH_MODE);
+            if (rawproperty !== undefined) {
+                try {
+                    oldvalue = Number.parseInt(rawproperty);
+                } catch(error) {
+                }
+            }
+            const notification = switchSmartLockNotification(oldvalue, SmartLockNotification.ENABLED, value);
+            this.p2pSession.sendCommandWithStringPayload({
+                commandType: CommandType.CMD_SET_PAYLOAD,
+                value: JSON.stringify({
+                    "account_id": this.rawStation.member.admin_user_id,
+                    "cmd": CommandType.CMD_DOORLOCK_SET_PUSH_MODE,
+                    "mChannel": device.getChannel(),
+                    "mValue3": 0,
+                    "payload": {
+                        "mode": notification,
+                    }
+                }),
+                channel: 0
+            }, {
+                property: propertyData,
+                onSuccess: () => {
+                    device.updateRawProperty(CommandType.CMD_DOORLOCK_SET_PUSH_MODE, notification.toString(), "p2p");
+                }
+            });
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8883,6 +9169,34 @@ export class Station extends TypedEmitter<StationEvents> {
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             //TODO: Implement LockWifiR10 / LockWifiR20 commnand
             throw new NotSupportedError("This functionality is not implemented by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
+        } else if (device.isLockWifiT8506()) {
+            let oldvalue = 0;
+            const rawproperty = device.getRawProperty(CommandType.CMD_DOORLOCK_SET_PUSH_MODE);
+            if (rawproperty !== undefined) {
+                try {
+                    oldvalue = Number.parseInt(rawproperty);
+                } catch(error) {
+                }
+            }
+            const notification = switchSmartLockNotification(oldvalue, SmartLockNotification.LOCKED, value);
+            this.p2pSession.sendCommandWithStringPayload({
+                commandType: CommandType.CMD_SET_PAYLOAD,
+                value: JSON.stringify({
+                    "account_id": this.rawStation.member.admin_user_id,
+                    "cmd": CommandType.CMD_DOORLOCK_SET_PUSH_MODE,
+                    "mChannel": device.getChannel(),
+                    "mValue3": 0,
+                    "payload": {
+                        "mode": notification,
+                    }
+                }),
+                channel: 0
+            }, {
+                property: propertyData,
+                onSuccess: () => {
+                    device.updateRawProperty(CommandType.CMD_DOORLOCK_SET_PUSH_MODE, notification.toString(), "p2p");
+                }
+            });
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -8905,6 +9219,34 @@ export class Station extends TypedEmitter<StationEvents> {
         } else if (device.isLockWifiR10() || device.isLockWifiR20()) {
             //TODO: Implement LockWifiR10 / LockWifiR20 commnand
             throw new NotSupportedError("This functionality is not implemented by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
+        } else if (device.isLockWifiT8506()) {
+            let oldvalue = 0;
+            const rawproperty = device.getRawProperty(CommandType.CMD_DOORLOCK_SET_PUSH_MODE);
+            if (rawproperty !== undefined) {
+                try {
+                    oldvalue = Number.parseInt(rawproperty);
+                } catch(error) {
+                }
+            }
+            const notification = switchSmartLockNotification(oldvalue, SmartLockNotification.UNLOCKED, value);
+            this.p2pSession.sendCommandWithStringPayload({
+                commandType: CommandType.CMD_SET_PAYLOAD,
+                value: JSON.stringify({
+                    "account_id": this.rawStation.member.admin_user_id,
+                    "cmd": CommandType.CMD_DOORLOCK_SET_PUSH_MODE,
+                    "mChannel": device.getChannel(),
+                    "mValue3": 0,
+                    "payload": {
+                        "mode": notification,
+                    }
+                }),
+                channel: 0
+            }, {
+                property: propertyData,
+                onSuccess: () => {
+                    device.updateRawProperty(CommandType.CMD_DOORLOCK_SET_PUSH_MODE, notification.toString(), "p2p");
+                }
+            });
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
         }
@@ -9004,6 +9346,20 @@ export class Station extends TypedEmitter<StationEvents> {
                 }),
                 channel: device.getChannel()
             }, {
+                command: commandData
+            });
+        } else if (device.isLockWifiT8506()) {
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.QUERY_ALL_USERS,
+                device.getChannel(),
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockGetUserList(this.rawStation.member.admin_user_id)
+            );
+            rootHTTPLogger.debug("Station get user list - payload", { station: this.getSerial(), device: device.getSerial(), admin_user_id: this.rawStation.member.admin_user_id, payload: command.payload });
+
+            this.p2pSession.sendCommandWithStringPayload(command.payload, {
                 command: commandData
             });
         } else {
@@ -10538,6 +10894,63 @@ export class Station extends TypedEmitter<StationEvents> {
             this.setAdvancedLockParams(device, PropertyName.DeviceNightvisionOptimizationSide, value);
         } else {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: device.getSerial(), station: this.getSerial(), propertyName: propertyData.name, propertyValue: propertyData.value } });
+        }
+    }
+
+    public getLockParameters(): void {
+        //TODO: Implement support for other Locks
+        if (Device.isLockWifiT8506(this.getDeviceType())) {
+            rootHTTPLogger.debug(`Station smart lock send get lock parameters command`, { stationSN: this.getSerial() });
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.GET_LOCK_PARAM,
+                0,
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockGetParams(this.rawStation.member.admin_user_id)
+            );
+            this.p2pSession.sendCommandWithStringPayload(command.payload);
+        }
+    }
+
+    public getLockStatus(): void {
+        //TODO: Implement support for other Locks
+        if (Device.isLockWifiT8506(this.getDeviceType())) {
+            rootHTTPLogger.debug(`Station smart lock send get lock status command`, { stationSN: this.getSerial() });
+            const command = getSmartLockP2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                SmartLockCommand.QUERY_STATUS_IN_LOCK,
+                0,
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdSmartLockStatus(this.rawStation.member.admin_user_id)
+            );
+            this.p2pSession.sendCommandWithStringPayload(command.payload);
+        } else if (Device.isLockWifiR10(this.getDeviceType()) || Device.isLockWifiR20(this.getDeviceType())) {
+            rootHTTPLogger.debug(`Station lock v12 send get lock status command`, { stationSN: this.getSerial() });
+            const command = getLockV12P2PCommand(
+                this.rawStation.station_sn,
+                this.rawStation.member.admin_user_id,
+                ESLCommand.QUERY_STATUS_IN_LOCK,
+                0,
+                this.lockPublicKey,
+                this.p2pSession.incLockSequenceNumber(),
+                Lock.encodeCmdStatus(this.rawStation.member.admin_user_id)
+            );
+            this.p2pSession.sendCommandWithStringPayload(command.payload);
+        } else if (Device.isLockWifi(this.getDeviceType()) || Device.isLockWifiNoFinger(this.getDeviceType())) {
+            this.p2pSession.sendCommandWithStringPayload({
+                commandType: CommandType.CMD_SET_PAYLOAD,
+                value: JSON.stringify({
+                    "account_id": this.rawStation.member.admin_user_id,
+                    "cmd": CommandType.P2P_QUERY_STATUS_IN_LOCK,
+                    "mChannel": 0,
+                    "mValue3": 0,
+                    "payload": {
+                        "timezone": this.rawStation.time_zone === undefined || this.rawStation.time_zone === "" ? getAdvancedLockTimezone(this.rawStation.station_sn) : this.rawStation.time_zone,
+                    }}),
+                channel: 0
+            } as P2PCommand);
         }
     }
 }
