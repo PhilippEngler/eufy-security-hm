@@ -74,7 +74,7 @@ export enum DeviceType {
     SMART_TRACK_CARD = 159, //T87B2
     LOCK_8502 = 180,
     LOCK_8506 = 184,
-    WALL_LIGHT_CAM_81A0 = 10005,    
+    WALL_LIGHT_CAM_81A0 = 10005,
 }
 
 export enum ParamType {

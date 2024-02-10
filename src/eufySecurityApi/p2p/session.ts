@@ -526,7 +526,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             (this.connectTime && !this.lastPong && ((new Date().getTime() - this.connectTime) / this.getHeartbeatInterval() >= this.MAX_RETRIES))) {
             if (!this.energySavingDevice)
                 rootP2PLogger.warn(`Heartbeat check failed for station ${this.rawStation.station_sn}. Connection seems lost. Try to reconnect...`);
-                await sleep(Math.random() * 1000);
+                await sleep((Math.random() * 1000) + (Math.random() * 1400));
             this._disconnected();
         }
         await this.sendMessage(`Send ping`, address, RequestMessageType.PING, this.lastPongData);
