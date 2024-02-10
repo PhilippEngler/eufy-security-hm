@@ -7712,7 +7712,7 @@ export const StationStorageInfoEmmcProperty: PropertyMetadataObject = {
     name: PropertyName.StationStorageInfoEmmc,
     label: "Storage Info Emmc",
     readable: true,
-    writeable: true,
+    writeable: false,
     type: "object",
 }
 
@@ -7721,7 +7721,7 @@ export const StationStorageInfoHddProperty: PropertyMetadataObject = {
     name: PropertyName.StationStorageInfoHdd,
     label: "Storage Info Hdd",
     readable: true,
-    writeable: true,
+    writeable: false,
     type: "object",
 }
 
