@@ -57,31 +57,11 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
             this.pushService.setPersistentIds(this.persistentIds);
         }
 
-        this.pushService.on("connect", async (token: string) => {
-            this.pushCloudRegistered = await this.httpService.registerPushToken(token);
-            this.pushCloudChecked = await this.httpService.checkPushToken();
-            //TODO: Retry if failed with max retry to not lock account
+        this.pushService.on("connect", async (token: string) => await this.onConnect(token));
 
-            if (this.pushCloudRegistered && this.pushCloudChecked)
-            {
-                rootPushLogger.info("Push notification connection successfully established.");
-                this.emit("push connect");
-            }
-            else
-            {
-                rootPushLogger.info("Push notification connection closed.");
-                this.emit("push close");
-            }
-        });
-
-        this.pushService.on("credential", (credentials: Credentials) => {
-            this.savePushCredentials(credentials);
-        });
+        this.pushService.on("credential", (credentials: Credentials) => this.onSavePushCredentials(credentials));
         this.pushService.on("message", (message: PushMessage) => this.onPushMessage(message));
-        this.pushService.on("close", () => {
-            rootPushLogger.info("Push notification connection closed.");
-            this.emit("push close");
-        });
+        this.pushService.on("close", () => this.onClose());
     }
 
     /**
@@ -111,6 +91,46 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
         this.savePushPersistentIds();
 
         this.pushService.close();
+    }
+
+    /**
+     * Eventhandler for push connect event.
+     * @param token The push token.
+     */
+    private async onConnect(token : string) : Promise<void>
+    {
+        this.pushCloudRegistered = await this.httpService.registerPushToken(token);
+        this.pushCloudChecked = await this.httpService.checkPushToken();
+        //TODO: Retry if failed with max retry to not lock account
+
+        if (this.pushCloudRegistered && this.pushCloudChecked)
+        {
+            rootPushLogger.info("Push notification connection successfully established.");
+            this.emit("push connect");
+        }
+        else
+        {
+            rootPushLogger.info("Push notification connection closed.");
+            this.emit("push close");
+        }
+    }
+
+    /**
+     * Eventhandler for push close event.
+     */
+    private onClose()
+    {
+        rootPushLogger.info("Push notification connection closed.");
+        this.emit("push close");
+    }
+
+    /**
+     * Eventhandler for save push credentials event.
+     * @param credentials The Credentials.
+     */
+    private onSavePushCredentials(credentials : Credentials)
+    {
+        this.savePushCredentials(credentials);
     }
 
     /**

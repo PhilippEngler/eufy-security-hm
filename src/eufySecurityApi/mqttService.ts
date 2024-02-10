@@ -36,25 +36,9 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     private async initialize() : Promise<void>
     {
         this.mqttService = await MQTTService.init();
-        this.mqttService.on("connect", () => {
-            rootMQTTLogger.info("MQTT connection successfully established");
-            this.emit("mqtt connect");
-        });
-        this.mqttService.on("close", () => {
-            rootMQTTLogger.info("MQTT connection closed");
-            this.emit("mqtt close");
-        });
-        this.mqttService.on("lock message", (message) => {
-            this.api.getDevice(message.data.data.deviceSn).then((device: Device) => {
-                (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
-            }).catch((error) => {
-                if (!(error instanceof DeviceNotFoundError)) {
-                    rootMQTTLogger.error("Lock MQTT Message Error", { error: getError(error) });
-                }
-            }).finally(() => {
-                this.emit("mqtt lock message", message);
-            });
-        });
+        this.mqttService.on("connect", () => this.onConnect());
+        this.mqttService.on("close", () => this.onClose());
+        this.mqttService.on("lock message", (message) => this.onLockMessage(message));
     }
 
     /**
@@ -93,5 +77,40 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     public subscribeLock(deviceSerial : string) : void
     {
         this.mqttService.subscribeLock(deviceSerial);
+    }
+
+    /**
+     * Eventhandler for mqtt connect event.
+     */
+    private onConnect()
+    {
+        rootMQTTLogger.info("MQTT connection successfully established");
+        this.emit("mqtt connect");
+    }
+
+    /**
+     * Eventhandler for mqtt close event.
+     */
+    private onClose()
+    {
+        rootMQTTLogger.info("MQTT connection closed");
+        this.emit("mqtt close");
+    }
+
+    /**
+     * Eventhandler for mqtt lock message.
+     * @param message The message.
+     */
+    private onLockMessage(message : any)
+    {
+        this.api.getDevice(message.data.data.deviceSn).then((device: Device) => {
+            (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
+        }).catch((error) => {
+            if (!(error instanceof DeviceNotFoundError)) {
+                rootMQTTLogger.error("Lock MQTT Message Error", { error: getError(error) });
+            }
+        }).finally(() => {
+            this.emit("mqtt lock message", message);
+        });
     }
 }
