@@ -2,6 +2,7 @@ import { appendFileSync, closeSync, openSync } from "fs";
 import { LogLevel as Level } from "typescript-logging";
 import { CategoryProvider } from "typescript-logging-category-style";
 import { pathToClientLog } from "./utils/utils";
+import util from 'node:util';
 
 export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt";
 export const LogLevel = Level;
@@ -155,7 +156,12 @@ function logMessageForClient(message: string, ...messageArgs: any[]) {
     try {
         fileHandle = openSync(pathToClientLog, 'a');
         if(messageArgs) {
-            appendFileSync(fileHandle, message + messageArgs + "\r\n", 'utf-8');
+            let messageArgsString = "";
+            for (var arg in messageArgs) {
+                let message = util.format('%O', messageArgs[arg]);
+                messageArgsString += `${messageArgsString.length > 0 ? ` ${message}` : message}`;
+            }
+            appendFileSync(fileHandle, `${message} ${messageArgsString} \r\n`, 'utf-8');
         } else {
             appendFileSync(fileHandle, message + "\r\n", 'utf-8');
         }
