@@ -548,6 +548,10 @@ export enum PropertyName {
     SerialNumber = "serialNumber",
     HardwareVersion = "hardwareVersion",
     SoftwareVersion = "softwareVersion",
+    SoftwareTime = "softwareTime",
+    SecHardwareVersion = "secHardwareVersion",
+    SecSoftwareVersion = "secSoftwareVersion",
+    SecSoftwareTime = "secSoftwareTime",
     Type = "type",
     DeviceStationSN = "stationSerialNumber",
     DeviceBattery = "battery",
@@ -904,6 +908,42 @@ export const GenericSWVersionProperty: PropertyMetadataString = {
     type: "string",
 }
 
+export const GenericSWTimeProperty: PropertyMetadataString = {
+    key: "main_sw_time",
+    name: PropertyName.SoftwareTime,
+    label: "Software time",
+    readable: true,
+    writeable: false,
+    type: "string",
+}
+
+export const GenericSecHWVersionProperty: PropertyMetadataString = {
+    key: "sec_hw_version",
+    name: PropertyName.SecHardwareVersion,
+    label: "Sec hardware version",
+    readable: true,
+    writeable: false,
+    type: "string",
+}
+
+export const GenericSecSWVersionProperty: PropertyMetadataString = {
+    key: "sec_sw_version",
+    name: PropertyName.SecSoftwareVersion,
+    label: "Sec software version",
+    readable: true,
+    writeable: false,
+    type: "string",
+}
+
+export const GenericSecSWTimeProperty: PropertyMetadataString = {
+    key: "sec_sw_time",
+    name: PropertyName.SecSoftwareTime,
+    label: "Sec software time",
+    readable: true,
+    writeable: false,
+    type: "string",
+}
+
 export const GenericTypeProperty: PropertyMetadataNumeric = {
     key: "device_type",
     name: PropertyName.Type,
@@ -991,6 +1031,10 @@ export const BaseDeviceProperties: IndexedProperty = {
     [GenericTypeProperty.name]: GenericTypeProperty,
     [GenericHWVersionProperty.name]: GenericHWVersionProperty,
     [GenericSWVersionProperty.name]: GenericSWVersionProperty,
+    [GenericSWTimeProperty.name]: GenericSWTimeProperty,
+    [GenericSecHWVersionProperty.name]: GenericSecHWVersionProperty,
+    [GenericSecSWVersionProperty.name]: GenericSecSWVersionProperty,
+    [GenericSecSWTimeProperty.name]: GenericSecSWTimeProperty,
 }
 
 export const GenericDeviceProperties: IndexedProperty = {
@@ -7346,6 +7390,10 @@ export const BaseStationProperties: IndexedProperty = {
     [GenericTypeProperty.name]: GenericTypeProperty,
     [GenericHWVersionProperty.name]: GenericHWVersionProperty,
     [GenericSWVersionProperty.name]: GenericSWVersionProperty,
+    [GenericSWTimeProperty.name]: GenericSWTimeProperty,
+    [GenericSecHWVersionProperty.name]: GenericSecHWVersionProperty,
+    [GenericSecSWVersionProperty.name]: GenericSecSWVersionProperty,
+    [GenericSecSWTimeProperty.name]: GenericSecSWTimeProperty,
 }
 
 export const StationGuardModeProperty: PropertyMetadataNumeric = {
