@@ -140,11 +140,11 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
     if(level === LogLevel.Off) {
         let categoryString = `[${category}]`.padEnd(7, " ");
         if(category === "all") {
-            console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for all categories have been set to ${LogLevel[level]}.`);
-            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for all lcategories have been set to  ${level.toString()}  /  ${LogLevel[level]}.`);
+            console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for all categories has been set to ${LogLevel[level]}.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for all categories has been set to ${LogLevel[level]}.`);
         } else {
             console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for category ${category} has been set to ${LogLevel[level]}.`);
-            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for category ${category} hasbeen set to  ${level.toString()}  /  ${LogLevel[level]}.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for category ${category} has been set to ${LogLevel[level]}.`);
         }
     }
 }
