@@ -487,12 +487,6 @@ class ApiServer
                     case "getTimeZones":
                         responseData = api.getTimeZones();
                         break;
-                    case "getLogFileContent":
-                        responseData = await api.getLogFileContent();
-                        break;
-                    case "getErrorFileContent":
-                        responseData = await api.getErrorFileContent();
-                        break;
                     case "removeInteractions":
                         responseData = api.removeInteractions();
                         break;
@@ -536,14 +530,6 @@ class ApiServer
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
-                    case "clearLogFile":
-                        emptyLogFile();
-                        responseData = `{"success":true}`;
-                        break;
-                    case "clearErrFile":
-                        emptyErrFile();
-                        responseData = `{"success":true}`;
-                        break;
                     case "restartService":
                         restartServer();
                         responseData = `{"success":true}`;
@@ -553,16 +539,6 @@ class ApiServer
                         responseData = readFileSync('config.json', 'utf-8');
                         contentType = "text/json";
                         fileName = `config_${os.hostname}_${getDateTimeAsString(new Date())}.json`;
-                        break;
-                    case "downloadLogFile":
-                        responseData = readFileSync('/var/log/eufySecurity.log', 'utf-8');
-                        contentType = "text/plain";
-                        fileName = `eufySecurity_${os.hostname}.log`;
-                        break;
-                    case "downloadErrFile":
-                        responseData = readFileSync('/var/log/eufySecurity.err', 'utf-8');
-                        contentType = "text/plain";
-                        fileName = `eufySecurity_${os.hostname}.err`;
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
@@ -1270,22 +1246,6 @@ async function restartServer()
 {
     rootAddonLogger.info("Going to restart with apiServerRestarter...");
     exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
-}
-
-/**
- * Clear the logfile
- */
-function emptyLogFile()
-{
-    exec("truncate -s 0 /var/log/eufySecurity.log");
-}
-
-/**
- * Clear the errorlogfile
- */
-function emptyErrFile()
-{
-    exec("truncate -s 0 /var/log/eufySecurity.err");
 }
 
 /**

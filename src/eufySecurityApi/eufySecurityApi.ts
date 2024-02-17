@@ -3029,58 +3029,6 @@ export class EufySecurityApi
     }
 
     /**
-     * returns the content of the logfile.
-     */
-    public async getLogFileContent() : Promise<string>
-    {
-        var json = {};
-        try
-        {
-            var errorContent = await this.homematicApi.getLogFileContent();
-            if(errorContent === "")
-            {
-                json = {"success":true, "hasData": false};
-            }
-            else
-            {
-                json = {"success":true, "hasData": true, "data": encodeURIComponent(errorContent)};
-            }
-        }
-        catch(error: any)
-        {
-            json = {"success":false, "reason":`${error.message}`};
-        }
-
-        return JSON.stringify(json);
-    }
-
-    /**
-     * Returns the content of the errorfile
-     */
-    public async getErrorFileContent() : Promise<string>
-    {
-        var json = {};
-        try
-        {
-            var errorContent = await this.homematicApi.getErrorFileContent();
-            if(errorContent === "")
-            {
-                json = {"success":true, "hasData": false};
-            }
-            else
-            {
-                json = {"success":true, "hasData": true, "data": encodeURIComponent(errorContent)};
-            }
-        }
-        catch(error: any)
-        {
-            json = {"success":false, "reason":`${error.message}`};
-        }
-
-        return JSON.stringify(json);
-    }
-
-    /**
      * Converts the guard mode to a string.
      * @param guardMode The guard mode.
      */

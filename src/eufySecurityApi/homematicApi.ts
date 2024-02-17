@@ -1,5 +1,4 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { existsSync, readFileSync } from 'fs';
 import { EufySecurityApi } from './eufySecurityApi';
 import { rootAddonLogger } from "./logging";
 
@@ -263,44 +262,10 @@ export class HomematicApi
     }
 
     /**
-     * Returns the content of the logile.
-     */
-    public async getLogFileContent(): Promise<string>
-    {
-        if(existsSync('/var/log/eufySecurity.log') == true)
-        {
-            var fileContent = readFileSync('/var/log/eufySecurity.log', 'utf-8');
-            return fileContent;
-        }
-        else
-        {
-            rootAddonLogger.error("File not found. File: '/var/log/eufySecurity.log'");
-            throw new Error(`File not found. File: '/var/log/eufySecurity.log'`);
-        }
-    }
-
-    /**
-     * Returns the content of the errorfile.
-     */
-    public async getErrorFileContent(): Promise<string>
-    {
-        if(existsSync('/var/log/eufySecurity.err') == true)
-        {
-            var fileContent = readFileSync('/var/log/eufySecurity.err', 'utf-8');
-            return fileContent;
-        }
-        else
-        {
-            rootAddonLogger.error("File not found. File: '/var/log/eufySecurity.err'");
-            throw new Error(`File not found. File: '/var/log/eufySecurity.err'`);
-        }
-    }
-
-    /**
      * Returns the version info of the homematic api.
      */
     public getHomematicApiVersion(): string
     {
-        return "2.5.0";
+        return "3.0.0";
     }
 }
