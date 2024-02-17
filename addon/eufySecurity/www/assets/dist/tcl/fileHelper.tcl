@@ -14,6 +14,16 @@ proc getFileContent { filePath } {
     return $fileData
 }
 
+proc emptyFile { filePath } {
+    if { ![file exist $filePath] || [catch {open $filePath r+} filePointer] } {
+        return false        
+    } else {
+        chan truncate $filePointer 0
+        close $filePointer
+        return true
+    }
+}
+
 proc init {} {
     variable replaceMap
     # characters that should not be replaced

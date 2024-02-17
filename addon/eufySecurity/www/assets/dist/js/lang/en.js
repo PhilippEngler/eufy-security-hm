@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.4
-20240208
+Schema v9.5
+20240217
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240208 (v9.4)";
+var languageVersion = "20240217 (v9.5)";
 
 function translateNavbarElement(element)
 {
@@ -405,18 +405,18 @@ function translateStaticContentElement(element)
 			return "OK";
 		case "logfileIntroHeader":
 			return "Logfiles";
-		case "headerLogfile":
-			return "Log file content";
+		case "tabHeaderAddonLog":
+			return "Addon - Logfile";
+		case "imgReloadLogfileData":
+			return "Reload content";
 		case "imgDeleteLogfileData":
 			return "Remove all entries";
 		case "imgDownloadLogfile":
 			return "Download";
-		case "headerErrorfile":
-			return "Error file content";
-		case "imgDeleteErrorfileData":
-			return "Remove all entries";
-		case "imgDownloadErrorfile":
-			return "Download";
+		case "tabHeaderAddonErr":
+			return "Addon - Errorfile";
+		case "tabHeaderClientLog":
+			return "Client - Logfile";
 		case "lblWaitServiceStart":
 			return "Waiting for the service to start...";
 		case "lblWaitServiceInit":
@@ -509,6 +509,8 @@ function translateStaticContentElement(element)
 			return "Website:";
 		case "headerAboutAddOn":
 			return "CCU add-on:";
+		case "txtLogfileLocation":
+			return "Content of file";
 		default:
             return `{${element}}`;
     }

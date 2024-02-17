@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240208
+ * 20240217
  */
 action = "";
 port = "";
@@ -157,7 +157,6 @@ function initContent(page)
 			break;
 		case "logfiles":
 			loadLogfile("log", true);
-			loadLogfile("err", true);
 			break;
 		case "info":
 			loadDataInfo(true);
@@ -313,10 +312,13 @@ function downloadFile(filetype)
 	switch(filetype)
 	{
 		case "log":
-			url = `${location.protocol}//${location.hostname}:${port}/downloadLogFile`;
+			url = `logfileAddonLogDownload.cgi`;
 			break;
 		case "err":
-			url = `${location.protocol}//${location.hostname}:${port}/downloadErrFile`;
+			url = `logfileAddonErrDownload.cgi`;
+			break;
+		case "clientLog":
+			url = `logfileClientDownload.cgi`;
 			break;
 		case "conf":
 			url = `${location.protocol}//${location.hostname}:${port}/downloadConfig`;
@@ -4634,10 +4636,25 @@ function loadLogfile(logfiletype, showLoading)
 		case "index":
 			break;
 		case "log":
-			url=`${location.protocol}//${location.hostname}/addons/eufySecurity/getAddonLogFile.cgi`;
+			url=`logfileAddonLogGetContent.cgi`;
+			document.getElementById("tabHeaderAddonErr").classList.remove("active");
+			document.getElementById("tabHeaderClientLog").classList.remove("active");
+			document.getElementById("tabHeaderAddonLog").classList.add("active");
+			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '/var/log/eufySecurity.log'`;
 			break;
 		case "err":
-			url=`${location.protocol}//${location.hostname}/addons/eufySecurity/getAddonErrorFile.cgi`;
+			url=`logfileAddonErrGetContent.cgi`;
+			document.getElementById("tabHeaderAddonLog").classList.remove("active");
+			document.getElementById("tabHeaderClientLog").classList.remove("active");
+			document.getElementById("tabHeaderAddonErr").classList.add("active");
+			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '/var/log/eufySecurity.err'`;
+			break;
+		case "clientLog":
+			url=`logfileClientGetContent.cgi`;
+			document.getElementById("tabHeaderAddonLog").classList.remove("active");
+			document.getElementById("tabHeaderAddonErr").classList.remove("active");
+			document.getElementById("tabHeaderClientLog").classList.add("active");
+			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '/var/log/eufySecurityClient.log'`;
 			break;
 		default:
 			return;
@@ -4661,80 +4678,35 @@ function loadLogfile(logfiletype, showLoading)
 					logData = logData.replace(/\n/g, "<br />");
 				}
 
-				switch(logfiletype)
+				if(objResp.hasData === true)
 				{
-					case "log":
-						if(objResp.hasData === true)
-						{
-							document.getElementById("log").innerHTML = `<code>${logData}</code>`;
-							document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
-							document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
-						}
-						else
-						{
-							document.getElementById("log").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.log')}</code>`;
-							document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
-							document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
-						}
-						break;
-					case "err":
-						if(objResp.hasData === true)
-						{
-							document.getElementById("err").innerHTML = `<code>${logData}</code>`;
-							document.getElementById("btnDeleteErrorfileData").removeAttribute("disabled");
-							document.getElementById("btnDownloadErrorfile").removeAttribute("disabled");
-						}
-						else
-						{
-							document.getElementById("err").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.err')}</code>`;
-							document.getElementById("btnDeleteErrorfileData").setAttribute("disabled", true);
-							document.getElementById("btnDownloadErrorfile").setAttribute("disabled", true);
-						}
-						break;
+					document.getElementById("log").innerHTML = `<code>${logData}</code>`;
+					document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
+					document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
+				}
+				else
+				{
+					document.getElementById("log").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.log')}</code>`;
+					document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
+					document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
 				}
 			}
 			else
 			{
-				switch(logfiletype)
-				{
-					case "log":
-						document.getElementById("log").innerHTML = `<code>${objResp.reason}</code>`;
-						document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
-						document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
-						break;
-					case "err":
-						document.getElementById("err").innerHTML = `<code>${objResp.reason}</code>`;
-						document.getElementById("btnDeleteErrorfileData").setAttribute("disabled", true);
-						document.getElementById("btnDownloadErrorfile").setAttribute("disabled", true);
-						break;
-				}
+				document.getElementById("log").innerHTML = `<code>${objResp.reason}</code>`;
+				document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
+				document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			switch(logfiletype)
-			{
-				case "log":
-					document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageLoadLogFileErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-					break;
-				case "err":
-					document.getElementById("err").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageLoadErrorFileErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-					break;
-			}
+			document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageLoadLogFileErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 		}
 		else
 		{
 			if(showLoading == true)
 			{
-				switch(logfiletype)
-				{
-					case "log":
-						document.getElementById("log").innerHTML = createWaitMessage(translateString("strLoadingLogFile"));
-						break;
-					case "err":
-						document.getElementById("err").innerHTML = createWaitMessage(translateString("strLoadingErrorFile"));
-						break;
-				}
+				document.getElementById("log").innerHTML = createWaitMessage(translateString("strLoadingLogFile"));
 			}
 		}
 	};

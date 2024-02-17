@@ -76,48 +76,32 @@
 			<div id="content">
 				<div id="captchaMessage"></div>
 				<h3 id="logfileIntroHeader">{logfileIntroHeader}</h3>
-				<div class="card mb-3">
-					<div class="card-header">
-						<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0" id="headerLogfile">{headerLogfile}</h5></div>
+				<ul class="nav nav-tabs">
+					<li class="nav-item">
+						<a class="nav-link text-body active" onclick="loadLogfile('log', true)" id="tabHeaderAddonLog">{tabHeaderAddonLog}</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link text-body" onclick="loadLogfile('err', true)" id="tabHeaderAddonErr">{tabHeaderAddonErr}</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link text-body" onclick="loadLogfile('clientLog', true)" id="tabHeaderClientLog">{tabHeaderClientLog}</a>
+					</li>
+				</ul>
+				<div class="div-tab border border-top-0 rounded-bottom-2 mb-3 p-2">
+					<div class="div-tab div-tab-header border p-2">
+						<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0" id="txtLogfileLocation">{txtLogfileLocation}</h5></div>
 						<div style="text-align:right;">
 							<span class="text-nowrap">
 								<div class="btn-group mb-0 py-0" role="group">
+									<button id="btnReloadLogfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="loadLogfile('log', true)"><i id="imgReloadLogfileData" class="bi-arrow-clockwise" title="{imgReloadLogfileData}"></i></button>
 									<button id="btnDeleteLogfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="emptyLogfile('log')"><i id="imgDeleteLogfileData" class="bi-trash" title="{imgDeleteLogfileData}"></i></button>
 									<button id="btnDownloadLogfile" type="button" class="btn btn-link btn-sm mb-0 py-0 pe-0" onclick="downloadFile('log')"><i id="imgDownloadLogfile" class="bi-download" title="{imgDownloadLogfile}"></i></button>
 								</div>
 							</span>
 						</div>
 					</div>
-					<div class="row no-gutters">
-						<div class="col-md-12">
-							<div class="card-body">
-								<div id="log"></div>
-							</div>
-						</div>
-					</div>
-					<div class="card-footer">
-					</div>
-				</div>
-				<div class="card mb-3">
-					<div class="card-header">
-						<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0" id="headerErrorfile">{headerErrorfile}</h5></div>
-						<div style="text-align:right;">
-							<span class="text-nowrap">
-								<div class="btn-group mb-0" role="group">
-									<button id="btnDeleteErrorfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="emptyLogfile('err')"><i id="imgDeleteErrorfileData" class="bi-trash" title="{imgDeleteErrorfileData}"></i></button>
-									<button id="btnDownloadErrorfile" type="button" class="btn btn-link btn-sm mb-0 py-0 pe-0" onclick="downloadFile('err')"><i id="imgDownloadErrorfile" class="bi-download" title="{imgDownloadErrorfile}"></i></button>
-								</div>
-							</span>
-						</div>
-					</div>
-					<div class="row no-gutters">
-						<div class="col-md-12">
-							<div class="card-body">
-								<div id="err"></div>
-							</div>
-						</div>
-					</div>
-					<div class="card-footer">
+					<div class="div-tab p-2">
+						<div id="log"></div>
 					</div>
 				</div>
 			</div>

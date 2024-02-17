@@ -266,12 +266,12 @@ function translateStaticPageContent(page)
             break;
         case "logfiles":
             translateInnerHtml("logfileIntroHeader");
-            translateInnerHtml("headerLogfile");
+            translateInnerHtml("tabHeaderAddonLog");
+            translateTitle("imgReloadLogfileData");
             translateTitle("imgDeleteLogfileData");
             translateTitle("imgDownloadLogfile");
-            translateInnerHtml("headerErrorfile");
-            translateTitle("imgDeleteErrorfileData");
-            translateTitle("imgDownloadErrorfile");
+            translateInnerHtml("tabHeaderAddonErr");
+            translateInnerHtml("tabHeaderClientLog");
             break;
         case "info":
             translateInnerHtml("aboutIntroHeader");
