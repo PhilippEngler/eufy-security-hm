@@ -9436,7 +9436,7 @@ export class Station extends TypedEmitter<StationEvents> {
         this.updateRawProperty(CommandType.CMD_GET_TFCARD_STATUS, status.toString(), "p2p");
     }
 
-    public databaseQueryLatestInfo(): void {
+    public databaseQueryLatestInfo(failureCallback?: () => void): void {
         const commandData: CommandData = {
             name: CommandName.StationDatabaseQueryLatestInfo,
         };
@@ -9460,7 +9460,8 @@ export class Station extends TypedEmitter<StationEvents> {
             }),
             channel: 0
         }, {
-            command: commandData
+            command: commandData,
+            onFailure: failureCallback
         });
     }
 

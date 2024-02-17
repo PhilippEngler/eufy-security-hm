@@ -240,12 +240,24 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                 {
                     try
                     {
-                        devices[deviceSerial].processPushNotification(message, this.config.getEventDurationSeconds());
+                        let station = this.api.getStation(devices[deviceSerial].getStationSerial());
+                        if(station !== undefined)
+                        {
+                            try
+                            {
+                                devices[deviceSerial].processPushNotification(station, message, this.config.getEventDurationSeconds());
+                            }
+                            catch(err)
+                            {
+                                const error = ensureError(err);
+                                rootPushLogger.error(`Error processing push notification for device`, { error: getError(error), deviceSN: deviceSerial, message: message });
+                            }
+                        }
                     }
                     catch(err)
                     {
                         const error = ensureError(err);
-                        rootPushLogger.error(`Error processing push notification for device`, { error: getError(error), deviceSN: deviceSerial, message: message });
+                        rootPushLogger.error("Process push notification for devices loading station", { error: getError(error), message: message });
                     }
                 }
             }

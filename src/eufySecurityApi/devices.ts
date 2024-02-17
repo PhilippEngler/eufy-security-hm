@@ -2,10 +2,10 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock } from './http';
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad } from './http';
 import { EufySecurityEvents } from './interfaces';
 import { DatabaseQueryLocal, DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
-import { getError, parseValue, waitForEvent } from "./utils";
+import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
 import { CameraEvent, DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 import { EventInteractions } from "./eventInteractions";
@@ -143,6 +143,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     else if (Device.isSmartTrack(resDevices[deviceSerial].device_type))
                     {
                         new_device = Tracker.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (Device.isLockKeypad(resDevices[deviceSerial].device_type))
+                    {
+                        new_device = LockKeypad.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
                     else
                     {
@@ -484,7 +488,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         switch (eventListenerName)
         {
             case "PropertyChanged":
-                device.on("property changed", (device : Device, name : string, value : PropertyValue, ready: boolean) => this.onPropertyChanged(device, name, value, ready));
+                device.on("property changed", (device : Device, name : string, value : PropertyValue, ready: boolean) => this.onDevicePropertyChanged(device, name, value, ready));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
@@ -720,7 +724,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    private async onPropertyChanged(device : Device, name : string, value : PropertyValue, ready: boolean) : Promise<void>
+    private async onDevicePropertyChanged(device : Device, name : string, value : PropertyValue, ready: boolean) : Promise<void>
     {
         //this.emit("device property changed", device, name, value);
         rootAddonLogger.debug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
@@ -746,15 +750,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             }
             else if (name === PropertyName.DevicePictureUrl && value !== "")
             {
-                this.api.getStation(device.getStationSerial()).then((station: Station) => {
-                    if (station.hasCommand(CommandName.StationDownloadImage))
-                    {
-                        station.downloadImage(value as string);
-                    }
-                }).catch((err) => {
-                    const error = ensureError(err);
-                    rootAddonLogger.error(`Device property changed error - station download image`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
-                });
+                if (!isValidUrl(value as string))
+                {
+                    this.api.getStation(device.getStationSerial()).then((station: Station) => {
+                        if (station.hasCommand(CommandName.StationDownloadImage))
+                        {
+                            station.downloadImage(value as string);
+                        }
+                    }).catch((err) => {
+                        const error = ensureError(err);
+                        rootAddonLogger.error(`Device property changed error - station download image`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+                    });
+                }
             }
         }
         catch (err)
@@ -798,7 +805,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -825,7 +832,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -852,7 +859,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -879,7 +886,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -906,7 +913,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -934,7 +941,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -1067,7 +1074,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1154,7 +1161,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1179,7 +1186,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1204,7 +1211,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1229,7 +1236,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
 
