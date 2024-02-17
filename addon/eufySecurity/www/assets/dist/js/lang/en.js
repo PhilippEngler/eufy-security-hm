@@ -666,8 +666,6 @@ function translateMessages(message, ...options)
 			return "You have entered a port that has already been entered for another station or another device.";
 		case "messageLoadLogFileErrorHeader":
 			return "Error loading the log file.";
-		case "messageLoadErrorFileErrorHeader":
-			return "Error loading the error log file.";
 		case "messageLoadVersionInfoErrorHeader":
 			return "Error loading the version information.";
 		default:
@@ -1134,8 +1132,6 @@ function translateString(content)
 			return "File is uploaded and checked...";
 		case "strLoadingLogFile":
 			return "Loading Log File...";
-		case "strLoadingErrorFile":
-			return "Loading Error File...";
 		case "strAddOnName":
 			return "eufy Security AddOn";
 		case "strClientName":

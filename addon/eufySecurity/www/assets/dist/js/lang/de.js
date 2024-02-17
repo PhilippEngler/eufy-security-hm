@@ -665,9 +665,7 @@ function translateMessages(message, ...options)
 		case "messageUdpPortPortAlreadyUsedMessage":
 			return "Sie haben einen Port eingegeben, der bereits für eine andere Station oder ein anderes Gerät eingegeben wurde.";
 		case "messageLoadLogFileErrorHeader":
-			return "Fehler beim Laden der Protokolldatei.";
-		case "messageLoadErrorFileErrorHeader":
-			return "Fehler beim Laden der Fehlerprotokolldatei.";
+			return "Fehler beim Laden der Logdatei.";
 		case "messageLoadVersionInfoErrorHeader":
 			return "Fehler beim Laden der Versionsinformationen.";
 		default:
@@ -1134,8 +1132,6 @@ function translateString(content)
 			return "Datei wird hochgeladen und überprüft...";
 		case "strLoadingLogFile":
 			return "Lade Protokolldatei...";
-		case "strLoadingErrorFile":
-			return "Lade Fehlerprotokolldatei...";
 		case "strAddOnName":
 			return "eufy Security AddOn";
 		case "strClientName":
