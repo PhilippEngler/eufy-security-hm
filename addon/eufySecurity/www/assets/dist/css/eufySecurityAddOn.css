@@ -148,3 +148,20 @@ code {
 .card-header {
   --bs-card-cap-padding-x: 0.75rem;
 }
+
+.nav-tabs {
+  --bs-nav-tabs-border-color: #d2d2d2;
+  --bs-nav-tabs-link-active-border-color: #d2d2d2 #d2d2d2 #f8f8f8;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #f8f8f8 !important;
+}
+
+.div-tab {
+  border-color: #d2d2d2 !important;
+}
+
+.div-tab-header {
+  background: #f8f8f8;
+}
