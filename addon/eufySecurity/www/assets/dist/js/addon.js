@@ -414,7 +414,7 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
 							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", translateContent("lblCurrentState"), `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? translateGuardMode(objResp.data[station].guardMode) : translateContent("lblPrivacy")}`)}</div>`, `<small class="text-muted">${translateContent("lblIpAddress")}: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
-					text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
+					text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
 					document.getElementById("stations").innerHTML =  text;
 				}
 				else
@@ -571,7 +571,7 @@ function createDeviceTypeCardsContainer(typeName, firendlyTypeName, cards)
 {
 	if(cards != "")
 	{
-		return `<p id="${typeName}"><h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3">${cards}</div></p>`;
+		return `<p id="${typeName}"><h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3">${cards}</div></p>`;
 	}
 	else
 	{
@@ -2958,7 +2958,7 @@ function loadDataStatechange(showLoading)
 					}
 					stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="${translateString("strCurrentState")}"></i>&nbsp;${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? translateGuardMode(objResp.data[station].guardMode) : translateString("strInactive")}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">${translateContent("lblLastStateChange")}: ${lastChangeTime}</small>`);
 				}
-				text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 g-3", stations);
+				text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
 				document.getElementById("btnArmAll").removeAttribute("disabled");
 				document.getElementById("btnHomeAll").removeAttribute("disabled");
 				document.getElementById("btnScheduleAll").removeAttribute("disabled");
