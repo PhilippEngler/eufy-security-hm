@@ -4641,6 +4641,9 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonLog").classList.add("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '/var/log/eufySecurity.log'`;
+			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('log', true)");
+			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfile('log')");
+			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('log')");
 			break;
 		case "err":
 			url=`logfileAddonErrGetContent.cgi`;
@@ -4648,6 +4651,9 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.add("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '/var/log/eufySecurity.err'`;
+			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('err', true)");
+			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfile('err')");
+			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('err')");
 			break;
 		case "clientLog":
 			url=`logfileClientGetContent.cgi`;
@@ -4655,6 +4661,9 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.add("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '/var/log/eufySecurityClient.log'`;
+			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('clientLog', true)");
+			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfile('clientLog')");
+			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('clientLog')");
 			break;
 		default:
 			return;
