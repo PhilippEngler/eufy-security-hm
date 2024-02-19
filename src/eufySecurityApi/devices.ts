@@ -1,15 +1,15 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
-import { EufySecurityApi } from './eufySecurityApi';
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, Picture, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad } from './http';
-import { EufySecurityEvents } from './interfaces';
-import { DatabaseQueryLocal, DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
+import { EufySecurityApi } from "./eufySecurityApi";
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad } from "./http";
+import { EufySecurityEvents } from "./interfaces";
+import { DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
 import { CameraEvent, DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 import { EventInteractions } from "./eventInteractions";
-import { rootAddonLogger } from './logging';
+import { rootAddonLogger } from "./logging";
 
 /**
  * Represents all the Devices in the account.
@@ -54,15 +54,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private async handleDevices(devices : FullDevices) : Promise<void>
     {
         rootAddonLogger.debug("Got devices", { devices: devices });
-        
+
         const resDevices = devices;
 
         const deviceSNs: string[] = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
         const promises: Array<Promise<Device>> = [];
-        
-        var deviceSerial : string;
-        
+
+        let deviceSerial : string;
+
         if(resDevices != null)
         {
             for (deviceSerial in resDevices)
@@ -151,7 +151,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     else
                     {
                         new_device = UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial]);
-                    }                        
+                    }
 
                     promises.push(new_device.then((device: Device) => {
                         try
@@ -324,7 +324,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     {
         if(this.devices != null)
         {
-            for (var deviceSerial in this.devices)
+            for (const deviceSerial in this.devices)
             {
                 this.removeEventListener(this.devices[deviceSerial], "PropertyChanged");
                 this.removeEventListener(this.devices[deviceSerial], "RawPropertyChanged");
@@ -373,7 +373,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Returns all Devices.
      */
-    public async getDevices() : Promise<{ [deviceSerial : string] : any }> 
+    public async getDevices() : Promise<{ [deviceSerial : string] : any }>
     {
         if (this.devicesLoaded)
         {
@@ -443,7 +443,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public existDevice(deviceSerial : string) : boolean
     {
-        var res = this.devices[deviceSerial];
+        const res = this.devices[deviceSerial];
         if(res)
         {
             return true;
@@ -746,7 +746,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             else if (name === PropertyName.DeviceRTSPStream && (value as boolean) === false)
             {
                 device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, "");
-            
             }
             else if (name === PropertyName.DevicePictureUrl && value !== "")
             {
@@ -770,7 +769,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             rootAddonLogger.error(`Device property changed error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
         }
     }
-    
+
     /**
      * The action to be one when event RawPropertyChanged is fired.
      * @param device The device as Device object.
@@ -795,7 +794,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CRYING);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CRYING);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -822,7 +821,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.SOUND);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.SOUND);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -849,7 +848,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PET);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PET);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -876,7 +875,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.VEHICLE);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.VEHICLE);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -903,7 +902,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -913,7 +912,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -931,7 +930,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PERSON);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PERSON);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -957,7 +956,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         //this.setLastVideoTimeNow(device.getSerial());
         try
         {
-            var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
+            const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
             if(deviceEventInteraction !== null)
             {
                 this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -1064,7 +1063,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RADAR_MOTION);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RADAR_MOTION);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -1151,7 +1150,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.STRANGER_PERSON);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.STRANGER_PERSON);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -1176,7 +1175,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -1201,7 +1200,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_LICK);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_LICK);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -1226,7 +1225,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             try
             {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_POOP);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_POOP);
                 if(deviceEventInteraction !== null)
                 {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
@@ -1278,7 +1277,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param path The path to the image.
      * @param start_time The date as Date.
      */
-    public addLastEventForDevice(deviceSerial : string, path : string, start_time : Date)
+    public addLastEventForDevice(deviceSerial : string, path : string, start_time : Date): void
     {
         this.devicesLastEvent[deviceSerial] = { path, start_time };
     }
@@ -1307,7 +1306,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Set the timeout of 75 seconds to download image of last event.
      * @param deviceSerial The serial of the device.
      */
-    private loadDeviceImage(deviceSerial : string)
+    private loadDeviceImage(deviceSerial : string): void
     {
         if (this.deviceImageLoadTimeout[deviceSerial] !== undefined)
         {
@@ -1321,13 +1320,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Helper for removing timeout and initiate download of the image of the last event.
      * @param deviceSerial The serial of the device.
      */
-    private getDeviceImage(deviceSerial : string)
+    private getDeviceImage(deviceSerial : string): void
     {
         if (this.deviceImageLoadTimeout[deviceSerial] !== undefined)
         {
             clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
         }
-        
+
         //this.getDeviceEvents(deviceSerial);
         this.getDeviceLastEvent(deviceSerial);
     }
@@ -1357,12 +1356,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Retrieves the last event of the given device.
      * @param deviceSerial The serial of the device.
      */
-    public async getDeviceLastEvent(deviceSerial : string)
+    public async getDeviceLastEvent(deviceSerial : string): Promise<void>
     {
         try
         {
-            var device = await this.getDevice(deviceSerial);
-            var station = await this.api.getStation(device.getStationSerial());
+            const device = await this.getDevice(deviceSerial);
+            const station = await this.api.getStation(device.getStationSerial());
 
             if(device)
             {
@@ -1405,11 +1404,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Retrieves the last event of all devices.
      */
-    public async getDevicesLastEvent()
+    public async getDevicesLastEvent(): Promise<void>
     {
-        var stations = await this.api.getStations();
+        const stations = await this.api.getStations();
 
-        for(let station in stations)
+        for(const station in stations)
         {
             stations[station].databaseQueryLatestInfo();
         }
@@ -1419,12 +1418,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Downloads the image of the last event for the given device.
      * @param deviceSerial The serial of the device.
      */
-    public async downloadLatestImageForDevice(deviceSerial : string)
+    public async downloadLatestImageForDevice(deviceSerial : string): Promise<void>
     {
         try
         {
-            var device = await this.getDevice(deviceSerial);
-            var station = await this.api.getStation(device.getStationSerial());
+            const device = await this.getDevice(deviceSerial);
+            const station = await this.api.getStation(device.getStationSerial());
             /*var results = this.getEventResultsForDevice(deviceSerial);
             if(results && results.length > 0)
             {
@@ -1437,7 +1436,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     }
                 }
             }*/
-            var result = this.getLastEventForDevice(deviceSerial);
+            const result = this.getLastEventForDevice(deviceSerial);
             if(result !== null && result.path !== "")
             {
                 station.downloadImage(result.path);
@@ -1477,7 +1476,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
     {
-        var result = this.getLastEventForDevice(deviceSerial);
+        const result = this.getLastEventForDevice(deviceSerial);
         if(result !== null && result.path !== "")
         {
             return result.start_time.valueOf();

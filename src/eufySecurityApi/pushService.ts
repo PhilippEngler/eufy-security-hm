@@ -1,12 +1,12 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 
-import { EufySecurityApi } from './eufySecurityApi';
-import { Config } from './config';
-import { HTTPApi } from './http';
-import { EufySecurityEvents } from './interfaces';
+import { EufySecurityApi } from "./eufySecurityApi";
+import { Config } from "./config";
+import { HTTPApi } from "./http";
+import { EufySecurityEvents } from "./interfaces";
 import { PushNotificationService } from "./push/service";
 import { CheckinResponse, Credentials, FidInstallationResponse, GcmRegisterResponse, PushMessage } from "./push/models";
-import { rootPushLogger } from './logging';
+import { rootPushLogger } from "./logging";
 import { ServerPushEvent } from "./push/types";
 import { ensureError } from ".";
 import { getError } from "./utils";
@@ -35,7 +35,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
         this.api = api;
         this.httpService = httpService;
         this.config = config;
-        
+
         this.initialize();
     }
 
@@ -118,7 +118,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
     /**
      * Eventhandler for push close event.
      */
-    private onClose()
+    private onClose(): void
     {
         rootPushLogger.info("Push notification connection closed.");
         this.emit("push close");
@@ -128,7 +128,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
      * Eventhandler for save push credentials event.
      * @param credentials The Credentials.
      */
-    private onSavePushCredentials(credentials : Credentials)
+    private onSavePushCredentials(credentials : Credentials): void
     {
         this.savePushCredentials(credentials);
     }
@@ -211,9 +211,9 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
             try
             {
-                var rawStations = await this.api.getRawStations();
-                var stations = await rawStations.getStations();
-                for(var stationSerial in stations)
+                const rawStations = await this.api.getRawStations();
+                const stations = await rawStations.getStations();
+                for(const stationSerial in stations)
                 {
                     try
                     {
@@ -234,13 +234,13 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
             try
             {
-                var rawDevices = await this.api.getRawDevices();
-                var devices = await rawDevices.getDevices();
-                for(var deviceSerial in devices)
+                const rawDevices = await this.api.getRawDevices();
+                const devices = await rawDevices.getDevices();
+                for(const deviceSerial in devices)
                 {
                     try
                     {
-                        let station = this.api.getStation(devices[deviceSerial].getStationSerial());
+                        const station = this.api.getStation(devices[deviceSerial].getStationSerial());
                         if(station !== undefined)
                         {
                             try

@@ -1,23 +1,23 @@
-import { Config } from './config';
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera, Picture, WallLightCam, GarageCamera, DeviceType } from './http';
-import { HomematicApi } from './homematicApi';
-import { rootAddonLogger, setLoggingLevel } from './logging';
+import { Config } from "./config";
+import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera, Picture, WallLightCam, GarageCamera, DeviceType } from "./http";
+import { HomematicApi } from "./homematicApi";
+import { rootAddonLogger, setLoggingLevel } from "./logging";
 
-import { PushService } from './pushService';
-import { MqttService } from './mqttService';
-import { generateUDID, generateSerialnumber, getError } from './utils';
-import { Devices } from './devices'
-import { Stations } from './stations';
-import { DatabaseQueryLatestInfo, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from './p2p';
-import { sleep } from './push/utils';
-import { EufyHouses } from './houses';
-import { NotSupportedError, ReadOnlyPropertyError, ensureError } from './error';
-import { randomNumber } from './http/utils';
-import { PhoneModels, timeZoneData } from './http/const';
-import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString } from './utils/utils';
-import { countryData } from './utils/const';
-import path from 'path';
-import { EventInteractionType } from './utils/types';
+import { PushService } from "./pushService";
+import { MqttService } from "./mqttService";
+import { generateUDID, generateSerialnumber, getError } from "./utils";
+import { Devices } from "./devices"
+import { Stations } from "./stations";
+import { DatabaseQueryLatestInfo, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from "./p2p";
+import { sleep } from "./push/utils";
+import { EufyHouses } from "./houses";
+import { NotSupportedError, ReadOnlyPropertyError, ensureError } from "./error";
+import { randomNumber } from "./http/utils";
+import { PhoneModels, timeZoneData } from "./http/const";
+import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString } from "./utils/utils";
+import { countryData } from "./utils/const";
+import path from "path";
+import { EventInteractionType } from "./utils/types";
 
 export class EufySecurityApi
 {
@@ -34,13 +34,13 @@ export class EufySecurityApi
     private retries = 0;
     private serviceState : string = "init";
     private captchaState = { captchaId: "", captcha: "" };
-    
+
     private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
     private taskUpdateLinks !: NodeJS.Timeout;
     private waitUpdateState !: NodeJS.Timeout;
     private refreshEufySecurityCloudTimeout?: NodeJS.Timeout;
-    
+
     /**
      * Create the api object.
      */
@@ -59,13 +59,13 @@ export class EufySecurityApi
     }
 
     /**
-     * Initialize the api and make basic settings check. 
+     * Initialize the api and make basic settings check.
      */
     private async initialize() : Promise<void>
     {
         if(this.config.getEmailAddress() == "" || this.config.getPassword() == "")
         {
-            var missingSettings = "";
+            let missingSettings = "";
             if(this.config.getEmailAddress() == "")
             {
                 missingSettings = "email";
@@ -80,7 +80,7 @@ export class EufySecurityApi
             }
 
             rootAddonLogger.error(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email and password to run this addon (missing: ${missingSettings}).`);
-        
+
             this.setServiceState("ok");
         }
         else
@@ -97,7 +97,7 @@ export class EufySecurityApi
             this.httpApiPersistentData.clientPrivateKey = this.config.getClientPrivateKey();
             this.httpApiPersistentData.serverPublicKey = this.config.getServerPublicKey();
             this.httpApiPersistentData.device_public_keys = this.config.getDevicePublicKeys();
-            
+
             this.httpService = await HTTPApi.initialize(this.config.getCountry(), this.config.getEmailAddress(), this.config.getPassword(), this.httpApiPersistentData);
 
             this.httpService.setLanguage(this.config.getLanguage());
@@ -119,14 +119,14 @@ export class EufySecurityApi
 
             this.httpService.setToken(this.getToken());
             this.httpService.setTokenExpiration(new Date(this.getTokenExpire()));
-            
+
             if (this.config.getOpenudid() == "")
             {
                 this.config.setOpenudid(generateUDID());
                 rootAddonLogger.debug("Generated new openudid", { openudid: this.config.getOpenudid() });
             }
             this.httpService.setOpenUDID(this.config.getOpenudid());
-    
+
             if (this.config.getSerialNumber() == "")
             {
                 this.config.setSerialNumber(generateSerialnumber(12));
@@ -166,7 +166,7 @@ export class EufySecurityApi
      * Set the state of the service to the given value.
      * @returns The state of the service.
      */
-    public setServiceState(state : string)
+    public setServiceState(state : string): void
     {
         if(state == "init" || state == "ok" || state == "disconnected" || state == "shutdown")
         {
@@ -196,9 +196,9 @@ export class EufySecurityApi
      */
     public async getAccountInfoAsJson() : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
 
-        var passportProfile = await this.getAccountInfo();
+        const passportProfile = await this.getAccountInfo();
 
         if(passportProfile)
         {
@@ -218,14 +218,14 @@ export class EufySecurityApi
      */
     public getCaptchaState() : string
     {
-        var json : any = {};
-        var captchaNeeded = false;
+        let json : any = {};
+        let captchaNeeded = false;
 
         if(this.captchaState.captchaId != "" || this.captchaState.captcha != "")
         {
             captchaNeeded = true;
         }
-        
+
         json = {"success":true,"captchaNeeded":captchaNeeded,"captcha":this.captchaState};
         return JSON.stringify(json);
     }
@@ -233,13 +233,13 @@ export class EufySecurityApi
     /**
      * Set the code from the captcha image and login again.
      * @param code The code from the captcha image.
-     * @returns 
+     * @returns The result as JSON string.
      */
     public setCaptchaCode(code : string) : string
     {
-        var json : any = {};
-        var success = false;
-        var message = "No captcha code requested.";
+        let json : any = {};
+        let success = false;
+        let message = "No captcha code requested.";
 
         if(this.captchaState.captchaId != "" || this.captchaState.captcha != "")
         {
@@ -247,7 +247,7 @@ export class EufySecurityApi
             success = true;
             message = "Connecting again with the captcha code provided.";
         }
-        
+
         json = {"success":success,"message":message};
         return JSON.stringify(json);
     }
@@ -266,7 +266,7 @@ export class EufySecurityApi
 
         this.closePushService();
         this.closeMqttService();
-        
+
         await this.closeStation();
 
         this.closeDevice();
@@ -328,7 +328,7 @@ export class EufySecurityApi
             this.devices.closeDevices();
         }
     }
-    
+
     /**
      * Login with the in the api provoded login information.
      * @param options Options for login.
@@ -417,7 +417,7 @@ export class EufySecurityApi
         //this.emit("connect");
 
         this.setCaptchaData("", "");
-        
+
         this.saveCloudToken();
 
         if(this.pushService)
@@ -526,7 +526,8 @@ export class EufySecurityApi
      * @param file The file name.
      * @param image The image.
      */
-    private async onStationImageDownload(station : Station, file : string, image : Picture)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private async onStationImageDownload(station : Station, file : string, image : Picture): Promise<void>
     {
         /*var filename = path.basename(file);
         var filenameContent = path.parse(file).name.split("_c", 2);
@@ -563,7 +564,8 @@ export class EufySecurityApi
      * @param returnCode The return code of the query.
      * @param data The result data.
      */
-    private async onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[])
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private async onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]): Promise<void>
     {
         /*var deviceSerials : string[] = [];
         if(returnCode == 0 && data && data.length > 0)
@@ -594,7 +596,7 @@ export class EufySecurityApi
      * @param returnCode The return code of the query.
      * @param data The result data.
      */
-    private async onStationDatabaseQueryLatest(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLatestInfo[])
+    private async onStationDatabaseQueryLatest(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLatestInfo[]): Promise<void>
     {
         if(returnCode == 0 && data && data.length > 0)
         {
@@ -602,7 +604,7 @@ export class EufySecurityApi
             {
                 try
                 {
-                    var response = data[i] as DatabaseQueryLatestInfoLocal;
+                    const response = data[i] as DatabaseQueryLatestInfoLocal;
 
                     if(response.device_sn === undefined || !(this.devices.existDevice(response.device_sn)))
                     {
@@ -616,10 +618,9 @@ export class EufySecurityApi
                         continue;
                     }
 
-                    var file = "";
-                    var fileName = "";
-                    var timeString = "";
-                    var timestamp : Date;
+                    let file = "";
+                    let fileName = "";
+                    let timeString = "";
 
                     file = response.crop_local_path;
                     fileName = path.parse(file).name + path.parse(file).ext;
@@ -630,7 +631,7 @@ export class EufySecurityApi
                     }
                     else if(file.includes("/Camera"))
                     {
-                        var res = file.split("/");
+                        const res = file.split("/");
                         if(file.includes("snapshort.jpg"))
                         {
                             timeString = res[res.length-2];
@@ -645,7 +646,7 @@ export class EufySecurityApi
                         rootAddonLogger.error("StationDatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
                         continue;
                     }
-                    timestamp = new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14)));
+                    const timestamp = new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14)));
                     this.updateCameraEventTimeSystemVariable(response.device_sn, timestamp.valueOf());
                     this.devices.addLastEventForDevice(response.device_sn, file, timestamp);
                     this.devices.downloadLatestImageForDevice(response.device_sn);
@@ -663,7 +664,7 @@ export class EufySecurityApi
      * The action to be performed when event device added is fired.
      * @param device The device as Device object.
      */
-    private async onDeviceAdded(device : Device)
+    private async onDeviceAdded(device : Device): Promise<void>
     {
         //this.devices.getDeviceEvents(device.getSerial());
         this.devices.getDeviceLastEvent(device.getSerial());
@@ -672,7 +673,7 @@ export class EufySecurityApi
     /**
      * The action to be performed when event devices loaded is fired.
      */
-    private async onDevicesLoaded()
+    private async onDevicesLoaded(): Promise<void>
     {
         //this.devices.getDevicesEvents();
         this.devices.getDevicesLastEvent();
@@ -770,7 +771,7 @@ export class EufySecurityApi
      * @param captchaId The value for the captcha id.
      * @param captcha the captcha image as base64 string.
      */
-    public setCaptchaData(captchaId : string, captcha : string)
+    public setCaptchaData(captchaId : string, captcha : string): void
     {
         this.captchaState.captchaId = captchaId;
         this.captchaState.captcha = captcha;
@@ -796,7 +797,7 @@ export class EufySecurityApi
      * Save the persistent http api data.
      * @param httpApiPersistentData The persistent data for the http api to save.
      */
-    public updateApiPersistentData(httpApiPersistentData : HTTPApiPersistentData)
+    public updateApiPersistentData(httpApiPersistentData : HTTPApiPersistentData): void
     {
         this.config.setUserId(httpApiPersistentData.user_id);
         this.config.setNickName(httpApiPersistentData.nick_name);
@@ -817,7 +818,7 @@ export class EufySecurityApi
                 rootAddonLogger.error("Error in processing invitations", { error: getError(error) });
             });
         }
-        
+
         await this.httpService.refreshAllData().catch(err => {
             const error = ensureError(err);
             rootAddonLogger.error("Error during API data refreshing", { error: getError(error) });
@@ -856,46 +857,46 @@ export class EufySecurityApi
      */
     public generateNewTrustedDeviceNameJson() : string
     {
-        var json : any = {};
+        let json : any = {};
         json = {"success":true, "trustedDeviceName":this.generateNewTrustedDeviceName()};
         return JSON.stringify(json);
     }
-    
+
     /**
      * Create a JSON object string for a given house.
      * @param house The house the JSON object created for.
      */
     private makeJsonObjectForHouse(house : HouseDetail) : any
     {
-        var json : any = {};
-
+        let json : any = {};
         json = {"houseId":house.house_id, "houseName":house.house_name, "isDefault":house.is_default, "geofenceId":house.geofence_id, "address":house.address, "latitude":house.latitude, "longitude":house.longitude, "radiusRange":house.radius_range, "locationMsg":house.location_msg, "createTime":house.create_time, "awayMode":house.away_mode, "homeMode":house.home_mode};
-
         return json;
     }
-    
+
     /**
      * Returns a JSON-Representation of all houses.
      */
-    public async getHousesAsJson() : Promise<string> 
+    public async getHousesAsJson() : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.houses)
             {
                 await this.httpService.refreshHouseData();
 
-                var houses = this.getHouses();
+                const houses = this.getHouses();
 
                 if(houses)
                 {
                     json = {"success":true, "data":[]};
-                    for (var house_id in houses)
+                    for (const house_id in houses)
                     {
-                        var house = await this.getHouse(house_id);
+                        const house = await this.getHouse(house_id);
                         if(house && house != null)
-                        json.data.push(this.makeJsonObjectForHouse(house));
+                        {
+                            json.data.push(this.makeJsonObjectForHouse(house));
+                        }
                     }
                     this.setLastConnectionInfo(true);
                 }
@@ -925,14 +926,14 @@ export class EufySecurityApi
      */
     public async getHouseAsJson(houseId : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.houses)
             {
                 await this.httpService.refreshHouseData();
 
-                var house = await this.getHouse(houseId);
+                const house = await this.getHouse(houseId);
 
                 if(house && house != null)
                 {
@@ -959,19 +960,19 @@ export class EufySecurityApi
 
         return JSON.stringify(json);
     }
-    
+
     /**
      * Create a JSON object for a given device.
      * @param device The device the JSON object created for.
      */
     private makeJsonObjectForDevice(device : Device, isStationP2PConnected : boolean) : any
     {
-        var properties = device.getProperties();
-        var json : any = {};
+        const properties = device.getProperties();
+        let json : any = {};
 
         json = {"eufyDeviceId":device.getId(), "isStationP2PConnected":isStationP2PConnected, "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
 
-        for(var property in properties)
+        for(const property in properties)
         {
             switch (property)
             {
@@ -996,9 +997,9 @@ export class EufySecurityApi
     /**
      * Returns a JSON-Representation of all devices.
      */
-    public async getDevicesAsJson() : Promise<string> 
+    public async getDevicesAsJson() : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.devices)
@@ -1009,11 +1010,11 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var devices = await this.getDevices();
+                const devices = await this.getDevices();
                 if(devices)
                 {
                     json = {"success":true, "data":[]};
-                    for (var deviceSerial in devices)
+                    for (const deviceSerial in devices)
                     {
                         json.data.push(this.makeJsonObjectForDevice(devices[deviceSerial], (await this.stations.getStation(devices[deviceSerial].getStationSerial())).isConnected()));
                     }
@@ -1044,12 +1045,12 @@ export class EufySecurityApi
      * Returns all devices as Devices-object
      * @returns All devices as object
      */
-    public async getRawDevices() : Promise<Devices> 
+    public async getRawDevices() : Promise<Devices>
     {
         await this.httpService.refreshDeviceData();
         await this.updateDeviceData();
         await this.devices.loadDevices();
-            
+
         return this.devices;
     }
 
@@ -1060,7 +1061,7 @@ export class EufySecurityApi
      */
     public async getDeviceImage(deviceSerial : string) : Promise<any>
     {
-        var device = (await this.getDevices())[deviceSerial];
+        const device = (await this.getDevices())[deviceSerial];
         if(device)
         {
             return device.getPropertyValue(PropertyName.DevicePicture) as Picture
@@ -1073,7 +1074,7 @@ export class EufySecurityApi
      */
     public async getDeviceAsJson(deviceSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.devices)
@@ -1084,7 +1085,7 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var device = (await this.getDevices())[deviceSerial];
+                const device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
                     json = {"success":true, "data":this.makeJsonObjectForDevice(device, (await this.stations.getStation(device.getStationSerial())).isConnected())};
@@ -1107,7 +1108,7 @@ export class EufySecurityApi
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
-        
+
         return JSON.stringify(json);
     }
 
@@ -1118,7 +1119,7 @@ export class EufySecurityApi
      */
     public async getDevicePropertiesMetadataAsJson(deviceSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.devices)
@@ -1129,7 +1130,7 @@ export class EufySecurityApi
                 //await this.updateDeviceData();
                 //await this.devices.loadDevices();
 
-                var device = (await this.getDevices())[deviceSerial];
+                const device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
                     json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getPropertiesMetadata()};
@@ -1152,7 +1153,7 @@ export class EufySecurityApi
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
-        
+
         return JSON.stringify(json);
     }
 
@@ -1163,7 +1164,7 @@ export class EufySecurityApi
      */
     public async getDevicePropertiesAsJson(deviceSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.devices)
@@ -1174,10 +1175,10 @@ export class EufySecurityApi
                 //await this.updateDeviceData();
                 //await this.devices.loadDevices();
 
-                var device = (await this.getDevices())[deviceSerial];
+                const device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
-                    var temp = this.devices.getDeviceInteractions(device.getSerial());
+                    let temp = this.devices.getDeviceInteractions(device.getSerial());
                     if(temp === undefined || temp === null)
                     {
                         temp = null;
@@ -1213,7 +1214,7 @@ export class EufySecurityApi
      */
     public async getDeviceParams(deviceSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.devices)
@@ -1224,7 +1225,7 @@ export class EufySecurityApi
                 //await this.updateDeviceData();
                 //await this.devices.loadDevices();
 
-                var device = (await this.getDevices())[deviceSerial];
+                const device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
                     json = device.getRawDevice()
@@ -1260,7 +1261,7 @@ export class EufySecurityApi
      */
     public async setDeviceProperty(deviceSerial : string, propertyName : string, propertyValue : unknown) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.devices)
@@ -1312,13 +1313,13 @@ export class EufySecurityApi
      */
     private async makeJsonObjectForStation(station : Station) : Promise<any>
     {
-        var properties = station.getProperties();
-        var json : any = {};
+        const properties = station.getProperties();
+        let json : any = {};
 
-        var privacyMode : boolean | undefined = undefined;
+        let privacyMode : boolean | undefined = undefined;
         if(this.devices.existDevice(station.getSerial()))
         {
-            var device = (await this.devices.getDevices())[station.getSerial()];
+            const device = (await this.devices.getDevices())[station.getSerial()];
             if(device.isPanAndTiltCamera())
             {
                 if(device.isEnabled())
@@ -1333,7 +1334,7 @@ export class EufySecurityApi
         }
 
         json = {"eufyDeviceId":station.getId(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "wanIpAddress":station.getIPAddress(), "isP2PConnected":station.isConnected()};
-        for (var property in properties)
+        for (const property in properties)
         {
             switch (property)
             {
@@ -1366,7 +1367,7 @@ export class EufySecurityApi
      */
     public async getStationsAsJson() : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1376,12 +1377,12 @@ export class EufySecurityApi
 
                 await this.stations.loadStations();
 
-                var stations = await this.getStations();
+                const stations = await this.getStations();
 
                 if(stations)
                 {
                     json = {"success":true, "data":[]};
-                    for (var stationSerial in stations)
+                    for (const stationSerial in stations)
                     {
                         json.data.push(await this.makeJsonObjectForStation(stations[stationSerial]));
                     }
@@ -1412,12 +1413,12 @@ export class EufySecurityApi
      * Get all stations as Stations-object.
      * @returns All stations as object.
      */
-    public async getRawStations() : Promise<Stations> 
+    public async getRawStations() : Promise<Stations>
     {
         await this.httpService.refreshStationData();
         await this.updateDeviceData();
         await this.stations.loadStations();
-            
+
         return this.stations;
     }
 
@@ -1428,7 +1429,7 @@ export class EufySecurityApi
      */
     public async getStationPropertiesMetadataAsJson(stationSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1438,7 +1439,7 @@ export class EufySecurityApi
 
                 //await this.stations.loadStations();
 
-                var station = await this.getStation(stationSerial);
+                const station = await this.getStation(stationSerial);
 
                 if(station)
                 {
@@ -1473,7 +1474,7 @@ export class EufySecurityApi
      */
     public async getStationPropertiesAsJson(stationSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1483,7 +1484,7 @@ export class EufySecurityApi
 
                 //await this.stations.loadStations();
 
-                var station = await this.getStation(stationSerial);
+                const station = await this.getStation(stationSerial);
 
                 if(station)
                 {
@@ -1518,7 +1519,7 @@ export class EufySecurityApi
      */
     public async getStationParams(stationSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1528,7 +1529,7 @@ export class EufySecurityApi
 
                 //await this.stations.loadStations();
 
-                var station = await this.getStation(stationSerial);
+                const station = await this.getStation(stationSerial);
 
                 if(station)
                 {
@@ -1565,7 +1566,7 @@ export class EufySecurityApi
      */
     public async setStationProperty(stationSerial : string, propertyName : string, propertyValue : unknown) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1618,7 +1619,7 @@ export class EufySecurityApi
      */
     public async rebootStation(stationSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1665,7 +1666,7 @@ export class EufySecurityApi
      */
     public async getStationAsJson(stationSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1675,7 +1676,7 @@ export class EufySecurityApi
 
                 await this.stations.loadStations();
 
-                var station = await this.getStation(stationSerial);
+                const station = await this.getStation(stationSerial);
 
                 if(station)
                 {
@@ -1731,14 +1732,14 @@ export class EufySecurityApi
     {
         if(this.stations)
         {
-            for (var stationSerial in stations)
+            for (const stationSerial in stations)
             {
-                var station = stations[stationSerial];
+                const station = stations[stationSerial];
 
-                var p2pDid = this.config.getP2PDataP2pDid(stationSerial);
-                var stationIpAddress = this.config.getP2PDataStationIpAddress(stationSerial);
+                const p2pDid = this.config.getP2PDataP2pDid(stationSerial);
+                const stationIpAddress = this.config.getP2PDataStationIpAddress(stationSerial);
 
-                var updateNeed = false;
+                let updateNeed = false;
 
                 if(p2pDid != station.getP2pDid() || stationIpAddress != station.getLANIPAddress())
                 {
@@ -1758,7 +1759,7 @@ export class EufySecurityApi
      */
     public async getGuardMode() : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1768,13 +1769,13 @@ export class EufySecurityApi
 
                 await this.stations.loadStations();
 
-                var mode = -1;
-                var stations = await this.getStations();
+                let mode = -1;
+                const stations = await this.getStations();
 
                 if(stations)
                 {
                     json = {"success":true, "data":[]};
-                    for (var stationSerial in stations)
+                    for (const stationSerial in stations)
                     {
                         json.data.push(await this.makeJsonObjectForStation(stations[stationSerial]));
 
@@ -1786,7 +1787,7 @@ export class EufySecurityApi
                         {
                             mode = -2;
                         }
-                    
+
                         this.updateStationGuardModeSystemVariable(stations[stationSerial].getSerial(), stations[stationSerial].getGuardMode());
                     }
 
@@ -1829,19 +1830,19 @@ export class EufySecurityApi
      */
     public async getGuardModeAsGuardMode() : Promise<GuardMode>
     {
-        var mode = -1;
+        let mode = -1;
         try
         {
             if(this.stations)
             {
                 await this.stations.loadStations();
 
-                var stations = await this.getStations();
-                var station : Station;
+                const stations = await this.getStations();
+                let station : Station;
 
                 if(stations)
                 {
-                    for (var stationSerial in stations)
+                    for (const stationSerial in stations)
                     {
                         station = stations[stationSerial];
                         if(mode == -1)
@@ -1874,7 +1875,7 @@ export class EufySecurityApi
      */
     public async getGuardModeStation(stationSerial : string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -1886,7 +1887,7 @@ export class EufySecurityApi
 
                 await this.stations.loadStations();
 
-                var station = await this.getStation(stationSerial);
+                const station = await this.getStation(stationSerial);
 
                 if(station)
                 {
@@ -1956,24 +1957,24 @@ export class EufySecurityApi
      */
     public async setGuardMode(guardMode : GuardMode) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
             {
-                var err = 0;
-                var res = await this.stations.setGuardMode(guardMode);
+                let err = 0;
+                const res = await this.stations.setGuardMode(guardMode);
 
                 if(res == true)
                 {
-                    var stations = await this.getStations();
-                    var station : Station;
+                    const stations = await this.getStations();
+                    let station : Station;
 
                     json = {"success":true, "data":[]};
-                    for (var stationSerial in stations)
+                    for (const stationSerial in stations)
                     {
                         station = stations[stationSerial];
-                        
+
                         if(guardMode == station.getGuardMode())
                         {
                             json.data.push({"stationSerial":station.getSerial(), "result":"success", "guardMode":station.getGuardMode()});
@@ -2030,7 +2031,7 @@ export class EufySecurityApi
      */
     public async setGuardModeStation(stationSerial : string, guardMode : GuardMode) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.stations)
@@ -2044,11 +2045,11 @@ export class EufySecurityApi
                     }
                 }
 
-                var res = await this.stations.setGuardModeStation(stationSerial, guardMode);
+                const res = await this.stations.setGuardModeStation(stationSerial, guardMode);
 
                 //var stations = await this.getStations();
-                
-                var station = await this.getStation(stationSerial);
+
+                const station = await this.getStation(stationSerial);
 
                 if(res)
                 {
@@ -2095,7 +2096,7 @@ export class EufySecurityApi
      * @param stationSerial The serial of the station.
      * @param guardMode The guard mode to set.
      */
-    public updateStationGuardModeSystemVariable(stationSerial : string, guardMode : PropertyValue)
+    public updateStationGuardModeSystemVariable(stationSerial : string, guardMode : PropertyValue): void
     {
         this.setSystemVariableString("eufyCentralState" + stationSerial, this.convertGuardModeToString(guardMode as GuardMode));
     }
@@ -2153,12 +2154,12 @@ export class EufySecurityApi
      */
     public async connectStation(stationSerial: string) : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
 
         if(this.stations)
         {
             await this.httpService.refreshStationData();
-            var station = await this.stations.getStation(stationSerial);
+            let station = await this.stations.getStation(stationSerial);
 
             if(station)
             {
@@ -2174,7 +2175,7 @@ export class EufySecurityApi
 
                     await this.httpService.refreshStationData();
                     station = await this.stations.getStation(stationSerial);
-                    var connected = station.isConnected();
+                    const connected = station.isConnected();
                     json = {"success":connected, "conneceted":connected};
                 }
             }
@@ -2205,7 +2206,7 @@ export class EufySecurityApi
      */
     public async getLibrary() : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
         try
         {
             if(this.devices)
@@ -2216,13 +2217,13 @@ export class EufySecurityApi
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
 
-                var devices = await this.getDevices();
-                var device;
+                const devices = await this.getDevices();
+                let device;
 
                 if(devices)
                 {
                     json = {"success":true, "data":[]};
-                    for (var deviceSerial in devices)
+                    for (const deviceSerial in devices)
                     {
                         device = devices[deviceSerial];
                         switch (getDeviceTypeAsString(device))
@@ -2285,7 +2286,7 @@ export class EufySecurityApi
      * @param stationSerial The serial of the station.
      * @param timestamp The timestamp to set.
      */
-    public updateStationGuardModeChangeTimeSystemVariable(stationSerial : string, timestamp : number | undefined)
+    public updateStationGuardModeChangeTimeSystemVariable(stationSerial : string, timestamp : number | undefined): void
     {
         if(this.getStateUpdateEventActive() == true && timestamp !== undefined)
         {
@@ -2301,14 +2302,14 @@ export class EufySecurityApi
     /**
      * Update the global station guard mode change time systemvariable.
      */
-    public async updateGlobalStationGuardModeChangeTimeSystemVariable()
+    public async updateGlobalStationGuardModeChangeTimeSystemVariable(): Promise<void>
     {
-        var stations = await this.getStations();
-        var station;
-        var tempModeChange;
-        var lastModeChange = new Date(1970, 1, 1);
+        const stations = await this.getStations();
+        let station;
+        let tempModeChange;
+        let lastModeChange = new Date(1970, 1, 1);
 
-        for (var stationSerial in stations)
+        for (const stationSerial in stations)
         {
             station = stations[stationSerial]
             tempModeChange = new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0)
@@ -2325,7 +2326,7 @@ export class EufySecurityApi
      * @param deviceSerial The serial of the device.
      * @param timestamp The timestamp to set.
      */
-    public updateCameraEventTimeSystemVariable(deviceSerial : string, timestamp : number | undefined)
+    public updateCameraEventTimeSystemVariable(deviceSerial : string, timestamp : number | undefined): void
     {
         if(this.getApiUsePushService() == true && timestamp !== undefined)
         {
@@ -2368,11 +2369,10 @@ export class EufySecurityApi
      */
     public setTokenData(token : string | undefined, tokenExpire : number | undefined) : string
     {
-        var res;
-        var json : any = {};
+        let json : any = {};
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
-        res = this.config.writeCurrentConfig();
+        const res = this.config.writeCurrentConfig();
         if(res == "saved" || res == "ok")
         {
             json = `{"success":true,"dataRemoved":true}`;
@@ -2438,7 +2438,7 @@ export class EufySecurityApi
      */
     public getHouseId() : string
     {
-        return this.config.getHouseId(); 
+        return this.config.getHouseId();
     }
 
     /**
@@ -2454,14 +2454,14 @@ export class EufySecurityApi
      */
     public async getLocalStaticUdpPorts() : Promise<any[]>
     {
-        var json : any = [];
+        const json : any = [];
         if(this.stations)
         {
-            var stations = await this.getStations();
+            const stations = await this.getStations();
 
             if(stations)
             {
-                for (var stationSerial in stations)
+                for (const stationSerial in stations)
                 {
                     json.push({"stationSerial":stationSerial, "port":this.config.getLocalStaticUdpPortPerStation(stationSerial)});
                 }
@@ -2533,8 +2533,8 @@ export class EufySecurityApi
      */
     public async getAPIConfigAsJson() : Promise<string>
     {
-        var json : any = {};
-        
+        let json : any = {};
+
         json = {"success":true, "data":{}};
         json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "cameraDefaultImage":this.config.getCameraDefaultImage(), "cameraDefaultVideo":this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevelAddon":this.config.getLogLevelAddon(), "logLevelMain":this.config.getLogLevelMain(), "logLevelHttp":this.config.getLogLevelHttp(), "logLevelP2p":this.config.getLogLevelP2p(), "logLevelPush":this.config.getLogLevelPush(), "logLevelMqtt":this.config.getLogLevelMqtt(), "tokenExpire":this.config.getTokenExpire()};
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
@@ -2578,9 +2578,9 @@ export class EufySecurityApi
      */
     public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevelAddon : number, logLevelMain : number, logLevelHttp : number, logLevelP2p : number, logLevelPush : number, logLevelMqtt : number) : Promise<string>
     {
-        var serviceRestart = false;
-        var taskSetupStateNeeded = false;
-        var taskSetupLinksNeeded = false;
+        let serviceRestart = false;
+        let taskSetupStateNeeded = false;
+        let taskSetupLinksNeeded = false;
         if(this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getHouseId() != houseId || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive)
         {
             serviceRestart = true;
@@ -2616,10 +2616,10 @@ export class EufySecurityApi
         {
             if(this.stations)
             {
-                var stations = await this.getStations();
+                const stations = await this.getStations();
                 if(stations)
                 {
-                    for (var stationSerial in stations)
+                    for (const stationSerial in stations)
                     {
                         if(this.config.setLocalStaticUdpPortPerStation(stationSerial, null) == true)
                         {
@@ -2679,7 +2679,7 @@ export class EufySecurityApi
         this.config.setLogLevelPush(logLevelPush);
         this.config.setLogLevelMqtt(logLevelMqtt);
 
-        var res = this.config.writeCurrentConfig();
+        const res = this.config.writeCurrentConfig();
         if(res == "saved")
         {
             return `{"success":true,"serviceRestart":${serviceRestart},"message":"Config saved."}`;
@@ -2699,7 +2699,7 @@ export class EufySecurityApi
      */
     public writeConfig() : string
     {
-        var res = this.config.writeCurrentConfig();
+        const res = this.config.writeCurrentConfig();
         if(res == "saved")
         {
             return `{"success":true,"message":"Config saved."}`;
@@ -2728,8 +2728,8 @@ export class EufySecurityApi
      */
     public async checkSystemVariables() : Promise<string>
     {
-        var json : any = {};
-        var availableSystemVariables = await this.homematicApi.getSystemVariables("localhost", false, "eufy");
+        let json : any = {};
+        const availableSystemVariables = await this.homematicApi.getSystemVariables("localhost", false, "eufy");
         if(availableSystemVariables === undefined)
         {
             json = {"success":false, "reason":"Faild retrieving system variables from CCU."};
@@ -2744,18 +2744,18 @@ export class EufySecurityApi
                     {
                         await this.loadData();
 
-                        var station : Station;
-                        var device : Device;
-                        var stations = await this.getStations();
-                        var devices = await this.getDevices();
+                        let station : Station;
+                        let device : Device;
+                        const stations = await this.getStations();
+                        const devices = await this.getDevices();
 
-                        var commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime","eufyLastModeChangeTime"];
-                        var commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus","Zeitpunkt des letzten Moduswechsels"];
+                        const commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime","eufyLastModeChangeTime"];
+                        const commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus","Zeitpunkt des letzten Moduswechsels"];
 
                         json = {"success":true, "data":[]};
-                        var i = 0;
+                        let i = 0;
 
-                        for (var sv of commonSystemVariablesName)
+                        for (const sv of commonSystemVariablesName)
                         {
                             json.data.push({"sysVarName":sv, "sysVarInfo":commonSystemVariablesInfo[i], "sysVarAvailable":availableSystemVariables.includes(sv), "sysVarCurrent":true});
                             if(availableSystemVariables.includes(sv))
@@ -2765,10 +2765,10 @@ export class EufySecurityApi
                             i = i + 1;
                         }
 
-                        for (var stationSerial in stations)
+                        for (const stationSerial in stations)
                         {
                             station = stations[stationSerial];
-                            
+
                             json.data.push({"sysVarName":`eufyCentralState${station.getSerial()}`, "sysVarInfo":`aktueller Status der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCentralState" + station.getSerial()), "sysVarCurrent":true});
                             if(availableSystemVariables.includes("eufyCentralState" + station.getSerial()))
                             {
@@ -2780,11 +2780,11 @@ export class EufySecurityApi
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyLastModeChangeTime${station.getSerial()}`), 1);
                             }
                         }
-                        
-                        for (var deviceSerial in devices)
+
+                        for (const deviceSerial in devices)
                         {
                             device = devices[deviceSerial];
-                            
+
                             if(availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()))
                             {
                                 json.data.push({"sysVarName":`eufyCameraImageURL${device.getSerial()}`, "sysVarInfo":`Standbild der Kamera ${device.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()), "sysVarCurrent":false});
@@ -2840,7 +2840,7 @@ export class EufySecurityApi
      */
     public async createSystemVariable(variableName : string, variableInfo : string) : Promise<string>
     {
-        var res = await this.homematicApi.createSystemVariable("localhost", false, variableName, variableInfo);
+        const res = await this.homematicApi.createSystemVariable("localhost", false, variableName, variableInfo);
 
         if(res !== undefined && res == variableName)
         {
@@ -2862,7 +2862,7 @@ export class EufySecurityApi
      */
     public async removeSystemVariable(variableName : string) : Promise<string>
     {
-        var res = await this.homematicApi.removeSystemVariable("localhost", false, variableName);
+        const res = await this.homematicApi.removeSystemVariable("localhost", false, variableName);
 
         if(res !== undefined && res === "true")
         {
@@ -2882,9 +2882,9 @@ export class EufySecurityApi
      * Set the state of the last connection with eufy to CCU.
      * @param success The state of the last request with eufy.
      */
-    private setLastConnectionInfo(success : boolean)
+    private setLastConnectionInfo(success : boolean): void
     {
-        var nowDateTime = new Date();
+        const nowDateTime = new Date();
 
         if(success == true)
         {
@@ -2903,7 +2903,7 @@ export class EufySecurityApi
      * @param systemVariable Name of the system variable to set.
      * @param dateTime The dateTime value to set.
      */
-    private setSystemVariableTime(systemVariable : string, dateTime : Date)
+    private setSystemVariableTime(systemVariable : string, dateTime : Date): void
     {
         this.setSystemVariableString(systemVariable, makeDateTimeString(dateTime.getTime()));
     }
@@ -2913,7 +2913,7 @@ export class EufySecurityApi
      * @param systemVariable Name of the system variable to set.
      * @param newValue The value to set.
      */
-    private setSystemVariableString(systemVariable : string, newValue : string)
+    private setSystemVariableString(systemVariable : string, newValue : string): void
     {
         if(this.config.getSystemVariableActive() == true)
         {
@@ -2942,12 +2942,12 @@ export class EufySecurityApi
      */
     public setInteraction(serialNumber: string, eventInteractionType: EventInteractionType, target: string, useHttps: boolean, command: string): string
     {
-        var json = {};
+        let json = {};
         try
         {
             if(serialNumber !== "" && eventInteractionType >= 0 && eventInteractionType <= 12 && target !== "" && command !== "")
             {
-                var res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, {target: target, useHttps: useHttps, command: command});
+                const res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, {target: target, useHttps: useHttps, command: command});
                 if(res === true)
                 {
                     json = {"success":true, "data":`Interaction has been added successfully.`};
@@ -2977,10 +2977,10 @@ export class EufySecurityApi
      */
     public async testInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string>
     {
+        let json = {};
         try
         {
-            var json = {};
-            var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+            const deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
             if(deviceInteraction !== null)
             {
                 await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.command);
@@ -3006,10 +3006,10 @@ export class EufySecurityApi
      */
     public async deleteInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string>
     {
+        let json = {};
         try
         {
-            var json = {};
-            var deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+            const deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
             if(deviceInteraction !== null)
             {
                 this.devices.deleteDeviceInteraction(serialNumber, eventInteractionType);
@@ -3034,7 +3034,7 @@ export class EufySecurityApi
      */
     private convertGuardModeToString(guardMode : GuardMode) : string
     {
-        var res = "";
+        let res = "";
         switch (guardMode)
         {
             case GuardMode.AWAY:
@@ -3083,7 +3083,7 @@ export class EufySecurityApi
     {
         try
         {
-            var res = this.config.getConnectionType();
+            const res = this.config.getConnectionType();
             switch (res)
             {
                 case 1:
@@ -3237,7 +3237,7 @@ export class EufySecurityApi
      * @param task The object of the task.
      * @param name The name of the task.
      */
-    private setupScheduledTask(task : NodeJS.Timeout, name : string)
+    private setupScheduledTask(task : NodeJS.Timeout, name : string): void
     {
         if(task)
         {
@@ -3299,7 +3299,7 @@ export class EufySecurityApi
      */
     private async setScheuduleLibrary() : Promise<void>
     {
-        var mode = await this.getGuardModeAsGuardMode();
+        const mode = await this.getGuardModeAsGuardMode();
         if(this.config.getUpdateLinksOnlyWhenArmed() == false || ((this.config.getUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.DISARMED) && (this.config.getUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.OFF)))
         {
             await this.getLibrary();
@@ -3328,16 +3328,16 @@ export class EufySecurityApi
      */
     public async getApiStateAsJson() : Promise<string>
     {
-        var json : any = {};
+        let json : any = {};
 
         json = {"success":true, "data":{"serviceState":this.getServiceState(),"isConnectedToEufy":this.isConnected(),"stations":[]}};
 
         if(this.stations)
         {
-            var stations = await this.getStations();
-            for(var stationSerial in stations)
+            const stations = await this.getStations();
+            for(const stationSerial in stations)
             {
-                var station = stations[stationSerial];
+                const station = stations[stationSerial];
                 json.data.stations.push({"stationSerial":station.getSerial(),"stationName":station.getName(),"isP2pConnected":station.isConnected()});
             }
         }
@@ -3422,7 +3422,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "3.0.0-b3";
+        return "3.0.0-b4";
     }
 
     /**
@@ -3431,6 +3431,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "3.0.0-b_0c01cfc";
+        return "3.0.0-b_8e2a23a";
     }
 }

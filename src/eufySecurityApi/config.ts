@@ -1,13 +1,13 @@
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
-import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from './push/models';
-import { formatDate } from './logging';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
+import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from "./push/models";
+import { formatDate } from "./logging";
 
 export class Config
 {
     private configJson : any;
     private hasChanged : boolean;
     private taskSaveConfig24h !: NodeJS.Timeout;
-    
+
     /**
      * Constructor, read the config file and provide values to the variables.
      */
@@ -25,14 +25,14 @@ export class Config
             {
                 this.configJson = this.checkConfigFile(this.loadConfigJson("./config.json.upload"));
                 this.hasChanged = true;
-                unlinkSync('./config.json.upload');
+                unlinkSync("./config.json.upload");
                 this.log("INFO", "Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
             }
             catch
             {
                 if(this.existUploadedConfig() == true)
                 {
-                    unlinkSync('./config.json.upload');
+                    unlinkSync("./config.json.upload");
                 }
                 this.log("INFO", "Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
                 if(this.isConfigFileAvailable() == false)
@@ -67,7 +67,7 @@ export class Config
      * @param logLevel The logLevel.
      * @param message The message.
      */
-    private log(logLevel: string, message: string)
+    private log(logLevel: string, message: string): void
     {
         console.log(`${formatDate(Date.now())} ${logLevel.padEnd(5, " ")} [conf]  ${message}`);
     }
@@ -75,7 +75,7 @@ export class Config
     /**
      * Remove the scheduling for saveConfig12h
      */
-    public close()
+    public close(): void
     {
         if(this.taskSaveConfig24h)
         {
@@ -90,7 +90,7 @@ export class Config
      */
     private isConfigFileAvailable() : boolean
     {
-        if(existsSync('./config.json'))
+        if(existsSync("./config.json"))
         {
             return true;
         }
@@ -103,7 +103,7 @@ export class Config
      */
     private existUploadedConfig() : boolean
     {
-        if(existsSync('./config.json.upload'))
+        if(existsSync("./config.json.upload"))
         {
             return true;
         }
@@ -126,11 +126,11 @@ export class Config
      */
     private loadConfigJson(filePath : string) : any
     {
-        var resConfigJson;
+        let resConfigJson;
         try
         {
             this.hasChanged = false;
-            resConfigJson = JSON.parse(readFileSync(filePath, 'utf-8'));
+            resConfigJson = JSON.parse(readFileSync(filePath, "utf-8"));
             this.taskSaveConfig24h = setInterval(async() => { this.writeConfig(this.configJson); }, (24 * 60 * 60 * 1000));
             if(this.updateConfigNeeded(resConfigJson))
             {
@@ -168,7 +168,7 @@ export class Config
         {
             try
             {
-                writeFileSync('./config.json', JSON.stringify(configJson));
+                writeFileSync("./config.json", JSON.stringify(configJson));
                 this.hasChanged = false;
                 return "saved";
             }
@@ -198,31 +198,31 @@ export class Config
      */
     private createEmptyConfigJson() : any
     {
-        var config = JSON.parse(`{}`);
+        const config = JSON.parse(`{}`);
         config.configVersion = this.getConfigFileTemplateVersion();
 
-        var accountData = {"eMail": "", "password": "", "encryptedPassword": "", "userId": "", "nickName": "", "clientPrivateKey": "", "serverPublicKey": "", "country": "DE", "language": "de"};
+        const accountData = {"eMail": "", "password": "", "encryptedPassword": "", "userId": "", "nickName": "", "clientPrivateKey": "", "serverPublicKey": "", "country": "DE", "language": "de"};
         config.accountData = accountData;
 
-        var tokenData = {"token": "", "tokenExpires": 0};
+        const tokenData = {"token": "", "tokenExpires": 0};
         config.tokenData = tokenData;
 
-        var pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
+        const pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        var apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false};
+        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false};
         config.apiConfig = apiConfig;
 
-        var logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
+        const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
         config.logConfig = logConfig;
 
-        var stations : [] = [];
+        const stations : [] = [];
         config.stations = stations;
 
-        var devicePublicKeys : [] = [];
+        const devicePublicKeys : [] = [];
         config.devicePublicKeys = devicePublicKeys;
 
-        var interactions = null;
+        const interactions = null;
         config.interactions = interactions;
 
         return config;
@@ -250,7 +250,7 @@ export class Config
     {
         if(configJson.configVersion < this.getConfigFileTemplateVersion())
         {
-            var updated = false;
+            let updated = false;
             if(configJson.configVersion < 12)
             {
                 this.log("INFO", "Configfile needs Stage2 update to version 12...");
@@ -318,7 +318,7 @@ export class Config
                 {
                     this.log("INFO", " adding 'logConfig'.");
                     configJson.logConfig = null;
-                    var logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
+                    const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
                     configJson.logConfig = logConfig;
                 }
                 updated = true;
@@ -340,7 +340,7 @@ export class Config
      */
     private checkConfigFile(configJson : any) : any
     {
-        var newConfigJson = this.createEmptyConfigJson()
+        const newConfigJson = this.createEmptyConfigJson()
         if(configJson.configVersion !== undefined)
         {
             newConfigJson.configVersion = configJson.configVersion;
@@ -385,7 +385,7 @@ export class Config
                 newConfigJson.accountData.language = configJson.accountData.language;
             }
         }
-        
+
         if(configJson.tokenData !== undefined)
         {
             if(configJson.tokenData.token !== undefined)
@@ -437,7 +437,7 @@ export class Config
                 newConfigJson.pushData.persistentIds = configJson.pushData.persistentIds;
             }
         }
-        
+
         if(configJson.apiConfig !== undefined)
         {
             if(configJson.apiConfig.httpActive !== undefined)
@@ -576,7 +576,7 @@ export class Config
 
     private checkConfigValues() : boolean
     {
-        var updated = false;
+        let updated = false;
         if(this.configJson.apiConfig.httpActive == true && (this.configJson.apiConfig.httpPort < 1 || this.configJson.httpPort > 65535))
         {
             this.log("INFO", `Set httpPort to default value "52789"`);
@@ -616,7 +616,7 @@ export class Config
                     }
                 }
             }
-        }*/        
+        }*/
         if(this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240))
         {
             this.log("INFO", `Set stateUpdateIntervallTimespan to default value "15"`);
@@ -679,7 +679,7 @@ export class Config
     private updateWithNewStation(stationSerial : string) : boolean
     {
         this.log("INFO", `Adding station ${stationSerial} to settings.`);
-        var station = {"stationSerial": stationSerial, "p2pDid": null, "stationIpAddress": null, "udpPort": null};
+        const station = {"stationSerial": stationSerial, "p2pDid": null, "stationIpAddress": null, "udpPort": null};
 
         if(Array.isArray(this.configJson.stations))
         {
@@ -687,7 +687,7 @@ export class Config
         }
         else
         {
-            var stations = [];
+            const stations = [];
             stations.push(station);
             this.configJson.stations = stations
         }
@@ -704,7 +704,7 @@ export class Config
     {
         if(Array.isArray(this.configJson.stations))
         {
-            var station;
+            let station;
             for (station in this.configJson.stations)
             {
                 if(this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial ==  stationSerial)
@@ -725,7 +725,7 @@ export class Config
     {
         if(Array.isArray(this.configJson.stations))
         {
-            var station;
+            let station;
             for (station in this.configJson.stations)
             {
                 if(this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial == stationSerial)
@@ -964,7 +964,7 @@ export class Config
             return -1;
         }
     }
- 
+
     /**
      * Sets true, if static udp ports should be used otherwise false.
      * @param connectionTypeP2p Boolean value.
@@ -1012,12 +1012,12 @@ export class Config
      */
     public setLocalStaticUdpPorts(ports : string[]) : boolean
     {
-        var done = false;
+        let done = false;
         if(ports)
         {
-            for (var array of ports)
+            for (const array of ports)
             {
-                var portNumber;
+                let portNumber;
                 if(array[1] == null)
                 {
                     portNumber = null;
@@ -1501,7 +1501,7 @@ export class Config
     }
 
     /**
-     * Set the value for the time between runs of two scheduled tasks for update state. 
+     * Set the value for the time between runs of two scheduled tasks for update state.
      * @param stateUpdateIntervallTimespan The time in minutes.
      */
     public setStateUpdateIntervallTimespan(stateUpdateIntervallTimespan : number) : void
@@ -1588,7 +1588,7 @@ export class Config
      * Set the value the api should only refresh links when eufy state is other than off or deactivated
      * @param updateLinksOnlyWhenArmed true for not refreshing links during off or deactivated, otherwise false.
      */
-    public setUpdateLinksOnlyWhenArmed(updateLinksOnlyWhenArmed : boolean)
+    public setUpdateLinksOnlyWhenArmed(updateLinksOnlyWhenArmed : boolean): void
     {
         if(this.configJson.apiConfig.updateLinksOnlyWhenArmed != updateLinksOnlyWhenArmed)
         {
@@ -1835,7 +1835,7 @@ export class Config
      */
     public getP2PDataP2pDid(stationSerial : string) : string
     {
-        var station = this.getStationIterator(stationSerial);
+        const station = this.getStationIterator(stationSerial);
         if(station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].p2pDid !== undefined)
         {
             return this.configJson.stations[station].p2pDid;
@@ -1853,7 +1853,7 @@ export class Config
      */
     private setP2PDataP2pDid(stationSerial : string, p2pDid : string) : void
     {
-        var station = this.getStationIterator(stationSerial);
+        const station = this.getStationIterator(stationSerial);
         if(station !== undefined)
         {
             if(this.configJson.stations[station].p2pDid != p2pDid)
@@ -1870,7 +1870,7 @@ export class Config
      */
     public getP2PDataStationIpAddress(stationSerial: string) : string
     {
-        var station = this.getStationIterator(stationSerial);
+        const station = this.getStationIterator(stationSerial);
         if(station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationIpAddress !== undefined)
         {
             return this.configJson.stations[station].stationIpAddress;
@@ -1888,7 +1888,7 @@ export class Config
      */
     private setP2PDataStationIpAddress(stationSerial: string, stationIpAddress : string) : void
     {
-        var station = this.getStationIterator(stationSerial);
+        const station = this.getStationIterator(stationSerial);
         if(station !== undefined)
         {
             if(this.configJson.stations[station].stationIpAddress != stationIpAddress)
@@ -1906,7 +1906,7 @@ export class Config
      */
     public getLocalStaticUdpPortPerStation(stationSerial : string) : number | null
     {
-        var station = this.getStationIterator(stationSerial);
+        const station = this.getStationIterator(stationSerial);
         if(station !== undefined && this.configJson.stations !== undefined && this.configJson.stations[station] !== undefined && this.configJson.stations[station].udpPort !== undefined && this.configJson.stations[station].udpPort !== null)
         {
             return this.configJson.stations[station].udpPort;
@@ -1927,7 +1927,7 @@ export class Config
     {
         if(stationSerial !== undefined)
         {
-            var res;
+            let res;
             if(this.isStationInConfig(stationSerial) == false)
             {
                 this.log("INFO", `Station ${stationSerial} not in config. Try to create new station entry.`);
@@ -1940,7 +1940,7 @@ export class Config
             if(res)
             {
                 res = false;
-                var station = this.getStationIterator(stationSerial);
+                const station = this.getStationIterator(stationSerial);
                 if(station !== undefined)
                 {
                     if(udpPort === undefined)
@@ -1971,7 +1971,7 @@ export class Config
      */
     public setP2PData(stationSerial : string, p2pDid : string, station_ip_address : string) : void
     {
-        var res;
+        let res;
         if(this.isStationInConfig(stationSerial) == false)
         {
             res = this.updateWithNewStation(stationSerial);
@@ -2198,7 +2198,7 @@ export class Config
 
     /**
      * Set the fid response credentials for push connections.
-     * @param fidResponse 
+     * @param fidResponse The fid response credentials.
      */
     public setCredentialsFidResponse(fidResponse : FidInstallationResponse) : void
     {
@@ -2246,7 +2246,7 @@ export class Config
     {
         try
         {
-            var res: GcmRegisterResponse = {token: this.configJson.pushData.gcmResponseToken}
+            const res: GcmRegisterResponse = {token: this.configJson.pushData.gcmResponseToken}
             return res;
         }
         catch

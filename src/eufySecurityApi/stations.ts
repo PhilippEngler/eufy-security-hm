@@ -1,8 +1,8 @@
 import { TypedEmitter } from "tiny-typed-emitter";
-import { EufySecurityApi } from './eufySecurityApi';
-import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError, Schedule, Picture, UserPasswordType } from './http';
-import { sleep } from './push/utils';
+import { EufySecurityApi } from "./eufySecurityApi";
+import { EufySecurityEvents } from "./interfaces";
+import { HTTPApi, Hubs, Station, GuardMode, PropertyValue, RawValues, Device, StationListResponse, DeviceType, PropertyName, NotificationSwitchMode, CommandName, SmartSafe, Camera, InvalidPropertyError, Schedule, Picture, UserPasswordType } from "./http";
+import { sleep } from "./push/utils";
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError, ensureError } from "./error";
 import internal from "stream";
 import EventEmitter from "events";
@@ -69,7 +69,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         const promises: Array<Promise<Station>> = [];
         const newStationsSerials = Object.keys(hubs);
 
-        for (var stationSerial in resStations)
+        for (const stationSerial in resStations)
         {
             if(this.api.getHouseId() !== undefined && resStations[stationSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resStations[stationSerial].house_id !== this.api.getHouseId())
             {
@@ -91,10 +91,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 {
                     udpPort = undefined;
                 }
-                let new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, this.api.getP2PConnectionType());
+                const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, this.api.getP2PConnectionType());
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
-                
+
                 promises.push(new_station.then((station: Station) => {
                     try
                     {
@@ -289,7 +289,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         if(this.stations != null)
         {
-            for (var stationSerial in this.stations)
+            for (const stationSerial in this.stations)
             {
                 if(this.stations[stationSerial])
                 {
@@ -299,7 +299,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
                         return;
                     });
-                    
+
                     this.removeEventListener(this.stations[stationSerial], "GuardMode");
                     this.removeEventListener(this.stations[stationSerial], "CurrentMode");
                     this.removeEventListener(this.stations[stationSerial], "PropertyChanged");
@@ -347,7 +347,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
                     clearTimeout(this.refreshEufySecurityP2PTimeout[stationSerial]);
                     delete this.refreshEufySecurityP2PTimeout[stationSerial];
-                }                
+                }
             }
         }
     }
@@ -361,10 +361,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async waitForP2PCloseEvent(station : Station, timeout : number) : Promise<boolean>
     {
         return new Promise<boolean>(async (resolve, reject) => {
-            var timer : NodeJS.Timeout;
-            var funcListener = () => listener();
+            // eslint-disable-next-line prefer-const
+            let timer : NodeJS.Timeout;
+            const funcListener = (): void => listener();
 
-            function listener() {
+            function listener(): void {
                 station.removeListener("close", funcListener);
                 clearTimeout(timer);
                 resolve(true);
@@ -567,7 +568,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     public existStation(stationSerial : string) : boolean
     {
-        var res = this.stations[stationSerial];
+        const res = this.stations[stationSerial];
         if(res)
         {
             return true;
@@ -583,8 +584,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     public getGuardMode() : { [stationSerial : string ] : GuardMode}
     {
-        var res : { [stationSerial : string ] : GuardMode} = {};
-        for (var stationSerial in this.stations)
+        const res : { [stationSerial : string ] : GuardMode} = {};
+        for (const stationSerial in this.stations)
         {
             res[stationSerial] = this.stations[stationSerial].getGuardMode() as GuardMode;
         }
@@ -597,8 +598,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      */
     public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
     {
-        var err = 0;
-        for (var stationSerial in this.stations)
+        let err = 0;
+        for (const stationSerial in this.stations)
         {
             if (await this.setGuardModeStation(stationSerial, guardMode) == false)
             {
@@ -628,8 +629,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         }
         else
         {
-            var res : boolean;
-            res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
+            const res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
                 return true;
             }, (value : any) => {
                 if(typeof value === "boolean")
@@ -660,10 +660,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private async waitForGuardModeEvent(station : Station, guardMode : number, timeout : number) : Promise<boolean>
     {
         return new Promise<boolean>(async (resolve, reject) => {
-            var timer : NodeJS.Timeout;
-            var funcListener = () => listener();
+            // eslint-disable-next-line prefer-const
+            let timer : NodeJS.Timeout;
+            const funcListener = (): void => listener();
 
-            function listener() {
+            function listener(): void {
                 station.removeListener("guard mode", funcListener);
                 clearTimeout(timer);
                 resolve(true);
@@ -694,7 +695,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     {
         if(stationSerial === undefined)
         {
-            for (var serial in this.stations)
+            for (const serial in this.stations)
             {
                 await this.getStorageInfoStation(serial);
             }
@@ -729,7 +730,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Add a given event listener for a given station.
      * @param station The station as Station object.
      * @param eventListenerName The event listener name as string.
-     * @param delayed false if add instantly, for a 5s delay set true. 
+     * @param delayed false if add instantly, for a 5s delay set true.
      */
     public async addEventListener(station : Station, eventListenerName : string, delayed : boolean) : Promise<void>
     {
@@ -1264,7 +1265,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         if(this.api.getServiceState() != "shutdown")
         {
-            
+
         }
         for (const device_sn of this.cameraStationLivestreamTimeout.keys())
         {
@@ -1964,7 +1965,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param sdCapacity The capacity of the sd card.
      * @param sdCapacityAvailable The available capacity of the sd card.
      */
-    private onStationSdInfoEx(station : Station, sdStatus : TFCardStatus, sdCapacity : number, sdCapacityAvailable : number)
+    private onStationSdInfoEx(station : Station, sdStatus : TFCardStatus, sdCapacity : number, sdCapacityAvailable : number): void
     {
         if(station.hasProperty(PropertyName.StationSdStatus)) {
             station.updateProperty(PropertyName.StationSdStatus, sdStatus);
@@ -1987,15 +1988,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         this.emit("station image download", station, file, picture);
 
         this.api.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
-            var channel = -1;
+            let channel = -1;
             if(path.parse(file).name.includes("_c"))
             {
                 channel = Number.parseInt(path.parse(file).name.split("_c", 2)[1]);
             }
             else if(file.includes("/Camera"))
             {
-                var res = file.split("/");
-                for(var elem of res)
+                const res = file.split("/");
+                for(const elem of res)
                 {
                     if(elem.startsWith("Camera"))
                     {
@@ -2098,7 +2099,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param returnCode The return code of the query.
      * @param data The result data.
      */
-    private onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[])
+    private onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]): void
     {
         this.emit("station database query local", station, returnCode, data);
     }
@@ -2160,7 +2161,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
         });
     }
 
-    private onStorageInfoHb3(station: Station, channel: number, storageInfo: StorageInfoBodyHB3) {
+    private onStorageInfoHb3(station: Station, channel: number, storageInfo: StorageInfoBodyHB3): void {
         if(station.hasProperty(PropertyName.StationStorageInfoEmmc)) {
             station.updateProperty(PropertyName.StationStorageInfoEmmc, storageInfo.emmc_info);
         }

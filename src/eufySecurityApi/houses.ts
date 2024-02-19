@@ -1,7 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
-import { EufySecurityApi } from './eufySecurityApi';
-import { EufySecurityEvents } from './interfaces';
-import { HTTPApi, HouseDetail, Houses } from './http';
+import { EufySecurityApi } from "./eufySecurityApi";
+import { EufySecurityEvents } from "./interfaces";
+import { HTTPApi, HouseDetail, Houses } from "./http";
 import { rootAddonLogger } from "./logging";
 
 /**
@@ -14,7 +14,7 @@ export class EufyHouses extends TypedEmitter<EufySecurityEvents>
 
     //private houses: Houses = {};
     private houses : { [houseId : string] : any } = {};
-    
+
     /**
      * Create the Houses objects holding all houses in the account.
      * @param api The eufySecurityApi.

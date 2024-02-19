@@ -1,11 +1,11 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 
-import { EufySecurityApi } from './eufySecurityApi';
-import { Config } from './config';
-import { Device, Lock } from './http';
-import { EufySecurityEvents } from './interfaces';
+import { EufySecurityApi } from "./eufySecurityApi";
+import { Config } from "./config";
+import { Device, Lock } from "./http";
+import { EufySecurityEvents } from "./interfaces";
 import { MQTTService } from "./mqtt/service";
-import { rootMQTTLogger } from './logging';
+import { rootMQTTLogger } from "./logging";
 import { DeviceNotFoundError } from "./error";
 import { getError } from "./utils";
 
@@ -26,7 +26,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
         super();
         this.api = api;
         this.config = config;
-        
+
         this.initialize();
     }
 
@@ -82,7 +82,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     /**
      * Eventhandler for mqtt connect event.
      */
-    private onConnect()
+    private onConnect(): void
     {
         rootMQTTLogger.info("MQTT connection successfully established");
         this.emit("mqtt connect");
@@ -91,7 +91,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     /**
      * Eventhandler for mqtt close event.
      */
-    private onClose()
+    private onClose(): void
     {
         rootMQTTLogger.info("MQTT connection closed");
         this.emit("mqtt close");
@@ -101,7 +101,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      * Eventhandler for mqtt lock message.
      * @param message The message.
      */
-    private onLockMessage(message : any)
+    private onLockMessage(message : any): void
     {
         this.api.getDevice(message.data.data.deviceSn).then((device: Device) => {
             (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());

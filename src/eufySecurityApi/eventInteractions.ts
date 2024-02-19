@@ -17,7 +17,7 @@ export class EventInteractions
     {
         this.api = api;
         this.config = this.api.getConfig();
-        var temp = this.config.getInteractions();
+        const temp = this.config.getInteractions();
         if(temp === null || temp === "")
         {
             this.interactions = null;
@@ -31,9 +31,9 @@ export class EventInteractions
     /**
      * Retrieve all interactions from config.
      */
-    public getInteractions()
+    public getInteractions(): void
     {
-        var temp = this.config.getInteractions();
+        const temp = this.config.getInteractions();
         this.interactions = JSON.parse(`${temp !== undefined || temp !== "" ? temp : "{}"}`);
     }
 
@@ -81,10 +81,10 @@ export class EventInteractions
         {
             try
             {
-                var eventInteraction = JSON.parse(JSON.stringify(this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType]));
+                const eventInteraction = JSON.parse(JSON.stringify(this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType]));
                 if(eventInteraction !== null)
                 {
-                    eventInteraction.command = Buffer.from(eventInteraction.command, 'base64').toString();
+                    eventInteraction.command = Buffer.from(eventInteraction.command, "base64").toString();
                 }
                 return eventInteraction;
             }
@@ -146,30 +146,30 @@ export class EventInteractions
         {
             if(this.interactions === undefined || this.interactions === null)
             {
-                this.interactions = {deviceInteractions: {[deviceSerial]: {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString('base64')}}}}};
+                this.interactions = {deviceInteractions: {[deviceSerial]: {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}}}};
             }
             else
             {
                 if(this.interactions.deviceInteractions[deviceSerial] === undefined)
                 {
-                    this.interactions.deviceInteractions[deviceSerial] = {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString('base64')}}};
+                    this.interactions.deviceInteractions[deviceSerial] = {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}};
                 }
                 else
                 {
                     if(this.interactions.deviceInteractions[deviceSerial].eventInteractions === undefined)
                     {
-                        this.interactions.deviceInteractions[deviceSerial].eventInteractions = {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString('base64')}};
+                        this.interactions.deviceInteractions[deviceSerial].eventInteractions = {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}};
                     }
                     else
                     {
-                        deviceEventInteraction.command = Buffer.from(deviceEventInteraction.command).toString('base64');
+                        deviceEventInteraction.command = Buffer.from(deviceEventInteraction.command).toString("base64");
                         this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType] = deviceEventInteraction;
                     }
                 }
             }
-            
-            var res = this.saveInteractions();
-            
+
+            const res = this.saveInteractions();
+
             if(res === true)
             {
                 return true;
@@ -192,7 +192,7 @@ export class EventInteractions
      */
     public removeIntegrations(): any
     {
-        var json : any = {};
+        let json : any = {};
 
         if(this.interactions === null)
         {
@@ -201,7 +201,7 @@ export class EventInteractions
         else
         {
             this.interactions = null;
-            var res = this.saveInteractions();
+            const res = this.saveInteractions();
             if(res === true)
             {
                 json = `{"success":true,"interactionsRemoved":true}`;

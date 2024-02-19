@@ -1,18 +1,19 @@
-import { createServer as createServerHttp, IncomingMessage, ServerResponse } from 'http';
-import { createServer as createServerHttps } from 'https';
-import os from 'os';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { exit } from 'process';
-import { EufySecurityApi } from './eufySecurityApi/eufySecurityApi';
-import { GuardMode } from './eufySecurityApi/http';
-import { exec } from 'child_process';
-import { dummyLogger, InternalLogger, rootAddonLogger, setLoggingLevel, LogLevel } from "./eufySecurityApi/logging"
+import { createServer as createServerHttp, IncomingMessage, ServerResponse } from "http";
+import { createServer as createServerHttps } from "https";
+import os from "os";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { exit } from "process";
+import { EufySecurityApi } from "./eufySecurityApi/eufySecurityApi";
+import { GuardMode } from "./eufySecurityApi/http";
+import { exec } from "child_process";
+import { dummyLogger, InternalLogger, rootAddonLogger } from "./eufySecurityApi/logging";
 
 process.chdir(__dirname);
-var apiServer !: ApiServer;
-var serverHttp = createServerHttp();
-var serverHttps = createServerHttps();
-var api : EufySecurityApi;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let apiServer !: ApiServer;
+const serverHttp = createServerHttp();
+const serverHttps = createServerHttps();
+let api : EufySecurityApi;
 
 class ApiServer
 {
@@ -37,7 +38,7 @@ class ApiServer
      * @param certHttps The cert for https.
      * @param logger The logger component.
      */
-    public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string)
+    public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string): Promise<void>
     {
         rootAddonLogger.info(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         rootAddonLogger.info(`  Host: ${os.hostname}`);
@@ -89,7 +90,7 @@ class ApiServer
             rootAddonLogger.error(`Errorcode: ${error.code}: ${error.message}`);
         }
     }
-    
+
     /**
      * The request listener for the api.
      * @param request The request object.
@@ -97,11 +98,11 @@ class ApiServer
      */
     private async requestListener (request : IncomingMessage, response : ServerResponse) : Promise<void>
     {
-        var responseData : any = "";
-        var contentType = "application/json";
-        var fileName = "";
+        let responseData : any = "";
+        let contentType = "application/json";
+        let fileName = "";
 
-        var url = request.url?.split("/");
+        let url = request.url?.split("/");
 
         if(url === undefined)
         {
@@ -180,7 +181,7 @@ class ApiServer
                     case "getDevicePropertiesTruncated":
                         if(url.length == 3)
                         {
-                            var json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
+                            const json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
                             if(json.success == true)
                             {
                                 json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
@@ -218,7 +219,7 @@ class ApiServer
                     case "getDeviceImage":
                         if(url.length == 3)
                         {
-                            var picture = await api.getDeviceImage(url[2]);
+                            const picture = await api.getDeviceImage(url[2]);
                             if(picture !== null)
                             {
                                 responseData = picture.data;
@@ -282,7 +283,7 @@ class ApiServer
                     case "getStationPropertiesTruncated":
                         if(url.length == 3)
                         {
-                            var json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
+                            const json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
                             if(json.success == true)
                             {
                                 json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
@@ -536,16 +537,16 @@ class ApiServer
                         break;
                     case "downloadConfig":
                         api.writeConfig();
-                        responseData = readFileSync('config.json', 'utf-8');
+                        responseData = readFileSync("config.json", "utf-8");
                         contentType = "text/json";
                         fileName = `config_${os.hostname}_${getDateTimeAsString(new Date())}.json`;
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
                 }
-                
-                response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', contentType + '; charset=UTF-8');
+
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Content-Type", contentType + "; charset=UTF-8");
 
                 if(fileName === "")
                 {
@@ -562,9 +563,9 @@ class ApiServer
             else
             {
                 responseData = `{"success":false,"message":"Unknown command."}`;
-                
-                response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', '; charset=UTF-8');
+
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Content-Type", "; charset=UTF-8");
 
                 response.writeHead(200);
                 response.end(responseData);
@@ -578,56 +579,56 @@ class ApiServer
                 switch (url[1])
                 {
                     case "setConfig":
-                        var postData = "";
-                        var isDataOK = true;
+                        let postData = "";
+                        let isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
                         });
 
                         request.on("end", async function(){
-                            var username = "";
+                            let username = "";
                             if(postData.indexOf("username") >= 0)
                             {
                                 username = getDataFromPOSTData(postData, "username", "string");
                             }
 
-                            var password = "";
+                            let password = "";
                             if(postData.indexOf("password") >= 0)
                             {
                                 password = getDataFromPOSTData(postData, "password", "string");
                             }
 
-                            var country = "";
+                            let country = "";
                             if(postData.indexOf("country") >= 0)
                             {
                                 country = getDataFromPOSTData(postData, "country", "string");
                             }
 
-                            var language = "";
+                            let language = "";
                             if(postData.indexOf("language") >= 0)
                             {
                                 language = getDataFromPOSTData(postData, "language", "string");
                             }
 
-                            var trustedDeviceName = "";
+                            let trustedDeviceName = "";
                             if(postData.indexOf("trustedDeviceName") >= 0)
                             {
                                 trustedDeviceName = getDataFromPOSTData(postData, "trustedDeviceName", "string");
                             }
 
-                            var useHttp = false;
+                            let useHttp = false;
                             if(postData.indexOf("useHttp") >= 0)
                             {
                                 useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
                             }
 
-                            var apiporthttp = 52789;
+                            let apiporthttp = 52789;
                             if(postData.indexOf("httpPort") >= 0)
                             {
                                 apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
                             }
 
-                            var useHttps = false;
+                            let useHttps = false;
                             if(postData.indexOf("useHttps") >= 0)
                             {
                                 useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
@@ -637,145 +638,145 @@ class ApiServer
                                 isDataOK = false;
                             }
 
-                            var apiporthttps = 52790;
+                            let apiporthttps = 52790;
                             if(postData.indexOf("httpsPort") >= 0)
                             {
                                 apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
                             }
 
-                            var apikeyfile = "/usr/local/etc/config/server.pem";
+                            let apikeyfile = "/usr/local/etc/config/server.pem";
                             if(postData.indexOf("httpsKeyFile") >= 0)
                             {
                                 apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
                             }
 
-                            var apicertfile = "/usr/local/etc/config/server.pem";
+                            let apicertfile = "/usr/local/etc/config/server.pem";
                             if(postData.indexOf("httpsCertFile") >= 0)
                             {
                                 apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                             }
 
-                            var apiacceptinvitations = false;
+                            let apiacceptinvitations = false;
                             if(postData.indexOf("acceptInvitations") >= 0)
                             {
                                 apiacceptinvitations = getDataFromPOSTData(postData, "acceptInvitations", "boolean");
                             }
 
-                            var apihouseid = "all";
+                            let apihouseid = "all";
                             if(postData.indexOf("house") >= 0)
                             {
                                 apihouseid = getDataFromPOSTData(postData, "house", "string");
                             }
 
-                            var apiconnectiontype = 1;
+                            let apiconnectiontype = 1;
                             if(postData.indexOf("connectionType") >= 0)
                             {
                                 apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
                             }
 
-                            var apiuseudpstaticports = false;
+                            let apiuseudpstaticports = false;
                             if(postData.indexOf("useUdpStaticPorts") >= 0)
                             {
                                 apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
                             }
 
-                            var apiudpports = undefined;
+                            let apiudpports = undefined;
                             if(postData.indexOf("udpPortsStation") >= 0)
                             {
                                 apiudpports = getAllUdpPortsForStations(postData);
                             }
 
-                            var useSystemVariables = false;
+                            let useSystemVariables = false;
                             if(postData.indexOf("useSystemVariables") >= 0)
                             {
                                 useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
                             }
 
-                            var apicameradefaultimage = "";
+                            let apicameradefaultimage = "";
                             if(postData.indexOf("defaultImagePath") >= 0)
                             {
                                 apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
                             }
 
-                            var apicameradefaultvideo = "";
+                            let apicameradefaultvideo = "";
                             if(postData.indexOf("defaultVideoPath") >= 0)
                             {
                                 apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                             }
 
-                            var useupdatestateevent = false;
+                            let useupdatestateevent = false;
                             if(postData.indexOf("useUpdateStateEvent") >= 0)
                             {
                                 useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
                             }
 
-                            var useupdatestateintervall = false;
+                            let useupdatestateintervall = false;
                             if(postData.indexOf("useUpdateStateIntervall") >= 0)
                             {
                                 useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
                             }
 
-                            var updatestatetimespan = 15;
+                            let updatestatetimespan = 15;
                             if(postData.indexOf("updateStateIntervallTimespan") >= 0)
                             {
                                 updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
                             }
 
-                            var useupdatelinks = false;
+                            let useupdatelinks = false;
                             if(postData.indexOf("useUpdateLinksIntervall") >= 0)
                             {
                                 useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
                             }
 
-                            var useupdatelinksonlywhenactive = false;
+                            let useupdatelinksonlywhenactive = false;
                             if(postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0)
                             {
                                 useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
                             }
 
-                            var updatelinkstimespan = 15;
+                            let updatelinkstimespan = 15;
                             if(postData.indexOf("updateLinksIntervallTimespan") >= 0)
                             {
                                 updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "number");
                             }
 
-                            var usepushservice = false;
+                            let usepushservice = false;
                             if(postData.indexOf("usePushService") >= 0)
                             {
                                 usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
                             }
 
-                            var loglevelAddon = 6;
+                            let loglevelAddon = 6;
                             if(postData.indexOf("logLevelAddon") >= 0)
                             {
                                 loglevelAddon = getDataFromPOSTData(postData, "logLevelAddon", "number");
                             }
 
-                            var loglevelMain = 6;
+                            let loglevelMain = 6;
                             if(postData.indexOf("logLevelMain") >= 0)
                             {
                                 loglevelMain = getDataFromPOSTData(postData, "logLevelMain", "number");
                             }
 
-                            var loglevelHttp = 6;
+                            let loglevelHttp = 6;
                             if(postData.indexOf("logLevelHttp") >= 0)
                             {
                                 loglevelHttp = getDataFromPOSTData(postData, "logLevelHttp", "number");
                             }
 
-                            var loglevelP2p = 6;
+                            let loglevelP2p = 6;
                             if(postData.indexOf("logLevelP2p") >= 0)
                             {
                                 loglevelP2p = getDataFromPOSTData(postData, "logLevelP2p", "number");
                             }
 
-                            var loglevelPush = 6;
+                            let loglevelPush = 6;
                             if(postData.indexOf("logLevelPush") >= 0)
                             {
                                 loglevelPush = getDataFromPOSTData(postData, "logLevelPush", "number");
                             }
 
-                            var loglevelMqtt = 6;
+                            let loglevelMqtt = 6;
                             if(postData.indexOf("logLevelAddon") >= 0)
                             {
                                 loglevelMqtt = getDataFromPOSTData(postData, "logLevelMqtt", "number");
@@ -844,10 +845,10 @@ class ApiServer
                                 responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
                             }
 
-                            var resJson = JSON.parse(responseData);
+                            const resJson = JSON.parse(responseData);
 
-                            response.setHeader('Access-Control-Allow-Origin', '*');
-                            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                            response.setHeader("Access-Control-Allow-Origin", "*");
+                            response.setHeader("Content-Type", "application/json; charset=UTF-8");
 
                             response.writeHead(200);
                             response.end(responseData);
@@ -868,11 +869,9 @@ class ApiServer
                         });
                         break;
                     case "uploadConfig":
-                        var postData = "";
-                        var isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
-                            if(request.headers['content-length'] !== undefined && Number.parseInt(request.headers['content-length']?.toString()) > 500000)
+                            if(request.headers["content-length"] !== undefined && Number.parseInt(request.headers["content-length"]?.toString()) > 500000)
                             {
                                 rootAddonLogger.info("Error during upload and saving config file: File is to large.");
                                 request.destroy(new Error("FileToLarge"));
@@ -890,7 +889,7 @@ class ApiServer
                                 }
                                 else
                                 {
-                                    var fileContent = getUploadFileContent(postData);
+                                    const fileContent = getUploadFileContent(postData);
                                     if(fileContent === undefined)
                                     {
                                         if(responseData == "")
@@ -906,15 +905,15 @@ class ApiServer
                                     }
                                     else
                                     {
-                                        writeFileSync("config.json.upload", fileContent, 'utf-8');
+                                        writeFileSync("config.json.upload", fileContent, "utf-8");
                                         responseData = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
                                     }
                                 }
 
-                                var resJson = JSON.parse(responseData);
+                                const resJson = JSON.parse(responseData);
 
-                                response.setHeader('Access-Control-Allow-Origin', '*');
-                                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
 
                                 response.writeHead(200);
                                 response.end(responseData);
@@ -931,13 +930,11 @@ class ApiServer
                             }
                             catch (e : any)
                             {
-                                
+                                rootAddonLogger.info("Error during upload config", e);
                             }
                         });
                         break;
                     case "setInteraction":
-                        var postData = "";
-                        var isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
                         });
@@ -945,11 +942,11 @@ class ApiServer
                         request.on("end", async function() {
                             try
                             {
-                                var resJson = JSON.parse(postData);
+                                const resJson = JSON.parse(postData);
                                 responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
 
-                                response.setHeader('Access-Control-Allow-Origin', '*');
-                                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
 
                                 response.writeHead(200);
                                 response.end(responseData);
@@ -962,8 +959,8 @@ class ApiServer
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
-                        response.setHeader('Access-Control-Allow-Origin', '*');
-                        response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                        response.setHeader("Access-Control-Allow-Origin", "*");
+                        response.setHeader("Content-Type", "application/json; charset=UTF-8");
 
                         response.writeHead(200);
                         response.end(responseData);
@@ -972,8 +969,8 @@ class ApiServer
             else
             {
                 responseData = `{"success":false,"message":"Wrong amount of arguments."}`;
-                response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Content-Type", "application/json; charset=UTF-8");
 
                 response.writeHead(200);
                 response.end(responseData);
@@ -983,8 +980,8 @@ class ApiServer
         else
         {
             responseData = `{"success":false,"message":"Unknown command."}`;
-            response.setHeader('Access-Control-Allow-Origin', '*');
-            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Content-Type", "application/json; charset=UTF-8");
 
             response.writeHead(200);
             response.end(responseData);
@@ -995,37 +992,37 @@ class ApiServer
 /**
  * The main function will start the ApiServer
  */
-function main()
+function main(): void
 {
     apiServer = new ApiServer();
 }
 
 /**
- * Create the apiPorts.json file needed for using the api on the website if file does not exist or update it when the ports have changed. 
+ * Create the apiPorts.json file needed for using the api on the website if file does not exist or update it when the ports have changed.
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */
-function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, httpsPort : number)
+function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, httpsPort : number): void
 {
     try
     {
-        if(existsSync('www/apiPorts.json'))
+        if(existsSync("www/apiPorts.json"))
         {
-            var resJson = JSON.parse(readFileSync('www/apiPorts.json', 'utf-8'));
+            const resJson = JSON.parse(readFileSync("www/apiPorts.json", "utf-8"));
 
             if(useHttp !== resJson.useHttp as boolean || httpPort !== Number.parseInt(resJson.httpPort) || useHttps !== resJson.useHttps as boolean || httpsPort !== Number.parseInt(resJson.httpsPort))
             {
-                writeFileSync('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
+                writeFileSync("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
             }
         }
         else
         {
-            writeFileSync('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
+            writeFileSync("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
         }
     }
     catch (ENOENT)
     {
-        
+        rootAddonLogger.info("Error during handling apiPortFile.", ENOENT);
     }
 }
 
@@ -1039,7 +1036,7 @@ function checkNumberValue(value : number, lowestValue : number, highestValue : n
 {
     try
     {
-        var val = value;
+        const val = value;
         if(val >= lowestValue && val <= highestValue)
         {
             return true;
@@ -1061,6 +1058,7 @@ function checkNumberValue(value : number, lowestValue : number, highestValue : n
  * @param lowestValue The lowest value allowd.
  * @param highestValue The highest value allowed.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function checkNumbersValue(values : string, lowestValue : number, highestValue : number) : boolean
 {
     if(values == "")
@@ -1068,10 +1066,10 @@ function checkNumbersValue(values : string, lowestValue : number, highestValue :
         return false;
     }
 
-    var vals = (values.split(",")).map((i) => Number(i));
+    const vals = (values.split(",")).map((i) => Number(i));
     if(vals.length > 0)
     {
-        for (var val of vals)
+        for (const val of vals)
         {
             if(checkNumberValue(val, lowestValue, highestValue) == false)
             {
@@ -1093,21 +1091,21 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
 {
     if(dataType == "string")
     {
-        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n","");
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return temp;
     }
     else if(dataType == "number")
     {
-        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n","");
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return Number.parseInt(temp);
     }
     else if(dataType == "boolean")
     {
-        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.substring(2, temp.indexOf("----") - 2);
         if(temp.trim() == "on")
         {
@@ -1128,15 +1126,15 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
  */
 function getAllUdpPortsForStations(postData : string) : any[]
 {
-    var pos = postData.indexOf("udpPortsStation");
-    var res = [];
+    let pos = postData.indexOf("udpPortsStation");
+    const res = [];
     while (pos > 0)
     {
-        var temp = postData.substring(pos + 29);
-        var stationSerial = postData.substring(pos + 15, pos + 31);
+        let temp = postData.substring(pos + 29);
+        const stationSerial = postData.substring(pos + 15, pos + 31);
         temp = temp.replace("\r\n","");
         temp = temp.substring(5, temp.indexOf("----") - 2);
-        var line = [];
+        const line = [];
         line[0] = stationSerial;
         line[1] = temp;
         res.push(line);
@@ -1153,7 +1151,7 @@ function getAllUdpPortsForStations(postData : string) : any[]
  */
 function checkUploadedFileMetadata(postData : string) : boolean
 {
-    var pos = postData.indexOf("Content-Disposition: form-data;");
+    let pos = postData.indexOf("Content-Disposition: form-data;");
     if(pos < 0)
     {
         return false;
@@ -1208,12 +1206,12 @@ function checkUploadedFileMetadata(postData : string) : boolean
  */
 function getUploadFileContent(postData : string) : string | undefined
 {
-    var start = postData.indexOf("{");
+    const start = postData.indexOf("{");
     if(start < 0)
     {
         return undefined;
     }
-    var end = postData.lastIndexOf("}");
+    const end = postData.lastIndexOf("}");
     if(end < 0)
     {
         return undefined;
@@ -1224,7 +1222,7 @@ function getUploadFileContent(postData : string) : string | undefined
 /**
  * Will write config, stop the server and exit.
  */
-async function stopServer()
+async function stopServer(): Promise<void>
 {
     rootAddonLogger.info("Set service state to shutdown...");
     api.setServiceState("shutdown");
@@ -1242,15 +1240,16 @@ async function stopServer()
 /**
  * Will write config and restart the server.
  */
-async function restartServer()
+async function restartServer(): Promise<void>
 {
     rootAddonLogger.info("Going to restart with apiServerRestarter...");
     exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
 }
 
 /**
- * Wait-function for waiting between stop and start when restarting. 
+ * Wait-function for waiting between stop and start when restarting.
  */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
 function wait10Seconds() {
     return new Promise(resolve => {
         setTimeout(() => {
@@ -1259,14 +1258,14 @@ function wait10Seconds() {
     });
 }
 
-process.on('SIGTERM', async () => {
+process.on("SIGTERM", async () => {
     rootAddonLogger.info("SIGTERM signal received. Save config and shutdown server...");
     await stopServer();
     rootAddonLogger.info("...done. Exiting");
     exit(0);
 });
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
     rootAddonLogger.info("SIGINT signal received. Save config and shutdown server...");
     await stopServer();
     rootAddonLogger.info("...done. Exiting");
@@ -1280,7 +1279,7 @@ process.on('SIGINT', async () => {
  * @param numberOfChars The number of chars which should not be replaced.
  * @returns The result string.
  */
-function replaceLastChars(input : string, char : string, numberOfChars : number)
+function replaceLastChars(input : string, char : string, numberOfChars : number): string
 {
     return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
 }
@@ -1290,9 +1289,9 @@ function replaceLastChars(input : string, char : string, numberOfChars : number)
  * @param dateTime The date as Date object.
  * @returns The date and time as string.
  */
-function getDateTimeAsString(dateTime: Date)
+function getDateTimeAsString(dateTime: Date): string
 {
-    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth()+1).toString().padStart(2, '0')}${dateTime.getDate().toString().padStart(2, '0')}-${dateTime.getHours().toString().padStart(2, '0')}${dateTime.getMinutes().toString().padStart(2, '0')}${dateTime.getSeconds().toString().padStart(2, '0')}`;
+    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth()+1).toString().padStart(2, "0")}${dateTime.getDate().toString().padStart(2, "0")}-${dateTime.getHours().toString().padStart(2, "0")}${dateTime.getMinutes().toString().padStart(2, "0")}${dateTime.getSeconds().toString().padStart(2, "0")}`;
 }
 
 main();

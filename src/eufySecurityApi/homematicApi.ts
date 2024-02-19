@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { EufySecurityApi } from './eufySecurityApi';
+import { EufySecurityApi } from "./eufySecurityApi";
 import { rootAddonLogger } from "./logging";
 
 /**
@@ -8,7 +8,7 @@ import { rootAddonLogger } from "./logging";
 export class HomematicApi
 {
     private api: EufySecurityApi;
-    
+
     /**
      * Create the api object.
      */
@@ -47,14 +47,14 @@ export class HomematicApi
      */
     public async getSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var requestData = `string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='${variableName}'){result=svObject.Value();break;}}svName='null';svObject=null;`;
-        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+        const requestData = `string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='${variableName}'){result=svObject.Value();break;}}svName='null';svObject=null;`;
+        const requestConfig = { headers : {"Content-Type": "text/plain" } };
 
-        var data = "";
+        let data = "";
         this.getSystemVariables(hostName, useHttps);
 
         try{
-            var response = await this.request(hostName, useHttps, requestData, requestConfig);
+            const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -77,14 +77,14 @@ export class HomematicApi
      */
     public async getSystemVariable1(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var requestData = `result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').Value()`;
-        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+        const requestData = `result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').Value()`;
+        const requestConfig = { headers : {"Content-Type": "text/plain" } };
 
-        var data = "";
+        let data = "";
 
         try
         {
-            var response = await this.request(hostName, useHttps, requestData, requestConfig);
+            const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -108,18 +108,19 @@ export class HomematicApi
      */
     public async setSystemVariable(hostName: string, useHttps: boolean, variableName: string, value: string): Promise<void>
     {
-        var requestData = `dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').State('${value}')`;
-        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+        const requestData = `dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').State('${value}')`;
+        const requestConfig = { headers : {"Content-Type": "text/plain" } };
 
-        var data = "";
+        //let data = "";
 
         try
         {
-            var response = await this.request(hostName, useHttps, requestData, requestConfig);
-            data = response.data;
-            data = data.substring(data.indexOf("<result>"));
-            data = data.substring(8, data.indexOf("</result>"));
-            
+            await this.request(hostName, useHttps, requestData, requestConfig);
+            //const response = await this.request(hostName, useHttps, requestData, requestConfig);
+            //data = response.data;
+            //data = data.substring(data.indexOf("<result>"));
+            //data = data.substring(8, data.indexOf("</result>"));
+
             //return data;
         }
         catch(error : any)
@@ -138,15 +139,15 @@ export class HomematicApi
      */
     public async getSystemVariables(hostName: string, useHttps: boolean, variablePrefix?: string): Promise<string[] | undefined>
     {
-        var requestData = "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();";
-        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+        const requestData = "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();";
+        const requestConfig = { headers : {"Content-Type": "text/plain" } };
 
-        var data = "";
-        var res : string[] | undefined;
+        let data = "";
+        let res : string[] | undefined;
 
         try
         {
-            var response = await this.request(hostName, useHttps, requestData, requestConfig);
+            const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -159,7 +160,7 @@ export class HomematicApi
             }
             else
             {
-                for (var i = 0; i < res.length; i++)
+                for (let i = 0; i < res.length; i++)
                 {
                     if(!(res[i].startsWith(variablePrefix)))
                     {
@@ -187,14 +188,14 @@ export class HomematicApi
      */
     public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined>
     {
-        var requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('${variableName}');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('${variableInfo}');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);`;
-        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+        const requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('${variableName}');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('${variableInfo}');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);`;
+        const requestConfig = { headers : {"Content-Type": "text/plain" } };
 
-        var data = "";
+        let data = "";
 
         try
         {
-            var response = await this.request(hostName, useHttps, requestData, requestConfig);
+            const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<svObj>"));
             data = data.substring(7, data.indexOf("</svObj>"));
@@ -217,14 +218,14 @@ export class HomematicApi
      */
     public async removeSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
     {
-        var requestData = `string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '${variableName}'){dom.DeleteObject(svObject);result='true';break;}}`;
-        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+        const requestData = `string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '${variableName}'){dom.DeleteObject(svObject);result='true';break;}}`;
+        const requestConfig = { headers : {"Content-Type": "text/plain" } };
 
-        var data = "";
+        let data = "";
 
         try
         {
-            var response = await this.request(hostName, useHttps, requestData, requestConfig);
+            const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = response.data;
             data = data.substring(data.indexOf("<result>"));
             data = data.substring(8, data.indexOf("</result>"));
@@ -247,8 +248,8 @@ export class HomematicApi
      */
     public async sendInteractionCommand(hostName: string, useHttps: boolean, command: string): Promise<void>
     {
-        var requestData = command;
-        var requestConfig = { headers : {'Content-Type': 'text/plain' } };
+        const requestData = command;
+        const requestConfig = { headers : {"Content-Type": "text/plain" } };
 
         try
         {

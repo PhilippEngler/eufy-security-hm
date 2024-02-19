@@ -2,7 +2,7 @@ import { appendFileSync, closeSync, openSync } from "fs";
 import { LogLevel as Level } from "typescript-logging";
 import { CategoryProvider } from "typescript-logging-category-style";
 import { pathToClientLog } from "./utils/utils";
-import util from 'node:util';
+import util from "node:util";
 
 export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt";
 export const LogLevel = Level;
@@ -138,7 +138,7 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
             break;
     }
     if(level === LogLevel.Off) {
-        let categoryString = `[${category}]`.padEnd(7, " ");
+        const categoryString = `[${category}]`.padEnd(7, " ");
         if(category === "all") {
             console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for all categories has been set to ${LogLevel[level]}.`);
             logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for all categories has been set to ${LogLevel[level]}.`);
@@ -161,19 +161,19 @@ export function formatDate(millisSinceEpoch: number): string {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds},${millis}`;
 }
 
-function logMessageForClient(message: string, ...messageArgs: any[]) {
+function logMessageForClient(message: string, ...messageArgs: any[]): void {
     let fileHandle;
     try {
-        fileHandle = openSync(pathToClientLog, 'a');
+        fileHandle = openSync(pathToClientLog, "a");
         if(messageArgs) {
             let messageArgsString = "";
-            for (var arg in messageArgs) {
-                let message = util.format('%O', messageArgs[arg]);
+            for (const arg in messageArgs) {
+                const message = util.format("%O", messageArgs[arg]);
                 messageArgsString += `${messageArgsString.length > 0 ? ` ${message}` : message}`;
             }
-            appendFileSync(fileHandle, `${message} ${messageArgsString} \r\n`, 'utf-8');
+            appendFileSync(fileHandle, `${message} ${messageArgsString} \r\n`, "utf-8");
         } else {
-            appendFileSync(fileHandle, message + "\r\n", 'utf-8');
+            appendFileSync(fileHandle, message + "\r\n", "utf-8");
         }
     } catch (err: any) {
         console.log(`${formatDate(Date.now())} ERROR [log]   ${err.message}`);
