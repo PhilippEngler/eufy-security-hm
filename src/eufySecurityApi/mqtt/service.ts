@@ -1,6 +1,6 @@
 import * as mqtt from "mqtt"
 import { TypedEmitter } from "tiny-typed-emitter";
-import { readFileSync } from 'fs';
+import { readFileSync } from "fs";
 import * as path from "path";
 import { load, Root } from "protobufjs";
 

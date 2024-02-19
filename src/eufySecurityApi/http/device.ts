@@ -1009,6 +1009,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
             type == DeviceType.LOCK_8592 ||
             type == DeviceType.LOCK_85A3 ||
 	        type == DeviceType.LOCK_8506 ||
+            type == DeviceType.LOCK_8502 ||
             type == DeviceType.SMART_SAFE_7400 ||
             type == DeviceType.SMART_SAFE_7401 ||
             type == DeviceType.SMART_SAFE_7402 ||
@@ -1150,7 +1151,8 @@ export class Device extends TypedEmitter<DeviceEvents> {
         Device.isLockWifiR10(type) ||
         Device.isLockWifiR20(type) ||
         Device.isLockWifiVideo(type) ||
-        Device.isLockWifiT8506(type);
+        Device.isLockWifiT8506(type) ||
+        Device.isLockWifiT8502(type);
     }
 
     static isLockKeypad(type: number): boolean {
@@ -1195,6 +1197,10 @@ export class Device extends TypedEmitter<DeviceEvents> {
 
     static isLockWifiT8506(type: number): boolean {
         return DeviceType.LOCK_8506 == type;
+    }
+
+    static isLockWifiT8502(type: number): boolean {
+        return DeviceType.LOCK_8502 == type;
     }
 
     static isBatteryDoorbell1(type: number): boolean {
@@ -1541,6 +1547,10 @@ export class Device extends TypedEmitter<DeviceEvents> {
 
     public isLockWifiT8506(): boolean {
         return Device.isLockWifiT8506(this.rawDevice.device_type);
+    }
+
+    public isLockWifiT8502(): boolean {
+        return Device.isLockWifiT8502(this.rawDevice.device_type);
     }
 
     public isBatteryDoorbell1(): boolean {
