@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.5
-20240217
+Schema v9.6
+20240220
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240217 (v9.5)";
+var languageVersion = "20240220 (v9.6)";
 
 function translateNavbarElement(element)
 {
@@ -677,18 +677,30 @@ function translateContent(content, ...options)
 {
 	switch(content)
 	{
+		case "lblTfaHeader":
+			return "Login requires TFA code";
+		case "lblTfaHint":
+			return "Please enter the character string you have received in the text box.";
+		case "lblTfaCode":
+			return "Character string received:";
+		case "btnTfaSubmit":
+			return "Continue Login";
+		case "lblTfaNotAvailable":
+			return "There is currently no TFA for the account.";
+		case "lblWaitMessageSendTfa":
+			return "Send TFA character string...";
 		case "lblCaptchaHeader":
-			return "Login requires Captcha";
+			return "Login requires Captcha code";
 		case "lblCaptchaHint":
-			return "Please enter the character string shown in the captcha in the text box.";
+			return "Please enter the character string shown in the captcha image in the text box.";
+		case "lblCaptchaImageAltDesc":
+			return "Captcha image"
 		case "lblCaptchaCode":
-			return "Character string shown in the captcha.";
+			return "Character string shown in the captcha:";
 		case "btnCaptchaSubmit":
 			return "Continue Login";
 		case "lblCaptchaNotAvailable":
 			return "There is currently no captcha for the account.";
-		case "lblWaitMessageCaptcha":
-			return "Determine Captcha status...";
 		case "lblWaitMessageSendCaptcha":
 			return "Send Captcha character string...";
 		case "titleNoP2PConnection":

@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240217
+ * 20240220
  */
 action = "";
 port = "";
@@ -140,7 +140,7 @@ function initContent(page)
 {
 	if(page != "restartWaiter")
 	{
-		checkCaptchaState(page);
+		checkTfaCaptchaState(page);
 	}
 	switch(page)
 	{
@@ -167,10 +167,10 @@ function initContent(page)
 	}
 }
 
-function checkCaptchaState(page)
+function checkTfaCaptchaState(page)
 {
 	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/getCaptchaState`;
+	var url = `${location.protocol}//${location.hostname}:${port}/getTfaCaptchaState`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
 	xmlhttp.onreadystatechange = function()
@@ -180,9 +180,13 @@ function checkCaptchaState(page)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				if(objResp.captchaNeeded == true)
+				if(objResp.tfaNeeded == true)
 				{
-					generateCaptchaCodeModal(page);
+					generateTfaCodeModal(page, objResp);
+				}
+				else if(objResp.captchaNeeded == true)
+				{
+					generateCaptchaCodeModal(page, objResp);
 				}
 			}
 			else
@@ -195,43 +199,40 @@ function checkCaptchaState(page)
 	xmlhttp.send();
 }
 
-function generateCaptchaCodeModal(page)
+function generateTfaCodeModal(page, objResp)
 {
-	generateContentCaptchaCodeModal();
+	generateContentTfaCodeModal(page, objResp);
 
-	const myModal = new bootstrap.Modal(document.getElementById('modalCaptchaCode'));
+	const myModal = new bootstrap.Modal(document.getElementById('modalTfaCode'));
 	myModal.show();
-
-	getCaptchaImage(page);
 }
 
-function generateContentCaptchaCodeModal()
+function generateContentTfaCodeModal(page, objResp)
 {
-	var captchaCodeModal = `
+	var tfaCodeModal = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
-							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalCaptchaCodeTitle">
-								<div style="text-align:left; float:left;"><h5 class="mb-0">${translateContent("lblCaptchaHeader")}</h5></div>
+							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalTfaCodeTitle">
+								<div style="text-align:left; float:left;"><h5 class="mb-0">${translateContent("lblTfaHeader")}</h5></div>
 							</div>
-							<div class="modal-body placeholder-glow" id="divModalCaptchaCodeContent">
-								<h5 id="captchaHint"></h5>
-								<div class="my-3" id="captchaImage"></div>
-								<div class="my-3" id="captchaCode"></div>
-								<div class="mt-3" id="captchaButton"></div>
+							<div class="modal-body placeholder-glow" id="divModalTfaCodeContent">
+								<h5 id="tfaHint">${objResp.tfaNeeded == true ? translateContent("lblTfaHint"): translateContent("lblTfaNotAvailable")}</h5>
+								<div class="my-3" id="tfaCode">${objResp.tfaNeeded == true ? `<label class="my-2" for="txtTfaCode">${translateContent("lblTfaCode")}</label><input type="text" class="form-control" id="txtTfaCode">` : ""}</div>
+								<div class="mt-3" id="tfaButton">${objResp.tfaNeeded == true ? `<input id="btnSubmitTfa" onclick="setTfaCode('${page}')" class="btn btn-primary" type="button" value="${translateContent("btnTfaSubmit")}">` : ""}</div>
 							</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, translateContent("btnClose"), true, "modal", undefined, true)}
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, translateContent("btnClose"), !objResp.tfaNeeded, "modal", undefined, true)}
 							</div>
 						</div>
 					</div>`;
 	
-	document.getElementById("modalCaptchaCode").innerHTML = captchaCodeModal;
+	document.getElementById("modalTfaCode").innerHTML = tfaCodeModal;
 }
 
-function getCaptchaImage(page)
+function setTfaCode(page)
 {
 	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/getCaptchaState`;
+	var url = `${location.protocol}//${location.hostname}:${port}/setTfaCode/${document.getElementById("txtTfaCode").value}`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
 	xmlhttp.onreadystatechange = function()
@@ -241,36 +242,56 @@ function getCaptchaImage(page)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				if(objResp.captchaNeeded == true)
-				{
-					document.getElementById("captchaHint").innerHTML = translateContent("lblCaptchaHint");
-					document.getElementById("captchaImage").innerHTML = `<label class="my-2" for="txtCaptchaCode">Captcha.</label><br /><img src="${objResp.captcha.captcha}" alt="Captcha">`;
-					document.getElementById("captchaCode").innerHTML = `<label class="my-2" for="txtCaptchaCode">${translateContent("lblCaptchaCode")}</label><input type="text" class="form-control" id="txtCaptchaCode">`;
-					document.getElementById("captchaButton").innerHTML = `<input id="btnSubmitCaptcha" onclick="setCaptchaCode('${page}')" class="btn btn-primary" type="button" value="${translateContent("btnCaptchaSubmit")}">`;
-					document.getElementById("btnCloseModalDeviceSettingsBottom").setAttribute("disabled", true);
-				}
-				else
-				{
-					document.getElementById("captchaHint").innerHTML = translateContent("lblCaptchaNotAvailable");
-					document.getElementById("btnCloseModalDeviceSettingsBottom").removeAttribute("disabled");
-				}
+				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=tfa&redirect=${page}.html`;
 			}
 			else
 			{
-				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
+				document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+			document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
 		}
 		else
 		{
-			document.getElementById("captchaHint").innerHTML = createWaitMessage(translateContent(lblWaitMessageCaptcha));
+			document.getElementById("tfaHint").innerHTML = createWaitMessage(translateContent("lblWaitMessageSendTfa"));
 		}
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
+}
+
+function generateCaptchaCodeModal(page, objResp)
+{
+	generateContentCaptchaCodeModal(page, objResp);
+
+	const myModal = new bootstrap.Modal(document.getElementById('modalCaptchaCode'));
+	myModal.show();
+}
+
+function generateContentCaptchaCodeModal(page, objResp)
+{
+	var captchaCodeModal = `
+					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
+						<div class="modal-content">
+							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalCaptchaCodeTitle">
+								<div style="text-align:left; float:left;"><h5 class="mb-0">${translateContent("lblCaptchaHeader")}</h5></div>
+							</div>
+							<div class="modal-body placeholder-glow" id="divModalCaptchaCodeContent">
+								<h5 id="captchaHint">${objResp.captchaNeeded == true ? translateContent("lblCaptchaHint"): translateContent("lblCaptchaNotAvailable")}</h5>
+								<div class="mt-3" id="captchaImageLabel">${objResp.captchaNeeded == true ? `<label class="my-2" for="txtCaptchaCode">Captcha:</label>` : ""}</div>
+								<div class="mb-3 text-center" id="captchaImage">${objResp.captchaNeeded == true ? `<img src="${objResp.captcha.captcha}" alt="${translateContent("lblCaptchaImageAltDesc")}">` : ""}</div>
+								<div class="my-3" id="captchaCode">${objResp.captchaNeeded == true ? `<label class="my-2" for="txtCaptchaCode">${translateContent("lblCaptchaCode")}</label><input type="text" class="form-control" id="txtCaptchaCode">` : ""}</div>
+								<div class="mt-3" id="captchaButton">${objResp.captchaNeeded == true ? `<input id="btnSubmitCaptcha" onclick="setCaptchaCode('${page}')" class="btn btn-primary" type="button" value="${translateContent("btnCaptchaSubmit")}"${objResp.captcha.captcha == "" ? " disabled" : ""}>` : ""}</div>
+							</div>
+							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, translateContent("btnClose"), !objResp.captchaNeeded, "modal", undefined, true)}
+							</div>
+						</div>
+					</div>`;
+	
+	document.getElementById("modalCaptchaCode").innerHTML = captchaCodeModal;
 }
 
 function setCaptchaCode(page)
@@ -4830,7 +4851,12 @@ async function restartAPIService()
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsErrorCaptcha");
 		checkServiceState(0, 0, 0);
 	}
-	else
+	else if(action == "tfa")
+	{
+		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsErrorTfa");
+		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsErrorTfa");
+		checkServiceState(0, 0, 0);
+	}else
 	{
 		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsError");
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsError");

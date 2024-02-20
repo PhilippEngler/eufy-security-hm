@@ -34,6 +34,7 @@ export class EufySecurityApi
     private retries = 0;
     private serviceState : string = "init";
     private captchaState = { captchaId: "", captcha: "" };
+    private tfaCodeRequested = false;
 
     private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
@@ -213,10 +214,10 @@ export class EufySecurityApi
     }
 
     /**
-     * Returns the captcha state as JSON string.
-     * @returns The captcha state as JSON string.
+     * Returns the tfa and captcha state as JSON string.
+     * @returns The tfa and captcha state as JSON string.
      */
-    public getCaptchaState() : string
+    public getTfaCaptchaState() : string
     {
         let json : any = {};
         let captchaNeeded = false;
@@ -226,7 +227,7 @@ export class EufySecurityApi
             captchaNeeded = true;
         }
 
-        json = {"success":true,"captchaNeeded":captchaNeeded,"captcha":this.captchaState};
+        json = {"success":true,"tfaNeeded":this.tfaCodeRequested,"captchaNeeded":captchaNeeded,"captcha":this.captchaState};
         return JSON.stringify(json);
     }
 
@@ -246,6 +247,26 @@ export class EufySecurityApi
             this.connect({ captcha: { captchaId: this.captchaState.captchaId, captchaCode: code}, force: false });
             success = true;
             message = "Connecting again with the captcha code provided.";
+        }
+
+        json = {"success":success,"message":message};
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Set the code from the tfa and login again.
+     * @param code The tfa code provided.
+     * @returns The result as JSON string.
+     */
+    public setTfaCode(code: string): string {
+        let json: any = {};
+        let success = false;
+        let message = "No tfa code requested.";
+
+        if(this.tfaCodeRequested === true) {
+            this.connect({ verifyCode: code, force: false });
+            success = true;
+            message = "Connecting again with the tfa code provided.";
         }
 
         json = {"success":success,"message":message};
@@ -417,6 +438,7 @@ export class EufySecurityApi
         //this.emit("connect");
 
         this.setCaptchaData("", "");
+        this.tfaCodeRequested = false;
 
         this.saveCloudToken();
 
@@ -517,6 +539,7 @@ export class EufySecurityApi
     private onTfaRequest(): void
     {
         //this.emit("tfa request");
+        this.tfaCodeRequested = true
         rootAddonLogger.info(`A tfa (two factor authentication) request received. This addon does not support tfa at the moment.`);
     }
 

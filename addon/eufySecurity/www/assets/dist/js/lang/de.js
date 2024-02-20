@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.5
-20240217
+Schema v9.6
+20240220
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240217 (v9.5)";
+var languageVersion = "20240220 (v9.6)";
 
 function translateNavbarElement(element)
 {
@@ -677,18 +677,30 @@ function translateContent(content, ...options)
 {
 	switch(content)
 	{
+		case "lblTfaHeader":
+			return "Anmeldung benötigt 2FA Code";
+		case "lblTfaHint":
+			return "Bitte geben Sie in das Textfeld die Zeichenkette ein, die Ihnen zugesandt wurde.";
+		case "lblTfaCode":
+			return "Zeichenkette, die Sie erhalten haben:";
+		case "btnTfaSubmit":
+			return "Login fortsetzen";
+		case "lblTfaNotAvailable":
+			return "Derzeit ist keine Anforderung für 2FA für den Account hinterlegt.";
+		case "lblWaitMessageSendTfa":
+			return "Sende 2FA Zeichenkette...";
 		case "lblCaptchaHeader":
-			return "Anmeldung benötigt Captcha";
+			return "Anmeldung benötigt Captcha-Antwort";
 		case "lblCaptchaHint":
-			return "Bitte geben Sie in das Textfeld die Zeichenkette ein, die in dem Captcha dargestellt wird.";
+			return "Bitte geben Sie in das Textfeld die Zeichenkette ein, die in dem Captcha-Bild dargestellt wird.";
+		case "lblCaptchaImageAltDesc":
+			return "Captcha-Bild"
 		case "lblCaptchaCode":
-			return "Zeichenkette, die in dem Captcha dargestellt wird.";
+			return "Zeichenkette, die in dem Captcha dargestellt wird:";
 		case "btnCaptchaSubmit":
 			return "Login fortsetzen";
 		case "lblCaptchaNotAvailable":
 			return "Derzeit ist kein Captcha für den Account hinterlegt.";
-		case "lblWaitMessageCaptcha":
-			return "Ermittle Captcha Status...";
 		case "lblWaitMessageSendCaptcha":
 			return "Sende Captcha Zeichenkette...";
 		case "titleNoP2PConnection":

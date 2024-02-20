@@ -122,13 +122,23 @@ class ApiServer
                     case "getAccountInfo":
                         responseData = await api.getAccountInfoAsJson();
                         break;
-                    case "getCaptchaState":
-                        responseData = api.getCaptchaState();
+                    case "getTfaCaptchaState":
+                        responseData = api.getTfaCaptchaState();
                         break;
                     case "setCaptchaCode":
                         if(url.length == 3)
                         {
                             responseData = api.setCaptchaCode(url[2]);
+                        }
+                        else
+                        {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "setTfaCode":
+                        if(url.length == 3)
+                        {
+                            responseData = api.setTfaCode(url[2]);
                         }
                         else
                         {
