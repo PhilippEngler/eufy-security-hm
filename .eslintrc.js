@@ -9,6 +9,9 @@ module.exports = {
         "plugin:@typescript-eslint/recommended", // Uses the recommended rules from the @typescript-eslint/eslint-plugin
     ],
     plugins: [],
+    ignorePatterns: [
+        "*.js", "eufysecurity.ts"
+    ],
     rules: {
         "indent": "off",
         "@typescript-eslint/indent": [
