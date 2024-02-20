@@ -804,7 +804,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -831,7 +831,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -858,7 +858,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -885,7 +885,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -940,7 +940,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -1073,7 +1073,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1160,7 +1160,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1185,7 +1185,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1210,7 +1210,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
     }
 
@@ -1235,7 +1235,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         }
         if(state === false)
         {
-            //this.loadDeviceImage(device.getSerial());
+            this.loadDeviceImage(device.getSerial());
         }
     }
 
