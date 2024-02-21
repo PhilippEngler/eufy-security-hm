@@ -1327,20 +1327,17 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async getDeviceLastEvent(deviceSerial : string): Promise<void>
     {
-        try
-        {
-            const device = await this.getDevice(deviceSerial);
-            const station = await this.api.getStation(device.getStationSerial());
-
-            if(device)
-            {
+        this.getDevice(deviceSerial).then((device) => {
+            this.api.getStation(device.getStationSerial()).then((station) => {
                 station.databaseQueryLatestInfo();
-            }
-        }
-        catch (error)
-        {
-            rootAddonLogger.error("Error at getDeviceLastEvent: ", error);
-        }
+            }).catch((err) => {
+                const error = ensureError(err);
+                rootAddonLogger.error(`Get Device Last Event - Station Error`, { error: getError(error), deviceSN: deviceSerial });
+            });
+        }).catch((err) => {
+            const error = ensureError(err);
+            rootAddonLogger.error(`Get Device Last Event - Device Error`, { error: getError(error), deviceSN: deviceSerial });
+        });
     }
 
     /**
@@ -1375,12 +1372,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async getDevicesLastEvent(): Promise<void>
     {
-        const stations = await this.api.getStations();
-
-        for(const station in stations)
-        {
-            stations[station].databaseQueryLatestInfo();
-        }
+        this.api.getStations().then((stations) => {
+            for(const station in stations)
+            {
+                stations[station].databaseQueryLatestInfo();
+            }
+        }).catch((err) => {
+            const error = ensureError(err);
+            rootAddonLogger.error(`Get Devices Last Event - Station Error`, { error: getError(error) });
+        });
     }
 
     /**
@@ -1389,33 +1389,22 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     public async downloadLatestImageForDevice(deviceSerial : string): Promise<void>
     {
-        try
-        {
-            const device = await this.getDevice(deviceSerial);
-            const station = await this.api.getStation(device.getStationSerial());
-            /*var results = this.getEventResultsForDevice(deviceSerial);
-            if(results && results.length > 0)
-            {
-                for(var pos = results.length - 1; pos >= 0; pos--)
+        this.getDevice(deviceSerial).then((device) => {
+            this.api.getStation(device.getStationSerial()).then((station) => {
+                const result = this.getLastEventForDevice(deviceSerial);
+                if(result !== null && result.path !== "")
                 {
-                    if(results[pos].history && results[pos].history.thumb_path)
-                    {
-                        station.downloadImage(results[pos].history.thumb_path);
-                        return;
-                    }
+                    station.downloadImage(result.path);
+                    return;
                 }
-            }*/
-            const result = this.getLastEventForDevice(deviceSerial);
-            if(result !== null && result.path !== "")
-            {
-                station.downloadImage(result.path);
-                return;
-            }
-        }
-        catch (error)
-        {
-            rootAddonLogger.error("Error at downloadLatestImageForDevice: ", error);
-        }
+            }).catch((err) => {
+                const error = ensureError(err);
+                rootAddonLogger.error(`Download Latest Image For Device - Station Error`, { error: getError(error), deviceSN: deviceSerial });
+            });
+        }).catch((err) => {
+            const error = ensureError(err);
+            rootAddonLogger.error(`Download Latest Image For Device - Device Error`, { error: getError(error), deviceSN: deviceSerial });
+        });
     }
 
     /**
