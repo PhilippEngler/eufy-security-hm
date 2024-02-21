@@ -25,7 +25,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private loadingEmitter = new EventEmitter();
     private devicesLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "devices loaded");
     private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
-    private deviceImageLoadTimeout : { [deviceSerial : string] : NodeJS.Timeout | undefined } = {};
 
     /**
      * Create the Devices objects holding all devices in the account.
@@ -248,7 +247,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             this.devices[serial] = device;
             //this.devicesHistory[serial] = [];
             this.devicesLastEvent[serial] = null;
-            this.deviceImageLoadTimeout[serial] = undefined;
             this.emit("device added", device);
 
             if (device.isLock())
@@ -1300,35 +1298,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     public getLastEventForDevice(deviceSerial : string) : CameraEvent | null
     {
         return this.devicesLastEvent[deviceSerial];
-    }
-
-    /**
-     * Set the timeout of 75 seconds to download image of last event.
-     * @param deviceSerial The serial of the device.
-     */
-    private loadDeviceImage(deviceSerial : string): void
-    {
-        if (this.deviceImageLoadTimeout[deviceSerial] !== undefined)
-        {
-            clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
-        }
-
-        this.deviceImageLoadTimeout[deviceSerial] = setTimeout(() => { this.getDeviceImage(deviceSerial) }, 75 * 1000);
-    }
-
-    /**
-     * Helper for removing timeout and initiate download of the image of the last event.
-     * @param deviceSerial The serial of the device.
-     */
-    private getDeviceImage(deviceSerial : string): void
-    {
-        if (this.deviceImageLoadTimeout[deviceSerial] !== undefined)
-        {
-            clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
-        }
-
-        //this.getDeviceEvents(deviceSerial);
-        this.getDeviceLastEvent(deviceSerial);
     }
 
     /**
