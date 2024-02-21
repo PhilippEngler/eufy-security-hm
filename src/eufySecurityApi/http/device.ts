@@ -10,6 +10,7 @@ import { calculateCellularSignalLevel, calculateWifiSignalLevel, getAbsoluteFile
 import { DecimalToRGBColor, eslTimestamp, getCurrentTimeInSeconds, isCharging } from "../p2p/utils";
 import { CusPushEvent, DoorbellPushEvent, LockPushEvent, IndoorPushEvent, SmartSafeEvent, HB3PairedDevicePushEvent, GarageDoorPushEvent } from "../push/types";
 import { PushMessage, SmartSafeEventValueDetail } from "../push/models";
+import { sleep } from "../push/utils";
 import { getError, isEmpty, validValue } from "../utils";
 import { InvalidPropertyError, PropertyNotSupportedError } from "./error";
 import { DeviceSmartLockNotifyData } from "../mqtt/model";
@@ -2004,17 +2005,19 @@ export class Camera extends Device {
             if (message.event_type === CusPushEvent.SECURITY && message.device_sn === this.getSerial()) {
                 try {
                     if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        station.databaseQueryLatestInfo(() => {
-                            if (!isEmpty(message.pic_url)) {
-                                getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                    if (image.data.length > 0) {
-                                        this.updateProperty(PropertyName.DevicePicture, image, true);
-                                    }
-                                }).catch((err) => {
-                                    const error = ensureError(err);
-                                    rootHTTPLogger.debug(`Camera process push notification - CusPushEvent.SECURITY - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                });
-                            }
+                        sleep(75 * 1000).then(() => {
+                            station.databaseQueryLatestInfo(() => {
+                                if (!isEmpty(message.pic_url)) {
+                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                        if (image.data.length > 0) {
+                                            this.updateProperty(PropertyName.DevicePicture, image, true);
+                                        }
+                                    }).catch((err) => {
+                                        const error = ensureError(err);
+                                        rootHTTPLogger.error(`Camera process push notification - CusPushEvent.SECURITY - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                    });
+                                }
+                            });
                         });
                     } else if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2023,7 +2026,7 @@ export class Camera extends Device {
                             }
                         }).catch((err) => {
                             const error = ensureError(err);
-                            rootHTTPLogger.debug(`Camera process push notification - CusPushEvent.SECURITY - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                            rootHTTPLogger.error(`Camera process push notification - CusPushEvent.SECURITY - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                         });
                     }
                     if (message.fetch_id !== undefined) {
@@ -2047,23 +2050,25 @@ export class Camera extends Device {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`Camera process push notification - CusPushEvent.SECURITY - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`Camera process push notification - CusPushEvent.SECURITY - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             } else if (message.msg_type === DeviceType.HB3) {
                 if (message.device_sn === this.getSerial()) {
                     try {
                         if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image, true);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.debug(`Camera process push notification - HB3PairedDevicePushEvent - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
+                            sleep(75 * 1000).then(() => {
+                                station.databaseQueryLatestInfo(() => {
+                                    if (!isEmpty(message.pic_url)) {
+                                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                            if (image.data.length > 0) {
+                                                this.updateProperty(PropertyName.DevicePicture, image, true);
+                                            }
+                                        }).catch((err) => {
+                                            const error = ensureError(err);
+                                            rootHTTPLogger.error(`Camera process push notification - HB3PairedDevicePushEvent - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                        });
+                                    }
+                                });
                             });
                         } else if (!isEmpty(message.pic_url)) {
                             getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2072,7 +2077,7 @@ export class Camera extends Device {
                                 }
                             }).catch((err) => {
                                 const error = ensureError(err);
-                                rootHTTPLogger.debug(`Camera process push notification - HB3PairedDevicePushEvent - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                rootHTTPLogger.error(`Camera process push notification - HB3PairedDevicePushEvent - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                             });
                         }
                         switch (message.event_type) {
@@ -2176,7 +2181,7 @@ export class Camera extends Device {
                         }
                     } catch (err) {
                         const error = ensureError(err);
-                        rootHTTPLogger.debug(`Camera process push notification - HB3PairedDevicePushEvent - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                        rootHTTPLogger.error(`Camera process push notification - HB3PairedDevicePushEvent - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                     }
                 }
             }
@@ -2219,17 +2224,19 @@ export class SoloCamera extends Camera {
             if (message.device_sn === this.getSerial()) {
                 try {
                     if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        station.databaseQueryLatestInfo(() => {
-                            if (!isEmpty(message.pic_url)) {
-                                getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                    if (image.data.length > 0) {
-                                        this.updateProperty(PropertyName.DevicePicture, image, true);
-                                    }
-                                }).catch((err) => {
-                                    const error = ensureError(err);
-                                    rootHTTPLogger.debug(`SoloCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                });
-                            }
+                        sleep(75 * 1000).then(() => {
+                            station.databaseQueryLatestInfo(() => {
+                                if (!isEmpty(message.pic_url)) {
+                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                        if (image.data.length > 0) {
+                                            this.updateProperty(PropertyName.DevicePicture, image, true);
+                                        }
+                                    }).catch((err) => {
+                                        const error = ensureError(err);
+                                        rootHTTPLogger.error(`SoloCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                    });
+                                }
+                            });
                         });
                     } else if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2238,7 +2245,7 @@ export class SoloCamera extends Camera {
                             }
                         }).catch((err) => {
                             const error = ensureError(err);
-                            rootHTTPLogger.debug(`SoloCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                            rootHTTPLogger.error(`SoloCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                         });
                     }
                     switch (message.event_type) {
@@ -2266,7 +2273,7 @@ export class SoloCamera extends Camera {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`SoloCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`SoloCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -2322,17 +2329,19 @@ export class IndoorCamera extends Camera {
             if (message.device_sn === this.getSerial()) {
                 try {
                     if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        station.databaseQueryLatestInfo(() => {
-                            if (!isEmpty(message.pic_url)) {
-                                getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                    if (image.data.length > 0) {
-                                        this.updateProperty(PropertyName.DevicePicture, image, true);
-                                    }
-                                }).catch((err) => {
-                                    const error = ensureError(err);
-                                    rootHTTPLogger.debug(`IndoorCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                });
-                            }
+                        sleep(75 * 1000).then(() => {
+                            station.databaseQueryLatestInfo(() => {
+                                if (!isEmpty(message.pic_url)) {
+                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                        if (image.data.length > 0) {
+                                            this.updateProperty(PropertyName.DevicePicture, image, true);
+                                        }
+                                    }).catch((err) => {
+                                        const error = ensureError(err);
+                                        rootHTTPLogger.error(`IndoorCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                    });
+                                }
+                            });
                         });
                     } else if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2341,7 +2350,7 @@ export class IndoorCamera extends Camera {
                             }
                         }).catch((err) => {
                             const error = ensureError(err);
-                            rootHTTPLogger.debug(`IndoorCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                            rootHTTPLogger.error(`IndoorCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                         });
                     }
                     switch (message.event_type) {
@@ -2393,7 +2402,7 @@ export class IndoorCamera extends Camera {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`IndoorCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`IndoorCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -2477,17 +2486,19 @@ export class DoorbellCamera extends Camera {
             if (message.device_sn === this.getSerial()) {
                 try {
                     if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        station.databaseQueryLatestInfo(() => {
-                            if (!isEmpty(message.pic_url)) {
-                                getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                    if (image.data.length > 0) {
-                                        this.updateProperty(PropertyName.DevicePicture, image, true);
-                                    }
-                                }).catch((err) => {
-                                    const error = ensureError(err);
-                                    rootHTTPLogger.debug(`DoorbellCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                });
-                            }
+                        sleep(75 * 1000).then(() => {
+                            station.databaseQueryLatestInfo(() => {
+                                if (!isEmpty(message.pic_url)) {
+                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                        if (image.data.length > 0) {
+                                            this.updateProperty(PropertyName.DevicePicture, image, true);
+                                        }
+                                    }).catch((err) => {
+                                        const error = ensureError(err);
+                                        rootHTTPLogger.error(`DoorbellCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                    });
+                                }
+                            });
                         });
                     } else if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2496,7 +2507,7 @@ export class DoorbellCamera extends Camera {
                             }
                         }).catch((err) => {
                             const error = ensureError(err);
-                            rootHTTPLogger.debug(`DoorbellCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                            rootHTTPLogger.error(`DoorbellCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                         });
                     }
                     switch (message.event_type) {
@@ -2581,7 +2592,7 @@ export class DoorbellCamera extends Camera {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`DoorbellCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`DoorbellCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -2683,17 +2694,19 @@ export class FloodlightCamera extends Camera {
             if (message.device_sn === this.getSerial()) {
                 try {
                     if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        station.databaseQueryLatestInfo(() => {
-                            if (!isEmpty(message.pic_url)) {
-                                getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                    if (image.data.length > 0) {
-                                        this.updateProperty(PropertyName.DevicePicture, image, true);
-                                    }
-                                }).catch((err) => {
-                                    const error = ensureError(err);
-                                    rootHTTPLogger.debug(`FloodlightCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                });
-                            }
+                        sleep(75 * 1000).then(() => {
+                            station.databaseQueryLatestInfo(() => {
+                                if (!isEmpty(message.pic_url)) {
+                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                        if (image.data.length > 0) {
+                                            this.updateProperty(PropertyName.DevicePicture, image, true);
+                                        }
+                                    }).catch((err) => {
+                                        const error = ensureError(err);
+                                        rootHTTPLogger.error(`FloodlightCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                    });
+                                }
+                            });
                         });
                     } else if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2702,7 +2715,7 @@ export class FloodlightCamera extends Camera {
                             }
                         }).catch((err) => {
                             const error = ensureError(err);
-                            rootHTTPLogger.debug(`FloodlightCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                            rootHTTPLogger.error(`FloodlightCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                         });
                     }
                     switch (message.event_type) {
@@ -2730,7 +2743,7 @@ export class FloodlightCamera extends Camera {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`FloodlightCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`FloodlightCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -2819,17 +2832,19 @@ export class WallLightCam extends Camera {
             if (message.device_sn === this.getSerial()) {
                 try {
                     if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        station.databaseQueryLatestInfo(() => {
-                            if (!isEmpty(message.pic_url)) {
-                                getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                    if (image.data.length > 0) {
-                                        this.updateProperty(PropertyName.DevicePicture, image);
-                                    }
-                                }).catch((err) => {
-                                    const error = ensureError(err);
-                                    rootHTTPLogger.debug(`WallLightCam process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                });
-                            }
+                        sleep(75 * 1000).then(() => {
+                            station.databaseQueryLatestInfo(() => {
+                                if (!isEmpty(message.pic_url)) {
+                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                        if (image.data.length > 0) {
+                                            this.updateProperty(PropertyName.DevicePicture, image);
+                                        }
+                                    }).catch((err) => {
+                                        const error = ensureError(err);
+                                        rootHTTPLogger.error(`WallLightCam process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                    });
+                                }
+                            });
                         });
                     } else if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2838,7 +2853,7 @@ export class WallLightCam extends Camera {
                             }
                         }).catch((err) => {
                             const error = ensureError(err);
-                            rootHTTPLogger.debug(`WallLightCam process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                            rootHTTPLogger.error(`WallLightCam process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                         });
                     }
                     switch (message.event_type) {
@@ -2866,7 +2881,7 @@ export class WallLightCam extends Camera {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`WallLightCam process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`WallLightCam process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -2956,17 +2971,19 @@ export class GarageCamera extends Camera {
             if (message.device_sn === this.getSerial()) {
                 try {
                     if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        station.databaseQueryLatestInfo(() => {
-                            if (!isEmpty(message.pic_url)) {
-                                getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                    if (image.data.length > 0) {
-                                        this.updateProperty(PropertyName.DevicePicture, image);
-                                    }
-                                }).catch((err) => {
-                                    const error = ensureError(err);
-                                    rootHTTPLogger.debug(`GarageCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                });
-                            }
+                        sleep(75 * 1000).then(() => {
+                            station.databaseQueryLatestInfo(() => {
+                                if (!isEmpty(message.pic_url)) {
+                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
+                                        if (image.data.length > 0) {
+                                            this.updateProperty(PropertyName.DevicePicture, image);
+                                        }
+                                    }).catch((err) => {
+                                        const error = ensureError(err);
+                                        rootHTTPLogger.error(`GarageCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                                    });
+                                }
+                            });
                         });
                     } else if (!isEmpty(message.pic_url)) {
                         getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
@@ -2975,7 +2992,7 @@ export class GarageCamera extends Camera {
                             }
                         }).catch((err) => {
                             const error = ensureError(err);
-                            rootHTTPLogger.debug(`GarageCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                            rootHTTPLogger.error(`GarageCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                         });
                     }
                     switch (message.event_type) {
@@ -3012,7 +3029,7 @@ export class GarageCamera extends Camera {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`GarageCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`GarageCamera process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -3063,7 +3080,7 @@ export class EntrySensor extends Sensor {
                     }
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`EntrySensor process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`EntrySensor process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -3145,7 +3162,7 @@ export class MotionSensor extends Sensor {
                     }, eventDurationSeconds * 1000));
                 } catch (err) {
                     const error = ensureError(err);
-                    rootHTTPLogger.debug(`MotionSensor process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
+                    rootHTTPLogger.error(`MotionSensor process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
                 }
             }
         }
@@ -3319,7 +3336,7 @@ export class Lock extends Device {
                 }
             } catch (err) {
                 const error = ensureError(err);
-                rootHTTPLogger.debug(`Lock process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), eventType: eventType, eventTime: eventTime, eventDurationSeconds: eventDurationSeconds, source: source });
+                rootHTTPLogger.error(`Lock process push notification - Error`, { error: getError(error), deviceSN: this.getSerial(), eventType: eventType, eventTime: eventTime, eventDurationSeconds: eventDurationSeconds, source: source });
             }
         }
     }

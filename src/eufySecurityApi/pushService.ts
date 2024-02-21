@@ -240,7 +240,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
                 {
                     try
                     {
-                        const station = this.api.getStation(devices[deviceSerial].getStationSerial());
+                        const station = await this.api.getStation(devices[deviceSerial].getStationSerial());
                         if(station !== undefined)
                         {
                             try
