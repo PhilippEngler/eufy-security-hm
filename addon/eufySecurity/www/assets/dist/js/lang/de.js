@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.6
-20240220
+Schema v9.7
+20240221
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240220 (v9.6)";
+var languageVersion = "20240221 (v9.7)";
 
 function translateNavbarElement(element)
 {
@@ -1562,12 +1562,8 @@ function translateDeviceStateValue(state, propertyName, value)
 			return "externes Solarpanel";
 		case "Charging":
 			return "ladend";
-		case "Unplugged":
-			return "nicht angeschlossen";
-		case "Plugged":
-			return "angeschlossen";
-		case "Solar charging":
-			return "ladend mit Solarpanel";
+		case "Not Charging":
+			return "nicht ladend";
 		case "Always":
 			return "immer";
 		case "Schedule":

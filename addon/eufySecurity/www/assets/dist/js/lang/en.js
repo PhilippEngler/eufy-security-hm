@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.6
-20240220
+Schema v9.7
+20240221
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240220 (v9.6)";
+var languageVersion = "20240221 (v9.7)";
 
 function translateNavbarElement(element)
 {
@@ -1562,12 +1562,8 @@ function translateDeviceStateValue(state, propertyName, value)
 			return "Solar Panel";
 		case "Charging":
 			return "Charging";
-		case "Unplugged":
-			return "Unplugged";
-		case "Plugged":
-			return "Plugged";
-		case "Solar charging":
-			return "Solar charging";
+		case "Not Charging":
+			return "Not Charging";
 		case "Always":
 			return "Always";
 		case "Schedule":
