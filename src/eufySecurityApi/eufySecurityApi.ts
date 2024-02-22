@@ -471,7 +471,7 @@ export class EufySecurityApi
         this.stations.on("station database query latest", (station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLatestInfo[]) => this.onStationDatabaseQueryLatest(station, returnCode, data));
 
         //this.devices.on("device added", (device: Device) => this.onDeviceAdded(device));
-        this.devices.once("devices loaded", () => this.onDevicesLoaded());
+        //this.devices.once("devices loaded", () => this.onDevicesLoaded());
 
         await sleep(10);
         await this.refreshCloudData();
