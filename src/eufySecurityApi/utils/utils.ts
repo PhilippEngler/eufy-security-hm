@@ -269,8 +269,8 @@ export const getStationTypeString = function(station: Station): string {
  * @param timestamp The timestamp as number.
  */
 export const makeDateTimeString = function(timestamp: number): string {
-    var dateTime = new Date(timestamp);
-    return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}`);
+    const dateTime = new Date(timestamp);
+    return (`${dateTime.getDate().toString().padStart(2,"0")}.${(dateTime.getMonth()+1).toString().padStart(2,"0")}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,"0")}:${dateTime.getMinutes().toString().padStart(2,"0")}`);
 }
 
 /**
@@ -287,5 +287,5 @@ export const convertTimeStampToTimeStampMs = function(timeStamp: number, timeSta
             return timeStamp;
         default:
             return undefined;
-        }
+    }
 }
