@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240220
+ * 20240222
  */
 action = "";
 port = "";
@@ -570,7 +570,7 @@ function createCardDevice(device)
 	}
 	if(device.battery !== undefined || device.batteryLow !== undefined)
 	{
-		card += generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus === 1 || device.chargingStatus === 4 ? "bi-battery-charging" : "bi-battery", translateContent("lblBatteryLevel"), device.battery !== undefined ? device.battery : device.batteryLow, device.battery !== undefined ? "%" : "");
+		card += generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus === 1 ? "bi-battery-charging" : "bi-battery", translateContent("lblBatteryLevel"), device.battery !== undefined ? device.battery : device.batteryLow, device.battery !== undefined ? "%" : "");
 	}
 	if(device.batteryTemperature !== undefined)
 	{
@@ -989,7 +989,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.battery !== undefined || deviceProperties.batteryLow !== undefined)
 		{
 			deviceModal += `
-													${generateColumnForProperty("col", "spnBattery", "text-nowrap", "", "", deviceProperties.chargingStatus == 1 || deviceProperties.chargingStatus == 4 ? "bi-battery-charging" : "bi-battery", translateContent("lblBatteryLevel"), deviceProperties.battery !== undefined ? deviceProperties.battery : deviceProperties.batteryLow, deviceProperties.battery !== undefined ? "%" : "")}`;
+													${generateColumnForProperty("col", "spnBattery", "text-nowrap", "", "", deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", translateContent("lblBatteryLevel"), deviceProperties.battery !== undefined ? deviceProperties.battery : deviceProperties.batteryLow, deviceProperties.battery !== undefined ? "%" : "")}`;
 		}
 		if(deviceProperties.batteryTemperature !== undefined && deviceProperties.batteryTemperature > -99 && deviceProperties.batteryTemperature < 99)
 		{
