@@ -3412,8 +3412,6 @@ function disableUIElements()
 	document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
 	document.getElementById("cbConnectionType").setAttribute("disabled", true);
 	document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
-	document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
-	document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
 	document.getElementById("chkUsePushService").setAttribute("disabled", true);
 	document.getElementById("cbLogLevelAddon").setAttribute("disabled", true);
 	document.getElementById("cbLogLevelMain").setAttribute("disabled", true);
@@ -3794,22 +3792,6 @@ function loadDataSettings()
 						document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
 					}
 					document.getElementById('txtUpdateStateIntervallTimespan').value=objResp.data.stateUpdateIntervallTimespan;
-					if(objResp.data.updateLinksActive == true)
-					{
-						document.getElementById("chkUseUpdateLinksIntervall").setAttribute("checked", true);
-						document.getElementById("chkUpdateLinksOnlyWhenActive").removeAttribute("disabled");
-						document.getElementById("txtUpdateLinksIntervallTimespan").removeAttribute("disabled");
-					}
-					else
-					{
-						document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
-						document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
-					}
-					if(objResp.data.updateLinksOnlyWhenArmed == true)
-					{
-						document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("checked", true);
-					}
-					document.getElementById('txtUpdateLinksIntervallTimespan').value = objResp.data.updateLinksTimespan;
 					if(objResp.data.pushServiceActive == true)
 					{
 						document.getElementById("chkUsePushService").setAttribute("checked", true);
@@ -4513,18 +4495,6 @@ function changeValue(element)
 			else
 			{
 				document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
-			}
-			break;
-		case "useUpdateLinksIntervall":
-			if(element.checked == true)
-			{
-				document.getElementById("txtUpdateLinksIntervallTimespan").removeAttribute("disabled");
-				document.getElementById("chkUpdateLinksOnlyWhenActive").removeAttribute("disabled");
-			}
-			else
-			{
-				document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
-				document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
 			}
 			break;
 		case "useUpdateStateEvent":

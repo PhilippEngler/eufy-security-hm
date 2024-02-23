@@ -116,7 +116,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 17;
+        return 18;
     }
 
     /**
@@ -210,7 +210,7 @@ export class Config
         const pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false};
+        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false};
         config.apiConfig = apiConfig;
 
         const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
@@ -326,14 +326,38 @@ export class Config
             if(configJson.configVersion < 17)
             {
                 this.log("INFO", "Configfile needs Stage2 update to version 17...");
-                if(configJson.apiConfig.cameraDefaultImage !== undefined)
+                if(configJson.apiConfig.hasOwnProperty("cameraDefaultImage"))
                 {
                     this.log("INFO", " removing 'cameraDefaultImage'.");
                     updated = true;
                 }
-                if(configJson.apiConfig.cameraDefaultVideo !== undefined)
+                if(configJson.apiConfig.hasOwnProperty("cameraDefaultVideo"))
                 {
                     this.log("INFO", " removing 'cameraDefaultVideo'.");
+                    updated = true;
+                }
+            }
+            if(configJson.configVersion < 18)
+            {
+                this.log("INFO", "Configfile needs Stage2 update to version 18...");
+                if(configJson.apiConfig.hasOwnProperty("updateLinksActive"))
+                {
+                    this.log("INFO", " removing 'updateLinksActive'.");
+                    updated = true;
+                }
+                if(configJson.apiConfig.hasOwnProperty("updateLinksOnlyWhenArmed"))
+                {
+                    this.log("INFO", " removing 'updateLinksOnlyWhenArmed'.");
+                    updated = true;
+                }
+                if(configJson.apiConfig.hasOwnProperty("updateLinks24hActive"))
+                {
+                    this.log("INFO", " removing 'updateLinks24hActive'.");
+                    updated = true;
+                }
+                if(configJson.apiConfig.hasOwnProperty("updateLinksTimespan"))
+                {
+                    this.log("INFO", " removing 'updateLinksTimespan'.");
                     updated = true;
                 }
             }
@@ -522,22 +546,6 @@ export class Config
             {
                 newConfigJson.apiConfig.stateUpdateIntervallTimespan = configJson.apiConfig.stateUpdateIntervallTimespan;
             }
-            if(configJson.apiConfig.updateLinksActive !== undefined)
-            {
-                newConfigJson.apiConfig.updateLinksActive = configJson.apiConfig.updateLinksActive;
-            }
-            if(configJson.apiConfig.updateLinksOnlyWhenArmed !== undefined)
-            {
-                newConfigJson.apiConfig.updateLinksOnlyWhenArmed = configJson.apiConfig.updateLinksOnlyWhenArmed;
-            }
-            if(configJson.apiConfig.updateLinks24hActive !== undefined)
-            {
-                newConfigJson.apiConfig.updateLinks24hActive = configJson.apiConfig.updateLinks24hActive;
-            }
-            if(configJson.apiConfig.updateLinksTimespan !== undefined)
-            {
-                newConfigJson.apiConfig.updateLinksTimespan = configJson.apiConfig.updateLinksTimespan;
-            }
             if(configJson.apiConfig.pushServiceActive !== undefined)
             {
                 newConfigJson.apiConfig.pushServiceActive = configJson.apiConfig.pushServiceActive;
@@ -627,12 +635,6 @@ export class Config
         {
             this.log("INFO", `Set stateUpdateIntervallTimespan to default value "15"`);
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
-            updated = true;
-        }
-        if(this.configJson.apiConfig.updateLinksOnlyWhenArmed && (this.configJson.apiConfig.updateLinksTimespan < 15 || this.configJson.apiConfig.updateLinksTimespan > 240))
-        {
-            this.log("INFO", `Set updateLinksTimespan to default value "15"`);
-            this.configJson.apiConfig.updateLinksTimespan = 15;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelAddon < 0 || this.configJson.logConfig.logLevelAddon > 6)
@@ -1459,90 +1461,6 @@ export class Config
         if(this.configJson.apiConfig.stateUpdateIntervallTimespan != stateUpdateIntervallTimespan)
         {
             this.configJson.apiConfig.stateUpdateIntervallTimespan = stateUpdateIntervallTimespan;
-            this.hasChanged = true;
-        }
-    }
-
-    /**
-     * Determines if the updated links runs scheduled.
-     */
-    public getUpdateLinksActive() : boolean
-    {
-        if(this.configJson.apiConfig.updateLinksActive !== undefined)
-        {
-            return this.configJson.apiConfig.updateLinksActive;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    /**
-     * Set the value for update links scheduled.
-     * @param updateLinksActive The value if the links should updated scheduled.
-     */
-    public setUpdateLinksActive(updateLinksActive : boolean) : void
-    {
-        if(this.configJson.apiConfig.updateLinksActive != updateLinksActive)
-        {
-            this.configJson.apiConfig.updateLinksActive = updateLinksActive;
-            this.hasChanged = true;
-        }
-    }
-
-    /**
-     * Returns the time between runs of two scheduled tasks for update state.
-     */
-    public getUpdateLinksTimespan() : number
-    {
-        if(this.configJson.apiConfig.updateLinksTimespan !== undefined)
-        {
-            return this.configJson.apiConfig.updateLinksTimespan;
-        }
-        else
-        {
-            return 15;
-        }
-    }
-
-    /**
-     * Set the value for the time between runs of two scheduled tasks for update links.
-     * @param updateLinksTimespan The time in minutes.
-     */
-    public setUpdateLinksTimespan(updateLinksTimespan : number) : void
-    {
-        if(this.configJson.apiConfig.updateLinksTimespan != updateLinksTimespan)
-        {
-            this.configJson.apiConfig.updateLinksTimespan = updateLinksTimespan;
-            this.hasChanged = true;
-        }
-    }
-
-    /**
-     * Return weather the api should only refresh links when eufy state is other than off or deactivated.
-     */
-    public getUpdateLinksOnlyWhenArmed() : boolean
-    {
-        if(this.configJson.apiConfig.updateLinksOnlyWhenArmed !== undefined)
-        {
-            return this.configJson.apiConfig.updateLinksOnlyWhenArmed;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    /**
-     * Set the value the api should only refresh links when eufy state is other than off or deactivated
-     * @param updateLinksOnlyWhenArmed true for not refreshing links during off or deactivated, otherwise false.
-     */
-    public setUpdateLinksOnlyWhenArmed(updateLinksOnlyWhenArmed : boolean): void
-    {
-        if(this.configJson.apiConfig.updateLinksOnlyWhenArmed != updateLinksOnlyWhenArmed)
-        {
-            this.configJson.apiConfig.updateLinksOnlyWhenArmed = updateLinksOnlyWhenArmed;
             this.hasChanged = true;
         }
     }

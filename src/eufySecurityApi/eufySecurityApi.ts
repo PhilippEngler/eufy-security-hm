@@ -1,5 +1,5 @@
 import { Config } from "./config";
-import { HTTPApi, GuardMode, Station, Device, PropertyName, Camera, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, DoorbellCamera, IndoorCamera, SoloCamera, FloodlightCamera, Picture, WallLightCam, GarageCamera, DeviceType } from "./http";
+import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType } from "./http";
 import { HomematicApi } from "./homematicApi";
 import { rootAddonLogger, setLoggingLevel } from "./logging";
 
@@ -38,7 +38,6 @@ export class EufySecurityApi
 
     private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
-    private taskUpdateLinks !: NodeJS.Timeout;
     private waitUpdateState !: NodeJS.Timeout;
     private refreshEufySecurityCloudTimeout?: NodeJS.Timeout;
 
@@ -2225,86 +2224,6 @@ export class EufySecurityApi
     }
 
     /**
-     * Update the library (at this time only image and the corrospondending datetime) from the devices.
-     */
-    public async getLibrary() : Promise<string>
-    {
-        let json : any = {};
-        try
-        {
-            if(this.devices)
-            {
-                await this.httpService.refreshStationData();
-                await this.httpService.refreshDeviceData();
-
-                await this.updateDeviceData();
-                await this.devices.loadDevices();
-
-                const devices = await this.getDevices();
-                let device;
-
-                if(devices)
-                {
-                    json = {"success":true, "data":[]};
-                    for (const deviceSerial in devices)
-                    {
-                        device = devices[deviceSerial];
-                        switch (getDeviceTypeAsString(device))
-                        {
-                            case "camera":
-                                device = devices[deviceSerial] as Camera;
-                                break;
-                            case "doorbell":
-                                device = devices[deviceSerial] as DoorbellCamera;
-                                break;
-                            case "indoorcamera":
-                                device = devices[deviceSerial] as IndoorCamera;
-                                break;
-                            case "solocamera":
-                                device = devices[deviceSerial] as SoloCamera;
-                                break;
-                            case "floodlight":
-                                device = devices[deviceSerial] as FloodlightCamera;
-                                break;
-                            case "walllightcamera":
-                                device = devices[deviceSerial] as WallLightCam;
-                                break;
-                            case "garagecamera":
-                                device = devices[deviceSerial] as GarageCamera;
-                                break;
-                            default:
-                                device = undefined;
-                        }
-                        if(device !== undefined)
-                        {
-                            json.data.push({"deviceSerial":deviceSerial, "pictureTime":this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial)});
-                        }
-                    }
-                    this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
-                    this.setLastConnectionInfo(true);
-                }
-                else
-                {
-                    json = {"success":false, "reason":"No devices found."};
-                    this.setLastConnectionInfo(false);
-                }
-            }
-            else
-            {
-                json = {"success":false, "reason":"No connection to eufy."};
-            }
-        }
-        catch (e : any)
-        {
-            rootAddonLogger.error(`Error occured at getLibrary(). Error: ${e.message}`);
-            this.setLastConnectionInfo(false);
-            json = {"success":false, "reason":e.message};
-        }
-
-        return JSON.stringify(json);
-    }
-
-    /**
      * Updates the last guard mode change time systemvariable for a given station.
      * @param stationSerial The serial of the station.
      * @param timestamp The timestamp to set.
@@ -2559,7 +2478,7 @@ export class EufySecurityApi
         let json : any = {};
 
         json = {"success":true, "data":{}};
-        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevelAddon":this.config.getLogLevelAddon(), "logLevelMain":this.config.getLogLevelMain(), "logLevelHttp":this.config.getLogLevelHttp(), "logLevelP2p":this.config.getLogLevelP2p(), "logLevelPush":this.config.getLogLevelPush(), "logLevelMqtt":this.config.getLogLevelMqtt(), "tokenExpire":this.config.getTokenExpire()};
+        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevelAddon":this.config.getLogLevelAddon(), "logLevelMain":this.config.getLogLevelMain(), "logLevelHttp":this.config.getLogLevelHttp(), "logLevelP2p":this.config.getLogLevelP2p(), "logLevelPush":this.config.getLogLevelPush(), "logLevelMqtt":this.config.getLogLevelMqtt(), "tokenExpire":this.config.getTokenExpire()};
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -2585,9 +2504,6 @@ export class EufySecurityApi
      * @param stateUpdateEventActive Should the api use station events for updateing the state.
      * @param stateUpdateIntervallActive Should the api schedule a task for updateing the state.
      * @param stateUpdateIntervallTimespan The time between two scheduled runs of update state.
-     * @param updateLinksActive Should the api schedule a task for updateing the links.
-     * @param updateLinksOnlyWhenArmed Should the api only refreah links when state is active
-     * @param updateLinksTimespan The time between two scheduled runs of update links.
      * @param pushServiceActive Should the api use push service.
      * @param logLevelAddon The log level for addon.
      * @param logLevelMain The log level for main.
@@ -2597,11 +2513,10 @@ export class EufySecurityApi
      * @param logLevelMqtt The log level for mqtt.
      * @returns A JSON string containing the result.
      */
-    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevelAddon : number, logLevelMain : number, logLevelHttp : number, logLevelP2p : number, logLevelPush : number, logLevelMqtt : number) : Promise<string>
+    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, pushServiceActive : boolean, logLevelAddon : number, logLevelMain : number, logLevelHttp : number, logLevelP2p : number, logLevelPush : number, logLevelMqtt : number) : Promise<string>
     {
         let serviceRestart = false;
         let taskSetupStateNeeded = false;
-        let taskSetupLinksNeeded = false;
         if(this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getHouseId() != houseId || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive)
         {
             serviceRestart = true;
@@ -2667,28 +2582,9 @@ export class EufySecurityApi
             taskSetupStateNeeded = true;
         }
         this.config.setStateUpdateIntervallTimespan(stateUpdateIntervallTimespan);
-        if(this.config.getUpdateLinksActive() == true && updateLinksActive == false)
-        {
-            this.clearScheduledTask(this.taskUpdateLinks, "getLibrary");
-        }
-        else if(this.config.getUpdateLinksActive() != updateLinksActive)
-        {
-            taskSetupLinksNeeded = true;
-        }
-        this.config.setUpdateLinksActive(updateLinksActive);
-        this.config.setUpdateLinksOnlyWhenArmed(updateLinksOnlyWhenArmed);
-        if(this.config.getUpdateLinksTimespan() != updateLinksTimespan)
-        {
-            taskSetupLinksNeeded = true;
-        }
-        this.config.setUpdateLinksTimespan(updateLinksTimespan);
         if(taskSetupStateNeeded == true)
         {
             this.setupScheduledTask(this.taskUpdateState, "getState");
-        }
-        if(taskSetupLinksNeeded == true)
-        {
-            this.setupScheduledTask(this.taskUpdateLinks, "getLibrary");
         }
         this.config.setPushServiceActive(pushServiceActive);
         this.config.setLogLevelAddon(logLevelAddon);
@@ -3211,20 +3107,6 @@ export class EufySecurityApi
             rootAddonLogger.info(`  scheduling getState disabled in settings${this.config.getStateUpdateEventActive() == true ? " (state changes will be received by event)" : ""}.`)
         }
 
-        if(this.config.getUpdateLinksActive())
-        {
-            if(this.taskUpdateLinks)
-            {
-                rootAddonLogger.info(`  getLibrary already scheduled, remove scheduling...`);
-                clearInterval(this.taskUpdateLinks);
-            }
-            this.taskUpdateLinks = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getUpdateLinksTimespan() * 60 * 1000));
-            rootAddonLogger.info(`  getLibrary scheduled (runs every ${this.config.getUpdateLinksTimespan()} minutes${this.config.getUpdateLinksOnlyWhenArmed() == true ? " when system is armed" : ""}).`);
-        }
-        else
-        {
-            rootAddonLogger.info(`  scheduling getLinks disabled in settings.`);
-        }
         rootAddonLogger.info(`...done setting up scheduled tasks.`);
     }
 
@@ -3242,11 +3124,6 @@ export class EufySecurityApi
         {
             rootAddonLogger.info(`Remove scheduling for getState.`);
             clearInterval(this.taskUpdateState);
-        }
-        if(this.taskUpdateLinks)
-        {
-            rootAddonLogger.info(`Remove scheduling for getLibrary.`);
-            clearInterval(this.taskUpdateLinks);
         }
         this.config.close();
     }
@@ -3269,9 +3146,6 @@ export class EufySecurityApi
                 case "getState":
                     clearInterval(this.taskUpdateState);
                     break;
-                case "getLibrary":
-                    clearInterval(this.taskUpdateLinks);
-                    break;
             }
         }
         switch (name)
@@ -3283,10 +3157,6 @@ export class EufySecurityApi
             case "getState":
                 task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
                 rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
-                break;
-            case "getLibrary":
-                task = setInterval(async() => { await this.setScheuduleLibrary(); }, (this.config.getUpdateLinksTimespan() * 60 * 1000));
-                rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getUpdateLinksTimespan()} minutes${this.config.getUpdateLinksOnlyWhenArmed() == true ? " when system is active" : ""}).`);
                 break;
         }
     }
@@ -3311,18 +3181,6 @@ export class EufySecurityApi
     private async setScheduleState() : Promise<void>
     {
         await this.getGuardMode();
-    }
-
-    /**
-     * The method called when scheduleing library is called.
-     */
-    private async setScheuduleLibrary() : Promise<void>
-    {
-        const mode = await this.getGuardModeAsGuardMode();
-        if(this.config.getUpdateLinksOnlyWhenArmed() == false || ((this.config.getUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.DISARMED) && (this.config.getUpdateLinksOnlyWhenArmed() == true && mode != GuardMode.OFF)))
-        {
-            await this.getLibrary();
-        }
     }
 
     /**

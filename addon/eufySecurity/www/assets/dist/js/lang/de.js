@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.8
+Schema v9.9
 20240223
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240223 (v9.8)";
+var languageVersion = "20240223 (v9.9)";
 
 function translateNavbarElement(element)
 {
@@ -197,20 +197,6 @@ function translateStaticContentElement(element)
 		case "hintStateIntervallTimespan":
 			return "Intervall in Minuten.";
 		case "divStateIntervallError":
-			return "Bitte geben Sie ein Intervall zwischen 15 und 240 Minuten ein.";
-		case "settingsHeaderConfigUpdateLinks":
-			return "Einstellungen für regelmäßige Aktualisierung der Links";
-		case "lblUseUpdateLinksIntervall":
-			return "Links regelmäßig aktualisieren";
-		case "lblUpdateLinksOnlyWhenActive":
-			return "Links nur regelmäßig aktualisieren, wenn System aktiv ist";
-		case "lblUpdateLinksIntervallTimespan":
-			return "Zeit zwischen den Aktualisierungen.";
-		case "txtUpdateLinksIntervallTimespan":
-			return "Intervall zwischen Aktualisierungen.";
-		case "hintLinksIntervallTimespan":
-			return "Intervall in Minuten.";
-		case "divLinksIntervallTimespanError":
 			return "Bitte geben Sie ein Intervall zwischen 15 und 240 Minuten ein.";
 		case "settingsHeaderConfigPushService":
 			return "Einstellungen für Pushbenachrichtigungen";

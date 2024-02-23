@@ -132,13 +132,6 @@ function translateStaticPageContent(page)
             translatePlaceholer("txtUpdateStateIntervallTimespan");
             translateInnerHtml("hintStateIntervallTimespan");
             translateInnerHtml("divStateIntervallError");
-            translateInnerHtml("settingsHeaderConfigUpdateLinks");
-            translateInnerHtml("lblUseUpdateLinksIntervall");
-            translateInnerHtml("lblUpdateLinksOnlyWhenActive");
-            translateInnerHtml("lblUpdateLinksIntervallTimespan");
-            translatePlaceholer("txtUpdateLinksIntervallTimespan");
-            translateInnerHtml("hintLinksIntervallTimespan");
-            translateInnerHtml("divLinksIntervallTimespanError");
             translateInnerHtml("settingsHeaderConfigPushService");
             translateInnerHtml("lblUsePushService");
             translateInnerHtml("hintUsePushService");

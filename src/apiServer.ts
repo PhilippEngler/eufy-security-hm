@@ -475,16 +475,6 @@ class ApiServer
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
-                    case "getLibrary":
-                        if(url.length == 2)
-                        {
-                            responseData = await api.getLibrary();
-                        }
-                        else
-                        {
-                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
-                        }
-                        break;
                     case "connect":
                         if(url.length == 3)
                         {
@@ -721,24 +711,6 @@ class ApiServer
                                 updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
                             }
 
-                            let useupdatelinks = false;
-                            if(postData.indexOf("useUpdateLinksIntervall") >= 0)
-                            {
-                                useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
-                            }
-
-                            let useupdatelinksonlywhenactive = false;
-                            if(postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0)
-                            {
-                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
-                            }
-
-                            let updatelinkstimespan = 15;
-                            if(postData.indexOf("updateLinksIntervallTimespan") >= 0)
-                            {
-                                updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "number");
-                            }
-
                             let usepushservice = false;
                             if(postData.indexOf("usePushService") >= 0)
                             {
@@ -838,17 +810,12 @@ class ApiServer
                                 isDataOK = false;
                                 rootAddonLogger.info("The value for 'updatestatetimespan' is out of range. Please use a value between '15' and '240'.");
                             }
-                            if(checkNumberValue(updatelinkstimespan, 15, 240) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'updatelinkstimespan' is out of range. Please use a value between '15' and '240'.");
-                            }
 
                             if(isDataOK == true)
                             {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
-                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevelAddon, loglevelMain, loglevelHttp, loglevelP2p, loglevelPush, loglevelMqtt);
+                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, loglevelAddon, loglevelMain, loglevelHttp, loglevelP2p, loglevelPush, loglevelMqtt);
                             }
                             else
                             {
