@@ -211,8 +211,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
             try
             {
-                const rawStations = await this.api.getRawStations();
-                const stations = await rawStations.getStations();
+                const stations = await this.api.getStations();
                 for(const stationSerial in stations)
                 {
                     try
@@ -234,8 +233,7 @@ export class PushService extends TypedEmitter<EufySecurityEvents>
 
             try
             {
-                const rawDevices = await this.api.getRawDevices();
-                const devices = await rawDevices.getDevices();
+                const devices = await this.api.getDevices();
                 for(const deviceSerial in devices)
                 {
                     try
