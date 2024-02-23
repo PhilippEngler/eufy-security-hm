@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240222
+ * 20240223
  */
 action = "";
 port = "";
@@ -3411,8 +3411,6 @@ function disableUIElements()
 	document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
 	document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
 	document.getElementById("cbConnectionType").setAttribute("disabled", true);
-	document.getElementById('txtDefaultImagePath').setAttribute("disabled", true);
-	document.getElementById('txtDefaultVideoPath').setAttribute("disabled", true);
 	document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
 	document.getElementById("chkUpdateLinksOnlyWhenActive").setAttribute("disabled", true);
 	document.getElementById("txtUpdateLinksIntervallTimespan").setAttribute("disabled", true);
@@ -3440,8 +3438,6 @@ function enableUIElements()
 	document.getElementById("cbCountry").removeAttribute("disabled");
 	document.getElementById("cbLanguage").removeAttribute("disabled");
 	document.getElementById("cbConnectionType").removeAttribute("disabled");
-	document.getElementById('txtDefaultImagePath').removeAttribute("disabled");
-	document.getElementById('txtDefaultVideoPath').removeAttribute("disabled");
 	document.getElementById("chkUsePushService").removeAttribute("disabled");
 	document.getElementById("cbLogLevelAddon").removeAttribute("disabled");
 	document.getElementById("cbLogLevelMain").removeAttribute("disabled");
@@ -3780,8 +3776,6 @@ function loadDataSettings()
 							}
 						}
 					}
-					document.getElementById('txtDefaultImagePath').value = objResp.data.cameraDefaultImage;
-					document.getElementById('txtDefaultVideoPath').value = objResp.data.cameraDefaultVideo;
 					if(objResp.data.stateUpdateEventActive == true)
 					{
 						document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);

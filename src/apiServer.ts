@@ -646,6 +646,7 @@ class ApiServer
                             if(useHttp == false && useHttps == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("At least 'useHttp' or 'useHttps' must be activated.");
                             }
 
                             let apiporthttps = 52790;
@@ -700,18 +701,6 @@ class ApiServer
                             if(postData.indexOf("useSystemVariables") >= 0)
                             {
                                 useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
-                            }
-
-                            let apicameradefaultimage = "";
-                            if(postData.indexOf("defaultImagePath") >= 0)
-                            {
-                                apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
-                            }
-
-                            let apicameradefaultvideo = "";
-                            if(postData.indexOf("defaultVideoPath") >= 0)
-                            {
-                                apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
                             }
 
                             let useupdatestateevent = false;
@@ -795,10 +784,12 @@ class ApiServer
                             if(checkNumberValue(apiporthttp, 1, 53535) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'apiporthttp' is out of range. Please use a value between '1' and '53535'.");
                             }
                             if(checkNumberValue(apiporthttps, 1, 53535) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'apiporthttps' is out of range. Please use a value between '1' and '53535'.");
                             }
                             if(apiuseudpstaticports == true)
                             {
@@ -810,49 +801,58 @@ class ApiServer
                             if(useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == ""))
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The settings for using https are incomplete. Please set 'apiporthttps', 'apikeyfile' and 'apicertfile'.");
                             }
                             if(checkNumberValue(loglevelAddon, 0, 6) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'loglevelAddon' is out of range. Please use a value between '0' and '6'.");
                             }
                             if(checkNumberValue(loglevelMain, 0, 6) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'loglevelMain' is out of range. Please use a value between '0' and '6'.");
                             }
                             if(checkNumberValue(loglevelHttp, 0, 6) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'loglevelHttp' is out of range. Please use a value between '0' and '6'.");
                             }
                             if(checkNumberValue(loglevelP2p, 0, 6) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'loglevelP2p' is out of range. Please use a value between '0' and '6'.");
                             }
                             if(checkNumberValue(loglevelPush, 0, 6) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'loglevelPush' is out of range. Please use a value between '0' and '6'.");
                             }
                             if(checkNumberValue(loglevelMqtt, 0, 6) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'loglevelMqtt' is out of range. Please use a value between '0' and '6'.");
                             }
                             if(checkNumberValue(updatestatetimespan, 15, 240) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'updatestatetimespan' is out of range. Please use a value between '15' and '240'.");
                             }
                             if(checkNumberValue(updatelinkstimespan, 15, 240) == false)
                             {
                                 isDataOK = false;
+                                rootAddonLogger.info("The value for 'updatelinkstimespan' is out of range. Please use a value between '15' and '240'.");
                             }
 
                             if(isDataOK == true)
                             {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
-                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevelAddon, loglevelMain, loglevelHttp, loglevelP2p, loglevelPush, loglevelMqtt);
+                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, loglevelAddon, loglevelMain, loglevelHttp, loglevelP2p, loglevelPush, loglevelMqtt);
                             }
                             else
                             {
-                                responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
+                                responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check logfile and values."}`;
                             }
 
                             const resJson = JSON.parse(responseData);

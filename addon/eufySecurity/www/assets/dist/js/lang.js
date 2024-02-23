@@ -125,14 +125,6 @@ function translateStaticPageContent(page)
             translateInnerHtml("lblUseUdpStaticPorts");
             translateInnerHtml("settingsHeaderConfigUpdateSystemVariables");
             translateInnerHtml("lblUseSystemVariables");
-            translateInnerHtml("settingsHeaderConfigDefaultImageSettings");
-            translateInnerHtml("lblDefaultImagePath");
-            translatePlaceholer("txtDefaultImagePath");
-            translateInnerHtml("hintDefaultImagePath");
-            translateInnerHtml("settingsHeaderConfigDefaultVideoSettings");
-            translateInnerHtml("lblDefaultVideoPath");
-            translatePlaceholer("txtDefaultVideoPath");
-            translateInnerHtml("hintDefaultVideoPath");
             translateInnerHtml("settingsHeaderConfigUpdateState");
             translateInnerHtml("lblUpdateStateEvent");
             translateInnerHtml("lblUpdateStateIntervall");

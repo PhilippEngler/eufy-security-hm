@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.7
-20240221
+Schema v9.8
+20240223
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240221 (v9.7)";
+var languageVersion = "20240223 (v9.8)";
 
 function translateNavbarElement(element)
 {
@@ -184,22 +184,6 @@ function translateStaticContentElement(element)
 			return "Settings for updating the system variables";
 		case "lblUseSystemVariables":
 			return "Automatically update system variables for API actions";
-		case "settingsHeaderConfigDefaultImageSettings":
-			return "Settings for standard image of the cameras";
-		case "lblDefaultImagePath":
-			return "Standard image for cameras.";
-		case "txtDefaultImagePath":
-			return "Link to the standard image.";
-		case "hintDefaultImagePath":
-			return "If no still image is available for the respective camera, this link is set in the corresponding system variable.";
-		case "settingsHeaderConfigDefaultVideoSettings":
-			return "Settings for standard video for cameras";
-		case "lblDefaultVideoPath":
-			return "Standard video for cameras.";
-		case "txtDefaultVideoPath":
-			return "Link to the standard video.";
-		case "hintDefaultVideoPath":
-			return "If no video is available for the respective camera, this link is set in the corresponding system variable.";
 		case "settingsHeaderConfigUpdateState":
 			return "Settings for regular mode update";
 		case "lblUpdateStateEvent":

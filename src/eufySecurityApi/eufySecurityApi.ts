@@ -2277,7 +2277,7 @@ export class EufySecurityApi
                         }
                         if(device !== undefined)
                         {
-                            json.data.push({"deviceSerial":deviceSerial, "pictureTime":this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial), "videoUrl":device.getLastCameraVideoURL() == "" ? this.config.getCameraDefaultVideo() : device.getLastCameraVideoURL()});
+                            json.data.push({"deviceSerial":deviceSerial, "pictureTime":this.devices.getLastEventTimeForDevice(deviceSerial) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(deviceSerial)});
                         }
                     }
                     this.setSystemVariableTime("eufyLastLinkUpdateTime", new Date());
@@ -2559,7 +2559,7 @@ export class EufySecurityApi
         let json : any = {};
 
         json = {"success":true, "data":{}};
-        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "cameraDefaultImage":this.config.getCameraDefaultImage(), "cameraDefaultVideo":this.config.getCameraDefaultVideo(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevelAddon":this.config.getLogLevelAddon(), "logLevelMain":this.config.getLogLevelMain(), "logLevelHttp":this.config.getLogLevelHttp(), "logLevelP2p":this.config.getLogLevelP2p(), "logLevelPush":this.config.getLogLevelPush(), "logLevelMqtt":this.config.getLogLevelMqtt(), "tokenExpire":this.config.getTokenExpire()};
+        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "updateLinksActive":this.config.getUpdateLinksActive(), "updateLinksOnlyWhenArmed":this.config.getUpdateLinksOnlyWhenArmed(), "updateLinksTimespan":this.config.getUpdateLinksTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevelAddon":this.config.getLogLevelAddon(), "logLevelMain":this.config.getLogLevelMain(), "logLevelHttp":this.config.getLogLevelHttp(), "logLevelP2p":this.config.getLogLevelP2p(), "logLevelPush":this.config.getLogLevelPush(), "logLevelMqtt":this.config.getLogLevelMqtt(), "tokenExpire":this.config.getTokenExpire()};
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -2582,8 +2582,6 @@ export class EufySecurityApi
      * @param localStaticUdpPortsActive Should the api use static ports to connect with station.
      * @param localStaticUdpPorts The local ports for connection with station.
      * @param systemVariableActive Should the api update related systemvariables.
-     * @param cameraDefaultImage The path to the default image.
-     * @param cameraDefaultVideo The path to the default video.
      * @param stateUpdateEventActive Should the api use station events for updateing the state.
      * @param stateUpdateIntervallActive Should the api schedule a task for updateing the state.
      * @param stateUpdateIntervallTimespan The time between two scheduled runs of update state.
@@ -2599,7 +2597,7 @@ export class EufySecurityApi
      * @param logLevelMqtt The log level for mqtt.
      * @returns A JSON string containing the result.
      */
-    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, cameraDefaultImage : string, cameraDefaultVideo : string, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevelAddon : number, logLevelMain : number, logLevelHttp : number, logLevelP2p : number, logLevelPush : number, logLevelMqtt : number) : Promise<string>
+    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, updateLinksActive : boolean, updateLinksOnlyWhenArmed : boolean, updateLinksTimespan : number, pushServiceActive : boolean, logLevelAddon : number, logLevelMain : number, logLevelHttp : number, logLevelP2p : number, logLevelPush : number, logLevelMqtt : number) : Promise<string>
     {
         let serviceRestart = false;
         let taskSetupStateNeeded = false;
@@ -2654,8 +2652,6 @@ export class EufySecurityApi
             this.config.setLocalStaticUdpPortsActive(false);
         }
         this.config.setSystemVariableActive(systemVariableActive);
-        this.config.setCameraDefaultImage(cameraDefaultImage);
-        this.config.setCameraDefaultVideo(cameraDefaultVideo);
         this.config.setStateUpdateEventActive(stateUpdateEventActive);
         if(this.config.getStateUpdateIntervallActive() == true && stateUpdateIntervallActive == false)
         {

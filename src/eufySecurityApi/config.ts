@@ -116,7 +116,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 16;
+        return 17;
     }
 
     /**
@@ -210,7 +210,7 @@ export class Config
         const pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "cameraDefaultImage": "", "cameraDefaultVideo": "", "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false};
+        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "updateLinksActive": true, "updateLinksOnlyWhenArmed": false, "updateLinks24hActive": false, "updateLinksTimespan": 15, "pushServiceActive": false};
         config.apiConfig = apiConfig;
 
         const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
@@ -322,6 +322,20 @@ export class Config
                     configJson.logConfig = logConfig;
                 }
                 updated = true;
+            }
+            if(configJson.configVersion < 17)
+            {
+                this.log("INFO", "Configfile needs Stage2 update to version 17...");
+                if(configJson.apiConfig.cameraDefaultImage !== undefined)
+                {
+                    this.log("INFO", " removing 'cameraDefaultImage'.");
+                    updated = true;
+                }
+                if(configJson.apiConfig.cameraDefaultVideo !== undefined)
+                {
+                    this.log("INFO", " removing 'cameraDefaultVideo'.");
+                    updated = true;
+                }
             }
             if(updated == true)
             {
@@ -487,14 +501,6 @@ export class Config
             if(configJson.apiConfig.systemVariableActive !== undefined)
             {
                 newConfigJson.apiConfig.systemVariableActive = configJson.apiConfig.systemVariableActive;
-            }
-            if(configJson.apiConfig.cameraDefaultImage !== undefined)
-            {
-                newConfigJson.apiConfig.cameraDefaultImage = configJson.apiConfig.cameraDefaultImage;
-            }
-            if(configJson.apiConfig.cameraDefaultVideo !== undefined)
-            {
-                newConfigJson.apiConfig.cameraDefaultVideo = configJson.apiConfig.cameraDefaultVideo;
             }
             if(configJson.apiConfig.updateCloudInfoIntervall !== undefined)
             {
@@ -1311,62 +1317,6 @@ export class Config
         if(this.configJson.apiConfig.httpsPkeyString != httpsPkeyString)
         {
             this.configJson.apiConfig.httpsPkeyString = httpsPkeyString;
-            this.hasChanged = true;
-        }
-    }
-
-    /**
-     * Get the default image for cameras.
-     */
-    public getCameraDefaultImage() : string
-    {
-        if(this.configJson.apiConfig.cameraDefaultImage !== undefined)
-        {
-            return this.configJson.apiConfig.cameraDefaultImage;
-        }
-        else
-        {
-            return "";
-        }
-    }
-
-    /**
-     * Set the default image for cameras.
-     * @param cameraDefaultImage The path to the default camera image.
-     */
-    public setCameraDefaultImage(cameraDefaultImage : string) : void
-    {
-        if(this.configJson.apiConfig.cameraDefaultImage != cameraDefaultImage)
-        {
-            this.configJson.apiConfig.cameraDefaultImage = cameraDefaultImage;
-            this.hasChanged = true;
-        }
-    }
-
-    /**
-     * Get the default video for cameras.
-     */
-    public getCameraDefaultVideo() : string
-    {
-        if(this.configJson.apiConfig.cameraDefaultVideo !== undefined)
-        {
-            return this.configJson.apiConfig.cameraDefaultVideo;
-        }
-        else
-        {
-            return "";
-        }
-    }
-
-    /**
-     * Set the default video for cameras.
-     * @param cameraDefaultVideo The path to the default camera video.
-     */
-    public setCameraDefaultVideo(cameraDefaultVideo : string) : void
-    {
-        if(this.configJson.apiConfig.cameraDefaultVideo != cameraDefaultVideo)
-        {
-            this.configJson.apiConfig.cameraDefaultVideo = cameraDefaultVideo;
             this.hasChanged = true;
         }
     }
