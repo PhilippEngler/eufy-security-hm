@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from "./eufySecurityApi";
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad } from "./http";
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop } from "./http";
 import { EufySecurityEvents } from "./interfaces";
 import { DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
@@ -115,6 +115,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                     {
                         new_device = GarageCamera.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
+                    else if (Device.isSmartDrop(resDevices[deviceSerial].device_type))
+                    {
+                        new_device = SmartDrop.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
                     else if(Device.isCamera(resDevices[deviceSerial].device_type))
                     {
                         new_device = Camera.getInstance(this.httpService, resDevices[deviceSerial]);
@@ -182,6 +186,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                             this.addEventListener(device, "DogDetected");
                             this.addEventListener(device, "DogLickDetected");
                             this.addEventListener(device, "DogPoopDetected");
+                            this.addEventListener(device, "Tampering");
+                            this.addEventListener(device, "LowTemperature");
+                            this.addEventListener(device, "HighTemperature");
+                            this.addEventListener(device, "PinIncorrect");
+                            this.addEventListener(device, "LidStuck");
+                            this.addEventListener(device, "BatteryFullyCharged");
 
                             this.addDevice(device);
                             device.initialize();
@@ -351,6 +361,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.removeEventListener(this.devices[deviceSerial], "DogDetected");
                 this.removeEventListener(this.devices[deviceSerial], "DogLickDetected");
                 this.removeEventListener(this.devices[deviceSerial], "DogPoopDetected");
+                this.removeEventListener(this.devices[deviceSerial], "Tampering");
+                this.removeEventListener(this.devices[deviceSerial], "LowTemperature");
+                this.removeEventListener(this.devices[deviceSerial], "HighTemperature");
+                this.removeEventListener(this.devices[deviceSerial], "PinIncorrect");
+                this.removeEventListener(this.devices[deviceSerial], "LidStuck");
+                this.removeEventListener(this.devices[deviceSerial], "BatteryFullyCharged");
 
                 (this.devices[deviceSerial] as Device).destroy();
             }
@@ -593,6 +609,32 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 device.on("dog poop detected", (device: Device, state: boolean) => this.onDeviceDogPoopDetected(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog poop detected")} Listener.`);
                 break;
+            case "Tampering":
+                device.on("tampering", (device: Device, state: boolean) => this.onDeviceTampering(device, state));
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("tampering")} Listener.`);
+                break;
+            case "LowTemperature":
+                device.on("low temperature", (device: Device, state: boolean) => this.onDeviceLowTemperature(device, state));
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("low temperature")} Listener.`);
+                break;
+            case "HighTemperature":
+                device.on("high temperature", (device: Device, state: boolean) => this.onDeviceHighTemperature(device, state));
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("high temperature")} Listener.`);
+                break;
+            case "PinIncorrect":
+                device.on("pin incorrect", (device: Device, state: boolean) => this.onDevicePinIncorrect(device, state));
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pin incorrect")} Listener.`);
+                break;
+            case "LidStuck":
+                device.on("lid stuck", (device: Device, state: boolean) => this.onDeviceLidStuck(device, state));
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("lid stuck")} Listener.`);
+                break;
+            case "BatteryFullyCharged":
+                device.on("battery fully charged", (device: Device, state: boolean) => this.onDeviceBatteryFullyCharged(device, state));
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("battery fully charged")} Listener.`);
+                break;
+            default:
+                rootAddonLogger.error(`Error adding event listener: Unknown event listener name '${eventListenerName}'.`);
         }
     }
 
@@ -713,6 +755,32 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 device.removeAllListeners("dog poop detected");
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog poop detected")} Listener.`);
                 break;
+            case "Tampering":
+                device.removeAllListeners("tampering");
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("tampering")} Listener.`);
+                break;
+            case "LowTemperature":
+                device.removeAllListeners("low temperature");
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("low temperature")} Listener.`);
+                break;
+            case "HighTemperature":
+                device.removeAllListeners("high temperature");
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("high temperature")} Listener.`);
+                break;
+            case "PinIncorrect":
+                device.removeAllListeners("pin incorrect");
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pin incorrect")} Listener.`);
+                break;
+            case "LidStuck":
+                device.removeAllListeners("lid stuck");
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("lid stuck")} Listener.`);
+                break;
+            case "BatteryFullyCharged":
+                device.removeAllListeners("battery fully charged");
+                rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("battery fully charged")} Listener.`);
+                break;
+            default:
+                rootAddonLogger.error(`Error removing event listener: Unknown event listener name '${eventListenerName}'.`);
         }
     }
 
@@ -1235,6 +1303,60 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         {
             //this.loadDeviceImage(device.getSerial());
         }
+    }
+
+    /**
+     * The action to be one when event DeviceTampering is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceTampering(device: Device, state: boolean): void {
+        this.emit("device tampering", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceLowTemperature is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceLowTemperature(device: Device, state: boolean): void {
+        this.emit("device low temperature", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceHighTemperature is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceHighTemperature(device: Device, state: boolean): void {
+        this.emit("device high temperature", device, state);
+    }
+
+    /**
+     * The action to be one when event DevicePinIncorrect is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDevicePinIncorrect(device: Device, state: boolean): void {
+        this.emit("device pin incorrect", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceLidStuck is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceLidStuck(device: Device, state: boolean): void {
+        this.emit("device lid stuck", device, state);
+    }
+
+    /**
+     * The action to be one when event DeviceBatteryFullyCharged is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    private onDeviceBatteryFullyCharged(device: Device, state: boolean): void {
+        this.emit("device battery fully charged", device, state);
     }
 
     /**
@@ -2076,6 +2198,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 break;
             case PropertyName.DeviceNightvisionOptimizationSide:
                 station.setNightvisionOptimizationSide(device, value as number);
+                break;
+            case PropertyName.DeviceOpenMethod:
+                station.setOpenMethod(device, value as number);
+                break;
+            case PropertyName.DeviceMotionActivatedPrompt:
+                station.setMotionActivatedPrompt(device, value as boolean);
                 break;
             default:
                 if (!Object.values(PropertyName).includes(name as PropertyName))
