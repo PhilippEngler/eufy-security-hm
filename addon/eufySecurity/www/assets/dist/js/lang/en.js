@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.9
-20240223
+Schema v9.10
+20240229
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240223 (v9.9)";
+var languageVersion = "20240229 (v9.10)";
 
 function translateNavbarElement(element)
 {
@@ -638,6 +638,12 @@ function translateMessages(message, ...options)
 			return "Error loading the log file.";
 		case "messageLoadVersionInfoErrorHeader":
 			return "Error loading the version information.";
+		case "messageRebootStationHeader":
+			return "Reboot station.";
+		case "messageRebootStationOkMessage":
+			return "The station is rebooting. This may take some minutes.";
+		case "messageSaveSettingsOkMessage":
+			return "The station reboot failed.";
 		default:
 			return `{${message}}`;
 	}

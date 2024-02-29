@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240223
+ * 20240229
  */
 action = "";
 port = "";
@@ -2889,8 +2889,8 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
 				if(propertyName == "rebootStation")
 				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateContent("messageRebootStationHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateContent("messageRebootStationOkMessage");
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessage("messageRebootStationHeader");
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessage("messageRebootStationOkMessage");
 				}
 				else
 				{
@@ -2906,7 +2906,7 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 				if(propertyName == "rebootStation")
 				{
 					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateContent("messageRebootStationHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateContent("messageRebootStationFailedMessage");
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateContent("messageSaveSettingsOkMessage");
 				}
 				else
 				{

@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.9
-20240223
+Schema v9.10
+20240229
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240223 (v9.9)";
+var languageVersion = "20240229 (v9.10)";
 
 function translateNavbarElement(element)
 {
@@ -638,6 +638,12 @@ function translateMessages(message, ...options)
 			return "Fehler beim Laden der Logdatei.";
 		case "messageLoadVersionInfoErrorHeader":
 			return "Fehler beim Laden der Versionsinformationen.";
+		case "messageRebootStationHeader":
+			return "Station neu starten.";
+		case "messageRebootStationOkMessage":
+			return "Die Station startet neu. Dies kann einige Minuten dauern.";
+		case "messageSaveSettingsOkMessage":
+			return "Die Station konnte nicht neu gestartet werden.";
 		default:
 			return `{${message}}`;
 	}
