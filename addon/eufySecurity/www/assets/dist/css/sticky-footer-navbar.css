@@ -6,6 +6,6 @@ main {
 }
 
 /* Some padding */
-main > .container-fluid {
+main > .container {
   padding: 60px 15px 0;
 }
