@@ -133,6 +133,8 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private encryption: EncryptionType = EncryptionType.NONE;
     private p2pKey?: Buffer;
 
+    private lookupErrorCounter = 0;
+
     constructor(rawStation: StationListResponse, api: HTTPApi, ipAddress?: string, preferredUdpPort?: number | null, connectionType?: P2PConnectionType, publicKey = "") {
         super();
         this.api = api;
@@ -487,18 +489,25 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         this.localLookup(host);
         if(this.connectionType == P2PConnectionType.QUICKEST) {
             this.cloudLookup();
+            this._clearLookup2Timeout();
+            this.lookup2Timeout = setTimeout(() => {
+                this.cloudLookup2();
+            }, this.LOOKUP2_TIMEOUT);
         }
-        this._clearLookup2Timeout();
-        this.lookup2Timeout = setTimeout(() => {
-            this.cloudLookup2();
-        }, this.LOOKUP2_TIMEOUT);
 
         this._clearLookupTimeout();
         this.lookupTimeout = setTimeout(() => {
             this.lookupTimeout = undefined;
             rootP2PLogger.error(`All address lookup tentatives failed.`, { stationSN: this.rawStation.station_sn });
-            if (this.localIPAddress !== undefined)
-                this.localIPAddress = undefined
+            if (this.localIPAddress !== undefined) {
+                rootP2PLogger.debug(`Deleted local ip address.`, { localIPAddress: this.localIPAddress, stationSN: this.rawStation.station_sn });
+                this.localIPAddress = undefined;
+            }
+            if (this.lookupErrorCounter === 3 && this.preferredIPAddress !== undefined) {
+                rootP2PLogger.debug(`Deleted preferred ip address.`, { preferredIPAddress: this.preferredIPAddress, stationSN: this.rawStation.station_sn });
+                this.preferredIPAddress = undefined;
+            }
+            this.lookupErrorCounter++;
             this._disconnected();
         }, this.MAX_LOOKUP_TIMEOUT);
     }
@@ -880,6 +889,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 this._clearConnectTimeout();
                 this._clearLookup2Timeout();
                 this.connected = true;
+                this.lookupErrorCounter = 0;
                 this.connectTime = new Date().getTime();
                 this.lastPong = null;
                 this.lastPongData = undefined;
