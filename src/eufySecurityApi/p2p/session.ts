@@ -133,7 +133,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private encryption: EncryptionType = EncryptionType.NONE;
     private p2pKey?: Buffer;
 
-    private lookupErrorCounter = 0;
+    private lookupTimeoutErrorCounter = 0;
 
     constructor(rawStation: StationListResponse, api: HTTPApi, ipAddress?: string, preferredUdpPort?: number | null, connectionType?: P2PConnectionType, publicKey = "") {
         super();
@@ -500,14 +500,14 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             this.lookupTimeout = undefined;
             rootP2PLogger.error(`All address lookup tentatives failed.`, { stationSN: this.rawStation.station_sn });
             if (this.localIPAddress !== undefined) {
-                rootP2PLogger.debug(`Deleted local ip address.`, { localIPAddress: this.localIPAddress, stationSN: this.rawStation.station_sn });
+                rootP2PLogger.debug(`Deleted local ip address.`, { stationSN: this.rawStation.station_sn, localIPAddress: this.localIPAddress });
                 this.localIPAddress = undefined;
             }
-            if (this.lookupErrorCounter === 3 && this.preferredIPAddress !== undefined) {
-                rootP2PLogger.debug(`Deleted preferred ip address.`, { preferredIPAddress: this.preferredIPAddress, stationSN: this.rawStation.station_sn });
+            if (this.lookupTimeoutErrorCounter === 3 && this.preferredIPAddress !== undefined) {
+                rootP2PLogger.debug(`Deleted preferred ip address.`, { stationSN: this.rawStation.station_sn, preferredIPAddress: this.preferredIPAddress });
                 this.preferredIPAddress = undefined;
             }
-            this.lookupErrorCounter++;
+            this.lookupTimeoutErrorCounter++;
             this._disconnected();
         }, this.MAX_LOOKUP_TIMEOUT);
     }
@@ -889,7 +889,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 this._clearConnectTimeout();
                 this._clearLookup2Timeout();
                 this.connected = true;
-                this.lookupErrorCounter = 0;
+                this.lookupTimeoutErrorCounter = 0;
                 this.connectTime = new Date().getTime();
                 this.lastPong = null;
                 this.lastPongData = undefined;
