@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.10
-20240229
+Schema v9.11
+20240309
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240229 (v9.10)";
+var languageVersion = "20240309 (v9.11)";
 
 function translateNavbarElement(element)
 {
@@ -743,11 +743,11 @@ function translateContent(content, ...options)
 			return "not available";
 		case "lblUnknown":
 			return "unknown";
-		case "lblLastRecordiung":
+		case "lblLastRecording":
 			return "Last recording";
 		case "lblLastRecordingThumbnail":
 			return "Thumbnail";
-		case "lblLastRecordiungNotAvailable":
+		case "lblLastRecordingNotAvailable":
 			return "no recording available";
 		case "lblStationDeviceModalHeader":
 			return "Integrated Device";

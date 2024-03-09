@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240229
+ * 20240309
  */
 action = "";
 port = "";
@@ -615,17 +615,24 @@ function getDeviceLastEventTime(device)
 	}
 	else
 	{
-		if(device.pictureTime !== undefined && device.pictureTime != "" && device.pictureTime != "n/a" && device.pictureTime != "n/d" && device.pictureTime != "0")
+		if(device.hasPicture === true)
 		{
-			return `${translateContent("lblLastRecordiung")}: ${makeDateTimeString(new Date(parseInt(device.pictureTime)))} | <a href="javascript:generateDeviceImageModal('${device.serialNumber}','${device.name}');">${translateContent("lblLastRecordingThumbnail")}</a>`;
-		}
-		else if(device.pictureTime === undefined || device.pictureTime == "n/a")
-		{
-			return translateContent("lblLastRecordiungNotAvailable");
+			if(device.pictureTime !== undefined && device.pictureTime !== "0")
+			{
+				return `${translateContent("lblLastRecording")}: ${makeDateTimeString(new Date(parseInt(device.pictureTime)))} | <a href="javascript:generateDeviceImageModal('${device.serialNumber}','${device.name}');">${translateContent("lblLastRecordingThumbnail")}</a>`;
+			}
+			else if(device.pictureTime === undefined)
+			{
+				return translateContent("lblLastRecordingNotAvailable");
+			}
+			else
+			{
+				return `${translateContent("lblLastRecording")}: ${translateContent("lblNotAvailable")}`;
+			}
 		}
 		else
 		{
-			return `${translateContent("lblLastRecordiung")}: ${translateContent("lblNotAvailable")}`;
+			return translateContent("lblLastRecordingNotAvailable");
 		}
 	}
 }

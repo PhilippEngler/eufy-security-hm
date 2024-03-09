@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.10
-20240229
+Schema v9.11
+20240309
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240229 (v9.10)";
+var languageVersion = "20240309 (v9.11)";
 
 function translateNavbarElement(element)
 {
@@ -743,11 +743,11 @@ function translateContent(content, ...options)
 			return "nicht verfügbar";
 		case "lblUnknown":
 			return "unbekannt";
-		case "lblLastRecordiung":
+		case "lblLastRecording":
 			return "letzte Aufnahme";
 		case "lblLastRecordingThumbnail":
 			return "Standbild";
-		case "lblLastRecordiungNotAvailable":
+		case "lblLastRecordingNotAvailable":
 			return "keine Aufnahme verfügbar";
 		case "lblStationDeviceModalHeader":
 			return "Integriertes Gerät";
