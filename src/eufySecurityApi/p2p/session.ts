@@ -489,6 +489,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         this.localLookup(host);
         if(this.connectionType == P2PConnectionType.QUICKEST) {
             this.cloudLookup();
+
             this._clearLookup2Timeout();
             this.lookup2Timeout = setTimeout(() => {
                 this.cloudLookup2();

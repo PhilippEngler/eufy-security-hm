@@ -6,7 +6,7 @@ import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, Floo
 import { EufySecurityEvents } from "./interfaces";
 import { DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
-import { CameraEvent, DeviceInteractions, EventInteraction } from "./utils/models";
+import { DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 import { EventInteractions } from "./eventInteractions";
 import { rootAddonLogger } from "./logging";
@@ -20,8 +20,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private httpService : HTTPApi;
     private eventInteractions: EventInteractions;
     private devices : { [deviceSerial : string] : any } = {};
-    //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
-    private devicesLastEvent : { [deviceSerial : string] : CameraEvent | null } = {};
     private loadingEmitter = new EventEmitter();
     private devicesLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "devices loaded");
     private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
@@ -255,8 +253,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         if (serial && !Object.keys(this.devices).includes(serial))
         {
             this.devices[serial] = device;
-            //this.devicesHistory[serial] = [];
-            this.devicesLastEvent[serial] = null;
             this.emit("device added", device);
 
             if (device.isLock())
@@ -1375,75 +1371,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Add a given event result to the local store if the event is not already stored.
-     * @param deviceSerial The serial of the device.
-     * @param eventResult The event result data.
-     */
-    /*public addEventResultForDevice(deviceSerial : string, eventResult : DatabaseQueryLocal)
-    {
-        for (let event of this.devicesHistory[deviceSerial])
-        {
-            if(event.history && eventResult.history && event.history.start_time && eventResult.history.start_time && event.record_id === eventResult.record_id && event.history.storage_path === eventResult.history.storage_path && event.history.start_time === eventResult.history.start_time)
-            {
-                return;
-            }
-        }
-        this.devicesHistory[deviceSerial].push(eventResult);
-    }*/
-
-    /**
-     * Set given event data to the local store.
-     * @param deviceSerial The serial of the device.
-     * @param path The path to the image.
-     * @param start_time The date as Date.
-     */
-    public addLastEventForDevice(deviceSerial : string, path : string, start_time : Date): void
-    {
-        this.devicesLastEvent[deviceSerial] = { path, start_time };
-    }
-
-    /**
-     * Returns the stored events for a given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The stored events.
-     */
-    /*public getEventResultsForDevice1(deviceSerial : string) : DatabaseQueryLocal[]
-    {
-        return this.devicesHistory[deviceSerial];
-    }*/
-
-    /**
-     * Returns the stored last event for a given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The stored last event.
-     */
-    public getLastEventForDevice(deviceSerial : string) : CameraEvent | null
-    {
-        return this.devicesLastEvent[deviceSerial];
-    }
-
-    /**
-     * Retrieves the events of the given device.
-     * @param deviceSerial The serial of the device.
-     */
-    /*public async getDeviceEvents(deviceSerial : string)
-    {
-        var device = await this.getDevice(deviceSerial);
-        var station = await this.api.getStation(device.getStationSerial());
-        var deviceSerials : string[] = [];
-        var dateEnd = new Date(Date.now());
-        dateEnd.setDate(dateEnd.getDate()+1);
-        var dateStart = new Date(Date.now());
-        dateStart.setFullYear(dateStart.getFullYear()-1);
-
-        deviceSerials.push(device.getSerial());
-        if(device)
-        {
-            station.databaseQueryLocal(deviceSerials, dateStart, dateEnd);
-        }
-    }*/
-
-    /**
      * Retrieves the last event of the given device.
      * @param deviceSerial The serial of the device.
      */
@@ -1463,33 +1390,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Retrieves the events of all devices.
-     */
-    /*public async getDevicesEvents()
-    {
-        var devices = await this.getDevices();
-        var stations = await this.api.getStations();
-        var dateEnd = new Date(Date.now());
-        dateEnd.setDate(dateEnd.getDate()+1);
-        var dateStart = new Date(Date.now());
-        dateStart.setFullYear(dateStart.getFullYear()-1);
-
-        for(let station in stations)
-        {
-            let deviceSerials : string[] = [];
-            for(let device in devices)
-            {
-                if(devices[device].getStationSerial() === stations[station].getSerial())
-                {
-                    deviceSerials.push(devices[device].getSerial());
-                }
-            }
-
-            stations[station].databaseQueryLocal(deviceSerials, dateStart, dateEnd);
-        }
-    }*/
-
-    /**
      * Retrieves the last event of all devices.
      */
     public async getDevicesLastEvent(): Promise<void>
@@ -1505,64 +1405,6 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         });
     }
 
-    /**
-     * Downloads the image of the last event for the given device.
-     * @param deviceSerial The serial of the device.
-     */
-    public async downloadLatestImageForDevice(deviceSerial : string): Promise<void>
-    {
-        this.getDevice(deviceSerial).then((device) => {
-            this.api.getStation(device.getStationSerial()).then((station) => {
-                const result = this.getLastEventForDevice(deviceSerial);
-                if(result !== null && result.path !== "")
-                {
-                    station.downloadImage(result.path);
-                    return;
-                }
-            }).catch((err) => {
-                const error = ensureError(err);
-                rootAddonLogger.error(`Download Latest Image For Device - Station Error`, { error: getError(error), deviceSN: deviceSerial });
-            });
-        }).catch((err) => {
-            const error = ensureError(err);
-            rootAddonLogger.error(`Download Latest Image For Device - Device Error`, { error: getError(error), deviceSN: deviceSerial });
-        });
-    }
-
-    /**
-     * Returns the timestamp of the last event for the given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The timestamp or undefinied.
-     */
-    /*public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
-    {
-        if(this.devicesHistory[deviceSerial] !== undefined && this.devicesHistory[deviceSerial].length > 0)
-        {
-            for(var pos = this.devicesHistory[deviceSerial].length - 1; pos >= 0; pos--)
-            {
-                if(this.devicesHistory[deviceSerial][pos].history && this.devicesHistory[deviceSerial][pos].history.start_time)
-                {
-                    return this.devicesHistory[deviceSerial][pos].history.start_time.valueOf();
-                }
-            }
-        }
-        return undefined;
-    }*/
-
-    /**
-     * Returns the timestamp of the last event for the given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The timestamp or undefinied.
-     */
-    public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
-    {
-        const result = this.getLastEventForDevice(deviceSerial);
-        if(result !== null && result.path !== "")
-        {
-            return result.start_time.valueOf();
-        }
-        return undefined;
-    }
 
     /**
      * Retrieve the interactions for a given device.

@@ -1980,7 +1980,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
-     * Update the device picture for the given device  with the given picture.
+     * Update the device picture for the given device with the given picture.
      * @param station The station as Station object.
      * @param file The file name.
      * @param picture: The picture.

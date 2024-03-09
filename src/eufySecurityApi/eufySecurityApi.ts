@@ -12,11 +12,10 @@ import { DatabaseQueryLatestInfo, DatabaseQueryLatestInfoLocal, DatabaseQueryLoc
 import { sleep } from "./push/utils";
 import { EufyHouses } from "./houses";
 import { NotSupportedError, ReadOnlyPropertyError, ensureError } from "./error";
-import { randomNumber } from "./http/utils";
+import { getDateTimeFromImageFilePath, randomNumber } from "./http/utils";
 import { PhoneModels, timeZoneData } from "./http/const";
 import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString } from "./utils/utils";
 import { countryData } from "./utils/const";
-import path from "path";
 import { EventInteractionType } from "./utils/types";
 
 export class EufySecurityApi
@@ -640,38 +639,37 @@ export class EufySecurityApi
                         continue;
                     }
 
-                    let file = "";
-                    let fileName = "";
-                    let timeString = "";
-
-                    file = response.crop_local_path;
-                    fileName = path.parse(file).name + path.parse(file).ext;
-
-                    if(fileName.includes("_c"))
+                    const device = await this.devices.getDevice(response.device_sn);
+                    if(device.hasProperty(PropertyName.DevicePictureTime))
                     {
-                        timeString = fileName.split("_c", 2)[0];
-                    }
-                    else if(file.includes("/Camera"))
-                    {
-                        const res = file.split("/");
-                        if(file.includes("snapshort.jpg"))
+                        const pictureTimeValue = device.getPropertyValue(PropertyName.DevicePictureTime) as number;
+
+                        if(pictureTimeValue === 0)
                         {
-                            timeString = res[res.length-2];
+                            rootAddonLogger.debug(`StationDatabaseQueryLatest: Initialize the pictureTime property.`, { station: station.getSerial(), device: device.getSerial(), pictureTimeValue: pictureTimeValue, filePath: response.crop_local_path });
+
+                            const imageTime = getDateTimeFromImageFilePath(response.crop_local_path);
+                            if(imageTime === undefined)
+                            {
+                                this.updateCameraEventTimeSystemVariable(response.device_sn, -1);
+                                device.setCustomPropertyValue(PropertyName.DevicePictureTime, -1);
+                            }
+                            else
+                            {
+                                this.updateCameraEventTimeSystemVariable(response.device_sn, imageTime.valueOf());
+                                device.setCustomPropertyValue(PropertyName.DevicePictureTime, imageTime.valueOf());
+                            }
+                        }
+                        else if(pictureTimeValue > 0)
+                        {
+                            rootAddonLogger.debug(`StationDatabaseQueryLatest: The pictureTime property already set.`, { station: station.getSerial(), device: device.getSerial(), pictureTimeValue: pictureTimeValue });
+                            this.updateCameraEventTimeSystemVariable(response.device_sn, pictureTimeValue);
                         }
                         else
                         {
-                            timeString = res[res.length-1].replace("n", "");
+                            rootAddonLogger.error(`StationDatabaseQueryLatest: There was an previous error retrieving the pictureTime.`, { station: station.getSerial(), device: device.getSerial() });
                         }
                     }
-                    else
-                    {
-                        rootAddonLogger.error("StationDatabaseQueryLatest: Unhandled path structure detected.", JSON.stringify(response));
-                        continue;
-                    }
-                    const timestamp = new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14)));
-                    this.updateCameraEventTimeSystemVariable(response.device_sn, timestamp.valueOf());
-                    this.devices.addLastEventForDevice(response.device_sn, file, timestamp);
-                    this.devices.downloadLatestImageForDevice(response.device_sn);
                 }
                 catch (error: any)
                 {
@@ -1005,8 +1003,7 @@ export class EufySecurityApi
                 case PropertyName.DeviceStationSN:
                     break;
                 case PropertyName.DevicePicture:
-                    //json[property] = properties[property] === undefined ? "n/a" : properties[property];
-                    json.pictureTime = this.getApiUsePushService() == false ? "n/d" : (this.devices.getLastEventTimeForDevice(device.getSerial()) === undefined ? "n/a" : this.devices.getLastEventTimeForDevice(device.getSerial()));
+                    json.hasPicture = properties[property] === null ? false : true;
                     break;
                 default:
                     json[property] = properties[property] === undefined ? "n/a" : properties[property];

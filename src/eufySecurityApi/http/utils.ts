@@ -15,6 +15,7 @@ import { Station } from "./station";
 import { rootHTTPLogger } from "../logging";
 import { getError, isEmpty } from "../utils";
 import { PushMessage } from "../push/models";
+import path from "path";
 
 const normalizeVersionString = function (version: string): number[] {
     const trimmed = version ? version.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1") : "";
@@ -756,6 +757,9 @@ export const loadImageOverP2P = function (station: Station, device: Device, id: 
 }
 
 export const loadEventImage = function(station: Station, api: HTTPApi, device: Device, message: PushMessage, p2pTimeouts: Map<string, NodeJS.Timeout>): void {
+    if (device.hasProperty(PropertyName.DevicePictureTime)) {
+        device.updateProperty(PropertyName.DevicePictureTime, message.event_time, true);
+    }
     if (message.notification_style === NotificationType.MOST_EFFICIENT) {
         loadImageOverP2P(station, device, device.getSerial(), p2pTimeouts);
     } else {
@@ -773,7 +777,7 @@ export const loadEventImage = function(station: Station, api: HTTPApi, device: D
                 }
             }).catch((err) => {
                 const error = ensureError(err);
-                rootHTTPLogger.debug(`Device load event image - Fallback Error`, { error: getError(error), stationSN: station.getSerial(), deviceSN: device.getSerial(), message: JSON.stringify(message) });
+                rootHTTPLogger.error(`Device load event image - Fallback Error`, { error: getError(error), stationSN: station.getSerial(), deviceSN: device.getSerial(), message: JSON.stringify(message) });
                 loadImageOverP2P(station, device, device.getSerial(), p2pTimeouts);
             });
         } else {
@@ -781,4 +785,26 @@ export const loadEventImage = function(station: Station, api: HTTPApi, device: D
             loadImageOverP2P(station, device, device.getSerial(), p2pTimeouts);
         }
     }
+}
+
+export const getDateTimeFromImageFilePath = function(imageFilePath: string): Date | undefined {
+    let timeString = "";
+    const imageFileName = path.parse(imageFilePath).name + path.parse(imageFilePath).ext;
+
+    rootHTTPLogger.debug(`getDateTimeFromImageFilePath: received data:`, { imageFilePath: imageFilePath, imageFileName: imageFileName });
+
+    if (imageFileName.includes("_c")) {
+        timeString = imageFileName.split("_c", 2)[0];
+    } else if (imageFilePath.includes("/Camera")) {
+        const res = imageFilePath.split("/");
+        if (imageFilePath.includes("snapshort.jpg")) {
+            timeString = res[res.length-2];
+        } else {
+            timeString = res[res.length-1].replace("n", "");
+        }
+    } else {
+        rootHTTPLogger.error("getDateTimeFromImageFilePath: Unhandled path structure detected.", { imageFilePath: imageFilePath });
+        return undefined;
+    }
+    return new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14)));
 }
