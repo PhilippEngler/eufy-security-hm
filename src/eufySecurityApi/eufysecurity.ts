@@ -25,7 +25,7 @@ import { MQTTService } from "./mqtt/service";
 import { TalkbackStream } from "./p2p/talkback";
 import { PhoneModels } from "./http/const";
 import { hexStringScheduleToSchedule, randomNumber } from "./http/utils";
-import { Logger, dummyLogger, InternalLogger, rootMainLogger, setLoggingLevel, LoggingCategories } from "./logging"
+import { Logger, dummyLogger, InternalLogger, rootMainLogger, setLoggingLevel, LoggingCategories, getLoggingLevel } from "./logging"
 import { LogLevel } from "typescript-logging";
 import { isCharging } from "./p2p/utils";
 
@@ -284,13 +284,29 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
         });
     }
 
-    public updateLogging(category: LoggingCategories, level: LogLevel): void {
+    public setLoggingLevel(category: LoggingCategories, level: LogLevel): void {
         if (typeof level === "number" &&
         Object.values(LogLevel).includes(level) &&
         typeof category === "string" &&
-        ["main", "http", "p2p" , "push", "mqtt"].includes(category.toLowerCase())) {
+        ["all", "main", "http", "p2p" , "push", "mqtt"].includes(category.toLowerCase())) {
             setLoggingLevel(category, level);
         }
+    }
+
+    public getLoggingLevel(category: LoggingCategories): number {
+        if (typeof category === "string" &&
+        ["all", "main", "http", "p2p" , "push", "mqtt"].includes(category.toLowerCase())) {
+            return getLoggingLevel(category);
+        }
+        return -1;
+    }
+
+    public setInternalLogger(logger: Logger): void {
+        InternalLogger.logger = logger;
+    }
+
+    public getInternalLogger(): Logger|undefined {
+        return InternalLogger.logger;
     }
 
     public getPushService(): PushNotificationService {
@@ -2590,14 +2606,14 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
         this.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
             for (const device of devices) {
                 if (device.getPropertyValue(PropertyName.DevicePictureUrl) === file) {
-                    rootMainLogger.debug(`onStationImageDownload - Set first picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
+                    rootMainLogger.debug(`onStationImageDownload - Set picture for device ${device.getSerial()} file: ${file} picture_ext: ${picture.type.ext} picture_mime: ${picture.type.mime}`);
                     device.updateProperty(PropertyName.DevicePicture, picture);
                     break;
                 }
             }
         }).catch((err) => {
             const error = ensureError(err);
-            rootMainLogger.error(`onStationImageDownload - Set first picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
+            rootMainLogger.error(`onStationImageDownload - Set picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
         });
     }
 

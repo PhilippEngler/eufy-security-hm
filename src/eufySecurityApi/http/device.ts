@@ -6,11 +6,10 @@ import { DeviceListResponse, Voice, GarageDoorSensorsProperty, FloodlightDetecti
 import { ParameterHelper } from "./parameter";
 import { DeviceEvents, PropertyValue, PropertyValues, PropertyMetadataAny, IndexedProperty, RawValues, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, Voices, PropertyMetadataObject } from "./interfaces";
 import { CommandType, ESLAnkerBleConstant, TrackerCommandType } from "../p2p/types";
-import { calculateCellularSignalLevel, calculateWifiSignalLevel, getAbsoluteFilePath, getDistances, getImage, getImagePath, getLockEventType, hexDate, hexTime, hexWeek, isFloodlightT8425NotitficationEnabled, isHB3DetectionModeEnabled, isIndoorNotitficationEnabled, isPrioritySourceType, isSmartLockNotification, isT8170DetectionModeEnabled, WritePayload } from "./utils";
+import { calculateCellularSignalLevel, calculateWifiSignalLevel, getAbsoluteFilePath, getDistances, getImagePath, getLockEventType, hexDate, hexTime, hexWeek, isFloodlightT8425NotitficationEnabled, isHB3DetectionModeEnabled, isIndoorNotitficationEnabled, isPrioritySourceType, isSmartLockNotification, isT8170DetectionModeEnabled, loadEventImage, WritePayload } from "./utils";
 import { DecimalToRGBColor, eslTimestamp, getCurrentTimeInSeconds, isCharging } from "../p2p/utils";
 import { CusPushEvent, DoorbellPushEvent, LockPushEvent, IndoorPushEvent, SmartSafeEvent, HB3PairedDevicePushEvent, GarageDoorPushEvent, SmartDropOpen, SmartDropOpenedBy, SmartDropPushEvent } from "../push/types";
 import { PushMessage, SmartSafeEventValueDetail } from "../push/models";
-import { sleep } from "../push/utils";
 import { getError, isEmpty, validValue } from "../utils";
 import { InvalidPropertyError, PropertyNotSupportedError } from "./error";
 import { DeviceSmartLockNotifyData } from "../mqtt/model";
@@ -24,6 +23,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
     protected api: HTTPApi;
     protected rawDevice: DeviceListResponse;
     protected eventTimeouts = new Map<DeviceEvent, NodeJS.Timeout>();
+    protected pictureEventTimeouts = new Map<string, NodeJS.Timeout>();
 
     protected properties: PropertyValues = {};
     private rawProperties: RawValues = {};
@@ -56,9 +56,11 @@ export class Device extends TypedEmitter<DeviceEvents> {
         const metadata = this.getPropertiesMetadata(true);
         for (const property of Object.values(metadata)) {
             if (this.rawDevice[property.key] !== undefined && typeof property.key === "string") {
-                if(property.key !== "cover_path") {
-                    //this.updateProperty(property.name, property.key === "cover_path" ? getImagePath(this.rawDevice[property.key]) : this.rawDevice[property.key] as PropertyValue);
-                    this.updateProperty(property.name, this.convertRawPropertyValue(property, property.key === "cover_path" ? getImagePath(this.rawDevice[property.key]) : this.rawDevice[property.key] as string));
+                if (property.key === "cover_path" && !this.getPropertyValue(property.name) && this.rawDevice[property.key] !== "") {
+                    // First image initialisation if no image has been set yet and a cloud value is available
+                    this.updateProperty(property.name, this.convertRawPropertyValue(property, getImagePath(this.rawDevice[property.key])));
+                } else {
+                    this.updateProperty(property.name, this.convertRawPropertyValue(property, this.rawDevice[property.key] as string));
                 }
             } else if (this.properties[property.name] === undefined && property.default !== undefined && !this.ready) {
                 this.updateProperty(property.name, property.default);
@@ -935,6 +937,10 @@ export class Device extends TypedEmitter<DeviceEvents> {
             clearTimeout(timeout);
         });
         this.eventTimeouts.clear();
+        this.pictureEventTimeouts.forEach((timeout) => {
+            clearTimeout(timeout);
+        });
+        this.pictureEventTimeouts.clear();
     }
 
     protected clearEventTimeout(eventType: DeviceEvent): void {
@@ -2008,31 +2014,7 @@ export class Camera extends Device {
         if (message.type !== undefined && message.event_type !== undefined) {
             if (message.event_type === CusPushEvent.SECURITY && message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image, true);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`Camera process push notification - CusPushEvent.SECURITY - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image, true);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`Camera process push notification - CusPushEvent.SECURITY - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     if (message.fetch_id !== undefined) {
                         // Person or someone identified
                         this.updateProperty(PropertyName.DevicePersonName, !isEmpty(message.person_name) ? message.person_name! : "Unknown");
@@ -2043,15 +2025,14 @@ export class Camera extends Device {
                             this.updateProperty(PropertyName.DevicePersonDetected, false);
                             this.eventTimeouts.delete(DeviceEvent.PersonDetected);
                         }, eventDurationSeconds * 1000));
-                    } else {
-                        // Motion detected
-                        this.updateProperty(PropertyName.DeviceMotionDetected, true);
-                        this.clearEventTimeout(DeviceEvent.MotionDetected);
-                        this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
-                            this.updateProperty(PropertyName.DeviceMotionDetected, false);
-                            this.eventTimeouts.delete(DeviceEvent.MotionDetected);
-                        }, eventDurationSeconds * 1000));
                     }
+                    // Motion detected
+                    this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                    this.clearEventTimeout(DeviceEvent.MotionDetected);
+                    this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                        this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                        this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                    }, eventDurationSeconds * 1000));
                 } catch (err) {
                     const error = ensureError(err);
                     rootHTTPLogger.error(`Camera process push notification - CusPushEvent.SECURITY - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
@@ -2059,31 +2040,7 @@ export class Camera extends Device {
             } else if (message.msg_type === DeviceType.HB3) {
                 if (message.device_sn === this.getSerial()) {
                     try {
-                        if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                            sleep(75 * 1000).then(() => {
-                                station.databaseQueryLatestInfo(() => {
-                                    if (!isEmpty(message.pic_url)) {
-                                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                            if (image.data.length > 0) {
-                                                this.updateProperty(PropertyName.DevicePicture, image, true);
-                                            }
-                                        }).catch((err) => {
-                                            const error = ensureError(err);
-                                            rootHTTPLogger.error(`Camera process push notification - HB3PairedDevicePushEvent - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                        });
-                                    }
-                                });
-                            });
-                        } else if (!isEmpty(message.pic_url)) {
-                            getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                if (image.data.length > 0) {
-                                    this.updateProperty(PropertyName.DevicePicture, image, true);
-                                }
-                            }).catch((err) => {
-                                const error = ensureError(err);
-                                rootHTTPLogger.error(`Camera process push notification - HB3PairedDevicePushEvent - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                            });
-                        }
+                        loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                         switch (message.event_type) {
                             case HB3PairedDevicePushEvent.MOTION_DETECTION:
                                 this.updateProperty(PropertyName.DeviceMotionDetected, true);
@@ -2102,6 +2059,12 @@ export class Camera extends Device {
                                     this.updateProperty(PropertyName.DevicePersonDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.PersonDetected);
                                 }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                                this.clearEventTimeout(DeviceEvent.MotionDetected);
+                                this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                                }, eventDurationSeconds * 1000));
                                 break;
                             case HB3PairedDevicePushEvent.CRYING_DETECTION:
                                 this.updateProperty(PropertyName.DeviceCryingDetected, true);
@@ -2110,6 +2073,12 @@ export class Camera extends Device {
                                     this.updateProperty(PropertyName.DeviceCryingDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.CryingDetected);
                                 }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DeviceSoundDetected, true);
+                                this.clearEventTimeout(DeviceEvent.SoundDetected);
+                                this.eventTimeouts.set(DeviceEvent.SoundDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DeviceSoundDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.SoundDetected);
+                                }, eventDurationSeconds * 1000));
                                 break;
                             case HB3PairedDevicePushEvent.DOG_DETECTION:
                                 this.updateProperty(PropertyName.DeviceDogDetected, true);
@@ -2117,6 +2086,12 @@ export class Camera extends Device {
                                 this.eventTimeouts.set(DeviceEvent.DogDetected, setTimeout(async () => {
                                     this.updateProperty(PropertyName.DeviceDogDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.DogDetected);
+                                }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                                this.clearEventTimeout(DeviceEvent.MotionDetected);
+                                this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                                 }, eventDurationSeconds * 1000));
                                 break;
                             case HB3PairedDevicePushEvent.DOG_LICK_DETECTION:
@@ -2142,6 +2117,12 @@ export class Camera extends Device {
                                     this.updateProperty(PropertyName.DevicePetDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.PetDetected);
                                 }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                                this.clearEventTimeout(DeviceEvent.MotionDetected);
+                                this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                                }, eventDurationSeconds * 1000));
                                 break;
                             case HB3PairedDevicePushEvent.SOUND_DETECTION:
                                 this.updateProperty(PropertyName.DeviceSoundDetected, true);
@@ -2158,6 +2139,12 @@ export class Camera extends Device {
                                     this.updateProperty(PropertyName.DeviceVehicleDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.VehicleDetected);
                                 }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                                this.clearEventTimeout(DeviceEvent.MotionDetected);
+                                this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                                }, eventDurationSeconds * 1000));
                                 break;
                             case HB3PairedDevicePushEvent.IDENTITY_PERSON_DETECTION:
                                 this.updateProperty(PropertyName.DevicePersonName, !isEmpty(message.person_name) ? message.person_name! : "Unknown");
@@ -2168,6 +2155,18 @@ export class Camera extends Device {
                                     this.updateProperty(PropertyName.DeviceIdentityPersonDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.IdentityPersonDetected);
                                 }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DevicePersonDetected, true);
+                                this.clearEventTimeout(DeviceEvent.PersonDetected);
+                                this.eventTimeouts.set(DeviceEvent.PersonDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DevicePersonDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                                }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                                this.clearEventTimeout(DeviceEvent.MotionDetected);
+                                this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                                }, eventDurationSeconds * 1000));
                                 break;
                             case HB3PairedDevicePushEvent.STRANGER_PERSON_DETECTION:
                                 this.updateProperty(PropertyName.DevicePersonName, !isEmpty(message.person_name) ? message.person_name! : "Unknown");
@@ -2177,6 +2176,18 @@ export class Camera extends Device {
                                     this.updateProperty(PropertyName.DevicePersonName, "");
                                     this.updateProperty(PropertyName.DeviceStrangerPersonDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.StrangerPersonDetected);
+                                }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DevicePersonDetected, true);
+                                this.clearEventTimeout(DeviceEvent.PersonDetected);
+                                this.eventTimeouts.set(DeviceEvent.PersonDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DevicePersonDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                                }, eventDurationSeconds * 1000));
+                                this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                                this.clearEventTimeout(DeviceEvent.MotionDetected);
+                                this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                    this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                    this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                                 }, eventDurationSeconds * 1000));
                                 break;
                             default:
@@ -2227,31 +2238,7 @@ export class SoloCamera extends Camera {
         if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image, true);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`SoloCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image, true);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`SoloCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     switch (message.event_type) {
                         case IndoorPushEvent.MOTION_DETECTION:
                             this.updateProperty(PropertyName.DeviceMotionDetected, true);
@@ -2269,6 +2256,12 @@ export class SoloCamera extends Camera {
                                 this.updateProperty(PropertyName.DevicePersonName, "");
                                 this.updateProperty(PropertyName.DevicePersonDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                             }, eventDurationSeconds * 1000));
                             break;
                         default:
@@ -2332,31 +2325,7 @@ export class IndoorCamera extends Camera {
         if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image, true);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`IndoorCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image, true);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`IndoorCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     switch (message.event_type) {
                         case IndoorPushEvent.MOTION_DETECTION:
                             this.updateProperty(PropertyName.DeviceMotionDetected, true);
@@ -2375,6 +2344,12 @@ export class IndoorCamera extends Camera {
                                 this.updateProperty(PropertyName.DevicePersonDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.PersonDetected);
                             }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                            }, eventDurationSeconds * 1000));
                             break;
                         case IndoorPushEvent.CRYING_DETECTION:
                             this.updateProperty(PropertyName.DeviceCryingDetected, true);
@@ -2382,6 +2357,12 @@ export class IndoorCamera extends Camera {
                             this.eventTimeouts.set(DeviceEvent.CryingDetected, setTimeout(async () => {
                                 this.updateProperty(PropertyName.DeviceCryingDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.CryingDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceSoundDetected, true);
+                            this.clearEventTimeout(DeviceEvent.SoundDetected);
+                            this.eventTimeouts.set(DeviceEvent.SoundDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceSoundDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.SoundDetected);
                             }, eventDurationSeconds * 1000));
                             break;
                         case IndoorPushEvent.SOUND_DETECTION:
@@ -2398,6 +2379,12 @@ export class IndoorCamera extends Camera {
                             this.eventTimeouts.set(DeviceEvent.PetDetected, setTimeout(async () => {
                                 this.updateProperty(PropertyName.DevicePetDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.PetDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                             }, eventDurationSeconds * 1000));
                             break;
                         default:
@@ -2489,31 +2476,7 @@ export class DoorbellCamera extends Camera {
         if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image, true);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`DoorbellCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image, true);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`DoorbellCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     switch (message.event_type) {
                         case DoorbellPushEvent.MOTION_DETECTION:
                             this.updateProperty(PropertyName.DeviceMotionDetected, true);
@@ -2532,6 +2495,12 @@ export class DoorbellCamera extends Camera {
                                 this.updateProperty(PropertyName.DevicePersonName, "");
                                 this.updateProperty(PropertyName.DevicePersonDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                             }, eventDurationSeconds * 1000));
                             break;
                         case DoorbellPushEvent.PRESS_DOORBELL:
@@ -2573,6 +2542,17 @@ export class DoorbellCamera extends Camera {
                                 this.updateProperty(PropertyName.DeviceSomeoneLoitering, false);
                                 this.eventTimeouts.delete(DeviceEvent.SomeoneLoitering);
                             }, eventDurationSeconds * 1000));
+                            this.clearEventTimeout(DeviceEvent.PersonDetected);
+                            this.eventTimeouts.set(DeviceEvent.PersonDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DevicePersonDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                            }, eventDurationSeconds * 1000));
                             break;
                         case DoorbellPushEvent.RADAR_MOTION_DETECTION:
                             this.updateProperty(PropertyName.DeviceRadarMotionDetected, true);
@@ -2581,6 +2561,12 @@ export class DoorbellCamera extends Camera {
                                 this.updateProperty(PropertyName.DeviceRadarMotionDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.RadarMotionDetected);
                             }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
+                            }, eventDurationSeconds * 1000));
                             break;
                         case DoorbellPushEvent.AWAY_FROM_HOME:
                             this.updateProperty(PropertyName.DeviceSomeoneGoing, true);
@@ -2588,6 +2574,17 @@ export class DoorbellCamera extends Camera {
                             this.eventTimeouts.set(DeviceEvent.SomeoneGoing, setTimeout(async () => {
                                 this.updateProperty(PropertyName.DeviceSomeoneGoing, false);
                                 this.eventTimeouts.delete(DeviceEvent.SomeoneGoing);
+                            }, eventDurationSeconds * 1000));
+                            this.clearEventTimeout(DeviceEvent.PersonDetected);
+                            this.eventTimeouts.set(DeviceEvent.PersonDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DevicePersonDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                             }, eventDurationSeconds * 1000));
                             break;
                         default:
@@ -2697,31 +2694,7 @@ export class FloodlightCamera extends Camera {
         if (message.type !== undefined && message.event_type !== undefined && message.msg_type !== DeviceType.HB3) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image, true);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`FloodlightCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image, true);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`FloodlightCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     switch (message.event_type) {
                         case IndoorPushEvent.MOTION_DETECTION:
                             this.updateProperty(PropertyName.DeviceMotionDetected, true);
@@ -2739,6 +2712,12 @@ export class FloodlightCamera extends Camera {
                                 this.updateProperty(PropertyName.DevicePersonName, "");
                                 this.updateProperty(PropertyName.DevicePersonDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                             }, eventDurationSeconds * 1000));
                             break;
                         default:
@@ -2835,31 +2814,7 @@ export class WallLightCam extends Camera {
         if (message.type !== undefined && message.event_type !== undefined) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`WallLightCam process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`WallLightCam process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     switch (message.event_type) {
                         case IndoorPushEvent.MOTION_DETECTION:
                             this.updateProperty(PropertyName.DeviceMotionDetected, true);
@@ -2877,6 +2832,12 @@ export class WallLightCam extends Camera {
                                 this.updateProperty(PropertyName.DevicePersonName, "");
                                 this.updateProperty(PropertyName.DevicePersonDetected, false);
                                 this.eventTimeouts.delete(DeviceEvent.PersonDetected);
+                            }, eventDurationSeconds * 1000));
+                            this.updateProperty(PropertyName.DeviceMotionDetected, true);
+                            this.clearEventTimeout(DeviceEvent.MotionDetected);
+                            this.eventTimeouts.set(DeviceEvent.MotionDetected, setTimeout(async () => {
+                                this.updateProperty(PropertyName.DeviceMotionDetected, false);
+                                this.eventTimeouts.delete(DeviceEvent.MotionDetected);
                             }, eventDurationSeconds * 1000));
                             break;
                         default:
@@ -2974,31 +2935,7 @@ export class GarageCamera extends Camera {
         if (message.type !== undefined && message.event_type !== undefined) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`GarageCamera process push notification - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`GarageCamera process push notification - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     switch (message.event_type) {
                         case GarageDoorPushEvent.CLOSED_DOOR_BY_APP:
                         case GarageDoorPushEvent.CLOSED_DOOR_WITHOUT_APP:
@@ -4355,31 +4292,7 @@ export class SmartDrop extends Camera {
         if (message.type !== undefined && message.event_type !== undefined) {
             if (message.device_sn === this.getSerial()) {
                 try {
-                    if (station.hasCommand(CommandName.StationDatabaseQueryLatestInfo)) {
-                        sleep(75 * 1000).then(() => {
-                            station.databaseQueryLatestInfo(() => {
-                                if (!isEmpty(message.pic_url)) {
-                                    getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                                        if (image.data.length > 0) {
-                                            this.updateProperty(PropertyName.DevicePicture, image, true);
-                                        }
-                                    }).catch((err) => {
-                                        const error = ensureError(err);
-                                        rootHTTPLogger.error(`SmartDrop process push notification - CusPushEvent.SECURITY - Device Get picture - Fallback Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                                    });
-                                }
-                            });
-                        });
-                    } else if (!isEmpty(message.pic_url)) {
-                        getImage(this.api, this.getSerial(), message.pic_url!).then((image) => {
-                            if (image.data.length > 0) {
-                                this.updateProperty(PropertyName.DevicePicture, image, true);
-                            }
-                        }).catch((err) => {
-                            const error = ensureError(err);
-                            rootHTTPLogger.error(`SmartDrop process push notification - CusPushEvent.SECURITY - Device Get picture - Error`, { error: getError(error), deviceSN: this.getSerial(), message: JSON.stringify(message), eventDurationSeconds: eventDurationSeconds });
-                        });
-                    }
+                    loadEventImage(station, this.api, this, message, this.pictureEventTimeouts);
                     if (message.event_type === CusPushEvent.SMART_DROP) {
                         switch (message.open) {
                             case SmartDropOpen.OPEN:

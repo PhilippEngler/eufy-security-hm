@@ -636,7 +636,7 @@ export class EufySecurityApi
 
                     if(response.crop_local_path === "")
                     {
-                        rootAddonLogger.debug("StationDatabaseQueryLatest: Empty path detected.", JSON.stringify(response));
+                        rootAddonLogger.debug(`StationDatabaseQueryLatest: Empty path detected.`, JSON.stringify(response));
                         continue;
                     }
 
@@ -3299,7 +3299,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "3.0.0-b4";
+        return "3.0.0-rc1";
     }
 
     /**
@@ -3308,6 +3308,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "3.0.0-b_a092024";
+        return "3.0.0";
     }
 }

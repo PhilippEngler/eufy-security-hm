@@ -2021,7 +2021,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             }
         }).catch((err) => {
             const error = ensureError(err);
-            rootAddonLogger.debug(`onStationImageDownload - Set first picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
+            rootAddonLogger.debug(`onStationImageDownload - Set picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
         });
     }
 
