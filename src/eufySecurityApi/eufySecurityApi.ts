@@ -326,11 +326,11 @@ export class EufySecurityApi
     private async closeStation() : Promise<void>
     {
         rootAddonLogger.info("Closing connections to all stations...");
-        if(this.devices != null || this.devices !== undefined)
+        if(this.devices !== null && this.devices !== undefined)
         {
             this.devices.close();
         }
-        if(this.stations != null || this.devices !== undefined)
+        if(this.stations !== null && this.stations !== undefined)
         {
             await this.stations.closeP2PConnections();
         }
