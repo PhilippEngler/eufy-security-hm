@@ -30,6 +30,7 @@ const fs_1 = require("fs");
 const path = __importStar(require("path"));
 const protobufjs_1 = require("protobufjs");
 const utils_1 = require("../utils");
+const logging_1 = require("../logging");
 class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
     CLIENT_ID_FORMAT = "android_EufySecurity_<user_id>_<android_id>";
     USERNAME_FORMAT = "eufy_<user_id>";
@@ -37,7 +38,6 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
     SUBSCRIBE_LOCK_FORMAT = "/phone/smart_lock/<device_sn>/push_message";
     SUBSCRIBE_DOORBELL_FORMAT = "/phone/doorbell/<device_sn>/push_message";
     static proto = null;
-    log;
     connected = false;
     client = null;
     connecting = false;
@@ -47,14 +47,13 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
     email;
     subscribeLocks = [];
     deviceSmartLockMessageModel;
-    constructor(log) {
+    constructor() {
         super();
-        this.log = log;
         this.deviceSmartLockMessageModel = MQTTService.proto.lookupType("DeviceSmartLockMessage");
     }
-    static async init(log) {
+    static async init() {
         this.proto = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/lock.proto"));
-        return new MQTTService(log);
+        return new MQTTService();
     }
     parseSmartLockMessage(data) {
         const message = this.deviceSmartLockMessageModel.decode(data);
@@ -119,18 +118,18 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
             });
             this.client.on("error", (error) => {
                 this.connecting = false;
-                this.log.error("MQTT Error", { error: (0, utils_1.getError)(error) });
+                logging_1.rootMQTTLogger.error("MQTT Error", { error: (0, utils_1.getError)(error) });
                 if (error.code === 1 || error.code === 2 || error.code === 4 || error.code === 5)
                     this.client?.end();
             });
             this.client.on("message", (topic, message, _packet) => {
                 if (topic.includes("smart_lock")) {
                     const parsedMessage = this.parseSmartLockMessage(message);
-                    this.log.debug("Received a smart lock message over MQTT", { message: parsedMessage });
+                    logging_1.rootMQTTLogger.debug("Received a smart lock message over MQTT", { message: parsedMessage });
                     this.emit("lock message", parsedMessage);
                 }
                 else {
-                    this.log.debug("MQTT message received", { topic: topic, message: message.toString("hex") });
+                    logging_1.rootMQTTLogger.debug("MQTT message received", { topic: topic, message: message.toString("hex") });
                 }
             });
         }
@@ -138,10 +137,10 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
     _subscribeLock(deviceSN) {
         this.client?.subscribe(this.SUBSCRIBE_LOCK_FORMAT.replace("<device_sn>", deviceSN), { qos: 1 }, (error, granted) => {
             if (error) {
-                this.log.error(`Subscribe error for lock ${deviceSN}`, { error: (0, utils_1.getError)(error), deviceSN: deviceSN });
+                logging_1.rootMQTTLogger.error(`Subscribe error for lock ${deviceSN}`, { error: (0, utils_1.getError)(error), deviceSN: deviceSN });
             }
             if (granted) {
-                this.log.info(`Successfully registered to MQTT notifications for lock ${deviceSN}`);
+                logging_1.rootMQTTLogger.info(`Successfully registered to MQTT notifications for lock ${deviceSN}`);
             }
         });
     }

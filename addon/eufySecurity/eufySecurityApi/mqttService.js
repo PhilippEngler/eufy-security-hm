@@ -3,12 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MqttService = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const service_1 = require("./mqtt/service");
+const logging_1 = require("./logging");
 const error_1 = require("./error");
 const utils_1 = require("./utils");
 class MqttService extends tiny_typed_emitter_1.TypedEmitter {
     api;
     config;
-    logger;
     mqttService;
     /**
      * Create the MqttService object.
@@ -16,39 +16,20 @@ class MqttService extends tiny_typed_emitter_1.TypedEmitter {
      * @param config The Config.
      * @param logger The Logger.
      */
-    constructor(api, config, logger) {
+    constructor(api, config) {
         super();
         this.api = api;
         this.config = config;
-        this.logger = logger;
         this.initialize();
     }
     /**
      * Initialize the MqttService.
      */
     async initialize() {
-        this.mqttService = await service_1.MQTTService.init(this.logger);
-        this.mqttService.on("connect", () => {
-            this.logger.logInfoBasic("MQTT connection successfully established");
-            this.emit("mqtt connect");
-        });
-        this.mqttService.on("close", () => {
-            this.logger.logInfoBasic("MQTT connection closed");
-            this.emit("mqtt close");
-        });
-        this.mqttService.on("lock message", (message) => {
-            this.api.getDevice(message.data.data.deviceSn).then((device) => {
-                device.processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
-            }).catch((error) => {
-                if (error instanceof error_1.DeviceNotFoundError) {
-                }
-                else {
-                    this.logger.error("Lock MQTT Message Error", { error: (0, utils_1.getError)(error) });
-                }
-            }).finally(() => {
-                this.emit("mqtt lock message", message);
-            });
-        });
+        this.mqttService = await service_1.MQTTService.init();
+        this.mqttService.on("connect", () => this.onConnect());
+        this.mqttService.on("close", () => this.onClose());
+        this.mqttService.on("lock message", (message) => this.onLockMessage(message));
     }
     /**
      * Connect to the MQTT Servers.
@@ -79,6 +60,35 @@ class MqttService extends tiny_typed_emitter_1.TypedEmitter {
      */
     subscribeLock(deviceSerial) {
         this.mqttService.subscribeLock(deviceSerial);
+    }
+    /**
+     * Eventhandler for mqtt connect event.
+     */
+    onConnect() {
+        logging_1.rootMQTTLogger.info("MQTT connection successfully established");
+        this.emit("mqtt connect");
+    }
+    /**
+     * Eventhandler for mqtt close event.
+     */
+    onClose() {
+        logging_1.rootMQTTLogger.info("MQTT connection closed");
+        this.emit("mqtt close");
+    }
+    /**
+     * Eventhandler for mqtt lock message.
+     * @param message The message.
+     */
+    onLockMessage(message) {
+        this.api.getDevice(message.data.data.deviceSn).then((device) => {
+            device.processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
+        }).catch((error) => {
+            if (!(error instanceof error_1.DeviceNotFoundError)) {
+                logging_1.rootMQTTLogger.error("Lock MQTT Message Error", { error: (0, utils_1.getError)(error) });
+            }
+        }).finally(() => {
+            this.emit("mqtt lock message", message);
+        });
     }
 }
 exports.MqttService = MqttService;

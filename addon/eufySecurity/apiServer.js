@@ -10,21 +10,23 @@ const fs_1 = require("fs");
 const process_1 = require("process");
 const eufySecurityApi_1 = require("./eufySecurityApi/eufySecurityApi");
 const http_2 = require("./eufySecurityApi/http");
-const logging_1 = require("./eufySecurityApi/utils/logging");
 const child_process_1 = require("child_process");
+const logging_1 = require("./eufySecurityApi/logging");
 process.chdir(__dirname);
-var apiServer;
-var serverHttp = (0, http_1.createServer)();
-var serverHttps = (0, https_1.createServer)();
-var api = new eufySecurityApi_1.EufySecurityApi();
-var logger = new logging_1.Logger(api);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let apiServer;
+const serverHttp = (0, http_1.createServer)();
+const serverHttps = (0, https_1.createServer)();
+let api;
 class ApiServer {
     /**
      * Create the ApiServer-Object.
      */
     constructor() {
+        logging_1.InternalLogger.logger = logging_1.dummyLogger;
+        api = new eufySecurityApi_1.EufySecurityApi();
         apiPortFile(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort());
-        this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile(), logger);
+        this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile());
     }
     /**
      * Start the apiServer.
@@ -36,20 +38,20 @@ class ApiServer {
      * @param certHttps The cert for https.
      * @param logger The logger component.
      */
-    async startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps, logger) {
-        logger.logInfoBasic(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
-        logger.logInfoBasic(`  Host: ${os_1.default.hostname}`);
-        logger.logInfoBasic(`  Platform: ${os_1.default.platform}_${os_1.default.arch}`);
-        logger.logInfoBasic(`  Node: ${process.version}`);
+    async startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps) {
+        logging_1.rootAddonLogger.info(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
+        logging_1.rootAddonLogger.info(`  Host: ${os_1.default.hostname}`);
+        logging_1.rootAddonLogger.info(`  Platform: ${os_1.default.platform}_${os_1.default.arch}`);
+        logging_1.rootAddonLogger.info(`  Node: ${process.version}`);
         if (httpActive == true) {
-            logger.logInfoBasic("Starting http server...");
+            logging_1.rootAddonLogger.info("Starting http server...");
             serverHttp.on("error", this.errorListener);
             serverHttp.on("request", this.requestListener);
             serverHttp.listen(portHttp);
-            logger.logInfoBasic(`...started. http listening on port '${portHttp}'`);
+            logging_1.rootAddonLogger.info(`...started. http listening on port '${portHttp}'`);
         }
         if (httpsActive == true) {
-            logger.logInfoBasic("Starting https server...");
+            logging_1.rootAddonLogger.info("Starting https server...");
             if ((0, fs_1.existsSync)(keyHttps) && (0, fs_1.existsSync)(certHttps)) {
                 const options = {
                     key: (0, fs_1.readFileSync)(keyHttps),
@@ -59,10 +61,10 @@ class ApiServer {
                 serverHttps.on("error", this.errorListener);
                 serverHttps.on("request", this.requestListener);
                 serverHttps.listen(portHttps);
-                logger.logInfoBasic(`...started. https listening on port '${portHttps}'`);
+                logging_1.rootAddonLogger.info(`...started. https listening on port '${portHttps}'`);
             }
             else {
-                logger.logErrorBasis("FAILED TO START SERVER (HTTPS): key or cert file not found.");
+                logging_1.rootAddonLogger.error("FAILED TO START SERVER (HTTPS): key or cert file not found.");
             }
         }
     }
@@ -72,10 +74,10 @@ class ApiServer {
      */
     async errorListener(error) {
         if (error.code == "EADDRINUSE") {
-            logger.logErrorBasis(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
+            logging_1.rootAddonLogger.error(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
         }
         else {
-            logger.logErrorBasis(`Errorcode: ${error.code}: ${error.message}`);
+            logging_1.rootAddonLogger.error(`Errorcode: ${error.code}: ${error.message}`);
         }
     }
     /**
@@ -84,10 +86,10 @@ class ApiServer {
      * @param response The response object.
      */
     async requestListener(request, response) {
-        var responseData = "";
-        var contentType = "application/json";
-        var fileName = "";
-        var url = request.url?.split("/");
+        let responseData = "";
+        let contentType = "application/json";
+        let fileName = "";
+        let url = request.url?.split("/");
         if (url === undefined) {
             url = [];
         }
@@ -101,12 +103,20 @@ class ApiServer {
                     case "getAccountInfo":
                         responseData = await api.getAccountInfoAsJson();
                         break;
-                    case "getCaptchaState":
-                        responseData = api.getCaptchaState();
+                    case "getTfaCaptchaState":
+                        responseData = api.getTfaCaptchaState();
                         break;
                     case "setCaptchaCode":
                         if (url.length == 3) {
                             responseData = api.setCaptchaCode(url[2]);
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "setTfaCode":
+                        if (url.length == 3) {
+                            responseData = api.setTfaCode(url[2]);
                         }
                         else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -149,7 +159,7 @@ class ApiServer {
                         break;
                     case "getDevicePropertiesTruncated":
                         if (url.length == 3) {
-                            var json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
+                            const json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
                             if (json.success == true) {
                                 json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
                                 json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
@@ -179,7 +189,7 @@ class ApiServer {
                         break;
                     case "getDeviceImage":
                         if (url.length == 3) {
-                            var picture = await api.getDeviceImage(url[2]);
+                            const picture = await api.getDeviceImage(url[2]);
                             if (picture !== null) {
                                 responseData = picture.data;
                                 contentType = picture.type.mime;
@@ -231,7 +241,7 @@ class ApiServer {
                         break;
                     case "getStationPropertiesTruncated":
                         if (url.length == 3) {
-                            var json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
+                            const json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
                             if (json.success == true) {
                                 json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
                                 json.data.macAddress = "XX:XX:XX:XX:XX:XX";
@@ -393,14 +403,6 @@ class ApiServer {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
-                    case "getLibrary":
-                        if (url.length == 2) {
-                            responseData = await api.getLibrary();
-                        }
-                        else {
-                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
-                        }
-                        break;
                     case "connect":
                         if (url.length == 3) {
                             responseData = await api.connectStation(url[2]);
@@ -411,12 +413,6 @@ class ApiServer {
                         break;
                     case "getTimeZones":
                         responseData = api.getTimeZones();
-                        break;
-                    case "getLogFileContent":
-                        responseData = await api.getLogFileContent();
-                        break;
-                    case "getErrorFileContent":
-                        responseData = await api.getErrorFileContent();
                         break;
                     case "removeInteractions":
                         responseData = api.removeInteractions();
@@ -453,39 +449,21 @@ class ApiServer {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
-                    case "clearLogFile":
-                        emptyLogFile();
-                        responseData = `{"success":true}`;
-                        break;
-                    case "clearErrFile":
-                        emptyErrFile();
-                        responseData = `{"success":true}`;
-                        break;
                     case "restartService":
                         restartServer();
                         responseData = `{"success":true}`;
                         break;
                     case "downloadConfig":
                         api.writeConfig();
-                        responseData = (0, fs_1.readFileSync)('config.json', 'utf-8');
+                        responseData = (0, fs_1.readFileSync)("config.json", "utf-8");
                         contentType = "text/json";
                         fileName = `config_${os_1.default.hostname}_${getDateTimeAsString(new Date())}.json`;
-                        break;
-                    case "downloadLogFile":
-                        responseData = (0, fs_1.readFileSync)('/var/log/eufySecurity.log', 'utf-8');
-                        contentType = "text/plain";
-                        fileName = `eufySecurity_${os_1.default.hostname}.log`;
-                        break;
-                    case "downloadErrFile":
-                        responseData = (0, fs_1.readFileSync)('/var/log/eufySecurity.err', 'utf-8');
-                        contentType = "text/plain";
-                        fileName = `eufySecurity_${os_1.default.hostname}.err`;
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
                 }
-                response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', contentType + '; charset=UTF-8');
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Content-Type", contentType + "; charset=UTF-8");
                 if (fileName === "") {
                     response.writeHead(200);
                     //response.end(responseData);
@@ -498,8 +476,8 @@ class ApiServer {
             }
             else {
                 responseData = `{"success":false,"message":"Unknown command."}`;
-                response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', '; charset=UTF-8');
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Content-Type", "; charset=UTF-8");
                 response.writeHead(200);
                 response.end(responseData);
             }
@@ -509,128 +487,131 @@ class ApiServer {
             if (url.length > 1) {
                 switch (url[1]) {
                     case "setConfig":
-                        var postData = "";
-                        var isDataOK = true;
+                        let postData = "";
+                        let isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
                         });
                         request.on("end", async function () {
-                            var username = "";
+                            let username = "";
                             if (postData.indexOf("username") >= 0) {
                                 username = getDataFromPOSTData(postData, "username", "string");
                             }
-                            var password = "";
+                            let password = "";
                             if (postData.indexOf("password") >= 0) {
                                 password = getDataFromPOSTData(postData, "password", "string");
                             }
-                            var country = "";
+                            let country = "";
                             if (postData.indexOf("country") >= 0) {
                                 country = getDataFromPOSTData(postData, "country", "string");
                             }
-                            var language = "";
+                            let language = "";
                             if (postData.indexOf("language") >= 0) {
                                 language = getDataFromPOSTData(postData, "language", "string");
                             }
-                            var trustedDeviceName = "";
+                            let trustedDeviceName = "";
                             if (postData.indexOf("trustedDeviceName") >= 0) {
                                 trustedDeviceName = getDataFromPOSTData(postData, "trustedDeviceName", "string");
                             }
-                            var useHttp = false;
+                            let useHttp = false;
                             if (postData.indexOf("useHttp") >= 0) {
                                 useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
                             }
-                            var apiporthttp = 52789;
+                            let apiporthttp = 52789;
                             if (postData.indexOf("httpPort") >= 0) {
                                 apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
                             }
-                            var useHttps = false;
+                            let useHttps = false;
                             if (postData.indexOf("useHttps") >= 0) {
                                 useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
                             }
                             if (useHttp == false && useHttps == false) {
                                 isDataOK = false;
+                                logging_1.rootAddonLogger.info("At least 'useHttp' or 'useHttps' must be activated.");
                             }
-                            var apiporthttps = 52790;
+                            let apiporthttps = 52790;
                             if (postData.indexOf("httpsPort") >= 0) {
                                 apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
                             }
-                            var apikeyfile = "/usr/local/etc/config/server.pem";
+                            let apikeyfile = "/usr/local/etc/config/server.pem";
                             if (postData.indexOf("httpsKeyFile") >= 0) {
                                 apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
                             }
-                            var apicertfile = "/usr/local/etc/config/server.pem";
+                            let apicertfile = "/usr/local/etc/config/server.pem";
                             if (postData.indexOf("httpsCertFile") >= 0) {
                                 apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                             }
-                            var apiacceptinvitations = false;
+                            let apiacceptinvitations = false;
                             if (postData.indexOf("acceptInvitations") >= 0) {
                                 apiacceptinvitations = getDataFromPOSTData(postData, "acceptInvitations", "boolean");
                             }
-                            var apihouseid = "all";
+                            let apihouseid = "all";
                             if (postData.indexOf("house") >= 0) {
                                 apihouseid = getDataFromPOSTData(postData, "house", "string");
                             }
-                            var apiconnectiontype = 1;
+                            let apiconnectiontype = 1;
                             if (postData.indexOf("connectionType") >= 0) {
                                 apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
                             }
-                            var apiuseudpstaticports = false;
+                            let apiuseudpstaticports = false;
                             if (postData.indexOf("useUdpStaticPorts") >= 0) {
                                 apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
                             }
-                            var apiudpports = undefined;
+                            let apiudpports = undefined;
                             if (postData.indexOf("udpPortsStation") >= 0) {
                                 apiudpports = getAllUdpPortsForStations(postData);
                             }
-                            var useSystemVariables = false;
+                            let useSystemVariables = false;
                             if (postData.indexOf("useSystemVariables") >= 0) {
                                 useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
                             }
-                            var apicameradefaultimage = "";
-                            if (postData.indexOf("defaultImagePath") >= 0) {
-                                apicameradefaultimage = getDataFromPOSTData(postData, "defaultImagePath", "string");
-                            }
-                            var apicameradefaultvideo = "";
-                            if (postData.indexOf("defaultVideoPath") >= 0) {
-                                apicameradefaultvideo = getDataFromPOSTData(postData, "defaultVideoPath", "string");
-                            }
-                            var useupdatestateevent = false;
+                            let useupdatestateevent = false;
                             if (postData.indexOf("useUpdateStateEvent") >= 0) {
                                 useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
                             }
-                            var useupdatestateintervall = false;
+                            let useupdatestateintervall = false;
                             if (postData.indexOf("useUpdateStateIntervall") >= 0) {
                                 useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
                             }
-                            var updatestatetimespan = 15;
+                            let updatestatetimespan = 15;
                             if (postData.indexOf("updateStateIntervallTimespan") >= 0) {
                                 updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
                             }
-                            var useupdatelinks = false;
-                            if (postData.indexOf("useUpdateLinksIntervall") >= 0) {
-                                useupdatelinks = getDataFromPOSTData(postData, "useUpdateLinksIntervall", "boolean");
-                            }
-                            var useupdatelinksonlywhenactive = false;
-                            if (postData.indexOf("useUpdateLinksOnlyWhenActive") >= 0) {
-                                useupdatelinksonlywhenactive = getDataFromPOSTData(postData, "useUpdateLinksOnlyWhenActive", "boolean");
-                            }
-                            var updatelinkstimespan = 15;
-                            if (postData.indexOf("updateLinksIntervallTimespan") >= 0) {
-                                updatelinkstimespan = getDataFromPOSTData(postData, "updateLinksIntervallTimespan", "number");
-                            }
-                            var usepushservice = false;
+                            let usepushservice = false;
                             if (postData.indexOf("usePushService") >= 0) {
                                 usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
                             }
-                            var apiloglevel = 0;
-                            if (postData.indexOf("logLevel") >= 0) {
-                                apiloglevel = getDataFromPOSTData(postData, "logLevel", "number");
+                            let loglevelAddon = 6;
+                            if (postData.indexOf("logLevelAddon") >= 0) {
+                                loglevelAddon = getDataFromPOSTData(postData, "logLevelAddon", "number");
+                            }
+                            let loglevelMain = 6;
+                            if (postData.indexOf("logLevelMain") >= 0) {
+                                loglevelMain = getDataFromPOSTData(postData, "logLevelMain", "number");
+                            }
+                            let loglevelHttp = 6;
+                            if (postData.indexOf("logLevelHttp") >= 0) {
+                                loglevelHttp = getDataFromPOSTData(postData, "logLevelHttp", "number");
+                            }
+                            let loglevelP2p = 6;
+                            if (postData.indexOf("logLevelP2p") >= 0) {
+                                loglevelP2p = getDataFromPOSTData(postData, "logLevelP2p", "number");
+                            }
+                            let loglevelPush = 6;
+                            if (postData.indexOf("logLevelPush") >= 0) {
+                                loglevelPush = getDataFromPOSTData(postData, "logLevelPush", "number");
+                            }
+                            let loglevelMqtt = 6;
+                            if (postData.indexOf("logLevelAddon") >= 0) {
+                                loglevelMqtt = getDataFromPOSTData(postData, "logLevelMqtt", "number");
                             }
                             if (checkNumberValue(apiporthttp, 1, 53535) == false) {
                                 isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'apiporthttp' is out of range. Please use a value between '1' and '53535'.");
                             }
                             if (checkNumberValue(apiporthttps, 1, 53535) == false) {
                                 isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'apiporthttps' is out of range. Please use a value between '1' and '53535'.");
                             }
                             if (apiuseudpstaticports == true) {
                                 /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
@@ -640,47 +621,65 @@ class ApiServer {
                             }
                             if (useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == "")) {
                                 isDataOK = false;
+                                logging_1.rootAddonLogger.info("The settings for using https are incomplete. Please set 'apiporthttps', 'apikeyfile' and 'apicertfile'.");
                             }
-                            if (checkNumberValue(apiloglevel, 0, 3) == false) {
+                            if (checkNumberValue(loglevelAddon, 0, 6) == false) {
                                 isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'loglevelAddon' is out of range. Please use a value between '0' and '6'.");
+                            }
+                            if (checkNumberValue(loglevelMain, 0, 6) == false) {
+                                isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'loglevelMain' is out of range. Please use a value between '0' and '6'.");
+                            }
+                            if (checkNumberValue(loglevelHttp, 0, 6) == false) {
+                                isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'loglevelHttp' is out of range. Please use a value between '0' and '6'.");
+                            }
+                            if (checkNumberValue(loglevelP2p, 0, 6) == false) {
+                                isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'loglevelP2p' is out of range. Please use a value between '0' and '6'.");
+                            }
+                            if (checkNumberValue(loglevelPush, 0, 6) == false) {
+                                isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'loglevelPush' is out of range. Please use a value between '0' and '6'.");
+                            }
+                            if (checkNumberValue(loglevelMqtt, 0, 6) == false) {
+                                isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'loglevelMqtt' is out of range. Please use a value between '0' and '6'.");
                             }
                             if (checkNumberValue(updatestatetimespan, 15, 240) == false) {
                                 isDataOK = false;
-                            }
-                            if (checkNumberValue(updatelinkstimespan, 15, 240) == false) {
-                                isDataOK = false;
+                                logging_1.rootAddonLogger.info("The value for 'updatestatetimespan' is out of range. Please use a value between '15' and '240'.");
                             }
                             if (isDataOK == true) {
                                 apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
-                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, apicameradefaultimage, apicameradefaultvideo, useupdatestateevent, useupdatestateintervall, updatestatetimespan, useupdatelinks, useupdatelinksonlywhenactive, updatelinkstimespan, usepushservice, apiloglevel);
+                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, loglevelAddon, loglevelMain, loglevelHttp, loglevelP2p, loglevelPush, loglevelMqtt);
                             }
                             else {
-                                responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check values."}`;
+                                responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check logfile and values."}`;
                             }
-                            var resJson = JSON.parse(responseData);
-                            response.setHeader('Access-Control-Allow-Origin', '*');
-                            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                            const resJson = JSON.parse(responseData);
+                            response.setHeader("Access-Control-Allow-Origin", "*");
+                            response.setHeader("Content-Type", "application/json; charset=UTF-8");
                             response.writeHead(200);
                             response.end(responseData);
                             if (resJson.success == true && resJson.serviceRestart == true) {
-                                logger.logInfoBasic("Settings saved. Restarting apiServer.");
+                                logging_1.rootAddonLogger.info("Settings saved. Restarting apiServer.");
                                 restartServer();
                             }
                             else if (resJson.success == true && resJson.serviceRestart == false) {
-                                logger.logInfoBasic("Settings saved.");
+                                logging_1.rootAddonLogger.info("Settings saved.");
                             }
                             else {
-                                logger.logInfoBasic("Error during saving settings.");
+                                logging_1.rootAddonLogger.info("Error during saving settings.");
                             }
                         });
                         break;
                     case "uploadConfig":
-                        var postData = "";
-                        var isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
-                            if (request.headers['content-length'] !== undefined && Number.parseInt(request.headers['content-length']?.toString()) > 500000) {
-                                logger.logInfoBasic("Error during upload and saving config file: File is to large.");
+                            if (request.headers["content-length"] !== undefined && Number.parseInt(request.headers["content-length"]?.toString()) > 500000) {
+                                logging_1.rootAddonLogger.info("Error during upload and saving config file: File is to large.");
                                 request.destroy(new Error("FileToLarge"));
                             }
                         });
@@ -688,75 +687,74 @@ class ApiServer {
                             try {
                                 responseData = "";
                                 if (checkUploadedFileMetadata(postData) == false) {
-                                    logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing.");
+                                    logging_1.rootAddonLogger.info("Error during upload and saving config file: File metadata are unsopported or missing.");
                                     responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
                                 }
                                 else {
-                                    var fileContent = getUploadFileContent(postData);
+                                    const fileContent = getUploadFileContent(postData);
                                     if (fileContent === undefined) {
                                         if (responseData == "") {
-                                            logger.logInfoBasic("Error during upload and saving config file: File content could not be determined.");
+                                            logging_1.rootAddonLogger.info("Error during upload and saving config file: File content could not be determined.");
                                             responseData = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
                                         }
                                         else {
-                                            logger.logInfoBasic("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
+                                            logging_1.rootAddonLogger.info("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
                                             responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
                                         }
                                     }
                                     else {
-                                        (0, fs_1.writeFileSync)("config.json.upload", fileContent, 'utf-8');
+                                        (0, fs_1.writeFileSync)("config.json.upload", fileContent, "utf-8");
                                         responseData = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
                                     }
                                 }
-                                var resJson = JSON.parse(responseData);
-                                response.setHeader('Access-Control-Allow-Origin', '*');
-                                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                                const resJson = JSON.parse(responseData);
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
                                 response.writeHead(200);
                                 response.end(responseData);
                                 if (resJson.success == true && resJson.serviceRestart == true) {
-                                    logger.logInfoBasic("Config file uploaded and saved. Restarting apiServer.");
+                                    logging_1.rootAddonLogger.info("Config file uploaded and saved. Restarting apiServer.");
                                     restartServer();
                                 }
                                 else {
-                                    logger.logInfoBasic("Config file was not saved.");
+                                    logging_1.rootAddonLogger.info("Config file was not saved.");
                                 }
                             }
                             catch (e) {
+                                logging_1.rootAddonLogger.info("Error during upload config", e);
                             }
                         });
                         break;
                     case "setInteraction":
-                        var postData = "";
-                        var isDataOK = true;
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
                         });
                         request.on("end", async function () {
                             try {
-                                var resJson = JSON.parse(postData);
+                                const resJson = JSON.parse(postData);
                                 responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
-                                response.setHeader('Access-Control-Allow-Origin', '*');
-                                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
                                 response.writeHead(200);
                                 response.end(responseData);
                             }
                             catch (e) {
-                                logger.logErrorBasis(e.message);
+                                logging_1.rootAddonLogger.error(e.message);
                             }
                         });
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
-                        response.setHeader('Access-Control-Allow-Origin', '*');
-                        response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                        response.setHeader("Access-Control-Allow-Origin", "*");
+                        response.setHeader("Content-Type", "application/json; charset=UTF-8");
                         response.writeHead(200);
                         response.end(responseData);
                 }
             }
             else {
                 responseData = `{"success":false,"message":"Wrong amount of arguments."}`;
-                response.setHeader('Access-Control-Allow-Origin', '*');
-                response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Content-Type", "application/json; charset=UTF-8");
                 response.writeHead(200);
                 response.end(responseData);
             }
@@ -764,8 +762,8 @@ class ApiServer {
         // Be polite and give an answer even we know that there is nothing to answer...
         else {
             responseData = `{"success":false,"message":"Unknown command."}`;
-            response.setHeader('Access-Control-Allow-Origin', '*');
-            response.setHeader('Content-Type', 'application/json; charset=UTF-8');
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Content-Type", "application/json; charset=UTF-8");
             response.writeHead(200);
             response.end(responseData);
         }
@@ -784,17 +782,18 @@ function main() {
  */
 function apiPortFile(useHttp, httpPort, useHttps, httpsPort) {
     try {
-        if ((0, fs_1.existsSync)('www/apiPorts.json')) {
-            var resJson = JSON.parse((0, fs_1.readFileSync)('www/apiPorts.json', 'utf-8'));
+        if ((0, fs_1.existsSync)("www/apiPorts.json")) {
+            const resJson = JSON.parse((0, fs_1.readFileSync)("www/apiPorts.json", "utf-8"));
             if (useHttp !== resJson.useHttp || httpPort !== Number.parseInt(resJson.httpPort) || useHttps !== resJson.useHttps || httpsPort !== Number.parseInt(resJson.httpsPort)) {
-                (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
+                (0, fs_1.writeFileSync)("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
             }
         }
         else {
-            (0, fs_1.writeFileSync)('www/apiPorts.json', `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
+            (0, fs_1.writeFileSync)("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
         }
     }
     catch (ENOENT) {
+        logging_1.rootAddonLogger.info("Error during handling apiPortFile.", ENOENT);
     }
 }
 /**
@@ -805,7 +804,7 @@ function apiPortFile(useHttp, httpPort, useHttps, httpsPort) {
  */
 function checkNumberValue(value, lowestValue, highestValue) {
     try {
-        var val = value;
+        const val = value;
         if (val >= lowestValue && val <= highestValue) {
             return true;
         }
@@ -823,13 +822,14 @@ function checkNumberValue(value, lowestValue, highestValue) {
  * @param lowestValue The lowest value allowd.
  * @param highestValue The highest value allowed.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function checkNumbersValue(values, lowestValue, highestValue) {
     if (values == "") {
         return false;
     }
-    var vals = (values.split(",")).map((i) => Number(i));
+    const vals = (values.split(",")).map((i) => Number(i));
     if (vals.length > 0) {
-        for (var val of vals) {
+        for (const val of vals) {
             if (checkNumberValue(val, lowestValue, highestValue) == false) {
                 return false;
             }
@@ -846,19 +846,19 @@ function checkNumbersValue(values, lowestValue, highestValue) {
  */
 function getDataFromPOSTData(postData, target, dataType) {
     if (dataType == "string") {
-        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n", "");
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return temp;
     }
     else if (dataType == "number") {
-        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n", "");
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return Number.parseInt(temp);
     }
     else if (dataType == "boolean") {
-        var temp = postData.substring(postData.indexOf(target) + (target.length + 1));
+        let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.substring(2, temp.indexOf("----") - 2);
         if (temp.trim() == "on") {
             return true;
@@ -875,14 +875,14 @@ function getDataFromPOSTData(postData, target, dataType) {
  * @returns The array with the setGuardModeStationserials and the port number.
  */
 function getAllUdpPortsForStations(postData) {
-    var pos = postData.indexOf("udpPortsStation");
-    var res = [];
+    let pos = postData.indexOf("udpPortsStation");
+    const res = [];
     while (pos > 0) {
-        var temp = postData.substring(pos + 29);
-        var stationSerial = postData.substring(pos + 15, pos + 31);
+        let temp = postData.substring(pos + 29);
+        const stationSerial = postData.substring(pos + 15, pos + 31);
         temp = temp.replace("\r\n", "");
         temp = temp.substring(5, temp.indexOf("----") - 2);
-        var line = [];
+        const line = [];
         line[0] = stationSerial;
         line[1] = temp;
         res.push(line);
@@ -896,7 +896,7 @@ function getAllUdpPortsForStations(postData) {
  * @returns A boolean value.
  */
 function checkUploadedFileMetadata(postData) {
-    var pos = postData.indexOf("Content-Disposition: form-data;");
+    let pos = postData.indexOf("Content-Disposition: form-data;");
     if (pos < 0) {
         return false;
     }
@@ -940,11 +940,11 @@ function checkUploadedFileMetadata(postData) {
  * @returns A string value or undefined.
  */
 function getUploadFileContent(postData) {
-    var start = postData.indexOf("{");
+    const start = postData.indexOf("{");
     if (start < 0) {
         return undefined;
     }
-    var end = postData.lastIndexOf("}");
+    const end = postData.lastIndexOf("}");
     if (end < 0) {
         return undefined;
     }
@@ -954,40 +954,29 @@ function getUploadFileContent(postData) {
  * Will write config, stop the server and exit.
  */
 async function stopServer() {
-    logger.logInfoBasic("Set service state to shutdown...");
+    logging_1.rootAddonLogger.info("Set service state to shutdown...");
     api.setServiceState("shutdown");
-    logger.logInfoBasic("Stopping scheduled tasks...");
+    logging_1.rootAddonLogger.info("Stopping scheduled tasks...");
     api.clearScheduledTasks();
-    logger.logInfoBasic("Stopping EufySecurityApi...");
+    logging_1.rootAddonLogger.info("Stopping EufySecurityApi...");
     await api.close();
-    logger.logInfoBasic("Write config...");
+    logging_1.rootAddonLogger.info("Write config...");
     api.writeConfig();
-    logger.logInfoBasic("Stopping...");
+    logging_1.rootAddonLogger.info("Stopping...");
     serverHttp.close();
-    logger.logInfoBasic("Stopped...");
+    logging_1.rootAddonLogger.info("Stopped...");
 }
 /**
  * Will write config and restart the server.
  */
 async function restartServer() {
-    logger.logInfoBasic("Going to restart with apiServerRestarter...");
+    logging_1.rootAddonLogger.info("Going to restart with apiServerRestarter...");
     (0, child_process_1.exec)("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
-}
-/**
- * Clear the logfile
- */
-function emptyLogFile() {
-    (0, child_process_1.exec)("truncate -s 0 /var/log/eufySecurity.log");
-}
-/**
- * Clear the errorlogfile
- */
-function emptyErrFile() {
-    (0, child_process_1.exec)("truncate -s 0 /var/log/eufySecurity.err");
 }
 /**
  * Wait-function for waiting between stop and start when restarting.
  */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
 function wait10Seconds() {
     return new Promise(resolve => {
         setTimeout(() => {
@@ -995,16 +984,16 @@ function wait10Seconds() {
         }, 10000);
     });
 }
-process.on('SIGTERM', async () => {
-    logger.logInfoBasic("SIGTERM signal received. Save config and shutdown server...");
+process.on("SIGTERM", async () => {
+    logging_1.rootAddonLogger.info("SIGTERM signal received. Save config and shutdown server...");
     await stopServer();
-    logger.logInfoBasic("...done. Exiting");
+    logging_1.rootAddonLogger.info("...done. Exiting");
     (0, process_1.exit)(0);
 });
-process.on('SIGINT', async () => {
-    logger.logInfoBasic("SIGINT signal received. Save config and shutdown server...");
+process.on("SIGINT", async () => {
+    logging_1.rootAddonLogger.info("SIGINT signal received. Save config and shutdown server...");
     await stopServer();
-    logger.logInfoBasic("...done. Exiting");
+    logging_1.rootAddonLogger.info("...done. Exiting");
     (0, process_1.exit)(0);
 });
 /**
@@ -1023,6 +1012,6 @@ function replaceLastChars(input, char, numberOfChars) {
  * @returns The date and time as string.
  */
 function getDateTimeAsString(dateTime) {
-    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth() + 1).toString().padStart(2, '0')}${dateTime.getDate().toString().padStart(2, '0')}-${dateTime.getHours().toString().padStart(2, '0')}${dateTime.getMinutes().toString().padStart(2, '0')}${dateTime.getSeconds().toString().padStart(2, '0')}`;
+    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth() + 1).toString().padStart(2, "0")}${dateTime.getDate().toString().padStart(2, "0")}-${dateTime.getHours().toString().padStart(2, "0")}${dateTime.getMinutes().toString().padStart(2, "0")}${dateTime.getSeconds().toString().padStart(2, "0")}`;
 }
 main();

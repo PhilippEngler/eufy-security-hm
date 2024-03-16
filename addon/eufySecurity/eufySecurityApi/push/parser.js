@@ -24,13 +24,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PushClientParser = void 0;
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 const path = __importStar(require("path"));
 const protobufjs_1 = require("protobufjs");
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const models_1 = require("./models");
 const error_1 = require("../error");
 const error_2 = require("./error");
+const logging_1 = require("../logging");
 class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
     static proto = null;
     state = models_1.ProcessingState.MCS_VERSION_TAG_AND_SIZE;
@@ -40,10 +40,8 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
     messageSize = 0;
     messageTag = 0;
     handshakeComplete = false;
-    log;
-    constructor(log) {
+    constructor() {
         super();
-        this.log = log;
     }
     resetState() {
         this.state = models_1.ProcessingState.MCS_VERSION_TAG_AND_SIZE;
@@ -55,9 +53,9 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
         this.handshakeComplete = false;
         this.removeAllListeners();
     }
-    static async init(log) {
+    static async init() {
         this.proto = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/mcs.proto"));
-        return new PushClientParser(log);
+        return new PushClientParser();
     }
     handleData(newData) {
         this.data = Buffer.concat([this.data, newData]);
@@ -92,7 +90,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
                 this.onGotMessageBytes();
                 break;
             default:
-                this.log.warn("Push Parser - Unknown state", { state: this.state });
+                logging_1.rootPushLogger.warn("Push Parser - Unknown state", { state: this.state });
                 break;
         }
     }
@@ -164,7 +162,7 @@ class PushClientParser extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("message", { tag: this.messageTag, object: object });
         if (this.messageTag === models_1.MessageTag.LoginResponse) {
             if (this.handshakeComplete) {
-                this.log.error("Push Parser - Unexpected login response!");
+                logging_1.rootPushLogger.error("Push Parser - Unexpected login response!");
             }
             else {
                 this.handshakeComplete = true;

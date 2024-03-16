@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EufyHouses = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
+const logging_1 = require("./logging");
 /**
  * Represents all the Houses the account has access to.
  */
@@ -26,7 +27,7 @@ class EufyHouses extends tiny_typed_emitter_1.TypedEmitter {
      * @param houses The houses object.
      */
     handleHouses(houses) {
-        this.api.logDebug("Got houses", { houses: houses });
+        logging_1.rootAddonLogger.debug("Got houses", { houses: houses });
         //TODO: Finish implementation
         this.houses = houses;
     }

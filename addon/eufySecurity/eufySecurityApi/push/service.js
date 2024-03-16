@@ -22,12 +22,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PushNotificationService = void 0;
-const got_1 = __importDefault(require("got"));
 const qs = __importStar(require("qs"));
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const utils_1 = require("./utils");
@@ -38,6 +34,9 @@ const utils_2 = require("../http/utils");
 const utils_3 = require("../utils");
 const error_1 = require("./error");
 const error_2 = require("../error");
+const logging_1 = require("../logging");
+const _1 = require(".");
+const station_1 = require("../http/station");
 class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     APP_PACKAGE = "com.oceanwing.battery.cam";
     APP_ID = "1:348804314802:android:440a6773b3620da7";
@@ -52,12 +51,20 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     retryDelay = 0;
     credentials;
     persistentIds = [];
-    log;
     connected = false;
     connecting = false;
-    constructor(log) {
+    got;
+    constructor() {
         super();
-        this.log = log;
+    }
+    async loadLibraries() {
+        const { default: got } = await import("got");
+        this.got = got;
+    }
+    static async initialize() {
+        const service = new PushNotificationService();
+        await service.loadLibraries();
+        return service;
     }
     buildExpiresAt(expiresIn) {
         if (expiresIn.endsWith("ms")) {
@@ -71,7 +78,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     async registerFid(fid) {
         const url = `https://firebaseinstallations.googleapis.com/v1/projects/${this.FCM_PROJECT_ID}/installations`;
         try {
-            const response = await (0, got_1.default)(url, {
+            const response = await this.got(url, {
                 method: "post",
                 json: {
                     fid: fid,
@@ -97,7 +104,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                             const { response, options } = error;
                             const statusCode = response?.statusCode || 0;
                             const { method, url, prefixUrl } = options;
-                            const shortUrl = (0, utils_3.getShortUrl)(url, prefixUrl);
+                            const shortUrl = (0, utils_3.getShortUrl)(typeof url === "string" ? new URL(url) : url === undefined ? new URL("") : url, typeof prefixUrl === "string" ? prefixUrl : prefixUrl.toString());
                             const body = response?.body ? response.body : error.message;
                             if (response?.body) {
                                 error.name = "RegisterFidError";
@@ -119,20 +126,20 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 };
             }
             else {
-                this.log.error("Register FID - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                logging_1.rootPushLogger.error("Register FID - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
                 throw new error_1.FidRegistrationFailedError("FID registration failed", { context: { status: response.statusCode, statusText: response.statusMessage, data: response.body } });
             }
         }
         catch (err) {
             const error = (0, error_2.ensureError)(err);
-            this.log.error("Register FID - Generic Error", { error: (0, utils_3.getError)(error) });
+            logging_1.rootPushLogger.error("Register FID - Generic Error", { error: (0, utils_3.getError)(error) });
             throw new error_1.FidRegistrationFailedError("FID registration failed", { cause: error, context: { fid: fid } });
         }
     }
     async renewFidToken(fid, refreshToken) {
         const url = `https://firebaseinstallations.googleapis.com/v1/projects/${this.FCM_PROJECT_ID}/installations/${fid}/authTokens:generate`;
         try {
-            const response = await (0, got_1.default)(url, {
+            const response = await this.got(url, {
                 method: "post",
                 json: {
                     installation: {
@@ -159,7 +166,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                             const { response, options } = error;
                             const statusCode = response?.statusCode || 0;
                             const { method, url, prefixUrl } = options;
-                            const shortUrl = (0, utils_3.getShortUrl)(url, prefixUrl);
+                            const shortUrl = (0, utils_3.getShortUrl)(typeof url === "string" ? new URL(url) : url === undefined ? new URL("") : url, typeof prefixUrl === "string" ? prefixUrl : prefixUrl.toString());
                             const body = response?.body ? response.body : error.message;
                             if (response?.body) {
                                 error.name = "RenewFidTokenError";
@@ -178,13 +185,13 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 };
             }
             else {
-                this.log.error("Renew FID Token - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                logging_1.rootPushLogger.error("Renew FID Token - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
                 throw new error_1.RenewFidTokenFailedError("FID Token renewal failed", { context: { status: response.statusCode, statusText: response.statusMessage, data: response.body } });
             }
         }
         catch (err) {
             const error = (0, error_2.ensureError)(err);
-            this.log.error("Renew FID Token - Generic Error", { error: (0, utils_3.getError)(error) });
+            logging_1.rootPushLogger.error("Renew FID Token - Generic Error", { error: (0, utils_3.getError)(error) });
             throw new error_1.RenewFidTokenFailedError("FID Token renewal failed", { cause: error, context: { fid: fid, refreshToken: refreshToken } });
         }
     }
@@ -245,7 +252,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         const url = "https://android.clients.google.com/checkin";
         try {
             const buffer = await (0, utils_1.buildCheckinRequest)();
-            const response = await (0, got_1.default)(url, {
+            const response = await this.got(url, {
                 method: "post",
                 body: Buffer.from(buffer),
                 headers: {
@@ -264,7 +271,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                             const { response, options } = error;
                             const statusCode = response?.statusCode || 0;
                             const { method, url, prefixUrl } = options;
-                            const shortUrl = (0, utils_3.getShortUrl)(url, prefixUrl);
+                            const shortUrl = (0, utils_3.getShortUrl)(typeof url === "string" ? new URL(url) : url === undefined ? new URL("") : url, typeof prefixUrl === "string" ? prefixUrl : prefixUrl.toString());
                             const body = response?.body ? response.body : error.message;
                             if (response?.body) {
                                 error.name = "ExecuteCheckInError";
@@ -279,13 +286,13 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 return await (0, utils_1.parseCheckinResponse)(response.body);
             }
             else {
-                this.log.error("Check in - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                logging_1.rootPushLogger.error("Check in - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
                 throw new error_1.ExecuteCheckInError("Google checkin failed", { context: { status: response.statusCode, statusText: response.statusMessage, data: response.body } });
             }
         }
         catch (err) {
             const error = (0, error_2.ensureError)(err);
-            this.log.error("Check in - Generic Error", { error: (0, utils_3.getError)(error) });
+            logging_1.rootPushLogger.error("Check in - Generic Error", { error: (0, utils_3.getError)(error) });
             throw new error_1.ExecuteCheckInError("Google checkin failed", { cause: error });
         }
     }
@@ -297,7 +304,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         const retry = 5;
         try {
             for (let retry_count = 1; retry_count <= retry; retry_count++) {
-                const response = await (0, got_1.default)(url, {
+                const response = await this.got(url, {
                     method: "post",
                     body: qs.stringify({
                         "X-subtype": `${this.APP_SENDER_ID}`,
@@ -342,7 +349,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                                 const { response, options } = error;
                                 const statusCode = response?.statusCode || 0;
                                 const { method, url, prefixUrl } = options;
-                                const shortUrl = (0, utils_3.getShortUrl)(url, prefixUrl);
+                                const shortUrl = (0, utils_3.getShortUrl)(typeof url === "string" ? new URL(url) : url === undefined ? new URL("") : url, typeof prefixUrl === "string" ? prefixUrl : prefixUrl.toString());
                                 const body = response?.body ? response.body : error.message;
                                 if (response?.body) {
                                     error.name = "RegisterGcmError";
@@ -356,7 +363,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.statusCode == 200) {
                     const result = response.body.split("=");
                     if (result[0] == "Error") {
-                        this.log.debug("GCM register error, retry...", { retry: retry, retryCount: retry_count, response: response.body });
+                        logging_1.rootPushLogger.debug("GCM register error, retry...", { retry: retry, retryCount: retry_count, response: response.body });
                         if (retry_count == retry)
                             throw new error_1.RegisterGcmError("Max GCM registration retries reached", { context: { message: result[1], retry: retry, retryCount: retry_count } });
                     }
@@ -367,7 +374,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 else {
-                    this.log.error("Register GCM - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
+                    logging_1.rootPushLogger.error("Register GCM - Status return code not 200", { status: response.statusCode, statusText: response.statusMessage, data: response.body });
                     throw new error_1.RegisterGcmError("Google register to GCM failed", { context: { status: response.statusCode, statusText: response.statusMessage, data: response.body } });
                 }
                 await (0, utils_1.sleep)(10000 * retry_count);
@@ -376,12 +383,12 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_2.ensureError)(err);
-            this.log.error("Register GCM - Generic Error", { error: (0, utils_3.getError)(error) });
+            logging_1.rootPushLogger.error("Register GCM - Generic Error", { error: (0, utils_3.getError)(error) });
             throw new error_1.RegisterGcmError("Google register to GCM failed", { cause: error, context: { fidInstallationResponse: fidInstallationResponse, checkinResponse: checkinResponse } });
         }
     }
     _normalizePushMessage(message) {
-        const normalized_message = {
+        const normalizedMessage = {
             name: "",
             event_time: 0,
             type: -1,
@@ -389,99 +396,143 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             device_sn: ""
         };
         if (message.payload.payload) {
+            const payload = message.payload;
             // CusPush
-            normalized_message.type = Number.parseInt(message.payload.type);
             try {
-                normalized_message.event_time = message.payload.event_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.event_time)) : Number.parseInt(message.payload.event_time);
+                normalizedMessage.type = Number.parseInt(payload.type);
             }
             catch (err) {
                 const error = (0, error_2.ensureError)(err);
-                this.log.error(`Normalize push message - Type ${types_1.DeviceType[normalized_message.type]} CusPush - event_time - Error`, { error: (0, utils_3.getError)(error), message: message });
+                logging_1.rootPushLogger.error(`Normalize push message - type - Error`, { error: (0, utils_3.getError)(error), message: message });
             }
-            normalized_message.station_sn = message.payload.station_sn;
-            if (normalized_message.type === types_1.DeviceType.FLOODLIGHT)
-                normalized_message.device_sn = message.payload.station_sn;
-            else
-                normalized_message.device_sn = message.payload.device_sn;
-            if ((0, utils_3.isEmpty)(normalized_message.device_sn) && !(0, utils_3.isEmpty)(normalized_message.station_sn)) {
-                normalized_message.device_sn = normalized_message.station_sn;
-            }
-            normalized_message.title = message.payload.title;
-            normalized_message.content = message.payload.content;
-            try {
-                normalized_message.push_time = message.payload.push_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(message.payload.push_time)) : Number.parseInt(message.payload.push_time);
-            }
-            catch (err) {
-                const error = (0, error_2.ensureError)(err);
-                this.log.error(`Normalize push message - Type ${types_1.DeviceType[normalized_message.type]} CusPush - push_time - Error`, { error: (0, utils_3.getError)(error), message: message });
-            }
-            const excludeDevices = !device_1.Device.isBatteryDoorbell(normalized_message.type) && !device_1.Device.isWiredDoorbellDual(normalized_message.type) && !device_1.Device.isSensor(normalized_message.type) && !device_1.Device.isGarageCamera(normalized_message.type);
-            if ((normalized_message.station_sn.startsWith("T8030") && excludeDevices) || normalized_message.type === types_1.DeviceType.HB3) {
-                const push_data = message.payload.payload;
-                normalized_message.name = push_data.name ? push_data.name : "";
-                normalized_message.channel = push_data.channel !== undefined ? push_data.channel : 0;
-                normalized_message.cipher = push_data.cipher !== undefined ? push_data.cipher : 0;
-                normalized_message.event_session = push_data.session_id !== undefined ? push_data.session_id : "";
-                normalized_message.event_type = push_data.a !== undefined ? push_data.a : push_data.event_type;
-                normalized_message.file_path = push_data.file_path !== undefined ? push_data.file_path : "";
-                normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
-                normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
-                normalized_message.notification_style = push_data.notification_style;
-                normalized_message.storage_type = push_data.storage_type !== undefined ? push_data.storage_type : 1;
-                normalized_message.msg_type = push_data.msg_type;
-                normalized_message.person_name = push_data.nick_name;
-                normalized_message.person_id = push_data.person_id;
-                normalized_message.tfcard_status = push_data.tfcard_status;
-                normalized_message.user_type = push_data.user;
-                normalized_message.user_name = push_data.user_name;
-                normalized_message.station_guard_mode = push_data.arming;
-                normalized_message.station_current_mode = push_data.mode;
-                normalized_message.alarm_delay = push_data.alarm_delay;
-                normalized_message.sound_alarm = push_data.alarm !== undefined ? push_data.alarm === 1 ? true : false : undefined;
+            if (normalizedMessage.type >= 10000) {
+                // server push notification
+                const serverPushData = payload.payload;
+                normalizedMessage.email = serverPushData.email;
+                normalizedMessage.person_name = serverPushData.nick_name;
+                normalizedMessage.verify_code = serverPushData.verify_code;
+                switch (normalizedMessage.type) {
+                    case _1.ServerPushEvent.ALARM_NOTIFY:
+                    case _1.ServerPushEvent.ALARM_GUEST_NOTIFY:
+                        const alarmPushData = payload.payload;
+                        normalizedMessage.device_sn = alarmPushData.device_sn;
+                        normalizedMessage.station_sn = alarmPushData.station_sn;
+                        normalizedMessage.alarm_status = alarmPushData.alarm_status;
+                        normalizedMessage.alarm_action = alarmPushData.alarm_action_channel;
+                        try {
+                            normalizedMessage.alarm_type = Number.parseInt(alarmPushData.alarm_id);
+                        }
+                        catch (err) {
+                            const error = (0, error_2.ensureError)(err);
+                            logging_1.rootPushLogger.error(`Normalize push message - alarm_type - Error`, { error: (0, utils_3.getError)(error), message: message });
+                        }
+                        try {
+                            normalizedMessage.event_time = alarmPushData.alert_time !== undefined ? (0, utils_1.convertTimestampMs)(alarmPushData.alert_time) : Number.parseInt(alarmPushData.alert_time);
+                        }
+                        catch (err) {
+                            const error = (0, error_2.ensureError)(err);
+                            logging_1.rootPushLogger.error(`Normalize push message - event_time - Error`, { error: (0, utils_3.getError)(error), message: message });
+                        }
+                        break;
+                }
             }
             else {
-                if (device_1.Device.isBatteryDoorbell(normalized_message.type) || device_1.Device.isWiredDoorbellDual(normalized_message.type)) {
-                    const push_data = message.payload.payload;
-                    normalized_message.name = push_data.name ? push_data.name : "";
+                try {
+                    normalizedMessage.event_time = payload.event_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(payload.event_time)) : Number.parseInt(payload.event_time);
+                }
+                catch (err) {
+                    const error = (0, error_2.ensureError)(err);
+                    logging_1.rootPushLogger.error(`Normalize push message - Type ${types_1.DeviceType[normalizedMessage.type]} CusPush - event_time - Error`, { error: (0, utils_3.getError)(error), message: message });
+                }
+                try {
+                    normalizedMessage.push_time = payload.push_time !== undefined ? (0, utils_1.convertTimestampMs)(Number.parseInt(payload.push_time)) : Number.parseInt(payload.push_time);
+                }
+                catch (err) {
+                    const error = (0, error_2.ensureError)(err);
+                    logging_1.rootPushLogger.error(`Normalize push message - Type ${types_1.DeviceType[normalizedMessage.type]} CusPush - push_time - Error`, { error: (0, utils_3.getError)(error), message: message });
+                }
+                normalizedMessage.station_sn = payload.station_sn;
+                normalizedMessage.title = payload.title;
+                normalizedMessage.content = payload.content;
+                if (normalizedMessage.type === types_1.DeviceType.FLOODLIGHT)
+                    normalizedMessage.device_sn = payload.station_sn;
+                else
+                    normalizedMessage.device_sn = payload.device_sn;
+                if ((0, utils_3.isEmpty)(normalizedMessage.device_sn) && !(0, utils_3.isEmpty)(normalizedMessage.station_sn)) {
+                    normalizedMessage.device_sn = normalizedMessage.station_sn;
+                }
+                if (station_1.Station.isStationHomeBase3(normalizedMessage.type) ||
+                    (normalizedMessage.station_sn.startsWith("T8030") && (device_1.Device.isCamera1Product(normalizedMessage.type) ||
+                        device_1.Device.isCamera2Product(normalizedMessage.type) ||
+                        device_1.Device.isCamera3(normalizedMessage.type) ||
+                        device_1.Device.isCamera3C(normalizedMessage.type) ||
+                        normalizedMessage.type === types_1.DeviceType.CAMERA_SNAIL ||
+                        normalizedMessage.type === types_1.DeviceType.CAMERA_GUN))) {
+                    const platformPushData = payload.payload;
+                    normalizedMessage.name = platformPushData.name ? platformPushData.name : "";
+                    normalizedMessage.channel = platformPushData.channel !== undefined ? platformPushData.channel : 0;
+                    normalizedMessage.cipher = platformPushData.cipher !== undefined ? platformPushData.cipher : 0;
+                    normalizedMessage.event_session = platformPushData.session_id !== undefined ? platformPushData.session_id : "";
+                    normalizedMessage.event_type = platformPushData.a !== undefined ? platformPushData.a : platformPushData.event_type;
+                    normalizedMessage.file_path = platformPushData.file_path !== undefined ? platformPushData.file_path : "";
+                    normalizedMessage.pic_url = platformPushData.pic_url !== undefined ? platformPushData.pic_url : "";
+                    normalizedMessage.push_count = platformPushData.push_count !== undefined ? platformPushData.push_count : 1;
+                    normalizedMessage.notification_style = platformPushData.notification_style;
+                    normalizedMessage.storage_type = platformPushData.storage_type !== undefined ? platformPushData.storage_type : 1;
+                    normalizedMessage.msg_type = platformPushData.msg_type;
+                    normalizedMessage.person_name = platformPushData.nick_name;
+                    normalizedMessage.person_id = platformPushData.person_id;
+                    normalizedMessage.tfcard_status = platformPushData.tfcard_status;
+                    normalizedMessage.user_type = platformPushData.user;
+                    normalizedMessage.user_name = platformPushData.user_name;
+                    normalizedMessage.station_guard_mode = platformPushData.arming;
+                    normalizedMessage.station_current_mode = platformPushData.mode;
+                    normalizedMessage.alarm_delay = platformPushData.alarm_delay;
+                    normalizedMessage.sound_alarm = platformPushData.alarm !== undefined ? platformPushData.alarm === 1 ? true : false : undefined;
+                }
+                else if (device_1.Device.isBatteryDoorbell(normalizedMessage.type) || device_1.Device.isWiredDoorbellDual(normalizedMessage.type)) {
+                    const batteryDoorbellPushData = payload.payload;
+                    normalizedMessage.name = batteryDoorbellPushData.name ? batteryDoorbellPushData.name : "";
                     //Get family face names from Doorbell Dual "Family Recognition" event
-                    if (push_data.objects !== undefined) {
-                        normalized_message.person_name = push_data.objects.names !== undefined ? push_data.objects.names.join(",") : "";
+                    if (batteryDoorbellPushData.objects !== undefined) {
+                        normalizedMessage.person_name = batteryDoorbellPushData.objects.names !== undefined ? batteryDoorbellPushData.objects.names.join(",") : "";
                     }
-                    normalized_message.channel = push_data.channel !== undefined ? push_data.channel : 0;
-                    normalized_message.cipher = push_data.cipher !== undefined ? push_data.cipher : 0;
-                    normalized_message.event_session = push_data.session_id !== undefined ? push_data.session_id : "";
-                    normalized_message.event_type = push_data.event_type;
-                    normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? (0, utils_2.getAbsoluteFilePath)(normalized_message.type, push_data.channel, push_data.file_path) : "";
-                    normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
-                    normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
-                    normalized_message.notification_style = push_data.notification_style;
+                    normalizedMessage.channel = batteryDoorbellPushData.channel !== undefined ? batteryDoorbellPushData.channel : 0;
+                    normalizedMessage.cipher = batteryDoorbellPushData.cipher !== undefined ? batteryDoorbellPushData.cipher : 0;
+                    normalizedMessage.event_session = batteryDoorbellPushData.session_id !== undefined ? batteryDoorbellPushData.session_id : "";
+                    normalizedMessage.event_type = batteryDoorbellPushData.event_type;
+                    normalizedMessage.file_path = batteryDoorbellPushData.file_path !== undefined && batteryDoorbellPushData.file_path !== "" && batteryDoorbellPushData.channel !== undefined ? (0, utils_2.getAbsoluteFilePath)(normalizedMessage.type, batteryDoorbellPushData.channel, batteryDoorbellPushData.file_path) : "";
+                    normalizedMessage.pic_url = batteryDoorbellPushData.pic_url !== undefined ? batteryDoorbellPushData.pic_url : "";
+                    normalizedMessage.push_count = batteryDoorbellPushData.push_count !== undefined ? batteryDoorbellPushData.push_count : 1;
+                    normalizedMessage.notification_style = batteryDoorbellPushData.notification_style;
                 }
-                else if (device_1.Device.isIndoorCamera(normalized_message.type) ||
-                    device_1.Device.isSoloCameras(normalized_message.type) ||
-                    device_1.Device.isWallLightCam(normalized_message.type) ||
-                    device_1.Device.isFloodLightT8420X(normalized_message.type, normalized_message.device_sn) ||
-                    (device_1.Device.isFloodLight(normalized_message.type) && normalized_message.type !== types_1.DeviceType.FLOODLIGHT)) {
-                    const push_data = message.payload.payload;
-                    normalized_message.name = push_data.name ? push_data.name : "";
-                    normalized_message.channel = push_data.channel;
-                    normalized_message.cipher = push_data.cipher;
-                    normalized_message.event_session = push_data.session_id;
-                    normalized_message.event_type = push_data.event_type;
-                    //normalized_message.file_path = push_data.file_path !== undefined && push_data.file_path !== "" && push_data.channel !== undefined ? getAbsoluteFilePath(normalized_message.type, push_data.channel, push_data.file_path) : "";
-                    normalized_message.file_path = push_data.file_path;
-                    normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
-                    normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
-                    normalized_message.notification_style = push_data.notification_style;
-                    normalized_message.msg_type = push_data.msg_type;
-                    normalized_message.timeout = push_data.timeout;
-                    normalized_message.tfcard_status = push_data.tfcard_status;
-                    normalized_message.storage_type = push_data.storage_type !== undefined ? push_data.storage_type : 1;
-                    normalized_message.unique_id = push_data.unique_id;
+                else if (device_1.Device.isIndoorCamera(normalizedMessage.type) ||
+                    device_1.Device.isSoloCameras(normalizedMessage.type) ||
+                    device_1.Device.isWallLightCam(normalizedMessage.type) ||
+                    device_1.Device.isOutdoorPanAndTiltCamera(normalizedMessage.type) ||
+                    device_1.Device.isFloodLightT8420X(normalizedMessage.type, normalizedMessage.device_sn) ||
+                    (device_1.Device.isFloodLight(normalizedMessage.type) && normalizedMessage.type !== types_1.DeviceType.FLOODLIGHT)) {
+                    const indoorPushData = payload.payload;
+                    normalizedMessage.name = indoorPushData.name ? indoorPushData.name : "";
+                    normalizedMessage.channel = indoorPushData.channel;
+                    normalizedMessage.cipher = indoorPushData.cipher;
+                    normalizedMessage.event_session = indoorPushData.session_id;
+                    normalizedMessage.event_type = indoorPushData.event_type;
+                    //normalizedMessage.file_path = indoorPushData.file_path !== undefined && indoorPushData.file_path !== "" && indoorPushData.channel !== undefined ? getAbsoluteFilePath(normalizedMessage.type, indoorPushData.channel, indoorPushData.file_path) : "";
+                    normalizedMessage.file_path = indoorPushData.file_path;
+                    normalizedMessage.pic_url = indoorPushData.pic_url !== undefined ? indoorPushData.pic_url : "";
+                    normalizedMessage.push_count = indoorPushData.push_count !== undefined ? indoorPushData.push_count : 1;
+                    normalizedMessage.notification_style = indoorPushData.notification_style;
+                    normalizedMessage.msg_type = indoorPushData.msg_type;
+                    normalizedMessage.timeout = indoorPushData.timeout;
+                    normalizedMessage.tfcard_status = indoorPushData.tfcard_status;
+                    normalizedMessage.storage_type = indoorPushData.storage_type !== undefined ? indoorPushData.storage_type : 1;
+                    normalizedMessage.unique_id = indoorPushData.unique_id;
                 }
-                else if (device_1.Device.isSmartSafe(normalized_message.type)) {
-                    const push_data = message.payload.payload;
-                    normalized_message.event_type = push_data.event_type;
-                    normalized_message.event_value = push_data.event_value;
+                else if (device_1.Device.isSmartSafe(normalizedMessage.type)) {
+                    const smartSafePushData = payload.payload;
+                    normalizedMessage.event_type = smartSafePushData.event_type;
+                    normalizedMessage.event_value = smartSafePushData.event_value;
                     /*
                     event_value: {
                         type: 3,    3/4
@@ -490,123 +541,147 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         user_id: 0
                     }
                     */
-                    normalized_message.name = push_data.dev_name !== undefined ? push_data.dev_name : "";
-                    /*normalized_message.short_user_id = push_data.short_user_id !== undefined ? push_data.short_user_id : "";
-                    normalized_message.user_id = push_data.user_id !== undefined ? push_data.user_id : "";*/
+                    normalizedMessage.name = smartSafePushData.dev_name !== undefined ? smartSafePushData.dev_name : "";
+                    /*normalizedMessage.short_user_id = smartSafePushData.short_user_id !== undefined ? smartSafePushData.short_user_id : "";
+                    normalizedMessage.user_id = smartSafePushData.user_id !== undefined ? smartSafePushData.user_id : "";*/
                 }
-                else if (device_1.Device.isLock(normalized_message.type)) {
-                    const push_data = message.payload.payload;
-                    normalized_message.event_type = push_data.event_type;
-                    normalized_message.short_user_id = push_data.short_user_id !== undefined ? push_data.short_user_id : "";
-                    normalized_message.user_id = push_data.user_id !== undefined ? push_data.user_id : "";
-                    normalized_message.name = push_data.device_name !== undefined ? push_data.device_name : "";
+                else if (device_1.Device.isLock(normalizedMessage.type) && !device_1.Device.isLockWifiVideo(normalizedMessage.type)) {
+                    const lockPushData = payload.payload;
+                    normalizedMessage.event_type = lockPushData.event_type;
+                    normalizedMessage.short_user_id = lockPushData.short_user_id !== undefined ? lockPushData.short_user_id : "";
+                    normalizedMessage.user_id = lockPushData.user_id !== undefined ? lockPushData.user_id : "";
+                    normalizedMessage.name = lockPushData.device_name !== undefined ? lockPushData.device_name : "";
+                    normalizedMessage.person_name = lockPushData.nick_name !== undefined ? lockPushData.nick_name : "";
                 }
-                else if (device_1.Device.isGarageCamera(normalized_message.type)) {
-                    const push_data = message.payload.payload;
-                    normalized_message.event_type = push_data.event_type;
-                    normalized_message.user_name = push_data.user_name !== undefined ? push_data.user_name : "";
-                    normalized_message.door_id = push_data.door_id !== undefined ? push_data.door_id : -1;
-                    normalized_message.name = push_data.door_name !== undefined ? push_data.door_name : "";
-                    normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
-                    normalized_message.file_path = push_data.file_path !== undefined ? push_data.file_path : "";
-                    normalized_message.storage_type = push_data.storage_type !== undefined ? push_data.storage_type : 1;
-                    normalized_message.power = push_data.power !== undefined ? push_data.power : undefined;
+                else if (device_1.Device.isGarageCamera(normalizedMessage.type)) {
+                    const garageDoorPushData = payload.payload;
+                    normalizedMessage.event_type = garageDoorPushData.event_type;
+                    normalizedMessage.user_name = garageDoorPushData.user_name !== undefined ? garageDoorPushData.user_name : "";
+                    normalizedMessage.door_id = garageDoorPushData.door_id !== undefined ? garageDoorPushData.door_id : -1;
+                    normalizedMessage.name = garageDoorPushData.door_name !== undefined ? garageDoorPushData.door_name : "";
+                    normalizedMessage.pic_url = garageDoorPushData.pic_url !== undefined ? garageDoorPushData.pic_url : "";
+                    normalizedMessage.file_path = garageDoorPushData.file_path !== undefined ? garageDoorPushData.file_path : "";
+                    normalizedMessage.storage_type = garageDoorPushData.storage_type !== undefined ? garageDoorPushData.storage_type : 1;
+                    normalizedMessage.power = garageDoorPushData.power !== undefined ? garageDoorPushData.power : undefined;
                 }
                 else {
-                    const push_data = message.payload.payload;
-                    normalized_message.name = push_data.device_name && push_data.device_name !== null && push_data.device_name !== "" ? push_data.device_name : push_data.n ? push_data.n : "";
-                    normalized_message.channel = push_data.c;
-                    normalized_message.cipher = push_data.k;
-                    normalized_message.event_session = push_data.session_id;
-                    normalized_message.event_type = push_data.a;
-                    normalized_message.file_path = push_data.c !== undefined && push_data.p !== undefined && push_data.p !== "" ? (0, utils_2.getAbsoluteFilePath)(normalized_message.type, push_data.c, push_data.p) : "";
-                    normalized_message.pic_url = push_data.pic_url !== undefined ? push_data.pic_url : "";
-                    normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
-                    normalized_message.notification_style = push_data.notification_style;
-                    normalized_message.tfcard_status = push_data.tfcard;
-                    normalized_message.alarm_delay_type = push_data.alarm_type;
-                    normalized_message.alarm_delay = push_data.alarm_delay;
-                    normalized_message.alarm_type = push_data.type;
-                    normalized_message.sound_alarm = push_data.alarm !== undefined ? push_data.alarm === 1 ? true : false : undefined;
-                    normalized_message.user_name = push_data.user_name;
-                    normalized_message.user_type = push_data.user;
-                    normalized_message.user_id = push_data.user_id;
-                    normalized_message.short_user_id = push_data.short_user_id;
-                    normalized_message.station_guard_mode = push_data.arming;
-                    normalized_message.station_current_mode = push_data.mode;
-                    normalized_message.person_name = push_data.f;
-                    normalized_message.sensor_open = push_data.e !== undefined ? push_data.e == "1" ? true : false : undefined;
-                    normalized_message.device_online = push_data.m !== undefined ? push_data.m === 1 ? true : false : undefined;
+                    const cusPushData = payload.payload;
+                    normalizedMessage.name = cusPushData.device_name && cusPushData.device_name !== null && cusPushData.device_name !== "" ? cusPushData.device_name : cusPushData.n ? cusPushData.n : cusPushData.name ? cusPushData.name : "";
+                    normalizedMessage.channel = cusPushData.c ? cusPushData.c : cusPushData.channel;
+                    normalizedMessage.cipher = cusPushData.k ? cusPushData.k : cusPushData.cipher;
+                    normalizedMessage.event_session = cusPushData.session_id;
+                    normalizedMessage.event_type = cusPushData.a ? cusPushData.a : cusPushData.event_type;
+                    normalizedMessage.file_path = cusPushData.c !== undefined && cusPushData.p !== undefined && cusPushData.p !== "" ? (0, utils_2.getAbsoluteFilePath)(normalizedMessage.type, cusPushData.c, cusPushData.p) : cusPushData.file_path ? cusPushData.file_path : "";
+                    normalizedMessage.pic_url = cusPushData.pic_url !== undefined ? cusPushData.pic_url : "";
+                    normalizedMessage.push_count = cusPushData.push_count !== undefined ? cusPushData.push_count : 1;
+                    normalizedMessage.notification_style = cusPushData.notification_style;
+                    normalizedMessage.tfcard_status = cusPushData.tfcard;
+                    normalizedMessage.alarm_delay_type = cusPushData.alarm_type;
+                    normalizedMessage.alarm_delay = cusPushData.alarm_delay;
+                    normalizedMessage.alarm_type = cusPushData.type;
+                    normalizedMessage.sound_alarm = cusPushData.alarm !== undefined ? cusPushData.alarm === 1 ? true : false : undefined;
+                    normalizedMessage.user_name = cusPushData.user_name;
+                    normalizedMessage.user_type = cusPushData.user;
+                    normalizedMessage.user_id = cusPushData.user_id;
+                    normalizedMessage.short_user_id = cusPushData.short_user_id;
+                    normalizedMessage.station_guard_mode = cusPushData.arming;
+                    normalizedMessage.station_current_mode = cusPushData.mode;
+                    normalizedMessage.person_name = cusPushData.f && cusPushData.f !== "" ? cusPushData.f : cusPushData.nick_name && cusPushData.nick_name ? cusPushData.nick_name : "";
+                    normalizedMessage.sensor_open = cusPushData.e !== undefined ? cusPushData.e == "1" ? true : false : undefined;
+                    normalizedMessage.device_online = cusPushData.m !== undefined ? cusPushData.m === 1 ? true : false : undefined;
                     try {
-                        normalized_message.fetch_id = push_data.i !== undefined ? Number.parseInt(push_data.i) : undefined;
+                        normalizedMessage.fetch_id = cusPushData.i !== undefined ? Number.parseInt(cusPushData.i) : undefined;
                     }
                     catch (err) {
                         const error = (0, error_2.ensureError)(err);
-                        this.log.error(`Normalize push message - Type ${types_1.DeviceType[normalized_message.type]} CusPushData - fetch_id - Error`, { error: (0, utils_3.getError)(error), message: message });
+                        logging_1.rootPushLogger.error(`Normalize push message - Type ${types_1.DeviceType[normalizedMessage.type]} CusPushData - fetch_id - Error`, { error: (0, utils_3.getError)(error), message: message });
                     }
-                    normalized_message.sense_id = push_data.j;
-                    normalized_message.battery_powered = push_data.batt_powered !== undefined ? push_data.batt_powered === 1 ? true : false : undefined;
+                    normalizedMessage.sense_id = cusPushData.j;
+                    normalizedMessage.battery_powered = cusPushData.batt_powered !== undefined ? cusPushData.batt_powered === 1 ? true : false : undefined;
                     try {
-                        normalized_message.battery_low = push_data.bat_low !== undefined ? Number.parseInt(push_data.bat_low) : undefined;
+                        normalizedMessage.battery_low = cusPushData.bat_low !== undefined ? Number.parseInt(cusPushData.bat_low) : undefined;
                     }
                     catch (err) {
                         const error = (0, error_2.ensureError)(err);
-                        this.log.error(`Normalize push message - Type ${types_1.DeviceType[normalized_message.type]} CusPushData - battery_low - Error`, { error: (0, utils_3.getError)(error), message: message });
+                        logging_1.rootPushLogger.error(`Normalize push message - Type ${types_1.DeviceType[normalizedMessage.type]} CusPushData - battery_low - Error`, { error: (0, utils_3.getError)(error), message: message });
                     }
-                    normalized_message.storage_type = push_data.storage_type !== undefined ? push_data.storage_type : 1;
-                    normalized_message.unique_id = push_data.unique_id;
-                    normalized_message.automation_id = push_data.automation_id;
-                    normalized_message.click_action = push_data.click_action;
-                    normalized_message.news_id = push_data.news_id;
-                    if (device_1.Device.isStarlight4GLTE(normalized_message.type)) {
-                        if (push_data.channel && push_data.channel !== null && push_data.channel !== undefined) {
-                            normalized_message.channel = push_data.channel;
+                    normalizedMessage.storage_type = cusPushData.storage_type !== undefined ? cusPushData.storage_type : 1;
+                    normalizedMessage.unique_id = cusPushData.unique_id;
+                    normalizedMessage.automation_id = cusPushData.automation_id;
+                    normalizedMessage.click_action = cusPushData.click_action;
+                    normalizedMessage.news_id = cusPushData.news_id;
+                    normalizedMessage.msg_type = cusPushData.msg_type;
+                    if (device_1.Device.isStarlight4GLTE(normalizedMessage.type)) {
+                        if (cusPushData.channel && cusPushData.channel !== null && cusPushData.channel !== undefined) {
+                            normalizedMessage.channel = cusPushData.channel;
                         }
-                        if (push_data.cipher && push_data.cipher !== null && push_data.cipher !== undefined) {
-                            normalized_message.cipher = push_data.cipher;
+                        if (cusPushData.cipher && cusPushData.cipher !== null && cusPushData.cipher !== undefined) {
+                            normalizedMessage.cipher = cusPushData.cipher;
                         }
-                        if (push_data.event_type && push_data.event_type !== null && push_data.event_type !== undefined) {
-                            normalized_message.event_type = push_data.event_type;
+                        if (cusPushData.event_type && cusPushData.event_type !== null && cusPushData.event_type !== undefined) {
+                            normalizedMessage.event_type = cusPushData.event_type;
                         }
-                        if (push_data.file_path && push_data.file_path !== null && push_data.file_path !== undefined) {
-                            normalized_message.file_path = push_data.file_path;
+                        if (cusPushData.file_path && cusPushData.file_path !== null && cusPushData.file_path !== undefined) {
+                            normalizedMessage.file_path = cusPushData.file_path;
                         }
-                        normalized_message.msg_type = push_data.msg_type;
+                        normalizedMessage.msg_type = cusPushData.msg_type;
+                    }
+                    else if (device_1.Device.isSmartDrop(normalizedMessage.type)) {
+                        try {
+                            normalizedMessage.open = cusPushData.e !== undefined ? Number.parseInt(cusPushData.e) : 0;
+                        }
+                        catch (err) {
+                            const error = (0, error_2.ensureError)(err);
+                            logging_1.rootPushLogger.error(`Normalize push message - Type ${types_1.DeviceType[normalizedMessage.type]} CusPushData - open - Error`, { error: (0, utils_3.getError)(error), message: message });
+                        }
+                        try {
+                            normalizedMessage.openType = cusPushData.r !== undefined ? Number.parseInt(cusPushData.r) : 0;
+                        }
+                        catch (err) {
+                            const error = (0, error_2.ensureError)(err);
+                            logging_1.rootPushLogger.error(`Normalize push message - Type ${types_1.DeviceType[normalizedMessage.type]} CusPushData - openType - Error`, { error: (0, utils_3.getError)(error), message: message });
+                        }
+                        normalizedMessage.person_name = cusPushData.p;
+                        normalizedMessage.pin = cusPushData.u;
+                        normalizedMessage.channel = cusPushData.channel !== undefined ? cusPushData.channel : 0;
+                        normalizedMessage.cipher = cusPushData.cipher !== undefined ? cusPushData.cipher : 0;
+                        normalizedMessage.event_session = cusPushData.session_id !== undefined ? cusPushData.session_id : "";
+                        normalizedMessage.file_path = cusPushData.file_path !== undefined ? cusPushData.file_path : "";
                     }
                 }
             }
         }
         else if (message.payload.doorbell !== undefined) {
-            const push_data = (0, utils_3.parseJSON)(message.payload.doorbell, this.log);
-            if (push_data !== undefined) {
-                normalized_message.name = "Doorbell";
-                normalized_message.type = 5;
-                normalized_message.event_time = push_data.create_time !== undefined ? (0, utils_1.convertTimestampMs)(push_data.create_time) : push_data.create_time;
-                normalized_message.station_sn = push_data.device_sn;
-                normalized_message.device_sn = push_data.device_sn;
-                normalized_message.title = push_data.title;
-                normalized_message.content = push_data.content;
-                normalized_message.push_time = push_data.event_time !== undefined ? (0, utils_1.convertTimestampMs)(push_data.event_time) : push_data.event_time;
-                normalized_message.channel = push_data.channel;
-                normalized_message.cipher = push_data.cipher;
-                normalized_message.event_session = push_data.event_session;
-                normalized_message.event_type = push_data.event_type;
-                normalized_message.file_path = push_data.file_path;
-                normalized_message.pic_url = push_data.pic_url;
-                normalized_message.push_count = push_data.push_count !== undefined ? push_data.push_count : 1;
-                normalized_message.doorbell_url = push_data.url;
-                normalized_message.doorbell_url_ex = push_data.url_ex;
-                normalized_message.doorbell_video_url = push_data.video_url;
+            const doorbellPushData = (0, utils_3.parseJSON)(message.payload.doorbell, logging_1.rootPushLogger);
+            if (doorbellPushData !== undefined) {
+                normalizedMessage.name = "Doorbell";
+                normalizedMessage.type = 5;
+                normalizedMessage.event_time = doorbellPushData.create_time !== undefined ? (0, utils_1.convertTimestampMs)(doorbellPushData.create_time) : doorbellPushData.create_time;
+                normalizedMessage.station_sn = doorbellPushData.device_sn;
+                normalizedMessage.device_sn = doorbellPushData.device_sn;
+                normalizedMessage.title = doorbellPushData.title;
+                normalizedMessage.content = doorbellPushData.content;
+                normalizedMessage.push_time = doorbellPushData.event_time !== undefined ? (0, utils_1.convertTimestampMs)(doorbellPushData.event_time) : doorbellPushData.event_time;
+                normalizedMessage.channel = doorbellPushData.channel;
+                normalizedMessage.cipher = doorbellPushData.cipher;
+                normalizedMessage.event_session = doorbellPushData.event_session;
+                normalizedMessage.event_type = doorbellPushData.event_type;
+                normalizedMessage.file_path = doorbellPushData.file_path;
+                normalizedMessage.pic_url = doorbellPushData.pic_url;
+                normalizedMessage.push_count = doorbellPushData.push_count !== undefined ? doorbellPushData.push_count : 1;
+                normalizedMessage.doorbell_url = doorbellPushData.url;
+                normalizedMessage.doorbell_url_ex = doorbellPushData.url_ex;
+                normalizedMessage.doorbell_video_url = doorbellPushData.video_url;
             }
         }
-        return normalized_message;
+        return normalizedMessage;
     }
     onMessage(message) {
-        this.log.debug("Raw push message received", { message: message });
+        logging_1.rootPushLogger.debug("Raw push message received", { message: message });
         this.emit("raw message", message);
-        const normalized_message = this._normalizePushMessage(message);
-        this.log.debug("Normalized push message received", { message: normalized_message });
-        this.emit("message", normalized_message);
+        const normalizedMessage = this._normalizePushMessage(message);
+        logging_1.rootPushLogger.debug("Normalized push message received", { message: normalizedMessage });
+        this.emit("message", normalizedMessage);
     }
     getCurrentPushRetryDelay() {
         const delay = this.retryDelay == 0 ? 5000 : this.retryDelay;
@@ -630,26 +705,26 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     }
     async _open(renew = false) {
         if (!this.credentials || Object.keys(this.credentials).length === 0 || (this.credentials && this.credentials.fidResponse && new Date().getTime() >= this.credentials.fidResponse.authToken.expiresAt)) {
-            this.log.debug(`Create new push credentials...`, { credentials: this.credentials, renew: renew });
+            logging_1.rootPushLogger.debug(`Create new push credentials...`, { credentials: this.credentials, renew: renew });
             this.credentials = await this.createPushCredentials().catch(err => {
                 const error = (0, error_2.ensureError)(err);
-                this.log.error("Create push credentials Error", { error: (0, utils_3.getError)(error), credentials: this.credentials, renew: renew });
+                logging_1.rootPushLogger.error("Create push credentials Error", { error: (0, utils_3.getError)(error), credentials: this.credentials, renew: renew });
                 return undefined;
             });
         }
         else if (this.credentials && renew) {
-            this.log.debug(`Renew push credentials...`, { credentials: this.credentials, renew: renew });
+            logging_1.rootPushLogger.debug(`Renew push credentials...`, { credentials: this.credentials, renew: renew });
             this.credentials = await this.renewPushCredentials(this.credentials).catch(err => {
                 const error = (0, error_2.ensureError)(err);
-                this.log.error("Push credentials renew Error", { error: (0, utils_3.getError)(error), credentials: this.credentials, renew: renew });
+                logging_1.rootPushLogger.error("Push credentials renew Error", { error: (0, utils_3.getError)(error), credentials: this.credentials, renew: renew });
                 return undefined;
             });
         }
         else {
-            this.log.debug(`Login with previous push credentials...`, { credentials: this.credentials });
+            logging_1.rootPushLogger.debug(`Login with previous push credentials...`, { credentials: this.credentials });
             this.credentials = await this.loginPushCredentials(this.credentials).catch(err => {
                 const error = (0, error_2.ensureError)(err);
-                this.log.error("Push credentials login Error", { error: (0, utils_3.getError)(error), credentials: this.credentials, renew: renew });
+                logging_1.rootPushLogger.error("Push credentials login Error", { error: (0, utils_3.getError)(error), credentials: this.credentials, renew: renew });
                 return undefined;
             });
         }
@@ -657,7 +732,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("credential", this.credentials);
             this.clearCredentialsTimeout();
             this.credentialsTimeout = setTimeout(async () => {
-                this.log.info("Push notification token is expiring, renew it.");
+                logging_1.rootPushLogger.info("Push notification token is expiring, renew it.");
                 await this._open(true);
             }, this.credentials.fidResponse.authToken.expiresAt - new Date().getTime() - 60000);
             if (this.pushClient) {
@@ -666,7 +741,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             this.pushClient = await client_1.PushClient.init({
                 androidId: this.credentials.checkinResponse.androidId,
                 securityToken: this.credentials.checkinResponse.securityToken,
-            }, this.log);
+            });
             if (this.persistentIds)
                 this.pushClient.setPersistentIds(this.persistentIds);
             const token = this.credentials.gcmResponse.token;
@@ -687,7 +762,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("close");
             this.connected = false;
             this.connecting = false;
-            this.log.error("Push notifications are disabled, because the registration failed!", { credentials: this.credentials, renew: renew });
+            logging_1.rootPushLogger.error("Push notifications are disabled, because the registration failed!", { credentials: this.credentials, renew: renew });
         }
     }
     async open() {
@@ -695,14 +770,14 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             this.connecting = true;
             await this._open().catch((err) => {
                 const error = (0, error_2.ensureError)(err);
-                this.log.error(`Got exception trying to initialize push notifications`, { error: (0, utils_3.getError)(error), credentials: this.credentials });
+                logging_1.rootPushLogger.error(`Got exception trying to initialize push notifications`, { error: (0, utils_3.getError)(error), credentials: this.credentials });
             });
             if (!this.credentials) {
                 this.clearRetryTimeout();
                 const delay = this.getCurrentPushRetryDelay();
-                this.log.info(`Retry to register/login for push notification in ${delay / 1000} seconds...`);
+                logging_1.rootPushLogger.info(`Retry to register/login for push notification in ${delay / 1000} seconds...`);
                 this.retryTimeout = setTimeout(async () => {
-                    this.log.info(`Retry to register/login for push notification`);
+                    logging_1.rootPushLogger.info(`Retry to register/login for push notification`);
                     await this.open();
                 }, delay);
             }

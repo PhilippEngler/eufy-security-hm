@@ -21,9 +21,11 @@ The addon will only run with the original CCU3 Firmware and other community proj
 Most of the eufy security devices should be compatible, but there might be issues with recently released devices. The following eufy security devices are known as compatible:
 * HomeBase: HomeBase E (T8002), HomeBase 2 (T8010) and HomeBase 3 (T8030)
 * eufyCam: eufyCam E (T8112), eufyCam 2C (T8113), eufyCam 2 (T8114), eufyCam 2C Pro (T8142), eufyCam 2 Pro (T8140), eufyCam 3 (T8160) and eufyCam 3C (T8161)
-* IndoorCam: IndoorCam C24 (T8400) and IndoorCam P24 (T8410)
-* Doorbell: Video Doorbell 2K (T8210) and Video Doorbell Dual (T8213)
-* WallLightCam: Wall Light Cam S100 (T84A1)
+* IndoorCam: IndoorCam C24 (T8400), IndoorCam P24 (T8410) and IndoorCam S350 (T8416)<sup>1</sup>
+* Doorbell: Video Doorbell 2K (T8210), Video Doorbell Dual (T8213) and Video Doorbell Dual E340 (T8214)<sup>1</sup>
+* WallLightCam: Wall Light Cam S100 (T84A1)<sup>1</sup>
+
+<sup>1</sup>: This device is compatible with v3.0.0 and newer.
 
 If you are using other devices, please send the files you can find on top of the settings page of the device to me, so that they can properly be integrated in one of the next releases.
 

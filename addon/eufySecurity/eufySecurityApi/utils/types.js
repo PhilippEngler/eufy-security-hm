@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventInteractionType = void 0;
+/**
+ * The enum for event interaction type.
+ */
 var EventInteractionType;
 (function (EventInteractionType) {
     EventInteractionType[EventInteractionType["MOTION"] = 0] = "MOTION";

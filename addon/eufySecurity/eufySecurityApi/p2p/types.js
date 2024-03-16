@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TrackerCommandType = exports.InternalP2PCommandType = exports.EncryptionType = exports.CalibrateGarageType = exports.FilterDetectType = exports.FeatureTag = exports.FilterEventType = exports.FilterStorageType = exports.P2PStorageType = exports.DatabaseReturnCode = exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.ChargingType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting5 = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.TFCardStatus = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
+exports.SmartLockBleCommandFunctionType2 = exports.SmartLockBleCommandFunctionType1 = exports.SmartLockFunctionType = exports.SmartLockCommand = exports.TrackerCommandType = exports.InternalP2PCommandType = exports.EncryptionType = exports.CalibrateGarageType = exports.FilterDetectType = exports.FeatureTag = exports.FilterEventType = exports.FilterStorageType = exports.P2PStorageType = exports.DatabaseReturnCode = exports.SmartSafeBatteryStatusEvent = exports.SmartSafeBatteryTemperatureEvent = exports.SmartSafeShakeAlarmEvent = exports.SmartSafeAlarm911Event = exports.SmartSafeCommandCode = exports.IndoorSoloSmartdropCommandType = exports.P2PConnectionType = exports.ESLAnkerBleConstant = exports.ESLBleCommand = exports.ESLCommand = exports.AudioCodec = exports.VideoCodec = exports.PanTiltDirection = exports.WatermarkSetting5 = exports.WatermarkSetting4 = exports.WatermarkSetting3 = exports.WatermarkSetting2 = exports.WatermarkSetting1 = exports.AlarmEvent = exports.TFCardStatus = exports.ErrorCode = exports.MessageType = exports.CommandType = exports.P2PDataTypeHeader = exports.P2PDataType = exports.ResponseMessageType = exports.RequestMessageType = void 0;
 exports.RequestMessageType = {
     STUN: Buffer.from([0xF1, 0x00]),
     LOOKUP: Buffer.from([0xF1, 0x20]),
     LOOKUP_WITH_KEY: Buffer.from([0xF1, 0x26]),
     LOOKUP_WITH_KEY2: Buffer.from([0xF1, 0x6a]),
-    LOOKUP_WITH_KEY3: Buffer.from([0xF1, 0x80]),
-    UNKNOWN_70: Buffer.from([0xF1, 0x70]),
-    UNKNOWN_71: Buffer.from([0xF1, 0x72]),
+    TURN_LOOKUP_WITH_KEY: Buffer.from([0xF1, 0x80]),
+    TURN_SERVER_INIT: Buffer.from([0xF1, 0x70]),
+    TURN_CLIENT_OK: Buffer.from([0xF1, 0x72]),
     CHECK_CAM2: Buffer.from([0xF1, 0x83]),
     LOCAL_LOOKUP: Buffer.from([0xF1, 0x30]),
     PING: Buffer.from([0xF1, 0xE0]),
@@ -23,13 +23,13 @@ exports.ResponseMessageType = {
     LOOKUP_RESP: Buffer.from([0xF1, 0x21]),
     LOOKUP_ADDR: Buffer.from([0xF1, 0x40]),
     LOCAL_LOOKUP_RESP: Buffer.from([0xF1, 0x41]),
-    //UNKNOWN_69:         Buffer.from([0xF1, 0x69]),
-    UNKNOWN_71: Buffer.from([0xF1, 0x71]),
-    UNKNOWN_73: Buffer.from([0xF1, 0x73]),
-    UNKNOWN_81: Buffer.from([0xF1, 0x81]),
+    TURN_SERVER_LIST: Buffer.from([0xF1, 0x69]),
+    TURN_SERVER_OK: Buffer.from([0xF1, 0x71]),
+    TURN_SERVER_TOKEN: Buffer.from([0xF1, 0x73]),
+    TURN_SERVER_LOOKUP_OK: Buffer.from([0xF1, 0x81]),
     LOOKUP_ADDR2: Buffer.from([0xF1, 0x82]),
     UNKNOWN_83: Buffer.from([0xF1, 0x83]),
-    CAM_ID2: Buffer.from([0xF1, 0x84]),
+    TURN_SERVER_CAM_ID: Buffer.from([0xF1, 0x84]),
     END: Buffer.from([0xF1, 0xF0]),
     PONG: Buffer.from([0xF1, 0xE1]),
     PING: Buffer.from([0xF1, 0xE0]),
@@ -83,6 +83,8 @@ var CommandType;
     CommandType[CommandType["CMD_BAT_DOORBELL_SET_RINGTONE_VOLUME"] = 1708] = "CMD_BAT_DOORBELL_SET_RINGTONE_VOLUME";
     CommandType[CommandType["CMD_BAT_DOORBELL_UPDATE_QUICK_RESPONSE"] = 1707] = "CMD_BAT_DOORBELL_UPDATE_QUICK_RESPONSE";
     CommandType[CommandType["CMD_BAT_DOORBELL_VIDEO_QUALITY"] = 1705] = "CMD_BAT_DOORBELL_VIDEO_QUALITY";
+    CommandType[CommandType["CMD_BAT_DOORBELL_VIDEO_QUALITY2"] = 2730] = "CMD_BAT_DOORBELL_VIDEO_QUALITY2";
+    CommandType[CommandType["CMD_BAT_DOORBELL_RECORD_QUALITY2"] = 2731] = "CMD_BAT_DOORBELL_RECORD_QUALITY2";
     CommandType[CommandType["CMD_BAT_DOORBELL_WDR_SWITCH"] = 1704] = "CMD_BAT_DOORBELL_WDR_SWITCH";
     CommandType[CommandType["CMD_BIND_BROADCAST"] = 1000] = "CMD_BIND_BROADCAST";
     CommandType[CommandType["CMD_BIND_SYNC_ACCOUNT_INFO"] = 1001] = "CMD_BIND_SYNC_ACCOUNT_INFO";
@@ -274,6 +276,7 @@ var CommandType;
     CommandType[CommandType["CMD_SET_AUDDEC_SENSITIVITY"] = 1213] = "CMD_SET_AUDDEC_SENSITIVITY";
     CommandType[CommandType["CMD_SET_AUDIOSENSITIVITY"] = 1227] = "CMD_SET_AUDIOSENSITIVITY";
     CommandType[CommandType["CMD_SET_AUDIO_MUTE_RECORD"] = 1288] = "CMD_SET_AUDIO_MUTE_RECORD";
+    CommandType[CommandType["CMD_SET_AUDIO_MOTION_ACTIVATED_PROMPT"] = 2123] = "CMD_SET_AUDIO_MOTION_ACTIVATED_PROMPT";
     CommandType[CommandType["CMD_SET_AUTO_DELETE_RECORD"] = 1367] = "CMD_SET_AUTO_DELETE_RECORD";
     CommandType[CommandType["CMD_SET_BITRATE"] = 1206] = "CMD_SET_BITRATE";
     CommandType[CommandType["CMD_SET_CUSTOM_MODE"] = 1256] = "CMD_SET_CUSTOM_MODE";
@@ -310,7 +313,9 @@ var CommandType;
     CommandType[CommandType["CMD_SET_JSON_SCHEDULE"] = 1254] = "CMD_SET_JSON_SCHEDULE";
     CommandType[CommandType["CMD_SET_LANGUAGE"] = 1200] = "CMD_SET_LANGUAGE";
     CommandType[CommandType["CMD_SET_LIGHT_CTRL_BRIGHT_PIR"] = 1412] = "CMD_SET_LIGHT_CTRL_BRIGHT_PIR";
+    CommandType[CommandType["CMD_SET_LIGHT_CTRL_BRIGHT_PIR_T8425"] = 1422] = "CMD_SET_LIGHT_CTRL_BRIGHT_PIR_T8425";
     CommandType[CommandType["CMD_SET_LIGHT_CTRL_BRIGHT_SCH"] = 1413] = "CMD_SET_LIGHT_CTRL_BRIGHT_SCH";
+    CommandType[CommandType["CMD_SET_LIGHT_CTRL_BRIGHT_SCH_T8425"] = 1421] = "CMD_SET_LIGHT_CTRL_BRIGHT_SCH_T8425";
     CommandType[CommandType["CMD_SET_LIGHT_CTRL_LAMP_VALUE"] = 1410] = "CMD_SET_LIGHT_CTRL_LAMP_VALUE";
     CommandType[CommandType["CMD_SET_LIGHT_CTRL_PIR_SWITCH"] = 1408] = "CMD_SET_LIGHT_CTRL_PIR_SWITCH";
     CommandType[CommandType["CMD_SET_LIGHT_CTRL_PIR_TIME"] = 1409] = "CMD_SET_LIGHT_CTRL_PIR_TIME";
@@ -372,6 +377,7 @@ var CommandType;
     CommandType[CommandType["CMD_INDOOR_AI_PERSON_ENABLE"] = 6022] = "CMD_INDOOR_AI_PERSON_ENABLE";
     CommandType[CommandType["CMD_INDOOR_AI_PET_ENABLE"] = 6026] = "CMD_INDOOR_AI_PET_ENABLE";
     CommandType[CommandType["CMD_INDOOR_AI_SOUND_ENABLE"] = 6025] = "CMD_INDOOR_AI_SOUND_ENABLE";
+    CommandType[CommandType["CMD_INDOOR_SET_MOTION_DETECTION_TYPE"] = 6027] = "CMD_INDOOR_SET_MOTION_DETECTION_TYPE";
     CommandType[CommandType["CMD_INDOOR_CONTINUE_RECORD_SCHEDULE"] = 6013] = "CMD_INDOOR_CONTINUE_RECORD_SCHEDULE";
     CommandType[CommandType["CMD_INDOOR_DET_SET_ACTIVE_ZONE"] = 6042] = "CMD_INDOOR_DET_SET_ACTIVE_ZONE";
     CommandType[CommandType["CMD_INDOOR_DET_SET_MOTION_DETECT_ENABLE"] = 6040] = "CMD_INDOOR_DET_SET_MOTION_DETECT_ENABLE";
@@ -390,6 +396,7 @@ var CommandType;
     CommandType[CommandType["CMD_INDOOR_NAS_STORAGE_TYPE"] = 6050] = "CMD_INDOOR_NAS_STORAGE_TYPE";
     CommandType[CommandType["CMD_INDOOR_OWNER_STREAM_TYPE"] = 6052] = "CMD_INDOOR_OWNER_STREAM_TYPE";
     CommandType[CommandType["CMD_INDOOR_PAN_CALIBRATION"] = 6017] = "CMD_INDOOR_PAN_CALIBRATION";
+    CommandType[CommandType["CMD_OUTDOOR_PAN_CALIBRATION"] = 6251] = "CMD_OUTDOOR_PAN_CALIBRATION";
     CommandType[CommandType["CMD_INDOOR_PAN_MOTION_TRACK"] = 6016] = "CMD_INDOOR_PAN_MOTION_TRACK";
     CommandType[CommandType["CMD_INDOOR_PAN_SPEED"] = 6015] = "CMD_INDOOR_PAN_SPEED";
     CommandType[CommandType["CMD_INDOOR_PUSH_JUMP_TYPE"] = 6021] = "CMD_INDOOR_PUSH_JUMP_TYPE";
@@ -400,6 +407,7 @@ var CommandType;
     CommandType[CommandType["CMD_INDOOR_SHOW_SDCARD"] = 6054] = "CMD_INDOOR_SHOW_SDCARD";
     CommandType[CommandType["CMD_INDOOR_TFCARD_NAS_STATUS"] = 6051] = "CMD_INDOOR_TFCARD_NAS_STATUS";
     CommandType[CommandType["CMD_INDOOR_ROTATE"] = 6030] = "CMD_INDOOR_ROTATE";
+    CommandType[CommandType["CMD_OUTDOOR_ROTATE"] = 6038] = "CMD_OUTDOOR_ROTATE";
     CommandType[CommandType["CMD_INDOOR_ENABLE_PRIVACY_MODE"] = 6090] = "CMD_INDOOR_ENABLE_PRIVACY_MODE";
     CommandType[CommandType["CMD_INDOOR_SET_PRIVACY_ANGLE"] = 6091] = "CMD_INDOOR_SET_PRIVACY_ANGLE";
     CommandType[CommandType["CMD_INDOOR_DEFAULT_ANGLE_SET"] = 6092] = "CMD_INDOOR_DEFAULT_ANGLE_SET";
@@ -436,12 +444,15 @@ var CommandType;
     CommandType[CommandType["SUB1G_REP_POWER_OFF"] = 2110] = "SUB1G_REP_POWER_OFF";
     CommandType[CommandType["SUB1G_REP_RUNTIME_STATE"] = 2107] = "SUB1G_REP_RUNTIME_STATE";
     CommandType[CommandType["SUB1G_REP_UNPLUG_POWER_LINE"] = 2111] = "SUB1G_REP_UNPLUG_POWER_LINE";
+    CommandType[CommandType["CMD_FLOODLIGHT_SET_DETECTION_RANGE_T8425"] = 6073] = "CMD_FLOODLIGHT_SET_DETECTION_RANGE_T8425";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_DETECTION_RANGE"] = 6086] = "CMD_FLOODLIGHT_SET_DETECTION_RANGE";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_DETECTION_RANGE_STD_SENSITIVITY"] = 6087] = "CMD_FLOODLIGHT_SET_DETECTION_RANGE_STD_SENSITIVITY";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_DETECTION_RANGE_ADV_LEFT_SENSITIVITY"] = 6081] = "CMD_FLOODLIGHT_SET_DETECTION_RANGE_ADV_LEFT_SENSITIVITY";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_DETECTION_RANGE_ADV_MIDDLE_SENSITIVITY"] = 6083] = "CMD_FLOODLIGHT_SET_DETECTION_RANGE_ADV_MIDDLE_SENSITIVITY";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_DETECTION_RANGE_ADV_RIGHT_SENSITIVITY"] = 6085] = "CMD_FLOODLIGHT_SET_DETECTION_RANGE_ADV_RIGHT_SENSITIVITY";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_MOTION_TRACKING_SENSITIVITY"] = 6107] = "CMD_FLOODLIGHT_SET_MOTION_TRACKING_SENSITIVITY";
+    CommandType[CommandType["CMD_FLOODLIGHT_SAVE_MOTION_PRESET_POSITION"] = 6032] = "CMD_FLOODLIGHT_SAVE_MOTION_PRESET_POSITION";
+    CommandType[CommandType["CMD_FLOODLIGHT_DELETE_MOTION_PRESET_POSITION"] = 6033] = "CMD_FLOODLIGHT_DELETE_MOTION_PRESET_POSITION";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_MOTION_PRESET_POSITION"] = 6035] = "CMD_FLOODLIGHT_SET_MOTION_PRESET_POSITION";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_MOTION_AUTO_CRUISE"] = 6031] = "CMD_FLOODLIGHT_SET_MOTION_AUTO_CRUISE";
     CommandType[CommandType["CMD_FLOODLIGHT_SET_MOTION_OUT_OF_VIEW_DETECTION"] = 6098] = "CMD_FLOODLIGHT_SET_MOTION_OUT_OF_VIEW_DETECTION";
@@ -467,7 +478,14 @@ var CommandType;
     CommandType[CommandType["CMD_SMARTLOCK_AUTO_LOCK_TIMER"] = 6600] = "CMD_SMARTLOCK_AUTO_LOCK_TIMER";
     CommandType[CommandType["CMD_SMARTLOCK_WRONG_TRY_LOCKDOWN"] = 6604] = "CMD_SMARTLOCK_WRONG_TRY_LOCKDOWN";
     CommandType[CommandType["CMD_SMARTLOCK_WRONG_TRY_ATTEMPTS"] = 6603] = "CMD_SMARTLOCK_WRONG_TRY_ATTEMPTS";
+    CommandType[CommandType["CMD_SMARTLOCK_NIGHT_VISION_ENHANCE"] = 6614] = "CMD_SMARTLOCK_NIGHT_VISION_ENHANCE";
+    CommandType[CommandType["CMD_SMARTLOCK_NIGHT_VISION_SIDE"] = 6615] = "CMD_SMARTLOCK_NIGHT_VISION_SIDE";
+    //CMD_SMARTLOCK_OPEN_DIRECTION = 6615,
+    CommandType[CommandType["CMD_SMARTLOCK_LEFT_OPEN_ALARM"] = 6616] = "CMD_SMARTLOCK_LEFT_OPEN_ALARM";
+    CommandType[CommandType["CMD_SMARTLOCK_TAMPER_ALARM"] = 6617] = "CMD_SMARTLOCK_TAMPER_ALARM";
+    CommandType[CommandType["CMD_SMARTLOCK_VOLUME"] = 6618] = "CMD_SMARTLOCK_VOLUME";
     CommandType[CommandType["CMD_DOORBELL_DUAL_VIEW_MODE"] = 2700] = "CMD_DOORBELL_DUAL_VIEW_MODE";
+    CommandType[CommandType["CMD_DOORBELL_DUAL_VIEW_MODE2"] = 6243] = "CMD_DOORBELL_DUAL_VIEW_MODE2";
     CommandType[CommandType["CMD_DOORBELL_DUAL_RADAR_WD_DETECTION_SENSITIVITY"] = 2705] = "CMD_DOORBELL_DUAL_RADAR_WD_DETECTION_SENSITIVITY";
     CommandType[CommandType["CMD_DOORBELL_DUAL_RADAR_WD_SWITCH"] = 2706] = "CMD_DOORBELL_DUAL_RADAR_WD_SWITCH";
     CommandType[CommandType["CMD_DOORBELL_DUAL_RADAR_WD_DISTANCE"] = 2707] = "CMD_DOORBELL_DUAL_RADAR_WD_DISTANCE";
@@ -560,6 +578,32 @@ var CommandType;
     //CMD_CAMERA_GARAGE_DOOR_UNKNOWN3 = 7506,
     CommandType[CommandType["CMD_CAMERA_GARAGE_DOOR_SENSORS"] = 7503] = "CMD_CAMERA_GARAGE_DOOR_SENSORS";
     CommandType[CommandType["CMD_STORAGE_INFO_HB3"] = 1307] = "CMD_STORAGE_INFO_HB3";
+    CommandType[CommandType["CMD_SET_FLICKER_ADJUSTMENT"] = 8000] = "CMD_SET_FLICKER_ADJUSTMENT";
+    CommandType[CommandType["CMD_SET_CROSS_CAMERA_TRACKING"] = 1065] = "CMD_SET_CROSS_CAMERA_TRACKING";
+    CommandType[CommandType["CMD_SET_TRACKING_ASSISTANCE"] = 1069] = "CMD_SET_TRACKING_ASSISTANCE";
+    CommandType[CommandType["CMD_SET_CONTINUOUS_TRACKING_TIME"] = 1070] = "CMD_SET_CONTINUOUS_TRACKING_TIME";
+    CommandType[CommandType["CMD_SET_CROSS_TRACKING_CAMERA_LIST"] = 1072] = "CMD_SET_CROSS_TRACKING_CAMERA_LIST";
+    CommandType[CommandType["CMD_SET_CROSS_TRACKING_GROUP_LIST"] = 1073] = "CMD_SET_CROSS_TRACKING_GROUP_LIST";
+    CommandType[CommandType["CMD_INDOOR_SET_SOUND_DETECT_ROUND_LOOK_S350"] = 6208] = "CMD_INDOOR_SET_SOUND_DETECT_ROUND_LOOK_S350";
+    CommandType[CommandType["CMD_INDOOR_ENABLE_PRIVACY_MODE_S350"] = 6250] = "CMD_INDOOR_ENABLE_PRIVACY_MODE_S350";
+    CommandType[CommandType["CMD_MOTION_SET_LEAVING_DETECTION"] = 2726] = "CMD_MOTION_SET_LEAVING_DETECTION";
+    CommandType[CommandType["CMD_MOTION_SET_LEAVING_REACTIONS"] = 2727] = "CMD_MOTION_SET_LEAVING_REACTIONS";
+    CommandType[CommandType["CMD_SMARKLOCK_ADD_FINGER"] = 1965] = "CMD_SMARKLOCK_ADD_FINGER";
+    CommandType[CommandType["CMD_SMARKLOCK_ADD_FINGER_STEP"] = 1967] = "CMD_SMARKLOCK_ADD_FINGER_STEP";
+    CommandType[CommandType["CMD_SMARKLOCK_CANCLE_FINGER"] = 1966] = "CMD_SMARKLOCK_CANCLE_FINGER";
+    CommandType[CommandType["CMD_SMARTLOCK_ALARM_NOTIFY"] = 1970] = "CMD_SMARTLOCK_ALARM_NOTIFY";
+    CommandType[CommandType["CMD_SMARTLOCK_ALARM_STOP"] = 1971] = "CMD_SMARTLOCK_ALARM_STOP";
+    CommandType[CommandType["CMD_SMARTLOCK_GET_DOOR_STATUS"] = 1972] = "CMD_SMARTLOCK_GET_DOOR_STATUS";
+    CommandType[CommandType["CMD_TRANSFER_PAYLOAD"] = 1940] = "CMD_TRANSFER_PAYLOAD";
+    CommandType[CommandType["CMD_WIFILOCK_KEYPAD_ENTER_OTA"] = 1933] = "CMD_WIFILOCK_KEYPAD_ENTER_OTA";
+    CommandType[CommandType["CMD_SMART_DROP_DELIVERY_MODE"] = 2103] = "CMD_SMART_DROP_DELIVERY_MODE";
+    CommandType[CommandType["CMD_SMART_DROP_OPEN"] = 2105] = "CMD_SMART_DROP_OPEN";
+    CommandType[CommandType["CMD_SMART_DROP_OPEN_LID"] = 2100] = "CMD_SMART_DROP_OPEN_LID";
+    CommandType[CommandType["CMD_SMART_DROP_IS_DENIED_DELIVERY"] = 2106] = "CMD_SMART_DROP_IS_DENIED_DELIVERY";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+    CommandType[CommandType["CMD_SMART_DROP_HAS_MASTER_PIN"] = 2109] = "CMD_SMART_DROP_HAS_MASTER_PIN";
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+    CommandType[CommandType["CMD_SMART_DROP_IS_PIN_REQUIRED"] = 2107] = "CMD_SMART_DROP_IS_PIN_REQUIRED";
 })(CommandType || (exports.CommandType = CommandType = {}));
 var MessageType;
 (function (MessageType) {
@@ -887,13 +931,6 @@ var P2PConnectionType;
     P2PConnectionType[P2PConnectionType["ONLY_LOCAL"] = 1] = "ONLY_LOCAL";
     P2PConnectionType[P2PConnectionType["QUICKEST"] = 2] = "QUICKEST";
 })(P2PConnectionType || (exports.P2PConnectionType = P2PConnectionType = {}));
-var ChargingType;
-(function (ChargingType) {
-    ChargingType[ChargingType["CHARGING"] = 1] = "CHARGING";
-    ChargingType[ChargingType["UNPLUGGED"] = 2] = "UNPLUGGED";
-    ChargingType[ChargingType["PLUGGED"] = 3] = "PLUGGED";
-    ChargingType[ChargingType["SOLAR_CHARGING"] = 4] = "SOLAR_CHARGING";
-})(ChargingType || (exports.ChargingType = ChargingType = {}));
 var IndoorSoloSmartdropCommandType;
 (function (IndoorSoloSmartdropCommandType) {
     //com.eufy.security.indoorcam.logic.net.IcP2PCommandType
@@ -1057,6 +1094,7 @@ var FilterDetectType;
     // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     FilterDetectType[FilterDetectType["PACKAGE_PICK_UP"] = 512] = "PACKAGE_PICK_UP";
     FilterDetectType[FilterDetectType["PACKAGE_DELIVERED"] = 1024] = "PACKAGE_DELIVERED";
+    FilterDetectType[FilterDetectType["CROSS_DELIVERED"] = 2048] = "CROSS_DELIVERED";
 })(FilterDetectType || (exports.FilterDetectType = FilterDetectType = {}));
 var CalibrateGarageType;
 (function (CalibrateGarageType) {
@@ -1094,3 +1132,87 @@ var TrackerCommandType;
     TrackerCommandType[TrackerCommandType["LOCATION_NEW_ADDRESS"] = 1009] = "LOCATION_NEW_ADDRESS";
     TrackerCommandType[TrackerCommandType["TYPE_ICON_INDEX"] = 1005] = "TYPE_ICON_INDEX";
 })(TrackerCommandType || (exports.TrackerCommandType = TrackerCommandType = {}));
+var SmartLockCommand;
+(function (SmartLockCommand) {
+    SmartLockCommand[SmartLockCommand["CALIBRATE_LOCK"] = 6017] = "CALIBRATE_LOCK";
+    SmartLockCommand[SmartLockCommand["QUERY_STATUS_IN_LOCK"] = 6012] = "QUERY_STATUS_IN_LOCK";
+    SmartLockCommand[SmartLockCommand["ON_OFF_LOCK"] = 6018] = "ON_OFF_LOCK";
+    SmartLockCommand[SmartLockCommand["ADD_PW"] = 6002] = "ADD_PW";
+    SmartLockCommand[SmartLockCommand["UPDATE_USER_TIME"] = 146] = "UPDATE_USER_TIME";
+    SmartLockCommand[SmartLockCommand["UPDATE_PW"] = 6014] = "UPDATE_PW";
+    SmartLockCommand[SmartLockCommand["QUERY_PW"] = 6009] = "QUERY_PW";
+    SmartLockCommand[SmartLockCommand["ADD_FINGER"] = 6003] = "ADD_FINGER";
+    SmartLockCommand[SmartLockCommand["CANCEL_ADD_FINGER"] = 115] = "CANCEL_ADD_FINGER";
+    SmartLockCommand[SmartLockCommand["DELETE_FINGER"] = 6006] = "DELETE_FINGER";
+    SmartLockCommand[SmartLockCommand["UPDATE_FINGER_NAME"] = 119] = "UPDATE_FINGER_NAME";
+    SmartLockCommand[SmartLockCommand["QUERY_ALL_USERS"] = 6007] = "QUERY_ALL_USERS";
+    SmartLockCommand[SmartLockCommand["DELETE_USER"] = 6004] = "DELETE_USER";
+    SmartLockCommand[SmartLockCommand["GET_FINGER_PW_USAGE"] = 6022] = "GET_FINGER_PW_USAGE";
+    SmartLockCommand[SmartLockCommand["WIFI_SCAN"] = 104] = "WIFI_SCAN";
+    SmartLockCommand[SmartLockCommand["WIFI_LIST"] = 105] = "WIFI_LIST";
+    SmartLockCommand[SmartLockCommand["WIFI_CONNECT"] = 106] = "WIFI_CONNECT";
+    SmartLockCommand[SmartLockCommand["ACTIVATE_DEVICE"] = 107] = "ACTIVATE_DEVICE";
+    SmartLockCommand[SmartLockCommand["SET_LOCK_PARAM"] = 6015] = "SET_LOCK_PARAM";
+    SmartLockCommand[SmartLockCommand["GET_LOCK_PARAM"] = 6016] = "GET_LOCK_PARAM";
+    SmartLockCommand[SmartLockCommand["GET_LOCK_EVENT"] = 122] = "GET_LOCK_EVENT";
+    SmartLockCommand[SmartLockCommand["PULL_BLE"] = 6024] = "PULL_BLE";
+    SmartLockCommand[SmartLockCommand["NOTIFY"] = 142] = "NOTIFY";
+    SmartLockCommand[SmartLockCommand["CONNECT"] = 138] = "CONNECT";
+    SmartLockCommand[SmartLockCommand["DISCONNECT"] = 141] = "DISCONNECT";
+    SmartLockCommand[SmartLockCommand["CAPACITY_NEGOTIATION"] = 139] = "CAPACITY_NEGOTIATION";
+    SmartLockCommand[SmartLockCommand["SET_CAPACITY"] = 140] = "SET_CAPACITY";
+    SmartLockCommand[SmartLockCommand["VERIFY_IDENTIFY"] = 6000] = "VERIFY_IDENTIFY";
+    SmartLockCommand[SmartLockCommand["BIND"] = 101] = "BIND";
+    SmartLockCommand[SmartLockCommand["UNBIND"] = 124] = "UNBIND";
+    SmartLockCommand[SmartLockCommand["HEARTBEAT"] = 6001] = "HEARTBEAT";
+    SmartLockCommand[SmartLockCommand["RESET"] = 6019] = "RESET";
+    SmartLockCommand[SmartLockCommand["BIND_SUCCESS"] = 102] = "BIND_SUCCESS";
+})(SmartLockCommand || (exports.SmartLockCommand = SmartLockCommand = {}));
+var SmartLockFunctionType;
+(function (SmartLockFunctionType) {
+    SmartLockFunctionType[SmartLockFunctionType["TYPE_1"] = 1] = "TYPE_1";
+    SmartLockFunctionType[SmartLockFunctionType["TYPE_2"] = 2] = "TYPE_2";
+})(SmartLockFunctionType || (exports.SmartLockFunctionType = SmartLockFunctionType = {}));
+var SmartLockBleCommandFunctionType1;
+(function (SmartLockBleCommandFunctionType1) {
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["CONNECT"] = 1] = "CONNECT";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["DISCONNECT"] = 2] = "DISCONNECT";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["CAPACITY_NEGOTIATION"] = 3] = "CAPACITY_NEGOTIATION";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["SET_CAPACITY"] = 5] = "SET_CAPACITY";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["VERIFY_IDENTIFY"] = 34] = "VERIFY_IDENTIFY";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["BIND"] = 35] = "BIND";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["UNBIND"] = 36] = "UNBIND";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["HEARTBEAT"] = 38] = "HEARTBEAT";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["GET_DEVICE_INFO"] = 41] = "GET_DEVICE_INFO";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["GET_OTA_STATUS"] = 44] = "GET_OTA_STATUS";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["OTA_OPERATION"] = 45] = "OTA_OPERATION";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["OTA_DATA_SENDING"] = 46] = "OTA_DATA_SENDING";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["RESET"] = 47] = "RESET";
+    SmartLockBleCommandFunctionType1[SmartLockBleCommandFunctionType1["BIND_SUCCESS"] = 48] = "BIND_SUCCESS";
+})(SmartLockBleCommandFunctionType1 || (exports.SmartLockBleCommandFunctionType1 = SmartLockBleCommandFunctionType1 = {}));
+var SmartLockBleCommandFunctionType2;
+(function (SmartLockBleCommandFunctionType2) {
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["CALIBRATE_LOCK"] = 33] = "CALIBRATE_LOCK";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["QUERY_STATUS_IN_LOCK"] = 34] = "QUERY_STATUS_IN_LOCK";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["ON_OFF_LOCK"] = 35] = "ON_OFF_LOCK";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["ADD_PW"] = 36] = "ADD_PW";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["UPDATE_USER_TIME"] = 37] = "UPDATE_USER_TIME";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["UPDATE_PW"] = 38] = "UPDATE_PW";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["QUERY_PW"] = 39] = "QUERY_PW";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["ADD_FINGER"] = 40] = "ADD_FINGER";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["CANCEL_ADD_FINGER"] = 41] = "CANCEL_ADD_FINGER";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["DELETE_FINGER"] = 42] = "DELETE_FINGER";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["UPDATE_FINGER_NAME"] = 43] = "UPDATE_FINGER_NAME";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["QUERY_ALL_USERS"] = 44] = "QUERY_ALL_USERS";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["DELETE_USER"] = 45] = "DELETE_USER";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["GET_FINGER_PW_USAGE"] = 46] = "GET_FINGER_PW_USAGE";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["WIFI_SCAN"] = 48] = "WIFI_SCAN";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["WIFI_LIST"] = 49] = "WIFI_LIST";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["WIFI_CONNECT"] = 50] = "WIFI_CONNECT";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["ACTIVATE_DEVICE"] = 51] = "ACTIVATE_DEVICE";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["SET_LOCK_PARAM"] = 52] = "SET_LOCK_PARAM";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["GET_LOCK_PARAM"] = 53] = "GET_LOCK_PARAM";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["GET_LOCK_EVENT"] = 56] = "GET_LOCK_EVENT";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["PULL_BLE"] = 61] = "PULL_BLE";
+    SmartLockBleCommandFunctionType2[SmartLockBleCommandFunctionType2["NOTIFY"] = 74] = "NOTIFY";
+})(SmartLockBleCommandFunctionType2 || (exports.SmartLockBleCommandFunctionType2 = SmartLockBleCommandFunctionType2 = {}));

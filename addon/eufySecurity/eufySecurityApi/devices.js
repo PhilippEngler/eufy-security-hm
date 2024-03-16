@@ -11,6 +11,7 @@ const http_1 = require("./http");
 const utils_1 = require("./utils");
 const types_1 = require("./utils/types");
 const eventInteractions_1 = require("./eventInteractions");
+const logging_1 = require("./logging");
 /**
  * Represents all the Devices in the account.
  */
@@ -19,12 +20,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     httpService;
     eventInteractions;
     devices = {};
-    //private devicesHistory : { [deviceSerial : string] : DatabaseQueryLocal[] } = {};
-    devicesLastEvent = {};
     loadingEmitter = new events_1.default();
     devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
     deviceSnoozeTimeout = {};
-    deviceImageLoadTimeout = {};
     /**
      * Create the Devices objects holding all devices in the account.
      * @param api  The api.
@@ -36,7 +34,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.httpService = httpService;
         this.eventInteractions = new eventInteractions_1.EventInteractions(this.api);
         if (this.api.getApiUsePushService() == false) {
-            this.api.logInfoBasic("Retrieving last video event times disabled in settings.");
+            logging_1.rootAddonLogger.info("Retrieving last video event times disabled in settings.");
         }
         this.httpService.on("devices", (devices) => this.handleDevices(devices));
     }
@@ -45,16 +43,16 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param devices The devices object with all devices.
      */
     async handleDevices(devices) {
-        this.api.logDebug("Got devices", { devices: devices });
+        logging_1.rootAddonLogger.debug("Got devices", { devices: devices });
         const resDevices = devices;
         const deviceSNs = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
         const promises = [];
-        var deviceSerial;
+        let deviceSerial;
         if (resDevices != null) {
             for (deviceSerial in resDevices) {
                 if (this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId()) {
-                    this.api.logDebug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
+                    logging_1.rootAddonLogger.debug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
                     continue;
                 }
                 if (this.devices[deviceSerial]) {
@@ -71,6 +69,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     else if (http_1.Device.isSoloCameras(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.SoloCamera.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
+                    else if (http_1.Device.isLockWifiVideo(resDevices[deviceSerial].device_type)) {
+                        new_device = http_1.DoorbellLock.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
                     else if (http_1.Device.isBatteryDoorbell(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.BatteryDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
@@ -85,6 +86,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     else if (http_1.Device.isGarageCamera(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.GarageCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (http_1.Device.isSmartDrop(resDevices[deviceSerial].device_type)) {
+                        new_device = http_1.SmartDrop.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
                     else if (http_1.Device.isCamera(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.Camera.getInstance(this.httpService, resDevices[deviceSerial]);
@@ -106,6 +110,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     else if (http_1.Device.isSmartTrack(resDevices[deviceSerial].device_type)) {
                         new_device = http_1.Tracker.getInstance(this.httpService, resDevices[deviceSerial]);
+                    }
+                    else if (http_1.Device.isLockKeypad(resDevices[deviceSerial].device_type)) {
+                        new_device = http_1.LockKeypad.getInstance(this.httpService, resDevices[deviceSerial]);
                     }
                     else {
                         new_device = http_1.UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial]);
@@ -139,12 +146,18 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                             this.addEventListener(device, "DogDetected");
                             this.addEventListener(device, "DogLickDetected");
                             this.addEventListener(device, "DogPoopDetected");
+                            this.addEventListener(device, "Tampering");
+                            this.addEventListener(device, "LowTemperature");
+                            this.addEventListener(device, "HighTemperature");
+                            this.addEventListener(device, "PinIncorrect");
+                            this.addEventListener(device, "LidStuck");
+                            this.addEventListener(device, "BatteryFullyCharged");
                             this.addDevice(device);
                             device.initialize();
                         }
                         catch (err) {
                             const error = (0, error_1.ensureError)(err);
-                            this.api.logError("HandleDevices Error", { error: (0, utils_1.getError)(error), deviceSN: device.getSerial() });
+                            logging_1.rootAddonLogger.error("HandleDevices Error", { error: (0, utils_1.getError)(error), deviceSN: device.getSerial() });
                         }
                         return device;
                     }));
@@ -159,7 +172,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }).catch((err) => {
                         const error = (0, error_1.ensureError)(err);
-                        this.api.logError("Error trying to connect to station after device loaded", { error: (0, utils_1.getError)(error), deviceSN: device.getSerial() });
+                        logging_1.rootAddonLogger.error("Error trying to connect to station after device loaded", { error: (0, utils_1.getError)(error), deviceSN: device.getSerial() });
                     });
                 });
                 this.loadingEmitter.emit("devices loaded");
@@ -175,7 +188,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                         this.removeDevice(device);
                     }).catch((err) => {
                         const error = (0, error_1.ensureError)(err);
-                        this.api.logError("Error removing device", { error: (0, utils_1.getError)(error), deviceSN: deviceSN });
+                        logging_1.rootAddonLogger.error("Error removing device", { error: (0, utils_1.getError)(error), deviceSN: deviceSN });
                     });
                 }
             }
@@ -190,16 +203,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         const serial = device.getSerial();
         if (serial && !Object.keys(this.devices).includes(serial)) {
             this.devices[serial] = device;
-            //this.devicesHistory[serial] = [];
-            this.devicesLastEvent[serial] = null;
-            this.deviceImageLoadTimeout[serial] = undefined;
             this.emit("device added", device);
             if (device.isLock()) {
                 this.api.getMqttService().subscribeLock(device.getSerial());
             }
         }
         else {
-            this.api.logDebug(`Device with this serial ${device.getSerial()} exists already and couldn't be added again!`);
+            logging_1.rootAddonLogger.debug(`Device with this serial ${device.getSerial()} exists already and couldn't be added again!`);
         }
     }
     /**
@@ -214,7 +224,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("device removed", device);
         }
         else {
-            this.api.logDebug(`Device with this serial ${device.getSerial()} doesn't exists and couldn't be removed!`);
+            logging_1.rootAddonLogger.debug(`Device with this serial ${device.getSerial()} doesn't exists and couldn't be removed!`);
         }
     }
     /**
@@ -249,7 +259,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     closeDevices() {
         if (this.devices != null) {
-            for (var deviceSerial in this.devices) {
+            for (const deviceSerial in this.devices) {
                 this.removeEventListener(this.devices[deviceSerial], "PropertyChanged");
                 this.removeEventListener(this.devices[deviceSerial], "RawPropertyChanged");
                 this.removeEventListener(this.devices[deviceSerial], "CryingDetected");
@@ -277,6 +287,12 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 this.removeEventListener(this.devices[deviceSerial], "DogDetected");
                 this.removeEventListener(this.devices[deviceSerial], "DogLickDetected");
                 this.removeEventListener(this.devices[deviceSerial], "DogPoopDetected");
+                this.removeEventListener(this.devices[deviceSerial], "Tampering");
+                this.removeEventListener(this.devices[deviceSerial], "LowTemperature");
+                this.removeEventListener(this.devices[deviceSerial], "HighTemperature");
+                this.removeEventListener(this.devices[deviceSerial], "PinIncorrect");
+                this.removeEventListener(this.devices[deviceSerial], "LidStuck");
+                this.removeEventListener(this.devices[deviceSerial], "BatteryFullyCharged");
                 this.devices[deviceSerial].destroy();
             }
         }
@@ -347,7 +363,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @returns True if device exists, otherwise false.
      */
     existDevice(deviceSerial) {
-        var res = this.devices[deviceSerial];
+        const res = this.devices[deviceSerial];
         if (res) {
             return true;
         }
@@ -378,49 +394,6 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         }, timeoutMS);
     }
     /**
-     * Returns a string with the type of the device.
-     * @param device The device.
-     * @returns A string with the type of the device.
-     */
-    getDeviceTypeAsString(device) {
-        if (device.isFirstCamera() || device.isCameraE() || device.isCamera2() || device.isCamera2C() || device.isCamera2Pro() || device.isCamera2CPro() || device.isCamera3() || device.isCamera3C()) {
-            return "camera";
-        }
-        else if (device.isDoorbell()) {
-            return "doorbell";
-        }
-        else if (device.isIndoorCamera()) {
-            return "indoorcamera";
-        }
-        else if (device.isSoloCameras()) {
-            return "solocamera";
-        }
-        else if (device.isFloodLight()) {
-            return "floodlight";
-        }
-        else if (device.isWallLightCam()) {
-            return "walllightcamera";
-        }
-        else if (device.isGarageCamera()) {
-            return "garagecamera";
-        }
-        else if (device.isStarlight4GLTE()) {
-            return "starlight4glte";
-        }
-        else if (device.isLock()) {
-            return "lock";
-        }
-        else if (device.isEntrySensor()) {
-            return "sensor";
-        }
-        else if (device.isKeyPad()) {
-            return "keypad";
-        }
-        else {
-            return `unknown(${device.getRawDevice().device_type})`;
-        }
-    }
-    /**
      * Add a given event listener for a given device.
      * @param device The device as Device object.
      * @param eventListenerName The event listener name as string.
@@ -428,113 +401,139 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     addEventListener(device, eventListenerName) {
         switch (eventListenerName) {
             case "PropertyChanged":
-                device.on("property changed", (device, name, value, ready) => this.onPropertyChanged(device, name, value, ready));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
+                device.on("property changed", (device, name, value, ready) => this.onDevicePropertyChanged(device, name, value, ready));
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 device.on("raw property changed", (device, type, value) => this.onRawPropertyChanged(device, type, value));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property changed")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property changed")} Listener.`);
                 break;
             case "CryingDetected":
                 device.on("crying detected", (device, state) => this.onCryingDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("crying detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("crying detected")} Listener.`);
                 break;
             case "SoundDetected":
                 device.on("sound detected", (device, state) => this.onSoundDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("sound detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("sound detected")} Listener.`);
                 break;
             case "PetDetected":
                 device.on("pet detected", (device, state) => this.onPetDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
             case "VehicleDetected":
                 device.on("vehicle detected", (device, state) => this.onVehicleDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("vehicle detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("vehicle detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.on("motion detected", (device, state) => this.onMotionDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
                 device.on("person detected", (device, state, person) => this.onPersonDetected(device, state, person));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
                 break;
             case "Rings":
                 device.on("rings", (device, state) => this.onRings(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("rings")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("rings")} Listener.`);
                 break;
             case "Locked":
                 device.on("locked", (device, state) => this.onLocked(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("locked")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("locked")} Listener.`);
                 break;
             case "Open":
                 device.on("open", (device, state) => this.onOpen(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("open")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("open")} Listener.`);
                 break;
             case "Ready":
                 device.on("ready", (device) => this.onReady(device));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("ready")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("ready")} Listener.`);
                 break;
             case "PackageDelivered":
                 device.on("package delivered", (device, state) => this.onDevicePackageDelivered(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package delivered")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package delivered")} Listener.`);
                 break;
             case "PackageStranded":
                 device.on("package stranded", (device, state) => this.onDevicePackageStranded(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package stranded")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package stranded")} Listener.`);
                 break;
             case "PackageTaken":
                 device.on("package taken", (device, state) => this.onDevicePackageTaken(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package taken")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("package taken")} Listener.`);
                 break;
             case "SomeoneLoitering":
                 device.on("someone loitering", (device, state) => this.onDeviceSomeoneLoitering(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("someone loitering")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("someone loitering")} Listener.`);
                 break;
             case "RadarMotionDetected":
                 device.on("radar motion detected", (device, state) => this.onDeviceRadarMotionDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("radar motion detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("radar motion detected")} Listener.`);
                 break;
             case "911Alarm":
                 device.on("911 alarm", (device, state, detail) => this.onDevice911Alarm(device, state, detail));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("911 alarm")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("911 alarm")} Listener.`);
                 break;
             case "ShakeAlarm":
                 device.on("shake alarm", (device, state, detail) => this.onDeviceShakeAlarm(device, state, detail));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("shake alarm")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("shake alarm")} Listener.`);
                 break;
             case "WrongTryProtectAlarm":
                 device.on("wrong try-protect alarm", (device, state) => this.onDeviceWrongTryProtectAlarm(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
                 break;
             case "LongTimeNotClose":
                 device.on("long time not close", (device, state) => this.onDeviceLongTimeNotClose(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("long time not close")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("long time not close")} Listener.`);
                 break;
             case "LowBattery":
                 device.on("low battery", (device, state) => this.onDeviceLowBattery(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("low battery")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("low battery")} Listener.`);
                 break;
             case "Jammed":
                 device.on("jammed", (device, state) => this.onDeviceJammed(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("jammed")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("jammed")} Listener.`);
                 break;
             case "StrangerPersonDetected":
                 device.on("stranger person detected", (device, state) => this.onDeviceStrangerPersonDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("stranger person detected")} Listener.`);
                 break;
             case "DogDetected":
                 device.on("dog detected", (device, state) => this.onDeviceDogDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog detected")} Listener.`);
                 break;
             case "DogLickDetected":
                 device.on("dog lick detected", (device, state) => this.onDeviceDogLickDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog lick detected")} Listener.`);
                 break;
             case "DogPoopDetected":
                 device.on("dog poop detected", (device, state) => this.onDeviceDogPoopDetected(device, state));
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog poop detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("dog poop detected")} Listener.`);
                 break;
+            case "Tampering":
+                device.on("tampering", (device, state) => this.onDeviceTampering(device, state));
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("tampering")} Listener.`);
+                break;
+            case "LowTemperature":
+                device.on("low temperature", (device, state) => this.onDeviceLowTemperature(device, state));
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("low temperature")} Listener.`);
+                break;
+            case "HighTemperature":
+                device.on("high temperature", (device, state) => this.onDeviceHighTemperature(device, state));
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("high temperature")} Listener.`);
+                break;
+            case "PinIncorrect":
+                device.on("pin incorrect", (device, state) => this.onDevicePinIncorrect(device, state));
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pin incorrect")} Listener.`);
+                break;
+            case "LidStuck":
+                device.on("lid stuck", (device, state) => this.onDeviceLidStuck(device, state));
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("lid stuck")} Listener.`);
+                break;
+            case "BatteryFullyCharged":
+                device.on("battery fully charged", (device, state) => this.onDeviceBatteryFullyCharged(device, state));
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("battery fully charged")} Listener.`);
+                break;
+            default:
+                logging_1.rootAddonLogger.error(`Error adding event listener: Unknown event listener name '${eventListenerName}'.`);
         }
     }
     /**
@@ -546,112 +545,138 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         switch (eventListenerName) {
             case "PropertyChanged":
                 device.removeAllListeners("property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("property changed")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
                 device.removeAllListeners("raw property changed");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("raw property changed")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("raw property changed")} Listener.`);
                 break;
             case "CryingDetected":
                 device.removeAllListeners("crying detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("crying detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("crying detected")} Listener.`);
                 break;
             case "SoundDetected":
                 device.removeAllListeners("sound detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("sound detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("sound detected")} Listener.`);
                 break;
             case "PetDetected":
                 device.removeAllListeners("pet detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pet detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
             case "VehicleDetected":
                 device.removeAllListeners("vehicle detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("vehicle detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("vehicle detected")} Listener.`);
                 break;
             case "MotionDetected":
                 device.removeAllListeners("motion detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("motion detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
                 device.removeAllListeners("person detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("person detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("person detected")} Listener.`);
                 break;
             case "Rings":
                 device.removeAllListeners("rings");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("rings")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("rings")} Listener.`);
                 break;
             case "Locked":
                 device.removeAllListeners("locked");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("locked")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("locked")} Listener.`);
                 break;
             case "Open":
                 device.removeAllListeners("open");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("open")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("open")} Listener.`);
                 break;
             case "Ready":
                 device.removeAllListeners("ready");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("ready")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("ready")} Listener.`);
                 break;
             case "PackageDelivered":
                 device.removeAllListeners("package delivered");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package delivered")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package delivered")} Listener.`);
                 break;
             case "PackageStranded":
                 device.removeAllListeners("package stranded");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package stranded")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package stranded")} Listener.`);
                 break;
             case "PackageTaken":
                 device.removeAllListeners("package taken");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package taken")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("package taken")} Listener.`);
                 break;
             case "SomeoneLoitering":
                 device.removeAllListeners("someone loitering");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("someone loitering")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("someone loitering")} Listener.`);
                 break;
             case "RadarMotionDetected":
                 device.removeAllListeners("radar motion detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("radar motion detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("radar motion detected")} Listener.`);
                 break;
             case "911Alarm":
                 device.removeAllListeners("911 alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("911 alarm")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("911 alarm")} Listener.`);
                 break;
             case "ShakeAlarm":
                 device.removeAllListeners("shake alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("shake alarm")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("shake alarm")} Listener.`);
                 break;
             case "WrongTryProtectAlarm":
                 device.removeAllListeners("wrong try-protect alarm");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("wrong try-protect alarm")} Listener.`);
                 break;
             case "LongTimeNotClose":
                 device.removeAllListeners("long time not close");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("long time not close")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("long time not close")} Listener.`);
                 break;
             case "LowBattery":
                 device.removeAllListeners("low battery");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("low battery")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("low battery")} Listener.`);
                 break;
             case "Jammed":
                 device.removeAllListeners("jammed");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("jammed")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("jammed")} Listener.`);
                 break;
             case "StrangerPersonDetected":
                 device.removeAllListeners("stranger person detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("stranger person detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("stranger person detected")} Listener.`);
                 break;
             case "DogDetected":
                 device.removeAllListeners("dog detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog detected")} Listener.`);
                 break;
             case "DogLickDetected":
                 device.removeAllListeners("dog lick detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog lick detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog lick detected")} Listener.`);
                 break;
             case "DogPoopDetected":
                 device.removeAllListeners("dog poop detected");
-                this.api.logDebug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog poop detected")} Listener.`);
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("dog poop detected")} Listener.`);
                 break;
+            case "Tampering":
+                device.removeAllListeners("tampering");
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("tampering")} Listener.`);
+                break;
+            case "LowTemperature":
+                device.removeAllListeners("low temperature");
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("low temperature")} Listener.`);
+                break;
+            case "HighTemperature":
+                device.removeAllListeners("high temperature");
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("high temperature")} Listener.`);
+                break;
+            case "PinIncorrect":
+                device.removeAllListeners("pin incorrect");
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("pin incorrect")} Listener.`);
+                break;
+            case "LidStuck":
+                device.removeAllListeners("lid stuck");
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("lid stuck")} Listener.`);
+                break;
+            case "BatteryFullyCharged":
+                device.removeAllListeners("battery fully charged");
+                logging_1.rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("battery fully charged")} Listener.`);
+                break;
+            default:
+                logging_1.rootAddonLogger.error(`Error removing event listener: Unknown event listener name '${eventListenerName}'.`);
         }
     }
     /**
@@ -660,9 +685,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    async onPropertyChanged(device, name, value, ready) {
+    async onDevicePropertyChanged(device, name, value, ready) {
         //this.emit("device property changed", device, name, value);
-        this.api.logDebug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
+        logging_1.rootAddonLogger.debug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
         try {
             if (ready && !name.startsWith("hidden-")) {
                 this.emit("device property changed", device, name, value);
@@ -672,26 +697,28 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = (0, error_1.ensureError)(err);
-                    this.api.logError(`Device property changed error - station enable rtsp`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+                    logging_1.rootAddonLogger.error(`Device property changed error - station enable rtsp`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                 });
             }
             else if (name === http_1.PropertyName.DeviceRTSPStream && value === false) {
                 device.setCustomPropertyValue(http_1.PropertyName.DeviceRTSPStreamUrl, "");
             }
             else if (name === http_1.PropertyName.DevicePictureUrl && value !== "") {
-                this.api.getStation(device.getStationSerial()).then((station) => {
-                    if (station.hasCommand(http_1.CommandName.StationDownloadImage)) {
-                        station.downloadImage(value);
-                    }
-                }).catch((err) => {
-                    const error = (0, error_1.ensureError)(err);
-                    this.api.logError(`Device property changed error - station download image`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
-                });
+                if (!(0, utils_1.isValidUrl)(value)) {
+                    this.api.getStation(device.getStationSerial()).then((station) => {
+                        if (station.hasCommand(http_1.CommandName.StationDownloadImage)) {
+                            station.downloadImage(value);
+                        }
+                    }).catch((err) => {
+                        const error = (0, error_1.ensureError)(err);
+                        logging_1.rootAddonLogger.error(`Device property changed error - station download image`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+                    });
+                }
             }
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Device property changed error`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
+            logging_1.rootAddonLogger.error(`Device property changed error`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
         }
     }
     /**
@@ -702,7 +729,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onRawPropertyChanged(device, type, value) {
         //this.emit("device raw property changed", device, type, value, modified);
-        this.api.logDebug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value}`);
+        logging_1.rootAddonLogger.debug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value}`);
     }
     /**
      * The action to be one when event CryingDetected is fired.
@@ -710,10 +737,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onCryingDetected(device, state) {
-        this.api.logDebug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.CRYING);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.CRYING);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -721,7 +748,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -731,10 +758,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onSoundDetected(device, state) {
-        this.api.logDebug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.SOUND);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.SOUND);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -742,7 +769,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -752,10 +779,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onPetDetected(device, state) {
-        this.api.logDebug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PET);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PET);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -763,7 +790,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -773,10 +800,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     onVehicleDetected(device, state) {
-        this.api.logDebug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.VEHICLE);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.VEHICLE);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -784,7 +811,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -794,10 +821,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onMotionDetected(device, state) {
-        this.api.logDebug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.MOTION);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.MOTION);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -805,7 +832,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -816,10 +843,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param person The person detected.
      */
     async onPersonDetected(device, state, person) {
-        this.api.logDebug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
+        logging_1.rootAddonLogger.debug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PERSON);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PERSON);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -827,7 +854,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
     }
@@ -837,10 +864,10 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onRings(device, state) {
-        this.api.logDebug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
         //this.setLastVideoTimeNow(device.getSerial());
         try {
-            var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RING);
+            const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RING);
             if (deviceEventInteraction !== null) {
                 this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
             }
@@ -853,7 +880,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onLocked(device, state) {
-        this.api.logDebug(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
     }
     /**
      * The action to be one when event Open is fired.
@@ -861,27 +888,27 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * @param state The new state.
      */
     async onOpen(device, state) {
-        this.api.logDebug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
+        logging_1.rootAddonLogger.debug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
     }
     /**
      * The action to be one when event Ready is fired.
      * @param device The device as Device object.
      */
     async onReady(device) {
-        this.api.logDebug(`Event "Ready": device: ${device.getSerial()}`);
+        logging_1.rootAddonLogger.debug(`Event "Ready": device: ${device.getSerial()}`);
         try {
             if (device.getPropertyValue(http_1.PropertyName.DeviceRTSPStream) !== undefined && device.getPropertyValue(http_1.PropertyName.DeviceRTSPStream) === true) {
                 this.api.getStation(device.getStationSerial()).then((station) => {
                     station.setRTSPStream(device, true);
                 }).catch((err) => {
                     const error = (0, error_1.ensureError)(err);
-                    this.api.logError(`Device ready error - station enable rtsp`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
+                    logging_1.rootAddonLogger.error(`Device ready error - station enable rtsp`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
                 });
             }
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError(`Device ready error`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
+            logging_1.rootAddonLogger.error(`Device ready error`, { error: (0, utils_1.getError)(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
         }
     }
     /**
@@ -925,7 +952,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("device radar motion detected", device, state);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RADAR_MOTION);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RADAR_MOTION);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -933,7 +960,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
     /**
@@ -995,7 +1022,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("device stranger person detected", device, state);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.STRANGER_PERSON);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.STRANGER_PERSON);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -1003,7 +1030,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
     /**
@@ -1015,7 +1042,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("device dog detected", device, state);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -1023,7 +1050,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
     /**
@@ -1035,7 +1062,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("device dog lick detected", device, state);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_LICK);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_LICK);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -1043,7 +1070,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
     }
     /**
@@ -1055,7 +1082,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("device dog poop detected", device, state);
         if (state === true) {
             try {
-                var deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_POOP);
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_POOP);
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
@@ -1063,8 +1090,56 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             catch { }
         }
         if (state === false) {
-            this.loadDeviceImage(device.getSerial());
+            //this.loadDeviceImage(device.getSerial());
         }
+    }
+    /**
+     * The action to be one when event DeviceTampering is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceTampering(device, state) {
+        this.emit("device tampering", device, state);
+    }
+    /**
+     * The action to be one when event DeviceLowTemperature is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceLowTemperature(device, state) {
+        this.emit("device low temperature", device, state);
+    }
+    /**
+     * The action to be one when event DeviceHighTemperature is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceHighTemperature(device, state) {
+        this.emit("device high temperature", device, state);
+    }
+    /**
+     * The action to be one when event DevicePinIncorrect is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDevicePinIncorrect(device, state) {
+        this.emit("device pin incorrect", device, state);
+    }
+    /**
+     * The action to be one when event DeviceLidStuck is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceLidStuck(device, state) {
+        this.emit("device lid stuck", device, state);
+    }
+    /**
+     * The action to be one when event DeviceBatteryFullyCharged is fired.
+     * @param device The device as Device object.
+     * @param state The state.
+     */
+    onDeviceBatteryFullyCharged(device, state) {
+        this.emit("device battery fully charged", device, state);
     }
     /**
      * Update the raw values for a given device.
@@ -1076,203 +1151,38 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             device.updateRawProperties(values);
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            this.api.logError("Update device properties error", { error: (0, utils_1.getError)(error), deviceSN: deviceSerial, values: values });
+            logging_1.rootAddonLogger.error("Update device properties error", { error: (0, utils_1.getError)(error), deviceSN: deviceSerial, values: values });
         });
     }
-    /**
-     * Add a given event result to the local store if the event is not already stored.
-     * @param deviceSerial The serial of the device.
-     * @param eventResult The event result data.
-     */
-    /*public addEventResultForDevice(deviceSerial : string, eventResult : DatabaseQueryLocal)
-    {
-        for (let event of this.devicesHistory[deviceSerial])
-        {
-            if(event.history && eventResult.history && event.history.start_time && eventResult.history.start_time && event.record_id === eventResult.record_id && event.history.storage_path === eventResult.history.storage_path && event.history.start_time === eventResult.history.start_time)
-            {
-                return;
-            }
-        }
-        this.devicesHistory[deviceSerial].push(eventResult);
-    }*/
-    /**
-     * Set given event data to the local store.
-     * @param deviceSerial The serial of the device.
-     * @param path The path to the image.
-     * @param start_time The date as Date.
-     */
-    addLastEventForDevice(deviceSerial, path, start_time) {
-        this.devicesLastEvent[deviceSerial] = { path, start_time };
-    }
-    /**
-     * Returns the stored events for a given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The stored events.
-     */
-    /*public getEventResultsForDevice1(deviceSerial : string) : DatabaseQueryLocal[]
-    {
-        return this.devicesHistory[deviceSerial];
-    }*/
-    /**
-     * Returns the stored last event for a given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The stored last event.
-     */
-    getLastEventForDevice(deviceSerial) {
-        return this.devicesLastEvent[deviceSerial];
-    }
-    /**
-     * Set the timeout of 75 seconds to download image of last event.
-     * @param deviceSerial The serial of the device.
-     */
-    loadDeviceImage(deviceSerial) {
-        if (this.deviceImageLoadTimeout[deviceSerial] !== undefined) {
-            clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
-        }
-        this.deviceImageLoadTimeout[deviceSerial] = setTimeout(() => { this.getDeviceImage(deviceSerial); }, 75 * 1000);
-    }
-    /**
-     * Helper for removing timeout and initiate download of the image of the last event.
-     * @param deviceSerial The serial of the device.
-     */
-    getDeviceImage(deviceSerial) {
-        if (this.deviceImageLoadTimeout[deviceSerial] !== undefined) {
-            clearTimeout(this.deviceImageLoadTimeout[deviceSerial]);
-        }
-        //this.getDeviceEvents(deviceSerial);
-        this.getDeviceLastEvent(deviceSerial);
-    }
-    /**
-     * Retrieves the events of the given device.
-     * @param deviceSerial The serial of the device.
-     */
-    /*public async getDeviceEvents(deviceSerial : string)
-    {
-        var device = await this.getDevice(deviceSerial);
-        var station = await this.api.getStation(device.getStationSerial());
-        var deviceSerials : string[] = [];
-        var dateEnd = new Date(Date.now());
-        dateEnd.setDate(dateEnd.getDate()+1);
-        var dateStart = new Date(Date.now());
-        dateStart.setFullYear(dateStart.getFullYear()-1);
-
-        deviceSerials.push(device.getSerial());
-        if(device)
-        {
-            station.databaseQueryLocal(deviceSerials, dateStart, dateEnd);
-        }
-    }*/
     /**
      * Retrieves the last event of the given device.
      * @param deviceSerial The serial of the device.
      */
     async getDeviceLastEvent(deviceSerial) {
-        try {
-            var device = await this.getDevice(deviceSerial);
-            var station = await this.api.getStation(device.getStationSerial());
-            if (device) {
+        this.getDevice(deviceSerial).then((device) => {
+            this.api.getStation(device.getStationSerial()).then((station) => {
                 station.databaseQueryLatestInfo();
-            }
-        }
-        catch (error) {
-            this.api.logError("Error at getDeviceLastEvent: ", error);
-        }
+            }).catch((err) => {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootAddonLogger.error(`Get Device Last Event - Station Error`, { error: (0, utils_1.getError)(error), deviceSN: deviceSerial });
+            });
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
+            logging_1.rootAddonLogger.error(`Get Device Last Event - Device Error`, { error: (0, utils_1.getError)(error), deviceSN: deviceSerial });
+        });
     }
-    /**
-     * Retrieves the events of all devices.
-     */
-    /*public async getDevicesEvents()
-    {
-        var devices = await this.getDevices();
-        var stations = await this.api.getStations();
-        var dateEnd = new Date(Date.now());
-        dateEnd.setDate(dateEnd.getDate()+1);
-        var dateStart = new Date(Date.now());
-        dateStart.setFullYear(dateStart.getFullYear()-1);
-
-        for(let station in stations)
-        {
-            let deviceSerials : string[] = [];
-            for(let device in devices)
-            {
-                if(devices[device].getStationSerial() === stations[station].getSerial())
-                {
-                    deviceSerials.push(devices[device].getSerial());
-                }
-            }
-
-            stations[station].databaseQueryLocal(deviceSerials, dateStart, dateEnd);
-        }
-    }*/
     /**
      * Retrieves the last event of all devices.
      */
     async getDevicesLastEvent() {
-        var stations = await this.api.getStations();
-        for (let station in stations) {
-            stations[station].databaseQueryLatestInfo();
-        }
-    }
-    /**
-     * Downloads the image of the last event for the given device.
-     * @param deviceSerial The serial of the device.
-     */
-    async downloadLatestImageForDevice(deviceSerial) {
-        try {
-            var device = await this.getDevice(deviceSerial);
-            var station = await this.api.getStation(device.getStationSerial());
-            /*var results = this.getEventResultsForDevice(deviceSerial);
-            if(results && results.length > 0)
-            {
-                for(var pos = results.length - 1; pos >= 0; pos--)
-                {
-                    if(results[pos].history && results[pos].history.thumb_path)
-                    {
-                        station.downloadImage(results[pos].history.thumb_path);
-                        return;
-                    }
-                }
-            }*/
-            var result = this.getLastEventForDevice(deviceSerial);
-            if (result !== null && result.path !== "") {
-                station.downloadImage(result.path);
-                return;
+        this.api.getStations().then((stations) => {
+            for (const station in stations) {
+                stations[station].databaseQueryLatestInfo();
             }
-        }
-        catch (error) {
-            this.api.logError("Error at downloadLatestImageForDevice: ", error);
-        }
-    }
-    /**
-     * Returns the timestamp of the last event for the given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The timestamp or undefinied.
-     */
-    /*public getLastEventTimeForDevice(deviceSerial : string) : number | undefined
-    {
-        if(this.devicesHistory[deviceSerial] !== undefined && this.devicesHistory[deviceSerial].length > 0)
-        {
-            for(var pos = this.devicesHistory[deviceSerial].length - 1; pos >= 0; pos--)
-            {
-                if(this.devicesHistory[deviceSerial][pos].history && this.devicesHistory[deviceSerial][pos].history.start_time)
-                {
-                    return this.devicesHistory[deviceSerial][pos].history.start_time.valueOf();
-                }
-            }
-        }
-        return undefined;
-    }*/
-    /**
-     * Returns the timestamp of the last event for the given device.
-     * @param deviceSerial The serial of the device.
-     * @returns The timestamp or undefinied.
-     */
-    getLastEventTimeForDevice(deviceSerial) {
-        var result = this.getLastEventForDevice(deviceSerial);
-        if (result !== null && result.path !== "") {
-            return result.start_time.valueOf();
-        }
-        return undefined;
+        }).catch((err) => {
+            const error = (0, error_1.ensureError)(err);
+            logging_1.rootAddonLogger.error(`Get Devices Last Event - Station Error`, { error: (0, utils_1.getError)(error) });
+        });
     }
     /**
      * Retrieve the interactions for a given device.
@@ -1326,379 +1236,420 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         value = (0, utils_1.parseValue)(metadata, value);
         switch (name) {
             case http_1.PropertyName.DeviceEnabled:
-                await station.enableDevice(device, value);
+                station.enableDevice(device, value);
                 break;
             case http_1.PropertyName.DeviceStatusLed:
-                await station.setStatusLed(device, value);
+                station.setStatusLed(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoNightvision:
-                await station.setAutoNightVision(device, value);
+                station.setAutoNightVision(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetection:
-                await station.setMotionDetection(device, value);
+                station.setMotionDetection(device, value);
                 break;
             case http_1.PropertyName.DeviceSoundDetection:
-                await station.setSoundDetection(device, value);
+                station.setSoundDetection(device, value);
                 break;
             case http_1.PropertyName.DevicePetDetection:
-                await station.setPetDetection(device, value);
+                station.setPetDetection(device, value);
                 break;
             case http_1.PropertyName.DeviceRTSPStream:
-                await station.setRTSPStream(device, value);
+                station.setRTSPStream(device, value);
                 break;
             case http_1.PropertyName.DeviceAntitheftDetection:
-                await station.setAntiTheftDetection(device, value);
+                station.setAntiTheftDetection(device, value);
                 break;
             case http_1.PropertyName.DeviceLocked:
-                await station.lockDevice(device, value);
+                station.lockDevice(device, value);
                 break;
             case http_1.PropertyName.DeviceWatermark:
-                await station.setWatermark(device, value);
+                station.setWatermark(device, value);
                 break;
             case http_1.PropertyName.DeviceLight:
-                await station.switchLight(device, value);
+                station.switchLight(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsEnable:
-                await station.setFloodlightLightSettingsEnable(device, value);
+                station.setFloodlightLightSettingsEnable(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsBrightnessManual:
-                await station.setFloodlightLightSettingsBrightnessManual(device, value);
+                station.setFloodlightLightSettingsBrightnessManual(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsBrightnessMotion:
-                await station.setFloodlightLightSettingsBrightnessMotion(device, value);
+                station.setFloodlightLightSettingsBrightnessMotion(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsBrightnessSchedule:
-                await station.setFloodlightLightSettingsBrightnessSchedule(device, value);
+                station.setFloodlightLightSettingsBrightnessSchedule(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionTriggered:
-                await station.setFloodlightLightSettingsMotionTriggered(device, value);
+                station.setFloodlightLightSettingsMotionTriggered(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionTriggeredDistance:
-                await station.setFloodlightLightSettingsMotionTriggeredDistance(device, value);
+                station.setFloodlightLightSettingsMotionTriggeredDistance(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionTriggeredTimer:
-                await station.setFloodlightLightSettingsMotionTriggeredTimer(device, value);
+                station.setFloodlightLightSettingsMotionTriggeredTimer(device, value);
                 break;
             case http_1.PropertyName.DeviceMicrophone:
-                await station.setMicMute(device, value);
+                station.setMicMute(device, value);
                 break;
             case http_1.PropertyName.DeviceSpeaker:
-                await station.enableSpeaker(device, value);
+                station.enableSpeaker(device, value);
                 break;
             case http_1.PropertyName.DeviceSpeakerVolume:
-                await station.setSpeakerVolume(device, value);
+                station.setSpeakerVolume(device, value);
                 break;
             case http_1.PropertyName.DeviceAudioRecording:
-                await station.setAudioRecording(device, value);
+                station.setAudioRecording(device, value);
                 break;
             case http_1.PropertyName.DevicePowerSource:
-                await station.setPowerSource(device, value);
+                station.setPowerSource(device, value);
                 break;
             case http_1.PropertyName.DevicePowerWorkingMode:
-                await station.setPowerWorkingMode(device, value);
+                station.setPowerWorkingMode(device, value);
                 break;
             case http_1.PropertyName.DeviceRecordingEndClipMotionStops:
-                await station.setRecordingEndClipMotionStops(device, value);
+                station.setRecordingEndClipMotionStops(device, value);
                 break;
             case http_1.PropertyName.DeviceRecordingClipLength:
-                await station.setRecordingClipLength(device, value);
+                station.setRecordingClipLength(device, value);
                 break;
             case http_1.PropertyName.DeviceRecordingRetriggerInterval:
-                await station.setRecordingRetriggerInterval(device, value);
+                station.setRecordingRetriggerInterval(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoStreamingQuality:
-                await station.setVideoStreamingQuality(device, value);
+                station.setVideoStreamingQuality(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoRecordingQuality:
-                await station.setVideoRecordingQuality(device, value);
+                station.setVideoRecordingQuality(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivity:
-                await station.setMotionDetectionSensitivity(device, value);
+                station.setMotionDetectionSensitivity(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionTracking:
-                await station.setMotionTracking(device, value);
+                station.setMotionTracking(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionType:
-                await station.setMotionDetectionType(device, value);
+                station.setMotionDetectionType(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionZone:
-                await station.setMotionZone(device, value);
+                station.setMotionZone(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoWDR:
-                await station.setWDR(device, value);
+                station.setWDR(device, value);
                 break;
             case http_1.PropertyName.DeviceRingtoneVolume:
-                await station.setRingtoneVolume(device, value);
+                station.setRingtoneVolume(device, value);
                 break;
             case http_1.PropertyName.DeviceChimeIndoor:
-                await station.enableIndoorChime(device, value);
+                station.enableIndoorChime(device, value);
                 break;
             case http_1.PropertyName.DeviceChimeHomebase:
-                await station.enableHomebaseChime(device, value);
+                station.enableHomebaseChime(device, value);
                 break;
             case http_1.PropertyName.DeviceChimeHomebaseRingtoneVolume:
-                await station.setHomebaseChimeRingtoneVolume(device, value);
+                station.setHomebaseChimeRingtoneVolume(device, value);
                 break;
             case http_1.PropertyName.DeviceChimeHomebaseRingtoneType:
-                await station.setHomebaseChimeRingtoneType(device, value);
+                station.setHomebaseChimeRingtoneType(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationType:
-                await station.setNotificationType(device, value);
+                station.setNotificationType(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationPerson:
-                await station.setNotificationPerson(device, value);
+                if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.HUMAN, value);
+                }
+                else if (device.isFloodLightT8425()) {
+                    station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.HUMAN, value);
+                }
+                else {
+                    station.setNotificationPerson(device, value);
+                }
                 break;
             case http_1.PropertyName.DeviceNotificationPet:
-                await station.setNotificationPet(device, value);
+                if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.PET, value);
+                }
+                else if (device.isFloodLightT8425()) {
+                    station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.PET, value);
+                }
+                else {
+                    station.setNotificationPet(device, value);
+                }
                 break;
             case http_1.PropertyName.DeviceNotificationAllOtherMotion:
-                await station.setNotificationAllOtherMotion(device, value);
+                if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.ALL_OTHER_MOTION, value);
+                }
+                else if (device.isFloodLightT8425()) {
+                    station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.ALL_OTHER_MOTION, value);
+                }
+                else {
+                    station.setNotificationAllOtherMotion(device, value);
+                }
                 break;
             case http_1.PropertyName.DeviceNotificationAllSound:
-                await station.setNotificationAllSound(device, value);
+                if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.ALL_SOUND, value);
+                }
+                else {
+                    station.setNotificationAllSound(device, value);
+                }
                 break;
             case http_1.PropertyName.DeviceNotificationCrying:
-                await station.setNotificationCrying(device, value);
+                if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.CRYING, value);
+                }
+                else {
+                    station.setNotificationCrying(device, value);
+                }
+            case http_1.PropertyName.DeviceNotificationVehicle:
+                if (device.isFloodLightT8425()) {
+                    station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.VEHICLE, value);
+                }
+                else {
+                    throw new http_1.InvalidPropertyError("Station has no writable property", { context: { station: station.getSerial(), propertyName: name, propertyValue: value } });
+                }
                 break;
             case http_1.PropertyName.DeviceNotificationMotion:
-                await station.setNotificationMotion(device, value);
+                station.setNotificationMotion(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationRing:
-                await station.setNotificationRing(device, value);
+                station.setNotificationRing(device, value);
                 break;
             case http_1.PropertyName.DeviceChirpVolume:
-                await station.setChirpVolume(device, value);
+                station.setChirpVolume(device, value);
                 break;
             case http_1.PropertyName.DeviceChirpTone:
-                await station.setChirpTone(device, value);
+                station.setChirpTone(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoHDR:
-                await station.setHDR(device, value);
+                station.setHDR(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoDistortionCorrection:
-                await station.setDistortionCorrection(device, value);
+                station.setDistortionCorrection(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoRingRecord:
-                await station.setRingRecord(device, value);
+                station.setRingRecord(device, value);
                 break;
             case http_1.PropertyName.DeviceRotationSpeed:
-                await station.setPanAndTiltRotationSpeed(device, value);
+                station.setPanAndTiltRotationSpeed(device, value);
                 break;
             case http_1.PropertyName.DeviceNightvision:
-                await station.setNightVision(device, value);
+                station.setNightVision(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionRange:
-                await station.setMotionDetectionRange(device, value);
+                station.setMotionDetectionRange(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionRangeStandardSensitivity:
-                await station.setMotionDetectionRangeStandardSensitivity(device, value);
+                station.setMotionDetectionRangeStandardSensitivity(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionRangeAdvancedLeftSensitivity:
-                await station.setMotionDetectionRangeAdvancedLeftSensitivity(device, value);
+                station.setMotionDetectionRangeAdvancedLeftSensitivity(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionRangeAdvancedMiddleSensitivity:
-                await station.setMotionDetectionRangeAdvancedMiddleSensitivity(device, value);
+                station.setMotionDetectionRangeAdvancedMiddleSensitivity(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionRangeAdvancedRightSensitivity:
-                await station.setMotionDetectionRangeAdvancedRightSensitivity(device, value);
+                station.setMotionDetectionRangeAdvancedRightSensitivity(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTestMode:
-                await station.setMotionDetectionTestMode(device, value);
+                station.setMotionDetectionTestMode(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionTrackingSensitivity:
-                await station.setMotionTrackingSensitivity(device, value);
+                station.setMotionTrackingSensitivity(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionAutoCruise:
-                await station.setMotionAutoCruise(device, value);
+                station.setMotionAutoCruise(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionOutOfViewDetection:
-                await station.setMotionOutOfViewDetection(device, value);
+                station.setMotionOutOfViewDetection(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsColorTemperatureManual:
-                await station.setLightSettingsColorTemperatureManual(device, value);
+                station.setLightSettingsColorTemperatureManual(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsColorTemperatureMotion:
-                await station.setLightSettingsColorTemperatureMotion(device, value);
+                station.setLightSettingsColorTemperatureMotion(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsColorTemperatureSchedule:
-                await station.setLightSettingsColorTemperatureSchedule(device, value);
+                station.setLightSettingsColorTemperatureSchedule(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionActivationMode:
-                await station.setLightSettingsMotionActivationMode(device, value);
+                station.setLightSettingsMotionActivationMode(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoNightvisionImageAdjustment:
-                await station.setVideoNightvisionImageAdjustment(device, value);
+                station.setVideoNightvisionImageAdjustment(device, value);
                 break;
             case http_1.PropertyName.DeviceVideoColorNightvision:
-                await station.setVideoColorNightvision(device, value);
+                station.setVideoColorNightvision(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoCalibration:
-                await station.setAutoCalibration(device, value);
+                station.setAutoCalibration(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoLock:
-                await station.setAutoLock(device, value);
+                station.setAutoLock(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoLockSchedule:
-                await station.setAutoLockSchedule(device, value);
+                station.setAutoLockSchedule(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoLockScheduleStartTime:
-                await station.setAutoLockScheduleStartTime(device, value);
+                station.setAutoLockScheduleStartTime(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoLockScheduleEndTime:
-                await station.setAutoLockScheduleEndTime(device, value);
+                station.setAutoLockScheduleEndTime(device, value);
                 break;
             case http_1.PropertyName.DeviceAutoLockTimer:
-                await station.setAutoLockTimer(device, value);
+                station.setAutoLockTimer(device, value);
                 break;
             case http_1.PropertyName.DeviceOneTouchLocking:
-                await station.setOneTouchLocking(device, value);
+                station.setOneTouchLocking(device, value);
                 break;
             case http_1.PropertyName.DeviceSound:
-                await station.setSound(device, value);
+                station.setSound(device, value);
                 break;
             case http_1.PropertyName.DeviceNotification:
-                await station.setNotification(device, value);
+                station.setNotification(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationLocked:
-                await station.setNotificationLocked(device, value);
+                station.setNotificationLocked(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationUnlocked:
-                await station.setNotificationUnlocked(device, value);
+                station.setNotificationUnlocked(device, value);
                 break;
             case http_1.PropertyName.DeviceScramblePasscode:
-                await station.setScramblePasscode(device, value);
+                station.setScramblePasscode(device, value);
                 break;
             case http_1.PropertyName.DeviceWrongTryProtection:
-                await station.setWrongTryProtection(device, value);
+                station.setWrongTryProtection(device, value);
                 break;
             case http_1.PropertyName.DeviceWrongTryAttempts:
-                await station.setWrongTryAttempts(device, value);
+                station.setWrongTryAttempts(device, value);
                 break;
             case http_1.PropertyName.DeviceWrongTryLockdownTime:
-                await station.setWrongTryLockdownTime(device, value);
+                station.setWrongTryLockdownTime(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringDetection:
-                await station.setLoiteringDetection(device, value);
+                station.setLoiteringDetection(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringDetectionRange:
-                await station.setLoiteringDetectionRange(device, value);
+                station.setLoiteringDetectionRange(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringDetectionLength:
-                await station.setLoiteringDetectionLength(device, value);
+                station.setLoiteringDetectionLength(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringCustomResponseAutoVoiceResponse:
-                await station.setLoiteringCustomResponseAutoVoiceResponse(device, value);
+                station.setLoiteringCustomResponseAutoVoiceResponse(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringCustomResponseHomeBaseNotification:
-                await station.setLoiteringCustomResponseHomeBaseNotification(device, value);
+                station.setLoiteringCustomResponseHomeBaseNotification(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringCustomResponsePhoneNotification:
-                await station.setLoiteringCustomResponsePhoneNotification(device, value);
+                station.setLoiteringCustomResponsePhoneNotification(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringCustomResponseAutoVoiceResponseVoice:
-                await station.setLoiteringCustomResponseAutoVoiceResponseVoice(device, value);
+                station.setLoiteringCustomResponseAutoVoiceResponseVoice(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringCustomResponseTimeFrom:
-                await station.setLoiteringCustomResponseTimeFrom(device, value);
+                station.setLoiteringCustomResponseTimeFrom(device, value);
                 break;
             case http_1.PropertyName.DeviceLoiteringCustomResponseTimeTo:
-                await station.setLoiteringCustomResponseTimeTo(device, value);
+                station.setLoiteringCustomResponseTimeTo(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityMode:
-                await station.setMotionDetectionSensitivityMode(device, value);
+                station.setMotionDetectionSensitivityMode(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityStandard:
-                await station.setMotionDetectionSensitivityStandard(device, value);
+                station.setMotionDetectionSensitivityStandard(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedA:
-                await station.setMotionDetectionSensitivityAdvancedA(device, value);
+                station.setMotionDetectionSensitivityAdvancedA(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedB:
-                await station.setMotionDetectionSensitivityAdvancedB(device, value);
+                station.setMotionDetectionSensitivityAdvancedB(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedC:
-                await station.setMotionDetectionSensitivityAdvancedC(device, value);
+                station.setMotionDetectionSensitivityAdvancedC(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedD:
-                await station.setMotionDetectionSensitivityAdvancedD(device, value);
+                station.setMotionDetectionSensitivityAdvancedD(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedE:
-                await station.setMotionDetectionSensitivityAdvancedE(device, value);
+                station.setMotionDetectionSensitivityAdvancedE(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedF:
-                await station.setMotionDetectionSensitivityAdvancedF(device, value);
+                station.setMotionDetectionSensitivityAdvancedF(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedG:
-                await station.setMotionDetectionSensitivityAdvancedG(device, value);
+                station.setMotionDetectionSensitivityAdvancedG(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionSensitivityAdvancedH:
-                await station.setMotionDetectionSensitivityAdvancedH(device, value);
+                station.setMotionDetectionSensitivityAdvancedH(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuard:
-                await station.setDeliveryGuard(device, value);
+                station.setDeliveryGuard(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuardPackageGuarding:
-                await station.setDeliveryGuardPackageGuarding(device, value);
+                station.setDeliveryGuardPackageGuarding(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuardPackageGuardingVoiceResponseVoice:
-                await station.setDeliveryGuardPackageGuardingVoiceResponseVoice(device, value);
+                station.setDeliveryGuardPackageGuardingVoiceResponseVoice(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuardPackageGuardingActivatedTimeFrom:
-                await station.setDeliveryGuardPackageGuardingActivatedTimeFrom(device, value);
+                station.setDeliveryGuardPackageGuardingActivatedTimeFrom(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuardPackageGuardingActivatedTimeTo:
-                await station.setDeliveryGuardPackageGuardingActivatedTimeTo(device, value);
+                station.setDeliveryGuardPackageGuardingActivatedTimeTo(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuardUncollectedPackageAlert:
-                await station.setDeliveryGuardUncollectedPackageAlert(device, value);
+                station.setDeliveryGuardUncollectedPackageAlert(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuardPackageLiveCheckAssistance:
-                await station.setDeliveryGuardPackageLiveCheckAssistance(device, value);
+                station.setDeliveryGuardPackageLiveCheckAssistance(device, value);
                 break;
             case http_1.PropertyName.DeviceDualCamWatchViewMode:
-                await station.setDualCamWatchViewMode(device, value);
+                station.setDualCamWatchViewMode(device, value);
                 break;
             case http_1.PropertyName.DeviceRingAutoResponse:
-                await station.setRingAutoResponse(device, value);
+                station.setRingAutoResponse(device, value);
                 break;
             case http_1.PropertyName.DeviceRingAutoResponseVoiceResponse:
-                await station.setRingAutoResponseVoiceResponse(device, value);
+                station.setRingAutoResponseVoiceResponse(device, value);
                 break;
             case http_1.PropertyName.DeviceRingAutoResponseVoiceResponseVoice:
-                await station.setRingAutoResponseVoiceResponseVoice(device, value);
+                station.setRingAutoResponseVoiceResponseVoice(device, value);
                 break;
             case http_1.PropertyName.DeviceRingAutoResponseTimeFrom:
-                await station.setRingAutoResponseTimeFrom(device, value);
+                station.setRingAutoResponseTimeFrom(device, value);
                 break;
             case http_1.PropertyName.DeviceRingAutoResponseTimeTo:
-                await station.setRingAutoResponseTimeTo(device, value);
+                station.setRingAutoResponseTimeTo(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationRadarDetector:
-                await station.setNotificationRadarDetector(device, value);
+                station.setNotificationRadarDetector(device, value);
                 break;
             case http_1.PropertyName.DeviceSoundDetectionSensitivity:
-                await station.setSoundDetectionSensitivity(device, value);
+                station.setSoundDetectionSensitivity(device, value);
                 break;
             case http_1.PropertyName.DeviceContinuousRecording:
-                await station.setContinuousRecording(device, value);
+                station.setContinuousRecording(device, value);
                 break;
             case http_1.PropertyName.DeviceContinuousRecordingType:
-                await station.setContinuousRecordingType(device, value);
+                station.setContinuousRecordingType(device, value);
                 break;
             case http_1.PropertyName.DeviceDefaultAngle:
-                await station.enableDefaultAngle(device, value);
+                station.enableDefaultAngle(device, value);
                 break;
             case http_1.PropertyName.DeviceDefaultAngleIdleTime:
-                await station.setDefaultAngleIdleTime(device, value);
+                station.setDefaultAngleIdleTime(device, value);
                 break;
             case http_1.PropertyName.DeviceNotificationIntervalTime:
-                await station.setNotificationIntervalTime(device, value);
+                station.setNotificationIntervalTime(device, value);
                 break;
             case http_1.PropertyName.DeviceSoundDetectionRoundLook:
-                await station.setSoundDetectionRoundLook(device, value);
+                station.setSoundDetectionRoundLook(device, value);
                 break;
             case http_1.PropertyName.DeviceDeliveryGuardUncollectedPackageAlertTimeToCheck:
-                await station.setDeliveryGuardUncollectedPackageAlertTimeToCheck(device, value);
+                station.setDeliveryGuardUncollectedPackageAlertTimeToCheck(device, value);
                 break;
             case http_1.PropertyName.DeviceLeftOpenAlarm:
             case http_1.PropertyName.DeviceLeftOpenAlarmDuration:
@@ -1719,86 +1670,103 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             case http_1.PropertyName.DeviceNotificationDualLock:
             case http_1.PropertyName.DeviceNotificationWrongTryProtect:
             case http_1.PropertyName.DeviceNotificationJammed:
-                await station.setSmartSafeParams(device, name, value);
+                station.setSmartSafeParams(device, name, value);
                 break;
             case http_1.PropertyName.DeviceVideoTypeStoreToNAS:
-                await station.setVideoTypeStoreToNAS(device, value);
+                station.setVideoTypeStoreToNAS(device, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypeHumanRecognition:
-                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_RECOGNITION, value);
+                station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_RECOGNITION, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypeHuman:
                 if (device.isWallLightCam()) {
-                    await station.setMotionDetectionTypeHuman(device, value);
+                    station.setMotionDetectionTypeHuman(device, value);
+                }
+                else if (device.isOutdoorPanAndTiltCamera()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.T8170DetectionTypes.HUMAN_DETECTION, value);
+                }
+                else if (device.isSoloCameraC210()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.SoloCameraDetectionTypes.HUMAN_DETECTION, value);
                 }
                 else {
-                    await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_DETECTION, value);
+                    station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_DETECTION, value);
                 }
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypePet:
-                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.PET_DETECTION, value);
+                station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.PET_DETECTION, value);
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypeVehicle:
-                await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.VEHICLE_DETECTION, value);
+                if (device.isOutdoorPanAndTiltCamera()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.T8170DetectionTypes.VEHICLE_DETECTION, value);
+                }
+                else {
+                    station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.VEHICLE_DETECTION, value);
+                }
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypeAllOtherMotions:
                 if (device.isWallLightCam()) {
-                    await station.setMotionDetectionTypeAllOtherMotions(device, value);
+                    station.setMotionDetectionTypeAllOtherMotions(device, value);
+                }
+                else if (device.isOutdoorPanAndTiltCamera()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.T8170DetectionTypes.ALL_OTHER_MOTION, value);
+                }
+                else if (device.isSoloCameraC210()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.SoloCameraDetectionTypes.ALL_OTHER_MOTION, value);
                 }
                 else {
-                    await station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);
+                    station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);
                 }
                 break;
             case http_1.PropertyName.DeviceLightSettingsManualLightingActiveMode:
-                await station.setLightSettingsManualLightingActiveMode(device, value);
+                station.setLightSettingsManualLightingActiveMode(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsManualDailyLighting:
-                await station.setLightSettingsManualDailyLighting(device, value);
+                station.setLightSettingsManualDailyLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsManualColoredLighting:
-                await station.setLightSettingsManualColoredLighting(device, value);
+                station.setLightSettingsManualColoredLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsManualDynamicLighting:
-                await station.setLightSettingsManualDynamicLighting(device, value);
+                station.setLightSettingsManualDynamicLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionLightingActiveMode:
-                await station.setLightSettingsMotionLightingActiveMode(device, value);
+                station.setLightSettingsMotionLightingActiveMode(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionDailyLighting:
-                await station.setLightSettingsMotionDailyLighting(device, value);
+                station.setLightSettingsMotionDailyLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionColoredLighting:
-                await station.setLightSettingsMotionColoredLighting(device, value);
+                station.setLightSettingsMotionColoredLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsMotionDynamicLighting:
-                await station.setLightSettingsMotionDynamicLighting(device, value);
+                station.setLightSettingsMotionDynamicLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsScheduleLightingActiveMode:
-                await station.setLightSettingsScheduleLightingActiveMode(device, value);
+                station.setLightSettingsScheduleLightingActiveMode(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsScheduleDailyLighting:
-                await station.setLightSettingsScheduleDailyLighting(device, value);
+                station.setLightSettingsScheduleDailyLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsScheduleColoredLighting:
-                await station.setLightSettingsScheduleColoredLighting(device, value);
+                station.setLightSettingsScheduleColoredLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsScheduleDynamicLighting:
-                await station.setLightSettingsScheduleDynamicLighting(device, value);
+                station.setLightSettingsScheduleDynamicLighting(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsColoredLightingColors:
-                await station.setLightSettingsColoredLightingColors(device, value);
+                station.setLightSettingsColoredLightingColors(device, value);
                 break;
             case http_1.PropertyName.DeviceLightSettingsDynamicLightingThemes:
-                await station.setLightSettingsDynamicLightingThemes(device, value);
+                station.setLightSettingsDynamicLightingThemes(device, value);
                 break;
             case http_1.PropertyName.DeviceDoorControlWarning:
-                await station.setDoorControlWarning(device, value);
+                station.setDoorControlWarning(device, value);
                 break;
             case http_1.PropertyName.DeviceDoor1Open:
-                await station.openDoor(device, value, 1);
+                station.openDoor(device, value, 1);
                 break;
             case http_1.PropertyName.DeviceDoor2Open:
-                await station.openDoor(device, value, 2);
+                station.openDoor(device, value, 2);
                 break;
             case http_1.PropertyName.DeviceLeftBehindAlarm: {
                 const tracker = device;
@@ -1824,10 +1792,45 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 break;
             }
+            case http_1.PropertyName.DeviceImageMirrored:
+                station.setMirrorMode(device, value);
+                break;
+            case http_1.PropertyName.DeviceFlickerAdjustment:
+                station.setFlickerAdjustment(device, value);
+                break;
+            case http_1.PropertyName.DeviceSoundDetectionType:
+                station.setSoundDetectionType(device, value);
+                break;
+            case http_1.PropertyName.DeviceLeavingDetection:
+                station.setLeavingDetection(device, value);
+                break;
+            case http_1.PropertyName.DeviceLeavingReactionNotification:
+                station.setLeavingReactionNotification(device, value);
+                break;
+            case http_1.PropertyName.DeviceLeavingReactionStartTime:
+                station.setLeavingReactionStartTime(device, value);
+                break;
+            case http_1.PropertyName.DeviceLeavingReactionEndTime:
+                station.setLeavingReactionEndTime(device, value);
+                break;
+            case http_1.PropertyName.DeviceBeepVolume:
+                station.setBeepVolume(device, value);
+                break;
+            case http_1.PropertyName.DeviceNightvisionOptimization:
+                station.setNightvisionOptimization(device, value);
+                break;
+            case http_1.PropertyName.DeviceNightvisionOptimizationSide:
+                station.setNightvisionOptimizationSide(device, value);
+                break;
+            case http_1.PropertyName.DeviceOpenMethod:
+                station.setOpenMethod(device, value);
+                break;
+            case http_1.PropertyName.DeviceMotionActivatedPrompt:
+                station.setMotionActivatedPrompt(device, value);
+                break;
             default:
-                if (!Object.values(http_1.PropertyName).includes(name)) {
+                if (!Object.values(http_1.PropertyName).includes(name))
                     throw new error_1.ReadOnlyPropertyError("Property is read only", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });
-                }
                 throw new http_1.InvalidPropertyError("Device has no writable property", { context: { device: deviceSerial, propertyName: name, propertyValue: value } });
         }
     }

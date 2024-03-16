@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Logger = void 0;
-class Logger {
+exports.Logger1 = void 0;
+class Logger1 {
     api;
     constructor(api) {
         this.api = api;
@@ -137,4 +137,4 @@ class Logger {
         return (`${dateTime.getFullYear().toString()}-${(dateTime.getMonth() + 1).toString().padStart(2, '0')}-${dateTime.getDate().toString().padStart(2, '0')} ${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}:${dateTime.getSeconds().toString().padStart(2, '0')}`);
     }
 }
-exports.Logger = Logger;
+exports.Logger1 = Logger1;

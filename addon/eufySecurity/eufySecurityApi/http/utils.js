@@ -3,16 +3,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decryptTrackerData = exports.isPrioritySourceType = exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.SmartSafeByteWriter = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
+exports.getDateTimeFromImageFilePath = exports.loadEventImage = exports.loadImageOverP2P = exports.getWaitSeconds = exports.isSmartLockNotification = exports.switchSmartLockNotification = exports.getLockEventType = exports.getFloodLightT8425Notification = exports.isFloodlightT8425NotitficationEnabled = exports.getIndoorNotification = exports.isIndoorNotitficationEnabled = exports.getT8170DetectionMode = exports.isT8170DetectionModeEnabled = exports.decryptTrackerData = exports.isPrioritySourceType = exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexStringScheduleToSchedule = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.ParsePayload = exports.WritePayload = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
 const crypto_1 = require("crypto");
 const const_1 = require("./const");
 const md5_1 = __importDefault(require("crypto-js/md5"));
 const enc_hex_1 = __importDefault(require("crypto-js/enc-hex"));
 const sha256_1 = __importDefault(require("crypto-js/sha256"));
-const image_type_1 = __importDefault(require("image-type"));
 const types_1 = require("./types");
 const error_1 = require("../error");
 const error_2 = require("./error");
+const types_2 = require("./../push/types");
+const logging_1 = require("../logging");
+const utils_1 = require("../utils");
+const path_1 = __importDefault(require("path"));
 const normalizeVersionString = function (version) {
     const trimmed = version ? version.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1") : "";
     const pieces = trimmed.split(RegExp("\\."));
@@ -287,7 +290,7 @@ const getAdvancedLockTimezone = function (stationSN) {
     return "";
 };
 exports.getAdvancedLockTimezone = getAdvancedLockTimezone;
-class SmartSafeByteWriter {
+class WritePayload {
     split_byte = -95;
     data = Buffer.from([]);
     write(bytes) {
@@ -299,7 +302,96 @@ class SmartSafeByteWriter {
         return this.data;
     }
 }
-exports.SmartSafeByteWriter = SmartSafeByteWriter;
+exports.WritePayload = WritePayload;
+class ParsePayload {
+    data;
+    constructor(data) {
+        this.data = data;
+    }
+    readUint32BE(indexValue) {
+        return this.readData(indexValue).readUint32BE();
+    }
+    readUint32LE(indexValue) {
+        return this.readData(indexValue).readUint32LE();
+    }
+    readUint16BE(indexValue) {
+        return this.readData(indexValue).readUint16BE();
+    }
+    readUint16LE(indexValue) {
+        return this.readData(indexValue).readUint16LE();
+    }
+    readString(indexValue) {
+        return this.readData(indexValue).toString();
+    }
+    readStringHex(indexValue) {
+        return this.readData(indexValue).toString("hex");
+    }
+    readInt8(indexValue) {
+        let dataPosition = this.getDataPosition(indexValue);
+        if (dataPosition == -1) {
+            return 0;
+        }
+        dataPosition = dataPosition + 2;
+        if (dataPosition >= this.data.length) {
+            return 0;
+        }
+        return this.data.readInt8(dataPosition);
+    }
+    readData(indexValue) {
+        let dataPosition = this.getDataPosition(indexValue);
+        if (dataPosition == -1) {
+            return Buffer.from("");
+        }
+        dataPosition++;
+        if (dataPosition >= this.data.length) {
+            return Buffer.from("");
+        }
+        const nextStep = this.getNextStep(indexValue, dataPosition, this.data);
+        let tmp;
+        if (nextStep == 1) {
+            tmp = this.data.readInt8(dataPosition);
+        }
+        else {
+            tmp = this.data.readUint16LE(dataPosition);
+        }
+        if (dataPosition + nextStep + tmp > this.data.length) {
+            return Buffer.from("");
+        }
+        return this.data.subarray(dataPosition + nextStep, dataPosition + nextStep + tmp);
+    }
+    getDataPosition(indexValue) {
+        if (this.data && this.data.length >= 1) {
+            for (let currentPosition = 0; currentPosition < this.data.length;) {
+                if (this.data.readInt8(currentPosition) == indexValue) {
+                    return currentPosition;
+                }
+                else {
+                    const value = this.data.readInt8(currentPosition);
+                    currentPosition++;
+                    if (currentPosition >= this.data.length) {
+                        break;
+                    }
+                    const nextStep = this.getNextStep(value, currentPosition, this.data);
+                    if ((currentPosition + nextStep) >= this.data.length) {
+                        break;
+                    }
+                    if (nextStep == 1) {
+                        currentPosition = this.data.readInt8(currentPosition) + currentPosition + nextStep;
+                    }
+                    else {
+                        currentPosition = this.data.readUint16LE(currentPosition) + currentPosition + nextStep;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+    getNextStep(indexValue, position, data) {
+        const newPosition = position + 1 + data.readUInt8(position);
+        return (newPosition == data.length || newPosition > data.length || data.readInt8(newPosition) == indexValue + 1) ? 1 : 2;
+    }
+}
+exports.ParsePayload = ParsePayload;
 /*export const generateHash = function(data: Buffer): number {
     let result = 0;
     for (const value of data) {
@@ -378,6 +470,30 @@ const hexWeek = function (schedule) {
     return "ff";
 };
 exports.hexWeek = hexWeek;
+const hexStringScheduleToSchedule = function (startDay, startTime, endDay, endTime, week) {
+    const SUNDAY = 1;
+    const MONDAY = 2;
+    const TUESDAY = 4;
+    const WEDNESDAY = 8;
+    const THUERSDAY = 16;
+    const FRIDAY = 32;
+    const SATURDAY = 64;
+    const weekNumber = Number.parseInt(week, 16);
+    return {
+        startDateTime: startDay === "00000000" ? undefined : new Date(Number.parseInt(`${startDay.substring(2, 4)}${startDay.substring(0, 2)}`, 16), Number.parseInt(startDay.substring(4, 6), 16) - 1, Number.parseInt(startDay.substring(6, 8), 16), Number.parseInt(startTime.substring(0, 2), 16), Number.parseInt(startTime.substring(2, 4), 16)),
+        endDateTime: endDay === "ffffffff" ? undefined : new Date(Number.parseInt(`${endDay.substring(2, 4)}${endDay.substring(0, 2)}`, 16), Number.parseInt(endDay.substring(4, 6), 16) - 1, Number.parseInt(endDay.substring(6, 8), 16), Number.parseInt(endTime.substring(0, 2), 16), Number.parseInt(endTime.substring(2, 4), 16)),
+        week: {
+            monday: (weekNumber & MONDAY) == MONDAY,
+            tuesday: (weekNumber & TUESDAY) == TUESDAY,
+            wednesday: (weekNumber & WEDNESDAY) == WEDNESDAY,
+            thursday: (weekNumber & THUERSDAY) == THUERSDAY,
+            friday: (weekNumber & FRIDAY) == FRIDAY,
+            saturday: (weekNumber & SATURDAY) == SATURDAY,
+            sunday: (weekNumber & SUNDAY) == SUNDAY,
+        },
+    };
+};
+exports.hexStringScheduleToSchedule = hexStringScheduleToSchedule;
 const randomNumber = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
@@ -487,11 +603,12 @@ const getImagePath = function (path) {
 };
 exports.getImagePath = getImagePath;
 const getImage = async function (api, serial, url) {
+    const { default: imageType } = await import("image-type");
     const image = await api.getImage(serial, url);
-    const type = await (0, image_type_1.default)(image);
+    const type = await imageType(image);
     return {
         data: image,
-        type: type !== null ? type : { ext: "unknown", mime: "application/octet-stream" }
+        type: type !== null && type !== undefined ? type : { ext: "unknown", mime: "application/octet-stream" }
     };
 };
 exports.getImage = getImage;
@@ -512,3 +629,168 @@ const decryptTrackerData = (data, key) => {
     ]);
 };
 exports.decryptTrackerData = decryptTrackerData;
+const isT8170DetectionModeEnabled = function (value, type) {
+    return (type & value) == type;
+};
+exports.isT8170DetectionModeEnabled = isT8170DetectionModeEnabled;
+const getT8170DetectionMode = function (value, type, enable) {
+    let result = 0;
+    if (!enable) {
+        result = type ^ value;
+    }
+    else {
+        result = type | value;
+    }
+    return result;
+};
+exports.getT8170DetectionMode = getT8170DetectionMode;
+const isIndoorNotitficationEnabled = function (value, type) {
+    return (type & value) == type;
+};
+exports.isIndoorNotitficationEnabled = isIndoorNotitficationEnabled;
+const getIndoorNotification = function (value, type, enable) {
+    let result = 0;
+    if (!enable) {
+        result = (type ^ value) + 800;
+    }
+    else {
+        result = type | value;
+    }
+    return result;
+};
+exports.getIndoorNotification = getIndoorNotification;
+const isFloodlightT8425NotitficationEnabled = function (value, type) {
+    return (type & value) == type;
+};
+exports.isFloodlightT8425NotitficationEnabled = isFloodlightT8425NotitficationEnabled;
+const getFloodLightT8425Notification = function (value, type, enable) {
+    let result = 0;
+    if (!enable) {
+        result = (type ^ value);
+    }
+    else {
+        result = type | value;
+    }
+    return result;
+};
+exports.getFloodLightT8425Notification = getFloodLightT8425Notification;
+const getLockEventType = function (event) {
+    switch (event) {
+        case types_2.LockPushEvent.AUTO_LOCK:
+        case types_2.LockPushEvent.AUTO_UNLOCK:
+            return 1;
+        case types_2.LockPushEvent.MANUAL_LOCK:
+        case types_2.LockPushEvent.MANUAL_UNLOCK:
+            return 2;
+        case types_2.LockPushEvent.APP_LOCK:
+        case types_2.LockPushEvent.APP_UNLOCK:
+            return 3;
+        case types_2.LockPushEvent.PW_LOCK:
+        case types_2.LockPushEvent.PW_UNLOCK:
+            return 4;
+        case types_2.LockPushEvent.FINGER_LOCK:
+        case types_2.LockPushEvent.FINGERPRINT_UNLOCK:
+            return 5;
+        case types_2.LockPushEvent.TEMPORARY_PW_LOCK:
+        case types_2.LockPushEvent.TEMPORARY_PW_UNLOCK:
+            return 6;
+        case types_2.LockPushEvent.KEYPAD_LOCK:
+            return 7;
+    }
+    return 0;
+};
+exports.getLockEventType = getLockEventType;
+const switchSmartLockNotification = function (currentValue, mode, enable) {
+    let result = 0;
+    if (enable) {
+        result = mode | currentValue;
+    }
+    else {
+        result = ~mode & currentValue;
+    }
+    return result;
+};
+exports.switchSmartLockNotification = switchSmartLockNotification;
+const isSmartLockNotification = function (value, mode) {
+    return (value & mode) !== 0;
+};
+exports.isSmartLockNotification = isSmartLockNotification;
+const getWaitSeconds = (device) => {
+    let seconds = 60;
+    const workingMode = device.getPropertyValue(types_1.PropertyName.DevicePowerWorkingMode);
+    if (workingMode !== undefined && workingMode === 2) {
+        const customValue = device.getPropertyValue(types_1.PropertyName.DeviceRecordingClipLength);
+        if (customValue !== undefined) {
+            seconds = customValue;
+        }
+    }
+    return seconds;
+};
+exports.getWaitSeconds = getWaitSeconds;
+const loadImageOverP2P = function (station, device, id, p2pTimeouts) {
+    if (station.hasCommand(types_1.CommandName.StationDatabaseQueryLatestInfo) && p2pTimeouts.get(id) === undefined) {
+        const seconds = (0, exports.getWaitSeconds)(device);
+        p2pTimeouts.set(id, setTimeout(async () => {
+            station.databaseQueryLatestInfo();
+            p2pTimeouts.delete(id);
+        }, seconds * 1000));
+    }
+};
+exports.loadImageOverP2P = loadImageOverP2P;
+const loadEventImage = function (station, api, device, message, p2pTimeouts) {
+    if (device.hasProperty(types_1.PropertyName.DevicePictureTime)) {
+        device.updateProperty(types_1.PropertyName.DevicePictureTime, message.event_time, true);
+    }
+    if (message.notification_style === types_1.NotificationType.MOST_EFFICIENT) {
+        (0, exports.loadImageOverP2P)(station, device, device.getSerial(), p2pTimeouts);
+    }
+    else {
+        if (!(0, utils_1.isEmpty)(message.pic_url)) {
+            (0, exports.getImage)(api, device.getSerial(), message.pic_url).then((image) => {
+                if (image.data.length > 0) {
+                    if (p2pTimeouts.get(device.getSerial()) !== undefined) {
+                        clearTimeout(p2pTimeouts.get(device.getSerial()));
+                        p2pTimeouts.delete(device.getSerial());
+                    }
+                    device.updateProperty(types_1.PropertyName.DevicePicture, image, true);
+                }
+                else {
+                    //fallback
+                    (0, exports.loadImageOverP2P)(station, device, device.getSerial(), p2pTimeouts);
+                }
+            }).catch((err) => {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootHTTPLogger.error(`Device load event image - Fallback Error`, { error: (0, utils_1.getError)(error), stationSN: station.getSerial(), deviceSN: device.getSerial(), message: JSON.stringify(message) });
+                (0, exports.loadImageOverP2P)(station, device, device.getSerial(), p2pTimeouts);
+            });
+        }
+        else {
+            //fallback
+            (0, exports.loadImageOverP2P)(station, device, device.getSerial(), p2pTimeouts);
+        }
+    }
+};
+exports.loadEventImage = loadEventImage;
+const getDateTimeFromImageFilePath = function (imageFilePath) {
+    let timeString = "";
+    const imageFileName = path_1.default.parse(imageFilePath).name + path_1.default.parse(imageFilePath).ext;
+    logging_1.rootHTTPLogger.debug(`getDateTimeFromImageFilePath: received data:`, { imageFilePath: imageFilePath, imageFileName: imageFileName });
+    if (imageFileName.includes("_c")) {
+        timeString = imageFileName.split("_c", 2)[0];
+    }
+    else if (imageFilePath.includes("/Camera")) {
+        const res = imageFilePath.split("/");
+        if (imageFilePath.includes("snapshort.jpg")) {
+            timeString = res[res.length - 2];
+        }
+        else {
+            timeString = res[res.length - 1].replace("n", "");
+        }
+    }
+    else {
+        logging_1.rootHTTPLogger.error("getDateTimeFromImageFilePath: Unhandled path structure detected.", { imageFilePath: imageFilePath });
+        return undefined;
+    }
+    return new Date(Number.parseInt(timeString.substring(0, 4)), Number.parseInt(timeString.substring(4, 6)) - 1, Number.parseInt(timeString.substring(6, 8)), Number.parseInt(timeString.substring(8, 10)), Number.parseInt(timeString.substring(10, 12)), Number.parseInt(timeString.substring(12, 14)));
+};
+exports.getDateTimeFromImageFilePath = getDateTimeFromImageFilePath;

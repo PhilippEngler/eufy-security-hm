@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NotificationStyle = exports.IndoorPushMessageType = exports.HB3HDDType = exports.HB3PairedDeviceMessageType = exports.HB3PairedDevicePushEvent = exports.SmartSafeEvent = exports.GarageDoorPushEvent = exports.IndoorPushEvent = exports.LockPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
+exports.SmartDropOpenedBy = exports.SmartDropOpen = exports.SmartDropPushEvent = exports.AlarmAction = exports.NotificationStyle = exports.IndoorPushMessageType = exports.HB3HDDType = exports.HB3PairedDeviceMessageType = exports.HB3PairedDevicePushEvent = exports.SmartSafeEvent = exports.GarageDoorPushEvent = exports.IndoorPushEvent = exports.LockPushEvent = exports.DoorbellPushEvent = exports.ServerPushEvent = exports.CusPushMode = exports.CusPushAlarmType = exports.CusPushEvent = void 0;
 var CusPushEvent;
 (function (CusPushEvent) {
     CusPushEvent[CusPushEvent["SECURITY"] = 1] = "SECURITY";
@@ -20,6 +20,7 @@ var CusPushEvent;
     CusPushEvent[CusPushEvent["ALARM_DELAY"] = 16] = "ALARM_DELAY";
     CusPushEvent[CusPushEvent["HUB_BATT_POWERED"] = 17] = "HUB_BATT_POWERED";
     CusPushEvent[CusPushEvent["SENSOR_NO_OPEN"] = 18] = "SENSOR_NO_OPEN";
+    CusPushEvent[CusPushEvent["SMART_DROP"] = 20] = "SMART_DROP";
 })(CusPushEvent || (exports.CusPushEvent = CusPushEvent = {}));
 var CusPushAlarmType;
 (function (CusPushAlarmType) {
@@ -68,40 +69,47 @@ var DoorbellPushEvent;
     DoorbellPushEvent[DoorbellPushEvent["MOTION_DETECTION"] = 3101] = "MOTION_DETECTION";
     DoorbellPushEvent[DoorbellPushEvent["FACE_DETECTION"] = 3102] = "FACE_DETECTION";
     DoorbellPushEvent[DoorbellPushEvent["PRESS_DOORBELL"] = 3103] = "PRESS_DOORBELL";
-    DoorbellPushEvent[DoorbellPushEvent["OFFLINE"] = 3106] = "OFFLINE";
-    DoorbellPushEvent[DoorbellPushEvent["ONLINE"] = 3107] = "ONLINE";
+    //OFFLINE = 3106,
+    DoorbellPushEvent[DoorbellPushEvent["PET_DETECTION"] = 3106] = "PET_DETECTION";
+    //ONLINE = 3107,
+    DoorbellPushEvent[DoorbellPushEvent["VEHICLE_DETECTION"] = 3107] = "VEHICLE_DETECTION";
     DoorbellPushEvent[DoorbellPushEvent["PACKAGE_DELIVERED"] = 3301] = "PACKAGE_DELIVERED";
     DoorbellPushEvent[DoorbellPushEvent["PACKAGE_TAKEN"] = 3302] = "PACKAGE_TAKEN";
     DoorbellPushEvent[DoorbellPushEvent["FAMILY_DETECTION"] = 3303] = "FAMILY_DETECTION";
     DoorbellPushEvent[DoorbellPushEvent["PACKAGE_STRANDED"] = 3304] = "PACKAGE_STRANDED";
     DoorbellPushEvent[DoorbellPushEvent["SOMEONE_LOITERING"] = 3305] = "SOMEONE_LOITERING";
     DoorbellPushEvent[DoorbellPushEvent["RADAR_MOTION_DETECTION"] = 3306] = "RADAR_MOTION_DETECTION";
+    DoorbellPushEvent[DoorbellPushEvent["AWAY_FROM_HOME"] = 3307] = "AWAY_FROM_HOME";
+    DoorbellPushEvent[DoorbellPushEvent["RADAR_DETECTION"] = 3308] = "RADAR_DETECTION";
 })(DoorbellPushEvent || (exports.DoorbellPushEvent = DoorbellPushEvent = {}));
 var LockPushEvent;
 (function (LockPushEvent) {
-    LockPushEvent[LockPushEvent["APP_LOCK"] = 264] = "APP_LOCK";
-    LockPushEvent[LockPushEvent["APP_UNLOCK"] = 261] = "APP_UNLOCK";
-    LockPushEvent[LockPushEvent["AUTO_LOCK"] = 265] = "AUTO_LOCK";
-    LockPushEvent[LockPushEvent["AUTO_UNLOCK"] = 258] = "AUTO_UNLOCK";
-    LockPushEvent[LockPushEvent["FINGERPRINT_UNLOCK"] = 260] = "FINGERPRINT_UNLOCK";
-    LockPushEvent[LockPushEvent["FINGER_LOCK"] = 267] = "FINGER_LOCK";
-    LockPushEvent[LockPushEvent["KEYPAD_LOCK"] = 263] = "KEYPAD_LOCK";
-    LockPushEvent[LockPushEvent["LOCK_MECHANICAL_ANOMALY"] = 519] = "LOCK_MECHANICAL_ANOMALY";
-    LockPushEvent[LockPushEvent["LOCK_OFFLINE"] = 516] = "LOCK_OFFLINE";
-    LockPushEvent[LockPushEvent["LOW_POWER"] = 513] = "LOW_POWER";
-    LockPushEvent[LockPushEvent["MANUAL_LOCK"] = 262] = "MANUAL_LOCK";
     LockPushEvent[LockPushEvent["MANUAL_UNLOCK"] = 257] = "MANUAL_UNLOCK";
-    LockPushEvent[LockPushEvent["MECHANICAL_ANOMALY"] = 517] = "MECHANICAL_ANOMALY";
-    LockPushEvent[LockPushEvent["MULTIPLE_ERRORS"] = 515] = "MULTIPLE_ERRORS";
-    LockPushEvent[LockPushEvent["PW_LOCK"] = 266] = "PW_LOCK";
+    LockPushEvent[LockPushEvent["AUTO_UNLOCK"] = 258] = "AUTO_UNLOCK";
     LockPushEvent[LockPushEvent["PW_UNLOCK"] = 259] = "PW_UNLOCK";
+    LockPushEvent[LockPushEvent["FINGERPRINT_UNLOCK"] = 260] = "FINGERPRINT_UNLOCK";
+    LockPushEvent[LockPushEvent["APP_UNLOCK"] = 261] = "APP_UNLOCK";
+    LockPushEvent[LockPushEvent["MANUAL_LOCK"] = 262] = "MANUAL_LOCK";
+    LockPushEvent[LockPushEvent["KEYPAD_LOCK"] = 263] = "KEYPAD_LOCK";
+    LockPushEvent[LockPushEvent["APP_LOCK"] = 264] = "APP_LOCK";
+    LockPushEvent[LockPushEvent["AUTO_LOCK"] = 265] = "AUTO_LOCK";
+    LockPushEvent[LockPushEvent["PW_LOCK"] = 266] = "PW_LOCK";
+    LockPushEvent[LockPushEvent["FINGER_LOCK"] = 267] = "FINGER_LOCK";
     LockPushEvent[LockPushEvent["TEMPORARY_PW_LOCK"] = 268] = "TEMPORARY_PW_LOCK";
     LockPushEvent[LockPushEvent["TEMPORARY_PW_UNLOCK"] = 269] = "TEMPORARY_PW_UNLOCK";
+    LockPushEvent[LockPushEvent["LOW_POWER"] = 513] = "LOW_POWER";
     LockPushEvent[LockPushEvent["VERY_LOW_POWER"] = 514] = "VERY_LOW_POWER";
+    LockPushEvent[LockPushEvent["MULTIPLE_ERRORS"] = 515] = "MULTIPLE_ERRORS";
+    LockPushEvent[LockPushEvent["LOCK_OFFLINE"] = 516] = "LOCK_OFFLINE";
+    LockPushEvent[LockPushEvent["MECHANICAL_ANOMALY"] = 517] = "MECHANICAL_ANOMALY";
     LockPushEvent[LockPushEvent["VIOLENT_DESTRUCTION"] = 518] = "VIOLENT_DESTRUCTION";
-    LockPushEvent[LockPushEvent["LOCK_ONLINE"] = 771] = "LOCK_ONLINE";
-    LockPushEvent[LockPushEvent["OTA_STATUS"] = 770] = "OTA_STATUS";
+    LockPushEvent[LockPushEvent["LOCK_MECHANICAL_ANOMALY"] = 519] = "LOCK_MECHANICAL_ANOMALY";
+    LockPushEvent[LockPushEvent["DOOR_OPEN_LEFT"] = 520] = "DOOR_OPEN_LEFT";
+    LockPushEvent[LockPushEvent["DOOR_TAMPER"] = 521] = "DOOR_TAMPER";
+    LockPushEvent[LockPushEvent["DOOR_STATE_ERROR"] = 522] = "DOOR_STATE_ERROR";
     LockPushEvent[LockPushEvent["STATUS_CHANGE"] = 769] = "STATUS_CHANGE";
+    LockPushEvent[LockPushEvent["OTA_STATUS"] = 770] = "OTA_STATUS";
+    LockPushEvent[LockPushEvent["LOCK_ONLINE"] = 771] = "LOCK_ONLINE";
 })(LockPushEvent || (exports.LockPushEvent = LockPushEvent = {}));
 var IndoorPushEvent;
 (function (IndoorPushEvent) {
@@ -126,7 +134,6 @@ var GarageDoorPushEvent;
 var SmartSafeEvent;
 (function (SmartSafeEvent) {
     SmartSafeEvent[SmartSafeEvent["ALARM_911"] = 1946161152] = "ALARM_911";
-    SmartSafeEvent[SmartSafeEvent["BASE"] = 1946161152] = "BASE";
     SmartSafeEvent[SmartSafeEvent["LOCK_STATUS"] = 1946161153] = "LOCK_STATUS";
     SmartSafeEvent[SmartSafeEvent["SHAKE_ALARM"] = 1946161154] = "SHAKE_ALARM";
     SmartSafeEvent[SmartSafeEvent["BATTERY_STATUS"] = 1946161155] = "BATTERY_STATUS";
@@ -201,3 +208,33 @@ var NotificationStyle;
     NotificationStyle[NotificationStyle["THUMB"] = 2] = "THUMB";
     NotificationStyle[NotificationStyle["ALL"] = 3] = "ALL";
 })(NotificationStyle || (exports.NotificationStyle = NotificationStyle = {}));
+var AlarmAction;
+(function (AlarmAction) {
+    AlarmAction[AlarmAction["CANCEL_APP"] = 0] = "CANCEL_APP";
+    AlarmAction[AlarmAction["CANCEL_NOLIGHT"] = 1] = "CANCEL_NOLIGHT";
+})(AlarmAction || (exports.AlarmAction = AlarmAction = {}));
+var SmartDropPushEvent;
+(function (SmartDropPushEvent) {
+    SmartDropPushEvent[SmartDropPushEvent["LOW_BATTERY"] = 6] = "LOW_BATTERY";
+    SmartDropPushEvent[SmartDropPushEvent["OVERHEATING_WARNING"] = 7] = "OVERHEATING_WARNING";
+    SmartDropPushEvent[SmartDropPushEvent["TAMPERED_WARNING"] = 10] = "TAMPERED_WARNING";
+    SmartDropPushEvent[SmartDropPushEvent["BATTERY_FULLY_CHARGED"] = 11] = "BATTERY_FULLY_CHARGED";
+    SmartDropPushEvent[SmartDropPushEvent["PERSON_DETECTED"] = 3102] = "PERSON_DETECTED";
+})(SmartDropPushEvent || (exports.SmartDropPushEvent = SmartDropPushEvent = {}));
+var SmartDropOpen;
+(function (SmartDropOpen) {
+    SmartDropOpen[SmartDropOpen["OPEN"] = 1] = "OPEN";
+    SmartDropOpen[SmartDropOpen["CLOSED"] = 2] = "CLOSED";
+    SmartDropOpen[SmartDropOpen["LID_STUCK"] = 3] = "LID_STUCK";
+    SmartDropOpen[SmartDropOpen["PIN_INCORRECT"] = 4] = "PIN_INCORRECT";
+    SmartDropOpen[SmartDropOpen["LEFT_OPENED"] = 10] = "LEFT_OPENED";
+    SmartDropOpen[SmartDropOpen["LOW_TEMPERATURE_WARNING"] = 11] = "LOW_TEMPERATURE_WARNING";
+})(SmartDropOpen || (exports.SmartDropOpen = SmartDropOpen = {}));
+var SmartDropOpenedBy;
+(function (SmartDropOpenedBy) {
+    SmartDropOpenedBy[SmartDropOpenedBy["APP"] = 1] = "APP";
+    SmartDropOpenedBy[SmartDropOpenedBy["PIN"] = 2] = "PIN";
+    SmartDropOpenedBy[SmartDropOpenedBy["WITHOUT_KEY"] = 3] = "WITHOUT_KEY";
+    SmartDropOpenedBy[SmartDropOpenedBy["EMERGENCY_RELEASE_BUTTON"] = 4] = "EMERGENCY_RELEASE_BUTTON";
+    SmartDropOpenedBy[SmartDropOpenedBy["KEY"] = 5] = "KEY";
+})(SmartDropOpenedBy || (exports.SmartDropOpenedBy = SmartDropOpenedBy = {}));

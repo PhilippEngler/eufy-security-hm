@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getModelName = exports.pathToTemp = exports.pathToNodeJs = void 0;
+exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToClientLog = exports.pathToTemp = exports.pathToNodeJs = void 0;
+const http_1 = require("../http");
 exports.pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
 exports.pathToTemp = "/var/tmp/eufySecurity";
+exports.pathToClientLog = "/var/log/eufySecurityClient.log";
 /**
  * Retrieve the model name of a given station or device.
  * @param modelNumber The model number of the station or device.
@@ -162,12 +164,125 @@ const getModelName = function (modelNumber) {
 };
 exports.getModelName = getModelName;
 /**
+ * Returns a string with the type of the device.
+ * @param device The device.
+ * @returns A string with the type of the device.
+ */
+const getDeviceTypeAsString = function (device) {
+    if (device.isCamera1Product() || device.isCamera2Product() || device.isCamera3Product()) {
+        return "camera";
+    }
+    else if (device.isDoorbell()) {
+        return "doorbell";
+    }
+    else if (device.isIndoorCamera()) {
+        return "indoorcamera";
+    }
+    else if (device.isSoloCameras()) {
+        return "solocamera";
+    }
+    else if (device.isFloodLight()) {
+        return "floodlight";
+    }
+    else if (device.isWallLightCam()) {
+        return "walllightcamera";
+    }
+    else if (device.isGarageCamera()) {
+        return "garagecamera";
+    }
+    else if (device.isStarlight4GLTE()) {
+        return "starlight4glte";
+    }
+    else if (device.isLock()) {
+        return "lock";
+    }
+    else if (device.isEntrySensor()) {
+        return "sensor";
+    }
+    else if (device.isKeyPad()) {
+        return "keypad";
+    }
+    else {
+        return `unknown(${device.getRawDevice().device_type})`;
+    }
+};
+exports.getDeviceTypeAsString = getDeviceTypeAsString;
+/**
+ * Returns a string with the type of the station.
+ * @param station Rhe station.
+ * @returns A string with the type of the station.
+ */
+const getStationTypeString = function (station) {
+    switch (station.getDeviceType()) {
+        case http_1.DeviceType.STATION:
+        case http_1.DeviceType.HB3:
+        case http_1.DeviceType.MINIBASE_CHIME:
+            return `station`;
+        case http_1.DeviceType.DOORBELL:
+        case http_1.DeviceType.DOORBELL_SOLO:
+        case http_1.DeviceType.BATTERY_DOORBELL:
+        case http_1.DeviceType.BATTERY_DOORBELL_2:
+        case http_1.DeviceType.BATTERY_DOORBELL_PLUS:
+        case http_1.DeviceType.BATTERY_DOORBELL_PLUS_E340:
+            return `doorbell`;
+        case http_1.DeviceType.INDOOR_CAMERA:
+        case http_1.DeviceType.INDOOR_CAMERA_1080:
+        case http_1.DeviceType.INDOOR_COST_DOWN_CAMERA:
+        case http_1.DeviceType.INDOOR_OUTDOOR_CAMERA_1080P:
+        case http_1.DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT:
+        case http_1.DeviceType.INDOOR_OUTDOOR_CAMERA_2K:
+        case http_1.DeviceType.INDOOR_PT_CAMERA:
+        case http_1.DeviceType.INDOOR_PT_CAMERA_1080:
+        case http_1.DeviceType.INDOOR_PT_CAMERA_S350:
+            return `indoorcamera`;
+        case http_1.DeviceType.SOLO_CAMERA:
+        case http_1.DeviceType.SOLO_CAMERA_PRO:
+        case http_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_1080:
+        case http_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_2K:
+        case http_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
+        case http_1.DeviceType.SOLO_CAMERA_SOLAR:
+        case http_1.DeviceType.SOLO_CAMERA_C210:
+        case http_1.DeviceType.OUTDOOR_PT_CAMERA:
+            return `solocamera`;
+        case http_1.DeviceType.FLOODLIGHT:
+        case http_1.DeviceType.FLOODLIGHT_CAMERA_8422:
+        case http_1.DeviceType.FLOODLIGHT_CAMERA_8423:
+        case http_1.DeviceType.FLOODLIGHT_CAMERA_8424:
+        case http_1.DeviceType.FLOODLIGHT_CAMERA_8425:
+            return `floodlight`;
+        case http_1.DeviceType.WALL_LIGHT_CAM:
+        case http_1.DeviceType.WALL_LIGHT_CAM_81A0:
+            return "walllightcam";
+        case http_1.DeviceType.CAMERA_GARAGE_T8452:
+        case http_1.DeviceType.CAMERA_GARAGE_T8453:
+        case http_1.DeviceType.CAMERA_GARAGE_T8453_COMMON:
+            return "garagecamera";
+        case http_1.DeviceType.CAMERA_FG:
+            return "starlight4glte";
+        case http_1.DeviceType.LOCK_8503:
+        case http_1.DeviceType.LOCK_8504:
+        case http_1.DeviceType.LOCK_8530:
+        case http_1.DeviceType.LOCK_8592:
+        case http_1.DeviceType.LOCK_85A3:
+        case http_1.DeviceType.LOCK_BLE:
+        case http_1.DeviceType.LOCK_BLE_NO_FINGER:
+        case http_1.DeviceType.LOCK_WIFI:
+        case http_1.DeviceType.LOCK_WIFI_NO_FINGER:
+        case http_1.DeviceType.LOCK_8502:
+        case http_1.DeviceType.LOCK_8506:
+            return `lock`;
+        default:
+            return `unknown(${station.getDeviceType()})`;
+    }
+};
+exports.getStationTypeString = getStationTypeString;
+/**
  * Converts the given timestamp to the german dd.mm.yyyy hh:mm string.
  * @param timestamp The timestamp as number.
  */
 const makeDateTimeString = function (timestamp) {
-    var dateTime = new Date(timestamp);
-    return (`${dateTime.getDate().toString().padStart(2, '0')}.${(dateTime.getMonth() + 1).toString().padStart(2, '0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}`);
+    const dateTime = new Date(timestamp);
+    return (`${dateTime.getDate().toString().padStart(2, "0")}.${(dateTime.getMonth() + 1).toString().padStart(2, "0")}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2, "0")}:${dateTime.getMinutes().toString().padStart(2, "0")}`);
 };
 exports.makeDateTimeString = makeDateTimeString;
 /**

@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getShortUrl = exports.waitForEvent = exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = exports.getError = void 0;
+exports.isValidUrl = exports.getShortUrl = exports.waitForEvent = exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = exports.getError = void 0;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const getError = function (error) {
@@ -52,7 +52,7 @@ exports.generateSerialnumber = generateSerialnumber;
 const md5 = (contents) => crypto.createHash("md5").update(contents).digest("hex");
 exports.md5 = md5;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const handleUpdate = function (config, log, oldVersion) {
+const handleUpdate = function (config, oldVersion) {
     if (oldVersion <= 1.24) {
         config.setToken("");
         config.setTokenExpire(0);
@@ -245,3 +245,18 @@ function getShortUrl(url, prefixUrl) {
     return shortUrl;
 }
 exports.getShortUrl = getShortUrl;
+function isValidUrl(value, protocols = ["http", "https"]) {
+    try {
+        const url = new URL(value);
+        return protocols
+            ? url.protocol
+                ? protocols.map(protocol => `${protocol.toLowerCase()}:`).includes(url.protocol)
+                : false
+            : true;
+    }
+    catch (err) {
+        return false;
+    }
+}
+exports.isValidUrl = isValidUrl;
+;

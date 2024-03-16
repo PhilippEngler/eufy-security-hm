@@ -22,18 +22,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HTTPApi = void 0;
-const got_1 = __importStar(require("got"));
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const i18n_iso_countries_1 = require("i18n-iso-countries");
 const i18n_iso_languages_1 = require("@cospired/i18n-iso-languages");
 const crypto_1 = require("crypto");
 const schedule = __importStar(require("node-schedule"));
-const p_throttle_1 = __importDefault(require("p-throttle"));
 const types_1 = require("./types");
 const parameter_1 = require("./parameter");
 const utils_1 = require("./utils");
@@ -41,6 +36,7 @@ const error_1 = require("./../error");
 const utils_2 = require("./../utils");
 const error_2 = require("./error");
 const utils_3 = require("../p2p/utils");
+const logging_1 = require("../logging");
 class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     static apiDomainBase = "https://extend.eufylife.com";
     SERVER_PUBLIC_KEY = "04c5c00c4f8d1197cc7c3167c52bf7acb054d722f0ef08dcd7e0883236e0d72a3868d9750cb47fa4619248f3d83f0f662671dadc6e2d31c2f41db0161651c7c076";
@@ -51,13 +47,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     token = null;
     tokenExpiration = null;
     renewAuthTokenJob;
-    log;
     connected = false;
     requestEufyCloud;
-    throttle = (0, p_throttle_1.default)({
-        limit: 5,
-        interval: 1000,
-    });
+    throttle;
     devices = {};
     hubs = {};
     houses = {};
@@ -70,6 +62,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         serverPublicKey: this.SERVER_PUBLIC_KEY
     };
     headers = {
+        "User-Agent": undefined,
         App_version: "v4.6.0_1630",
         Os_type: "android",
         Os_version: "31",
@@ -86,13 +79,12 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         Timezone: "GMT+01:00",
         "Cache-Control": "no-cache",
     };
-    constructor(apiBase, country, username, password, log, persistentData) {
+    constructor(apiBase, country, username, password, persistentData) {
         super();
         this.username = username;
         this.password = password;
-        this.log = log;
         this.apiBase = apiBase;
-        this.log.debug(`Loaded API`, { apieBase: apiBase, country: country, username: username, persistentData: persistentData });
+        logging_1.rootHTTPLogger.debug(`Loaded API`, { apieBase: apiBase, country: country, username: username, persistentData: persistentData });
         this.headers.timezone = (0, utils_1.getTimezoneGMTString)();
         this.headers.country = country.toUpperCase();
         if (persistentData) {
@@ -108,7 +100,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.debug(`Invalid client private key, generate new client private key...`, { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.debug(`Invalid client private key, generate new client private key...`, { error: (0, utils_2.getError)(error) });
                 this.ecdh.generateKeys();
                 this.persistentData.clientPrivateKey = this.ecdh.getPrivateKey().toString("hex");
             }
@@ -122,11 +114,36 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.debug(`Invalid server public key, fallback to default server public key...`, { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.debug(`Invalid server public key, fallback to default server public key...`, { error: (0, utils_2.getError)(error) });
                 this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
             }
         }
-        this.requestEufyCloud = got_1.default.extend({
+    }
+    static async getApiBaseFromCloud(country) {
+        const { default: got } = await import("got");
+        const response = await got(`domain/${country}`, {
+            prefixUrl: this.apiDomainBase,
+            method: "GET",
+            responseType: "json",
+            retry: {
+                limit: 1,
+                methods: ["GET"]
+            }
+        });
+        const result = response.body;
+        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+            return `https://${result.data.domain}`;
+        }
+        throw new error_2.ApiBaseLoadError("Error identifying API base from cloud", { context: { code: result.code, message: result.msg } });
+    }
+    async loadLibraries() {
+        const { default: pThrottle } = await import("p-throttle");
+        const { default: got } = await import("got");
+        this.throttle = pThrottle({
+            limit: 5,
+            interval: 1000,
+        });
+        this.requestEufyCloud = got.extend({
             prefixUrl: this.apiBase,
             headers: this.headers,
             responseType: "json",
@@ -158,7 +175,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         // Unauthorized
                         if (response.statusCode === 401) {
                             const oldToken = this.token;
-                            this.log.debug("Invalidate token an get a new one...", { requestUrl: response.requestUrl, statusCode: response.statusCode, statusMessage: response.statusMessage });
+                            logging_1.rootHTTPLogger.debug("Invalidate token an get a new one...", { requestUrl: response.requestUrl, statusCode: response.statusCode, statusMessage: response.statusMessage });
                             this.invalidateToken();
                             await this.login({ force: true });
                             if (oldToken !== this.token && this.token) {
@@ -169,7 +186,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                                     }
                                 };
                                 // Update the defaults
-                                this.requestEufyCloud.defaults.options = this.requestEufyCloud.mergeOptions(this.requestEufyCloud.defaults.options, updatedOptions);
+                                this.requestEufyCloud.defaults.options.merge(updatedOptions);
                                 // Make a new retry
                                 return retryWithMergedOptions(updatedOptions);
                             }
@@ -179,13 +196,13 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 ],
                 beforeRetry: [
-                    (options, error, retryCount) => {
+                    (error) => {
                         // This will be called on `retryWithMergedOptions(...)`
-                        const statusCode = error?.response?.statusCode || 0;
-                        const { method, url, prefixUrl } = options;
-                        const shortUrl = (0, utils_2.getShortUrl)(url, prefixUrl);
-                        const body = error?.response?.body ? error?.response?.body : error?.message;
-                        this.log.debug(`Retrying [${retryCount}]: ${error?.code} (${error?.request?.requestUrl})\n${statusCode} ${method} ${shortUrl}\n${body}`);
+                        const statusCode = error.response?.statusCode || 0;
+                        const { method, url, prefixUrl } = error.options;
+                        const shortUrl = (0, utils_2.getShortUrl)(typeof url === "string" ? new URL(url) : url === undefined ? new URL("") : url, typeof prefixUrl === "string" ? prefixUrl : prefixUrl.toString());
+                        const body = error.response?.body ? error.response?.body : error.message;
+                        logging_1.rootHTTPLogger.debug(`Retrying [${error.request?.retryCount !== undefined ? error.request?.retryCount + 1 : 1}]: ${error.code} (${error.request?.requestUrl})\n${statusCode} ${method} ${shortUrl}\n${body}`);
                         // Retrying [1]: ERR_NON_2XX_3XX_RESPONSE
                     }
                 ],
@@ -194,7 +211,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         const { response, options } = error;
                         const statusCode = response?.statusCode || 0;
                         const { method, url, prefixUrl } = options;
-                        const shortUrl = (0, utils_2.getShortUrl)(url, prefixUrl);
+                        const shortUrl = (0, utils_2.getShortUrl)(typeof url === "string" ? new URL(url) : url === undefined ? new URL("") : url, typeof prefixUrl === "string" ? prefixUrl : prefixUrl.toString());
                         const body = response?.body ? response.body : error.message;
                         if (response?.body) {
                             error.name = "EufyApiError";
@@ -212,26 +229,12 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             mutableDefaults: true
         });
     }
-    static async getApiBaseFromCloud(country) {
-        const response = await (0, got_1.default)(`domain/${country}`, {
-            prefixUrl: this.apiDomainBase,
-            method: "GET",
-            responseType: "json",
-            retry: {
-                limit: 1,
-                methods: ["GET"]
-            }
-        });
-        const result = response.body;
-        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-            return `https://${result.data.domain}`;
-        }
-        throw new error_2.ApiBaseLoadError("Error identifying API base from cloud", { context: { code: result.code, message: result.msg } });
-    }
-    static async initialize(country, username, password, log, persistentData) {
+    static async initialize(country, username, password, persistentData) {
         if ((0, i18n_iso_countries_1.isValid)(country) && country.length === 2) {
             const apiBase = await this.getApiBaseFromCloud(country);
-            return new HTTPApi(apiBase, country, username, password, log, persistentData);
+            const api = new HTTPApi(apiBase, country, username, password, persistentData);
+            await api.loadLibraries();
+            return api;
         }
         throw new error_1.InvalidCountryCodeError("Invalid ISO 3166-1 Alpha-2 country code", { context: { countryCode: country } });
     }
@@ -246,7 +249,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             const scheduleDate = new Date(this.tokenExpiration.getTime() - (1000 * 60 * 60 * 24));
             if (this.renewAuthTokenJob === undefined) {
                 this.renewAuthTokenJob = schedule.scheduleJob("renewAuthToken", scheduleDate, async () => {
-                    this.log.info("Authentication token is soon expiring, fetching a new one...");
+                    logging_1.rootHTTPLogger.info("Authentication token is soon expiring, fetching a new one...");
                     await this.login({ force: true });
                 });
             }
@@ -256,15 +259,23 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
     invalidateToken() {
+        this.connected = false;
         this.token = null;
-        this.requestEufyCloud.defaults.options.headers["X-Auth-Token"] = undefined;
+        this.requestEufyCloud.defaults.options.merge({
+            headers: {
+                "X-Auth-Token": undefined
+            }
+        });
         this.tokenExpiration = null;
+        this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
         this.clearScheduleRenewAuthToken();
         this.emit("auth token invalidated");
     }
     setPhoneModel(model) {
         this.headers.phone_model = model.toUpperCase();
-        this.requestEufyCloud.defaults.options.headers = this.headers;
+        this.requestEufyCloud.defaults.options.merge({
+            headers: this.headers
+        });
     }
     getPhoneModel() {
         return this.headers.phone_model;
@@ -275,7 +286,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     setLanguage(language) {
         if ((0, i18n_iso_languages_1.isValid)(language) && language.length === 2) {
             this.headers.language = language;
-            this.requestEufyCloud.defaults.options.headers = this.headers;
+            this.requestEufyCloud.defaults.options.merge({
+                headers: this.headers
+            });
         }
         else
             throw new error_1.InvalidLanguageCodeError("Invalid ISO 639 language code", { context: { languageCode: language } });
@@ -287,7 +300,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         options = (0, utils_2.mergeDeep)(options, {
             force: false
         });
-        this.log.debug("Login and get an access token", { token: this.token, tokenExpiration: this.tokenExpiration, options: options });
+        logging_1.rootHTTPLogger.debug("Login and get an access token", { token: this.token, tokenExpiration: this.tokenExpiration, options: options });
         if (!this.token || (this.tokenExpiration && (new Date()).getTime() >= this.tokenExpiration.getTime()) || options.verifyCode || options.captcha || options.force) {
             try {
                 const data = {
@@ -329,7 +342,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                                 ...this.headers,
                                 gtoken: (0, utils_2.md5)(dataresult.user_id)
                             };
-                            this.log.debug("Login - Token data", { token: this.token, tokenExpiration: this.tokenExpiration, serverPublicKey: this.persistentData.serverPublicKey });
+                            logging_1.rootHTTPLogger.debug("Login - Token data", { token: this.token, tokenExpiration: this.tokenExpiration, serverPublicKey: this.persistentData.serverPublicKey });
                             if (!this.connected) {
                                 this.connected = true;
                                 this.emit("connect");
@@ -340,37 +353,37 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             this.scheduleRenewAuthToken();
                         }
                         else if (result.code == types_1.ResponseErrorCode.CODE_NEED_VERIFY_CODE) {
-                            this.log.debug(`Login - Send verification code...`);
+                            logging_1.rootHTTPLogger.debug(`Login - Send verification code...`);
                             const dataresult = result.data;
                             this.setToken(dataresult.auth_token);
                             this.tokenExpiration = new Date(dataresult.token_expires_at * 1000);
-                            this.log.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
+                            logging_1.rootHTTPLogger.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
                             await this.sendVerifyCode(types_1.VerfyCodeTypes.TYPE_EMAIL);
                             this.emit("tfa request");
                         }
                         else if (result.code == types_1.ResponseErrorCode.LOGIN_NEED_CAPTCHA || result.code == types_1.ResponseErrorCode.LOGIN_CAPTCHA_ERROR) {
                             const dataresult = result.data;
-                            this.log.debug("Login - Captcha verification received", { captchaId: dataresult.captcha_id, item: dataresult.item });
+                            logging_1.rootHTTPLogger.debug("Login - Captcha verification received", { captchaId: dataresult.captcha_id, item: dataresult.item });
                             this.emit("captcha request", dataresult.captcha_id, dataresult.item);
                         }
                         else {
-                            this.log.error("Login - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                            logging_1.rootHTTPLogger.error("Login - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                             this.emit("connection error", new error_2.ApiResponseCodeError("API response code not ok", { context: { code: result.code, message: result.msg } }));
                         }
                     }
                     else {
-                        this.log.error("Login - Response data is missing", { code: result.code, msg: result.msg, data: result.data });
+                        logging_1.rootHTTPLogger.error("Login - Response data is missing", { code: result.code, msg: result.msg, data: result.data });
                         this.emit("connection error", new error_2.ApiInvalidResponseError("API response data is missing", { context: { code: result.code, message: result.msg, data: result.data } }));
                     }
                 }
                 else {
-                    this.log.error("Login - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                    logging_1.rootHTTPLogger.error("Login - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                     this.emit("connection error", new error_2.ApiHTTPResponseCodeError("API HTTP response code not ok", { context: { status: response.status, statusText: response.statusText } }));
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Login - Generic Error:", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Login - Generic Error:", { error: (0, utils_2.getError)(error) });
                 this.emit("connection error", new error_2.ApiGenericError("Generic API error", { cause: error }));
             }
         }
@@ -378,9 +391,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const profile = await this.getPassportProfile();
                 if (profile !== null) {
-                    this.connected = true;
-                    this.emit("connect");
-                    this.scheduleRenewAuthToken();
+                    if (!this.connected) {
+                        this.connected = true;
+                        this.emit("connect");
+                        this.scheduleRenewAuthToken();
+                    }
                 }
                 else {
                     this.emit("connection error", new error_2.ApiInvalidResponseError(`Invalid passport profile response`));
@@ -388,7 +403,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Login - getPassportProfile Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Login - getPassportProfile Error", { error: (0, utils_2.getError)(error) });
                 this.emit("connection error", new error_2.ApiGenericError("API get passport profile error", { cause: error }));
             }
         }
@@ -408,20 +423,20 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             if (response.status == 200) {
                 const result = response.data;
                 if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                    this.log.info(`Requested verification code for 2FA`);
+                    logging_1.rootHTTPLogger.info(`Requested verification code for 2FA`);
                     return true;
                 }
                 else {
-                    this.log.error("Send verify code - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                    logging_1.rootHTTPLogger.error("Send verify code - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                 }
             }
             else {
-                this.log.error("Send verify code - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                logging_1.rootHTTPLogger.error("Send verify code - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
             }
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.log.error("Send verify code - Generic Error", { error: (0, utils_2.getError)(error) });
+            logging_1.rootHTTPLogger.error("Send verify code - Generic Error", { error: (0, utils_2.getError)(error) });
         }
         return false;
     }
@@ -440,16 +455,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error("List trust device - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                        logging_1.rootHTTPLogger.error("List trust device - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                     }
                 }
                 else {
-                    this.log.error("List trust device - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                    logging_1.rootHTTPLogger.error("List trust device - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("List trust device - Generic Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("List trust device - Generic Error", { error: (0, utils_2.getError)(error) });
             }
         }
         return [];
@@ -465,30 +480,30 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         transaction: `${new Date().getTime()}`
                     }
                 });
-                this.log.debug("Add trust device - Response trust device", { verifyCode: verifyCode, data: response.data });
+                logging_1.rootHTTPLogger.debug("Add trust device - Response trust device", { verifyCode: verifyCode, data: response.data });
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
-                        this.log.info(`2FA authentication successfully done. Device trusted.`);
+                        logging_1.rootHTTPLogger.info(`2FA authentication successfully done. Device trusted.`);
                         const trusted_devices = await this.listTrustDevice();
                         trusted_devices.forEach((trusted_device) => {
                             if (trusted_device.is_current_device === 1) {
-                                this.log.debug("Add trust device - This device is trusted. Token expiration extended:", { trustDevice: { phoneModel: trusted_device.phone_model, openUdid: trusted_device.open_udid }, tokenExpiration: this.tokenExpiration });
+                                logging_1.rootHTTPLogger.debug("Add trust device - This device is trusted. Token expiration extended:", { trustDevice: { phoneModel: trusted_device.phone_model, openUdid: trusted_device.open_udid }, tokenExpiration: this.tokenExpiration });
                             }
                         });
                         return true;
                     }
                     else {
-                        this.log.error("Add trust device - Response code not ok", { code: result.code, msg: result.msg, verifyCode: verifyCode, data: response.data });
+                        logging_1.rootHTTPLogger.error("Add trust device - Response code not ok", { code: result.code, msg: result.msg, verifyCode: verifyCode, data: response.data });
                     }
                 }
                 else {
-                    this.log.error("Add trust device - Status return code not 200", { status: response.status, statusText: response.statusText, verifyCode: verifyCode, data: response.data });
+                    logging_1.rootHTTPLogger.error("Add trust device - Status return code not 200", { status: response.status, statusText: response.statusText, verifyCode: verifyCode, data: response.data });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Add trust device - Generic Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Add trust device - Generic Error", { error: (0, utils_2.getError)(error) });
             }
         }
         return false;
@@ -514,21 +529,21 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     if (result.code == 0) {
                         if (result.data) {
                             const stationList = this.decryptAPIData(result.data);
-                            this.log.debug("Decrypted station list data", stationList);
+                            logging_1.rootHTTPLogger.debug("Decrypted station list data", stationList);
                             return stationList;
                         }
                     }
                     else {
-                        this.log.error("Station list - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                        logging_1.rootHTTPLogger.error("Station list - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                     }
                 }
                 else {
-                    this.log.error("Station list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                    logging_1.rootHTTPLogger.error("Station list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Station list - Generic Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Station list - Generic Error", { error: (0, utils_2.getError)(error) });
             }
         }
         return [];
@@ -554,21 +569,21 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     if (result.code == 0) {
                         if (result.data) {
                             const deviceList = this.decryptAPIData(result.data);
-                            this.log.debug("Decrypted device list data", deviceList);
+                            logging_1.rootHTTPLogger.debug("Decrypted device list data", deviceList);
                             return deviceList;
                         }
                     }
                     else {
-                        this.log.error("Device list - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                        logging_1.rootHTTPLogger.error("Device list - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                     }
                 }
                 else {
-                    this.log.error("Device list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                    logging_1.rootHTTPLogger.error("Device list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Device list - Generic Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Device list - Generic Error", { error: (0, utils_2.getError)(error) });
             }
         }
         return [];
@@ -582,7 +597,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             });
         }
         else {
-            this.log.info("No houses found.");
+            logging_1.rootHTTPLogger.info("No houses found.");
         }
         this.emit("houses", this.houses);
     }
@@ -595,7 +610,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             });
         }
         else {
-            this.log.info("No stations found.");
+            logging_1.rootHTTPLogger.info("No stations found.");
         }
         this.emit("hubs", this.hubs);
     }
@@ -608,7 +623,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             });
         }
         else {
-            this.log.info("No devices found.");
+            logging_1.rootHTTPLogger.info("No devices found.");
         }
         this.emit("devices", this.devices);
     }
@@ -622,30 +637,32 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         await this.refreshDeviceData();
     }
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    async request(request) {
-        this.log.debug("Api request", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
+    async request(request, withoutUrlPrefix = false) {
+        logging_1.rootHTTPLogger.debug("Api request", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
         try {
-            const internalResponse = await this.requestEufyCloud(request.endpoint, {
+            const options = {
                 method: request.method,
                 json: request.data,
-                responseType: request.responseType !== undefined ? request.responseType : "json"
-            });
+                responseType: request.responseType !== undefined ? request.responseType : "json",
+            };
+            if (withoutUrlPrefix)
+                options.prefixUrl = "";
+            const internalResponse = await this.requestEufyCloud(request.endpoint, options);
             const response = {
                 status: internalResponse.statusCode,
                 statusText: internalResponse.statusMessage ? internalResponse.statusMessage : "",
                 headers: internalResponse.headers,
                 data: internalResponse.body,
             };
-            this.log.debug("Api request - Response", { token: this.token, request: request, response: response.data });
+            logging_1.rootHTTPLogger.debug("Api request - Response", { token: this.token, request: request, response: response.data });
             return response;
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            if (error instanceof got_1.HTTPError) {
+            if (error instanceof (await import("got")).HTTPError) {
                 if (error.response.statusCode === 401) {
                     this.invalidateToken();
-                    this.log.error("Status return code 401, invalidate token", { status: error.response.statusCode, statusText: error.response.statusMessage });
-                    this.connected = false;
+                    logging_1.rootHTTPLogger.error("Status return code 401, invalidate token", { status: error.response.statusCode, statusText: error.response.statusMessage });
                     this.emit("close");
                 }
             }
@@ -667,20 +684,20 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        this.log.debug(`Check push token - Push token OK`);
+                        logging_1.rootHTTPLogger.debug(`Check push token - Push token OK`);
                         return true;
                     }
                     else {
-                        this.log.error("Check push token - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                        logging_1.rootHTTPLogger.error("Check push token - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                     }
                 }
                 else {
-                    this.log.error("Check push token - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                    logging_1.rootHTTPLogger.error("Check push token - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Check push token - Generic Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Check push token - Generic Error", { error: (0, utils_2.getError)(error) });
             }
         }
         return false;
@@ -701,20 +718,20 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
-                        this.log.debug(`Register push token - Push token registered successfully`);
+                        logging_1.rootHTTPLogger.debug(`Register push token - Push token registered successfully`);
                         return true;
                     }
                     else {
-                        this.log.error("Register push token - Response code not ok", { code: result.code, msg: result.msg, data: response.data, token: token });
+                        logging_1.rootHTTPLogger.error("Register push token - Response code not ok", { code: result.code, msg: result.msg, data: response.data, token: token });
                     }
                 }
                 else {
-                    this.log.error("Register push token - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, token: token });
+                    logging_1.rootHTTPLogger.error("Register push token - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, token: token });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Register push token - Generic Error", { error: (0, utils_2.getError)(error), token: token });
+                logging_1.rootHTTPLogger.error("Register push token - Generic Error", { error: (0, utils_2.getError)(error), token: token });
             }
         }
         return false;
@@ -736,25 +753,25 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         transaction: `${new Date().getTime().toString()}`
                     }
                 });
-                this.log.debug("Set parameter - Response:", { stationSN: stationSN, deviceSN: deviceSN, params: tmp_params, response: response.data });
+                logging_1.rootHTTPLogger.debug("Set parameter - Response:", { stationSN: stationSN, deviceSN: deviceSN, params: tmp_params, response: response.data });
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
                         const dataresult = result.data;
-                        this.log.debug("Set parameter - New parameters set", { params: tmp_params, response: dataresult });
+                        logging_1.rootHTTPLogger.debug("Set parameter - New parameters set", { params: tmp_params, response: dataresult });
                         return true;
                     }
                     else {
-                        this.log.error("Set parameter - Response code not ok", { code: result.code, msg: result.msg, data: response.data, stationSN: stationSN, deviceSN: deviceSN, params: params });
+                        logging_1.rootHTTPLogger.error("Set parameter - Response code not ok", { code: result.code, msg: result.msg, data: response.data, stationSN: stationSN, deviceSN: deviceSN, params: params });
                     }
                 }
                 else {
-                    this.log.error("Set parameter - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, stationSN: stationSN, deviceSN: deviceSN, params: params });
+                    logging_1.rootHTTPLogger.error("Set parameter - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, stationSN: stationSN, deviceSN: deviceSN, params: params });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Set parameter - Generic Error", { error: (0, utils_2.getError)(error), stationSN: stationSN, deviceSN: deviceSN, params: params });
+                logging_1.rootHTTPLogger.error("Set parameter - Generic Error", { error: (0, utils_2.getError)(error), stationSN: stationSN, deviceSN: deviceSN, params: params });
             }
         }
         return false;
@@ -778,7 +795,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         if (result.data) {
                             const ciphers = {};
                             const decrypted = this.decryptAPIData(result.data);
-                            this.log.debug("Get ciphers - Decrypted ciphers data", { ciphers: decrypted });
+                            logging_1.rootHTTPLogger.debug("Get ciphers - Decrypted ciphers data", { ciphers: decrypted });
                             if (Array.isArray(decrypted)) {
                                 decrypted.forEach((cipher) => {
                                     ciphers[cipher.cipher_id] = cipher;
@@ -788,16 +805,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error("Get ciphers - Response code not ok", { code: result.code, msg: result.msg, data: response.data, cipherIDs: cipherIDs, userID: userID });
+                        logging_1.rootHTTPLogger.error("Get ciphers - Response code not ok", { code: result.code, msg: result.msg, data: response.data, cipherIDs: cipherIDs, userID: userID });
                     }
                 }
                 else {
-                    this.log.error("Get ciphers - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, cipherIDs: cipherIDs, userID: userID });
+                    logging_1.rootHTTPLogger.error("Get ciphers - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, cipherIDs: cipherIDs, userID: userID });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get ciphers - Generic Error", { error: (0, utils_2.getError)(error), cipherIDs: cipherIDs, userID: userID });
+                logging_1.rootHTTPLogger.error("Get ciphers - Generic Error", { error: (0, utils_2.getError)(error), cipherIDs: cipherIDs, userID: userID });
             }
         }
         return {};
@@ -821,25 +838,22 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error("Get Voices - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN });
+                        logging_1.rootHTTPLogger.error("Get Voices - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN });
                     }
                 }
                 else {
-                    this.log.error("Get Voices - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN });
+                    logging_1.rootHTTPLogger.error("Get Voices - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get Voices - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN });
+                logging_1.rootHTTPLogger.error("Get Voices - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN });
             }
         }
         return {};
     }
     async getCipher(/*stationSN: string, */ cipherID, userID) {
         return (await this.getCiphers(/*stationSN, */ [cipherID], userID))[cipherID];
-    }
-    getLog() {
-        return this.log;
     }
     getDevices() {
         return this.devices;
@@ -855,21 +869,29 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     }
     setToken(token) {
         this.token = token;
-        this.requestEufyCloud.defaults.options.headers["X-Auth-Token"] = token;
+        this.requestEufyCloud.defaults.options.merge({
+            headers: {
+                "X-Auth-Token": token
+            }
+        });
     }
     setTokenExpiration(tokenExpiration) {
         this.tokenExpiration = tokenExpiration;
     }
     getAPIBase() {
-        return this.requestEufyCloud.defaults.options.prefixUrl;
+        return typeof this.requestEufyCloud.defaults.options.prefixUrl === "string" ? this.requestEufyCloud.defaults.options.prefixUrl : this.requestEufyCloud.defaults.options.prefixUrl.toString();
     }
     setOpenUDID(openudid) {
         this.headers.openudid = openudid;
-        this.requestEufyCloud.defaults.options.headers = this.headers;
+        this.requestEufyCloud.defaults.options.merge({
+            headers: this.headers
+        });
     }
     setSerialNumber(serialnumber) {
         this.headers.sn = serialnumber;
-        this.requestEufyCloud.defaults.options.headers = this.headers;
+        this.requestEufyCloud.defaults.options.merge({
+            headers: this.headers
+        });
     }
     async _getEvents(functionName, endpoint, startTime, endTime, filter, maxResults) {
         const records = [];
@@ -899,35 +921,35 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         transaction: `${new Date().getTime().toString()}`
                     }
                 });
-                this.log.debug(`${functionName} - Response:`, response.data);
+                logging_1.rootHTTPLogger.debug(`${functionName} - Response:`, response.data);
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.code == 0) {
                         if (result.data) {
                             const dataresult = this.decryptAPIData(result.data);
-                            this.log.debug(`${functionName} - Decrypted data:`, dataresult);
+                            logging_1.rootHTTPLogger.debug(`${functionName} - Decrypted data:`, dataresult);
                             if (dataresult) {
                                 dataresult.forEach(record => {
-                                    this.log.debug(`${functionName} - Record:`, record);
+                                    logging_1.rootHTTPLogger.debug(`${functionName} - Record:`, record);
                                     records.push(record);
                                 });
                             }
                         }
                         else {
-                            this.log.error(`${functionName} - Response data is missing`, { code: result.code, msg: result.msg, data: response.data, endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
+                            logging_1.rootHTTPLogger.error(`${functionName} - Response data is missing`, { code: result.code, msg: result.msg, data: response.data, endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
                         }
                     }
                     else {
-                        this.log.error(`${functionName} - Response code not ok`, { code: result.code, msg: result.msg, data: response.data, endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
+                        logging_1.rootHTTPLogger.error(`${functionName} - Response code not ok`, { code: result.code, msg: result.msg, data: response.data, endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
                     }
                 }
                 else {
-                    this.log.error(`${functionName} - Status return code not 200`, { status: response.status, statusText: response.statusText, data: response.data, endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
+                    logging_1.rootHTTPLogger.error(`${functionName} - Status return code not 200`, { status: response.status, statusText: response.statusText, data: response.data, endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error(`${functionName} - Generic Error`, { error: (0, utils_2.getError)(error), endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
+                logging_1.rootHTTPLogger.error(`${functionName} - Generic Error`, { error: (0, utils_2.getError)(error), endpoint: endpoint, startTime: startTime, endTime: endTime, filter: filter, maxResults: maxResults });
             }
         }
         return records;
@@ -976,11 +998,11 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         if (result.data) {
                             const invites = {};
                             const decrypted = this.decryptAPIData(result.data);
-                            this.log.debug("Get invites - Decrypted invites data", { invites: decrypted });
+                            logging_1.rootHTTPLogger.debug("Get invites - Decrypted invites data", { invites: decrypted });
                             if (Array.isArray(decrypted)) {
                                 decrypted.forEach((invite) => {
                                     invites[invite.invite_id] = invite;
-                                    let data = (0, utils_2.parseJSON)(invites[invite.invite_id].devices, this.log);
+                                    let data = (0, utils_2.parseJSON)(invites[invite.invite_id].devices, logging_1.rootHTTPLogger);
                                     if (data === undefined)
                                         data = [];
                                     invites[invite.invite_id].devices = data;
@@ -990,16 +1012,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error("Get invites - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                        logging_1.rootHTTPLogger.error("Get invites - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                     }
                 }
                 else {
-                    this.log.error("Get invites - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                    logging_1.rootHTTPLogger.error("Get invites - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get invites - Generic Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Get invites - Generic Error", { error: (0, utils_2.getError)(error) });
             }
         }
         return {};
@@ -1021,16 +1043,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         return true;
                     }
                     else {
-                        this.log.error("Confirm invites - Response code not ok", { code: result.code, msg: result.msg, data: response.data, confirmInvites: confirmInvites });
+                        logging_1.rootHTTPLogger.error("Confirm invites - Response code not ok", { code: result.code, msg: result.msg, data: response.data, confirmInvites: confirmInvites });
                     }
                 }
                 else {
-                    this.log.error("Confirm invites - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, confirmInvites: confirmInvites });
+                    logging_1.rootHTTPLogger.error("Confirm invites - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, confirmInvites: confirmInvites });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Confirm invites - Generic Error", { error: (0, utils_2.getError)(error), confirmInvites: confirmInvites });
+                logging_1.rootHTTPLogger.error("Confirm invites - Generic Error", { error: (0, utils_2.getError)(error), confirmInvites: confirmInvites });
             }
         }
         return false;
@@ -1039,7 +1061,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         if (this.connected) {
             try {
                 if (this.persistentData.device_public_keys[deviceSN] !== undefined && type === types_1.PublicKeyType.LOCK) {
-                    this.log.debug("return cached public key", this.persistentData.device_public_keys[deviceSN]);
+                    logging_1.rootHTTPLogger.debug("return cached public key", this.persistentData.device_public_keys[deviceSN]);
                     return this.persistentData.device_public_keys[deviceSN];
                 }
                 else {
@@ -1057,17 +1079,17 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             }
                         }
                         else {
-                            this.log.error("Get public key - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, type: type });
+                            logging_1.rootHTTPLogger.error("Get public key - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, type: type });
                         }
                     }
                     else {
-                        this.log.error("Get public key - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, type: type });
+                        logging_1.rootHTTPLogger.error("Get public key - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, type: type });
                     }
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get public key - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, type: type });
+                logging_1.rootHTTPLogger.error("Get public key - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, type: type });
             }
         }
         return "";
@@ -1080,7 +1102,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Data decryption error, invalidating session data and reconnecting...", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Data decryption error, invalidating session data and reconnecting...", { error: (0, utils_2.getError)(error), serverPublicKey: this.persistentData.serverPublicKey });
                 this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
                 this.invalidateToken();
                 this.emit("close");
@@ -1088,7 +1110,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             if (decryptedData) {
                 const str = (0, utils_3.getNullTerminatedString)(decryptedData, "utf-8");
                 if (json)
-                    return (0, utils_2.parseJSON)(str, this.log);
+                    return (0, utils_2.parseJSON)(str, logging_1.rootHTTPLogger);
                 return str;
             }
             if (json)
@@ -1104,9 +1126,9 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     endpoint: "v1/app/get_sensor_history",
                     data: {
                         devicse_sn: deviceSN,
-                        max_time: 0,
-                        num: 500,
-                        page: 0,
+                        max_time: 0, //TODO: Finish implementation
+                        num: 500, //TODO: Finish implementation
+                        page: 0, //TODO: Finish implementation
                         station_sn: stationSN,
                         transaction: `${new Date().getTime().toString()}`
                     }
@@ -1120,16 +1142,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                     else {
-                        this.log.error("Get sensor history - Response code not ok", { code: result.code, msg: result.msg, data: response.data, stationSN: stationSN, deviceSN: deviceSN });
+                        logging_1.rootHTTPLogger.error("Get sensor history - Response code not ok", { code: result.code, msg: result.msg, data: response.data, stationSN: stationSN, deviceSN: deviceSN });
                     }
                 }
                 else {
-                    this.log.error("Get sensor history - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, stationSN: stationSN, deviceSN: deviceSN });
+                    logging_1.rootHTTPLogger.error("Get sensor history - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, stationSN: stationSN, deviceSN: deviceSN });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get sensor history - Generic Error", { error: (0, utils_2.getError)(error), stationSN: stationSN, deviceSN: deviceSN });
+                logging_1.rootHTTPLogger.error("Get sensor history - Generic Error", { error: (0, utils_2.getError)(error), stationSN: stationSN, deviceSN: deviceSN });
             }
         }
         return [];
@@ -1150,21 +1172,21 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                         if (result.data) {
                             const houseDetail = this.decryptAPIData(result.data);
-                            this.log.debug("Get house detail - Decrypted house detail data", { details: houseDetail });
+                            logging_1.rootHTTPLogger.debug("Get house detail - Decrypted house detail data", { details: houseDetail });
                             return houseDetail;
                         }
                     }
                     else {
-                        this.log.error("Get house detail - Response code not ok", { code: result.code, msg: result.msg, data: response.data, houseID: houseID });
+                        logging_1.rootHTTPLogger.error("Get house detail - Response code not ok", { code: result.code, msg: result.msg, data: response.data, houseID: houseID });
                     }
                 }
                 else {
-                    this.log.error("Get house detail - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, houseID: houseID });
+                    logging_1.rootHTTPLogger.error("Get house detail - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, houseID: houseID });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get house detail - Generic Error", { error: (0, utils_2.getError)(error), houseID: houseID });
+                logging_1.rootHTTPLogger.error("Get house detail - Generic Error", { error: (0, utils_2.getError)(error), houseID: houseID });
             }
         }
         return null;
@@ -1183,21 +1205,21 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     const result = response.data;
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                         if (result.data) {
-                            this.log.debug("Get house list - houses", { houses: result.data });
+                            logging_1.rootHTTPLogger.debug("Get house list - houses", { houses: result.data });
                             return result.data;
                         }
                     }
                     else {
-                        this.log.error("Get house list - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                        logging_1.rootHTTPLogger.error("Get house list - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                     }
                 }
                 else {
-                    this.log.error("Get house list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                    logging_1.rootHTTPLogger.error("Get house list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get house list - Generic Error", { error: (0, utils_2.getError)(error) });
+                logging_1.rootHTTPLogger.error("Get house list - Generic Error", { error: (0, utils_2.getError)(error) });
             }
         }
         return [];
@@ -1219,23 +1241,23 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                         if (result.data) {
                             //const houseInviteList = this.decryptAPIData(result.data) as Array<HouseInviteListResponse>;   // No more encrypted!?
-                            //this.log.debug("Get house invite list - Decrypted house invite list data", houseInviteList);
+                            //rootHTTPLogger.debug("Get house invite list - Decrypted house invite list data", houseInviteList);
                             const houseInviteList = result.data;
-                            this.log.debug("Get house invite list - House invite list data", houseInviteList);
+                            logging_1.rootHTTPLogger.debug("Get house invite list - House invite list data", houseInviteList);
                             return houseInviteList;
                         }
                     }
                     else {
-                        this.log.error("Get house invite list - Response code not ok", { code: result.code, msg: result.msg, data: response.data, isInviter: isInviter });
+                        logging_1.rootHTTPLogger.error("Get house invite list - Response code not ok", { code: result.code, msg: result.msg, data: response.data, isInviter: isInviter });
                     }
                 }
                 else {
-                    this.log.error("Get house invite list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, isInviter: isInviter });
+                    logging_1.rootHTTPLogger.error("Get house invite list - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, isInviter: isInviter });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get house invite list - Generic Error", { error: (0, utils_2.getError)(error), isInviter: isInviter });
+                logging_1.rootHTTPLogger.error("Get house invite list - Generic Error", { error: (0, utils_2.getError)(error), isInviter: isInviter });
             }
         }
         return [];
@@ -1249,7 +1271,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     data: {
                         house_id: houseID,
                         invite_id: inviteID,
-                        is_inviter: 1,
+                        is_inviter: 1, // 1 = true, 0 = false
                         //user_id: "",
                         transaction: `${new Date().getTime().toString()}`
                     }
@@ -1260,16 +1282,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         return true;
                     }
                     else {
-                        this.log.error("Confirm house invite - Response code not ok", { code: result.code, msg: result.msg, data: response.data, houseID: houseID, inviteID: inviteID });
+                        logging_1.rootHTTPLogger.error("Confirm house invite - Response code not ok", { code: result.code, msg: result.msg, data: response.data, houseID: houseID, inviteID: inviteID });
                     }
                 }
                 else {
-                    this.log.error("Confirm house invite - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, houseID: houseID, inviteID: inviteID });
+                    logging_1.rootHTTPLogger.error("Confirm house invite - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, houseID: houseID, inviteID: inviteID });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Confirm house invite - Generic Error", { error: (0, utils_2.getError)(error), houseID: houseID, inviteID: inviteID });
+                logging_1.rootHTTPLogger.error("Confirm house invite - Generic Error", { error: (0, utils_2.getError)(error), houseID: houseID, inviteID: inviteID });
             }
         }
         return false;
@@ -1288,7 +1310,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
                     if (result.data) {
                         const profile = this.decryptAPIData(result.data);
-                        this.log.debug("Get passport profile - Decrypted passport profile data", { profile: profile });
+                        logging_1.rootHTTPLogger.debug("Get passport profile - Decrypted passport profile data", { profile: profile });
                         this.persistentData.user_id = profile.user_id;
                         this.persistentData.nick_name = profile.nick_name;
                         this.persistentData.email = profile.email;
@@ -1296,16 +1318,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 else {
-                    this.log.error("Get passport profile - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                    logging_1.rootHTTPLogger.error("Get passport profile - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
                 }
             }
             else {
-                this.log.error("Get passport profile - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+                logging_1.rootHTTPLogger.error("Get passport profile - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
             }
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.log.error("Get passport profile - Generic Error", { error: (0, utils_2.getError)(error) });
+            logging_1.rootHTTPLogger.error("Get passport profile - Generic Error", { error: (0, utils_2.getError)(error) });
         }
         return null;
     }
@@ -1329,16 +1351,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             return result.data;
                     }
                     else {
-                        this.log.error("Add user - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, nickname: nickname, stationSN: stationSN });
+                        logging_1.rootHTTPLogger.error("Add user - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, nickname: nickname, stationSN: stationSN });
                     }
                 }
                 else {
-                    this.log.error("Add user - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, nickname: nickname, stationSN: stationSN });
+                    logging_1.rootHTTPLogger.error("Add user - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, nickname: nickname, stationSN: stationSN });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Add user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, nickname: nickname, stationSN: stationSN });
+                logging_1.rootHTTPLogger.error("Add user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, nickname: nickname, stationSN: stationSN });
             }
         }
         return null;
@@ -1362,16 +1384,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                         return true;
                     }
                     else {
-                        this.log.error("Delete user - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, shortUserId: shortUserId, stationSN: stationSN });
+                        logging_1.rootHTTPLogger.error("Delete user - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, shortUserId: shortUserId, stationSN: stationSN });
                     }
                 }
                 else {
-                    this.log.error("Delete user - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, shortUserId: shortUserId, stationSN: stationSN });
+                    logging_1.rootHTTPLogger.error("Delete user - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, shortUserId: shortUserId, stationSN: stationSN });
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Delete user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, shortUserId: shortUserId, stationSN: stationSN });
+                logging_1.rootHTTPLogger.error("Delete user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, shortUserId: shortUserId, stationSN: stationSN });
             }
         }
         return false;
@@ -1391,16 +1413,16 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 else {
-                    this.log.error("Get users - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, stationSN: stationSN });
+                    logging_1.rootHTTPLogger.error("Get users - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, stationSN: stationSN });
                 }
             }
             else {
-                this.log.error("Get users - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, stationSN: stationSN });
+                logging_1.rootHTTPLogger.error("Get users - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, stationSN: stationSN });
             }
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.log.error("Get users - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, stationSN: stationSN });
+            logging_1.rootHTTPLogger.error("Get users - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, stationSN: stationSN });
         }
         return null;
     }
@@ -1417,7 +1439,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (err) {
             const error = (0, error_1.ensureError)(err);
-            this.log.error("Get user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId });
+            logging_1.rootHTTPLogger.error("Get user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId });
         }
         return null;
     }
@@ -1445,17 +1467,17 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                             return true;
                         }
                         else {
-                            this.log.error("Update user - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId, nickname: nickname });
+                            logging_1.rootHTTPLogger.error("Update user - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId, nickname: nickname });
                         }
                     }
                     else {
-                        this.log.error("Update user - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId, nickname: nickname });
+                        logging_1.rootHTTPLogger.error("Update user - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId, nickname: nickname });
                     }
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Update user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId, nickname: nickname });
+                logging_1.rootHTTPLogger.error("Update user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, stationSN: stationSN, shortUserId: shortUserId, nickname: nickname });
             }
         }
         return false;
@@ -1469,24 +1491,68 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     if (station) {
                         const response = await this.request({
                             method: "GET",
-                            endpoint: new URL(url),
+                            endpoint: url,
                             responseType: "buffer"
-                        });
+                        }, true);
                         if (response.status == 200) {
                             return (0, utils_1.decodeImage)(station.p2p_did, response.data);
                         }
                         else {
-                            this.log.error("Get Image - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, url: url });
+                            logging_1.rootHTTPLogger.error("Get Image - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, url: url });
                         }
                     }
                 }
             }
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
-                this.log.error("Get Image - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, url: url });
+                logging_1.rootHTTPLogger.error("Get Image - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, url: url });
             }
         }
         return Buffer.alloc(0);
+    }
+    async updateUserPassword(deviceSN, shortUserId, passwordId, schedule, stationSN = "") {
+        if (this.connected) {
+            try {
+                const response = await this.request({
+                    method: "post",
+                    endpoint: "v1/app/device/password/save_or_update",
+                    data: {
+                        device_sn: deviceSN,
+                        password_list: [{
+                                password_id: passwordId,
+                                password_type: types_1.UserPasswordType.PIN,
+                                schedule: JSON.stringify({
+                                    endDay: schedule !== undefined && schedule.endDateTime !== undefined ? (0, utils_1.hexDate)(schedule.endDateTime) : "ffffffff",
+                                    endTime: schedule !== undefined && schedule.endDateTime !== undefined ? (0, utils_1.hexTime)(schedule.endDateTime) : "ffff",
+                                    startDay: schedule !== undefined && schedule.startDateTime !== undefined ? (0, utils_1.hexDate)(schedule.startDateTime) : "00000000",
+                                    startTime: schedule !== undefined && schedule.startDateTime !== undefined ? (0, utils_1.hexTime)(schedule.startDateTime) : "0000",
+                                    week: schedule !== undefined && schedule.week !== undefined ? (0, utils_1.hexWeek)(schedule) : "ff",
+                                })
+                            }],
+                        short_user_id: shortUserId,
+                        station_sn: stationSN === deviceSN ? "" : stationSN,
+                        transaction: `${new Date().getTime().toString()}`
+                    }
+                });
+                if (response.status == 200) {
+                    const result = response.data;
+                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        return true;
+                    }
+                    else {
+                        logging_1.rootHTTPLogger.error("Add user - Response code not ok", { code: result.code, msg: result.msg, data: response.data, deviceSN: deviceSN, shortUserId: shortUserId, schedule: schedule, stationSN: stationSN });
+                    }
+                }
+                else {
+                    logging_1.rootHTTPLogger.error("Add user - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data, deviceSN: deviceSN, shortUserId: shortUserId, schedule: schedule, stationSN: stationSN });
+                }
+            }
+            catch (err) {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootHTTPLogger.error("Add user - Generic Error", { error: (0, utils_2.getError)(error), deviceSN: deviceSN, shortUserId: shortUserId, schedule: schedule, stationSN: stationSN });
+            }
+        }
+        return false;
     }
 }
 exports.HTTPApi = HTTPApi;
