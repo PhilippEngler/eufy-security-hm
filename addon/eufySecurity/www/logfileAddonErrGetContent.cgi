@@ -1,4 +1,6 @@
 #!/bin/tclsh
+cd [ file dirname [ file normalize [ info script ] ] ]
+
 source assets/dist/tcl/fileHelper.tcl
 
 set fileContent [getFileContent /var/log/eufySecurity.err]
