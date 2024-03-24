@@ -27,7 +27,7 @@ proc emptyFile { filePath } {
 proc init {} {
     variable replaceMap
     # characters that should not be replaced
-    variable charsNotReplace a-zA-Z0-9_.!~*'()
+    variable charsNotReplace a-zA-Z0-9
     for {set i 0} {$i <= 256} {incr i} { 
         set c [format %c $i]
         if {![string match \[$charsNotReplace\] $c]} {
@@ -35,7 +35,7 @@ proc init {} {
         }
     }
     # characters that should be replaced with a special value
-    array set replaceMap {" " %20 \n %0A - -}
+    array set replaceMap {" " %20 \n %0A}
 }
 
 proc urlEncode { string } {
