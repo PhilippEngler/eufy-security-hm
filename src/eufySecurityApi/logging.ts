@@ -148,13 +148,12 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
             break;
     }
     if(level === LogLevel.Off) {
-        const categoryString = `[${category}]`.padEnd(7, " ");
         if(category === "all") {
-            console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for all categories has been set to ${LogLevel[level]}.`);
-            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for all categories has been set to ${LogLevel[level]}.`);
+            console.log(`${formatDate(Date.now())} INFO  [log]   Logging for all categories has been set to ${LogLevel[level]}.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  [log]   [Logging.setLoggingLevel] Logging for all categories has been set to ${LogLevel[level]}.`);
         } else {
-            console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for category ${category} has been set to ${LogLevel[level]}.`);
-            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for category ${category} has been set to ${LogLevel[level]}.`);
+            console.log(`${formatDate(Date.now())} INFO  [log]   Logging for category ${category} has been set to ${LogLevel[level]}.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  [log]   [Logging.setLoggingLevel] Logging for category ${category} has been set to ${LogLevel[level]}.`);
         }
     }
 }
