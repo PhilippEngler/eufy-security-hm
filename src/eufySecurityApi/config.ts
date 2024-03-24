@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from "./push/models";
-import { formatDate } from "./logging";
+import { rootConfLogger, setLoggingLevel } from "./logging";
+import { LogLevel } from "typescript-logging";
 
 export class Config
 {
@@ -13,6 +14,7 @@ export class Config
      */
     constructor()
     {
+        setLoggingLevel("conf", LogLevel.Info);
         this.hasChanged = false;
         if(this.isConfigFileAvailable() == false)
         {
@@ -26,7 +28,7 @@ export class Config
                 this.configJson = this.checkConfigFile(this.loadConfigJson("./config.json.upload"));
                 this.hasChanged = true;
                 unlinkSync("./config.json.upload");
-                this.log("INFO", "Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
+                rootConfLogger.info("Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
             }
             catch
             {
@@ -34,7 +36,7 @@ export class Config
                 {
                     unlinkSync("./config.json.upload");
                 }
-                this.log("INFO", "Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
+                rootConfLogger.info("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
                 if(this.isConfigFileAvailable() == false)
                 {
                     this.configJson = this.createEmptyConfigJson();
@@ -67,10 +69,10 @@ export class Config
      * @param logLevel The logLevel.
      * @param message The message.
      */
-    private log(logLevel: string, message: string): void
+    /*private log(logLevel: string, message: string): void
     {
         console.log(`${formatDate(Date.now())} ${logLevel.padEnd(5, " ")} [conf]  ${message}`);
-    }
+    }*/
 
     /**
      * Remove the scheduling for saveConfig12h
@@ -79,7 +81,7 @@ export class Config
     {
         if(this.taskSaveConfig24h)
         {
-            this.log("INFO", `Remove scheduling for saveConfig24h.`);
+            rootConfLogger.info(`Remove scheduling for saveConfig24h.`);
             clearInterval(this.taskSaveConfig24h);
         }
     }
@@ -139,8 +141,8 @@ export class Config
         }
         catch (err : any)
         {
-            this.log("ERROR", `No '${filePath}' available.`);
-            this.log("ERROR", JSON.stringify(err));
+            rootConfLogger.error(`No '${filePath}' available.`);
+            rootConfLogger.error(JSON.stringify(err));
         }
         return resConfigJson;
     }
@@ -153,7 +155,7 @@ export class Config
     {
         if(filecontent.indexOf("config_file_version") == -1)
         {
-            this.log("INFO", "Configfile needs Stage1 update. Adding 'config_file_version'.");
+            rootConfLogger.info("Configfile needs Stage1 update. Adding 'config_file_version'.");
             filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
         }
         return filecontent;
@@ -253,70 +255,70 @@ export class Config
             let updated = false;
             if(configJson.configVersion < 12)
             {
-                this.log("INFO", "Configfile needs Stage2 update to version 12...");
+                rootConfLogger.info("Configfile needs Stage2 update to version 12...");
                 if(configJson.apiConfig.updateCloudInfoIntervall === undefined)
                 {
-                    this.log("INFO", " adding 'updateCloudInfoIntervall'.");
+                    rootConfLogger.info(" adding 'updateCloudInfoIntervall'.");
                     configJson.apiConfig.updateCloudInfoIntervall = 10;
                 }
                 if(configJson.apiConfig.updateDeviceDataIntervall === undefined)
                 {
-                    this.log("INFO", " adding 'updateDeviceDataIntervall'.");
+                    rootConfLogger.info(" adding 'updateDeviceDataIntervall'.");
                     configJson.apiConfig.updateDeviceDataIntervall = 10;
                 }
                 updated = true;
             }
             if(configJson.configVersion < 13)
             {
-                this.log("INFO", "Configfile needs Stage2 update to version 13...");
+                rootConfLogger.info("Configfile needs Stage2 update to version 13...");
                 if(configJson.apiConfig.houseId === undefined)
                 {
-                    this.log("INFO", " adding 'houseId'.");
+                    rootConfLogger.info(" adding 'houseId'.");
                     configJson.apiConfig.houseId = "all";
                 }
                 updated = true;
             }
             if(configJson.configVersion < 14)
             {
-                this.log("INFO", "Configfile needs Stage2 update to version 14...");
+                rootConfLogger.info("Configfile needs Stage2 update to version 14...");
                 if(configJson.accountData.userId === undefined)
                 {
-                    this.log("INFO", " adding 'userId'.");
+                    rootConfLogger.info(" adding 'userId'.");
                     configJson.accountData.userId = "";
                 }
                 if(configJson.accountData.nickName === undefined)
                 {
-                    this.log("INFO", " adding 'nickName'.");
+                    rootConfLogger.info(" adding 'nickName'.");
                     configJson.accountData.nickName = "";
                 }
                 if(configJson.accountData.clientPrivateKey === undefined)
                 {
-                    this.log("INFO", " adding 'clientPrivateKey'.");
+                    rootConfLogger.info(" adding 'clientPrivateKey'.");
                     configJson.accountData.clientPrivateKey = "";
                 }
                 if(configJson.accountData.serverPublicKey === undefined)
                 {
-                    this.log("INFO", " adding 'serverPublicKey'.");
+                    rootConfLogger.info(" adding 'serverPublicKey'.");
                     configJson.accountData.serverPublicKey = "";
                 }
                 updated = true;
             }
             if(configJson.configVersion < 15)
             {
-                this.log("INFO", "Configfile needs Stage2 update to version 15...");
+                rootConfLogger.info("Configfile needs Stage2 update to version 15...");
                 if(configJson.interactions === undefined)
                 {
-                    this.log("INFO", " adding 'interactions'.");
+                    rootConfLogger.info(" adding 'interactions'.");
                     configJson.interactions = null;
                 }
                 updated = true;
             }
             if(configJson.configVersion < 16)
             {
-                this.log("INFO", "Configfile needs Stage2 update to version 16...");
+                rootConfLogger.info("Configfile needs Stage2 update to version 16...");
                 if(configJson.logConfig === undefined)
                 {
-                    this.log("INFO", " adding 'logConfig'.");
+                    rootConfLogger.info(" adding 'logConfig'.");
                     configJson.logConfig = null;
                     const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
                     configJson.logConfig = logConfig;
@@ -325,39 +327,39 @@ export class Config
             }
             if(configJson.configVersion < 17)
             {
-                this.log("INFO", "Configfile needs Stage2 update to version 17...");
+                rootConfLogger.info("Configfile needs Stage2 update to version 17...");
                 if(configJson.apiConfig.hasOwnProperty("cameraDefaultImage"))
                 {
-                    this.log("INFO", " removing 'cameraDefaultImage'.");
+                    rootConfLogger.info(" removing 'cameraDefaultImage'.");
                     updated = true;
                 }
                 if(configJson.apiConfig.hasOwnProperty("cameraDefaultVideo"))
                 {
-                    this.log("INFO", " removing 'cameraDefaultVideo'.");
+                    rootConfLogger.info(" removing 'cameraDefaultVideo'.");
                     updated = true;
                 }
             }
             if(configJson.configVersion < 18)
             {
-                this.log("INFO", "Configfile needs Stage2 update to version 18...");
+                rootConfLogger.info("Configfile needs Stage2 update to version 18...");
                 if(configJson.apiConfig.hasOwnProperty("updateLinksActive"))
                 {
-                    this.log("INFO", " removing 'updateLinksActive'.");
+                    rootConfLogger.info(" removing 'updateLinksActive'.");
                     updated = true;
                 }
                 if(configJson.apiConfig.hasOwnProperty("updateLinksOnlyWhenArmed"))
                 {
-                    this.log("INFO", " removing 'updateLinksOnlyWhenArmed'.");
+                    rootConfLogger.info(" removing 'updateLinksOnlyWhenArmed'.");
                     updated = true;
                 }
                 if(configJson.apiConfig.hasOwnProperty("updateLinks24hActive"))
                 {
-                    this.log("INFO", " removing 'updateLinks24hActive'.");
+                    rootConfLogger.info(" removing 'updateLinks24hActive'.");
                     updated = true;
                 }
                 if(configJson.apiConfig.hasOwnProperty("updateLinksTimespan"))
                 {
-                    this.log("INFO", " removing 'updateLinksTimespan'.");
+                    rootConfLogger.info(" removing 'updateLinksTimespan'.");
                     updated = true;
                 }
             }
@@ -593,19 +595,19 @@ export class Config
         let updated = false;
         if(this.configJson.apiConfig.httpActive == true && (this.configJson.apiConfig.httpPort < 1 || this.configJson.httpPort > 65535))
         {
-            this.log("INFO", `Set httpPort to default value "52789"`);
+            rootConfLogger.info(`Set httpPort to default value "52789"`);
             this.configJson.apiConfig.httpPort = 52789;
             updated = true;
         }
         if(this.configJson.apiConfig.httpsActive == true && (this.configJson.apiConfig.httpsPort < 1 || this.configJson.apiConfig.httpsPort > 65535))
         {
-            this.log("INFO", `Set httpsPort to default value "52790"`);
+            rootConfLogger.info(`Set httpsPort to default value "52790"`);
             this.configJson.apiConfig.httpsPort = 52790;
             updated = true;
         }
         if(this.configJson.apiConfig.httpActive == true && this.configJson.apiConfig.httpsActive == true && this.configJson.apiConfig.httpPort == this.configJson.apiConfig.httpsPort)
         {
-            this.log("INFO", `Set httpPort to default value "52789" and httpsPort to default value "52790"`);
+            rootConfLogger.info(`Set httpPort to default value "52789" and httpsPort to default value "52790"`);
             this.configJson.apiConfig.httpPort = 52789;
             this.configJson.apiConfig.httpsPort = 52790;
             updated = true;
@@ -624,7 +626,7 @@ export class Config
                     }
                     else
                     {
-                        this.log("INFO", `Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
+                        rootConfLogger.info(`Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
                         this.configJson.localStaticUdpPortsActive = false;
                         updated = true;
                     }
@@ -633,43 +635,43 @@ export class Config
         }*/
         if(this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240))
         {
-            this.log("INFO", `Set stateUpdateIntervallTimespan to default value "15"`);
+            rootConfLogger.info(`Set stateUpdateIntervallTimespan to default value "15"`);
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelAddon < 0 || this.configJson.logConfig.logLevelAddon > 6)
         {
-            this.log("INFO", `Set logLevelAddon to default value "2"`);
+            rootConfLogger.info(`Set logLevelAddon to default value "2"`);
             this.configJson.logConfig.logLevelAddon = 2;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelMain < 0 || this.configJson.logConfig.logLevelMain > 6)
         {
-            this.log("INFO", `Set logLevelMain to default value "2"`);
+            rootConfLogger.info(`Set logLevelMain to default value "2"`);
             this.configJson.logConfig.logLevelMain = 2;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelHttp < 0 || this.configJson.logConfig.logLevelHttp > 6)
         {
-            this.log("INFO", `Set logLevelHttp to default value "2"`);
+            rootConfLogger.info(`Set logLevelHttp to default value "2"`);
             this.configJson.logConfig.logLevelHttp = 2;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelP2p < 0 || this.configJson.logConfig.logLevelP2p > 6)
         {
-            this.log("INFO", `Set logLevelP2p to default value "2"`);
+            rootConfLogger.info(`Set logLevelP2p to default value "2"`);
             this.configJson.logConfig.logLevelP2p = 2;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelPush < 0 || this.configJson.logConfig.logLevelPush > 6)
         {
-            this.log("INFO", `Set logLevelPush to default value "2"`);
+            rootConfLogger.info(`Set logLevelPush to default value "2"`);
             this.configJson.logConfig.logLevelPush = 2;
             updated = true;
         }
         if(this.configJson.logConfig.logLevelMqtt < 0 || this.configJson.logConfig.logLevelMqtt > 6)
         {
-            this.log("INFO", `Set logLevelMqtt to default value "2"`);
+            rootConfLogger.info(`Set logLevelMqtt to default value "2"`);
             this.configJson.logConfig.logLevelMqtt = 2;
             updated = true;
         }
@@ -686,7 +688,7 @@ export class Config
      */
     private updateWithNewStation(stationSerial : string) : boolean
     {
-        this.log("INFO", `Adding station ${stationSerial} to settings.`);
+        rootConfLogger.info(`Adding station ${stationSerial} to settings.`);
         const station = {"stationSerial": stationSerial, "p2pDid": null, "stationIpAddress": null, "udpPort": null};
 
         if(Array.isArray(this.configJson.stations))
@@ -1798,7 +1800,7 @@ export class Config
             let res;
             if(this.isStationInConfig(stationSerial) == false)
             {
-                this.log("INFO", `Station ${stationSerial} not in config. Try to create new station entry.`);
+                rootConfLogger.info(`Station ${stationSerial} not in config. Try to create new station entry.`);
                 res = this.updateWithNewStation(stationSerial);
             }
             else
@@ -1822,11 +1824,11 @@ export class Config
                         return true;
                     }
                 }
-                this.log("INFO", `Station ${stationSerial} not in config.`);
+                rootConfLogger.info(`Station ${stationSerial} not in config.`);
                 return false;
             }
         }
-        this.log("INFO", `Station ${stationSerial} not in config.`);
+        rootConfLogger.info(`Station ${stationSerial} not in config.`);
         return false;
     }
 

@@ -4,7 +4,7 @@ import { CategoryProvider } from "typescript-logging-category-style";
 import { pathToClientLog } from "./utils/utils";
 import util from "node:util";
 
-export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt";
+export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt" | "conf";
 export const LogLevel = Level;
 
 export interface Logger {
@@ -98,6 +98,7 @@ export const rootHTTPLogger = provider.getCategory("http");
 export const rootMQTTLogger = provider.getCategory("mqtt");
 export const rootPushLogger = provider.getCategory("push");
 export const rootP2PLogger = provider.getCategory("p2p");
+export const rootConfLogger = provider.getCategory("conf");
 
 export const setLoggingLevel = function(category: LoggingCategories = "all", level: Level = LogLevel.Off): void {
     switch(category) {
@@ -135,6 +136,15 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
             provider.updateRuntimeSettingsCategory(rootPushLogger, {
                 level: level
             });
+            break;
+        case "conf":
+            provider.updateRuntimeSettingsCategory(rootConfLogger, {
+                level: level
+            });
+            break;
+        default:
+            console.log(`${formatDate(Date.now())} INFO  [log]   Unknown category '${category}'.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  [log]   [Logging.setLoggingLevel] Unknown category '${category}'.`);
             break;
     }
     if(level === LogLevel.Off) {
