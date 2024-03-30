@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.11
-20240309
+Schema v9.12
+20240328
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240309 (v9.11)";
+var languageVersion = "20240328 (v9.12)";
 
 function translateNavbarElement(element)
 {
@@ -204,6 +204,12 @@ function translateStaticContentElement(element)
 			return "Activate push notifications";
 		case "hintUsePushService":
 			return "Push notifications are required, for example, to determine the time of the last events for the cameras.";
+		case "settingsHeaderConfigSecureApiAccessSid":
+			return "Settings for securing access to api";
+		case "lblUseSecureApiAccessSid":
+			return "Activate securing access to api";
+		case "hintUseSecureApiAccessSid":
+			return "If you enable this setting a sid is needed to access some api endpoints. Please navigate to the CCUs WebUI and select Settings > Addons. There on the section for the eufy SECURITY-Addon select Setting.";
 		case "settingsHeaderConfigLogLevel":
 			return "Settings for logging";
 		case "lblLogLevelAddon":
@@ -600,8 +606,8 @@ function translateMessages(message, ...options)
 			return "Error determining the stations.";
 		case "messageSettingsLoadingErrorHeader":
 			return "Error determining the settings.";
-		case "messageErrorTwoValues":
-			return `The return value '${options[0]}' is '${options[1]}'.`;
+		case "messageErrorThreeValues":
+			return `The return value '${options[0]}' is '${options[1]}'.<br />Message: '${options[2]}'`;
 		case "messageSystemVariableHintHeader":
 			return "Option 'Automatically update system variables for API actionsn' is activated.";
 		case "messageSystemVariableHintMessage":

@@ -40,7 +40,7 @@ class ApiServer
      */
     public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string): Promise<void>
     {
-        rootAddonLogger.info(`eufy-security-hm version ${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
+        rootAddonLogger.info(`eufy-security-hm version v${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         rootAddonLogger.info(`  Host: ${os.hostname}`);
         rootAddonLogger.info(`  Platform: ${os.platform}_${os.arch}`);
         rootAddonLogger.info(`  Node: ${process.version}`);
@@ -349,7 +349,21 @@ class ApiServer
                         }
                         break;
                     case "getConfig":
-                        responseData = await api.getAPIConfigAsJson();
+                        if(api.isSidCheckEnabled() === false || (api.isSidCheckEnabled() === true && url.length === 3 && url[2] !== "" && await api.checkSid(url[2])))
+                        {
+                            responseData = await api.getAPIConfigAsJson();
+                        }
+                        else if(api.isSidCheckEnabled() === true && url.length === 3)
+                        {
+                            if(url[2] === "" || !await api.checkSid(url[2]))
+                            {
+                                responseData = `{"success":false,"message":"The sid is not valid."}`;
+                            }
+                        }
+                        else
+                        {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
                         break;
                     case "getCountries":
                         responseData = api.getCountriesAsJson();
@@ -576,274 +590,321 @@ class ApiServer
         {
             if(url.length > 1)
             {
-                switch (url[1])
+                let postData = "";
+                let isDataOK = true;switch (url[1])
                 {
                     case "setConfig":
-                        let postData = "";
-                        let isDataOK = true;
-                        request.on("data", function (chunk) {
-                            postData += chunk.toString();
-                        });
+                        if(api.isSidCheckEnabled() === false || (api.isSidCheckEnabled() === true && url.length === 3 && url[2] !== "" && await api.checkSid(url[2])))
+                        {
+                            request.on("data", function (chunk) {
+                                postData += chunk.toString();
+                            });
 
-                        request.on("end", async function(){
-                            let username = "";
-                            if(postData.indexOf("username") >= 0)
-                            {
-                                username = getDataFromPOSTData(postData, "username", "string");
-                            }
+                            request.on("end", async function(){
+                                let username = "";
+                                if(postData.indexOf("username") >= 0)
+                                {
+                                    username = getDataFromPOSTData(postData, "username", "string");
+                                }
 
-                            let password = "";
-                            if(postData.indexOf("password") >= 0)
-                            {
-                                password = getDataFromPOSTData(postData, "password", "string");
-                            }
+                                let password = "";
+                                if(postData.indexOf("password") >= 0)
+                                {
+                                    password = getDataFromPOSTData(postData, "password", "string");
+                                }
 
-                            let country = "";
-                            if(postData.indexOf("country") >= 0)
-                            {
-                                country = getDataFromPOSTData(postData, "country", "string");
-                            }
+                                let country = "";
+                                if(postData.indexOf("country") >= 0)
+                                {
+                                    country = getDataFromPOSTData(postData, "country", "string");
+                                }
 
-                            let language = "";
-                            if(postData.indexOf("language") >= 0)
-                            {
-                                language = getDataFromPOSTData(postData, "language", "string");
-                            }
+                                let language = "";
+                                if(postData.indexOf("language") >= 0)
+                                {
+                                    language = getDataFromPOSTData(postData, "language", "string");
+                                }
 
-                            let trustedDeviceName = "";
-                            if(postData.indexOf("trustedDeviceName") >= 0)
-                            {
-                                trustedDeviceName = getDataFromPOSTData(postData, "trustedDeviceName", "string");
-                            }
+                                let trustedDeviceName = "";
+                                if(postData.indexOf("trustedDeviceName") >= 0)
+                                {
+                                    trustedDeviceName = getDataFromPOSTData(postData, "trustedDeviceName", "string");
+                                }
 
-                            let useHttp = false;
-                            if(postData.indexOf("useHttp") >= 0)
-                            {
-                                useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
-                            }
+                                let useHttp = false;
+                                if(postData.indexOf("useHttp") >= 0)
+                                {
+                                    useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
+                                }
 
-                            let apiporthttp = 52789;
-                            if(postData.indexOf("httpPort") >= 0)
-                            {
-                                apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
-                            }
+                                let apiporthttp = 52789;
+                                if(postData.indexOf("httpPort") >= 0)
+                                {
+                                    apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
+                                }
 
-                            let useHttps = false;
-                            if(postData.indexOf("useHttps") >= 0)
-                            {
-                                useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
-                            }
-                            if(useHttp == false && useHttps == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("At least 'useHttp' or 'useHttps' must be activated.");
-                            }
-
-                            let apiporthttps = 52790;
-                            if(postData.indexOf("httpsPort") >= 0)
-                            {
-                                apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
-                            }
-
-                            let apikeyfile = "/usr/local/etc/config/server.pem";
-                            if(postData.indexOf("httpsKeyFile") >= 0)
-                            {
-                                apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
-                            }
-
-                            let apicertfile = "/usr/local/etc/config/server.pem";
-                            if(postData.indexOf("httpsCertFile") >= 0)
-                            {
-                                apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
-                            }
-
-                            let apiacceptinvitations = false;
-                            if(postData.indexOf("acceptInvitations") >= 0)
-                            {
-                                apiacceptinvitations = getDataFromPOSTData(postData, "acceptInvitations", "boolean");
-                            }
-
-                            let apihouseid = "all";
-                            if(postData.indexOf("house") >= 0)
-                            {
-                                apihouseid = getDataFromPOSTData(postData, "house", "string");
-                            }
-
-                            let apiconnectiontype = 1;
-                            if(postData.indexOf("connectionType") >= 0)
-                            {
-                                apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
-                            }
-
-                            let apiuseudpstaticports = false;
-                            if(postData.indexOf("useUdpStaticPorts") >= 0)
-                            {
-                                apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
-                            }
-
-                            let apiudpports = undefined;
-                            if(postData.indexOf("udpPortsStation") >= 0)
-                            {
-                                apiudpports = getAllUdpPortsForStations(postData);
-                            }
-
-                            let useSystemVariables = false;
-                            if(postData.indexOf("useSystemVariables") >= 0)
-                            {
-                                useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
-                            }
-
-                            let useupdatestateevent = false;
-                            if(postData.indexOf("useUpdateStateEvent") >= 0)
-                            {
-                                useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
-                            }
-
-                            let useupdatestateintervall = false;
-                            if(postData.indexOf("useUpdateStateIntervall") >= 0)
-                            {
-                                useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
-                            }
-
-                            let updatestatetimespan = 15;
-                            if(postData.indexOf("updateStateIntervallTimespan") >= 0)
-                            {
-                                updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
-                            }
-
-                            let usepushservice = false;
-                            if(postData.indexOf("usePushService") >= 0)
-                            {
-                                usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
-                            }
-
-                            let loglevelAddon = 6;
-                            if(postData.indexOf("logLevelAddon") >= 0)
-                            {
-                                loglevelAddon = getDataFromPOSTData(postData, "logLevelAddon", "number");
-                            }
-
-                            let loglevelMain = 6;
-                            if(postData.indexOf("logLevelMain") >= 0)
-                            {
-                                loglevelMain = getDataFromPOSTData(postData, "logLevelMain", "number");
-                            }
-
-                            let loglevelHttp = 6;
-                            if(postData.indexOf("logLevelHttp") >= 0)
-                            {
-                                loglevelHttp = getDataFromPOSTData(postData, "logLevelHttp", "number");
-                            }
-
-                            let loglevelP2p = 6;
-                            if(postData.indexOf("logLevelP2p") >= 0)
-                            {
-                                loglevelP2p = getDataFromPOSTData(postData, "logLevelP2p", "number");
-                            }
-
-                            let loglevelPush = 6;
-                            if(postData.indexOf("logLevelPush") >= 0)
-                            {
-                                loglevelPush = getDataFromPOSTData(postData, "logLevelPush", "number");
-                            }
-
-                            let loglevelMqtt = 6;
-                            if(postData.indexOf("logLevelAddon") >= 0)
-                            {
-                                loglevelMqtt = getDataFromPOSTData(postData, "logLevelMqtt", "number");
-                            }
-
-                            if(checkNumberValue(apiporthttp, 1, 53535) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'apiporthttp' is out of range. Please use a value between '1' and '53535'.");
-                            }
-                            if(checkNumberValue(apiporthttps, 1, 53535) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'apiporthttps' is out of range. Please use a value between '1' and '53535'.");
-                            }
-                            if(apiuseudpstaticports == true)
-                            {
-                                /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                                let useHttps = false;
+                                if(postData.indexOf("useHttps") >= 0)
+                                {
+                                    useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
+                                }
+                                if(useHttp == false && useHttps == false)
                                 {
                                     isDataOK = false;
-                                }*/
-                            }
-                            if(useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == ""))
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The settings for using https are incomplete. Please set 'apiporthttps', 'apikeyfile' and 'apicertfile'.");
-                            }
-                            if(checkNumberValue(loglevelAddon, 0, 6) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'loglevelAddon' is out of range. Please use a value between '0' and '6'.");
-                            }
-                            if(checkNumberValue(loglevelMain, 0, 6) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'loglevelMain' is out of range. Please use a value between '0' and '6'.");
-                            }
-                            if(checkNumberValue(loglevelHttp, 0, 6) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'loglevelHttp' is out of range. Please use a value between '0' and '6'.");
-                            }
-                            if(checkNumberValue(loglevelP2p, 0, 6) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'loglevelP2p' is out of range. Please use a value between '0' and '6'.");
-                            }
-                            if(checkNumberValue(loglevelPush, 0, 6) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'loglevelPush' is out of range. Please use a value between '0' and '6'.");
-                            }
-                            if(checkNumberValue(loglevelMqtt, 0, 6) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'loglevelMqtt' is out of range. Please use a value between '0' and '6'.");
-                            }
-                            if(checkNumberValue(updatestatetimespan, 15, 240) == false)
-                            {
-                                isDataOK = false;
-                                rootAddonLogger.info("The value for 'updatestatetimespan' is out of range. Please use a value between '15' and '240'.");
-                            }
+                                    rootAddonLogger.info("At least 'useHttp' or 'useHttps' must be activated.");
+                                }
 
-                            if(isDataOK == true)
-                            {
-                                apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
+                                let apiporthttps = 52790;
+                                if(postData.indexOf("httpsPort") >= 0)
+                                {
+                                    apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
+                                }
 
-                                responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, loglevelAddon, loglevelMain, loglevelHttp, loglevelP2p, loglevelPush, loglevelMqtt);
-                            }
-                            else
-                            {
-                                responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check logfile and values."}`;
-                            }
+                                let apikeyfile = "/usr/local/etc/config/server.pem";
+                                if(postData.indexOf("httpsKeyFile") >= 0)
+                                {
+                                    apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
+                                }
 
-                            const resJson = JSON.parse(responseData);
+                                let apicertfile = "/usr/local/etc/config/server.pem";
+                                if(postData.indexOf("httpsCertFile") >= 0)
+                                {
+                                    apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
+                                }
 
-                            response.setHeader("Access-Control-Allow-Origin", "*");
-                            response.setHeader("Content-Type", "application/json; charset=UTF-8");
+                                let apiacceptinvitations = false;
+                                if(postData.indexOf("acceptInvitations") >= 0)
+                                {
+                                    apiacceptinvitations = getDataFromPOSTData(postData, "acceptInvitations", "boolean");
+                                }
 
-                            response.writeHead(200);
-                            response.end(responseData);
+                                let apihouseid = "all";
+                                if(postData.indexOf("house") >= 0)
+                                {
+                                    apihouseid = getDataFromPOSTData(postData, "house", "string");
+                                }
 
-                            if(resJson.success == true && resJson.serviceRestart == true)
+                                let apiconnectiontype = 1;
+                                if(postData.indexOf("connectionType") >= 0)
+                                {
+                                    apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
+                                }
+
+                                let apiuseudpstaticports = false;
+                                if(postData.indexOf("useUdpStaticPorts") >= 0)
+                                {
+                                    apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
+                                }
+
+                                let apiudpports = undefined;
+                                if(postData.indexOf("udpPortsStation") >= 0)
+                                {
+                                    apiudpports = getAllUdpPortsForStations(postData);
+                                }
+
+                                let useSystemVariables = false;
+                                if(postData.indexOf("useSystemVariables") >= 0)
+                                {
+                                    useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
+                                }
+
+                                let useupdatestateevent = false;
+                                if(postData.indexOf("useUpdateStateEvent") >= 0)
+                                {
+                                    useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
+                                }
+
+                                let useupdatestateintervall = false;
+                                if(postData.indexOf("useUpdateStateIntervall") >= 0)
+                                {
+                                    useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
+                                }
+
+                                let updatestatetimespan = 15;
+                                if(postData.indexOf("updateStateIntervallTimespan") >= 0)
+                                {
+                                    updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
+                                }
+
+                                let usepushservice = false;
+                                if(postData.indexOf("usePushService") >= 0)
+                                {
+                                    usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
+                                }
+
+                                let usesecureapiaccesssid = false;
+                                if(postData.indexOf("useSecureApiAccessSid") >= 0)
+                                {
+                                    usesecureapiaccesssid = getDataFromPOSTData(postData, "useSecureApiAccessSid", "boolean");
+                                }
+
+                                let logleveladdon = 6;
+                                if(postData.indexOf("logLevelAddon") >= 0)
+                                {
+                                    logleveladdon = getDataFromPOSTData(postData, "logLevelAddon", "number");
+                                }
+
+                                let loglevelmain = 6;
+                                if(postData.indexOf("logLevelMain") >= 0)
+                                {
+                                    loglevelmain = getDataFromPOSTData(postData, "logLevelMain", "number");
+                                }
+
+                                let loglevelhttp = 6;
+                                if(postData.indexOf("logLevelHttp") >= 0)
+                                {
+                                    loglevelhttp = getDataFromPOSTData(postData, "logLevelHttp", "number");
+                                }
+
+                                let loglevelp2p = 6;
+                                if(postData.indexOf("logLevelP2p") >= 0)
+                                {
+                                    loglevelp2p = getDataFromPOSTData(postData, "logLevelP2p", "number");
+                                }
+
+                                let loglevelpush = 6;
+                                if(postData.indexOf("logLevelPush") >= 0)
+                                {
+                                    loglevelpush = getDataFromPOSTData(postData, "logLevelPush", "number");
+                                }
+
+                                let loglevelmqtt = 6;
+                                if(postData.indexOf("logLevelAddon") >= 0)
+                                {
+                                    loglevelmqtt = getDataFromPOSTData(postData, "logLevelMqtt", "number");
+                                }
+
+                                if(checkNumberValue(apiporthttp, 1, 53535) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'apiporthttp' is out of range. Please use a value between '1' and '53535'.");
+                                }
+                                if(checkNumberValue(apiporthttps, 1, 53535) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'apiporthttps' is out of range. Please use a value between '1' and '53535'.");
+                                }
+                                if(apiuseudpstaticports == true)
+                                {
+                                    /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
+                                    {
+                                        isDataOK = false;
+                                    }*/
+                                }
+                                if(useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == ""))
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The settings for using https are incomplete. Please set 'apiporthttps', 'apikeyfile' and 'apicertfile'.");
+                                }
+                                if(checkNumberValue(logleveladdon, 0, 6) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'logleveladdon' is out of range. Please use a value between '0' and '6'.");
+                                }
+                                if(checkNumberValue(loglevelmain, 0, 6) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'loglevelmain' is out of range. Please use a value between '0' and '6'.");
+                                }
+                                if(checkNumberValue(loglevelhttp, 0, 6) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'loglevelhttp' is out of range. Please use a value between '0' and '6'.");
+                                }
+                                if(checkNumberValue(loglevelp2p, 0, 6) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'loglevelp2p' is out of range. Please use a value between '0' and '6'.");
+                                }
+                                if(checkNumberValue(loglevelpush, 0, 6) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'loglevelpush' is out of range. Please use a value between '0' and '6'.");
+                                }
+                                if(checkNumberValue(loglevelmqtt, 0, 6) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'loglevelmqtt' is out of range. Please use a value between '0' and '6'.");
+                                }
+                                if(checkNumberValue(updatestatetimespan, 15, 240) == false)
+                                {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'updatestatetimespan' is out of range. Please use a value between '15' and '240'.");
+                                }
+
+                                if(isDataOK == true)
+                                {
+                                    apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
+
+                                    responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, usesecureapiaccesssid, logleveladdon, loglevelmain, loglevelhttp, loglevelp2p, loglevelpush, loglevelmqtt);
+                                }
+                                else
+                                {
+                                    responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check logfile and values."}`;
+                                }
+
+                                const resJson = JSON.parse(responseData);
+
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
+
+                                response.writeHead(200);
+                                response.end(responseData);
+
+                                if(resJson.success == true && resJson.serviceRestart == true)
+                                {
+                                    rootAddonLogger.info("Settings saved. Restarting apiServer.");
+                                    restartServer();
+                                }
+                                else if(resJson.success == true && resJson.serviceRestart == false)
+                                {
+                                    rootAddonLogger.info("Settings saved.");
+                                }
+                                else
+                                {
+                                    rootAddonLogger.info("Error during saving settings.");
+                                }
+                            });
+                        }
+                        else if(api.isSidCheckEnabled() === true && url.length === 3)
+                        {
+                            if(url[2] === "" || !await api.checkSid(url[2]))
                             {
-                                rootAddonLogger.info("Settings saved. Restarting apiServer.");
-                                restartServer();
+                                request.on("data", function (chunk) {
+                                    postData += chunk.toString();
+                                });
+
+                                request.on("end", async function(){
+                                    responseData = `{"success":false,"message":"The sid is not valid."}`;
+
+                                    response.setHeader("Access-Control-Allow-Origin", "*");
+                                    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+
+                                    response.writeHead(200);
+                                    response.end(responseData);
+
+                                    rootAddonLogger.info("Error during saving settings. The sid is not valid.");
+                                });
                             }
-                            else if(resJson.success == true && resJson.serviceRestart == false)
-                            {
-                                rootAddonLogger.info("Settings saved.");
-                            }
-                            else
-                            {
-                                rootAddonLogger.info("Error during saving settings.");
-                            }
-                        });
+                        }
+                        else
+                        {
+                            request.on("data", function (chunk) {
+                                postData += chunk.toString();
+                            });
+
+                            request.on("end", async function(){
+                                responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
+
+                                response.writeHead(200);
+                                response.end(responseData);
+
+                                rootAddonLogger.info("Error during saving settings. The sid is not valid.");
+                            });
+                        }
                         break;
                     case "uploadConfig":
                         request.on("data", function (chunk) {

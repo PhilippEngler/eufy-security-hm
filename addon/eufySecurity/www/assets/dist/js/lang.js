@@ -135,6 +135,9 @@ function translateStaticPageContent(page)
             translateInnerHtml("settingsHeaderConfigPushService");
             translateInnerHtml("lblUsePushService");
             translateInnerHtml("hintUsePushService");
+            translateInnerHtml("settingsHeaderConfigSecureApiAccessSid");
+            translateInnerHtml("lblUseSecureApiAccessSid");
+            translateInnerHtml("hintUseSecureApiAccessSid");
             translateInnerHtml("settingsHeaderConfigLogLevel");
             translateInnerHtml("lblLogLevelAddon");
             translateInnerHtml("lblLogLevelMain");

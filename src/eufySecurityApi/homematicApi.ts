@@ -1,6 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { EufySecurityApi } from "./eufySecurityApi";
 import { rootAddonLogger } from "./logging";
+import { promisify } from "util";
+import { exec } from "child_process";
 
 /**
  * Interacting with the CCU.
@@ -263,10 +265,37 @@ export class HomematicApi
     }
 
     /**
+     * Checks if a given sid represents a currently authenticated session.
+     * @param sid The sid to check.
+     * @returns true, if the sid is correct, otherwise false.
+     */
+    public async checkSid(sid: string): Promise<boolean>
+    {
+        try
+        {
+            const promisifyExec = promisify(exec);
+            const result = await promisifyExec(`tclsh /usr/local/addons/eufySecurity/www/sessionCheck.cgi ${sid}`);
+            if(result.stdout.trim() === "1")
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (err: any)
+        {
+            rootAddonLogger.error(`Error occured while checking sid.`, { error: err });
+            return false;
+        }
+    }
+
+    /**
      * Returns the version info of the homematic api.
      */
     public getHomematicApiVersion(): string
     {
-        return "3.0.0";
+        return "3.0.1";
     }
 }

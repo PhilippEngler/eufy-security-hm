@@ -272,6 +272,23 @@ export class EufySecurityApi
     }
 
     /**
+     * Returns the setting value if access to api is secured by sid.
+     * @returns true, if access to api is secured by sid, otherwise false.
+     */
+    public isSidCheckEnabled(): boolean {
+        return this.config.getSecureApiAccessBySid();
+    }
+
+    /**
+     * Checks if a given sid represents a currently authenticated session.
+     * @param sid The sid to check.
+     * @returns true, if the sid is correct, otherwise false.
+     */
+    public async checkSid(sid: string): Promise<boolean> {
+        return this.homematicApi.checkSid(sid);
+    }
+
+    /**
      * Close the EufySecurityApi.
      */
     public async close() : Promise<void>
@@ -2475,7 +2492,7 @@ export class EufySecurityApi
         let json : any = {};
 
         json = {"success":true, "data":{}};
-        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "logLevelAddon":this.config.getLogLevelAddon(), "logLevelMain":this.config.getLogLevelMain(), "logLevelHttp":this.config.getLogLevelHttp(), "logLevelP2p":this.config.getLogLevelP2p(), "logLevelPush":this.config.getLogLevelPush(), "logLevelMqtt":this.config.getLogLevelMqtt(), "tokenExpire":this.config.getTokenExpire()};
+        json.data = {"configVersion":this.config.getConfigFileVersion(), "eMail":this.config.getEmailAddress(), "password":this.config.getPassword(), "country":this.config.getCountry(), "language":this.config.getLanguage(), "trustedDeviceName":this.config.getTrustedDeviceName(), "httpActive":this.config.getHttpActive(), "httpPort":this.config.getHttpPort(), "httpsActive":this.config.getHttpsActive(), "httpsPort":this.config.getHttpsPort(), "httpsPKeyFile":this.config.getHttpsPKeyFile(), "httpsCertFile":this.config.getHttpsCertFile(), "acceptInvitations":this.config.getAcceptInvitations(), "houseId":this.config.getHouseId(), "connectionTypeP2p":this.config.getConnectionType(), "localStaticUdpPortsActive":this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive":this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive":this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive":this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan":this.config.getStateUpdateIntervallTimespan(), "pushServiceActive":this.config.getPushServiceActive(), "secureApiAccessBySid":this.config.getSecureApiAccessBySid(), "logLevelAddon":this.config.getLogLevelAddon(), "logLevelMain":this.config.getLogLevelMain(), "logLevelHttp":this.config.getLogLevelHttp(), "logLevelP2p":this.config.getLogLevelP2p(), "logLevelPush":this.config.getLogLevelPush(), "logLevelMqtt":this.config.getLogLevelMqtt(), "tokenExpire":this.config.getTokenExpire()};
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -2502,6 +2519,7 @@ export class EufySecurityApi
      * @param stateUpdateIntervallActive Should the api schedule a task for updateing the state.
      * @param stateUpdateIntervallTimespan The time between two scheduled runs of update state.
      * @param pushServiceActive Should the api use push service.
+     * @param secureApiAccessSidActive Should the api check if a given sid represents a currently authenticated session.
      * @param logLevelAddon The log level for addon.
      * @param logLevelMain The log level for main.
      * @param logLevelHttp The log level for http.
@@ -2510,7 +2528,7 @@ export class EufySecurityApi
      * @param logLevelMqtt The log level for mqtt.
      * @returns A JSON string containing the result.
      */
-    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, pushServiceActive : boolean, logLevelAddon : number, logLevelMain : number, logLevelHttp : number, logLevelP2p : number, logLevelPush : number, logLevelMqtt : number) : Promise<string>
+    public async setConfig(eMail : string, password : string, country : string, language : string, trustedDeviceName : string, httpActive : boolean, httpPort : number, httpsActive : boolean, httpsPort : number, httpsKeyFile : string, httpsCertFile : string, acceptInvitations : boolean, houseId : string, connectionTypeP2p : number, localStaticUdpPortsActive : boolean, localStaticUdpPorts : any[] | undefined, systemVariableActive : boolean, stateUpdateEventActive : boolean, stateUpdateIntervallActive : boolean, stateUpdateIntervallTimespan : number, pushServiceActive : boolean, secureApiAccessSidActive : boolean, logLevelAddon : number, logLevelMain : number, logLevelHttp : number, logLevelP2p : number, logLevelPush : number, logLevelMqtt : number) : Promise<string>
     {
         let serviceRestart = false;
         let taskSetupStateNeeded = false;
@@ -2584,6 +2602,7 @@ export class EufySecurityApi
             this.setupScheduledTask(this.taskUpdateState, "getState");
         }
         this.config.setPushServiceActive(pushServiceActive);
+        this.config.setSecureApiAccessBySid(secureApiAccessSidActive)
         this.config.setLogLevelAddon(logLevelAddon);
         this.config.setLogLevelMain(logLevelMain);
         this.config.setLogLevelHttp(logLevelHttp);

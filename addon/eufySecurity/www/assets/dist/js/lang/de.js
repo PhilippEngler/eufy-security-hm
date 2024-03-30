@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.11
-20240309
+Schema v9.12
+20240328
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240309 (v9.11)";
+var languageVersion = "20240328 (v9.12)";
 
 function translateNavbarElement(element)
 {
@@ -204,6 +204,12 @@ function translateStaticContentElement(element)
 			return "Pushbenachrichtigungen aktivieren";
 		case "hintUsePushService":
 			return "Pushbenachrichtigungen werden z.B. für die Ermittlung der Zeitangabe der letzten Ereignisse für die Kameras benötigt.";
+		case "settingsHeaderConfigSecureApiAccessSid":
+			return "Einstellungen für Sicherung des Zugriffs auf die API";
+		case "lblUseSecureApiAccessSid":
+			return "Sicherung des Zugriffs auf die API aktivieren";
+		case "hintUseSecureApiAccessSid":
+			return "Wenn Sie diese Einstellung aktivieren, wird für einige API-Funktionen eine gültige SID benötigt. Gehen Sie dazu bitte auf die WebUI der CCU, navigieren Sie zu Einstellungen > Zusatzsoftware und wählen Sie Einstellen in den Optionen des eufy SECURITY-Addons aus.";
 		case "settingsHeaderConfigLogLevel":
 			return "Einstellungen für Protokollierung";
 		case "lblLogLevelAddon":
@@ -600,8 +606,8 @@ function translateMessages(message, ...options)
 			return "Fehler bei der Ermittlung der Stationen.";
 		case "messageSettingsLoadingErrorHeader":
 			return "Fehler bei der Ermittlung der Einstellungen.";
-		case "messageErrorTwoValues":
-			return `Der Rückgabewert '${options[0]}' ist '${options[1]}'.`;
+		case "messageErrorThreeValues":
+			return `Der Rückgabewert '${options[0]}' ist '${options[1]}'.<br />Fehlermeldung: '${options[2]}'`;
 		case "messageSystemVariableHintHeader":
 			return "Option 'Systemvariablen bei API Aktionen automatisch aktualisieren' ist aktiviert.";
 		case "messageSystemVariableHintMessage":

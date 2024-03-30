@@ -1,11 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240309
+ * 20240328
  */
-action = "";
-port = "";
-redirectTarget = "";
-version = "3.0.0";
+var action = "";
+var port = "";
+var redirectTarget = "";
+var sid = "";
+var version = "3.0.1";
 
 /**
  * common used java script functions
@@ -42,9 +43,14 @@ function init(page)
 		urlParams = new URLSearchParams(window.location.search);
 		if(getParameterFromURLSearchParams(urlParams, "sid"))
 		{
-			addSidToLinks(getParameterFromURLSearchParams(urlParams, "sid"));
-			redirectTarget = `?sid=${getParameterFromURLSearchParams(urlParams, "sid")}`;
+			redirectTarget = `${redirectTarget}${redirectTarget === "" ? "?" : "&"}sid=${getParameterFromURLSearchParams(urlParams, "sid")}`;
+			sid = getParameterFromURLSearchParams(urlParams, "sid");
 		}
+		if(getParameterFromURLSearchParams(urlParams, "lang"))
+		{
+			redirectTarget = `${redirectTarget}${redirectTarget === "" ? "?" : "&"}lang=${getParameterFromURLSearchParams(urlParams, "lang")}`;
+		}
+		addUrlParams(redirectTarget);
 		if(getParameterFromURLSearchParams(urlParams, "redirect"))
 		{
 			if(getParameterFromURLSearchParams(urlParams, "redirect") == "index.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "devices.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "statechange.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "settings.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "logfiles.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "info.html")
@@ -78,15 +84,15 @@ function getParameterFromURLSearchParams(urlParams, parameterName)
 	return urlParams.get(parameterName);
 }
 
-function addSidToLinks(sessionID)
+function addUrlParams(urlParameter)
 {
-	document.getElementById("lnkMain").setAttribute("href", document.getElementById("lnkMain").getAttribute("href") + `?sid=${sessionID}`);
-	document.getElementById("lnkHome").setAttribute("href", document.getElementById("lnkHome").getAttribute("href") + `?sid=${sessionID}`);
-	document.getElementById("lnkDevices").setAttribute("href", document.getElementById("lnkDevices").getAttribute("href") + `?sid=${sessionID}`);
-	document.getElementById("lnkStatechange").setAttribute("href", document.getElementById("lnkStatechange").getAttribute("href") + `?sid=${sessionID}`);
-	document.getElementById("lnkSettings").setAttribute("href", document.getElementById("lnkSettings").getAttribute("href") + `?sid=${sessionID}`);
-	document.getElementById("lnkLogfiles").setAttribute("href", document.getElementById("lnkLogfiles").getAttribute("href") + `?sid=${sessionID}`);
-	document.getElementById("lnkInfo").setAttribute("href", document.getElementById("lnkInfo").getAttribute("href") + `?sid=${sessionID}`);
+	document.getElementById("niMain").setAttribute("href", document.getElementById("niMain").getAttribute("href") + urlParameter);
+	document.getElementById("niHome").setAttribute("href", document.getElementById("niHome").getAttribute("href") + urlParameter);
+	document.getElementById("niDevices").setAttribute("href", document.getElementById("niDevices").getAttribute("href") + urlParameter);
+	document.getElementById("niStateChange").setAttribute("href", document.getElementById("niStateChange").getAttribute("href") + urlParameter);
+	document.getElementById("niSettings").setAttribute("href", document.getElementById("niSettings").getAttribute("href") + urlParameter);
+	document.getElementById("niLogfiles").setAttribute("href", document.getElementById("niLogfiles").getAttribute("href") + urlParameter);
+	document.getElementById("niInfo").setAttribute("href", document.getElementById("niInfo").getAttribute("href") + urlParameter);
 }
 
 function getAPIPort(page)
@@ -3663,7 +3669,7 @@ function loadStationsSettings()
 function loadDataSettings()
 {
 	var xmlHttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/getConfig`;
+	var url = `${location.protocol}//${location.hostname}:${port}/getConfig${sid !== "" ? `/${sid}` : ""}`;
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
 	xmlHttp.onreadystatechange = function()
@@ -3803,6 +3809,10 @@ function loadDataSettings()
 					{
 						document.getElementById("chkUsePushService").setAttribute("checked", true);
 					}
+					if(objResp.data.secureApiAccessBySid == true)
+					{
+						document.getElementById("chkUseSecureApiAccessSid").setAttribute("checked", true);
+					}
 					if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6"))
 					{
 						document.getElementById("cbLogLevelAddon").selectedIndex = 3;
@@ -3882,7 +3892,7 @@ function loadDataSettings()
 				}
 				else
 				{
-					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorTwoValues", "success", objResp.success));
+					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorThreeValues", "success", objResp.success, objResp.message));
 				}
 			}
 			catch (e)
@@ -4008,7 +4018,7 @@ function loadSystemVariables()
 function saveConfig()
 {
 	var xmlHttp, objFD, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/setConfig`;
+	var url = `${location.protocol}//${location.hostname}:${port}/setConfig${sid !== "" ? `/${sid}` : ""}`;
 	xmlHttp = new XMLHttpRequest();
 	objFD = new FormData(document.getElementById("configform"));
 	xmlHttp.addEventListener("load", function(event)

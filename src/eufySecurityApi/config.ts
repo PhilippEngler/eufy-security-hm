@@ -118,7 +118,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 18;
+        return 19;
     }
 
     /**
@@ -212,7 +212,7 @@ export class Config
         const pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false};
+        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false};
         config.apiConfig = apiConfig;
 
         const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
@@ -362,6 +362,16 @@ export class Config
                     rootConfLogger.info(" removing 'updateLinksTimespan'.");
                     updated = true;
                 }
+            }
+            if(configJson.configVersion < 19)
+            {
+                rootConfLogger.info("Configfile needs Stage2 update to version 19...");
+                if(configJson.apiConfig.secureApiAccessBySid === undefined)
+                {
+                    rootConfLogger.info(" adding 'secureApiAccessBySid'.");
+                    configJson.apiConfig.secureApiAccessBySid = false;
+                }
+                updated = true;
             }
             if(updated == true)
             {
@@ -551,6 +561,10 @@ export class Config
             if(configJson.apiConfig.pushServiceActive !== undefined)
             {
                 newConfigJson.apiConfig.pushServiceActive = configJson.apiConfig.pushServiceActive;
+            }
+            if(configJson.apiConfig.secureApiAccessBySid !== undefined)
+            {
+                newConfigJson.apiConfig.secureApiAccessBySid = configJson.apiConfig.secureApiAccessBySid;
             }
         }
 
@@ -1884,6 +1898,35 @@ export class Config
         if(this.configJson.apiConfig.pushServiceActive != pushServiceActive)
         {
             this.configJson.apiConfig.pushServiceActive = pushServiceActive;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the value for securing the access to api by sid.
+     * @returns Boolean for enableing or diableing.
+     */
+    public getSecureApiAccessBySid() : boolean
+    {
+        if(this.configJson.apiConfig.secureApiAccessBySid !== undefined)
+        {
+            return this.configJson.apiConfig.secureApiAccessBySid;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set if securing api access by sid is used.
+     * @param secureApiAccessBySid The value if securing api access by sid is used.
+     */
+    public setSecureApiAccessBySid(secureApiAccessBySid : boolean) : void
+    {
+        if(this.configJson.apiConfig.secureApiAccessBySid != secureApiAccessBySid)
+        {
+            this.configJson.apiConfig.secureApiAccessBySid = secureApiAccessBySid;
             this.hasChanged = true;
         }
     }
