@@ -1812,7 +1812,7 @@ export class Config
         if(stationSerial !== undefined)
         {
             let res;
-            if(this.isStationInConfig(stationSerial) == false)
+            if(this.isStationInConfig(stationSerial) === false)
             {
                 rootConfLogger.info(`Station ${stationSerial} not in config. Try to create new station entry.`);
                 res = this.updateWithNewStation(stationSerial);
@@ -1830,19 +1830,29 @@ export class Config
                     if(udpPort === undefined)
                     {
                         udpPort = null;
+                        return true;
                     }
-                    if(this.configJson.stations[station].udpPort != udpPort)
+                    if(this.configJson.stations[station].udpPort !== udpPort)
                     {
                         this.configJson.stations[station].udpPort = udpPort;
                         this.hasChanged = true;
                         return true;
                     }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 rootConfLogger.info(`Station ${stationSerial} not in config.`);
                 return false;
             }
+            else
+            {
+                rootConfLogger.error(`Station ${stationSerial} not in config. Create new station entry failed.`);
+                return false;
+            }
         }
-        rootConfLogger.info(`Station ${stationSerial} not in config.`);
+        rootConfLogger.info(`No stationSerial given`);
         return false;
     }
 
