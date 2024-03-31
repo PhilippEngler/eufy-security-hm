@@ -15,6 +15,3 @@ if { $argc == 1 } {
 } else {
     puts -1
 }
-
-
-
