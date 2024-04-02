@@ -3434,14 +3434,6 @@ function disableUIElements()
 	document.getElementById("cbLogLevelMqtt").setAttribute("disabled", true);
 }
 
-function activateUIElements()
-{
-	document.getElementById("cardEufySecurityAccountData").classList.remove("collapse");
-	document.getElementById("cardEufySecurityConfig").classList.remove("collapse");
-	document.getElementById("containerBtnSave").classList.remove("collapse");
-	document.getElementById("cardSystemVariables").classList.remove("collapse");
-}
-
 function enableUIElements()
 {
 	document.getElementById("txtUsername").removeAttribute("disabled");
@@ -3456,6 +3448,22 @@ function enableUIElements()
 	document.getElementById("cbLogLevelP2p").removeAttribute("disabled");
 	document.getElementById("cbLogLevelPush").removeAttribute("disabled");
 	document.getElementById("cbLogLevelMqtt").removeAttribute("disabled");
+}
+
+function collapseUICards()
+{
+	document.getElementById("cardEufySecurityAccountData").classList.add("collapse");
+	document.getElementById("cardEufySecurityConfig").classList.add("collapse");
+	document.getElementById("containerBtnSave").classList.add("collapse");
+	document.getElementById("cardSystemVariables").classList.add("collapse");
+}
+
+function deCollapseUICards()
+{
+	document.getElementById("cardEufySecurityAccountData").classList.remove("collapse");
+	document.getElementById("cardEufySecurityConfig").classList.remove("collapse");
+	document.getElementById("containerBtnSave").classList.remove("collapse");
+	document.getElementById("cardSystemVariables").classList.remove("collapse");
 }
 
 function validateFormSettings()
@@ -3887,12 +3895,14 @@ function loadDataSettings()
 					checkLogLevel("alertLogLevelPush", objResp.data.logLevelPush);
 					checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelMqtt);
 					document.getElementById("resultLoading").innerHTML = "";
-					activateUIElements();
+					deCollapseUICards();
 					enableUIElements();
 				}
 				else
 				{
 					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorThreeValues", "success", objResp.success, objResp.message));
+					collapseUICards();
+					disableUIElements();
 				}
 			}
 			catch (e)
