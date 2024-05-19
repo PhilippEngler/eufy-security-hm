@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.12
-20240328
+Schema v9.13
+20240519
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240328 (v9.12)";
+var languageVersion = "20240519 (v9.13)";
 
 function translateNavbarElement(element)
 {
@@ -735,6 +735,17 @@ function translateContent(content, ...options)
 			return "Dieses Gerät wurde auf Grund des niedrigen Akkuladestandes deaktiviert.";
 		case "titleDeactivatedLowBatteryHint":
 			return "Um Einstellungen für dieses Gerät vornehmen zu können, laden Sie das Gerät wieder auf.";
+		case "titleDeactivatedRemoveAndReadd":
+			return "Das Gerät wurde entfernt.";
+		case "titleDeactivatedRemoveAndReaddHint":
+		case "titleDeactivatedResetAndReaddHint":
+			return "Um Einstellungen für dieses Gerät vornehmen zu können, fügen Sie das Gerät wieder Ihrem Account hinzu.";
+		case "titleDeactivatedResetAndReadd":
+			return "Das Gerät wurde zurückgesetzt.";
+		case "titleDeactivatedUnknownState":
+			return "Das Gerät hat einen unbekannten Status.";
+		case "titleDeactivatedUnknownStateHint":
+			return "Um Einstellungen für dieses Gerät vornehmen zu können, überprüfen Sie bitte das Gerät in der App.";
 		case "titleWifiSignalLevel":
 			return "WiFi Empfangsstärke";
 		case "lblBatteryLevel":

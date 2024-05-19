@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240328
+ * 20240519
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.1";
+var version = "3.0.2";
 
 /**
  * common used java script functions
@@ -1022,24 +1022,33 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	deviceModal +=     `
 									</div>
 								</div>`;
-	if(deviceProperties.state === 0)
+	
+	if (deviceProperties.state !== 1)
 	{
+		setEventHandler = false;
+		switch (deviceProperties.state)
+		{
+			case 0:
+				deviceModal += `
+									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedOffline"), translateContent("titleDeactivatedOfflineHint"), "")}`;
+				break;
+			case 2:
+			case 3:
+				deviceModal += `
+									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedLowBattery"), translateContent("titleDeactivatedLowBatteryHint"), "")}`;
+				break;
+			case 4:
+				deviceModal += `
+									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedRemoveAndReadd"), translateContent("titleDeactivatedRemoveAndReaddHint"), "")}`;
+			case 5:
+				deviceModal += `
+									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedResetAndReadd"), translateContent("titleDeactivatedResetAndReaddHint"), "")}`;
+				break;
+			default:
+				deviceModal += `
+									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedUnknownState"), translateContent("titleDeactivatedUnknownStateHint"), "")}`;
+		}
 		deviceModal += `
-									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedOffline"), translateContent("titleDeactivatedOfflineHint"), "")}
-								</div>
-							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
-								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, translateContent("btnClose"), true, "modal", undefined, setEventHandler)}
-							</div>
-						</div>
-					</div>`;
-
-		document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
-		return;
-	}
-	if(deviceProperties.state === 3)
-	{
-		deviceModal += `
-									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedLowBattery"), translateContent("titleDeactivatedLowBatteryHint"), "")}
 								</div>
 							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
 								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", undefined, translateContent("btnClose"), true, "modal", undefined, setEventHandler)}

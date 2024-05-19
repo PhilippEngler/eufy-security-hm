@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.12
-20240328
+Schema v9.13
+20240519
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240328 (v9.12)";
+var languageVersion = "20240519 (v9.13)";
 
 function translateNavbarElement(element)
 {
@@ -735,6 +735,17 @@ function translateContent(content, ...options)
 			return "This device has been deactivated due to low battery power.";
 		case "titleDeactivatedLowBatteryHint":
 			return "To be able to make settings for this device, charge the device again.";
+		case "titleDeactivatedRemoveAndReadd":
+			return "The Device was removed.";
+		case "titleDeactivatedRemoveAndReaddHint":
+		case "titleDeactivatedResetAndReaddHint":
+			return "To be able to make settings for this device, readd the device to your account.";
+		case "titleDeactivatedResetAndReadd":
+			return "The Device was reset.";
+		case "titleDeactivatedUnknownState":
+			return "The Device has an unknown state.";
+		case "titleDeactivatedUnknownStateHint":
+			return "To be able to make settings for the device, please check the device in your App.";
 		case "titleWifiSignalLevel":
 			return "WiFi reception strength";
 		case "lblBatteryLevel":
