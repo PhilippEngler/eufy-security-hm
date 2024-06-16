@@ -1169,7 +1169,7 @@ export class EufySecurityApi
                 const device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
-                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getPropertiesMetadata()};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getPropertiesMetadata()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1219,7 +1219,7 @@ export class EufySecurityApi
                     {
                         temp = null;
                     }
-                    json = {"success":true, "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getProperties(), "interactions":temp};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getProperties(), "interactions":temp};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1479,7 +1479,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "data":station.getPropertiesMetadata()};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "type":station.getModel(), "modelName":getModelName(station.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "data":station.getPropertiesMetadata()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1524,7 +1524,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "data":station.getProperties()};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "data":station.getProperties()};
                     this.setLastConnectionInfo(true);
                 }
                 else
