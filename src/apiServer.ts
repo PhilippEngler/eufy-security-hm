@@ -591,7 +591,8 @@ class ApiServer
             if(url.length > 1)
             {
                 let postData = "";
-                let isDataOK = true;switch (url[1])
+                let isDataOK = true;
+                switch (url[1])
                 {
                     case "setConfig":
                         if(api.isSidCheckEnabled() === false || (api.isSidCheckEnabled() === true && url.length === 3 && url[2] !== "" && await api.checkSid(url[2])))
