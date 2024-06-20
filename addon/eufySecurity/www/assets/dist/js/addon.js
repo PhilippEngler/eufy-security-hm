@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240519
+ * 20240620
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.2";
+var version = "3.0.3";
 
 /**
  * common used java script functions
@@ -1023,7 +1023,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	
-	if (deviceProperties.state !== 1)
+	if (deviceProperties.state !== undefined && deviceProperties.state !== 1)
 	{
 		setEventHandler = false;
 		switch (deviceProperties.state)
