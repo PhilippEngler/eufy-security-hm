@@ -1,4 +1,4 @@
-import type { Got, OptionsOfUnknownResponseBody } from "got" with {
+import type { Got, OptionsOfBufferResponseBody, OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got" with {
     "resolution-mode": "import"
 };
 import type { AnyFunction, ThrottledFunction } from "p-throttle" with {
@@ -644,14 +644,49 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     public async request(request: HTTPApiRequest, withoutUrlPrefix = false): Promise<ApiResponse> {
         rootHTTPLogger.debug("Api request", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
         try {
-            const options: OptionsOfUnknownResponseBody = {
+            // fix for got 14.4.0
+            /*const options: OptionsOfJSONResponseBody  = {
                 method: request.method,
                 json: request.data,
                 responseType: request.responseType !== undefined ? request.responseType : "json",
             };
             if (withoutUrlPrefix)
                 options.prefixUrl = "";
-            const internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            const internalResponse = await this.requestEufyCloud(request.endpoint, options);*/
+
+            let internalResponse;
+            if(request.responseType === "text") {
+                const options: OptionsOfTextResponseBody = {
+                    method: request.method,
+                    json: request.data,
+                    responseType: request.responseType,
+                };
+                if (withoutUrlPrefix) {
+                    options.prefixUrl = "";
+                }
+                internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            } else if(request.responseType === "buffer") {
+                const options: OptionsOfBufferResponseBody = {
+                    method: request.method,
+                    json: request.data,
+                    responseType: request.responseType,
+                };
+                if (withoutUrlPrefix) {
+                    options.prefixUrl = "";
+                }
+                internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            } else {
+                const options: OptionsOfJSONResponseBody = {
+                    method: request.method,
+                    json: request.data,
+                    responseType: "json",
+                };
+                if (withoutUrlPrefix) {
+                    options.prefixUrl = "";
+                }
+                internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            }
+
             const response: ApiResponse = {
                 status: internalResponse.statusCode,
                 statusText: internalResponse.statusMessage ? internalResponse.statusMessage : "",
