@@ -950,7 +950,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getHousesAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getHousesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -990,7 +990,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getHouseAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getHouseAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             json = {"success":false, "reason":`The house with id ${houseId} does not exists.`};
             this.setLastConnectionInfo(false);
         }
@@ -1069,7 +1069,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getDevicesAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getDevicesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1140,7 +1140,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getDeviceAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getDeviceAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1185,7 +1185,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getDevicePropertiesMetadataAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getDevicePropertiesMetadataAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1235,7 +1235,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getDevicePropertiesAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getDevicePropertiesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1280,7 +1280,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getDeviceParams(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getDeviceParams(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1335,7 +1335,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at setDeviceProperty. Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at setDeviceProperty. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1437,7 +1437,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getStationsAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getStationsAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1495,7 +1495,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getStationPropertiesMetadataAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getStationPropertiesMetadataAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1540,7 +1540,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getStationPropertiesAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getStationPropertiesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1585,7 +1585,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getStationParams(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getStationParams(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1629,7 +1629,7 @@ export class EufySecurityApi
                     }
                     else
                     {
-                        json = {"success":false,"reason":`Other error occured. Error: ${e.message}. Details: ${JSON.stringify(e)}`};
+                        json = {"success":false,"reason":`Other error occured. Error: ${e.message}.`};
                     }
                 }
             }
@@ -1640,7 +1640,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at setStationProperty(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at setStationProperty(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1678,7 +1678,7 @@ export class EufySecurityApi
                     }
                     else
                     {
-                        json = {"success":false,"reason":`Other error occured. Error: ${e.message}. Details: ${JSON.stringify(e)}`};
+                        json = {"success":false,"reason":`Other error occured. Error: ${e.message}.`};
                     }
                 }
             }
@@ -1689,7 +1689,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at rebootStation(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at rebootStation(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1732,7 +1732,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getStationAsJson(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getStationAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1794,7 +1794,7 @@ export class EufySecurityApi
                     }
                     catch (e : any)
                     {
-                        rootAddonLogger.error(`Error occured at saveStationsSettings(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+                        rootAddonLogger.error(`Error occured at saveStationsSettings(). Error: ${e.message}.`, JSON.stringify(e));
                     }
                 }
             }
@@ -1864,7 +1864,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getGuardMode(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getGuardMode(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1964,7 +1964,7 @@ export class EufySecurityApi
         }
         catch (e : any)
         {
-            rootAddonLogger.error(`Error occured at getGuardModeStation(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+            rootAddonLogger.error(`Error occured at getGuardModeStation(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -2766,7 +2766,7 @@ export class EufySecurityApi
             }
             catch (e : any)
             {
-                rootAddonLogger.error(`Error occured at checkSystemVariables(). Error: ${e.message}. Details: ${JSON.stringify(e)}`);
+                rootAddonLogger.error(`Error occured at checkSystemVariables(). Error: ${e.message}.`, JSON.stringify(e));
                 this.setLastConnectionInfo(false);
                 json = {"success":false, "reason":e.message};
             }
