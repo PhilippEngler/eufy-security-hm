@@ -6,7 +6,7 @@ var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.3";
+var version = "3.0.4";
 
 /**
  * common used java script functions
@@ -4716,7 +4716,18 @@ function loadLogfile(logfiletype, showLoading)
 				}
 				else
 				{
-					document.getElementById("log").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.log')}</code>`;
+					switch(logfiletype)
+					{
+						case "log":
+							document.getElementById("log").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.log')}</code>`;
+							break;
+						case "err":
+							document.getElementById("log").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.err')}</code>`;
+							break;
+						case "clientLog":
+							document.getElementById("log").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurityClient.log')}</code>`;
+							break;
+					}
 					document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
 					document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
 				}
