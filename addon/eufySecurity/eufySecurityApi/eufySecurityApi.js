@@ -210,6 +210,21 @@ class EufySecurityApi {
         return JSON.stringify(json);
     }
     /**
+     * Returns the setting value if access to api is secured by sid.
+     * @returns true, if access to api is secured by sid, otherwise false.
+     */
+    isSidCheckEnabled() {
+        return this.config.getSecureApiAccessBySid();
+    }
+    /**
+     * Checks if a given sid represents a currently authenticated session.
+     * @param sid The sid to check.
+     * @returns true, if the sid is correct, otherwise false.
+     */
+    async checkSid(sid) {
+        return this.homematicApi.checkSid(sid);
+    }
+    /**
      * Close the EufySecurityApi.
      */
     async close() {
@@ -725,7 +740,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getHousesAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getHousesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -754,7 +769,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getHouseAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getHouseAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             json = { "success": false, "reason": `The house with id ${houseId} does not exists.` };
             this.setLastConnectionInfo(false);
         }
@@ -814,7 +829,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getDevicesAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getDevicesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -868,7 +883,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getDeviceAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getDeviceAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -889,7 +904,7 @@ class EufySecurityApi {
                 //await this.devices.loadDevices();
                 const device = (await this.getDevices())[deviceSerial];
                 if (device) {
-                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": (0, utils_4.getDeviceTypeAsString)(device), "data": device.getPropertiesMetadata() };
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": (0, utils_4.getDeviceTypeAsString)(device), "data": device.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -902,7 +917,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getDevicePropertiesMetadataAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getDevicePropertiesMetadataAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -927,7 +942,7 @@ class EufySecurityApi {
                     if (temp === undefined || temp === null) {
                         temp = null;
                     }
-                    json = { "success": true, "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": (0, utils_4.getDeviceTypeAsString)(device), "data": device.getProperties(), "interactions": temp };
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": (0, utils_4.getDeviceTypeAsString)(device), "data": device.getProperties(), "interactions": temp };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -940,7 +955,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getDevicePropertiesAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getDevicePropertiesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -974,7 +989,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getDeviceParams(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getDeviceParams(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1016,7 +1031,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at setDeviceProperty. Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at setDeviceProperty. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1093,7 +1108,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getStationsAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getStationsAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1123,7 +1138,7 @@ class EufySecurityApi {
                 //await this.stations.loadStations();
                 const station = await this.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "data": station.getPropertiesMetadata() };
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "data": station.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1136,7 +1151,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getStationPropertiesMetadataAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getStationPropertiesMetadataAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1156,7 +1171,7 @@ class EufySecurityApi {
                 //await this.stations.loadStations();
                 const station = await this.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "data": station.getProperties() };
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "data": station.getProperties() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1169,7 +1184,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getStationPropertiesAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getStationPropertiesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1202,7 +1217,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getStationParams(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getStationParams(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1235,7 +1250,7 @@ class EufySecurityApi {
                         json = { "success": false, "reason": `The property ${propertyName} is read only.` };
                     }
                     else {
-                        json = { "success": false, "reason": `Other error occured. Error: ${e.message}` };
+                        json = { "success": false, "reason": `Other error occured. Error: ${e.message}.` };
                     }
                 }
             }
@@ -1244,7 +1259,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at setStationProperty(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at setStationProperty(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1272,7 +1287,7 @@ class EufySecurityApi {
                         json = { "success": false, "reason": `This functionality is not implemented or supported by ${stationSerial}` };
                     }
                     else {
-                        json = { "success": false, "reason": `Other error occured. Error: ${e.message}` };
+                        json = { "success": false, "reason": `Other error occured. Error: ${e.message}.` };
                     }
                 }
             }
@@ -1281,7 +1296,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at rebootStation(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at rebootStation(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1312,7 +1327,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getStationAsJson(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getStationAsJson(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1342,14 +1357,23 @@ class EufySecurityApi {
         if (this.stations) {
             for (const stationSerial in stations) {
                 const station = stations[stationSerial];
-                const p2pDid = this.config.getP2PDataP2pDid(stationSerial);
-                const stationIpAddress = this.config.getP2PDataStationIpAddress(stationSerial);
-                let updateNeed = false;
-                if (p2pDid != station.getP2pDid() || stationIpAddress != station.getLANIPAddress()) {
-                    updateNeed = true;
-                }
-                if (updateNeed == true) {
-                    this.config.setP2PData(stationSerial, station.getP2pDid(), (station.getLANIPAddress()).toString());
+                const currentP2pDid = this.config.getP2PDataP2pDid(stationSerial);
+                const currentStationIpAddress = this.config.getP2PDataStationIpAddress(stationSerial);
+                const newP2pDid = station.getP2pDid();
+                const newStationIpAddress = station.getLANIPAddress();
+                if (currentP2pDid !== newP2pDid || currentStationIpAddress !== newStationIpAddress) {
+                    if (currentP2pDid !== newP2pDid) {
+                        logging_1.rootAddonLogger.info(`Updateing p2p did for station ${stationSerial} [new value: ${newP2pDid} | old value: ${currentP2pDid}]`);
+                    }
+                    if (currentStationIpAddress !== newStationIpAddress) {
+                        logging_1.rootAddonLogger.info(`Updateing ip address for station ${stationSerial} [new value: ${newStationIpAddress} | old value: ${currentStationIpAddress}]`);
+                    }
+                    try {
+                        this.config.setP2PData(stationSerial, newP2pDid, newStationIpAddress.toString());
+                    }
+                    catch (e) {
+                        logging_1.rootAddonLogger.error(`Error occured at saveStationsSettings(). Error: ${e.message}.`, JSON.stringify(e));
+                    }
                 }
             }
         }
@@ -1398,7 +1422,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getGuardMode(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getGuardMode(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1469,7 +1493,7 @@ class EufySecurityApi {
             }
         }
         catch (e) {
-            logging_1.rootAddonLogger.error(`Error occured at getGuardModeStation(). Error: ${e.message}`);
+            logging_1.rootAddonLogger.error(`Error occured at getGuardModeStation(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = { "success": false, "reason": e.message };
         }
@@ -1879,7 +1903,7 @@ class EufySecurityApi {
     async getAPIConfigAsJson() {
         let json = {};
         json = { "success": true, "data": {} };
-        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "acceptInvitations": this.config.getAcceptInvitations(), "houseId": this.config.getHouseId(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "logLevelAddon": this.config.getLogLevelAddon(), "logLevelMain": this.config.getLogLevelMain(), "logLevelHttp": this.config.getLogLevelHttp(), "logLevelP2p": this.config.getLogLevelP2p(), "logLevelPush": this.config.getLogLevelPush(), "logLevelMqtt": this.config.getLogLevelMqtt(), "tokenExpire": this.config.getTokenExpire() };
+        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "acceptInvitations": this.config.getAcceptInvitations(), "houseId": this.config.getHouseId(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "secureApiAccessBySid": this.config.getSecureApiAccessBySid(), "logLevelAddon": this.config.getLogLevelAddon(), "logLevelMain": this.config.getLogLevelMain(), "logLevelHttp": this.config.getLogLevelHttp(), "logLevelP2p": this.config.getLogLevelP2p(), "logLevelPush": this.config.getLogLevelPush(), "logLevelMqtt": this.config.getLogLevelMqtt(), "tokenExpire": this.config.getTokenExpire() };
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -1905,6 +1929,7 @@ class EufySecurityApi {
      * @param stateUpdateIntervallActive Should the api schedule a task for updateing the state.
      * @param stateUpdateIntervallTimespan The time between two scheduled runs of update state.
      * @param pushServiceActive Should the api use push service.
+     * @param secureApiAccessSidActive Should the api check if a given sid represents a currently authenticated session.
      * @param logLevelAddon The log level for addon.
      * @param logLevelMain The log level for main.
      * @param logLevelHttp The log level for http.
@@ -1913,7 +1938,7 @@ class EufySecurityApi {
      * @param logLevelMqtt The log level for mqtt.
      * @returns A JSON string containing the result.
      */
-    async setConfig(eMail, password, country, language, trustedDeviceName, httpActive, httpPort, httpsActive, httpsPort, httpsKeyFile, httpsCertFile, acceptInvitations, houseId, connectionTypeP2p, localStaticUdpPortsActive, localStaticUdpPorts, systemVariableActive, stateUpdateEventActive, stateUpdateIntervallActive, stateUpdateIntervallTimespan, pushServiceActive, logLevelAddon, logLevelMain, logLevelHttp, logLevelP2p, logLevelPush, logLevelMqtt) {
+    async setConfig(eMail, password, country, language, trustedDeviceName, httpActive, httpPort, httpsActive, httpsPort, httpsKeyFile, httpsCertFile, acceptInvitations, houseId, connectionTypeP2p, localStaticUdpPortsActive, localStaticUdpPorts, systemVariableActive, stateUpdateEventActive, stateUpdateIntervallActive, stateUpdateIntervallTimespan, pushServiceActive, secureApiAccessSidActive, logLevelAddon, logLevelMain, logLevelHttp, logLevelP2p, logLevelPush, logLevelMqtt) {
         let serviceRestart = false;
         let taskSetupStateNeeded = false;
         if (this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getHouseId() != houseId || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive) {
@@ -1972,6 +1997,7 @@ class EufySecurityApi {
             this.setupScheduledTask(this.taskUpdateState, "getState");
         }
         this.config.setPushServiceActive(pushServiceActive);
+        this.config.setSecureApiAccessBySid(secureApiAccessSidActive);
         this.config.setLogLevelAddon(logLevelAddon);
         this.config.setLogLevelMain(logLevelMain);
         this.config.setLogLevelHttp(logLevelHttp);
@@ -2029,7 +2055,7 @@ class EufySecurityApi {
                         let device;
                         const stations = await this.getStations();
                         const devices = await this.getDevices();
-                        const commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastLinkUpdateTime", "eufyLastStatusUpdateTime", "eufyLastModeChangeTime"];
+                        const commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastStatusUpdateTime", "eufyLastModeChangeTime"];
                         const commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus", "Zeitpunkt des letzten Moduswechsels"];
                         json = { "success": true, "data": [] };
                         let i = 0;
@@ -2083,7 +2109,7 @@ class EufySecurityApi {
                 }
             }
             catch (e) {
-                logging_1.rootAddonLogger.error(`Error occured at checkSystemVariables(). Error: ${e.message}`);
+                logging_1.rootAddonLogger.error(`Error occured at checkSystemVariables(). Error: ${e.message}.`, JSON.stringify(e));
                 this.setLastConnectionInfo(false);
                 json = { "success": false, "reason": e.message };
             }
@@ -2524,7 +2550,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.0.0";
+        return "3.0.1";
     }
     /**
      * Return the version of the library used for communicating with eufy.

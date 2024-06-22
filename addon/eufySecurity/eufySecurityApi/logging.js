@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formatDate = exports.setLoggingLevel = exports.rootP2PLogger = exports.rootPushLogger = exports.rootMQTTLogger = exports.rootHTTPLogger = exports.rootAddonLogger = exports.rootMainLogger = exports.InternalLogger = exports.LogLevel = void 0;
+exports.formatDate = exports.setLoggingLevel = exports.rootConfLogger = exports.rootP2PLogger = exports.rootPushLogger = exports.rootMQTTLogger = exports.rootHTTPLogger = exports.rootAddonLogger = exports.rootMainLogger = exports.InternalLogger = exports.LogLevel = void 0;
 const fs_1 = require("fs");
 const typescript_logging_1 = require("typescript-logging");
 const typescript_logging_category_style_1 = require("typescript-logging-category-style");
@@ -87,6 +87,7 @@ exports.rootHTTPLogger = provider.getCategory("http");
 exports.rootMQTTLogger = provider.getCategory("mqtt");
 exports.rootPushLogger = provider.getCategory("push");
 exports.rootP2PLogger = provider.getCategory("p2p");
+exports.rootConfLogger = provider.getCategory("conf");
 const setLoggingLevel = function (category = "all", level = exports.LogLevel.Off) {
     switch (category) {
         case "all":
@@ -124,16 +125,24 @@ const setLoggingLevel = function (category = "all", level = exports.LogLevel.Off
                 level: level
             });
             break;
+        case "conf":
+            provider.updateRuntimeSettingsCategory(exports.rootConfLogger, {
+                level: level
+            });
+            break;
+        default:
+            console.log(`${formatDate(Date.now())} INFO  [log]   Unknown category '${category}'.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  [log]   [Logging.setLoggingLevel] Unknown category '${category}'.`);
+            break;
     }
     if (level === exports.LogLevel.Off) {
-        const categoryString = `[${category}]`.padEnd(7, " ");
         if (category === "all") {
-            console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for all categories has been set to ${exports.LogLevel[level]}.`);
-            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for all categories has been set to ${exports.LogLevel[level]}.`);
+            console.log(`${formatDate(Date.now())} INFO  [log]   Logging for all categories has been set to ${exports.LogLevel[level]}.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  [log]   [Logging.setLoggingLevel] Logging for all categories has been set to ${exports.LogLevel[level]}.`);
         }
         else {
-            console.log(`${formatDate(Date.now())} INFO  ${categoryString} Logging for category ${category} has been set to ${exports.LogLevel[level]}.`);
-            logMessageForClient(`${formatDate(Date.now())} INFO  ${categoryString} [Logging.setLoggingLevel] Logging for category ${category} has been set to ${exports.LogLevel[level]}.`);
+            console.log(`${formatDate(Date.now())} INFO  [log]   Logging for category ${category} has been set to ${exports.LogLevel[level]}.`);
+            logMessageForClient(`${formatDate(Date.now())} INFO  [log]   [Logging.setLoggingLevel] Logging for category ${category} has been set to ${exports.LogLevel[level]}.`);
         }
     }
 };
@@ -147,7 +156,7 @@ function formatDate(millisSinceEpoch) {
     const minutes = date.getMinutes().toString().padStart(2, "0");
     const seconds = date.getSeconds().toString().padStart(2, "0");
     const millis = date.getMilliseconds().toString().padStart(3, "0");
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds},${millis}`;
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${millis}`;
 }
 exports.formatDate = formatDate;
 function logMessageForClient(message, ...messageArgs) {

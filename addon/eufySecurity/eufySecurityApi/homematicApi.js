@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HomematicApi = void 0;
 const axios_1 = __importDefault(require("axios"));
 const logging_1 = require("./logging");
+const util_1 = require("util");
+const child_process_1 = require("child_process");
 /**
  * Interacting with the CCU.
  */
@@ -208,10 +210,31 @@ class HomematicApi {
         }
     }
     /**
+     * Checks if a given sid represents a currently authenticated session.
+     * @param sid The sid to check.
+     * @returns true, if the sid is correct, otherwise false.
+     */
+    async checkSid(sid) {
+        try {
+            const promisifyExec = (0, util_1.promisify)(child_process_1.exec);
+            const result = await promisifyExec(`tclsh /usr/local/addons/eufySecurity/www/sessionCheck.cgi ${sid}`);
+            if (result.stdout.trim() === "1") {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (err) {
+            logging_1.rootAddonLogger.error(`Error occured while checking sid.`, { error: err });
+            return false;
+        }
+    }
+    /**
      * Returns the version info of the homematic api.
      */
     getHomematicApiVersion() {
-        return "3.0.0";
+        return "3.0.1";
     }
 }
 exports.HomematicApi = HomematicApi;

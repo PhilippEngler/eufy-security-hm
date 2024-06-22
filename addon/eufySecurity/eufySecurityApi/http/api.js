@@ -640,14 +640,49 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
     async request(request, withoutUrlPrefix = false) {
         logging_1.rootHTTPLogger.debug("Api request", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
         try {
-            const options = {
+            // fix for got 14.4.0
+            /*const options: OptionsOfJSONResponseBody  = {
                 method: request.method,
                 json: request.data,
                 responseType: request.responseType !== undefined ? request.responseType : "json",
             };
             if (withoutUrlPrefix)
                 options.prefixUrl = "";
-            const internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            const internalResponse = await this.requestEufyCloud(request.endpoint, options);*/
+            let internalResponse;
+            if (request.responseType === "text") {
+                const options = {
+                    method: request.method,
+                    json: request.data,
+                    responseType: request.responseType,
+                };
+                if (withoutUrlPrefix) {
+                    options.prefixUrl = "";
+                }
+                internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            }
+            else if (request.responseType === "buffer") {
+                const options = {
+                    method: request.method,
+                    json: request.data,
+                    responseType: request.responseType,
+                };
+                if (withoutUrlPrefix) {
+                    options.prefixUrl = "";
+                }
+                internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            }
+            else {
+                const options = {
+                    method: request.method,
+                    json: request.data,
+                    responseType: "json",
+                };
+                if (withoutUrlPrefix) {
+                    options.prefixUrl = "";
+                }
+                internalResponse = await this.requestEufyCloud(request.endpoint, options);
+            }
             const response = {
                 status: internalResponse.statusCode,
                 statusText: internalResponse.statusMessage ? internalResponse.statusMessage : "",

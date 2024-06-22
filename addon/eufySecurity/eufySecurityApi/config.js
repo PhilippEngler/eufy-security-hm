@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Config = void 0;
 const fs_1 = require("fs");
 const logging_1 = require("./logging");
+const typescript_logging_1 = require("typescript-logging");
 class Config {
     configJson;
     hasChanged;
@@ -11,6 +12,7 @@ class Config {
      * Constructor, read the config file and provide values to the variables.
      */
     constructor() {
+        (0, logging_1.setLoggingLevel)("conf", typescript_logging_1.LogLevel.Info);
         this.hasChanged = false;
         if (this.isConfigFileAvailable() == false) {
             this.configJson = this.createEmptyConfigJson();
@@ -21,13 +23,13 @@ class Config {
                 this.configJson = this.checkConfigFile(this.loadConfigJson("./config.json.upload"));
                 this.hasChanged = true;
                 (0, fs_1.unlinkSync)("./config.json.upload");
-                this.log("INFO", "Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
+                logging_1.rootConfLogger.info("Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
             }
             catch {
                 if (this.existUploadedConfig() == true) {
                     (0, fs_1.unlinkSync)("./config.json.upload");
                 }
-                this.log("INFO", "Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
+                logging_1.rootConfLogger.info("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
                 if (this.isConfigFileAvailable() == false) {
                     this.configJson = this.createEmptyConfigJson();
                     this.hasChanged = true;
@@ -54,15 +56,16 @@ class Config {
      * @param logLevel The logLevel.
      * @param message The message.
      */
-    log(logLevel, message) {
-        console.log(`${(0, logging_1.formatDate)(Date.now())} ${logLevel.padEnd(5, " ")} [conf]  ${message}`);
-    }
+    /*private log(logLevel: string, message: string): void
+    {
+        console.log(`${formatDate(Date.now())} ${logLevel.padEnd(5, " ")} [conf]  ${message}`);
+    }*/
     /**
      * Remove the scheduling for saveConfig12h
      */
     close() {
         if (this.taskSaveConfig24h) {
-            this.log("INFO", `Remove scheduling for saveConfig24h.`);
+            logging_1.rootConfLogger.info(`Remove scheduling for saveConfig24h.`);
             clearInterval(this.taskSaveConfig24h);
         }
     }
@@ -91,7 +94,7 @@ class Config {
      * @returns The expected version of the config file.
      */
     getConfigFileTemplateVersion() {
-        return 18;
+        return 19;
     }
     /**
      * Load the config from the given file and returns the config.
@@ -109,8 +112,8 @@ class Config {
             }
         }
         catch (err) {
-            this.log("ERROR", `No '${filePath}' available.`);
-            this.log("ERROR", JSON.stringify(err));
+            logging_1.rootConfLogger.error(`No '${filePath}' available.`);
+            logging_1.rootConfLogger.error(JSON.stringify(err));
         }
         return resConfigJson;
     }
@@ -120,7 +123,7 @@ class Config {
      */
     updateConfigFileTemplateStage1(filecontent) {
         if (filecontent.indexOf("config_file_version") == -1) {
-            this.log("INFO", "Configfile needs Stage1 update. Adding 'config_file_version'.");
+            logging_1.rootConfLogger.info("Configfile needs Stage1 update. Adding 'config_file_version'.");
             filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
         }
         return filecontent;
@@ -163,7 +166,7 @@ class Config {
         config.tokenData = tokenData;
         const pushData = { "trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": "" };
         config.pushData = pushData;
-        const apiConfig = { "httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false };
+        const apiConfig = { "httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false };
         config.apiConfig = apiConfig;
         const logConfig = { "logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2 };
         config.logConfig = logConfig;
@@ -194,57 +197,57 @@ class Config {
         if (configJson.configVersion < this.getConfigFileTemplateVersion()) {
             let updated = false;
             if (configJson.configVersion < 12) {
-                this.log("INFO", "Configfile needs Stage2 update to version 12...");
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 12...");
                 if (configJson.apiConfig.updateCloudInfoIntervall === undefined) {
-                    this.log("INFO", " adding 'updateCloudInfoIntervall'.");
+                    logging_1.rootConfLogger.info(" adding 'updateCloudInfoIntervall'.");
                     configJson.apiConfig.updateCloudInfoIntervall = 10;
                 }
                 if (configJson.apiConfig.updateDeviceDataIntervall === undefined) {
-                    this.log("INFO", " adding 'updateDeviceDataIntervall'.");
+                    logging_1.rootConfLogger.info(" adding 'updateDeviceDataIntervall'.");
                     configJson.apiConfig.updateDeviceDataIntervall = 10;
                 }
                 updated = true;
             }
             if (configJson.configVersion < 13) {
-                this.log("INFO", "Configfile needs Stage2 update to version 13...");
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 13...");
                 if (configJson.apiConfig.houseId === undefined) {
-                    this.log("INFO", " adding 'houseId'.");
+                    logging_1.rootConfLogger.info(" adding 'houseId'.");
                     configJson.apiConfig.houseId = "all";
                 }
                 updated = true;
             }
             if (configJson.configVersion < 14) {
-                this.log("INFO", "Configfile needs Stage2 update to version 14...");
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 14...");
                 if (configJson.accountData.userId === undefined) {
-                    this.log("INFO", " adding 'userId'.");
+                    logging_1.rootConfLogger.info(" adding 'userId'.");
                     configJson.accountData.userId = "";
                 }
                 if (configJson.accountData.nickName === undefined) {
-                    this.log("INFO", " adding 'nickName'.");
+                    logging_1.rootConfLogger.info(" adding 'nickName'.");
                     configJson.accountData.nickName = "";
                 }
                 if (configJson.accountData.clientPrivateKey === undefined) {
-                    this.log("INFO", " adding 'clientPrivateKey'.");
+                    logging_1.rootConfLogger.info(" adding 'clientPrivateKey'.");
                     configJson.accountData.clientPrivateKey = "";
                 }
                 if (configJson.accountData.serverPublicKey === undefined) {
-                    this.log("INFO", " adding 'serverPublicKey'.");
+                    logging_1.rootConfLogger.info(" adding 'serverPublicKey'.");
                     configJson.accountData.serverPublicKey = "";
                 }
                 updated = true;
             }
             if (configJson.configVersion < 15) {
-                this.log("INFO", "Configfile needs Stage2 update to version 15...");
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 15...");
                 if (configJson.interactions === undefined) {
-                    this.log("INFO", " adding 'interactions'.");
+                    logging_1.rootConfLogger.info(" adding 'interactions'.");
                     configJson.interactions = null;
                 }
                 updated = true;
             }
             if (configJson.configVersion < 16) {
-                this.log("INFO", "Configfile needs Stage2 update to version 16...");
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 16...");
                 if (configJson.logConfig === undefined) {
-                    this.log("INFO", " adding 'logConfig'.");
+                    logging_1.rootConfLogger.info(" adding 'logConfig'.");
                     configJson.logConfig = null;
                     const logConfig = { "logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2 };
                     configJson.logConfig = logConfig;
@@ -252,34 +255,42 @@ class Config {
                 updated = true;
             }
             if (configJson.configVersion < 17) {
-                this.log("INFO", "Configfile needs Stage2 update to version 17...");
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 17...");
                 if (configJson.apiConfig.hasOwnProperty("cameraDefaultImage")) {
-                    this.log("INFO", " removing 'cameraDefaultImage'.");
+                    logging_1.rootConfLogger.info(" removing 'cameraDefaultImage'.");
                     updated = true;
                 }
                 if (configJson.apiConfig.hasOwnProperty("cameraDefaultVideo")) {
-                    this.log("INFO", " removing 'cameraDefaultVideo'.");
+                    logging_1.rootConfLogger.info(" removing 'cameraDefaultVideo'.");
                     updated = true;
                 }
             }
             if (configJson.configVersion < 18) {
-                this.log("INFO", "Configfile needs Stage2 update to version 18...");
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 18...");
                 if (configJson.apiConfig.hasOwnProperty("updateLinksActive")) {
-                    this.log("INFO", " removing 'updateLinksActive'.");
+                    logging_1.rootConfLogger.info(" removing 'updateLinksActive'.");
                     updated = true;
                 }
                 if (configJson.apiConfig.hasOwnProperty("updateLinksOnlyWhenArmed")) {
-                    this.log("INFO", " removing 'updateLinksOnlyWhenArmed'.");
+                    logging_1.rootConfLogger.info(" removing 'updateLinksOnlyWhenArmed'.");
                     updated = true;
                 }
                 if (configJson.apiConfig.hasOwnProperty("updateLinks24hActive")) {
-                    this.log("INFO", " removing 'updateLinks24hActive'.");
+                    logging_1.rootConfLogger.info(" removing 'updateLinks24hActive'.");
                     updated = true;
                 }
                 if (configJson.apiConfig.hasOwnProperty("updateLinksTimespan")) {
-                    this.log("INFO", " removing 'updateLinksTimespan'.");
+                    logging_1.rootConfLogger.info(" removing 'updateLinksTimespan'.");
                     updated = true;
                 }
+            }
+            if (configJson.configVersion < 19) {
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 19...");
+                if (configJson.apiConfig.secureApiAccessBySid === undefined) {
+                    logging_1.rootConfLogger.info(" adding 'secureApiAccessBySid'.");
+                    configJson.apiConfig.secureApiAccessBySid = false;
+                }
+                updated = true;
             }
             if (updated == true) {
                 configJson.configVersion = this.getConfigFileTemplateVersion();
@@ -420,6 +431,9 @@ class Config {
             if (configJson.apiConfig.pushServiceActive !== undefined) {
                 newConfigJson.apiConfig.pushServiceActive = configJson.apiConfig.pushServiceActive;
             }
+            if (configJson.apiConfig.secureApiAccessBySid !== undefined) {
+                newConfigJson.apiConfig.secureApiAccessBySid = configJson.apiConfig.secureApiAccessBySid;
+            }
         }
         if (configJson.logConfig !== undefined) {
             if (configJson.logConfig.logLevelAddon !== undefined) {
@@ -449,17 +463,17 @@ class Config {
     checkConfigValues() {
         let updated = false;
         if (this.configJson.apiConfig.httpActive == true && (this.configJson.apiConfig.httpPort < 1 || this.configJson.httpPort > 65535)) {
-            this.log("INFO", `Set httpPort to default value "52789"`);
+            logging_1.rootConfLogger.info(`Set httpPort to default value "52789"`);
             this.configJson.apiConfig.httpPort = 52789;
             updated = true;
         }
         if (this.configJson.apiConfig.httpsActive == true && (this.configJson.apiConfig.httpsPort < 1 || this.configJson.apiConfig.httpsPort > 65535)) {
-            this.log("INFO", `Set httpsPort to default value "52790"`);
+            logging_1.rootConfLogger.info(`Set httpsPort to default value "52790"`);
             this.configJson.apiConfig.httpsPort = 52790;
             updated = true;
         }
         if (this.configJson.apiConfig.httpActive == true && this.configJson.apiConfig.httpsActive == true && this.configJson.apiConfig.httpPort == this.configJson.apiConfig.httpsPort) {
-            this.log("INFO", `Set httpPort to default value "52789" and httpsPort to default value "52790"`);
+            logging_1.rootConfLogger.info(`Set httpPort to default value "52789" and httpsPort to default value "52790"`);
             this.configJson.apiConfig.httpPort = 52789;
             this.configJson.apiConfig.httpsPort = 52790;
             updated = true;
@@ -478,7 +492,7 @@ class Config {
                     }
                     else
                     {
-                        this.log("INFO", `Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
+                        rootConfLogger.info(`Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
                         this.configJson.localStaticUdpPortsActive = false;
                         updated = true;
                     }
@@ -486,37 +500,37 @@ class Config {
             }
         }*/
         if (this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240)) {
-            this.log("INFO", `Set stateUpdateIntervallTimespan to default value "15"`);
+            logging_1.rootConfLogger.info(`Set stateUpdateIntervallTimespan to default value "15"`);
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
             updated = true;
         }
         if (this.configJson.logConfig.logLevelAddon < 0 || this.configJson.logConfig.logLevelAddon > 6) {
-            this.log("INFO", `Set logLevelAddon to default value "2"`);
+            logging_1.rootConfLogger.info(`Set logLevelAddon to default value "2"`);
             this.configJson.logConfig.logLevelAddon = 2;
             updated = true;
         }
         if (this.configJson.logConfig.logLevelMain < 0 || this.configJson.logConfig.logLevelMain > 6) {
-            this.log("INFO", `Set logLevelMain to default value "2"`);
+            logging_1.rootConfLogger.info(`Set logLevelMain to default value "2"`);
             this.configJson.logConfig.logLevelMain = 2;
             updated = true;
         }
         if (this.configJson.logConfig.logLevelHttp < 0 || this.configJson.logConfig.logLevelHttp > 6) {
-            this.log("INFO", `Set logLevelHttp to default value "2"`);
+            logging_1.rootConfLogger.info(`Set logLevelHttp to default value "2"`);
             this.configJson.logConfig.logLevelHttp = 2;
             updated = true;
         }
         if (this.configJson.logConfig.logLevelP2p < 0 || this.configJson.logConfig.logLevelP2p > 6) {
-            this.log("INFO", `Set logLevelP2p to default value "2"`);
+            logging_1.rootConfLogger.info(`Set logLevelP2p to default value "2"`);
             this.configJson.logConfig.logLevelP2p = 2;
             updated = true;
         }
         if (this.configJson.logConfig.logLevelPush < 0 || this.configJson.logConfig.logLevelPush > 6) {
-            this.log("INFO", `Set logLevelPush to default value "2"`);
+            logging_1.rootConfLogger.info(`Set logLevelPush to default value "2"`);
             this.configJson.logConfig.logLevelPush = 2;
             updated = true;
         }
         if (this.configJson.logConfig.logLevelMqtt < 0 || this.configJson.logConfig.logLevelMqtt > 6) {
-            this.log("INFO", `Set logLevelMqtt to default value "2"`);
+            logging_1.rootConfLogger.info(`Set logLevelMqtt to default value "2"`);
             this.configJson.logConfig.logLevelMqtt = 2;
             updated = true;
         }
@@ -530,7 +544,7 @@ class Config {
      * @param stationSerial Serialnumber of the new station.
      */
     updateWithNewStation(stationSerial) {
-        this.log("INFO", `Adding station ${stationSerial} to settings.`);
+        logging_1.rootConfLogger.info(`Adding station ${stationSerial} to settings.`);
         const station = { "stationSerial": stationSerial, "p2pDid": null, "stationIpAddress": null, "udpPort": null };
         if (Array.isArray(this.configJson.stations)) {
             this.configJson.stations.push(station);
@@ -1366,8 +1380,8 @@ class Config {
     setLocalStaticUdpPortPerStation(stationSerial, udpPort) {
         if (stationSerial !== undefined) {
             let res;
-            if (this.isStationInConfig(stationSerial) == false) {
-                this.log("INFO", `Station ${stationSerial} not in config. Try to create new station entry.`);
+            if (this.isStationInConfig(stationSerial) === false) {
+                logging_1.rootConfLogger.info(`Station ${stationSerial} not in config. Try to create new station entry.`);
                 res = this.updateWithNewStation(stationSerial);
             }
             else {
@@ -1379,18 +1393,26 @@ class Config {
                 if (station !== undefined) {
                     if (udpPort === undefined) {
                         udpPort = null;
+                        return true;
                     }
-                    if (this.configJson.stations[station].udpPort != udpPort) {
+                    if (this.configJson.stations[station].udpPort !== udpPort) {
                         this.configJson.stations[station].udpPort = udpPort;
                         this.hasChanged = true;
                         return true;
                     }
+                    else {
+                        return false;
+                    }
                 }
-                this.log("INFO", `Station ${stationSerial} not in config.`);
+                logging_1.rootConfLogger.info(`Station ${stationSerial} not in config.`);
+                return false;
+            }
+            else {
+                logging_1.rootConfLogger.error(`Station ${stationSerial} not in config. Create new station entry failed.`);
                 return false;
             }
         }
-        this.log("INFO", `Station ${stationSerial} not in config.`);
+        logging_1.rootConfLogger.info(`No stationSerial given`);
         return false;
     }
     /**
@@ -1433,6 +1455,28 @@ class Config {
     setPushServiceActive(pushServiceActive) {
         if (this.configJson.apiConfig.pushServiceActive != pushServiceActive) {
             this.configJson.apiConfig.pushServiceActive = pushServiceActive;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the value for securing the access to api by sid.
+     * @returns Boolean for enableing or diableing.
+     */
+    getSecureApiAccessBySid() {
+        if (this.configJson.apiConfig.secureApiAccessBySid !== undefined) {
+            return this.configJson.apiConfig.secureApiAccessBySid;
+        }
+        else {
+            return false;
+        }
+    }
+    /**
+     * Set if securing api access by sid is used.
+     * @param secureApiAccessBySid The value if securing api access by sid is used.
+     */
+    setSecureApiAccessBySid(secureApiAccessBySid) {
+        if (this.configJson.apiConfig.secureApiAccessBySid != secureApiAccessBySid) {
+            this.configJson.apiConfig.secureApiAccessBySid = secureApiAccessBySid;
             this.hasChanged = true;
         }
     }
