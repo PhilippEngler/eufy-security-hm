@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.13
-20240519
+Schema v9.14
+20240623
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240519 (v9.13)";
+var languageVersion = "20240623 (v9.14)";
 
 function translateNavbarElement(element)
 {
@@ -1442,7 +1442,7 @@ function translatePropertyName(propertyName)
 		case "chirpVolume":
 			return "Chirp Volume";
 		case "motionEventTarget":
-		case "radarEventTarget":
+		case "radarMotionEventTarget":
 		case "personEventTarget":
 		case "petEventTarget":
 		case "soundEventTarget":
@@ -1455,7 +1455,7 @@ function translatePropertyName(propertyName)
 		case "ringEventTarget":
 			return "CCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
-		case "radarEventTargetHint":
+		case "radarMotionEventTargetHint":
 		case "personEventTargetHint":
 		case "petEventTargetHint":
 		case "soundEventTargetHint":
@@ -1468,7 +1468,7 @@ function translatePropertyName(propertyName)
 		case "ringEventTargetHint":
 			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
-		case "radarEventUseHttps":
+		case "radarMotionEventUseHttps":
 		case "personEventUseHttps":
 		case "petEventUseHttps":
 		case "soundEventUseHttps":
@@ -1481,7 +1481,7 @@ function translatePropertyName(propertyName)
 		case "ringEventUseHttps":
 			return "Establish connection via HTTPS";
 		case "motionEventCommand":
-		case "radarEventCommand":
+		case "radarMotionEventCommand":
 		case "personEventCommand":
 		case "petEventCommand":
 		case "soundEventCommand":
@@ -1494,7 +1494,7 @@ function translatePropertyName(propertyName)
 		case "ringEventCommand":
 			return "Command to be executed";
 		case "motionEventCommandHint":
-		case "radarEventCommandHint":
+		case "radarMotionEventCommandHint":
 		case "personEventCommandHint":
 		case "petEventCommandHint":
 		case "soundEventCommandHint":

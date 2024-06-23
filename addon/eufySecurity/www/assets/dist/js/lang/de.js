@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.13
-20240519
+Schema v9.14
+20240623
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240519 (v9.13)";
+var languageVersion = "20240623 (v9.14)";
 
 function translateNavbarElement(element)
 {
@@ -1442,7 +1442,7 @@ function translatePropertyName(propertyName)
 		case "chirpVolume":
 			return "Lautstärke Bestätigungstons";
 		case "motionEventTarget":
-		case "radarEventTarget":
+		case "radarMotionEventTarget":
 		case "personEventTarget":
 		case "petEventTarget":
 		case "soundEventTarget":
@@ -1455,7 +1455,7 @@ function translatePropertyName(propertyName)
 		case "ringEventTarget":
 			return "CCU, auf der die Interaktion ausgeführt werden soll";
 		case "motionEventTargetHint":
-		case "radarEventTargetHint":
+		case "radarMotionEventTargetHint":
 		case "personEventTargetHint":
 		case "petEventTargetHint":
 		case "soundEventTargetHint":
@@ -1468,7 +1468,7 @@ function translatePropertyName(propertyName)
 		case "ringEventTargetHint":
 			return "Bitte entweder 'localhost', die IP-Adresse oder den DNS-Namen der Ziel-CCU eingeben, ohne die Angabe von 'http://' oder 'https://'.";
 		case "motionEventUseHttps":
-		case "radarEventUseHttps":
+		case "radarMotionEventUseHttps":
 		case "personEventUseHttps":
 		case "petEventUseHttps":
 		case "soundEventUseHttps":
@@ -1481,7 +1481,7 @@ function translatePropertyName(propertyName)
 		case "ringEventUseHttps":
 			return "Verbindung über HTTPS herstellen";
 		case "motionEventCommand":
-		case "radarEventCommand":
+		case "radarMotionEventCommand":
 		case "personEventCommand":
 		case "petEventCommand":
 		case "soundEventCommand":
@@ -1494,7 +1494,7 @@ function translatePropertyName(propertyName)
 		case "ringEventCommand":
 			return "Befehl, der ausgeführt werden soll";
 		case "motionEventCommandHint":
-		case "radarEventCommandHint":
+		case "radarMotionEventCommandHint":
 		case "personEventCommandHint":
 		case "petEventCommandHint":
 		case "soundEventCommandHint":
