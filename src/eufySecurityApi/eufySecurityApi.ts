@@ -1018,12 +1018,21 @@ export class EufySecurityApi
                 case PropertyName.HardwareVersion:
                 case PropertyName.SoftwareVersion:
                 case PropertyName.DeviceStationSN:
-                    break;
                 case PropertyName.DevicePicture:
-                    json.hasPicture = properties[property] === null ? false : true;
                     break;
                 default:
                     json[property] = properties[property] === undefined ? "n/a" : properties[property];
+            }
+        }
+
+        if(device.hasProperty(PropertyName.DevicePicture)) {
+            if(device.hasProperty(PropertyName.DevicePictureTime)) {
+                const pictureTime = Number(device.getPropertyValue(PropertyName.DevicePictureTime));
+                if(pictureTime === undefined || Number.isNaN(pictureTime) || pictureTime <= 0) {
+                    json.hasPicture = false;
+                } else {
+                    json.hasPicture = true;
+                }
             }
         }
 
