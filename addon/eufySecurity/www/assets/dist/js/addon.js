@@ -6,7 +6,7 @@ var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.4";
+var version = "3.0.5";
 
 /**
  * common used java script functions
@@ -621,9 +621,9 @@ function getDeviceLastEventTime(device)
 	}
 	else
 	{
-		if(device.hasPicture === true)
+		if(device.hasPicture === true && device.pictureTime !== 0)
 		{
-			if(device.pictureTime !== undefined && device.pictureTime !== "0")
+			if(device.pictureTime !== undefined && device.pictureTime !== 0)
 			{
 				return `${translateContent("lblLastRecording")}: ${makeDateTimeString(new Date(parseInt(device.pictureTime)))} | <a href="javascript:generateDeviceImageModal('${device.serialNumber}','${device.name}');">${translateContent("lblLastRecordingThumbnail")}</a>`;
 			}

@@ -2496,6 +2496,14 @@ export class EufySecurityApi
     }
 
     /**
+     * Returns the current language from config.
+     * @returns The current language from config.
+     */
+    public getLanguage(): string {
+        return this.config.getLanguage();
+    }
+
+    /**
      * Get the config object.
      * @returns The config object.
      */

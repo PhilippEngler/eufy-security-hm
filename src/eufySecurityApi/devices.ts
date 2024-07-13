@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from "./eufySecurityApi";
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop } from "./http";
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType } from "./http";
 import { EufySecurityEvents } from "./interfaces";
 import { DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
@@ -10,6 +10,7 @@ import { DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 import { EventInteractions } from "./eventInteractions";
 import { rootAddonLogger } from "./logging";
+import { existsSync, readFileSync } from "fs";
 
 /**
  * Represents all the Devices in the account.
@@ -23,6 +24,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private loadingEmitter = new EventEmitter();
     private devicesLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "devices loaded");
     private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
+
+    private errorImage: Picture | undefined = undefined;
+    private defaultImage: Picture | undefined = undefined;
 
     /**
      * Create the Devices objects holding all devices in the account.
@@ -39,6 +43,39 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         if(this.api.getApiUsePushService() == false)
         {
             rootAddonLogger.info("Retrieving last video event times disabled in settings.");
+        }
+
+        const filePath = "www/assets/images";
+        const errorFile = "errorImage";
+        const defaultImage = "defaultImage";
+        const language = this.api.getLanguage();
+
+        const errorImageType: ImageType = { ext: "jpg", mime: "image/jpeg" };
+        try {
+            if (existsSync(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`)) {
+                this.errorImage = { data: readFileSync(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`), type: errorImageType };
+            } else if (existsSync(`${filePath}/${errorFile}_en.${errorImageType.ext}`)) {
+                this.errorImage = { data: readFileSync(`${filePath}/${errorFile}_en.${errorImageType.ext}`), type: errorImageType };
+            } else {
+                rootAddonLogger.error(`The file for the error image ('${filePath}/${errorFile}_${language}.${errorImageType.ext}' or '${filePath}/${errorFile}_en.${errorImageType.ext}') could not be found.`);
+                this.errorImage = undefined;
+            }
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured at loading error image. Error: ${e.message}.`, JSON.stringify(e));
+        }
+
+        try {
+            const defaultImageType: ImageType = { ext: "jpg", mime: "image/jpeg" };
+            if (existsSync(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`)) {
+                this.defaultImage = { data: readFileSync(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`), type: defaultImageType };
+            } else if (existsSync(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`)) {
+                this.errorImage = { data: readFileSync(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`), type: errorImageType };
+            } else {
+                rootAddonLogger.error(`The file for the default image ('${filePath}/${defaultImage}_${language}.${defaultImageType.ext}' or '${filePath}/${defaultImage}_en.${defaultImageType.ext}') could not be found.`);
+                this.defaultImage = undefined;
+            }
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured at loading default image. Error: ${e.message}.`, JSON.stringify(e));
         }
 
         this.httpService.on("devices", (devices: FullDevices) => this.handleDevices(devices));
@@ -258,6 +295,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             if (device.isLock())
             {
                 this.api.getMqttService().subscribeLock(device.getSerial());
+            }
+            if(device.hasProperty(PropertyName.DevicePicture)) {
+                if(this.defaultImage !== undefined) {
+                    device.updateProperty(PropertyName.DevicePicture, this.defaultImage);
+                }
             }
         }
         else
