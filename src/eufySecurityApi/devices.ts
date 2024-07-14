@@ -50,8 +50,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         const defaultImage = "defaultImage";
         const language = this.api.getLanguage();
 
-        const errorImageType: ImageType = { ext: "jpg", mime: "image/jpeg" };
         try {
+            const errorImageType: ImageType = { ext: "jpg", mime: "image/jpeg" };
             if (existsSync(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`)) {
                 this.errorImage = { data: readFileSync(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`), type: errorImageType };
             } else if (existsSync(`${filePath}/${errorFile}_en.${errorImageType.ext}`)) {
@@ -69,7 +69,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             if (existsSync(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`)) {
                 this.defaultImage = { data: readFileSync(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`), type: defaultImageType };
             } else if (existsSync(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`)) {
-                this.errorImage = { data: readFileSync(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`), type: errorImageType };
+                this.defaultImage = { data: readFileSync(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`), type: defaultImageType };
             } else {
                 rootAddonLogger.error(`The file for the default image ('${filePath}/${defaultImage}_${language}.${defaultImageType.ext}' or '${filePath}/${defaultImage}_en.${defaultImageType.ext}') could not be found.`);
                 this.defaultImage = undefined;
