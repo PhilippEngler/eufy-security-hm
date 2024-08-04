@@ -6266,6 +6266,7 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceWatermark]: DeviceWatermarkProperty,
         [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
+        [PropertyName.DeviceVehicleDetected]: DeviceVehicleDetectedProperty,
         [PropertyName.DeviceStatusLed]: DeviceStatusLedIndoorS350Property,
         [PropertyName.DevicePicture]: DevicePictureProperty,
         [PropertyName.DevicePictureTime]: DevicePictureTimeProperty,
