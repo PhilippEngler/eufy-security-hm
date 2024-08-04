@@ -1,4 +1,5 @@
 import { Device, DeviceType, Station } from "../http";
+import { Logger } from "../logging";
 
 export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
 export const pathToTemp = "/var/tmp/eufySecurity";
@@ -288,4 +289,18 @@ export const convertTimeStampToTimeStampMs = function(timeStamp: number, timeSta
         default:
             return undefined;
     }
+}
+
+/**
+ * Extracts the string enclosed between the given startString and the given endString.
+ * @param data The string where the string should be extracted.
+ * @param startString The string after that the result is expected.
+ * @param endString The string before the result is expected.
+ * @returns The string.
+ */
+export const extractEnclosedString = function(data: string, startString: string, endString: string, logger?: Logger): string {
+    if(logger !== undefined) {
+        logger.debug(JSON.stringify({"data": data, "start": startString, "end": endString}));
+    }
+    return data.substring(data.indexOf(startString) + startString.length, data.indexOf(endString));
 }
