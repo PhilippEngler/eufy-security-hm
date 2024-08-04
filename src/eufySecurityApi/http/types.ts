@@ -6699,6 +6699,8 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceSnoozeStartTime]: DeviceSnoozeStartTimeProperty,
         [PropertyName.DevicePersonName]: DevicePersonNameProperty,
         [PropertyName.DevicePowerSource]: DevicePowerSourceProperty,
+        [PropertyName.DevicePowerWorkingMode]: DevicePowerWorkingModeProperty,
+        [PropertyName.DeviceChargingStatus]: DeviceChargingStatusProperty,
         [PropertyName.DeviceDualCamWatchViewMode]: DeviceDualCamWatchViewModeS340Property,
     },
     [DeviceType.INDOOR_PT_CAMERA_S350]: {
