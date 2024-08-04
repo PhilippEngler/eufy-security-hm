@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.14
-20240623
+Schema v9.15
+20240804
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240623 (v9.14)";
+var languageVersion = "20240804 (v9.15)";
 
 function translateNavbarElement(element)
 {
@@ -782,6 +782,8 @@ function translateContent(content, ...options)
 			return "This device is not fully supported.";
 		case "lblNotSupportedDeviceMessage":
 			return `You can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[1]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
+		case "lblNotSupportedDeviceMessageSolo":
+			return `As the device is an integrated device, please also making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" and "<a href="${options[1]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" available to the developer.`
 		case "lblNotSupportedDeviceSubText":
 			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
 		case "lblNotSupportedDeviceNoSaving":
@@ -950,6 +952,8 @@ function translateContent(content, ...options)
 			return "This device is not fully supported.";
 		case "lblNotSupportedStationMessage":
 			return `You can help with further development by making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" and "<a href="${options[1]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" available to the developer.`
+		case "lblNotSupportedStationMessageSolo":
+			return `As the device is an integrated device, please also making the information from the two queries "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" and "<a href="${options[1]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" available to the developer.`
 		case "lblNotSupportedStationSubText":
 			return "The queries return results where serial numbers have been truncated and links removed. Please check whether there is any other data that you would like to remove.";
 		case "lblNotSupportedStationNoSaving":

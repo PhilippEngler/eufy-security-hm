@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.14
-20240623
+Schema v9.15
+20240804
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240623 (v9.14)";
+var languageVersion = "20240804 (v9.15)";
 
 function translateNavbarElement(element)
 {
@@ -782,6 +782,8 @@ function translateContent(content, ...options)
 			return "Dieses Gerät wird nicht vollständig unterstützt.";
 		case "lblNotSupportedDeviceMessage":
 			return `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${options[1]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
+		case "lblNotSupportedDeviceMessageSolo":
+			return `Da es sich bei dem Gerät um ein integriertes Gerät handelt, stellen Sie bitte zusätzlich die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">DeviceProperties</a>" und "<a href="${options[1]}" target=”_blank” class="alert-link">DevicePropertiesMetadata</a>" dem Entwickler zur Verfügung.`
 		case "lblNotSupportedDeviceSubText":
 			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
 		case "lblNotSupportedDeviceNoSaving":
@@ -950,6 +952,8 @@ function translateContent(content, ...options)
 			return "Dieses Gerät wird nicht vollständig unterstützt.";
 		case "lblNotSupportedStationMessage":
 			return `Sie können bei der Weiterentwicklung helfen, in dem Sie die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" und "<a href="${options[1]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung stellen.`
+		case "lblNotSupportedStationMessageSolo":
+			return `Da es sich bei dem Gerät um ein integriertes Gerät handelt, stellen Sie bitte zusätzlich die Informationen der beiden Abfragen "<a href="${options[0]}" target=”_blank” class="alert-link">StationProperties</a>" und "<a href="${options[1]}" target=”_blank” class="alert-link">StationPropertiesMetadata</a>" dem Entwickler zur Verfügung.`
 		case "lblNotSupportedStationSubText":
 			return "Die Abfragen liefern Ergebnisse, bei denen Seriennummern eingekürzt sowie Links entfernt wurden. Bitte prüfen Sie, ob weitere Daten enthalten sind, die Sie entfernen möchten.";
 		case "lblNotSupportedStationNoSaving":

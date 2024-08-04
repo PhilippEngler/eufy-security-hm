@@ -580,6 +580,25 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     }
 
     /**
+     * Checks if a given station is a integrated device.
+     * @param station The station object.
+     * @returns True if the station is an integrated device, otherwise false.
+     */
+    public async isStationIntegratedDevice(station: Station): Promise<boolean> {
+        if(this.stationsLoaded) {
+            await this.stationsLoaded;
+        }
+        if (Object.keys(this.stations).includes(station.getSerial())) {
+            const stationDevices = await this.api.getDevicesFromStation(station.getSerial());
+            if(stationDevices && stationDevices.length === 1 && stationDevices[0].getSerial() === station.getSerial()) {
+                return true;
+            }
+            return false;
+        }
+        throw new StationNotFoundError("Station doesn't exists", { context: { station: station.getSerial() } });
+    }
+
+    /**
      * Get the guard mode for all stations.
      */
     public getGuardMode() : { [stationSerial : string ] : GuardMode}

@@ -1533,7 +1533,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "data":station.getProperties()};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "isIntegratedDevice":await this.stations.isStationIntegratedDevice(station), "data":station.getProperties()};
                     this.setLastConnectionInfo(true);
                 }
                 else

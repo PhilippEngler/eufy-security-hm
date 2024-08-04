@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240620
+ * 20240804
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.5";
+var version = "3.0.6";
 
 /**
  * common used java script functions
@@ -957,7 +957,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	{
 		setEventHandler = false;
 		deviceModal += `
-									${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedDeviceHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedDeviceSubText"))}
+									${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedDeviceHeading"), `${translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`)}${deviceProperties.serialNumber === deviceProperties.stationSerialNumber ? `</p><p class="mt-2">${translateContent("lblNotSupportedStationMessageSolo", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`)}` : ""}`, translateContent("lblNotSupportedDeviceSubText"))}
 									${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedDeviceNoSaving"), "", "")}`;
 	}
 	else if (isDeviceKnownByClient === false)
@@ -2398,7 +2398,7 @@ function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.isP2PConnected, objResp.data);
+					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.isIntegratedDevice, objResp.isP2PConnected, objResp.data);
 				}
 				else
 				{
@@ -2441,7 +2441,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, isDeviceKnownByClient, isP2PConnected, stationProperties)
+function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, isDeviceKnownByClient, isIntegratedDevice, isP2PConnected, stationProperties)
 {
 	var setEventHandler = true;
 	var stationModal =  `
@@ -2457,7 +2457,7 @@ function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata
 	{
 		setEventHandler = false;
 		stationModal += `
-										${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedStationHeading"), translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`), translateContent("lblNotSupportedStationSubText"))}
+										${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedStationHeading"), `${translateContent("lblNotSupportedStationMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${stationId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}`)}${isIntegratedDevice ? `</p><p class="mt-2">${translateContent("lblNotSupportedDeviceMessageSolo", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${stationId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${stationId}`)}` : ""}`, translateContent("lblNotSupportedStationSubText"))}
 										${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedStationNoSaving"), "", "")}`;
 	}
 	else if (isDeviceKnownByClient === false)
