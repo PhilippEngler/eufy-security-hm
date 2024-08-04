@@ -523,7 +523,7 @@ function loadDevices()
 					text += createDeviceTypeCardsContainer("cameras", translateContent("lblCameras"), cams);
 					text += createDeviceTypeCardsContainer("indoorcameras", translateContent("lblIndoorCameras"), indoorcams);
 					text += createDeviceTypeCardsContainer("solocameras", translateContent("lblSoloCameras"), solocams);
-					text += createDeviceTypeCardsContainer("starlight4glte", translateContent("lblStarlightCameras"), solocams);
+					text += createDeviceTypeCardsContainer("starlight4glte", translateContent("lblStarlightCameras"), starlight4glte);
 					text += createDeviceTypeCardsContainer("doorbellcameras", translateContent("lblDoorbellCameras"), doorbellcams);
 					text += createDeviceTypeCardsContainer("outdoorlights", translateContent("lblOutdoorLightCameras"), outdoorlights);
 					text += createDeviceTypeCardsContainer("locks", translateContent("lblLocks"), locks);
