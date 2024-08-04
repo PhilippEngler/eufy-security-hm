@@ -6,7 +6,7 @@ var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.6";
+var version = "3.0.7";
 
 /**
  * common used java script functions
@@ -1370,8 +1370,12 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 										${deviceProperties.powerWorkingMode !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblPowerSource")}</h5>
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.powerSource.name, deviceProperties.powerSource, setEventHandler, devicePropertiesMetadata.powerSource.states)}
+										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.powerSource.name, deviceProperties.powerSource, setEventHandler, devicePropertiesMetadata.powerSource.states)}`;
+			if(deviceProperties.chargingStatus !== undefined)
+			{
+				deviceModal += `
 										<label>${translateString("strCurrentState")}: ${translateDeviceStateValue(devicePropertiesMetadata.chargingStatus.states[deviceProperties.chargingStatus])}</label>`;
+			}
 		}
 		if((deviceProperties.lastChargingDays !== undefined && deviceProperties.lastChargingDays > -1 && deviceProperties.lastChargingTotalEvents !== undefined && deviceProperties.lastChargingRecordedEvents !== undefined) || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined))
 		{
