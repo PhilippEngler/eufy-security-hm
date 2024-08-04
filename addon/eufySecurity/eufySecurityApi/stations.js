@@ -471,6 +471,24 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
     /**
+     * Checks if a given station is a integrated device.
+     * @param station The station object.
+     * @returns True if the station is an integrated device, otherwise false.
+     */
+    async isStationIntegratedDevice(station) {
+        if (this.stationsLoaded) {
+            await this.stationsLoaded;
+        }
+        if (Object.keys(this.stations).includes(station.getSerial())) {
+            const stationDevices = await this.api.getDevicesFromStation(station.getSerial());
+            if (stationDevices && stationDevices.length === 1 && stationDevices[0].getSerial() === station.getSerial()) {
+                return true;
+            }
+            return false;
+        }
+        throw new error_1.StationNotFoundError("Station doesn't exists", { context: { station: station.getSerial() } });
+    }
+    /**
      * Get the guard mode for all stations.
      */
     getGuardMode() {
@@ -1779,7 +1797,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
-            logging_1.rootAddonLogger.debug(`onStationImageDownload - Set picture error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), file: file });
+            logging_1.rootAddonLogger.error(`onStationImageDownload - Set picture error`, { error: (0, utils_2.getError)(error), stationSN: station.getSerial(), file: file });
         });
     }
     /**

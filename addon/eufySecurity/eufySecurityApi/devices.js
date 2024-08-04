@@ -12,6 +12,7 @@ const utils_1 = require("./utils");
 const types_1 = require("./utils/types");
 const eventInteractions_1 = require("./eventInteractions");
 const logging_1 = require("./logging");
+const fs_1 = require("fs");
 /**
  * Represents all the Devices in the account.
  */
@@ -23,6 +24,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     loadingEmitter = new events_1.default();
     devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
     deviceSnoozeTimeout = {};
+    errorImage = undefined;
+    defaultImage = undefined;
     /**
      * Create the Devices objects holding all devices in the account.
      * @param api  The api.
@@ -35,6 +38,42 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.eventInteractions = new eventInteractions_1.EventInteractions(this.api);
         if (this.api.getApiUsePushService() == false) {
             logging_1.rootAddonLogger.info("Retrieving last video event times disabled in settings.");
+        }
+        const filePath = "www/assets/images";
+        const errorFile = "errorImage";
+        const defaultImage = "defaultImage";
+        const language = this.api.getLanguage();
+        try {
+            const errorImageType = { ext: "jpg", mime: "image/jpeg" };
+            if ((0, fs_1.existsSync)(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`)) {
+                this.errorImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`), type: errorImageType };
+            }
+            else if ((0, fs_1.existsSync)(`${filePath}/${errorFile}_en.${errorImageType.ext}`)) {
+                this.errorImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorFile}_en.${errorImageType.ext}`), type: errorImageType };
+            }
+            else {
+                logging_1.rootAddonLogger.error(`The file for the error image ('${filePath}/${errorFile}_${language}.${errorImageType.ext}' or '${filePath}/${errorFile}_en.${errorImageType.ext}') could not be found.`);
+                this.errorImage = undefined;
+            }
+        }
+        catch (e) {
+            logging_1.rootAddonLogger.error(`Error occured at loading error image. Error: ${e.message}.`, JSON.stringify(e));
+        }
+        try {
+            const defaultImageType = { ext: "jpg", mime: "image/jpeg" };
+            if ((0, fs_1.existsSync)(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`)) {
+                this.defaultImage = { data: (0, fs_1.readFileSync)(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`), type: defaultImageType };
+            }
+            else if ((0, fs_1.existsSync)(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`)) {
+                this.defaultImage = { data: (0, fs_1.readFileSync)(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`), type: defaultImageType };
+            }
+            else {
+                logging_1.rootAddonLogger.error(`The file for the default image ('${filePath}/${defaultImage}_${language}.${defaultImageType.ext}' or '${filePath}/${defaultImage}_en.${defaultImageType.ext}') could not be found.`);
+                this.defaultImage = undefined;
+            }
+        }
+        catch (e) {
+            logging_1.rootAddonLogger.error(`Error occured at loading default image. Error: ${e.message}.`, JSON.stringify(e));
         }
         this.httpService.on("devices", (devices) => this.handleDevices(devices));
     }
@@ -206,6 +245,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             this.emit("device added", device);
             if (device.isLock()) {
                 this.api.getMqttService().subscribeLock(device.getSerial());
+            }
+            if (device.hasProperty(http_1.PropertyName.DevicePicture)) {
+                if (this.defaultImage !== undefined) {
+                    device.updateProperty(http_1.PropertyName.DevicePicture, this.defaultImage);
+                }
             }
         }
         else {

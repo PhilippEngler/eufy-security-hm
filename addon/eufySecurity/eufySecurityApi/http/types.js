@@ -5817,6 +5817,7 @@ exports.DeviceProperties = {
         [PropertyName.DeviceWatermark]: exports.DeviceWatermarkProperty,
         [PropertyName.DeviceMotionDetected]: exports.DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: exports.DevicePersonDetectedProperty,
+        [PropertyName.DeviceVehicleDetected]: exports.DeviceVehicleDetectedProperty,
         [PropertyName.DeviceStatusLed]: exports.DeviceStatusLedIndoorS350Property,
         [PropertyName.DevicePicture]: exports.DevicePictureProperty,
         [PropertyName.DevicePictureTime]: exports.DevicePictureTimeProperty,
@@ -6249,6 +6250,8 @@ exports.DeviceProperties = {
         [PropertyName.DeviceSnoozeStartTime]: exports.DeviceSnoozeStartTimeProperty,
         [PropertyName.DevicePersonName]: exports.DevicePersonNameProperty,
         [PropertyName.DevicePowerSource]: exports.DevicePowerSourceProperty,
+        [PropertyName.DevicePowerWorkingMode]: exports.DevicePowerWorkingModeProperty,
+        [PropertyName.DeviceChargingStatus]: exports.DeviceChargingStatusProperty,
         [PropertyName.DeviceDualCamWatchViewMode]: exports.DeviceDualCamWatchViewModeS340Property,
     },
     [DeviceType.INDOOR_PT_CAMERA_S350]: {

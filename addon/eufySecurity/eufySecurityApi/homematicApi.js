@@ -8,6 +8,7 @@ const axios_1 = __importDefault(require("axios"));
 const logging_1 = require("./logging");
 const util_1 = require("util");
 const child_process_1 = require("child_process");
+const utils_1 = require("./utils/utils");
 /**
  * Interacting with the CCU.
  */
@@ -50,9 +51,8 @@ class HomematicApi {
         this.getSystemVariables(hostName, useHttps);
         try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
-            data = response.data;
-            data = data.substring(data.indexOf("<result>"));
-            data = data.substring(8, data.indexOf("</result>"));
+            data = (0, utils_1.extractEnclosedString)(response.data, "<result>", "</result>", logging_1.rootAddonLogger);
+            logging_1.rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
             return data;
         }
         catch (error) {
@@ -73,9 +73,8 @@ class HomematicApi {
         let data = "";
         try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
-            data = response.data;
-            data = data.substring(data.indexOf("<result>"));
-            data = data.substring(8, data.indexOf("</result>"));
+            data = (0, utils_1.extractEnclosedString)(response.data, "<result>", "</result>", logging_1.rootAddonLogger);
+            logging_1.rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
             return data;
         }
         catch (error) {
@@ -98,9 +97,8 @@ class HomematicApi {
         try {
             await this.request(hostName, useHttps, requestData, requestConfig);
             //const response = await this.request(hostName, useHttps, requestData, requestConfig);
-            //data = response.data;
-            //data = data.substring(data.indexOf("<result>"));
-            //data = data.substring(8, data.indexOf("</result>"));
+            //data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
+            //rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
             //return data;
         }
         catch (error) {
@@ -122,9 +120,8 @@ class HomematicApi {
         let res;
         try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
-            data = response.data;
-            data = data.substring(data.indexOf("<result>"));
-            data = data.substring(8, data.indexOf("</result>"));
+            data = (0, utils_1.extractEnclosedString)(response.data, "<result>", "</result>", logging_1.rootAddonLogger);
+            logging_1.rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
             res = data.split("\t");
             if (variablePrefix === undefined) {
                 return res;
@@ -158,9 +155,8 @@ class HomematicApi {
         let data = "";
         try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
-            data = response.data;
-            data = data.substring(data.indexOf("<svObj>"));
-            data = data.substring(7, data.indexOf("</svObj>"));
+            data = (0, utils_1.extractEnclosedString)(response.data, "<svObj>", "</svObj>", logging_1.rootAddonLogger);
+            logging_1.rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
             return data;
         }
         catch (error) {
@@ -181,9 +177,8 @@ class HomematicApi {
         let data = "";
         try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
-            data = response.data;
-            data = data.substring(data.indexOf("<result>"));
-            data = data.substring(8, data.indexOf("</result>"));
+            data = (0, utils_1.extractEnclosedString)(response.data, "<result>", "</result>", logging_1.rootAddonLogger);
+            logging_1.rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
             return data;
         }
         catch (error) {

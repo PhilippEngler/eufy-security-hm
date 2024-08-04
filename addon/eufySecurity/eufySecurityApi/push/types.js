@@ -147,6 +147,7 @@ var HB3PairedDevicePushEvent;
 (function (HB3PairedDevicePushEvent) {
     HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["MOTION_DETECTION"] = 3101] = "MOTION_DETECTION";
     HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["FACE_DETECTION"] = 3102] = "FACE_DETECTION";
+    HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["PRESS_DOORBELL"] = 3103] = "PRESS_DOORBELL";
     HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["CRYING_DETECTION"] = 3104] = "CRYING_DETECTION";
     HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["SOUND_DETECTION"] = 3105] = "SOUND_DETECTION";
     HB3PairedDevicePushEvent[HB3PairedDevicePushEvent["PET_DETECTION"] = 3106] = "PET_DETECTION";

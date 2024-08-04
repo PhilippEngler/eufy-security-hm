@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToClientLog = exports.pathToTemp = exports.pathToNodeJs = void 0;
+exports.extractEnclosedString = exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToClientLog = exports.pathToTemp = exports.pathToNodeJs = void 0;
 const http_1 = require("../http");
 exports.pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
 exports.pathToTemp = "/var/tmp/eufySecurity";
@@ -302,3 +302,17 @@ const convertTimeStampToTimeStampMs = function (timeStamp, timeStampType) {
     }
 };
 exports.convertTimeStampToTimeStampMs = convertTimeStampToTimeStampMs;
+/**
+ * Extracts the string enclosed between the given startString and the given endString.
+ * @param data The string where the string should be extracted.
+ * @param startString The string after that the result is expected.
+ * @param endString The string before the result is expected.
+ * @returns The string.
+ */
+const extractEnclosedString = function (data, startString, endString, logger) {
+    if (logger !== undefined) {
+        logger.debug(JSON.stringify({ "data": data, "start": startString, "end": endString }));
+    }
+    return data.substring(data.indexOf(startString) + startString.length, data.indexOf(endString));
+};
+exports.extractEnclosedString = extractEnclosedString;

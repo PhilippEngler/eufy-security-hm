@@ -790,12 +790,21 @@ class EufySecurityApi {
                 case http_1.PropertyName.HardwareVersion:
                 case http_1.PropertyName.SoftwareVersion:
                 case http_1.PropertyName.DeviceStationSN:
-                    break;
                 case http_1.PropertyName.DevicePicture:
-                    json.hasPicture = properties[property] === null ? false : true;
                     break;
                 default:
                     json[property] = properties[property] === undefined ? "n/a" : properties[property];
+            }
+        }
+        if (device.hasProperty(http_1.PropertyName.DevicePicture)) {
+            if (device.hasProperty(http_1.PropertyName.DevicePictureTime)) {
+                const pictureTime = Number(device.getPropertyValue(http_1.PropertyName.DevicePictureTime));
+                if (pictureTime === undefined || Number.isNaN(pictureTime) || pictureTime <= 0) {
+                    json.hasPicture = false;
+                }
+                else {
+                    json.hasPicture = true;
+                }
             }
         }
         return json;
@@ -1171,7 +1180,7 @@ class EufySecurityApi {
                 //await this.stations.loadStations();
                 const station = await this.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "data": station.getProperties() };
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "isIntegratedDevice": await this.stations.isStationIntegratedDevice(station), "data": station.getProperties() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1891,6 +1900,13 @@ class EufySecurityApi {
         return this.config.getStateUpdateEventActive();
     }
     /**
+     * Returns the current language from config.
+     * @returns The current language from config.
+     */
+    getLanguage() {
+        return this.config.getLanguage();
+    }
+    /**
      * Get the config object.
      * @returns The config object.
      */
@@ -2550,7 +2566,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.0.1";
+        return "3.0.2";
     }
     /**
      * Return the version of the library used for communicating with eufy.

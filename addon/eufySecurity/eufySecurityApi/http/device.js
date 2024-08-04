@@ -1905,6 +1905,14 @@ class Camera extends Device {
                     try {
                         (0, utils_1.loadEventImage)(station, this.api, this, message, this.pictureEventTimeouts);
                         switch (message.event_type) {
+                            case types_3.HB3PairedDevicePushEvent.PRESS_DOORBELL:
+                                this.updateProperty(types_1.PropertyName.DeviceRinging, true);
+                                this.clearEventTimeout(types_1.DeviceEvent.Ringing);
+                                this.eventTimeouts.set(types_1.DeviceEvent.Ringing, setTimeout(async () => {
+                                    this.updateProperty(types_1.PropertyName.DeviceRinging, false);
+                                    this.eventTimeouts.delete(types_1.DeviceEvent.Ringing);
+                                }, eventDurationSeconds * 1000));
+                                break;
                             case types_3.HB3PairedDevicePushEvent.MOTION_DETECTION:
                                 this.updateProperty(types_1.PropertyName.DeviceMotionDetected, true);
                                 this.clearEventTimeout(types_1.DeviceEvent.MotionDetected);
