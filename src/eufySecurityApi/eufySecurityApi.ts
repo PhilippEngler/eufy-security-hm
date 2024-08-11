@@ -1001,13 +1001,15 @@ export class EufySecurityApi
     /**
      * Create a JSON object for a given device.
      * @param device The device the JSON object created for.
-     */
-    private makeJsonObjectForDevice(device : Device, isStationP2PConnected : boolean) : any
+     * @param isEnergySavingDevice True, if the device is an energy saving device, otherwise false.
+     * @param isStationP2PConnected True, if the station has an active p2p connection, otherwise false.
+    */
+    private makeJsonObjectForDevice(device : Device, isEnergySavingDevice : boolean, isStationP2PConnected : boolean) : any
     {
         const properties = device.getProperties();
         let json : any = {};
 
-        json = {"eufyDeviceId":device.getId(), "isStationP2PConnected":isStationP2PConnected, "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
+        json = {"eufyDeviceId":device.getId(), "isEnergySavingDevice":isEnergySavingDevice, "isStationP2PConnected":isStationP2PConnected, "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "model":device.getModel(), "modelName":getModelName(device.getModel()), "name":device.getName(), "hardwareVersion":device.getHardwareVersion(), "softwareVersion":device.getSoftwareVersion(), "stationSerialNumber":device.getStationSerial()};
 
         for(const property in properties)
         {
@@ -1061,7 +1063,8 @@ export class EufySecurityApi
                     json = {"success":true, "data":[]};
                     for (const deviceSerial in devices)
                     {
-                        json.data.push(this.makeJsonObjectForDevice(devices[deviceSerial], (await this.stations.getStation(devices[deviceSerial].getStationSerial())).isConnected()));
+                        const station = await this.stations.getStation(devices[deviceSerial].getStationSerial());
+                        json.data.push(this.makeJsonObjectForDevice(devices[deviceSerial], station.isEnergySavingDevice(), station.isConnected()));
                     }
                     this.setLastConnectionInfo(true);
                 }
@@ -1133,7 +1136,8 @@ export class EufySecurityApi
                 const device = (await this.getDevices())[deviceSerial];
                 if(device)
                 {
-                    json = {"success":true, "data":this.makeJsonObjectForDevice(device, (await this.stations.getStation(device.getStationSerial())).isConnected())};
+                    const station = await this.stations.getStation(device.getStationSerial());
+                    json = {"success":true, "data":this.makeJsonObjectForDevice(device, station.isEnergySavingDevice(), station.isConnected())};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -1378,7 +1382,7 @@ export class EufySecurityApi
             }
         }
 
-        json = {"eufyDeviceId":station.getId(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "wanIpAddress":station.getIPAddress(), "isP2PConnected":station.isConnected()};
+        json = {"eufyDeviceId":station.getId(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "wanIpAddress":station.getIPAddress(), "isP2PConnected":station.isConnected(), "isEnergySavingDevice":station.isEnergySavingDevice()};
         for (const property in properties)
         {
             switch (property)
@@ -1533,7 +1537,7 @@ export class EufySecurityApi
 
                 if(station)
                 {
-                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "isIntegratedDevice":await this.stations.isStationIntegratedDevice(station), "data":station.getProperties()};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "type":station.getModel(), "modelName":getModelName(station.getModel()), "isP2PConnected":station.isConnected(), "isEnergySavingDevice":station.isEnergySavingDevice(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "isIntegratedDevice":await this.stations.isStationIntegratedDevice(station), "data":station.getProperties()};
                     this.setLastConnectionInfo(true);
                 }
                 else
@@ -3259,7 +3263,7 @@ export class EufySecurityApi
             for(const stationSerial in stations)
             {
                 const station = stations[stationSerial];
-                json.data.stations.push({"stationSerial":station.getSerial(),"stationName":station.getName(),"isP2pConnected":station.isConnected()});
+                json.data.stations.push({"stationSerial":station.getSerial(),"stationName":station.getName(),"isP2pConnected":station.isConnected(),"isEnergySavingDevice":station.isEnergySavingDevice()});
             }
         }
 

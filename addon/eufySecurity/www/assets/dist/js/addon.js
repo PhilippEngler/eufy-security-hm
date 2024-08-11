@@ -6,7 +6,7 @@ var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.8";
+var version = "3.0.9";
 
 /**
  * common used java script functions
@@ -561,7 +561,7 @@ function createCardDevice(device)
 
 	card += `<div class="col"><div class="card">`;
 	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${device.name}</h5></div>`;
-	card += `<div style="text-align:right;"><h5 class="mb-0">${device.enabled === false ? `<i class="bi-power" title="${translateContent("titleDeviceDisabled")}"></i>&nbsp;&nbsp;` : ""}${device.isStationP2PConnected === false ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${device.state === 0 ? `<i class="bi-exclamation-triangle" title="${translateContent("titleDeactivatedOffline")}"></i>&nbsp;&nbsp;` : device.state === 2 ? `<i class="bi-exclamation-triangle" title="${translateContent("titleDeactivatedLowBattery")}"></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel, device.wifiRssi)}" title="${translateContent("titleWifiSignalLevel")}: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></div></div>`;
+	card += `<div style="text-align:right;"><h5 class="mb-0">${device.enabled === false ? `<i class="bi-power" title="${translateContent("titleDeviceDisabled")}"></i>&nbsp;&nbsp;` : ""}${(device.isStationP2PConnected === false && device.isEnergySavingDevice === false) ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${device.state === 0 ? `<i class="bi-exclamation-triangle" title="${translateContent("titleDeactivatedOffline")}"></i>&nbsp;&nbsp;` : device.state === 2 ? `<i class="bi-exclamation-triangle" title="${translateContent("titleDeactivatedLowBattery")}"></i>&nbsp;&nbsp;` : ""}${device.wifiSignalLevel === undefined || device.wifiRssi === undefined ? "" : `<i class="${getWifiSignalLevelIcon(device.wifiSignalLevel, device.wifiRssi)}" title="${translateContent("titleWifiSignalLevel")}: ${device.wifiRssi}dB"></i>&nbsp;&nbsp;`}<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="${device.serialNumber == device.stationSerialNumber ? `generateStationDeviceSettingsSelectionModal('${device.serialNumber}','${device.name}')` : `generateDeviceSettingsModal('${device.serialNumber}')`}"></i></h5></div></div>`;
 
 	card += `<div class="card-body p-0"><div class="row g-0">`;
 	card += `<div class="col-md-4 img-container"><div class="img-overlay-text-centered fs-6 text-muted m-3">${device.modelName} (${device.model})</div></div>`;
@@ -2404,7 +2404,7 @@ function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillStationSettingsModal(stationId, objResp.modelName, objResp.isP2PConnected, objResp.isDeviceKnownByClient, objResp.deviceType, objResp.isIntegratedDevice, objResp.data, stationPropertiesMetadata, timeZones);
+					fillStationSettingsModal(stationId, objResp.modelName, objResp.isP2PConnected, objResp.isEnergySavingDevice, objResp.isDeviceKnownByClient, objResp.deviceType, objResp.isIntegratedDevice, objResp.data, stationPropertiesMetadata, timeZones);
 				}
 				else
 				{
@@ -2447,7 +2447,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, modelName, isP2PConnected, isDeviceKnownByClient, deviceType, isIntegratedDevice, stationProperties, stationPropertiesMetadata, timeZone)
+function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergySavingDevice, isDeviceKnownByClient, deviceType, isIntegratedDevice, stationProperties, stationPropertiesMetadata, timeZone)
 {
 	var setEventHandler = true;
 	var stationModal =  `
@@ -2495,7 +2495,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isDevice
 										</div>
 										${generateColumnForProperty("col", "lblStationFirmware", "", `<h6 class="card-subtitle text-muted">`, `</h6>`, "bi-gear-wide-connected", translateContent("lblFirmware"), stationProperties.softwareVersion)}
 									</div>`;
-	if(isP2PConnected === false)
+	if(isP2PConnected === false && isEnergySavingDevice === false)
 	{
 		stationModal +=  `
 									${createMessageContainer("alert alert-warning", translateContent("titleNoP2PConnection"), translateContent("titleNoP2PConnectionDesc"), "")}
