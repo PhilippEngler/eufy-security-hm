@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240804
+ * 20240811
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.7";
+var version = "3.0.8";
 
 /**
  * common used java script functions
@@ -2063,6 +2063,8 @@ function isStationOrDevicesKnown(modell)
 		case "T8214":
 		//WallLightCams
 		case "T84A1":
+		//SoloCams
+		case "T8170":
 		//Sensors
 		case "T8900":
 			return true;
@@ -2402,7 +2404,7 @@ function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillStationSettingsModal(stationId, timeZones, stationPropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.isIntegratedDevice, objResp.isP2PConnected, objResp.data);
+					fillStationSettingsModal(stationId, objResp.modelName, objResp.isP2PConnected, objResp.isDeviceKnownByClient, objResp.deviceType, objResp.isIntegratedDevice, objResp.data, stationPropertiesMetadata, timeZones);
 				}
 				else
 				{
@@ -2445,7 +2447,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, timeZone, stationPropertiesMetadata, modelName, isDeviceKnownByClient, isIntegratedDevice, isP2PConnected, stationProperties)
+function fillStationSettingsModal(stationId, modelName, isP2PConnected, isDeviceKnownByClient, deviceType, isIntegratedDevice, stationProperties, stationPropertiesMetadata, timeZone)
 {
 	var setEventHandler = true;
 	var stationModal =  `
