@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.15
-20240804
+Schema v9.16
+20240817
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240804 (v9.15)";
+var languageVersion = "20240817 (v9.16)";
 
 function translateNavbarElement(element)
 {
@@ -487,6 +487,8 @@ function translateStaticContentElement(element)
 			return "CCU AddOn:";
 		case "txtLogfileLocation":
 			return "Inhalt der Datei";
+		case "txtLogfileUnknown":
+			return "Logdateityp unbekannt";
 		default:
             return `{${element}}`;
     }
@@ -642,6 +644,10 @@ function translateMessages(message, ...options)
 			return "Sie haben einen Port eingegeben, der bereits für eine andere Station oder ein anderes Gerät eingegeben wurde.";
 		case "messageLoadLogFileErrorHeader":
 			return "Fehler beim Laden der Logdatei.";
+		case "messageEmptyLogFileErrorHeader":
+			return "Fehler beim Leeren der Logdatei.";
+		case "messageErrorLogfileUnknown":
+			return `Der Logdateityp '${options[0]}' ist unbekannt.`;
 		case "messageLoadVersionInfoErrorHeader":
 			return "Fehler beim Laden der Versionsinformationen.";
 		case "messageRebootStationHeader":
