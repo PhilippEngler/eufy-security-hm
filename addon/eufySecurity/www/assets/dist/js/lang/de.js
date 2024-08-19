@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.16
-20240817
+Schema v9.17
+20240819
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240817 (v9.16)";
+var languageVersion = "20240819 (v9.17)";
 
 function translateNavbarElement(element)
 {
@@ -665,6 +665,12 @@ function translateContent(content, ...options)
 {
 	switch(content)
 	{
+		case "lblConfigNeededHeader":
+			return "Einstellungen unvollständig";
+		case "lblConfigNeeded":
+			return "Sie müssen das AddOn konfigurieren, bevor Sie es nutzen können. Klicken Sie auf die Schaltfläche 'zu den Einstellungen', um die Einstellungen vornehmen zu können.";
+		case "btnGoToSettings":
+			return "zu den Einstellungen";
 		case "lblTfaHeader":
 			return "Anmeldung benötigt 2FA Code";
 		case "lblTfaHint":

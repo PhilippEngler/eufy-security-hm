@@ -80,7 +80,7 @@ export class EufySecurityApi
 
             rootAddonLogger.error(`Please check your settings in the 'config.json' file.\r\nIf there was no 'config.json', it should now be there.\r\nYou need to set at least email and password to run this addon (missing: ${missingSettings}).`);
 
-            this.setServiceState("ok");
+            this.setServiceState("configNeeded");
         }
         else
         {
@@ -167,7 +167,7 @@ export class EufySecurityApi
      */
     public setServiceState(state : string): void
     {
-        if(state == "init" || state == "ok" || state == "disconnected" || state == "shutdown")
+        if(state === "init" || state === "configNeeded" || state === "ok" || state === "disconnected" || state === "shutdown")
         {
             this.serviceState = state;
         }

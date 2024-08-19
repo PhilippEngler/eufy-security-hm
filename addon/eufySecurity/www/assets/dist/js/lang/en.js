@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.16
-20240817
+Schema v9.17
+20240819
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240817 (v9.16)";
+var languageVersion = "20240819 (v9.14)";
 
 function translateNavbarElement(element)
 {
@@ -665,6 +665,12 @@ function translateContent(content, ...options)
 {
 	switch(content)
 	{
+		case "lblConfigNeededHeader":
+			return "Settings incomplete";
+		case "lblConfigNeeded":
+			return "You must configure the add-on before you can use it. Click on the 'Go To Settings' button to make the settings.";
+		case "btnGoToSettings":
+			return "Go To Settings";
 		case "lblTfaHeader":
 			return "Login requires TFA code";
 		case "lblTfaHint":

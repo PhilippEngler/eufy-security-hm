@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240817
+ * 20240819
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.10";
+var version = "3.0.11";
 
 /**
  * common used java script functions
@@ -112,7 +112,7 @@ function getAPIPort(page)
 					{
 						port = objResp.httpPort;
 						document.getElementById("loadApiSettingsError").innerHTML = "";
-						initContent(page);
+						checkConfigNeeded(page);
 						return;
 					}
 				}
@@ -122,7 +122,7 @@ function getAPIPort(page)
 					{
 						port = objResp.httpsPort;
 						document.getElementById("loadApiSettingsError").innerHTML = "";
-						initContent(page);
+						checkConfigNeeded(page);
 						return;
 					}
 				}
@@ -173,6 +173,43 @@ function initContent(page)
 	}
 }
 
+function checkConfigNeeded(page)
+{
+	if(page == "settings" || page == "logfiles" || page == "info" || page == "restartWaiter")
+	{
+		initContent(page);
+		return;
+	}
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/getApiState`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success == true)
+			{
+				if(objResp.data.serviceState == "configNeeded")
+				{
+					generateConfigNeeded(page);
+				}
+				else
+				{
+					initContent(page);
+				}
+			}
+			else
+			{
+				//document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
+			}
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+
 function checkTfaCaptchaState(page)
 {
 	var xmlhttp, objResp;
@@ -203,6 +240,39 @@ function checkTfaCaptchaState(page)
 	};
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
+}
+
+function generateConfigNeeded(page)
+{
+	generateContentConfigNeeded(page);
+
+	const myModal = new bootstrap.Modal(document.getElementById('modalConfigNeeded'));
+	myModal.show();
+}
+
+function redirectToPage(page)
+{
+	window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/${page}.html` + redirectTarget;
+}
+
+function generateContentConfigNeeded(page)
+{
+	var configNeeded = `
+					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
+						<div class="modal-content">
+							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalConfigNeededTitle">
+								<div style="text-align:left; float:left;"><h5 class="mb-0">${translateContent("lblConfigNeededHeader")}</h5></div>
+							</div>
+							<div class="modal-body placeholder-glow" id="divModalConfigNeeded">
+								<div class="my-3" id="configNeeded">${translateContent("lblConfigNeeded")}</div>
+							</div>
+							<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+								${makeButtonElement("btnCloseModalDeviceSettingsBottom", "btn btn-primary btn-sm", "redirectToPage('settings')", translateContent("btnGoToSettings"), true, "modal", undefined, true)}
+							</div>
+						</div>
+					</div>`;
+	
+	document.getElementById("modalConfigNeeded").innerHTML = configNeeded;
 }
 
 function generateTfaCodeModal(page, objResp)
