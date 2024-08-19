@@ -94,6 +94,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         const deviceSNs: string[] = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
         const promises: Array<Promise<Device>> = [];
+        const deviceConfig = this.api.getDeviceConfig();
 
         let deviceSerial : string;
 
@@ -120,75 +121,75 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
                     if(Device.isIndoorCamera(resDevices[deviceSerial].device_type))
                     {
-                        new_device = IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isSoloCameras(resDevices[deviceSerial].device_type))
                     {
-                        new_device = SoloCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = SoloCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (Device.isLockWifiVideo(resDevices[deviceSerial].device_type))
                     {
-                        new_device = DoorbellLock.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = DoorbellLock.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isBatteryDoorbell(resDevices[deviceSerial].device_type))
                     {
-                        new_device = BatteryDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = BatteryDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type))
                     {
-                        new_device = WiredDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = WiredDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isFloodLight(resDevices[deviceSerial].device_type))
                     {
-                        new_device = FloodlightCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = FloodlightCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (Device.isWallLightCam(resDevices[deviceSerial].device_type))
                     {
-                        new_device = WallLightCam.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = WallLightCam.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (Device.isGarageCamera(resDevices[deviceSerial].device_type))
                     {
-                        new_device = GarageCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = GarageCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (Device.isSmartDrop(resDevices[deviceSerial].device_type))
                     {
-                        new_device = SmartDrop.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = SmartDrop.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isCamera(resDevices[deviceSerial].device_type))
                     {
-                        new_device = Camera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = Camera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isLock(resDevices[deviceSerial].device_type))
                     {
-                        new_device = Lock.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = Lock.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isMotionSensor(resDevices[deviceSerial].device_type))
                     {
-                        new_device = MotionSensor.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = MotionSensor.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isEntrySensor(resDevices[deviceSerial].device_type))
                     {
-                        new_device = EntrySensor.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = EntrySensor.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if(Device.isKeyPad(resDevices[deviceSerial].device_type))
                     {
-                        new_device = Keypad.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = Keypad.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (Device.isSmartSafe(resDevices[deviceSerial].device_type))
                     {
-                        new_device = SmartSafe.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = SmartSafe.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (Device.isSmartTrack(resDevices[deviceSerial].device_type))
                     {
-                        new_device = Tracker.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = Tracker.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (Device.isLockKeypad(resDevices[deviceSerial].device_type))
                     {
-                        new_device = LockKeypad.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = LockKeypad.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else
                     {
-                        new_device = UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
 
                     promises.push(new_device.then((device: Device) => {

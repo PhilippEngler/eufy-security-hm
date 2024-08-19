@@ -2,6 +2,7 @@ import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from "./push/models";
 import { rootConfLogger, setLoggingLevel } from "./logging";
 import { LogLevel } from "typescript-logging";
+import { DeviceConfig } from ".";
 
 export class Config
 {
@@ -118,7 +119,7 @@ export class Config
      */
     private getConfigFileTemplateVersion() : number
     {
-        return 19;
+        return 20;
     }
 
     /**
@@ -212,7 +213,7 @@ export class Config
         const pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false};
+        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false, "enableEmbeddedPKCS1Support": false};
         config.apiConfig = apiConfig;
 
         const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
@@ -223,6 +224,9 @@ export class Config
 
         const devicePublicKeys : [] = [];
         config.devicePublicKeys = devicePublicKeys;
+
+        const deviceConfig = { simultaneousDetections: true };
+        config.deviceConfig = deviceConfig;
 
         const interactions = null;
         config.interactions = interactions;
@@ -370,6 +374,18 @@ export class Config
                 {
                     rootConfLogger.info(" adding 'secureApiAccessBySid'.");
                     configJson.apiConfig.secureApiAccessBySid = false;
+                }
+                updated = true;
+            }
+            if(configJson.configVersion < 20) {
+                rootConfLogger.info("Configfile needs Stage2 update to version 20...");
+                if(configJson.apiConfig.enableEmbeddedPKCS1Support === undefined) {
+                    rootConfLogger.info(" adding 'enableEmbeddedPKCS1Support'.");
+                    configJson.apiConfig.enableEmbeddedPKCS1Support = false;
+                }
+                if(configJson.deviceConfig === undefined) {
+                    rootConfLogger.info(" adding 'deviceConfig'.");
+                    configJson.deviceConfig = { simultaneousDetections: true };
                 }
                 updated = true;
             }
@@ -566,6 +582,10 @@ export class Config
             {
                 newConfigJson.apiConfig.secureApiAccessBySid = configJson.apiConfig.secureApiAccessBySid;
             }
+            if(configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined)
+            {
+                newConfigJson.apiConfig.enableEmbeddedPKCS1Support = configJson.apiConfig.enableEmbeddedPKCS1Support;
+            }
         }
 
         if(configJson.logConfig !== undefined)
@@ -599,6 +619,10 @@ export class Config
         if(configJson.stations !== undefined)
         {
             newConfigJson.stations = configJson.stations;
+        }
+
+        if(configJson.deviceConfig !== undefined) {
+            newConfigJson.deviceConfig = configJson.deviceConfig;
         }
 
         return newConfigJson;
@@ -1884,8 +1908,8 @@ export class Config
     }
 
     /**
-     * Get the value for enableing or diableing push service.
-     * @returns Boolean for enableing or diableing.
+     * Get the value for enableing or disableing push service.
+     * @returns Boolean for enableing or disableing.
      */
     public getPushServiceActive() : boolean
     {
@@ -1914,7 +1938,7 @@ export class Config
 
     /**
      * Get the value for securing the access to api by sid.
-     * @returns Boolean for enableing or diableing.
+     * @returns Boolean for enableing or disableing.
      */
     public getSecureApiAccessBySid() : boolean
     {
@@ -1937,6 +1961,35 @@ export class Config
         if(this.configJson.apiConfig.secureApiAccessBySid != secureApiAccessBySid)
         {
             this.configJson.apiConfig.secureApiAccessBySid = secureApiAccessBySid;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the value for enable embedded PKCS1 support.
+     * @returns Boolean for enableing or disableing.
+     */
+    public getEnableEmbeddedPKCS1Support() : boolean
+    {
+        if(this.configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined)
+        {
+            return this.configJson.apiConfig.enableEmbeddedPKCS1Support;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Set if enableing embedded PKCS1 support.
+     * @param enableEmbeddedPKCS1Support The value if securing api access by sid is used.
+     */
+    public setEnableEmbeddedPKCS1Support(enableEmbeddedPKCS1Support : boolean) : void
+    {
+        if(this.configJson.apiConfig.enableEmbeddedPKCS1Support != enableEmbeddedPKCS1Support)
+        {
+            this.configJson.apiConfig.enableEmbeddedPKCS1Support = enableEmbeddedPKCS1Support;
             this.hasChanged = true;
         }
     }
@@ -2310,5 +2363,27 @@ export class Config
     public removeInteractions(): void
     {
         this.configJson.interactions = null;
+    }
+
+    /**
+     * Retrieves the device config from the config.
+     * @returns The device config.
+     */
+    public getDeviceConfig(): DeviceConfig | undefined {
+        if(this.configJson.deviceConfig !== undefined) {
+            return this.configJson.deviceConfig;
+        }
+        return undefined;
+    }
+
+    /**
+     * Set the device config.
+     * @param deviceConfig The device config to set.
+     */
+    public setDeviceConfig(deviceConfig: DeviceConfig): void {
+        if(this.configJson.deviceConfig !== deviceConfig) {
+            this.configJson.deviceConfig = deviceConfig;
+            this.hasChanged = true;
+        }
     }
 }

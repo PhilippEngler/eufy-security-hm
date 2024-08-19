@@ -1,5 +1,5 @@
 import { Config } from "./config";
-import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType } from "./http";
+import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig } from "./http";
 import { HomematicApi } from "./homematicApi";
 import { rootAddonLogger, setLoggingLevel } from "./logging";
 
@@ -2475,6 +2475,26 @@ export class EufySecurityApi
     }
 
     /**
+     * Retrieves the config setting for enable embedded PKCS1 support.
+     * @returns True, if embedded PKCS1 support is enabled, otherwise false.
+     */
+    public getEnableEmbeddedPKCS1Support(): boolean {
+        try {
+            return this.config.getEnableEmbeddedPKCS1Support();
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Retrieves the device config object from settings.
+     * @returns The deice config object.
+     */
+    public getDeviceConfig(): DeviceConfig {
+        return this.getConfig().getDeviceConfig() as DeviceConfig;
+    }
+
+    /**
      * Returns the internal ip address for the given the station.
      * @param stationSerial The serial for the station.
      * @returns The internal ip address.
@@ -3347,7 +3367,7 @@ export class EufySecurityApi
      */
     public getEufySecurityApiVersion() : string
     {
-        return "3.0.2";
+        return "3.1.0-b1";
     }
 
     /**
@@ -3356,6 +3376,6 @@ export class EufySecurityApi
      */
     public getEufySecurityClientVersion() : string
     {
-        return "3.0.0";
+        return "3.1.0-b_ca37fa2";
     }
 }

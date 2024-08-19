@@ -374,10 +374,12 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
                             rootHTTPLogger.debug("Token data", { token: this.token, tokenExpiration: this.tokenExpiration });
                             await this.sendVerifyCode(VerfyCodeTypes.TYPE_EMAIL);
+                            rootHTTPLogger.info("Please send required verification code to proceed with authentication");
                             this.emit("tfa request");
                         } else if (result.code == ResponseErrorCode.LOGIN_NEED_CAPTCHA || result.code == ResponseErrorCode.LOGIN_CAPTCHA_ERROR) {
                             const dataresult: CaptchaResponse = result.data;
                             rootHTTPLogger.debug("Login - Captcha verification received", { captchaId: dataresult.captcha_id, item: dataresult.item });
+                            rootHTTPLogger.info("Please send requested captcha to proceed with authentication");
                             this.emit("captcha request", dataresult.captcha_id, dataresult.item);
                         } else {
                             rootHTTPLogger.error("Login - Response code not ok", {code: result.code, msg: result.msg, data: response.data });
@@ -644,49 +646,34 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     public async request(request: HTTPApiRequest, withoutUrlPrefix = false): Promise<ApiResponse> {
         rootHTTPLogger.debug("Api request", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
         try {
-            // fix for got 14.4.0
-            /*const options: OptionsOfJSONResponseBody  = {
-                method: request.method,
-                json: request.data,
-                responseType: request.responseType !== undefined ? request.responseType : "json",
-            };
+            let options: OptionsOfTextResponseBody | OptionsOfBufferResponseBody | OptionsOfJSONResponseBody;
+            switch(request.responseType) {
+                case undefined:
+                case "json":
+                    options = {
+                        method: request.method,
+                        json: request.data,
+                        responseType: "json",
+                    } as OptionsOfJSONResponseBody;
+                    break;
+                case "text":
+                    options = {
+                        method: request.method,
+                        json: request.data,
+                        responseType: request.responseType,
+                    } as OptionsOfTextResponseBody;
+                    break;
+                case "buffer":
+                    options = {
+                        method: request.method,
+                        json: request.data,
+                        responseType: request.responseType,
+                    } as OptionsOfBufferResponseBody;
+                    break;
+            }
             if (withoutUrlPrefix)
                 options.prefixUrl = "";
-            const internalResponse = await this.requestEufyCloud(request.endpoint, options);*/
-
-            let internalResponse;
-            if(request.responseType === "text") {
-                const options: OptionsOfTextResponseBody = {
-                    method: request.method,
-                    json: request.data,
-                    responseType: request.responseType,
-                };
-                if (withoutUrlPrefix) {
-                    options.prefixUrl = "";
-                }
-                internalResponse = await this.requestEufyCloud(request.endpoint, options);
-            } else if(request.responseType === "buffer") {
-                const options: OptionsOfBufferResponseBody = {
-                    method: request.method,
-                    json: request.data,
-                    responseType: request.responseType,
-                };
-                if (withoutUrlPrefix) {
-                    options.prefixUrl = "";
-                }
-                internalResponse = await this.requestEufyCloud(request.endpoint, options);
-            } else {
-                const options: OptionsOfJSONResponseBody = {
-                    method: request.method,
-                    json: request.data,
-                    responseType: "json",
-                };
-                if (withoutUrlPrefix) {
-                    options.prefixUrl = "";
-                }
-                internalResponse = await this.requestEufyCloud(request.endpoint, options);
-            }
-
+            const internalResponse = await this.requestEufyCloud(request.endpoint, options);
             const response: ApiResponse = {
                 status: internalResponse.statusCode,
                 statusText: internalResponse.statusMessage ? internalResponse.statusMessage : "",
