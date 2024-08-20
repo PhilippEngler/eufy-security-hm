@@ -225,7 +225,7 @@ export class Config
         const devicePublicKeys : [] = [];
         config.devicePublicKeys = devicePublicKeys;
 
-        const deviceConfig = { simultaneousDetections: true };
+        const deviceConfig = {"simultaneousDetections":true};
         config.deviceConfig = deviceConfig;
 
         const interactions = null;
