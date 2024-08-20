@@ -8,15 +8,13 @@ import { extractEnclosedString } from "./utils/utils";
 /**
  * Interacting with the CCU.
  */
-export class HomematicApi
-{
+export class HomematicApi {
     private api: EufySecurityApi;
 
     /**
      * Create the api object.
      */
-    constructor(api: EufySecurityApi)
-    {
+    constructor(api: EufySecurityApi) {
         this.api = api;
     }
 
@@ -27,8 +25,7 @@ export class HomematicApi
      * @param data The data for the request.
      * @param requestConfig The config.
      */
-    private async request(hostName: string, useHttps: boolean, data: string, requestConfig?: AxiosRequestConfig): Promise<AxiosResponse>
-    {
+    private async request(hostName: string, useHttps: boolean, data: string, requestConfig?: AxiosRequestConfig): Promise<AxiosResponse> {
         return await axios.post(this.getUrl(hostName, useHttps), data, requestConfig)
     }
 
@@ -37,8 +34,7 @@ export class HomematicApi
      * @param hostName The hostName of the ccu or localhost.
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      */
-    private getUrl(hostName: string, useHttps: boolean): string
-    {
+    private getUrl(hostName: string, useHttps: boolean): string {
         return `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
     }
 
@@ -48,23 +44,20 @@ export class HomematicApi
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get.
      */
-    public async getSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
-    {
+    public async getSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined> {
         const requestData = `string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='${variableName}'){result=svObject.Value();break;}}svName='null';svObject=null;`;
-        const requestConfig = { headers : {"Content-Type": "text/plain" } };
+        const requestConfig = { headers: {"Content-Type": "text/plain" } };
 
         let data = "";
         this.getSystemVariables(hostName, useHttps);
 
-        try{
+        try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        }
-        catch(error : any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`CCU request error on getSystemVariable(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on getSystemVariable():`, JSON.stringify(error));
             return undefined;
@@ -77,23 +70,19 @@ export class HomematicApi
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get.
      */
-    public async getSystemVariable1(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
-    {
+    public async getSystemVariable1(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined> {
         const requestData = `result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').Value()`;
-        const requestConfig = { headers : {"Content-Type": "text/plain" } };
+        const requestConfig = { headers: {"Content-Type": "text/plain" } };
 
         let data = "";
 
-        try
-        {
+        try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        }
-        catch(error : any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`CCU request error on getSystemVariable1(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on getSystemVariable1():`, JSON.stringify(error));
             return undefined;
@@ -107,24 +96,20 @@ export class HomematicApi
      * @param variableName The name of the system variable to set.
      * @param value The value to set.
      */
-    public async setSystemVariable(hostName: string, useHttps: boolean, variableName: string, value: string): Promise<void>
-    {
+    public async setSystemVariable(hostName: string, useHttps: boolean, variableName: string, value: string): Promise<void> {
         const requestData = `dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').State('${value}')`;
-        const requestConfig = { headers : {"Content-Type": "text/plain" } };
+        const requestConfig = { headers: {"Content-Type": "text/plain" } };
 
         //let data = "";
 
-        try
-        {
+        try {
             await this.request(hostName, useHttps, requestData, requestConfig);
             //const response = await this.request(hostName, useHttps, requestData, requestConfig);
             //data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
             //rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             //return data;
-        }
-        catch(error : any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`CCU request error on setSystemVariable(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on setSystemVariable():`, JSON.stringify(error));
         }
@@ -137,41 +122,32 @@ export class HomematicApi
      * @param variablePrefix The string the variables to be retrieved should start with.
      * @returns An array containg all system variables.
      */
-    public async getSystemVariables(hostName: string, useHttps: boolean, variablePrefix?: string): Promise<string[] | undefined>
-    {
+    public async getSystemVariables(hostName: string, useHttps: boolean, variablePrefix?: string): Promise<string[] | undefined> {
         const requestData = "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();";
-        const requestConfig = { headers : {"Content-Type": "text/plain" } };
+        const requestConfig = { headers: {"Content-Type": "text/plain" } };
 
         let data = "";
-        let res : string[] | undefined;
+        let res: string[] | undefined;
 
-        try
-        {
+        try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             res = data.split("\t");
 
-            if(variablePrefix === undefined)
-            {
+            if(variablePrefix === undefined) {
                 return res;
-            }
-            else
-            {
-                for (let i = 0; i < res.length; i++)
-                {
-                    if(!(res[i].startsWith(variablePrefix)))
-                    {
+            } else {
+                for (let i = 0; i < res.length; i++) {
+                    if(!(res[i].startsWith(variablePrefix))) {
                         res.splice(i, 1);
                         i--;
                     }
                 }
                 return res;
             }
-        }
-        catch(error : any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`CCU request error on getSystemVariables(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on getSystemVariables():`, JSON.stringify(error));
             res = undefined;
@@ -185,23 +161,19 @@ export class HomematicApi
      * @param variableName The name of the system variable to create.
      * @param variableInfo The info of the system variable to create.
      */
-    public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined>
-    {
+    public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined> {
         const requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('${variableName}');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('${variableInfo}');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);`;
-        const requestConfig = { headers : {"Content-Type": "text/plain" } };
+        const requestConfig = { headers: {"Content-Type": "text/plain" } };
 
         let data = "";
 
-        try
-        {
+        try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = extractEnclosedString(response.data, "<svObj>", "</svObj>", rootAddonLogger);
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        }
-        catch(error : any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`CCU request error on createSystemVariable(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on createSystemVariable():`, JSON.stringify(error));
             return undefined;
@@ -214,23 +186,19 @@ export class HomematicApi
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to remove.
      */
-    public async removeSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined>
-    {
+    public async removeSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined> {
         const requestData = `string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '${variableName}'){dom.DeleteObject(svObject);result='true';break;}}`;
-        const requestConfig = { headers : {"Content-Type": "text/plain" } };
+        const requestConfig = { headers: {"Content-Type": "text/plain" } };
 
         let data = "";
 
-        try
-        {
+        try {
             const response = await this.request(hostName, useHttps, requestData, requestConfig);
             data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        }
-        catch(error : any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`CCU request error on removeSystemVariable(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on removeSystemVariable():`, JSON.stringify(error));
             return undefined;
@@ -243,17 +211,13 @@ export class HomematicApi
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param command The command to be executed.
      */
-    public async sendInteractionCommand(hostName: string, useHttps: boolean, command: string): Promise<void>
-    {
+    public async sendInteractionCommand(hostName: string, useHttps: boolean, command: string): Promise<void> {
         const requestData = command;
-        const requestConfig = { headers : {"Content-Type": "text/plain" } };
+        const requestConfig = { headers: {"Content-Type": "text/plain" } };
 
-        try
-        {
+        try {
             await this.request(hostName, useHttps, requestData, requestConfig);
-        }
-        catch(error : any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(error));
         }
@@ -264,23 +228,16 @@ export class HomematicApi
      * @param sid The sid to check.
      * @returns true, if the sid is correct, otherwise false.
      */
-    public async checkSid(sid: string): Promise<boolean>
-    {
-        try
-        {
+    public async checkSid(sid: string): Promise<boolean> {
+        try {
             const promisifyExec = promisify(exec);
             const result = await promisifyExec(`tclsh /usr/local/addons/eufySecurity/www/sessionCheck.cgi ${sid}`);
-            if(result.stdout.trim() === "1")
-            {
+            if(result.stdout.trim() === "1") {
                 return true;
-            }
-            else
-            {
+            } else {
                 return false;
             }
-        }
-        catch (err: any)
-        {
+        } catch (err: any) {
             rootAddonLogger.error(`Error occured while checking sid.`, { error: err });
             return false;
         }
@@ -289,8 +246,7 @@ export class HomematicApi
     /**
      * Returns the version info of the homematic api.
      */
-    public getHomematicApiVersion(): string
-    {
+    public getHomematicApiVersion(): string {
         return "3.0.1";
     }
 }

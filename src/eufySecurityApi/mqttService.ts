@@ -9,10 +9,9 @@ import { rootMQTTLogger } from "./logging";
 import { DeviceNotFoundError } from "./error";
 import { getError } from "./utils";
 
-export class MqttService extends TypedEmitter<EufySecurityEvents>
-{
-    private api : EufySecurityApi;
-    private config : Config;
+export class MqttService extends TypedEmitter<EufySecurityEvents> {
+    private api: EufySecurityApi;
+    private config: Config;
     private mqttService!: MQTTService;
 
     /**
@@ -21,8 +20,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      * @param config The Config.
      * @param logger The Logger.
      */
-    constructor(api : EufySecurityApi, config : Config)
-    {
+    constructor(api: EufySecurityApi, config: Config) {
         super();
         this.api = api;
         this.config = config;
@@ -33,8 +31,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     /**
      * Initialize the MqttService.
      */
-    private async initialize() : Promise<void>
-    {
+    private async initialize(): Promise<void> {
         this.mqttService = await MQTTService.init();
         this.mqttService.on("connect", () => this.onConnect());
         this.mqttService.on("close", () => this.onClose());
@@ -48,16 +45,14 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      * @param apiBase The apiBase.
      * @param email The email.
      */
-    public connect(clientId : string, androidId : string, apiBase : string, email : string) : void
-    {
+    public connect(clientId: string, androidId: string, apiBase: string, email: string): void {
         this.mqttService.connect(clientId, androidId, apiBase, email);
     }
 
     /**
      * Close the MqtService.
      */
-    public close() : void
-    {
+    public close(): void {
         this.mqttService.close();
     }
 
@@ -65,8 +60,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      * Returns a boolean value to indicate the connection state.
      * @returns True if connected to eufy, otherwise false.
      */
-    public isConnected() : boolean
-    {
+    public isConnected(): boolean {
         return this.mqttService.isConnected();
     }
 
@@ -74,16 +68,14 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      * Add a device given by the device serial to the MqttService.
      * @param deviceSerial The device serial of the lock to add.
      */
-    public subscribeLock(deviceSerial : string) : void
-    {
+    public subscribeLock(deviceSerial: string) : void {
         this.mqttService.subscribeLock(deviceSerial);
     }
 
     /**
      * Eventhandler for mqtt connect event.
      */
-    private onConnect(): void
-    {
+    private onConnect(): void {
         rootMQTTLogger.info("MQTT connection successfully established");
         this.emit("mqtt connect");
     }
@@ -91,8 +83,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
     /**
      * Eventhandler for mqtt close event.
      */
-    private onClose(): void
-    {
+    private onClose(): void {
         rootMQTTLogger.info("MQTT connection closed");
         this.emit("mqtt close");
     }
@@ -101,8 +92,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents>
      * Eventhandler for mqtt lock message.
      * @param message The message.
      */
-    private onLockMessage(message : any): void
-    {
+    private onLockMessage(message: any): void {
         this.api.getDevice(message.data.data.deviceSn).then((device: Device) => {
             (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
         }).catch((error) => {

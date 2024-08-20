@@ -13,17 +13,13 @@ export class EventInteractions
     /**
      * Create the EventInteractions object.
      */
-    constructor(api: EufySecurityApi)
-    {
+    constructor(api: EufySecurityApi) {
         this.api = api;
         this.config = this.api.getConfig();
         const temp = this.config.getInteractions();
-        if(temp === null || temp === "")
-        {
+        if (temp === null || temp === "") {
             this.interactions = null;
-        }
-        else
-        {
+        } else {
             this.interactions = JSON.parse(temp);
         }
     }
@@ -31,8 +27,7 @@ export class EventInteractions
     /**
      * Retrieve all interactions from config.
      */
-    public getInteractions(): void
-    {
+    public getInteractions(): void {
         const temp = this.config.getInteractions();
         this.interactions = JSON.parse(`${temp !== undefined || temp !== "" ? temp : "{}"}`);
     }
@@ -41,15 +36,11 @@ export class EventInteractions
      * Save all interactions to config.
      * @returns true if successfully, otherwise false.
      */
-    private saveInteractions(): boolean
-    {
-        try
-        {
+    private saveInteractions(): boolean {
+        try {
             this.config.setInteractions(JSON.stringify(this.interactions));
             return true;
-        }
-        catch (error: any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`Error while adding integration to config. Error: ${error.message}`);
             throw new Error(`Error while adding integration to config. Error: ${error.message}`)
         }
@@ -60,10 +51,8 @@ export class EventInteractions
      * @param deviceSerial The serial of the device.
      * @returns A DeviceInteraction object or null.
      */
-    public getDeviceInteractions(deviceSerial: string): DeviceInteractions | null
-    {
-        if(this.interactions !== null)
-        {
+    public getDeviceInteractions(deviceSerial: string): DeviceInteractions | null {
+        if (this.interactions !== null) {
             return this.interactions.deviceInteractions[deviceSerial];
         }
         return null;
@@ -75,21 +64,15 @@ export class EventInteractions
      * @param eventInteractionType The type of event.
      * @returns The eventIneraction object or null.
      */
-    public getDeviceEventInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): EventInteraction | null
-    {
-        if(this.interactions !== null)
-        {
-            try
-            {
+    public getDeviceEventInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): EventInteraction | null {
+        if (this.interactions !== null) {
+            try {
                 const eventInteraction = JSON.parse(JSON.stringify(this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType]));
-                if(eventInteraction !== null)
-                {
+                if (eventInteraction !== null) {
                     eventInteraction.command = Buffer.from(eventInteraction.command, "base64").toString();
                 }
                 return eventInteraction;
-            }
-            catch (error: any)
-            {
+            } catch (error: any) {
                 throw new Error(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
             }
         }
@@ -102,20 +85,14 @@ export class EventInteractions
      * @param eventInteractionType The type of event.
      * @returns true if successfully, otherwise false.
      */
-    public deleteDeviceEventInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): boolean
-    {
-        try
-        {
-            if(this.interactions !== null)
-            {
-                if(this.interactions.deviceInteractions[deviceSerial].eventInteractions.hasOwnProperty(eventInteractionType))
-                {
+    public deleteDeviceEventInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): boolean {
+        try {
+            if (this.interactions !== null) {
+                if (this.interactions.deviceInteractions[deviceSerial].eventInteractions.hasOwnProperty(eventInteractionType)) {
                     delete this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType];
-                    if(Object.keys(this.interactions.deviceInteractions[deviceSerial].eventInteractions).length == 0)
-                    {
+                    if (Object.keys(this.interactions.deviceInteractions[deviceSerial].eventInteractions).length == 0) {
                         delete this.interactions.deviceInteractions[deviceSerial];
-                        if(Object.keys(this.interactions.deviceInteractions).length == 0)
-                        {
+                        if (Object.keys(this.interactions.deviceInteractions).length == 0) {
                             this.interactions = null;
                         }
                     }
@@ -125,9 +102,7 @@ export class EventInteractions
                 throw new Error(`No interaction for eventInteractionType ${eventInteractionType} at device ${deviceSerial}.`);
             }
             throw new Error(`No interactions for device ${deviceSerial}.`);
-        }
-        catch(error: any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
             throw new Error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`)
         }
@@ -140,28 +115,17 @@ export class EventInteractions
      * @param deviceEventInteraction The EventInteraction object.
      * @returns true if successfully, otherwise false.
      */
-    public setDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType, deviceEventInteraction: EventInteraction): boolean
-    {
-        try
-        {
-            if(this.interactions === undefined || this.interactions === null)
-            {
+    public setDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType, deviceEventInteraction: EventInteraction): boolean {
+        try {
+            if (this.interactions === undefined || this.interactions === null) {
                 this.interactions = {deviceInteractions: {[deviceSerial]: {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}}}};
-            }
-            else
-            {
-                if(this.interactions.deviceInteractions[deviceSerial] === undefined)
-                {
+            } else {
+                if (this.interactions.deviceInteractions[deviceSerial] === undefined) {
                     this.interactions.deviceInteractions[deviceSerial] = {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}};
-                }
-                else
-                {
-                    if(this.interactions.deviceInteractions[deviceSerial].eventInteractions === undefined)
-                    {
+                } else {
+                    if (this.interactions.deviceInteractions[deviceSerial].eventInteractions === undefined) {
                         this.interactions.deviceInteractions[deviceSerial].eventInteractions = {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}};
-                    }
-                    else
-                    {
+                    } else {
                         deviceEventInteraction.command = Buffer.from(deviceEventInteraction.command).toString("base64");
                         this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType] = deviceEventInteraction;
                     }
@@ -170,17 +134,12 @@ export class EventInteractions
 
             const res = this.saveInteractions();
 
-            if(res === true)
-            {
+            if (res === true) {
                 return true;
-            }
-            else
-            {
+            } else {
                 return false;
             }
-        }
-        catch(error: any)
-        {
+        } catch (error: any) {
             rootAddonLogger.error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
             throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`)
         }
@@ -190,24 +149,17 @@ export class EventInteractions
      * Remove all integrations.
      * @returns true, if all integrations deleted, otherwise false.
      */
-    public removeIntegrations(): any
-    {
-        let json : any = {};
+    public removeIntegrations(): any {
+        let json: any = {};
 
-        if(this.interactions === null)
-        {
+        if (this.interactions === null) {
             json = `{"success":false,"interactionsRemoved":true,"description":"No interactions in the config."}`;
-        }
-        else
-        {
+        } else {
             this.interactions = null;
             const res = this.saveInteractions();
-            if(res === true)
-            {
+            if (res === true) {
                 json = `{"success":true,"interactionsRemoved":true}`;
-            }
-            else
-            {
+            } else {
                 json = `{"success":false,"interactionsRemoved":false}`;
             }
         }
