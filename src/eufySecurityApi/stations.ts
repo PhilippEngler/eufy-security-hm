@@ -18,13 +18,12 @@ import { hexStringScheduleToSchedule } from "./http/utils";
 /**
  * Represents all the stations in the account.
  */
-export class Stations extends TypedEmitter<EufySecurityEvents>
-{
-    private api : EufySecurityApi;
-    private httpService : HTTPApi;
-    private stations : { [stationSerial : string ] : Station } = {};
-    private skipNextModeChangeEvent : { [stationSerial : string] : boolean } = {};
-    private lastGuardModeChangeTimeForStations : { [stationSerial : string] : number | undefined } = {};
+export class Stations extends TypedEmitter<EufySecurityEvents> {
+    private api: EufySecurityApi;
+    private httpService: HTTPApi;
+    private stations: { [stationSerial: string ]: Station } = {};
+    private skipNextModeChangeEvent: { [stationSerial: string]: boolean } = {};
+    private lastGuardModeChangeTimeForStations: { [stationSerial: string]: number | undefined } = {};
     private loadingEmitter = new EventEmitter();
     private stationsLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "stations loaded");
 
@@ -33,8 +32,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     private cameraMaxLivestreamSeconds = 30;
     private cameraStationLivestreamTimeout: Map<string, NodeJS.Timeout> = new Map<string, NodeJS.Timeout>();
 
-    private refreshEufySecurityP2PTimeout : {
-        [dataType : string] : NodeJS.Timeout;
+    private refreshEufySecurityP2PTimeout: {
+        [dataType: string]: NodeJS.Timeout;
     } = {};
 
     /**
@@ -42,14 +41,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param api The eufySecurityApi.
      * @param httpService The httpService.
      */
-    constructor(api : EufySecurityApi, httpService : HTTPApi)
-    {
+    constructor(api: EufySecurityApi, httpService: HTTPApi) {
         super();
         this.api = api;
         this.httpService = httpService;
 
-        if(this.api.getStateUpdateEventActive() == false)
-        {
+        if (this.api.getStateUpdateEventActive() === false) {
             rootAddonLogger.info("Retrieving last guard mode change times disabled in settings.");
         }
 
@@ -60,36 +57,28 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Put all stations and their settings in format so that we can work with them.
      * @param hubs The object containing the stations.
      */
-    private async handleHubs(hubs: Hubs) : Promise<void>
-    {
+    private async handleHubs(hubs: Hubs): Promise<void> {
         rootAddonLogger.debug("Got hubs", { hubs: hubs });
         const resStations = hubs;
 
-        const stationsSerials : string[] = Object.keys(this.stations);
+        const stationsSerials: string[] = Object.keys(this.stations);
         const promises: Array<Promise<Station>> = [];
         const newStationsSerials = Object.keys(hubs);
 
-        for (const stationSerial in resStations)
-        {
-            if(this.api.getHouseId() !== undefined && resStations[stationSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resStations[stationSerial].house_id !== this.api.getHouseId())
-            {
+        for (const stationSerial in resStations) {
+            if (this.api.getHouseId() !== undefined && resStations[stationSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resStations[stationSerial].house_id !== this.api.getHouseId()) {
                 rootAddonLogger.debug(`Station ${stationSerial} does not match houseId (got ${resStations[stationSerial].house_id} want ${this.api.getHouseId()}).`);
                 continue;
             }
-            if(this.stations[stationSerial])
-            {
+            if (this.stations[stationSerial]) {
                 await this.updateStation(resStations[stationSerial]);
-            }
-            else
-            {
-                if (this.stationsLoaded === undefined)
-                {
+            } else {
+                if (this.stationsLoaded === undefined) {
                     this.stationsLoaded = waitForEvent<void>(this.loadingEmitter, "stations loaded");
                 }
                 const enableEmbeddedPKCS1Support = this.api.getEnableEmbeddedPKCS1Support();
-                let udpPort : number | undefined | null = this.api.getLocalStaticUdpPortForStation(stationSerial);
-                if(udpPort === null)
-                {
+                let udpPort: number | undefined | null = this.api.getLocalStaticUdpPortForStation(stationSerial);
+                if (udpPort === null) {
                     udpPort = undefined;
                 }
                 const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, enableEmbeddedPKCS1Support, udpPort, this.api.getP2PConnectionType());
@@ -97,10 +86,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
 
                 promises.push(new_station.then((station: Station) => {
-                    try
-                    {
-                        if(this.api.getStateUpdateEventActive())
-                        {
+                    try {
+                        if (this.api.getStateUpdateEventActive()) {
                             this.addEventListener(station, "GuardMode", false);
                             this.addEventListener(station, "CurrentMode", false);
                             this.addEventListener(station, "PropertyChanged", false);
@@ -164,19 +151,16 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             this.stationsLoaded = undefined;
         });
 
-        if (promises.length === 0)
-        {
+        if (promises.length === 0) {
             this.loadingEmitter.emit("stations loaded");
             this.stationsLoaded = undefined;
         }
 
-        for (const stationSerial of stationsSerials)
-        {
-            if (!newStationsSerials.includes(stationSerial))
-            {
+        for (const stationSerial of stationsSerials) {
+            if (!newStationsSerials.includes(stationSerial)) {
                 this.getStation(stationSerial).then((station: Station) => {
                     this.removeStation(station);
-                }).catch((err: any) => {
+                }).catch ((err: any) => {
                     const error = ensureError(err);
                     rootAddonLogger.error("Error removing station", { error: getError(error), stationSN: stationSerial });
                 });
@@ -190,17 +174,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Add the given station for using.
      * @param station The station object to add.
      */
-    private addStation(station : Station) : void
-    {
+    private addStation(station: Station): void {
         const serial = station.getSerial();
-        if (serial && !Object.keys(this.stations).includes(serial))
-        {
+        if (serial && !Object.keys(this.stations).includes(serial)) {
             this.stations[serial] = station;
             this.getStorageInfo(serial);
             this.emit("station added", station);
-        }
-        else
-        {
+        } else {
             rootAddonLogger.debug(`Station with this serial ${station.getSerial()} exists already and couldn't be added again!`);
         }
     }
@@ -209,21 +189,16 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Remove the given station.
      * @param station The station object to remove.
      */
-    private removeStation(station : Station) : void
-    {
+    private removeStation(station: Station): void {
         const serial = station.getSerial();
-        if (serial && Object.keys(this.stations).includes(serial))
-        {
+        if (serial && Object.keys(this.stations).includes(serial)) {
             delete this.stations[serial];
             station.removeAllListeners();
-            if (station.isConnected())
-            {
+            if (station.isConnected()) {
                 station.close();
             }
             this.emit("station removed", station);
-        }
-        else
-        {
+        } else {
             rootAddonLogger.debug(`Station with this serial ${station.getSerial()} doesn't exists and couldn't be removed!`);
         }
     }
@@ -232,24 +207,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Update the station information.
      * @param hub The object containg the specific hub.
      */
-    private async updateStation(hub : StationListResponse) : Promise<void>
-    {
-        if (this.stationsLoaded)
-        {
+    private async updateStation(hub: StationListResponse): Promise<void> {
+        if (this.stationsLoaded) {
             await this.stationsLoaded;
         }
-        if (Object.keys(this.stations).includes(hub.station_sn))
-        {
+        if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
-            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice())
-            {
+            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
                 this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 this.stations[hub.station_sn].connect();
             }
             this.getStorageInfo(hub.station_sn);
-        }
-        else
-        {
+        } else {
             rootAddonLogger.error(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
         }
     }
@@ -257,14 +226,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * (Re)Loads all stations and the settings of them.
      */
-    public async loadStations() : Promise<void>
-    {
-        try
-        {
+    public async loadStations(): Promise<void> {
+        try {
             await this.handleHubs(this.httpService.getHubs());
-        }
-        catch (e : any)
-        {
+        } catch (e: any) {
             this.stations = {};
             throw new Error(e);
         }
@@ -273,10 +238,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Close all Livestreams.
      */
-    public async close() : Promise<void>
-    {
-        for (const device_sn of this.cameraStationLivestreamTimeout.keys())
-        {
+    public async close(): Promise<void> {
+        for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
             this.stopStationLivestream(device_sn);
         }
 
@@ -286,14 +249,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Close all P2P connection for all stations.
      */
-    public async closeP2PConnections() : Promise<void>
-    {
-        if(this.stations != null)
-        {
-            for (const stationSerial in this.stations)
-            {
-                if(this.stations[stationSerial])
-                {
+    public async closeP2PConnections(): Promise<void> {
+        if (this.stations !== null) {
+            for (const stationSerial in this.stations) {
+                if (this.stations[stationSerial]) {
                     await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
                         return;
                     }, () => {
@@ -359,11 +318,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param timeout The timespan in ms maximal to wait for the event.
      * @returns Returns true or false.
      */
-    private async waitForP2PCloseEvent(station : Station, timeout : number) : Promise<boolean>
-    {
+    private async waitForP2PCloseEvent(station: Station, timeout: number): Promise<boolean> {
         return new Promise<boolean>(async (resolve, reject) => {
             // eslint-disable-next-line prefer-const
-            let timer : NodeJS.Timeout;
+            let timer: NodeJS.Timeout;
             const funcListener = (): void => listener();
 
             function listener(): void {
@@ -377,12 +335,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeListener("close", funcListener);
                 reject(false);
             }, timeout);
-            try
-            {
+            try {
                 this.stations[station.getSerial()].close();
-            }
-            catch(e :any)
-            {
+            } catch (e :any) {
                 station.removeListener("close", funcListener);
                 reject(e);
             }
@@ -392,15 +347,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Update the infos of all connected devices over P2P.
      */
-    public async updateDeviceData() : Promise<void>
-    {
-        await this.httpService.refreshAllData().catch(err => {
+    public async updateDeviceData(): Promise<void> {
+        await this.httpService.refreshAllData().catch (err => {
             const error = ensureError(err);
             rootAddonLogger.error("Error occured at updateDeviceData while API data refreshing.", error);
         });
         Object.values(this.stations).forEach(async (station: Station) => {
-            if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL)
-            {
+            if (station.isConnected() && station.getDeviceType() !== DeviceType.DOORBELL) {
                 station.getCameraInfo();
             }
         });
@@ -410,16 +363,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Set the maximum livestream duration.
      * @param seconds The maximum duration in secons.
      */
-    public setCameraMaxLivestreamDuration(seconds : number) : void
-    {
+    public setCameraMaxLivestreamDuration(seconds: number): void {
         this.cameraMaxLivestreamSeconds = seconds;
     }
 
     /**
      * Get the maximum livestream duration.
      */
-    public getCameraMaxLivestreamDuration() : number
-    {
+    public getCameraMaxLivestreamDuration(): number {
         return this.cameraMaxLivestreamSeconds;
     }
 
@@ -427,31 +378,25 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Start the livestream from station for a given device.
      * @param deviceSerial The serial of the device.
      */
-    public async startStationLivestream(deviceSerial : string) : Promise<void>
-    {
+    public async startStationLivestream(deviceSerial: string): Promise<void> {
         const device = await this.api.getDevice(deviceSerial);
         const station = await this.getStation(device.getStationSerial());
 
-        if(!device.hasCommand(CommandName.DeviceStartLivestream))
-        {
+        if (!device.hasCommand(CommandName.DeviceStartLivestream)) {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: CommandName.DeviceStartLivestream } });
         }
 
         const camera = device as Camera;
-        if(!station.isLiveStreaming(camera))
-        {
+        if (!station.isLiveStreaming(camera)) {
             station.startLivestream(camera);
 
-            if (this.cameraMaxLivestreamSeconds > 0)
-            {
+            if (this.cameraMaxLivestreamSeconds > 0) {
                 this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
                     rootAddonLogger.info(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
                     this.stopStationLivestream(deviceSerial);
                 }, this.cameraMaxLivestreamSeconds * 1000));
             }
-        }
-        else
-        {
+        } else {
             rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
         }
     }
@@ -460,27 +405,22 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Stop the livestream from station for a given device.
      * @param deviceSerial The serial of the device.
      */
-    public async stopStationLivestream(deviceSerial : string) : Promise<void>
-    {
+    public async stopStationLivestream(deviceSerial: string): Promise<void> {
         const device = await this.api.getDevice(deviceSerial);
         const station = await this.getStation(device.getStationSerial());
 
-        if(!device.hasCommand(CommandName.DeviceStopLivestream))
-        {
+        if (!device.hasCommand(CommandName.DeviceStopLivestream)) {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: CommandName.DeviceStopLivestream } });
         }
 
-        if(station.isConnected() && station.isLiveStreaming(device))
-        {
+        if (station.isConnected() && station.isLiveStreaming(device)) {
             station.stopLivestream(device);
-        }
-        else
-        {
+        } else {
             rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
         }
 
         const timeout = this.cameraStationLivestreamTimeout.get(deviceSerial);
-        if(timeout) {
+        if (timeout) {
             clearTimeout(timeout);
             this.cameraStationLivestreamTimeout.delete(deviceSerial);
         }
@@ -527,18 +467,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Save the relevant settings (mainly for P2P-Connection) to the config
      */
-    public async saveStationsSettings() : Promise<void>
-    {
+    public async saveStationsSettings(): Promise<void> {
         await this.api.saveStationsSettings(this.stations);
     }
 
     /**
      * Returns a Array of all stations.
      */
-    public async getStations() : Promise<{ [stationSerial : string ] : Station }>
-    {
-        if (this.stationsLoaded)
-        {
+    public async getStations(): Promise<{ [stationSerial: string ]: Station }> {
+        if (this.stationsLoaded) {
             await this.stationsLoaded;
         }
         return this.stations;
@@ -549,14 +486,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The serial of the station to retrive.
      * @returns The station object.
      */
-    public async getStation(stationSerial: string): Promise<Station>
-    {
-        if (this.stationsLoaded)
-        {
+    public async getStation(stationSerial: string): Promise<Station> {
+        if (this.stationsLoaded) {
             await this.stationsLoaded;
         }
-        if (Object.keys(this.stations).includes(stationSerial))
-        {
+        if (Object.keys(this.stations).includes(stationSerial)) {
             return this.stations[stationSerial];
         }
         throw new StationNotFoundError("Station doesn't exists", { context: { station: stationSerial } });
@@ -567,15 +501,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The stationSerial of the station to check.
      * @returns True if station exists, otherwise false.
      */
-    public existStation(stationSerial : string) : boolean
-    {
+    public existStation(stationSerial: string): boolean {
         const res = this.stations[stationSerial];
-        if(res)
-        {
+        if (res) {
             return true;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
@@ -586,12 +516,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @returns True if the station is an integrated device, otherwise false.
      */
     public async isStationIntegratedDevice(station: Station): Promise<boolean> {
-        if(this.stationsLoaded) {
+        if (this.stationsLoaded) {
             await this.stationsLoaded;
         }
         if (Object.keys(this.stations).includes(station.getSerial())) {
             const stationDevices = await this.api.getDevicesFromStation(station.getSerial());
-            if(stationDevices && stationDevices.length === 1 && stationDevices[0].getSerial() === station.getSerial()) {
+            if (stationDevices && stationDevices.length === 1 && stationDevices[0].getSerial() === station.getSerial()) {
                 return true;
             }
             return false;
@@ -602,11 +532,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
     /**
      * Get the guard mode for all stations.
      */
-    public getGuardMode() : { [stationSerial : string ] : GuardMode}
-    {
-        const res : { [stationSerial : string ] : GuardMode} = {};
-        for (const stationSerial in this.stations)
-        {
+    public getGuardMode(): { [stationSerial: string ]: GuardMode} {
+        const res: { [stationSerial: string ]: GuardMode} = {};
+        for (const stationSerial in this.stations) {
             res[stationSerial] = this.stations[stationSerial].getGuardMode() as GuardMode;
         }
         return res;
@@ -616,22 +544,16 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Set the guard mode of all stations to the given mode.
      * @param guardMode The target guard mode.
      */
-    public async setGuardMode(guardMode : GuardMode) : Promise<boolean>
-    {
+    public async setGuardMode(guardMode: GuardMode): Promise<boolean> {
         let err = 0;
-        for (const stationSerial in this.stations)
-        {
-            if (await this.setGuardModeStation(stationSerial, guardMode) == false)
-            {
+        for (const stationSerial in this.stations) {
+            if (await this.setGuardModeStation(stationSerial, guardMode) === false) {
                 err = err + 1;
             }
         }
-        if (err == 0)
-        {
+        if (err === 0) {
             return true;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
@@ -641,28 +563,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The serial of the station the mode to change.
      * @param guardMode The target guard mode.
      */
-    public async setGuardModeStation(stationSerial : string, guardMode : GuardMode) : Promise<boolean>
-    {
-        if (this.stations[stationSerial].getGuardMode() === guardMode)
-        {
+    public async setGuardModeStation(stationSerial: string, guardMode: GuardMode): Promise<boolean> {
+        if (this.stations[stationSerial].getGuardMode() === guardMode) {
             return true;
-        }
-        else
-        {
+        } else {
             const res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
                 return true;
-            }, (value : any) => {
-                if(typeof value === "boolean")
-                {
+            }, (value: any) => {
+                if (typeof value === "boolean") {
                     return false;
-                }
-                else
-                {
+                } else {
                     throw value;
                 }
             });
-            if(res == true)
-            {
+            if (res === true) {
                 this.setLastGuardModeChangeTimeNow(stationSerial);
                 this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
             }
@@ -677,11 +591,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param timeout The timespan in ms maximal to wait for the event.
      * @returns Returns true or false.
      */
-    private async waitForGuardModeEvent(station : Station, guardMode : number, timeout : number) : Promise<boolean>
-    {
+    private async waitForGuardModeEvent(station: Station, guardMode: number, timeout: number): Promise<boolean> {
         return new Promise<boolean>(async (resolve, reject) => {
             // eslint-disable-next-line prefer-const
-            let timer : NodeJS.Timeout;
+            let timer: NodeJS.Timeout;
             const funcListener = (): void => listener();
 
             function listener(): void {
@@ -695,12 +608,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 station.removeListener("guard mode", funcListener);
                 reject(false);
             }, timeout);
-            try
-            {
+            try {
                 this.setStationProperty(station.getSerial(), PropertyName.StationGuardMode, guardMode);
-            }
-            catch(e :any)
-            {
+            } catch (e :any) {
                 station.removeListener("guard mode", funcListener);
                 reject(e);
             }
@@ -711,17 +621,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Retrieves the storage information from ether all station or a given station.
      * @param stationSerial The serial of the station.
      */
-    public async getStorageInfo(stationSerial? : string) : Promise<void>
-    {
-        if(stationSerial === undefined)
-        {
-            for (const serial in this.stations)
-            {
+    public async getStorageInfo(stationSerial?: string): Promise<void> {
+        if (stationSerial === undefined) {
+            for (const serial in this.stations) {
                 await this.getStorageInfoStation(serial);
             }
-        }
-        else
-        {
+        } else {
             await this.getStorageInfoStation(stationSerial);
         }
     }
@@ -730,17 +635,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Retrieves the storage information from the given station.
      * @param stationSerial The serial of the station.
      */
-    private async getStorageInfoStation(stationSerial : string) : Promise<void>
-    {
-        try
-        {
+    private async getStorageInfoStation(stationSerial: string): Promise<void> {
+        try {
             const station = await this.getStation(stationSerial);
-            if (station.isStation() || (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE))
-            {
+            if (station.isStation() || (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE)) {
                 station.getStorageInfoEx();
             }
-        }
-        catch (err) {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error("getStorageInfo Error", { error: getError(error), stationSN: stationSerial });
         }
@@ -752,24 +653,21 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param eventListenerName The event listener name as string.
      * @param delayed false if add instantly, for a 5s delay set true.
      */
-    public async addEventListener(station : Station, eventListenerName : string, delayed : boolean) : Promise<void>
-    {
-        if(delayed == true)
-        {
+    public async addEventListener(station: Station, eventListenerName: string, delayed: boolean): Promise<void> {
+        if (delayed === true) {
             await sleep(5000);
         }
-        switch (eventListenerName)
-        {
+        switch (eventListenerName) {
             case "Connect":
-                station.on("connect", (station : Station) => this.onStationConnect(station));
+                station.on("connect", (station: Station) => this.onStationConnect(station));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connect")} Listener.`);
                 break;
             case "ConnectionError":
-                station.on("connection error", (station : Station, error : Error) => this.onStationConnectionError(station, error));
+                station.on("connection error", (station: Station, error: Error) => this.onStationConnectionError(station, error));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("connection error")} Listeners.`);
                 break;
             case "Close":
-                station.on("close", (station : Station) => this.onStationClose(station));
+                station.on("close", (station: Station) => this.onStationClose(station));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("close")} Listener.`);
                 break;
             case "RawDevicePropertyChanged":
@@ -777,59 +675,59 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw device property changed")} Listener.`);
                 break;
             case "LivestreamStart":
-                station.on("livestream start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStartStationLivestream(station, channel, metadata, videoStream, audioStream));
+                station.on("livestream start", (station: Station, channel: number, metadata: StreamMetadata, videoStream: internal.Readable, audioStream: internal.Readable) => this.onStartStationLivestream(station, channel, metadata, videoStream, audioStream));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream start")} Listener.`);
                 break;
             case "LivestreamStop":
-                station.on("livestream stop", (station : Station, channel : number) => this.onStopStationLivestream(station, channel));
+                station.on("livestream stop", (station: Station, channel: number) => this.onStopStationLivestream(station, channel));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream stop")} Listener.`);
                 break;
             case "LivestreamError":
-                station.on("livestream error", (station : Station, channel : number, error: Error) => this.onErrorStationLivestream(station, channel, error));
+                station.on("livestream error", (station: Station, channel: number, error: Error) => this.onErrorStationLivestream(station, channel, error));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("livestream error")} Listener.`);
                 break;
             case "DownloadStart":
-                station.on("download start", (station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
+                station.on("download start", (station: Station, channel: number, metadata: StreamMetadata, videoStream: internal.Readable, audioStream: internal.Readable) => this.onStationDownloadStart(station, channel, metadata, videoStream, audioStream));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download start")} Listener.`);
                 break;
             case "DownloadFinish":
-                station.on("download finish", (station : Station, channel : number) => this.onStationDownloadFinish(station, channel));
+                station.on("download finish", (station: Station, channel: number) => this.onStationDownloadFinish(station, channel));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("download finish")} Listener.`);
                 break;
             case "CommandResult":
-                station.on("command result", (station : Station, result : CommandResult) => this.onStationCommandResult(station, result));
+                station.on("command result", (station: Station, result: CommandResult) => this.onStationCommandResult(station, result));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("command result")} Listener.`);
                 break;
             case "GuardMode":
-                station.on("guard mode", (station : Station, guardMode : number) => this.onStationGuardMode(station, guardMode));
+                station.on("guard mode", (station: Station, guardMode: number) => this.onStationGuardMode(station, guardMode));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("guard mode")} Listener.`);
                 break;
             case "CurrentMode":
-                station.on("current mode", (station : Station, guardMode : number) => this.onStationCurrentMode(station, guardMode));
+                station.on("current mode", (station: Station, guardMode: number) => this.onStationCurrentMode(station, guardMode));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("current mode")} Listener.`);
                 break;
             case "RTSPLivestreamStart":
-                station.on("rtsp livestream start", (station : Station, channel : number) => this.onStationRTSPLivestreamStart(station, channel));
+                station.on("rtsp livestream start", (station: Station, channel: number) => this.onStationRTSPLivestreamStart(station, channel));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream start")} Listener.`);
                 break;
             case "RTSPLivestreamStop":
-                station.on("rtsp livestream stop", (station : Station, channel : number) => this.onStationRTSPLivestreamStop(station, channel));
+                station.on("rtsp livestream stop", (station: Station, channel: number) => this.onStationRTSPLivestreamStop(station, channel));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp livestream stop")} Listener.`);
                 break;
             case "RTSPUrl":
-                station.on("rtsp url", (station : Station, channel : number, value: string) => this.onStationRTSPURL(station, channel, value));
+                station.on("rtsp url", (station: Station, channel: number, value: string) => this.onStationRTSPURL(station, channel, value));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("rtsp url")} Listener.`);
                 break;
             case "PropertyChanged":
-                station.on("property changed", (station : Station, name : string, value : PropertyValue, ready: boolean) => this.onStationPropertyChanged(station, name, value, ready));
+                station.on("property changed", (station: Station, name: string, value: PropertyValue, ready: boolean) => this.onStationPropertyChanged(station, name, value, ready));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
-                station.on("raw property changed", (station : Station, type : number, value : string) => this.onStationRawPropertyChanged(station, type, value));
+                station.on("raw property changed", (station: Station, type: number, value: string) => this.onStationRawPropertyChanged(station, type, value));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("raw property changed")} Listener.`);
                 break;
             case "AlarmEvent":
-                station.on("alarm event", (station : Station, alarmEvent : AlarmEvent) => this.onStationAlarmEvent(station, alarmEvent));
+                station.on("alarm event", (station: Station, alarmEvent: AlarmEvent) => this.onStationAlarmEvent(station, alarmEvent));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm event")} Listener.`);
                 break;
             case "RuntimeState":
@@ -845,15 +743,15 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("wifi rssi")} Listener.`);
                 break;
             case "FloodlightManualSwitch":
-                station.on("floodlight manual switch", (station: Station, channel: number, enabled : boolean) => this.onStationFloodlightManualSwitch(station, channel, enabled));
+                station.on("floodlight manual switch", (station: Station, channel: number, enabled: boolean) => this.onStationFloodlightManualSwitch(station, channel, enabled));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("floodlight manual switch")} Listener.`);
                 break;
             case "AlarmDelayEvent":
-                station.on("alarm delay event", (station: Station, alarmDelayEvent: AlarmEvent, alarmDelay : number) => this.onStationAlarmDelayEvent(station, alarmDelayEvent, alarmDelay));
+                station.on("alarm delay event", (station: Station, alarmDelayEvent: AlarmEvent, alarmDelay: number) => this.onStationAlarmDelayEvent(station, alarmDelayEvent, alarmDelay));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("alarm delay event")} Listener.`);
                 break;
             case "TalkbackStarted":
-                station.on("talkback started", (station: Station, channel: number, talkbackStream : TalkbackStream) => this.onStationTalkbackStarted(station, channel, talkbackStream));
+                station.on("talkback started", (station: Station, channel: number, talkbackStream: TalkbackStream) => this.onStationTalkbackStarted(station, channel, talkbackStream));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback started")} Listener.`);
                 break;
             case "TalkbackStopped":
@@ -861,7 +759,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback stopped")} Listener.`);
                 break;
             case "TalkbackError":
-                station.on("talkback error", (station: Station, channel: number, error : Error) => this.onStationTalkbackError(station, channel, error));
+                station.on("talkback error", (station: Station, channel: number, error: Error) => this.onStationTalkbackError(station, channel, error));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} added. Total ${station.listenerCount("talkback error")} Listener.`);
                 break;
             case "AlarmArmedEvent":
@@ -946,10 +844,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param eventListenerName The event listener name as string.
      */
-    public removeEventListener(station : Station, eventListenerName : string) : void
-    {
-        switch (eventListenerName)
-        {
+    public removeEventListener(station: Station, eventListenerName: string): void {
+        switch (eventListenerName) {
             case "Connect":
                 station.removeAllListeners("connect");
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for station ${station.getSerial()} removed. Total ${station.listenerCount("connect")} Listener.`);
@@ -1136,10 +1032,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station the number of attached listners to count.
      * @param eventListenerName The name of the event the attached listeners to count.
      */
-    public countEventListener(station : Station, eventListenerName : string) : number
-    {
-        switch (eventListenerName)
-        {
+    public countEventListener(station: Station, eventListenerName: string): number {
+        switch (eventListenerName) {
             case "Connect":
                 return station.listenerCount("connect");
             case "ConnectionError":
@@ -1238,8 +1132,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event Connect is fired.
      * @param station The station as Station object.
      */
-    private async onStationConnect(station : Station) : Promise<void>
-    {
+    private async onStationConnect(station: Station): Promise<void> {
         this.emit("station connect", station);
         if (Station.isStation(station.getDeviceType()) || (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType()))) {
             station.getCameraInfo();
@@ -1269,8 +1162,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param error Ther error occured.
      */
-    private onStationConnectionError(station : Station, error : Error) : void
-    {
+    private onStationConnectionError(station: Station, error: Error): void {
         rootAddonLogger.debug(`Event "ConnectionError": station: ${station.getSerial()}`);
         this.emit("station connection error", station, error);
     }
@@ -1279,24 +1171,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event Close is fired.
      * @param station The station as Station object.
      */
-    private async onStationClose(station : Station) : Promise<void>
-    {
+    private async onStationClose(station: Station): Promise<void> {
         rootAddonLogger.info(`Event "Close": station: ${station.getSerial()}`);
         this.emit("station close", station);
 
-        if(this.api.getServiceState() != "shutdown")
-        {
+        if (this.api.getServiceState() !== "shutdown") {
 
         }
-        for (const device_sn of this.cameraStationLivestreamTimeout.keys())
-        {
+        for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
             this.api.getDevice(device_sn).then((device: Device) => {
-                if (device !== null && device.getStationSerial() === station.getSerial())
-                {
+                if (device !== null && device.getStationSerial() === station.getSerial()) {
                     clearTimeout(this.cameraStationLivestreamTimeout.get(device_sn)!);
                     this.cameraStationLivestreamTimeout.delete(device_sn);
                 }
-            }).catch((err) => {
+            }).catch ((err) => {
                 const error = ensureError(err);
                 rootAddonLogger.error(`Station close Error`, { error: getError(error), stationSN: station.getSerial() });
             });
@@ -1308,8 +1196,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device the raw values changed for.
      * @param values The raw values for the device.
      */
-    private async onStationRawDevicePropertyChanged(deviceSerial : string, values : RawValues) : Promise<void>
-    {
+    private async onStationRawDevicePropertyChanged(deviceSerial: string, values: RawValues): Promise<void> {
         rootAddonLogger.debug(`Event "RawDevicePropertyChanged": device: ${deviceSerial} | values: ${values}`);
         this.api.updateDeviceProperties(deviceSerial, values);
     }
@@ -1322,12 +1209,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param videoStream The videoStream.
      * @param audioStream  The audioStream.
      */
-    private async onStartStationLivestream(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
-    {
+    private async onStartStationLivestream(station: Station, channel: number, metadata: StreamMetadata, videoStream: internal.Readable, audioStream: internal.Readable): Promise<void> {
         rootAddonLogger.debug(`Event "LivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station livestream start", station, device, metadata, videoStream, audioStream);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station start livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
@@ -1338,12 +1224,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStopStationLivestream(station : Station, channel : number) : Promise<void>
-    {
+    private async onStopStationLivestream(station: Station, channel: number): Promise<void> {
         rootAddonLogger.debug(`Event "LivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station livestream stop", station, device);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station stop livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
@@ -1354,11 +1239,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onErrorStationLivestream(station : Station, channel : number, origError : Error) : Promise<void>
-    {
+    private async onErrorStationLivestream(station: Station, channel: number, origError: Error): Promise<void> {
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             station.stopLivestream(device);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
         });
@@ -1372,12 +1256,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param videoStream The videoStream.
      * @param audioStream  The audioStream.
      */
-    private async onStationDownloadStart(station : Station, channel : number, metadata : StreamMetadata, videoStream : internal.Readable, audioStream : internal.Readable) : Promise<void>
-    {
+    private async onStationDownloadStart(station: Station, channel: number, metadata: StreamMetadata, videoStream: internal.Readable, audioStream: internal.Readable): Promise<void> {
         rootAddonLogger.debug(`Event "DownloadStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station download start", station, device, metadata, videoStream, audioStream);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station start download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, metadata: metadata });
         });
@@ -1388,12 +1271,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationDownloadFinish(station : Station, channel : number) : Promise<void>
-    {
+    private async onStationDownloadFinish(station: Station, channel: number): Promise<void> {
         rootAddonLogger.debug(`Event "DownloadFinish": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station download finish", station, device);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station finish download error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
@@ -1431,7 +1313,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         }
                     }
                 } else if (result.customData !== undefined && result.customData.command !== undefined && result.customData.command.name === CommandName.DeviceSnooze) {
-                    const snoozeTime = result.customData.command.value !== undefined && result.customData.command.value.snooze_time !== undefined ? result.customData.command.value.snooze_time as number : 0;
+                    const snoozeTime = result.customData.command.value !== undefined && result.customData.command.value.snooze_time !== undefined ? result.customData.command.value.snooze_time as number: 0;
                     if (snoozeTime > 0) {
                         device.updateProperty(PropertyName.DeviceSnooze, true);
                         device.updateProperty(PropertyName.DeviceSnoozeTime, snoozeTime);
@@ -1446,12 +1328,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                             timeoutMS = snoozeTime * 1000;
                         }
                         this.api.setDeviceSnooze(device, timeoutMS);
-                    }).catch(err => {
+                    }).catch (err => {
                         const error = ensureError(err);
                         rootAddonLogger.error("Error during API data refreshing", { error: getError(error) });
                     });
                 }
-            }).catch((err) => {
+            }).catch ((err) => {
                 const error = ensureError(err);
                 if (error instanceof DeviceNotFoundError) {
                     if (result.customData !== undefined && result.customData.property !== undefined) {
@@ -1544,34 +1426,24 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param result The result.
      */
-    private onStationSecondaryCommandResult(station : Station, result : CommandResult) : void
-    {
+    private onStationSecondaryCommandResult(station: Station, result: CommandResult): void {
         rootAddonLogger.debug(`Event "SecondaryCommandResult": station: ${station.getSerial()} | result: ${result}`);
-        if (result.return_code === 0)
-        {
+        if (result.return_code === 0) {
             this.api.getStationDevice(station.getSerial(), result.channel).then((device: Device) => {
-                if (result.customData !== undefined && result.customData.property !== undefined)
-                {
-                    if (device.hasProperty(result.customData.property.name))
-                    {
+                if (result.customData !== undefined && result.customData.property !== undefined) {
+                    if (device.hasProperty(result.customData.property.name)) {
                         device.updateProperty(result.customData.property.name, result.customData.property.value);
-                    }
-                    else if (station.hasProperty(result.customData.property.name))
-                    {
+                    } else if (station.hasProperty(result.customData.property.name)) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
                 }
-            }).catch((err) => {
+            }).catch ((err) => {
                 const error = ensureError(err);
-                if (error instanceof DeviceNotFoundError)
-                {
-                    if (result.customData !== undefined && result.customData.property !== undefined)
-                    {
+                if (error instanceof DeviceNotFoundError) {
+                    if (result.customData !== undefined && result.customData.property !== undefined) {
                         station.updateProperty(result.customData.property.name, result.customData.property.value);
                     }
-                }
-                else
-                {
+                } else {
                     rootAddonLogger.error(`Station secondary command result error`, { error: getError(error), stationSN: station.getSerial(), result: result });
                 }
             });
@@ -1583,17 +1455,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param guardMode The new guard mode as GuardMode.
      */
-    private async onStationGuardMode(station : Station, guardMode : number) : Promise<void>
-    {
+    private async onStationGuardMode(station: Station, guardMode: number): Promise<void> {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
-        if(this.skipNextModeChangeEvent[station.getSerial()] == true)
-        {
+        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
             rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
             this.skipNextModeChangeEvent[station.getSerial()] = false;
-        }
-        else
-        {
+        } else {
             rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeStation(station.getSerial());
         }
@@ -1604,15 +1472,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param guardMode The new guard mode as GuardMode.
      */
-    private async onStationCurrentMode(station : Station, guardMode : number) : Promise<void>
-    {
-        if(this.skipNextModeChangeEvent[station.getSerial()] == true)
-        {
+    private async onStationCurrentMode(station: Station, guardMode: number): Promise<void> {
+        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
             rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
             this.skipNextModeChangeEvent[station.getSerial()] = false;
-        }
-        else
-        {
+        } else {
             rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeStation(station.getSerial());
         }
@@ -1623,12 +1487,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationRTSPLivestreamStart(station : Station, channel : number) : Promise<void>
-    {
+    private async onStationRTSPLivestreamStart(station: Station, channel: number): Promise<void> {
         rootAddonLogger.debug(`Event "RTSPLivestreamStart": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp livestream start", station, device);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station start rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
@@ -1639,12 +1502,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationRTSPLivestreamStop(station : Station, channel : number) : Promise<void>
-    {
+    private async onStationRTSPLivestreamStop(station: Station, channel: number): Promise<void> {
         rootAddonLogger.debug(`Event "RTSPLivestreamStop": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp livestream stop", station, device);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station stop rtsp livestream error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
@@ -1655,13 +1517,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationRTSPURL(station : Station, channel : number, value : string) : Promise<void>
-    {
+    private async onStationRTSPURL(station: Station, channel: number, value: string): Promise<void> {
         rootAddonLogger.debug(`Event "RTSPURL": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station rtsp url", station, device, value);
             device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, value);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station rtsp url error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, url: value });
         });
@@ -1673,10 +1534,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    private async onStationPropertyChanged(station : Station, name : string, value : PropertyValue, ready: boolean) : Promise<void>
-    {
-        if (ready && (!name.startsWith("hidden-") && name != "guardMode" && name != "currentMode"))
-        {
+    private async onStationPropertyChanged(station: Station, name: string, value: PropertyValue, ready: boolean): Promise<void> {
+        if (ready && (!name.startsWith("hidden-") && name !== "guardMode" && name !== "currentMode")) {
             rootAddonLogger.debug(`Event "PropertyChanged": station: ${station.getSerial()} | name: ${name} | value: ${value}`);
         }
     }
@@ -1687,10 +1546,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
      */
-    private async onStationRawPropertyChanged(station : Station, type : number, value : string) : Promise<void>
-    {
-        if(type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665)
-        {
+    private async onStationRawPropertyChanged(station: Station, type: number, value: string): Promise<void> {
+        if (type !== 1102 && type !== 1137 && type !== 1147 && type !== 1151 && type !== 1154 && type !== 1162 && type !== 1165 && type !== 1224 && type !== 1279 && type !== 1281 && type !== 1282 && type !== 1283 && type !== 1284 && type !== 1285 && type !== 1660 && type !== 1664 && type !== 1665) {
             rootAddonLogger.debug(`Event "RawPropertyChanged": station: ${station.getSerial()} | type: ${type} | value: ${value}`);
         }
     }
@@ -1700,8 +1557,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param alarmEvent The alarmEvent.
      */
-    private async onStationAlarmEvent(station : Station, alarmEvent : AlarmEvent) : Promise<void>
-    {
+    private async onStationAlarmEvent(station: Station, alarmEvent: AlarmEvent): Promise<void> {
         rootAddonLogger.debug(`Event "AlarmEvent": station: ${station.getSerial()} | alarmEvent: ${alarmEvent}`);
     }
 
@@ -1712,21 +1568,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param batteryLevel The battery level as percentage value.
      * @param temperature The temperature as degree value.
      */
-    private async onStationRuntimeState(station : Station, channel : number, batteryLevel : number, temperature : number) : Promise<void>
-    {
+    private async onStationRuntimeState(station: Station, channel: number, batteryLevel: number, temperature: number): Promise<void> {
         rootAddonLogger.debug(`Event "RuntimeState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | temperature: ${temperature}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
-            if (device.hasProperty(PropertyName.DeviceBattery))
-            {
+            if (device.hasProperty(PropertyName.DeviceBattery)) {
                 const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
                 device.updateRawProperty(metadataBattery.key as number, batteryLevel.toString(), "p2p");
             }
-            if (device.hasProperty(PropertyName.DeviceBatteryTemp))
-            {
+            if (device.hasProperty(PropertyName.DeviceBatteryTemp)) {
                 const metadataBatteryTemperature = device.getPropertyMetadata(PropertyName.DeviceBatteryTemp);
                 device.updateRawProperty(metadataBatteryTemperature.key as number, temperature.toString(), "p2p");
             }
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station runtime state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, batteryLevel: batteryLevel, temperature: temperature });
         });
@@ -1739,24 +1592,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param chargeType The current carge state.
      * @param batteryLevel The battery level as percentage value.
      */
-    private async onStationChargingState(station : Station, channel : number, chargeType : number, batteryLevel : number) : Promise<void>
-    {
+    private async onStationChargingState(station: Station, channel: number, chargeType: number, batteryLevel: number): Promise<void> {
         rootAddonLogger.debug(`Event "ChargingState": station: ${station.getSerial()} | channel: ${channel} | battery: ${batteryLevel} | type: ${chargeType}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
-            if (device.hasProperty(PropertyName.DeviceBattery))
-            {
+            if (device.hasProperty(PropertyName.DeviceBattery)) {
                 const metadataBattery = device.getPropertyMetadata(PropertyName.DeviceBattery);
-                if (isCharging(chargeType) && batteryLevel > 0)
-                {
+                if (isCharging(chargeType) && batteryLevel > 0) {
                     device.updateRawProperty(metadataBattery.key as number, batteryLevel.toString(), "p2p");
                 }
             }
-            if (device.hasProperty(PropertyName.DeviceChargingStatus))
-            {
+            if (device.hasProperty(PropertyName.DeviceChargingStatus)) {
                 const metadataChargingStatus = device.getPropertyMetadata(PropertyName.DeviceChargingStatus);
                 device.updateRawProperty(metadataChargingStatus.key as number, chargeType.toString(), "p2p");
             }
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station charging state error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, chargeType: chargeType, charging: isCharging(chargeType), batteryLevel: batteryLevel });
         });
@@ -1768,16 +1617,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param rssi The current rssi value.
      */
-    private async onStationWifiRssi(station : Station, channel : number, rssi : number) : Promise<void>
-    {
+    private async onStationWifiRssi(station: Station, channel: number, rssi: number): Promise<void> {
         rootAddonLogger.debug(`Event "WifiRssi": station: ${station.getSerial()} | channel: ${channel} | rssi: ${rssi}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
-            if (device.hasProperty(PropertyName.DeviceWifiRSSI))
-            {
+            if (device.hasProperty(PropertyName.DeviceWifiRSSI)) {
                 const metadataWifiRssi = device.getPropertyMetadata(PropertyName.DeviceWifiRSSI);
                 device.updateRawProperty(metadataWifiRssi.key as number, rssi.toString(), "p2p");
             }
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station wifi rssi error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, rssi: rssi });
         });
@@ -1789,15 +1636,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param enabled The value for the floodlight.
      */
-    private async onStationFloodlightManualSwitch(station : Station, channel : number, enabled : boolean) : Promise<void>
-    {
+    private async onStationFloodlightManualSwitch(station: Station, channel: number, enabled: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "FloodlightManualSwitch": station: ${station.getSerial()} | channel: ${channel} | enabled: ${enabled}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             if (device.hasProperty(PropertyName.DeviceLight)) {
                 const metadataLight = device.getPropertyMetadata(PropertyName.DeviceLight);
-                device.updateRawProperty(metadataLight.key as number, enabled === true ? "1" : "0", "p2p");
+                device.updateRawProperty(metadataLight.key as number, enabled === true ? "1": "0", "p2p");
             }
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station floodlight manual switch error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, enabled: enabled });
         });
@@ -1809,8 +1655,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param alarmDelayEvent The AlarmDelayedEvent.
      * @param alarmDelay The delay in ms.
      */
-    private async onStationAlarmDelayEvent(station : Station, alarmDelayEvent : AlarmEvent, alarmDelay : number) : Promise<void>
-    {
+    private async onStationAlarmDelayEvent(station: Station, alarmDelayEvent: AlarmEvent, alarmDelay: number): Promise<void> {
         rootAddonLogger.debug(`Event "AlarmDelayEvent": station: ${station.getSerial()} | alarmDeleayEvent: ${alarmDelayEvent} | alarmDeleay: ${alarmDelay}`);
     }
 
@@ -1820,12 +1665,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param talkbackStream The TalbackStream object.
      */
-    private async onStationTalkbackStarted(station : Station, channel : number, talkbackStream : TalkbackStream) : Promise<void>
-    {
+    private async onStationTalkbackStarted(station: Station, channel: number, talkbackStream: TalkbackStream): Promise<void> {
         rootAddonLogger.debug(`Event "TalkbackStarted": station: ${station.getSerial()} | channel: ${channel} | talkbackStream: ${talkbackStream}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station talkback start", station, device, talkbackStream);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station talkback start error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
@@ -1836,12 +1680,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param channel The channel to define the device.
      */
-    private async onStationTalkbackStopped(station : Station, channel : number) : Promise<void>
-    {
+    private async onStationTalkbackStopped(station: Station, channel: number): Promise<void> {
         rootAddonLogger.debug(`Event "TalkbackStopped": station: ${station.getSerial()} | channel: ${channel}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             this.emit("station talkback stop", station, device);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station talkback stop error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
@@ -1853,12 +1696,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to define the device.
      * @param error The error object.
      */
-    private async onStationTalkbackError(station : Station, channel : number, origError: Error) : Promise<void>
-    {
+    private async onStationTalkbackError(station: Station, channel: number, origError: Error): Promise<void> {
         rootAddonLogger.debug(`Event "TalkbackError": station: ${station.getSerial()} | channel: ${channel} | error: ${origError}`);
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             station.stopTalkback(device);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station talkback error`, { error: getError(error), stationSN: station.getSerial(), channel: channel, origError: getError(origError) });
         });
@@ -1868,8 +1710,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event AlarmArmedEvent is fired.
      * @param station The station as Station object.
      */
-    private async onStationAlarmArmedEvent(station : Station) : Promise<void>
-    {
+    private async onStationAlarmArmedEvent(station: Station): Promise<void> {
         rootAddonLogger.debug(`Event "AlarmArmedEvent": station: ${station.getSerial()}`);
     }
 
@@ -1878,8 +1719,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param station The station as Station object.
      * @param alarmDelay The delay in ms.
      */
-    private async onStationArmDelayEvent(station : Station, alarmDelay : number) : Promise<void>
-    {
+    private async onStationArmDelayEvent(station: Station, alarmDelay: number): Promise<void> {
         rootAddonLogger.debug(`Event "ArmDelayEvent": station: ${station.getSerial()} | alarmDelay: ${alarmDelay}`);
     }
 
@@ -1888,13 +1728,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The device serial.
      * @param event The SmartSafeShakeAlarmEvent event.
      */
-    private onStationDeviceShakeAlarm(deviceSerial : string, event : SmartSafeShakeAlarmEvent) : void
-    {
+    private onStationDeviceShakeAlarm(deviceSerial: string, event: SmartSafeShakeAlarmEvent): void {
         rootAddonLogger.debug(`Event "DeviceShakeAlarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).shakeEvent(event, this.api.getEventDurationSeconds());
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`onStationDeviceShakeAlarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeShakeAlarmEvent[event] });
         });
@@ -1905,13 +1744,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The device serial.
      * @param event The SmartSafeAlarm911Event event.
      */
-    private onStationDevice911Alarm(deviceSerial : string, event : SmartSafeAlarm911Event) : void
-    {
+    private onStationDevice911Alarm(deviceSerial: string, event: SmartSafeAlarm911Event): void {
         rootAddonLogger.debug(`Event "Device911Alarm": device: ${deviceSerial} | event: ${event}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).alarm911Event(event, this.api.getEventDurationSeconds());
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`onStationDevice911Alarm error`, { error: getError(error), deviceSN: deviceSerial, event: SmartSafeAlarm911Event[event] });
         });
@@ -1921,13 +1759,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event DeviceJammed is fired.
      * @param deviceSerial The device serial.
      */
-    private onStationDeviceJammed(deviceSerial : string) : void
-    {
+    private onStationDeviceJammed(deviceSerial: string): void {
         rootAddonLogger.debug(`Event "DeviceJammed": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).jammedEvent(this.api.getEventDurationSeconds());
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`onStationDeviceJammed error`, { error: getError(error), deviceSN: deviceSerial });
         });
@@ -1937,13 +1774,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event DeviceLowBattery is fired.
      * @param deviceSerial The device serial.
      */
-    private onStationDeviceLowBattery(deviceSerial : string) : void
-    {
+    private onStationDeviceLowBattery(deviceSerial: string): void {
         rootAddonLogger.info(`Event "DeviceLowBattery": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).lowBatteryEvent(this.api.getEventDurationSeconds());
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`onStationDeviceLowBattery error`, { error: getError(error), deviceSN: deviceSerial });
         });
@@ -1953,13 +1789,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * The action to be done when event DeviceWrongTryProtectAlarm is fired.
      * @param deviceSerial The device serial.
      */
-    private onStationDeviceWrongTryProtectAlarm(deviceSerial : string) : void
-    {
+    private onStationDeviceWrongTryProtectAlarm(deviceSerial: string): void {
         rootAddonLogger.debug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             if (device.isSmartSafe())
                 (device as SmartSafe).wrongTryProtectAlarmEvent(this.api.getEventDurationSeconds());
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`onStationDeviceWrongTryProtectAlarm error`, { error: getError(error), deviceSN: deviceSerial });
         });
@@ -1970,11 +1805,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The device serial.
      * @param successfull Result of pin verification.
      */
-    private onStationDevicePinVerified(deviceSerial : string, successfull : boolean): void {
+    private onStationDevicePinVerified(deviceSerial: string, successfull: boolean): void {
         rootAddonLogger.debug(`Event "DeviceWrongTryProtectAlarm": device: ${deviceSerial}`);
         this.api.getDevice(deviceSerial).then((device: Device) => {
             this.emit("device pin verified", device, successfull);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`onStationDevicePinVerified error`, { error: getError(error), deviceSN: deviceSerial, successfull: successfull });
         });
@@ -1986,15 +1821,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param sdCapacity The capacity of the sd card.
      * @param sdCapacityAvailable The available capacity of the sd card.
      */
-    private onStationSdInfoEx(station : Station, sdStatus : TFCardStatus, sdCapacity : number, sdCapacityAvailable : number): void
-    {
-        if(station.hasProperty(PropertyName.StationSdStatus)) {
+    private onStationSdInfoEx(station: Station, sdStatus: TFCardStatus, sdCapacity: number, sdCapacityAvailable: number): void {
+        if (station.hasProperty(PropertyName.StationSdStatus)) {
             station.updateProperty(PropertyName.StationSdStatus, sdStatus);
         }
-        if(station.hasProperty(PropertyName.StationSdCapacity)) {
+        if (station.hasProperty(PropertyName.StationSdCapacity)) {
             station.updateProperty(PropertyName.StationSdCapacity, sdCapacity);
         }
-        if(station.hasProperty(PropertyName.StationSdCapacityAvailable)) {
+        if (station.hasProperty(PropertyName.StationSdCapacityAvailable)) {
             station.updateProperty(PropertyName.StationSdCapacityAvailable, sdCapacityAvailable);
         }
     }
@@ -2010,24 +1844,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
 
         this.api.getDevicesFromStation(station.getSerial()).then((devices: Device[]) => {
             let channel = -1;
-            if(path.parse(file).name.includes("_c"))
-            {
+            if (path.parse(file).name.includes("_c")) {
                 channel = Number.parseInt(path.parse(file).name.split("_c", 2)[1]);
-            }
-            else if(file.includes("/Camera"))
-            {
+            } else if (file.includes("/Camera")) {
                 const res = file.split("/");
-                for(const elem of res)
-                {
-                    if(elem.startsWith("Camera"))
-                    {
+                for (const elem of res) {
+                    if (elem.startsWith("Camera")) {
                         channel = Number.parseInt(elem.replace("Camera", ""));
                         break;
                     }
                 }
             }
-            if(channel == -1)
-            {
+            if (channel === -1) {
                 rootAddonLogger.error(`onStationImageDownload - Channel could not be extracted for file '${file}' on station ${station.getSerial()}.`);
                 return;
             }
@@ -2039,7 +1867,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                     break;
                 }
             }
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`onStationImageDownload - Set picture error`, { error: getError(error), stationSN: station.getSerial(), file: file });
         });
@@ -2056,16 +1884,16 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
             imageType(image).then((type) => {
                 const picture: Picture = {
                     data: image,
-                    type: type !== null && type !== undefined ? type : { ext: "unknown", mime: "application/octet-stream" }
+                    type: type !== null && type !== undefined ? type: { ext: "unknown", mime: "application/octet-stream" }
                 };
                 this._emitStationImageDownload(station, file, picture);
-            }).catch(() => {
+            }).catch (() => {
                 this._emitStationImageDownload(station, file, {
                     data: image,
                     type: { ext: "unknown", mime: "application/octet-stream" }
                 });
             });
-        }).catch(() => {
+        }).catch (() => {
             this._emitStationImageDownload(station, file, {
                 data: image,
                 type: { ext: "unknown", mime: "application/octet-stream" }
@@ -2079,30 +1907,22 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param returnCode The return code of the query.
      * @param data The result data.
      */
-    private onStationDatabaseQueryLatest(station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>): void
-    {
-        if (returnCode === DatabaseReturnCode.SUCCESSFUL)
-        {
-            for(const element of data)
-            {
-                if ((element.device_sn !== "" && !station.isStation()) || (station.isStation() && element.device_sn !== station.getSerial()))
-                {
-                    if(!this.api.existDevice(element.device_sn))
-                    {
+    private onStationDatabaseQueryLatest(station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>): void {
+        if (returnCode === DatabaseReturnCode.SUCCESSFUL) {
+            for (const element of data) {
+                if ((element.device_sn !== "" && !station.isStation()) || (station.isStation() && element.device_sn !== station.getSerial())) {
+                    if (!this.api.existDevice(element.device_sn)) {
                         continue;
                     }
                     this.api.getDevice(element.device_sn).then((device) => {
                         const raw = device.getRawDevice();
-                        if ("crop_local_path" in element)
-                        {
+                        if ("crop_local_path" in element) {
                             raw.cover_path = (element as DatabaseQueryLatestInfoLocal).crop_local_path;
-                        }
-                        else if ("crop_cloud_path" in element)
-                        {
+                        } else if ("crop_cloud_path" in element) {
                             raw.cover_path = (element as DatabaseQueryLatestInfoCloud).crop_cloud_path;
                         }
                         device.update(raw);
-                    }).catch((err) => {
+                    }).catch ((err) => {
                         const error = ensureError(err);
                         if (!(error instanceof DeviceNotFoundError)) {
                             rootAddonLogger.error("onStationDatabaseQueryLatest Error", { error: getError(error), stationSN: station.getSerial(), returnCode: returnCode });
@@ -2120,8 +1940,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param returnCode The return code of the query.
      * @param data The result data.
      */
-    private onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]): void
-    {
+    private onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: DatabaseQueryLocal[]): void {
         this.emit("station database query local", station, returnCode, data);
     }
 
@@ -2151,15 +1970,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel of the device.
      * @param status The status of the sensor.
      */
-    private onStationSensorStatus(station: Station, channel: number, status: number): void
-    {
+    private onStationSensorStatus(station: Station, channel: number, status: number): void {
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
-            if (device.hasProperty(PropertyName.DeviceSensorOpen))
-            {
+            if (device.hasProperty(PropertyName.DeviceSensorOpen)) {
                 const metadataSensorOpen = device.getPropertyMetadata(PropertyName.DeviceSensorOpen);
                 device.updateRawProperty(metadataSensorOpen.key as number, status.toString(), "p2p");
             }
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station sensor status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
@@ -2172,21 +1989,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param doorId The id of the door.
      * @param status The status of the garage door.
      */
-    private onStationGarageDoorStatus(station: Station, channel: number, doorId:number, status: number): void
-    {
+    private onStationGarageDoorStatus(station: Station, channel: number, doorId: number, status: number): void {
         this.api.getStationDevice(station.getSerial(), channel).then((device: Device) => {
             device.updateRawProperty(CommandType.CMD_CAMERA_GARAGE_DOOR_STATUS, status.toString(), "p2p");
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Station garage door status error`, { error: getError(error), stationSN: station.getSerial(), channel: channel });
         });
     }
 
     private onStorageInfoHb3(station: Station, channel: number, storageInfo: StorageInfoBodyHB3): void {
-        if(station.hasProperty(PropertyName.StationStorageInfoEmmc)) {
+        if (station.hasProperty(PropertyName.StationStorageInfoEmmc)) {
             station.updateProperty(PropertyName.StationStorageInfoEmmc, storageInfo.emmc_info);
         }
-        if(station.hasProperty(PropertyName.StationStorageInfoHdd)) {
+        if (station.hasProperty(PropertyName.StationStorageInfoHdd)) {
             station.updateProperty(PropertyName.StationStorageInfoHdd, storageInfo.hdd_info);
         }
     }
@@ -2196,10 +2012,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The serial of the station.
      * @param time The time as timestamp or undefined.
      */
-    private setLastGuardModeChangeTime(stationSerial : string, timeStamp : number | undefined, timeStampType : string) : void
-    {
-        if(timeStamp !== undefined)
-        {
+    private setLastGuardModeChangeTime(stationSerial: string, timeStamp: number | undefined, timeStampType: string): void {
+        if (timeStamp !== undefined) {
             timeStamp = convertTimeStampToTimeStampMs(timeStamp, timeStampType);
         }
         this.lastGuardModeChangeTimeForStations[stationSerial] = timeStamp;
@@ -2210,8 +2024,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * Set the time for the last guard mode change to the current time.
      * @param stationSerial The serial of the station.
      */
-    private setLastGuardModeChangeTimeNow(stationSerial : string) : void
-    {
+    private setLastGuardModeChangeTimeNow(stationSerial: string): void {
         this.setLastGuardModeChangeTime(stationSerial, new Date().getTime(), "ms");
     }
 
@@ -2220,8 +2033,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param stationSerial The serial of the station.
      * @returns The timestamp as number or undefined.
      */
-    public getLastGuardModeChangeTime(stationSerial : string) : number | undefined
-    {
+    public getLastGuardModeChangeTime(stationSerial: string): number | undefined {
         return this.lastGuardModeChangeTimeForStations[stationSerial];
     }
 
@@ -2231,8 +2043,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the property.
      * @param value The value of the property.
      */
-    public async setStationProperty(stationSerial : string, name : string, value : unknown) : Promise<void>
-    {
+    public async setStationProperty(stationSerial: string, name: string, value: unknown): Promise<void> {
         const station = this.stations[stationSerial];
         const metadata = station.getPropertyMetadata(name);
 
@@ -2307,30 +2118,22 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param passcode The passcode.
      * @param schedule The schedule.
      */
-    public async addUser(deviceSN: string, username: string, passcode: string, schedule?: Schedule): Promise<void>
-    {
+    public async addUser(deviceSN: string, username: string, passcode: string, schedule?: Schedule): Promise<void> {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
 
-        try
-        {
-            if (!device.hasCommand(CommandName.DeviceAddUser))
-            {
+        try {
+            if (!device.hasCommand(CommandName.DeviceAddUser)) {
                 throw new NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
             }
 
             const addUserResponse = await this.httpService.addUser(deviceSN, username, device.getStationSerial());
-            if (addUserResponse !== null)
-            {
+            if (addUserResponse !== null) {
                 station.addUser(device, username, addUserResponse.short_user_id, passcode, schedule);
-            }
-            else
-            {
+            } else {
                 this.emit("user error", device, username, new AddUserError("Error on creating user through cloud api call"));
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error(`addUser error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
@@ -2342,43 +2145,32 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param deviceSN The serial of the device.
      * @param username The username.
      */
-    public async deleteUser(deviceSN: string, username: string): Promise<void>
-    {
+    public async deleteUser(deviceSN: string, username: string): Promise<void> {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
 
-        if (!device.hasCommand(CommandName.DeviceDeleteUser))
-        {
+        if (!device.hasCommand(CommandName.DeviceDeleteUser)) {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: CommandName.DeviceDeleteUser, username: username } });
         }
 
-        try
-        {
+        try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null)
-            {
+            if (users !== null) {
                 let found = false;
-                for (const user of users)
-                {
-                    if (user.user_name === username)
-                    {
+                for (const user of users) {
+                    if (user.user_name === username) {
                         station.deleteUser(device, user. user_name, user.short_user_id);
                         found = true;
                         break;
                     }
                 }
-                if (!found)
-                {
+                if (!found) {
                     this.emit("user error", device, username, new DeleteUserError("User not found", { context: { device: deviceSN, username: username } }));
                 }
-            }
-            else
-            {
+            } else {
                 this.emit("user error", device, username, new DeleteUserError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username } }));
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error(`deleteUser error`, { error: getError(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
@@ -2391,31 +2183,25 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param username The current username.
      * @param newUsername The new username.
      */
-    public async updateUser(deviceSN: string, username: string, newUsername: string): Promise<void>
-    {
+    public async updateUser(deviceSN: string, username: string, newUsername: string): Promise<void> {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
 
-        if (!device.hasCommand(CommandName.DeviceUpdateUsername))
-        {
+        if (!device.hasCommand(CommandName.DeviceUpdateUsername)) {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: CommandName.DeviceUpdateUsername, usernmae: username, newUsername: newUsername } });
         }
 
-        try
-        {
+        try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null)
-            {
+            if (users !== null) {
                 let found = false;
-                for (const user of users)
-                {
-                    if (user.user_name === username)
-                    {
+                for (const user of users) {
+                    if (user.user_name === username) {
                         if ((device.isLockWifiT8506() || device.isLockWifiT8502() || device.isLockWifiT8510P() || device.isLockWifiT8520P()) && user.password_list.length > 0) {
                             for (const entry of user.password_list) {
                                 if (entry.password_type === UserPasswordType.PIN) {
                                     let schedule = entry.schedule;
-                                    if (schedule !== undefined && typeof schedule == "string") {
+                                    if (schedule !== undefined && typeof schedule === "string") {
                                         schedule = JSON.parse(schedule);
                                     }
                                     if (schedule !== undefined && schedule.endDay !== undefined && schedule.endTime !== undefined && schedule.startDay !== undefined && schedule.startTime !== undefined && schedule.week !== undefined) {
@@ -2431,30 +2217,22 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                             }
                         }
                         const result = await this.httpService.updateUser(deviceSN, device.getStationSerial(), user.short_user_id, newUsername);
-                        if (result)
-                        {
+                        if (result) {
                             this.emit("user username updated", device, username);
-                        }
-                        else
-                        {
+                        } else {
                             this.emit("user error", device, username, new UpdateUserUsernameError("Error in changing username through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
                         }
                         found = true;
                         break;
                     }
                 }
-                if (!found)
-                {
+                if (!found) {
                     this.emit("user error", device, username, new UpdateUserUsernameError("User not found", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
                 }
-            }
-            else
-            {
+            } else {
                 this.emit("user error", device, username, new UpdateUserUsernameError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error(`updateUser error`, { error: getError(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
             this.emit("user error", device, username, new UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
@@ -2467,26 +2245,20 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param username The username.
      * @param passcode The new passcode.
      */
-    public async updateUserPasscode(deviceSN: string, username: string, passcode: string): Promise<void>
-    {
+    public async updateUserPasscode(deviceSN: string, username: string, passcode: string): Promise<void> {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
 
-        if (!device.hasCommand(CommandName.DeviceUpdateUserPasscode))
-        {
+        if (!device.hasCommand(CommandName.DeviceUpdateUserPasscode)) {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: CommandName.DeviceUpdateUserPasscode, username: username, passcode: "[redacted]" } });
         }
 
-        try
-        {
+        try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null)
-            {
+            if (users !== null) {
                 let found = false;
-                for (const user of users)
-                {
-                    if (user.user_name === username)
-                    {
+                for (const user of users) {
+                    if (user.user_name === username) {
                         for (const entry of user.password_list) {
                             if (entry.password_type === UserPasswordType.PIN) {
                                 station.updateUserPasscode(device, user.user_name, user.short_user_id, passcode);
@@ -2495,18 +2267,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
                         }
                     }
                 }
-                if (!found)
-                {
+                if (!found) {
                     this.emit("user error", device, username, new UpdateUserPasscodeError("User not found", { context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
                 }
-            }
-            else
-            {
+            } else {
                 this.emit("user error", device, username, new UpdateUserPasscodeError("Error on getting user list through cloud api call"));
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error(`updateUserPasscode error`, { error: getError(error), deviceSN: deviceSN, username: username });
             this.emit("user error", device, username, new UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
@@ -2519,42 +2286,31 @@ export class Stations extends TypedEmitter<EufySecurityEvents>
      * @param username The username.
      * @param schedule The new schedule.
      */
-    public async updateUserSchedule(deviceSN: string, username: string, schedule: Schedule): Promise<void>
-    {
+    public async updateUserSchedule(deviceSN: string, username: string, schedule: Schedule): Promise<void> {
         const device = await this.api.getDevice(deviceSN);
         const station = await this.getStation(device.getStationSerial());
 
-        if (!device.hasCommand(CommandName.DeviceUpdateUserSchedule))
-        {
+        if (!device.hasCommand(CommandName.DeviceUpdateUserSchedule)) {
             throw new NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: CommandName.DeviceUpdateUserSchedule, usernmae: username, schedule: schedule } });
         }
 
-        try
-        {
+        try {
             const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null)
-            {
+            if (users !== null) {
                 let found = false;
-                for (const user of users)
-                {
-                    if (user.user_name === username)
-                    {
+                for (const user of users) {
+                    if (user.user_name === username) {
                         station.updateUserSchedule(device, user.user_name, user.short_user_id, schedule);
                         found = true;
                     }
                 }
-                if (!found)
-                {
+                if (!found) {
                     this.emit("user error", device, username, new UpdateUserScheduleError("User not found", { context: { device: deviceSN, username: username, schedule: schedule } }));
                 }
-            }
-            else
-            {
+            } else {
                 this.emit("user error", device, username, new UpdateUserScheduleError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, schedule: schedule } }));
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error(`updateUserSchedule error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
             this.emit("user error", device, username, new UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));

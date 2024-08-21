@@ -10,18 +10,16 @@ import { dummyLogger, InternalLogger, rootAddonLogger } from "./eufySecurityApi/
 
 process.chdir(__dirname);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-let apiServer !: ApiServer;
+let apiServer!: ApiServer;
 const serverHttp = createServerHttp();
 const serverHttps = createServerHttps();
-let api : EufySecurityApi;
+let api: EufySecurityApi;
 
-class ApiServer
-{
+class ApiServer {
     /**
      * Create the ApiServer-Object.
      */
-    constructor()
-    {
+    constructor() {
         InternalLogger.logger = dummyLogger;
         api = new EufySecurityApi();
         apiPortFile(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort());
@@ -38,14 +36,12 @@ class ApiServer
      * @param certHttps The cert for https.
      * @param logger The logger component.
      */
-    public async startServer(httpActive : boolean, portHttp : number, httpsActive : boolean, portHttps : number, keyHttps : string, certHttps : string): Promise<void>
-    {
+    public async startServer(httpActive: boolean, portHttp: number, httpsActive: boolean, portHttps: number, keyHttps: string, certHttps: string): Promise<void> {
         rootAddonLogger.info(`eufy-security-hm version v${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         rootAddonLogger.info(`  Host: ${os.hostname}`);
         rootAddonLogger.info(`  Platform: ${os.platform}_${os.arch}`);
         rootAddonLogger.info(`  Node: ${process.version}`);
-        if(httpActive == true)
-        {
+        if (httpActive === true) {
             rootAddonLogger.info("Starting http server...");
             serverHttp.on("error", this.errorListener)
             serverHttp.on("request", this.requestListener);
@@ -53,11 +49,9 @@ class ApiServer
             rootAddonLogger.info(`...started. http listening on port '${portHttp}'`);
         }
 
-        if(httpsActive == true)
-        {
+        if (httpsActive === true) {
             rootAddonLogger.info("Starting https server...");
-            if(existsSync(keyHttps) && existsSync(certHttps))
-            {
+            if (existsSync(keyHttps) && existsSync(certHttps)) {
                 const options = {
                     key: readFileSync(keyHttps),
                     cert: readFileSync(certHttps)
@@ -67,9 +61,7 @@ class ApiServer
                 serverHttps.on("request", this.requestListener);
                 serverHttps.listen(portHttps);
                 rootAddonLogger.info(`...started. https listening on port '${portHttps}'`);
-            }
-            else
-            {
+            } else {
                 rootAddonLogger.error("FAILED TO START SERVER (HTTPS): key or cert file not found.");
             }
         }
@@ -79,14 +71,10 @@ class ApiServer
      * The error listener for the api.
      * @param error The error object.
      */
-    private async errorListener (error : any) : Promise<void>
-    {
-        if(error.code == "EADDRINUSE")
-        {
+    private async errorListener (error: any): Promise<void> {
+        if (error.code === "EADDRINUSE") {
             rootAddonLogger.error(`Errorcode: ${error.code}: port '${error.port}' already in use.`);
-        }
-        else
-        {
+        } else {
             rootAddonLogger.error(`Errorcode: ${error.code}: ${error.message}`);
         }
     }
@@ -96,26 +84,21 @@ class ApiServer
      * @param request The request object.
      * @param response The response object.
      */
-    private async requestListener (request : IncomingMessage, response : ServerResponse) : Promise<void>
-    {
-        let responseData : any = "";
+    private async requestListener (request: IncomingMessage, response: ServerResponse): Promise<void> {
+        let responseData: any = "";
         let contentType = "application/json";
         let fileName = "";
 
         let url = request.url?.split("/");
 
-        if(url === undefined)
-        {
+        if (url === undefined) {
             url = [];
         }
 
         // we use 'GET' for all api-functions exept setConfig and uploadConfig
-        if(request.method == "GET")
-        {
-            if(url.length > 1)
-            {
-                switch (url[1])
-                {
+        if (request.method === "GET") {
+            if (url.length > 1) {
+                switch (url[1]) {
                     case "getServiceState":
                         responseData = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
@@ -126,22 +109,16 @@ class ApiServer
                         responseData = api.getTfaCaptchaState();
                         break;
                     case "setCaptchaCode":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = api.setCaptchaCode(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "setTfaCode":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = api.setTfaCode(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -149,99 +126,71 @@ class ApiServer
                         responseData = await api.getDevicesAsJson();
                         break;
                     case "getDevice":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getDeviceAsJson(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDevicePropertiesMetadata":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getDevicePropertiesMetadataAsJson(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDeviceProperties":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getDevicePropertiesAsJson(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDeviceParams":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getDeviceParams(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDevicePropertiesTruncated":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             const json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
-                            if(json.success == true)
-                            {
+                            if (json.success === true) {
                                 json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
                                 json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
-                                if(json.data.rtspStreamUrl !== undefined)
-                                {
+                                if (json.data.rtspStreamUrl !== undefined) {
                                     json.data.rtspStreamUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
-                                if(json.data.pictureUrl !== undefined)
-                                {
+                                if (json.data.pictureUrl !== undefined) {
                                     json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
-                                if(json.data.picture !== undefined)
-                                {
+                                if (json.data.picture !== undefined) {
                                     json.data.picture = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
                             }
                             responseData = JSON.stringify(json);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "setDeviceProperty":
-                        if(url.length == 5)
-                        {
+                        if (url.length === 5) {
                             responseData = await api.setDeviceProperty(url[2], url[3], url[4]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getDeviceImage":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             const picture = await api.getDeviceImage(url[2]);
-                            if(picture !== null)
-                            {
+                            if (picture !== null) {
                                 responseData = picture.data;
                                 contentType = picture.type.mime;
-                            }
-                            else
-                            {
+                            } else {
                                 responseData = `{"success":false,"message":"No image for device."}`;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -251,73 +200,52 @@ class ApiServer
                         break;
                     case "getStation":
                     case "getBase":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getStationAsJson(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStationPropertiesMetadata":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getStationPropertiesMetadataAsJson(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStationProperties":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getStationPropertiesAsJson(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStationParams":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getStationParams(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getStationPropertiesTruncated":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             const json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
-                            if(json.success == true)
-                            {
+                            if (json.success === true) {
                                 json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
                                 json.data.macAddress = "XX:XX:XX:XX:XX:XX";
                                 json.data.lanIpAddress = "XXX.XXX.XXX.XXX";
                             }
                             responseData = JSON.stringify(json);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "setStationProperty":
-                        if(url.length == 5)
-                        {
+                        if (url.length === 5) {
                             responseData = await api.setStationProperty(url[2], url[3], url[4]);
-                        }
-                        else if(url[3] == "rebootStation" && url.length == 4)
-                        {
+                        } else if (url[3] === "rebootStation" && url.length === 4) {
                             responseData = await api.rebootStation(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -325,43 +253,29 @@ class ApiServer
                         responseData = await api.getHousesAsJson();
                         break;
                     case "getHouse":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.getHouseAsJson(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getMode":
-                        if(url.length == 2)
-                        {
+                        if (url.length === 2) {
                             responseData = await api.getGuardMode();
-                        }
-                        else if(url.length == 3)
-                        {
+                        } else if (url.length === 3) {
                             responseData = await api.getGuardModeStation(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "getConfig":
-                        if(api.isSidCheckEnabled() === false || (api.isSidCheckEnabled() === true && url.length === 3 && url[2] !== "" && await api.checkSid(url[2])))
-                        {
+                        if (api.isSidCheckEnabled() === false || (api.isSidCheckEnabled() === true && url.length === 3 && url[2] !== "" && await api.checkSid(url[2]))) {
                             responseData = await api.getAPIConfigAsJson();
-                        }
-                        else if(api.isSidCheckEnabled() === true && url.length === 3)
-                        {
-                            if(url[2] === "" || !await api.checkSid(url[2]))
-                            {
+                        } else if (api.isSidCheckEnabled() === true && url.length === 3) {
+                            if (url[2] === "" || !await api.checkSid(url[2])) {
                                 responseData = `{"success":false,"message":"The sid is not valid."}`;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -375,10 +289,8 @@ class ApiServer
                         responseData = await api.getApiStateAsJson();
                         break;
                     case "setMode":
-                        if(url.length == 3)
-                        {
-                            switch (url[2])
-                            {
+                        if (url.length === 3) {
+                            switch (url[2]) {
                                 case "away":
                                     responseData = await api.setGuardMode(GuardMode.AWAY);
                                     break;
@@ -415,11 +327,8 @@ class ApiServer
                                 default:
                                     responseData = `{"success":false,"message":"Unknown mode to set."}`;
                             }
-                        }
-                        else if(url.length == 4)
-                        {
-                            switch (url[3])
-                            {
+                        } else if (url.length === 4) {
+                            switch (url[3]) {
                                 case "away":
                                     responseData = await api.setGuardModeStation(url[2], GuardMode.AWAY);
                                     break;
@@ -456,9 +365,7 @@ class ApiServer
                                 default:
                                     responseData = `{"success":false,"message":"Unknown mode to set."}`;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -466,36 +373,25 @@ class ApiServer
                         responseData = await api.checkSystemVariables();
                         break;
                     case "createSystemVariable":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.createSystemVariable(url[2], "");
-                        }
-                        else if(url.length == 4)
-                        {
+                        } else if (url.length === 4) {
                             responseData = await api.createSystemVariable(url[2], decodeURIComponent(url[3]));
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "removeSystemVariable":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.removeSystemVariable(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "connect":
-                        if(url.length == 3)
-                        {
+                        if (url.length === 3) {
                             responseData = await api.connectStation(url[2]);
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -512,36 +408,24 @@ class ApiServer
                         responseData = api.generateNewTrustedDeviceNameJson();
                         break;
                     case "testInteraction":
-                        if(url.length == 4)
-                        {
-                            try
-                            {
+                        if (url.length === 4) {
+                            try {
                                 responseData = await api.testInteraction(url[2], Number.parseInt(url[3]));
-                            }
-                            catch (error: any)
-                            {
+                            } catch (error: any) {
                                 responseData = `{"success":false,"message":"Error occured. Error: ${error.message}"}`;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
                     case "deleteInteraction":
-                        if(url.length == 4)
-                        {
-                            try
-                            {
+                        if (url.length === 4) {
+                            try {
                                 responseData = await api.deleteInteraction(url[2], Number.parseInt(url[3]));
-                            }
-                            catch (error: any)
-                            {
+                            } catch (error: any) {
                                 responseData = `{"success":false,"message":"Error occured. Error: ${error.message}"}`;
                             }
-                        }
-                        else
-                        {
+                        } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -562,20 +446,15 @@ class ApiServer
                 response.setHeader("Access-Control-Allow-Origin", "*");
                 response.setHeader("Content-Type", contentType + "; charset=UTF-8");
 
-                if(fileName === "")
-                {
+                if (fileName === "") {
                     response.writeHead(200);
                     //response.end(responseData);
-                }
-                else if(fileName !== "")
-                {
+                } else if (fileName !== "") {
                     response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
                     //response.end(responseData);
                 }
                 response.end(responseData);
-            }
-            else
-            {
+            } else {
                 responseData = `{"success":false,"message":"Unknown command."}`;
 
                 response.setHeader("Access-Control-Allow-Origin", "*");
@@ -584,263 +463,214 @@ class ApiServer
                 response.writeHead(200);
                 response.end(responseData);
             }
-        }
-        // using 'POST' for setConfig and uploadConfig
-        else if(request.method == "POST")
-        {
-            if(url.length > 1)
-            {
+        } else if (request.method === "POST") {
+            // using 'POST' for setConfig and uploadConfig
+            if (url.length > 1) {
                 let postData = "";
                 let isDataOK = true;
-                switch (url[1])
-                {
+                switch (url[1]) {
                     case "setConfig":
-                        if(api.isSidCheckEnabled() === false || (api.isSidCheckEnabled() === true && url.length === 3 && url[2] !== "" && await api.checkSid(url[2])))
-                        {
+                        if (api.isSidCheckEnabled() === false || (api.isSidCheckEnabled() === true && url.length === 3 && url[2] !== "" && await api.checkSid(url[2]))) {
                             request.on("data", function (chunk) {
                                 postData += chunk.toString();
                             });
 
                             request.on("end", async function(){
                                 let username = "";
-                                if(postData.indexOf("username") >= 0)
-                                {
+                                if (postData.indexOf("username") >= 0) {
                                     username = getDataFromPOSTData(postData, "username", "string");
                                 }
 
                                 let password = "";
-                                if(postData.indexOf("password") >= 0)
-                                {
+                                if (postData.indexOf("password") >= 0) {
                                     password = getDataFromPOSTData(postData, "password", "string");
                                 }
 
                                 let country = "";
-                                if(postData.indexOf("country") >= 0)
-                                {
+                                if (postData.indexOf("country") >= 0) {
                                     country = getDataFromPOSTData(postData, "country", "string");
                                 }
 
                                 let language = "";
-                                if(postData.indexOf("language") >= 0)
-                                {
+                                if (postData.indexOf("language") >= 0) {
                                     language = getDataFromPOSTData(postData, "language", "string");
                                 }
 
                                 let trustedDeviceName = "";
-                                if(postData.indexOf("trustedDeviceName") >= 0)
-                                {
+                                if (postData.indexOf("trustedDeviceName") >= 0) {
                                     trustedDeviceName = getDataFromPOSTData(postData, "trustedDeviceName", "string");
                                 }
 
                                 let useHttp = false;
-                                if(postData.indexOf("useHttp") >= 0)
-                                {
+                                if (postData.indexOf("useHttp") >= 0) {
                                     useHttp = getDataFromPOSTData(postData, "useHttp", "boolean");
                                 }
 
                                 let apiporthttp = 52789;
-                                if(postData.indexOf("httpPort") >= 0)
-                                {
+                                if (postData.indexOf("httpPort") >= 0) {
                                     apiporthttp = getDataFromPOSTData(postData, "httpPort", "number");
                                 }
 
                                 let useHttps = false;
-                                if(postData.indexOf("useHttps") >= 0)
-                                {
+                                if (postData.indexOf("useHttps") >= 0) {
                                     useHttps = getDataFromPOSTData(postData, "useHttps", "boolean");
                                 }
-                                if(useHttp == false && useHttps == false)
-                                {
+                                if (useHttp === false && useHttps === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("At least 'useHttp' or 'useHttps' must be activated.");
                                 }
 
                                 let apiporthttps = 52790;
-                                if(postData.indexOf("httpsPort") >= 0)
-                                {
+                                if (postData.indexOf("httpsPort") >= 0) {
                                     apiporthttps = getDataFromPOSTData(postData, "httpsPort", "number");
                                 }
 
                                 let apikeyfile = "/usr/local/etc/config/server.pem";
-                                if(postData.indexOf("httpsKeyFile") >= 0)
-                                {
+                                if (postData.indexOf("httpsKeyFile") >= 0) {
                                     apikeyfile = getDataFromPOSTData(postData, "httpsKeyFile", "string");
                                 }
 
                                 let apicertfile = "/usr/local/etc/config/server.pem";
-                                if(postData.indexOf("httpsCertFile") >= 0)
-                                {
+                                if (postData.indexOf("httpsCertFile") >= 0) {
                                     apicertfile = getDataFromPOSTData(postData, "httpsCertFile", "string");
                                 }
 
                                 let apiacceptinvitations = false;
-                                if(postData.indexOf("acceptInvitations") >= 0)
-                                {
+                                if (postData.indexOf("acceptInvitations") >= 0) {
                                     apiacceptinvitations = getDataFromPOSTData(postData, "acceptInvitations", "boolean");
                                 }
 
                                 let apihouseid = "all";
-                                if(postData.indexOf("house") >= 0)
-                                {
+                                if (postData.indexOf("house") >= 0) {
                                     apihouseid = getDataFromPOSTData(postData, "house", "string");
                                 }
 
                                 let apiconnectiontype = 1;
-                                if(postData.indexOf("connectionType") >= 0)
-                                {
+                                if (postData.indexOf("connectionType") >= 0) {
                                     apiconnectiontype = getDataFromPOSTData(postData, "connectionType", "number");
                                 }
 
                                 let apiuseudpstaticports = false;
-                                if(postData.indexOf("useUdpStaticPorts") >= 0)
-                                {
+                                if (postData.indexOf("useUdpStaticPorts") >= 0) {
                                     apiuseudpstaticports = getDataFromPOSTData(postData, "useUdpStaticPorts", "boolean");
                                 }
 
                                 let apiudpports = undefined;
-                                if(postData.indexOf("udpPortsStation") >= 0)
-                                {
+                                if (postData.indexOf("udpPortsStation") >= 0) {
                                     apiudpports = getAllUdpPortsForStations(postData);
                                 }
 
                                 let useSystemVariables = false;
-                                if(postData.indexOf("useSystemVariables") >= 0)
-                                {
+                                if (postData.indexOf("useSystemVariables") >= 0) {
                                     useSystemVariables = getDataFromPOSTData(postData, "useSystemVariables", "boolean");
                                 }
 
                                 let useupdatestateevent = false;
-                                if(postData.indexOf("useUpdateStateEvent") >= 0)
-                                {
+                                if (postData.indexOf("useUpdateStateEvent") >= 0) {
                                     useupdatestateevent = getDataFromPOSTData(postData, "useUpdateStateEvent", "boolean");
                                 }
 
                                 let useupdatestateintervall = false;
-                                if(postData.indexOf("useUpdateStateIntervall") >= 0)
-                                {
+                                if (postData.indexOf("useUpdateStateIntervall") >= 0) {
                                     useupdatestateintervall = getDataFromPOSTData(postData, "useUpdateStateIntervall", "boolean");
                                 }
 
                                 let updatestatetimespan = 15;
-                                if(postData.indexOf("updateStateIntervallTimespan") >= 0)
-                                {
+                                if (postData.indexOf("updateStateIntervallTimespan") >= 0) {
                                     updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
                                 }
 
                                 let usepushservice = false;
-                                if(postData.indexOf("usePushService") >= 0)
-                                {
+                                if (postData.indexOf("usePushService") >= 0) {
                                     usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
                                 }
 
                                 let usesecureapiaccesssid = false;
-                                if(postData.indexOf("useSecureApiAccessSid") >= 0)
-                                {
+                                if (postData.indexOf("useSecureApiAccessSid") >= 0) {
                                     usesecureapiaccesssid = getDataFromPOSTData(postData, "useSecureApiAccessSid", "boolean");
                                 }
 
                                 let logleveladdon = 6;
-                                if(postData.indexOf("logLevelAddon") >= 0)
-                                {
+                                if (postData.indexOf("logLevelAddon") >= 0) {
                                     logleveladdon = getDataFromPOSTData(postData, "logLevelAddon", "number");
                                 }
 
                                 let loglevelmain = 6;
-                                if(postData.indexOf("logLevelMain") >= 0)
-                                {
+                                if (postData.indexOf("logLevelMain") >= 0) {
                                     loglevelmain = getDataFromPOSTData(postData, "logLevelMain", "number");
                                 }
 
                                 let loglevelhttp = 6;
-                                if(postData.indexOf("logLevelHttp") >= 0)
-                                {
+                                if (postData.indexOf("logLevelHttp") >= 0) {
                                     loglevelhttp = getDataFromPOSTData(postData, "logLevelHttp", "number");
                                 }
 
                                 let loglevelp2p = 6;
-                                if(postData.indexOf("logLevelP2p") >= 0)
-                                {
+                                if (postData.indexOf("logLevelP2p") >= 0) {
                                     loglevelp2p = getDataFromPOSTData(postData, "logLevelP2p", "number");
                                 }
 
                                 let loglevelpush = 6;
-                                if(postData.indexOf("logLevelPush") >= 0)
-                                {
+                                if (postData.indexOf("logLevelPush") >= 0) {
                                     loglevelpush = getDataFromPOSTData(postData, "logLevelPush", "number");
                                 }
 
                                 let loglevelmqtt = 6;
-                                if(postData.indexOf("logLevelAddon") >= 0)
-                                {
+                                if (postData.indexOf("logLevelAddon") >= 0) {
                                     loglevelmqtt = getDataFromPOSTData(postData, "logLevelMqtt", "number");
                                 }
 
-                                if(checkNumberValue(apiporthttp, 1, 53535) == false)
-                                {
+                                if (checkNumberValue(apiporthttp, 1, 53535) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'apiporthttp' is out of range. Please use a value between '1' and '53535'.");
                                 }
-                                if(checkNumberValue(apiporthttps, 1, 53535) == false)
-                                {
+                                if (checkNumberValue(apiporthttps, 1, 53535) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'apiporthttps' is out of range. Please use a value between '1' and '53535'.");
                                 }
-                                if(apiuseudpstaticports == true)
-                                {
-                                    /*if(checkNumbersValue(apiudpports, 0, 53535) == false)
-                                    {
+                                if (apiuseudpstaticports === true) {
+                                    /*if (checkNumbersValue(apiudpports, 0, 53535) === false) {
                                         isDataOK = false;
                                     }*/
                                 }
-                                if(useHttps == true && (apiporthttps == 0 || apikeyfile == "" || apicertfile == ""))
-                                {
+                                if (useHttps === true && (apiporthttps === 0 || apikeyfile === "" || apicertfile === "")) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The settings for using https are incomplete. Please set 'apiporthttps', 'apikeyfile' and 'apicertfile'.");
                                 }
-                                if(checkNumberValue(logleveladdon, 0, 6) == false)
-                                {
+                                if (checkNumberValue(logleveladdon, 0, 6) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'logleveladdon' is out of range. Please use a value between '0' and '6'.");
                                 }
-                                if(checkNumberValue(loglevelmain, 0, 6) == false)
-                                {
+                                if (checkNumberValue(loglevelmain, 0, 6) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'loglevelmain' is out of range. Please use a value between '0' and '6'.");
                                 }
-                                if(checkNumberValue(loglevelhttp, 0, 6) == false)
-                                {
+                                if (checkNumberValue(loglevelhttp, 0, 6) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'loglevelhttp' is out of range. Please use a value between '0' and '6'.");
                                 }
-                                if(checkNumberValue(loglevelp2p, 0, 6) == false)
-                                {
+                                if (checkNumberValue(loglevelp2p, 0, 6) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'loglevelp2p' is out of range. Please use a value between '0' and '6'.");
                                 }
-                                if(checkNumberValue(loglevelpush, 0, 6) == false)
-                                {
+                                if (checkNumberValue(loglevelpush, 0, 6) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'loglevelpush' is out of range. Please use a value between '0' and '6'.");
                                 }
-                                if(checkNumberValue(loglevelmqtt, 0, 6) == false)
-                                {
+                                if (checkNumberValue(loglevelmqtt, 0, 6) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'loglevelmqtt' is out of range. Please use a value between '0' and '6'.");
                                 }
-                                if(checkNumberValue(updatestatetimespan, 15, 240) == false)
-                                {
+                                if (checkNumberValue(updatestatetimespan, 15, 240) === false) {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'updatestatetimespan' is out of range. Please use a value between '15' and '240'.");
                                 }
 
-                                if(isDataOK == true)
-                                {
+                                if (isDataOK === true) {
                                     apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
                                     responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, usesecureapiaccesssid, logleveladdon, loglevelmain, loglevelhttp, loglevelp2p, loglevelpush, loglevelmqtt);
-                                }
-                                else
-                                {
+                                } else {
                                     responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check logfile and values."}`;
                                 }
 
@@ -852,25 +682,17 @@ class ApiServer
                                 response.writeHead(200);
                                 response.end(responseData);
 
-                                if(resJson.success == true && resJson.serviceRestart == true)
-                                {
+                                if (resJson.success === true && resJson.serviceRestart === true) {
                                     rootAddonLogger.info("Settings saved. Restarting apiServer.");
                                     restartServer();
-                                }
-                                else if(resJson.success == true && resJson.serviceRestart == false)
-                                {
+                                } else if (resJson.success === true && resJson.serviceRestart === false) {
                                     rootAddonLogger.info("Settings saved.");
-                                }
-                                else
-                                {
+                                } else {
                                     rootAddonLogger.info("Error during saving settings.");
                                 }
                             });
-                        }
-                        else if(api.isSidCheckEnabled() === true && url.length === 3)
-                        {
-                            if(url[2] === "" || !await api.checkSid(url[2]))
-                            {
+                        } else if (api.isSidCheckEnabled() === true && url.length === 3) {
+                            if (url[2] === "" || !await api.checkSid(url[2])) {
                                 request.on("data", function (chunk) {
                                     postData += chunk.toString();
                                 });
@@ -887,9 +709,7 @@ class ApiServer
                                     rootAddonLogger.info("Error during saving settings. The sid is not valid.");
                                 });
                             }
-                        }
-                        else
-                        {
+                        } else {
                             request.on("data", function (chunk) {
                                 postData += chunk.toString();
                             });
@@ -910,40 +730,29 @@ class ApiServer
                     case "uploadConfig":
                         request.on("data", function (chunk) {
                             postData += chunk.toString();
-                            if(request.headers["content-length"] !== undefined && Number.parseInt(request.headers["content-length"]?.toString()) > 500000)
-                            {
+                            if (request.headers["content-length"] !== undefined && Number.parseInt(request.headers["content-length"]?.toString()) > 500000) {
                                 rootAddonLogger.info("Error during upload and saving config file: File is to large.");
                                 request.destroy(new Error("FileToLarge"));
                             }
                         });
 
                         request.on("end", function() {
-                            try
-                            {
+                            try {
                                 responseData = "";
-                                if(checkUploadedFileMetadata(postData) == false)
-                                {
+                                if (checkUploadedFileMetadata(postData) === false) {
                                     rootAddonLogger.info("Error during upload and saving config file: File metadata are unsopported or missing.");
                                     responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing."}`;
-                                }
-                                else
-                                {
+                                } else {
                                     const fileContent = getUploadFileContent(postData);
-                                    if(fileContent === undefined)
-                                    {
-                                        if(responseData == "")
-                                        {
+                                    if (fileContent === undefined) {
+                                        if (responseData === "") {
                                             rootAddonLogger.info("Error during upload and saving config file: File content could not be determined.");
                                             responseData = `{"success":false,"serviceRestart":false,"message":"File content could not be determined."}`;
-                                        }
-                                        else
-                                        {
+                                        } else {
                                             rootAddonLogger.info("Error during upload and saving config file: File metadata are unsopported or missing. File content could not be determined.");
                                             responseData = `{"success":false,"serviceRestart":false,"message":"File metadata are unsopported or missing. File content could not be determined."}`;
                                         }
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         writeFileSync("config.json.upload", fileContent, "utf-8");
                                         responseData = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
                                     }
@@ -957,18 +766,13 @@ class ApiServer
                                 response.writeHead(200);
                                 response.end(responseData);
 
-                                if(resJson.success == true && resJson.serviceRestart == true)
-                                {
+                                if (resJson.success === true && resJson.serviceRestart === true) {
                                     rootAddonLogger.info("Config file uploaded and saved. Restarting apiServer.");
                                     restartServer();
-                                }
-                                else
-                                {
+                                } else {
                                     rootAddonLogger.info("Config file was not saved.");
                                 }
-                            }
-                            catch (e : any)
-                            {
+                            } catch (e: any) {
                                 rootAddonLogger.info("Error during upload config", e);
                             }
                         });
@@ -979,8 +783,7 @@ class ApiServer
                         });
 
                         request.on("end", async function() {
-                            try
-                            {
+                            try {
                                 const resJson = JSON.parse(postData);
                                 responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
 
@@ -989,9 +792,7 @@ class ApiServer
 
                                 response.writeHead(200);
                                 response.end(responseData);
-                            }
-                            catch (e : any)
-                            {
+                            } catch (e: any) {
                                 rootAddonLogger.error(e.message);
                             }
                         });
@@ -1004,9 +805,7 @@ class ApiServer
                         response.writeHead(200);
                         response.end(responseData);
                 }
-            }
-            else
-            {
+            } else {
                 responseData = `{"success":false,"message":"Wrong amount of arguments."}`;
                 response.setHeader("Access-Control-Allow-Origin", "*");
                 response.setHeader("Content-Type", "application/json; charset=UTF-8");
@@ -1014,10 +813,8 @@ class ApiServer
                 response.writeHead(200);
                 response.end(responseData);
             }
-        }
-        // Be polite and give an answer even we know that there is nothing to answer...
-        else
-        {
+        } else {
+            // Be polite and give an answer even we know that there is nothing to answer...
             responseData = `{"success":false,"message":"Unknown command."}`;
             response.setHeader("Access-Control-Allow-Origin", "*");
             response.setHeader("Content-Type", "application/json; charset=UTF-8");
@@ -1031,8 +828,7 @@ class ApiServer
 /**
  * The main function will start the ApiServer
  */
-function main(): void
-{
+function main(): void {
     apiServer = new ApiServer();
 }
 
@@ -1041,26 +837,18 @@ function main(): void
  * @param httpPort The new http port.
  * @param httpsPort The new https port.
  */
-function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, httpsPort : number): void
-{
-    try
-    {
-        if(existsSync("www/apiPorts.json"))
-        {
+function apiPortFile(useHttp: boolean, httpPort: number, useHttps: boolean, httpsPort: number): void {
+    try {
+        if (existsSync("www/apiPorts.json")) {
             const resJson = JSON.parse(readFileSync("www/apiPorts.json", "utf-8"));
 
-            if(useHttp !== resJson.useHttp as boolean || httpPort !== Number.parseInt(resJson.httpPort) || useHttps !== resJson.useHttps as boolean || httpsPort !== Number.parseInt(resJson.httpsPort))
-            {
+            if (useHttp !== resJson.useHttp as boolean || httpPort !== Number.parseInt(resJson.httpPort) || useHttps !== resJson.useHttps as boolean || httpsPort !== Number.parseInt(resJson.httpsPort)) {
                 writeFileSync("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
             }
-        }
-        else
-        {
+        } else {
             writeFileSync("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
         }
-    }
-    catch (ENOENT)
-    {
+    } catch (ENOENT) {
         rootAddonLogger.info("Error during handling apiPortFile.", ENOENT);
     }
 }
@@ -1071,22 +859,15 @@ function apiPortFile(useHttp : boolean, httpPort : number, useHttps : boolean, h
  * @param lowestValue The lowest value allowd.
  * @param highestValue The highest value allowed.
  */
-function checkNumberValue(value : number, lowestValue : number, highestValue : number) : boolean
-{
-    try
-    {
+function checkNumberValue(value: number, lowestValue: number, highestValue: number): boolean {
+    try {
         const val = value;
-        if(val >= lowestValue && val <= highestValue)
-        {
+        if (val >= lowestValue && val <= highestValue) {
             return true;
-        }
-        else
-        {
+        } else {
             return false;
         }
-    }
-    catch
-    {
+    } catch {
         return false;
     }
 }
@@ -1098,20 +879,15 @@ function checkNumberValue(value : number, lowestValue : number, highestValue : n
  * @param highestValue The highest value allowed.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function checkNumbersValue(values : string, lowestValue : number, highestValue : number) : boolean
-{
-    if(values == "")
-    {
+function checkNumbersValue(values: string, lowestValue: number, highestValue: number): boolean {
+    if (values === "") {
         return false;
     }
 
     const vals = (values.split(",")).map((i) => Number(i));
-    if(vals.length > 0)
-    {
-        for (const val of vals)
-        {
-            if(checkNumberValue(val, lowestValue, highestValue) == false)
-            {
+    if (vals.length > 0) {
+        for (const val of vals) {
+            if (checkNumberValue(val, lowestValue, highestValue) === false) {
                 return false;
             }
         }
@@ -1126,32 +902,23 @@ function checkNumbersValue(values : string, lowestValue : number, highestValue :
  * @param target The setting to be seached for.
  * @param dataType The type of the return data (at the moment string and boolean).
  */
-function getDataFromPOSTData(postData : string, target : string, dataType : string) : any
-{
-    if(dataType == "string")
-    {
+function getDataFromPOSTData(postData: string, target: string, dataType: string): any {
+    if (dataType === "string") {
         let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n","");
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return temp;
-    }
-    else if(dataType == "number")
-    {
+    } else if (dataType === "number") {
         let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.replace("\r\n","");
         temp = temp.substring(2, temp.indexOf("----") - 2);
         return Number.parseInt(temp);
-    }
-    else if(dataType == "boolean")
-    {
+    } else if (dataType === "boolean") {
         let temp = postData.substring(postData.indexOf(target) + (target.length + 1));
         temp = temp.substring(2, temp.indexOf("----") - 2);
-        if(temp.trim() == "on")
-        {
+        if (temp.trim() === "on") {
             return true;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
@@ -1163,12 +930,10 @@ function getDataFromPOSTData(postData : string, target : string, dataType : stri
  * @param postData The data from the post event.
  * @returns The array with the setGuardModeStationserials and the port number.
  */
-function getAllUdpPortsForStations(postData : string) : any[]
-{
+function getAllUdpPortsForStations(postData: string): any[] {
     let pos = postData.indexOf("udpPortsStation");
     const res = [];
-    while (pos > 0)
-    {
+    while (pos > 0) {
         let temp = postData.substring(pos + 29);
         const stationSerial = postData.substring(pos + 15, pos + 31);
         temp = temp.replace("\r\n","");
@@ -1188,51 +953,41 @@ function getAllUdpPortsForStations(postData : string) : any[]
  * @param postData The postData to check.
  * @returns A boolean value.
  */
-function checkUploadedFileMetadata(postData : string) : boolean
-{
+function checkUploadedFileMetadata(postData: string): boolean {
     let pos = postData.indexOf("Content-Disposition: form-data;");
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf("Content-Type: application/json");
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf(`"accountData":`);
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf(`"eMail":`);
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf(`"password":`);
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf(`"httpActive":`);
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf(`"httpPort":`);
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf(`"httpsActive":`);
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     pos = postData.indexOf(`"httpsPort":`);
-    if(pos < 0)
-    {
+    if (pos < 0) {
         return false;
     }
     return true;
@@ -1243,16 +998,13 @@ function checkUploadedFileMetadata(postData : string) : boolean
  * @param postData The postData to check.
  * @returns A string value or undefined.
  */
-function getUploadFileContent(postData : string) : string | undefined
-{
+function getUploadFileContent(postData: string): string | undefined {
     const start = postData.indexOf("{");
-    if(start < 0)
-    {
+    if (start < 0) {
         return undefined;
     }
     const end = postData.lastIndexOf("}");
-    if(end < 0)
-    {
+    if (end < 0) {
         return undefined;
     }
     return postData.substring(start, end+1);
@@ -1261,8 +1013,7 @@ function getUploadFileContent(postData : string) : string | undefined
 /**
  * Will write config, stop the server and exit.
  */
-async function stopServer(): Promise<void>
-{
+async function stopServer(): Promise<void> {
     rootAddonLogger.info("Set service state to shutdown...");
     api.setServiceState("shutdown");
     rootAddonLogger.info("Stopping scheduled tasks...");
@@ -1279,8 +1030,7 @@ async function stopServer(): Promise<void>
 /**
  * Will write config and restart the server.
  */
-async function restartServer(): Promise<void>
-{
+async function restartServer(): Promise<void> {
     rootAddonLogger.info("Going to restart with apiServerRestarter...");
     exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
 }
@@ -1318,8 +1068,7 @@ process.on("SIGINT", async () => {
  * @param numberOfChars The number of chars which should not be replaced.
  * @returns The result string.
  */
-function replaceLastChars(input : string, char : string, numberOfChars : number): string
-{
+function replaceLastChars(input: string, char: string, numberOfChars: number): string {
     return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
 }
 
@@ -1328,8 +1077,7 @@ function replaceLastChars(input : string, char : string, numberOfChars : number)
  * @param dateTime The date as Date object.
  * @returns The date and time as string.
  */
-function getDateTimeAsString(dateTime: Date): string
-{
+function getDateTimeAsString(dateTime: Date): string {
     return `${dateTime.getFullYear().toString()}${(dateTime.getMonth()+1).toString().padStart(2, "0")}${dateTime.getDate().toString().padStart(2, "0")}-${dateTime.getHours().toString().padStart(2, "0")}${dateTime.getMinutes().toString().padStart(2, "0")}${dateTime.getSeconds().toString().padStart(2, "0")}`;
 }
 

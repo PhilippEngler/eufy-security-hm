@@ -125,7 +125,7 @@ export const parseValue = function(metadata: PropertyMetadataAny, value: unknown
 export const parseJSON = function(data: string, log: Category): any {
     try {
         return JSON.parse(data.replace(/[\0]+$/g, ""));
-    } catch(err) {
+    } catch (err) {
         const error = ensureError(err);
         log.debug("JSON parse error", { error: getError(error), data: data });
     }

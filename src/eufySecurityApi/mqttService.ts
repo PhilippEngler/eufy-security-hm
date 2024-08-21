@@ -95,7 +95,7 @@ export class MqttService extends TypedEmitter<EufySecurityEvents> {
     private onLockMessage(message: any): void {
         this.api.getDevice(message.data.data.deviceSn).then((device: Device) => {
             (device as Lock).processMQTTNotification(message.data.data, this.config.getEventDurationSeconds());
-        }).catch((error) => {
+        }).catch ((error) => {
             if (!(error instanceof DeviceNotFoundError)) {
                 rootMQTTLogger.error("Lock MQTT Message Error", { error: getError(error) });
             }

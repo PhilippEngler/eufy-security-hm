@@ -15,15 +15,14 @@ import { existsSync, readFileSync } from "fs";
 /**
  * Represents all the Devices in the account.
  */
-export class Devices extends TypedEmitter<EufySecurityEvents>
-{
-    private api : EufySecurityApi;
-    private httpService : HTTPApi;
+export class Devices extends TypedEmitter<EufySecurityEvents> {
+    private api: EufySecurityApi;
+    private httpService: HTTPApi;
     private eventInteractions: EventInteractions;
-    private devices : { [deviceSerial : string] : any } = {};
+    private devices: { [deviceSerial: string]: any } = {};
     private loadingEmitter = new EventEmitter();
     private devicesLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "devices loaded");
-    private deviceSnoozeTimeout : { [dataType : string] : NodeJS.Timeout; } = {};
+    private deviceSnoozeTimeout: { [dataType: string]: NodeJS.Timeout; } = {};
 
     private errorImage: Picture | undefined = undefined;
     private defaultImage: Picture | undefined = undefined;
@@ -33,15 +32,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param api  The api.
      * @param httpService The httpService.
      */
-    constructor(api : EufySecurityApi, httpService : HTTPApi)
-    {
+    constructor(api: EufySecurityApi, httpService: HTTPApi) {
         super();
         this.api = api;
         this.httpService = httpService;
         this.eventInteractions = new EventInteractions(this.api);
 
-        if(this.api.getApiUsePushService() == false)
-        {
+        if (this.api.getApiUsePushService() === false) {
             rootAddonLogger.info("Retrieving last video event times disabled in settings.");
         }
 
@@ -85,8 +82,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Handle the devices so that they can be used by the addon.
      * @param devices The devices object with all devices.
      */
-    private async handleDevices(devices : FullDevices) : Promise<void>
-    {
+    private async handleDevices(devices: FullDevices): Promise<void> {
         rootAddonLogger.debug("Got devices", { devices: devices });
 
         const resDevices = devices;
@@ -96,105 +92,62 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
         const promises: Array<Promise<Device>> = [];
         const deviceConfig = this.api.getDeviceConfig();
 
-        let deviceSerial : string;
+        let deviceSerial: string;
 
-        if(resDevices != null)
-        {
-            for (deviceSerial in resDevices)
-            {
-                if(this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId())
-                {
+        if (resDevices !== null) {
+            for (deviceSerial in resDevices) {
+                if (this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId()) {
                     rootAddonLogger.debug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
                     continue;
                 }
-                if(this.devices[deviceSerial])
-                {
+                if (this.devices[deviceSerial]) {
                     this.updateDevice(resDevices[deviceSerial]);
-                }
-                else
-                {
-                    if (this.devicesLoaded === undefined)
-                    {
+                } else {
+                    if (this.devicesLoaded === undefined) {
                         this.devicesLoaded = waitForEvent<void>(this.loadingEmitter, "devices loaded");
                     }
-                    let new_device : Promise<Device>;
+                    let new_device: Promise<Device>;
 
-                    if(Device.isIndoorCamera(resDevices[deviceSerial].device_type))
-                    {
+                    if (Device.isIndoorCamera(resDevices[deviceSerial].device_type)) {
                         new_device = IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isSoloCameras(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isSoloCameras(resDevices[deviceSerial].device_type)) {
                         new_device = SoloCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if (Device.isLockWifiVideo(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isLockWifiVideo(resDevices[deviceSerial].device_type)) {
                         new_device = DoorbellLock.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isBatteryDoorbell(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isBatteryDoorbell(resDevices[deviceSerial].device_type)) {
                         new_device = BatteryDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type)) {
                         new_device = WiredDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isFloodLight(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isFloodLight(resDevices[deviceSerial].device_type)) {
                         new_device = FloodlightCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if (Device.isWallLightCam(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isWallLightCam(resDevices[deviceSerial].device_type)) {
                         new_device = WallLightCam.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if (Device.isGarageCamera(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isGarageCamera(resDevices[deviceSerial].device_type)) {
                         new_device = GarageCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if (Device.isSmartDrop(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isSmartDrop(resDevices[deviceSerial].device_type)) {
                         new_device = SmartDrop.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isCamera(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isCamera(resDevices[deviceSerial].device_type)) {
                         new_device = Camera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isLock(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isLock(resDevices[deviceSerial].device_type)) {
                         new_device = Lock.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isMotionSensor(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isMotionSensor(resDevices[deviceSerial].device_type)) {
                         new_device = MotionSensor.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isEntrySensor(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isEntrySensor(resDevices[deviceSerial].device_type)) {
                         new_device = EntrySensor.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if(Device.isKeyPad(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isKeyPad(resDevices[deviceSerial].device_type)) {
                         new_device = Keypad.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if (Device.isSmartSafe(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isSmartSafe(resDevices[deviceSerial].device_type)) {
                         new_device = SmartSafe.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if (Device.isSmartTrack(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isSmartTrack(resDevices[deviceSerial].device_type)) {
                         new_device = Tracker.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else if (Device.isLockKeypad(resDevices[deviceSerial].device_type))
-                    {
+                    } else if (Device.isLockKeypad(resDevices[deviceSerial].device_type)) {
                         new_device = LockKeypad.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
-                    }
-                    else
-                    {
+                    } else {
                         new_device = UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
 
                     promises.push(new_device.then((device: Device) => {
-                        try
-                        {
+                        try {
                             this.addEventListener(device, "PropertyChanged");
                             this.addEventListener(device, "RawPropertyChanged");
                             this.addEventListener(device, "CryingDetected");
@@ -231,8 +184,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
 
                             this.addDevice(device);
                             device.initialize();
-                        }
-                        catch (err) {
+                        } catch (err) {
                             const error = ensureError(err);
                             rootAddonLogger.error("HandleDevices Error", { error: getError(error), deviceSN: device.getSerial() });
                         }
@@ -244,12 +196,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
             Promise.all(promises).then((devices) => {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
-                        if (!station.isConnected() && station.isP2PConnectableDevice())
-                        {
+                        if (!station.isConnected() && station.isP2PConnectableDevice()) {
                             station.setConnectionType(this.api.getP2PConnectionType());
                             station.connect();
                         }
-                    }).catch((err) => {
+                    }).catch ((err) => {
                         const error = ensureError(err);
                         rootAddonLogger.error("Error trying to connect to station after device loaded", { error: getError(error), deviceSN: device.getSerial() });
                     });
@@ -258,19 +209,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
                 this.devicesLoaded = undefined;
             });
 
-            if (promises.length === 0)
-            {
+            if (promises.length === 0) {
                 this.loadingEmitter.emit("devices loaded");
                 this.devicesLoaded = undefined;
             }
 
-            for (const deviceSN of deviceSNs)
-            {
-                if (!newDeviceSNs.includes(deviceSN))
-                {
+            for (const deviceSN of deviceSNs) {
+                if (!newDeviceSNs.includes(deviceSN)) {
                     this.getDevice(deviceSN).then((device: Device) => {
                         this.removeDevice(device);
-                    }).catch((err) => {
+                    }).catch ((err) => {
                         const error = ensureError(err);
                         rootAddonLogger.error("Error removing device", { error: getError(error), deviceSN: deviceSN });
                     });
@@ -285,26 +233,21 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Add the given device for using.
      * @param device The device object to add.
      */
-    private addDevice(device : Device) : void
-    {
+    private addDevice(device: Device): void {
         const serial = device.getSerial();
-        if (serial && !Object.keys(this.devices).includes(serial))
-        {
+        if (serial && !Object.keys(this.devices).includes(serial)) {
             this.devices[serial] = device;
             this.emit("device added", device);
 
-            if (device.isLock())
-            {
+            if (device.isLock()) {
                 this.api.getMqttService().subscribeLock(device.getSerial());
             }
-            if(device.hasProperty(PropertyName.DevicePicture)) {
-                if(this.defaultImage !== undefined) {
+            if (device.hasProperty(PropertyName.DevicePicture)) {
+                if (this.defaultImage !== undefined) {
                     device.updateProperty(PropertyName.DevicePicture, this.defaultImage);
                 }
             }
-        }
-        else
-        {
+        } else {
             rootAddonLogger.debug(`Device with this serial ${device.getSerial()} exists already and couldn't be added again!`);
         }
     }
@@ -313,17 +256,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Remove the given device.
      * @param device The device object to remove.
      */
-    private removeDevice(device : Device) : void
-    {
+    private removeDevice(device: Device): void {
         const serial = device.getSerial();
-        if (serial && Object.keys(this.devices).includes(serial))
-        {
+        if (serial && Object.keys(this.devices).includes(serial)) {
             delete this.devices[serial];
             device.removeAllListeners();
             this.emit("device removed", device);
-        }
-        else
-        {
+        } else {
             rootAddonLogger.debug(`Device with this serial ${device.getSerial()} doesn't exists and couldn't be removed!`);
         }
     }
@@ -332,18 +271,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Update the device information.
      * @param device The device object to update.
      */
-    private async updateDevice(device : DeviceListResponse) : Promise<void>
-    {
-        if (this.devicesLoaded)
-        {
+    private async updateDevice(device: DeviceListResponse): Promise<void> {
+        if (this.devicesLoaded) {
             await this.devicesLoaded;
         }
-        if (Object.keys(this.devices).includes(device.device_sn))
-        {
+        if (Object.keys(this.devices).includes(device.device_sn)) {
             this.devices[device.device_sn].update(device)
-        }
-        else
-        {
+        } else {
             throw new DeviceNotFoundError(`Device with this serial ${device.device_sn} doesn't exists and couldn't be updated!`);
         }
     }
@@ -351,14 +285,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * (Re)Loads all Devices and the settings of them.
      */
-    public async loadDevices() : Promise<void>
-    {
-        try
-        {
+    public async loadDevices(): Promise<void> {
+        try {
             this.handleDevices(this.httpService.getDevices());
-        }
-        catch (e : any)
-        {
+        } catch (e: any) {
             this.devices = {};
             throw new Error(e);
         }
@@ -367,12 +297,9 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Close all connections for all devices.
      */
-    public closeDevices() : void
-    {
-        if(this.devices != null)
-        {
-            for (const deviceSerial in this.devices)
-            {
+    public closeDevices(): void {
+        if (this.devices !== null) {
+            for (const deviceSerial in this.devices) {
                 this.removeEventListener(this.devices[deviceSerial], "PropertyChanged");
                 this.removeEventListener(this.devices[deviceSerial], "RawPropertyChanged");
                 this.removeEventListener(this.devices[deviceSerial], "CryingDetected");
@@ -415,8 +342,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Close devices.
      */
-    public close() : void
-    {
+    public close(): void {
         Object.keys(this.deviceSnoozeTimeout).forEach(device_sn => {
             clearTimeout(this.deviceSnoozeTimeout[device_sn]);
             delete this.deviceSnoozeTimeout[device_sn];
@@ -426,10 +352,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Returns all Devices.
      */
-    public async getDevices() : Promise<{ [deviceSerial : string] : any }>
-    {
-        if (this.devicesLoaded)
-        {
+    public async getDevices(): Promise<{ [deviceSerial: string]: any }> {
+        if (this.devicesLoaded) {
             await this.devicesLoaded;
         }
         return this.devices;
@@ -440,14 +364,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @returns The device as Device object.
      */
-    public async getDevice(deviceSerial : string) : Promise<Device>
-    {
-        if (this.devicesLoaded)
-        {
+    public async getDevice(deviceSerial: string): Promise<Device> {
+        if (this.devicesLoaded) {
             await this.devicesLoaded;
         }
-        if (Object.keys(this.devices).includes(deviceSerial))
-        {
+        if (Object.keys(this.devices).includes(deviceSerial)) {
             return this.devices[deviceSerial];
         }
         throw new DeviceNotFoundError("Device doesn't exists", { context: { device: deviceSerial } });
@@ -459,26 +380,20 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param channel The channel to specify the device.
      * @returns The device specified by base and channel.
      */
-    public async getDeviceByStationAndChannel(baseSerial : string, channel : number) : Promise<Device>
-    {
-        if (this.devicesLoaded)
-        {
+    public async getDeviceByStationAndChannel(baseSerial: string, channel: number): Promise<Device> {
+        if (this.devicesLoaded) {
             await this.devicesLoaded;
         }
-        for (const device of Object.values(this.devices))
-        {
-            if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial))
-            {
+        for (const device of Object.values(this.devices)) {
+            if ((device.getStationSerial() === baseSerial && device.getChannel() === channel) || (device.getStationSerial() === baseSerial && device.getSerial() === baseSerial)) {
                 return device;
             }
         }
         throw new DeviceNotFoundError("No device with passed channel found on station", { context: { station: baseSerial, channel: channel } });
     }
 
-    public async getDevicesFromStation(stationSerial: string): Promise<Array<Device>>
-    {
-        if (this.devicesLoaded)
-        {
+    public async getDevicesFromStation(stationSerial: string): Promise<Array<Device>> {
+        if (this.devicesLoaded) {
             await this.devicesLoaded;
         }
         const arr: Array<Device> = [];
@@ -494,15 +409,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The deviceSerial of the device to check.
      * @returns True if device exists, otherwise false.
      */
-    public existDevice(deviceSerial : string) : boolean
-    {
+    public existDevice(deviceSerial: string): boolean {
         const res = this.devices[deviceSerial];
-        if(res)
-        {
+        if (res) {
             return true;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
@@ -512,8 +423,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as object.
      * @param timeoutMS The snooze time in ms.
      */
-    public setDeviceSnooze(device : Device, timeoutMS : number) : void
-    {
+    public setDeviceSnooze(device: Device, timeoutMS: number): void {
         this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
             device.updateProperty(PropertyName.DeviceSnooze, false);
             device.updateProperty(PropertyName.DeviceSnoozeTime, 0);
@@ -536,56 +446,54 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param eventListenerName The event listener name as string.
      */
-    public addEventListener(device : Device, eventListenerName : string) : void
-    {
-        switch (eventListenerName)
-        {
+    public addEventListener(device: Device, eventListenerName: string): void {
+        switch (eventListenerName) {
             case "PropertyChanged":
-                device.on("property changed", (device : Device, name : string, value : PropertyValue, ready: boolean) => this.onDevicePropertyChanged(device, name, value, ready));
+                device.on("property changed", (device: Device, name: string, value: PropertyValue, ready: boolean) => this.onDevicePropertyChanged(device, name, value, ready));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("property changed")} Listener.`);
                 break;
             case "RawPropertyChanged":
-                device.on("raw property changed", (device : Device, type : number, value : string) => this.onRawPropertyChanged(device, type, value));
+                device.on("raw property changed", (device: Device, type: number, value: string) => this.onRawPropertyChanged(device, type, value));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("raw property changed")} Listener.`);
                 break;
             case "CryingDetected":
-                device.on("crying detected", (device : Device, state : boolean) => this.onCryingDetected(device, state));
+                device.on("crying detected", (device: Device, state: boolean) => this.onCryingDetected(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("crying detected")} Listener.`);
                 break;
             case "SoundDetected":
-                device.on("sound detected", (device : Device, state : boolean) => this.onSoundDetected(device, state));
+                device.on("sound detected", (device: Device, state: boolean) => this.onSoundDetected(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("sound detected")} Listener.`);
                 break;
             case "PetDetected":
-                device.on("pet detected", (device : Device, state : boolean) => this.onPetDetected(device, state));
+                device.on("pet detected", (device: Device, state: boolean) => this.onPetDetected(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("pet detected")} Listener.`);
                 break;
             case "VehicleDetected":
-                device.on("vehicle detected", (device : Device, state : boolean) => this.onVehicleDetected(device, state));
+                device.on("vehicle detected", (device: Device, state: boolean) => this.onVehicleDetected(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("vehicle detected")} Listener.`);
                 break;
             case "MotionDetected":
-                device.on("motion detected", (device : Device, state : boolean) => this.onMotionDetected(device, state));
+                device.on("motion detected", (device: Device, state: boolean) => this.onMotionDetected(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("motion detected")} Listener.`);
                 break;
             case "PersonDetected":
-                device.on("person detected", (device : Device, state : boolean, person : string) => this.onPersonDetected(device, state, person));
+                device.on("person detected", (device: Device, state: boolean, person: string) => this.onPersonDetected(device, state, person));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("person detected")} Listener.`);
                 break;
             case "Rings":
-                device.on("rings", (device : Device, state : boolean) => this.onRings(device, state));
+                device.on("rings", (device: Device, state: boolean) => this.onRings(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("rings")} Listener.`);
                 break;
             case "Locked":
-                device.on("locked", (device : Device, state : boolean) => this.onLocked(device, state));
+                device.on("locked", (device: Device, state: boolean) => this.onLocked(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("locked")} Listener.`);
                 break;
             case "Open":
-                device.on("open", (device : Device, state : boolean) => this.onOpen(device, state));
+                device.on("open", (device: Device, state: boolean) => this.onOpen(device, state));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("open")} Listener.`);
                 break;
             case "Ready":
-                device.on("ready", (device : Device) => this.onReady(device));
+                device.on("ready", (device: Device) => this.onReady(device));
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} added. Total ${device.listenerCount("ready")} Listener.`);
                 break;
             case "PackageDelivered":
@@ -682,10 +590,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param eventListenerName The event listener name as string.
      */
-    public removeEventListener(device : Device, eventListenerName : string) : void
-    {
-        switch (eventListenerName)
-        {
+    public removeEventListener(device: Device, eventListenerName: string): void {
+        switch (eventListenerName) {
             case "PropertyChanged":
                 device.removeAllListeners("property changed");
                 rootAddonLogger.debug(`Listener '${eventListenerName}' for device ${device.getSerial()} removed. Total ${device.listenerCount("property changed")} Listener.`);
@@ -829,47 +735,35 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the changed value.
      * @param value The value and timestamp of the new value as PropertyValue.
      */
-    private async onDevicePropertyChanged(device : Device, name : string, value : PropertyValue, ready: boolean) : Promise<void>
-    {
+    private async onDevicePropertyChanged(device: Device, name: string, value: PropertyValue, ready: boolean): Promise<void> {
         //this.emit("device property changed", device, name, value);
         rootAddonLogger.debug(`Event "PropertyChanged": device: ${device.getSerial()} | name: ${name} | value: ${value}`);
-        try
-        {
-            if (ready && !name.startsWith("hidden-"))
-            {
+        try {
+            if (ready && !name.startsWith("hidden-")) {
                 this.emit("device property changed", device, name, value);
             }
-            if (name === PropertyName.DeviceRTSPStream && (value as boolean) === true && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) === undefined || (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) as string) === "")))
-            {
+            if (name === PropertyName.DeviceRTSPStream && (value as boolean) === true && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) === undefined || (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStreamUrl) as string) === ""))) {
                 this.api.getStation(device.getStationSerial()).then((station: Station) => {
                     station.setRTSPStream(device, true);
-                }).catch((err) => {
+                }).catch ((err) => {
                     const error = ensureError(err);
                     rootAddonLogger.error(`Device property changed error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                 });
-            }
-            else if (name === PropertyName.DeviceRTSPStream && (value as boolean) === false)
-            {
+            } else if (name === PropertyName.DeviceRTSPStream && (value as boolean) === false) {
                 device.setCustomPropertyValue(PropertyName.DeviceRTSPStreamUrl, "");
-            }
-            else if (name === PropertyName.DevicePictureUrl && value !== "")
-            {
-                if (!isValidUrl(value as string))
-                {
+            } else if (name === PropertyName.DevicePictureUrl && value !== "") {
+                if (!isValidUrl(value as string)) {
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
-                        if (station.hasCommand(CommandName.StationDownloadImage))
-                        {
+                        if (station.hasCommand(CommandName.StationDownloadImage)) {
                             station.downloadImage(value as string);
                         }
-                    }).catch((err) => {
+                    }).catch ((err) => {
                         const error = ensureError(err);
                         rootAddonLogger.error(`Device property changed error - station download image`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
                     });
                 }
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error(`Device property changed error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial(), propertyName: name, propertyValue: value, ready: ready });
         }
@@ -881,8 +775,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param type The number of the raw-value in the eufy ecosystem.
      * @param value The new value as string.
      */
-    private async onRawPropertyChanged(device : Device, type : number, value : string) : Promise<void>
-    {
+    private async onRawPropertyChanged(device: Device, type: number, value: string): Promise<void> {
         //this.emit("device raw property changed", device, type, value, modified);
         rootAddonLogger.debug(`Event "RawPropertyChanged": device: ${device.getSerial()} | type: ${type} | value: ${value}`);
     }
@@ -892,23 +785,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onCryingDetected(device : Device, state : boolean) : Promise<void>
-    {
+    private async onCryingDetected(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "CryingDetected": device: ${device.getSerial()} | state: ${state}`);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CRYING);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
@@ -919,23 +807,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onSoundDetected(device : Device, state : boolean) : Promise<void>
-    {
+    private async onSoundDetected(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "SoundDetected": device: ${device.getSerial()} | state: ${state}`);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.SOUND);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
@@ -946,23 +829,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onPetDetected(device : Device, state : boolean) : Promise<void>
-    {
+    private async onPetDetected(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "PetDetected": device: ${device.getSerial()} | state: ${state}`);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PET);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
@@ -976,20 +854,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     private onVehicleDetected(device: Device, state: boolean): void
     {
         rootAddonLogger.debug(`Event "VehicleDetected": device: ${device.getSerial()} | state: ${state}`);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.VEHICLE);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
@@ -1000,23 +874,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onMotionDetected(device : Device, state : boolean) : Promise<void>
-    {
+    private async onMotionDetected(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "MotionDetected": device: ${device.getSerial()} | state: ${state}`);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
@@ -1028,23 +897,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The new state.
      * @param person The person detected.
      */
-    private async onPersonDetected(device : Device, state : boolean, person : string) : Promise<void>
-    {
+    private async onPersonDetected(device: Device, state: boolean, person: string): Promise<void> {
         rootAddonLogger.debug(`Event "PersonDetected": device: ${device.getSerial()} | state: ${state} | person: ${person}`);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PERSON);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
         //this.setLastVideoTimeNow(device.getSerial());
@@ -1055,15 +919,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onRings(device : Device, state : boolean) : Promise<void>
-    {
+    private async onRings(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
         //this.setLastVideoTimeNow(device.getSerial());
-        try
-        {
+        try {
             const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
-            if(deviceEventInteraction !== null)
-            {
+            if (deviceEventInteraction !== null) {
                 this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
             }
         }
@@ -1075,8 +936,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onLocked(device : Device, state : boolean) : Promise<void>
-    {
+    private async onLocked(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "Locked": device: ${device.getSerial()} | state: ${state}`);
     }
 
@@ -1085,8 +945,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The new state.
      */
-    private async onOpen(device : Device, state : boolean) : Promise<void>
-    {
+    private async onOpen(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
     }
 
@@ -1094,23 +953,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * The action to be one when event Ready is fired.
      * @param device The device as Device object.
      */
-    private async onReady(device : Device) : Promise<void>
-    {
+    private async onReady(device: Device): Promise<void> {
         rootAddonLogger.debug(`Event "Ready": device: ${device.getSerial()}`);
-        try
-        {
-            if (device.getPropertyValue(PropertyName.DeviceRTSPStream) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStream) as boolean) === true)
-            {
+        try {
+            if (device.getPropertyValue(PropertyName.DeviceRTSPStream) !== undefined && (device.getPropertyValue(PropertyName.DeviceRTSPStream) as boolean) === true) {
                 this.api.getStation(device.getStationSerial()).then((station: Station) => {
                     station.setRTSPStream(device, true);
-                }).catch((err) => {
+                }).catch ((err) => {
                     const error = ensureError(err);
                     rootAddonLogger.error(`Device ready error - station enable rtsp`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
                 });
             }
-        }
-        catch (err)
-        {
+        } catch (err) {
             const error = ensureError(err);
             rootAddonLogger.error(`Device ready error`, { error: getError(error), deviceSN: device.getSerial(), stationSN: device.getStationSerial() });
         }
@@ -1121,8 +975,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageDelivered(device : Device, state : boolean) : void
-    {
+    private onDevicePackageDelivered(device: Device, state: boolean): void {
         this.emit("device package delivered", device, state);
     }
 
@@ -1131,8 +984,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageStranded(device : Device, state : boolean) : void
-    {
+    private onDevicePackageStranded(device: Device, state: boolean): void {
         this.emit("device package stranded", device, state);
     }
 
@@ -1141,8 +993,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDevicePackageTaken(device : Device, state : boolean) : void
-    {
+    private onDevicePackageTaken(device: Device, state: boolean): void {
         this.emit("device package taken", device, state);
     }
 
@@ -1151,8 +1002,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceSomeoneLoitering(device : Device, state : boolean) : void
-    {
+    private onDeviceSomeoneLoitering(device: Device, state: boolean): void {
         this.emit("device someone loitering", device, state);
     }
 
@@ -1161,23 +1011,18 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceRadarMotionDetected(device : Device, state : boolean) : void
-    {
+    private onDeviceRadarMotionDetected(device: Device, state: boolean): void {
         this.emit("device radar motion detected", device, state);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RADAR_MOTION);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
     }
@@ -1188,8 +1033,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The state.
      * @param detail The detail.
      */
-    private onDevice911Alarm(device : Device, state : boolean, detail : SmartSafeAlarm911Event) : void
-    {
+    private onDevice911Alarm(device: Device, state: boolean, detail: SmartSafeAlarm911Event): void {
         this.emit("device 911 alarm", device, state, detail);
     }
 
@@ -1199,8 +1043,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param state The state.
      * @param detail The detail.
      */
-    private onDeviceShakeAlarm(device : Device, state : boolean, detail : SmartSafeShakeAlarmEvent) : void
-    {
+    private onDeviceShakeAlarm(device: Device, state: boolean, detail: SmartSafeShakeAlarmEvent): void {
         this.emit("device shake alarm", device, state, detail);
     }
 
@@ -1209,8 +1052,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceWrongTryProtectAlarm(device : Device, state : boolean) : void
-    {
+    private onDeviceWrongTryProtectAlarm(device: Device, state: boolean): void {
         this.emit("device wrong try-protect alarm", device, state);
     }
 
@@ -1219,8 +1061,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceLongTimeNotClose(device : Device, state : boolean) : void
-    {
+    private onDeviceLongTimeNotClose(device: Device, state: boolean): void {
         this.emit("device long time not close", device, state);
     }
 
@@ -1229,8 +1070,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceLowBattery(device : Device, state : boolean) : void
-    {
+    private onDeviceLowBattery(device: Device, state: boolean): void {
         this.emit("device low battery", device, state);
     }
 
@@ -1239,8 +1079,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param device The device as Device object.
      * @param state The state.
      */
-    private onDeviceJammed(device : Device, state : boolean) : void
-    {
+    private onDeviceJammed(device: Device, state: boolean): void {
         this.emit("device jammed", device, state);
     }
 
@@ -1251,20 +1090,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceStrangerPersonDetected(device: Device, state: boolean): void {
         this.emit("device stranger person detected", device, state);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.STRANGER_PERSON);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
     }
@@ -1276,20 +1111,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceDogDetected(device: Device, state: boolean): void {
         this.emit("device dog detected", device, state);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
     }
@@ -1301,20 +1132,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceDogLickDetected(device: Device, state: boolean): void {
         this.emit("device dog lick detected", device, state);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_LICK);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
     }
@@ -1326,20 +1153,16 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      */
     private onDeviceDogPoopDetected(device: Device, state: boolean): void {
         this.emit("device dog poop detected", device, state);
-        if(state === true)
-        {
-            try
-            {
+        if (state === true) {
+            try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_POOP);
-                if(deviceEventInteraction !== null)
-                {
+                if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
                 }
             }
             catch {}
         }
-        if(state === false)
-        {
+        if (state === false) {
             //this.loadDeviceImage(device.getSerial());
         }
     }
@@ -1403,11 +1226,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @param values The raw values.
      */
-    public async updateDeviceProperties(deviceSerial : string, values : RawValues) : Promise<void>
-    {
+    public async updateDeviceProperties(deviceSerial: string, values: RawValues): Promise<void> {
         this.getDevice(deviceSerial).then((device: Device) => {
             device.updateRawProperties(values);
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error("Update device properties error", { error: getError(error), deviceSN: deviceSerial, values: values });
         });
@@ -1417,16 +1239,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Retrieves the last event of the given device.
      * @param deviceSerial The serial of the device.
      */
-    public async getDeviceLastEvent(deviceSerial : string): Promise<void>
-    {
+    public async getDeviceLastEvent(deviceSerial: string): Promise<void> {
         this.getDevice(deviceSerial).then((device) => {
             this.api.getStation(device.getStationSerial()).then((station) => {
                 station.databaseQueryLatestInfo();
-            }).catch((err) => {
+            }).catch ((err) => {
                 const error = ensureError(err);
                 rootAddonLogger.error(`Get Device Last Event - Station Error`, { error: getError(error), deviceSN: deviceSerial });
             });
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Get Device Last Event - Device Error`, { error: getError(error), deviceSN: deviceSerial });
         });
@@ -1435,14 +1256,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
     /**
      * Retrieves the last event of all devices.
      */
-    public async getDevicesLastEvent(): Promise<void>
-    {
+    public async getDevicesLastEvent(): Promise<void> {
         this.api.getStations().then((stations) => {
-            for(const station in stations)
+            for (const station in stations)
             {
                 stations[station].databaseQueryLatestInfo();
             }
-        }).catch((err) => {
+        }).catch ((err) => {
             const error = ensureError(err);
             rootAddonLogger.error(`Get Devices Last Event - Station Error`, { error: getError(error) });
         });
@@ -1453,8 +1273,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Retrieve the interactions for a given device.
      * @param deviceSerial The serial of the device.
      */
-    public getDeviceInteractions(deviceSerial: string): DeviceInteractions | null
-    {
+    public getDeviceInteractions(deviceSerial: string): DeviceInteractions | null {
         return this.eventInteractions.getDeviceInteractions(deviceSerial);
     }
 
@@ -1463,8 +1282,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @param eventInteractionType The eventInteractionType.
      */
-    public getDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): EventInteraction | null
-    {
+    public getDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): EventInteraction | null {
         return this.eventInteractions.getDeviceEventInteraction(deviceSerial, eventInteractionType);
     }
 
@@ -1474,8 +1292,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param eventInteractionType The eventInteractionType.
      * @param deviceEventInteraction The eventIntegration data.
      */
-    public setDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType, deviceEventInteraction: EventInteraction): boolean
-    {
+    public setDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType, deviceEventInteraction: EventInteraction): boolean {
         return this.eventInteractions.setDeviceInteraction(deviceSerial, eventInteractionType, deviceEventInteraction);
     }
 
@@ -1484,8 +1301,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param deviceSerial The serial of the device.
      * @param eventInteractionType The eventInteractionType.
      */
-    public deleteDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): boolean
-    {
+    public deleteDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): boolean {
         return this.eventInteractions.deleteDeviceEventInteraction(deviceSerial, eventInteractionType);
     }
 
@@ -1493,8 +1309,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * Remove all integrations.
      * @returns true, if all integrations deleted, otherwise false.
      */
-    public removeInteractions(): any
-    {
+    public removeInteractions(): any {
         return this.eventInteractions.removeIntegrations();
     }
 
@@ -1504,8 +1319,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents>
      * @param name The name of the property.
      * @param value The value of the property.
      */
-    public async setDeviceProperty(deviceSerial : string, name : string, value : unknown) : Promise<void>
-    {
+    public async setDeviceProperty(deviceSerial: string, name: string, value: unknown): Promise<void> {
         const device = await this.devices[deviceSerial];
         const station = await this.api.getStation(device.getStationSerial());
         const metadata = device.getPropertyMetadata(name);
