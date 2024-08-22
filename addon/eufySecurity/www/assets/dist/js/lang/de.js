@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.17
-20240819
+Schema v9.18
+20240822
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240819 (v9.17)";
+var languageVersion = "20240822 (v9.18)";
 
 function translateNavbarElement(element)
 {
@@ -449,6 +449,8 @@ function translateStaticContentElement(element)
 			return "<code>/getLibrary</code>: Liefert den Link zum letzten Standbild sowie den dazugehörigen Zeitpunkt als JSON-String zurück.";
 		case "entryGetDeviceImage":
 			return "<code>/getDeviceImage/<i>DEVICE_SERIAL</i></code>: Gibt das letzte Bild des Gerätes mit der Seriennummer <i>DEVICE_SERIAL</i> als Bild zurück.";
+		case "entryMoveToPreset":
+			return "<code>/setStationProperty/<i>STATION_SERIAL</i>/moveToPreset/<i>DEVICE_SERIAL</i>/<i>PRESET_NUMBER</i></code>: Fährt für das Gerät mit der Seriennummer <i>DEVICE_SERIAL</i>, dass mit der Station mit der Seriennummer <i>STATION_SERIAL</i> verbunden ist, die gespeicherte Position <i>PRESET_NUMBER</i> an. <i>PRESET_NUMBER</i> kann die Werte <code>0</code>, <code>1</code>, <code>2</code> oder <code>3</code> annehmen.";
 		case "hintModeNotSupported":
 			return "Bitte beachten Sie, dass einige Modi nur mit bestimmten Gerätetypen genutzt werden könnnen. Sollten Sie einen vom Gerät nicht unterstützen Modus setzten wollen, erhalten Sie eine entsprechende Meldung.";
 		case "textUseApi":
@@ -570,6 +572,12 @@ function translateMessages(message, ...options)
 			return "Die Interaktion wurde entfernt.";
 		case "messageDeleteInteractionFailedMessage":
 			return "Die Interaktion konnte nicht entfernt werden.";
+		case "messageMoveToPresetHeader":
+			return "Anfahren der gespeicherten Position.";
+		case "messageMoveToPresetOkMessage":
+			return "Die Position wurde angefahren.";
+		case "messageMoveToPresetFailedMessage":
+			return "Beim Anfahren der Position ist ein Fehler aufgetreten.";
 		case "messageSaveSettingsHeader":
 			return "Einstellungen speichern.";
 		case "messageSaveSettingsOkMessage":
@@ -816,6 +824,10 @@ function translateContent(content, ...options)
 			return "Status LED";
 		case "lblImageMirrored":
 			return "Bild spiegeln";
+		case "lblMotionAutoCruise":
+			return "Auto-Cruise";
+		case "lblAutoCalibration":
+			return "automatische Kalibirierung";
 		case "lblHeaderMotionDetection":
 			return "Bewegungserkennung";
 		case "lblMotionDetection":
@@ -862,7 +874,7 @@ function translateContent(content, ...options)
 			return "Erkennungsempfindlichkeit";
 		case "lblSoundDetectionType":
 			return "Erkennungsart";
-		case "soundDetectionRoundLook":
+		case "lblSoundDetectionRoundLook":
 			return "Rundumblick nach Geräuscherkennung";
 		case "lblHeaderPowerManager":
 			return "Power Manager";
@@ -924,6 +936,10 @@ function translateContent(content, ...options)
 			return "Toneinstellungen";
 		case "lblChirpTone":
 			return "Bestätigungston";
+		case "lblHeaderPanAndTilt":
+			return "Schwenken und Neigen";
+		case "lblMoveToPreset":
+			return "Anfahren der gespeicherten Positionen";
 		case "lblHeaderNotificationSettings":
 			return "Benachrichtigungen";
 		case "lblNotification":
@@ -1179,6 +1195,14 @@ function translateString(content)
 			return "Sprache";
 		case "strVersion":
 			return "Version";
+		case "strMoveToPreset01":
+			return "zu Position 1";
+		case "strMoveToPreset02":
+			return "zu Position 2";
+		case "strMoveToPreset03":
+			return "zu Position 3";
+		case "strMoveToPreset04":
+			return "zu Position 4";
 		case "strEditInteractionStart":
 			return "zur Bearbeitung ausklappen";
 		case "strEditInteractionEnd":
@@ -1229,6 +1253,10 @@ function translatePropertyName(propertyName)
 			return "Status LED aktivieren";
 		case "imageMirrored":
 			return "Bild spiegeln aktivieren";
+		case "motionAutoCruise":
+			return "Auto-Cruise aktivieren";
+		case "autoCalibration":
+			return "automatische Kalibirierung aktivieren";
 		case "motionDetection":
 			return "Bewegungserkennung aktivieren";
 		case "motionDetectionSensitivity":
@@ -1248,11 +1276,15 @@ function translatePropertyName(propertyName)
 		case "rotationSpeed":
 			return "Bewegungsgeschwindigkeit";
 		case "motionTracking":
-			return "Bewegungsverfolgung aktivieren"
+			return "Bewegungsverfolgung aktivieren";
 		case "soundDetection":
 			return "Geräuscherkennung aktivieren";
+		case "soundDetectionType":
+			return "Erkennungsart";
 		case "soundDetectionSensitivity":
 			return "Erkennungsempfindlichkeit";
+		case "soundDetectionRoundLook":
+			return "Rundumblick nach Geräuscherkennung aktivieren";
 		case "recordingClipLength":
 			return "Länge der Aufzeichung";
 		case "recordingRetriggerInterval":
@@ -1666,6 +1698,10 @@ function translateDeviceStateValue(state, propertyName, value)
 				case "soundDetectionSensitivity":
 					return "maximal";
 			}
+		case "All Sounds":
+			return "alle Geräusche";
+		case "Crying":
+			return "Weinen";
 		case "Auto":
 			return "automatisch";
 		case "Most Efficient":

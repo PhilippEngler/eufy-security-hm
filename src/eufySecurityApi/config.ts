@@ -1404,7 +1404,7 @@ export class Config {
      * @param stationSerial The serialnumber of the station.
      * @param p2p_did The P2P_DID to set.
      */
-    private setP2PDataP2pDid(stationSerial: string, p2pDid: string): void {
+    public setP2PDataP2pDid(stationSerial: string, p2pDid: string): void {
         const station = this.getStationIterator(stationSerial);
         if (station !== undefined) {
             if (this.configJson.stations[station].p2pDid !== p2pDid) {
@@ -1432,7 +1432,7 @@ export class Config {
      * @param stationSerial The serialnumber of the station.
      * @param stationIpAddress The local ip address.
      */
-    private setP2PDataStationIpAddress(stationSerial: string, stationIpAddress: string): void {
+    public setP2PDataStationIpAddress(stationSerial: string, stationIpAddress: string): void {
         const station = this.getStationIterator(stationSerial);
         if (station !== undefined) {
             if (this.configJson.stations[station].stationIpAddress !== stationIpAddress) {
@@ -1496,28 +1496,6 @@ export class Config {
         }
         rootConfLogger.info(`No stationSerial given`);
         return false;
-    }
-
-    /**
-     * Saves the P2P releated data for a given station. If the station is currently not in config, it will be created before the config data is populated.
-     * The config data will be saved and the config is reloaded.
-     * @param stationSerial The serialnumber of the station
-     * @param p2pDid The P2P_DID for the P2P connection
-     * @param station_ip_address The local ip address of the station
-     */
-    public setP2PData(stationSerial: string, p2pDid: string, station_ip_address: string): void {
-        let res;
-        if (this.isStationInConfig(stationSerial) === false) {
-            res = this.updateWithNewStation(stationSerial);
-        } else {
-            res = true;
-        }
-        if (res) {
-            this.setP2PDataP2pDid(stationSerial, p2pDid);
-            this.setP2PDataStationIpAddress(stationSerial, station_ip_address);
-
-            this.writeConfig(this.configJson);
-        }
     }
 
     /**

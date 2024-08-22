@@ -286,6 +286,7 @@ function translateStaticPageContent(page)
             translateInnerHtml("entrySetModeStation");
             translateInnerHtml("entryGetLibrary");
             translateInnerHtml("entryGetDeviceImage");
+            translateInnerHtml("entryMoveToPreset");
             translateInnerHtml("hintModeNotSupported");
             translateInnerHtml("textUseApi");
             translateInnerHtml("entryApiBackground");

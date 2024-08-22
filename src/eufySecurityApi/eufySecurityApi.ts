@@ -1,5 +1,5 @@
 import { Config } from "./config";
-import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig } from "./http";
+import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig, PresetPositionType, CommandName } from "./http";
 import { HomematicApi } from "./homematicApi";
 import { rootAddonLogger, setLoggingLevel } from "./logging";
 
@@ -1048,7 +1048,7 @@ export class EufySecurityApi {
                     if (temp === undefined || temp === null) {
                         temp = null;
                     }
-                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getProperties(), "interactions":temp};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "isDevicePanAndTilt":device.hasCommand(CommandName.DevicePanAndTilt), "data":device.getProperties(), "interactions":temp};
                     this.setLastConnectionInfo(true);
                 } else {
                     json = {"success":false, "reason":`The device with serial ${deviceSerial} does not exists.`};
@@ -1414,6 +1414,44 @@ export class EufySecurityApi {
     }
 
     /**
+     * Move a given device connected to a given station to a given position.
+     * @param stationSerial The serial of the station.
+     * @param deviceSerial The serial of the device.
+     * @param presetPosition The preset position as string.
+     * @returns A JSON-String.
+     */
+    public async moveToPreset(stationSerial: string, deviceSerial: string, presetPosition: string): Promise<string> {
+        let json: any = {};
+        try {
+            if (this.stations && this.devices) {
+                if (!this.stations.existStation(stationSerial)) {
+                    json = {"success":false,"reason":`The station with serial ${stationSerial} does not exists.`};
+                }
+                try {
+                    const presetPositionNumber = Number.parseInt(presetPosition);
+                    await (await this.stations.getStation(stationSerial)).presetPosition(await this.devices.getDevice(deviceSerial), presetPositionNumber);
+                    await sleep(5000);
+                    json = {"success":true,"reason":`The device ${deviceSerial} has been moved to preset ${presetPosition}.`};
+                } catch (e: any) {
+                    if (e instanceof NotSupportedError) {
+                        json = {"success":false,"reason":`This functionality is not implemented or supported by station ${stationSerial} or device ${deviceSerial}`};
+                    } else {
+                        json = {"success":false,"reason":`Other error occured. Error: ${e.message}.`};
+                    }
+                }
+            } else {
+                json = {"success":false, "reason":"No connection to eufy."};
+            }
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured at moveToPreset(). Error: ${e.message}.`, JSON.stringify(e));
+            this.setLastConnectionInfo(false);
+            json = {"success":false, "reason":e.message};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
      * Returns a JSON-Representation of a given station.
      */
     public async getStationAsJson(stationSerial: string): Promise<string> {
@@ -1480,14 +1518,15 @@ export class EufySecurityApi {
                 const newStationIpAddress = station.getLANIPAddress();
 
                 if (currentP2pDid !== newP2pDid || currentStationIpAddress !== newStationIpAddress) {
-                    if (currentP2pDid !== newP2pDid) {
-                        rootAddonLogger.info(`Updateing p2p did for station ${stationSerial} [new value: ${newP2pDid} | old value: ${currentP2pDid}]`);
-                    }
-                    if (currentStationIpAddress !== newStationIpAddress) {
-                        rootAddonLogger.info(`Updateing ip address for station ${stationSerial} [new value: ${newStationIpAddress} | old value: ${currentStationIpAddress}]`);
-                    }
                     try {
-                        this.config.setP2PData(stationSerial, newP2pDid, newStationIpAddress.toString());
+                        if (newP2pDid !== undefined && currentP2pDid !== newP2pDid) {
+                            this.config.setP2PDataP2pDid(stationSerial, newP2pDid);
+                            rootAddonLogger.info(`Updateing p2p did for station ${stationSerial} [new value: ${newP2pDid} | old value: ${currentP2pDid}]`);
+                        }
+                        if (newStationIpAddress !== undefined && currentStationIpAddress !== newStationIpAddress) {
+                            this.config.setP2PDataStationIpAddress(stationSerial, newStationIpAddress.toString());
+                            rootAddonLogger.info(`Updateing ip address for station ${stationSerial} [new value: ${newStationIpAddress} | old value: ${currentStationIpAddress}]`);
+                        }
                     } catch (e: any) {
                         rootAddonLogger.error(`Error occured at saveStationsSettings(). Error: ${e.message}.`, JSON.stringify(e));
                     }

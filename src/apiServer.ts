@@ -245,6 +245,8 @@ class ApiServer {
                             responseData = await api.setStationProperty(url[2], url[3], url[4]);
                         } else if (url[3] === "rebootStation" && url.length === 4) {
                             responseData = await api.rebootStation(url[2]);
+                        } else if (url[3] === "moveToPreset" && url.length === 6) {
+                            responseData = await api.moveToPreset(url[2], url[4], url[5]);
                         } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
