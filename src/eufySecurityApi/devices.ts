@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from "./eufySecurityApi";
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType } from "./http";
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, DeviceType } from "./http";
 import { EufySecurityEvents } from "./interfaces";
 import { DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
@@ -108,6 +108,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                     }
                     let new_device: Promise<Device>;
 
+                    if (resDevices[deviceSerial].device_sn === resDevices[deviceSerial].station_sn) {
+                        if (Object.values(DeviceType).includes(resDevices[deviceSerial].device_type*-1)) {
+                            resDevices[deviceSerial].device_type = resDevices[deviceSerial].device_type*-1;
+                            rootAddonLogger.info(`Device ${deviceSerial} is a solo device and has different properties for solo and HB3-connected devices. Using deviceType ${resDevices[deviceSerial].device_type}`);
+                        } else {
+                            rootAddonLogger.info(`Device ${deviceSerial} is a solo device and has same properties for solo and HB-connected devices. Using deviceType ${resDevices[deviceSerial].device_type}`);
+                        }
+                    }
                     if (Device.isIndoorCamera(resDevices[deviceSerial].device_type)) {
                         new_device = IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     } else if (Device.isSoloCameras(resDevices[deviceSerial].device_type)) {
