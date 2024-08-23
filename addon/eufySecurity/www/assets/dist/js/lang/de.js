@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.18
-20240822
+Schema v9.19
+20240823
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240822 (v9.18)";
+var languageVersion = "20240823 (v9.19)";
 
 function translateNavbarElement(element)
 {
@@ -177,7 +177,7 @@ function translateStaticContentElement(element)
 		case "optConnectionTypeFastest":
 			return "schnellste Verbindung";
 		case "hintConnectionType":
-			return "Diese Einstellung wird für alle Basisstationen genutzt.";
+			return `Diese Einstellung wird für alle mit Strom versorgten Stationen und Geräten genutzt. Bei batteriebetriebenen Geräten wird die Verbindung immer mit der Option "schnellste Verbindung" hergestellt.`;
 		case "lblUseUdpStaticPorts":
 			return "Verbindung zu den Station über feste Ports aufbauen";
 		case "settingsHeaderConfigUpdateSystemVariables":
@@ -575,7 +575,7 @@ function translateMessages(message, ...options)
 		case "messageMoveToPresetHeader":
 			return "Anfahren der gespeicherten Position.";
 		case "messageMoveToPresetOkMessage":
-			return "Die Position wurde angefahren.";
+			return `Die Position ${options[0]} wurde angefahren.`;
 		case "messageMoveToPresetFailedMessage":
 			return "Beim Anfahren der Position ist ein Fehler aufgetreten.";
 		case "messageSaveSettingsHeader":
