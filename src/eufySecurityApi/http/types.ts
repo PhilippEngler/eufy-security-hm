@@ -2347,6 +2347,13 @@ export const DeviceRecordingClipLengthWalllightS120Property: PropertyMetadataNum
     default: 30,
 }
 
+export const DeviceRecordingClipLengthOutdoorPTProperty: PropertyMetadataNumeric = {
+    ...DeviceRecordingClipLengthProperty,
+    min: 10,
+    max: 120,
+    default: 60,
+}
+
 export const DeviceRecordingRetriggerIntervalProperty: PropertyMetadataNumeric = {
     key: CommandType.CMD_DEV_RECORD_INTERVAL,
     name: PropertyName.DeviceRecordingRetriggerInterval,
@@ -6733,6 +6740,12 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceNightvision]: DeviceNightvisionProperty,
         [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionIndoorSoloFloodProperty,
         [PropertyName.DeviceWatermark]: DeviceWatermarkProperty,
+        [PropertyName.DeviceState]: DeviceStateProperty,
+        [PropertyName.DeviceLastChargingDays]: DeviceLastChargingDaysProperty,
+        [PropertyName.DeviceLastChargingFalseEvents]: DeviceLastChargingFalseEventsProperty,
+        [PropertyName.DeviceLastChargingRecordedEvents]: DeviceLastChargingRecordedEventsProperty,
+        [PropertyName.DeviceLastChargingTotalEvents]: DeviceLastChargingTotalEventsProperty,
+        [PropertyName.DeviceBatteryUsageLastWeek]: DeviceBatteryUsageLastWeekProperty,
         [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
         [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
         [PropertyName.DeviceVehicleDetected]: DeviceVehicleDetectedProperty,
@@ -6764,6 +6777,9 @@ export const DeviceProperties: Properties = {
         [PropertyName.DevicePowerSource]: DevicePowerSourceProperty,
         [PropertyName.DevicePowerWorkingMode]: DevicePowerWorkingModeProperty,
         [PropertyName.DeviceChargingStatus]: DeviceChargingStatusProperty,
+        [PropertyName.DeviceRecordingClipLength]: DeviceRecordingClipLengthOutdoorPTProperty,
+        [PropertyName.DeviceRecordingRetriggerInterval]: DeviceRecordingRetriggerIntervalProperty,
+        [PropertyName.DeviceRecordingEndClipMotionStops]: DeviceRecordingEndClipMotionStopsProperty,
         [PropertyName.DeviceDualCamWatchViewMode]: DeviceDualCamWatchViewModeS340Property,
     },
     [DeviceType.INDOOR_PT_CAMERA_S350]: {
