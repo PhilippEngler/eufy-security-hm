@@ -220,7 +220,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
             if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
-                if (!Device.hasBattery(this.stations[hub.station_sn].getDeviceType())) {
+                if (Device.hasBattery(this.stations[hub.station_sn].getDeviceType())) {
                     this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
                 } else {
                     this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
