@@ -6,7 +6,7 @@ var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.13";
+var version = "3.0.14";
 
 /**
  * common used java script functions
@@ -1130,7 +1130,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
 		return;
 	}
-	if(deviceProperties.enabled !== undefined || deviceProperties.antitheftDetection !== undefined || deviceProperties.statusLed !== undefined || deviceProperties.imageMirrored !== undefined)
+	if(deviceProperties.enabled !== undefined || deviceProperties.antitheftDetection !== undefined || deviceProperties.statusLed !== undefined || deviceProperties.imageMirrored !== undefined || deviceProperties.motionAutoCruise !== undefined || deviceProperties.autoCalibration !== undefined)
 	{
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceCommonSettings">
@@ -1552,6 +1552,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>${translateContent("lblNightvision")}</h5>
 										${devicePropertiesMetadata.autoNightvision === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.autoNightvision.name, deviceProperties.autoNightvision, setEventHandler)}
 										${devicePropertiesMetadata.nightvision === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.nightvision.name, deviceProperties.nightvision, setEventHandler, devicePropertiesMetadata.nightvision.states)}
+										${devicePropertiesMetadata.lightSettingsEnable === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsEnable.name, deviceProperties.lightSettingsEnable, setEventHandler)}
 										${devicePropertiesMetadata.lightSettingsBrightnessManual === undefined ? "" : generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessManual.name, deviceProperties.lightSettingsBrightnessManual, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessManual.unit, devicePropertiesMetadata.lightSettingsBrightnessManual.min, devicePropertiesMetadata.lightSettingsBrightnessManual.max, devicePropertiesMetadata.lightSettingsBrightnessManual.default)}`;
 		}
 		if(deviceProperties.videoWdr !== undefined)

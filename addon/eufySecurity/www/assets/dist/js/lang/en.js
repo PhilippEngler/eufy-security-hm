@@ -1309,6 +1309,8 @@ function translatePropertyName(propertyName)
 			return "Nightvision Type";
 		case "flickerAdjustment":
 			return "Picture Refresh Rate";
+		case "lightSettingsEnable":
+			return "Enable Light Settings";
 		case "lightSettingsBrightnessManual":
 		case "lightSettingsBrightnessSchedule":
 		case "lightSettingsBrightnessMotion":

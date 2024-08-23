@@ -1309,6 +1309,8 @@ function translatePropertyName(propertyName)
 			return "Art der Nachtsicht";
 		case "flickerAdjustment":
 			return "Bildwiederholrate";
+		case "lightSettingsEnable":
+			return "Scheinwerfereinstellungen aktivieren";
 		case "lightSettingsBrightnessManual":
 		case "lightSettingsBrightnessSchedule":
 		case "lightSettingsBrightnessMotion":
