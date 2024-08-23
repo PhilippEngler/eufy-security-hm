@@ -2,7 +2,7 @@ import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from "./push/models";
 import { rootConfLogger, setLoggingLevel } from "./logging";
 import { LogLevel } from "typescript-logging";
-import { DeviceConfig } from ".";
+import { DeviceConfig, PropertyValue } from ".";
 
 export class Config {
     private configJson: any;
@@ -1496,6 +1496,34 @@ export class Config {
         }
         rootConfLogger.info(`No stationSerial given`);
         return false;
+    }
+
+    /**
+     * Saves the P2P releated data for a given station. If the station is currently not in config, it will be created before the config data is populated.
+     * The config data will be saved and the config is reloaded.
+     * @param stationSerial The serialnumber of the station
+     * @param p2pDid The P2P_DID for the P2P connection
+     * @param station_ip_address The local ip address of the station
+     */
+    public setP2PData(stationSerial: string, p2pDid: string | undefined, station_ip_address: PropertyValue | undefined): void {
+        let res;
+        if (this.isStationInConfig(stationSerial) === false) {
+            res = this.updateWithNewStation(stationSerial);
+        } else {
+            res = true;
+        }
+        if (res) {
+            if (p2pDid !== undefined) {
+                this.setP2PDataP2pDid(stationSerial, p2pDid);
+            }
+            if (station_ip_address !== undefined) {
+                this.setP2PDataStationIpAddress(stationSerial, station_ip_address.toString());
+            }
+
+            if (p2pDid !== undefined || station_ip_address !== undefined) {
+                this.writeConfig(this.configJson);
+            }
+        }
     }
 
     /**

@@ -1514,19 +1514,24 @@ export class EufySecurityApi {
                 const currentP2pDid = this.config.getP2PDataP2pDid(stationSerial);
                 const currentStationIpAddress = this.config.getP2PDataStationIpAddress(stationSerial);
 
-                const newP2pDid = station.getP2pDid();
-                const newStationIpAddress = station.getLANIPAddress();
+                let newP2pDid: string | undefined = station.getP2pDid();
+                let newStationIpAddress: PropertyValue | undefined = station.getLANIPAddress();
 
-                if (currentP2pDid !== newP2pDid || currentStationIpAddress !== newStationIpAddress) {
+                if (newP2pDid === undefined || currentP2pDid === newP2pDid) {
+                    newP2pDid = undefined;
+                }
+                if (newStationIpAddress === undefined || currentStationIpAddress === newStationIpAddress) {
+                    newStationIpAddress = undefined;
+                }
+                if (newP2pDid !== undefined || newStationIpAddress !== undefined) {
+                    if (newP2pDid !== undefined) {
+                        rootAddonLogger.info(`Updateing p2p did for station ${stationSerial} [new value: ${newP2pDid} | old value: ${currentP2pDid}]`);
+                    }
+                    if (newStationIpAddress !== undefined) {
+                        rootAddonLogger.info(`Updateing ip address for station ${stationSerial} [new value: ${newStationIpAddress} | old value: ${currentStationIpAddress}]`);
+                    }
                     try {
-                        if (newP2pDid !== undefined && currentP2pDid !== newP2pDid) {
-                            this.config.setP2PDataP2pDid(stationSerial, newP2pDid);
-                            rootAddonLogger.info(`Updateing p2p did for station ${stationSerial} [new value: ${newP2pDid} | old value: ${currentP2pDid}]`);
-                        }
-                        if (newStationIpAddress !== undefined && currentStationIpAddress !== newStationIpAddress) {
-                            this.config.setP2PDataStationIpAddress(stationSerial, newStationIpAddress.toString());
-                            rootAddonLogger.info(`Updateing ip address for station ${stationSerial} [new value: ${newStationIpAddress} | old value: ${currentStationIpAddress}]`);
-                        }
+                        this.config.setP2PData(stationSerial, newP2pDid, newStationIpAddress);
                     } catch (e: any) {
                         rootAddonLogger.error(`Error occured at saveStationsSettings(). Error: ${e.message}.`, JSON.stringify(e));
                     }
