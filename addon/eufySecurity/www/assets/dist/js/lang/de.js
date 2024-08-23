@@ -230,42 +230,42 @@ function translateStaticContentElement(element)
 		case "optLogLevelP2p0":
 		case "optLogLevelPush0":
 		case "optLogLevelMqtt0":
-			return "Protokollierungsstrufe Trace";
+			return "Protokollierungsstufe Trace";
 		case "optLogLevelAddon1":
 		case "optLogLevelMain1":
 		case "optLogLevelHttp1":
 		case "optLogLevelP2p1":
 		case "optLogLevelPush1":
 		case "optLogLevelMqtt1":
-			return "Protokollierungsstrufe Debug";
+			return "Protokollierungsstufe Debug";
 		case "optLogLevelAddon2":
 		case "optLogLevelMain2":
 		case "optLogLevelHttp2":
 		case "optLogLevelP2p2":
 		case "optLogLevelPush2":
 		case "optLogLevelMqtt2":
-			return "Protokollierungsstrufe Information";
+			return "Protokollierungsstufe Information";
 		case "optLogLevelAddon3":
 		case "optLogLevelMain3":
 		case "optLogLevelHttp3":
 		case "optLogLevelP2p3":
 		case "optLogLevelPush3":
 		case "optLogLevelMqtt3":
-			return "Protokollierungsstrufe Warnung";
+			return "Protokollierungsstufe Warnung";
 		case "optLogLevelAddon4":
 		case "optLogLevelMain4":
 		case "optLogLevelHttp4":
 		case "optLogLevelP2p4":
 		case "optLogLevelPush4":
 		case "optLogLevelMqtt4":
-			return "Protokollierungsstrufe Fehler";
+			return "Protokollierungsstufe Fehler";
 		case "optLogLevelAddon5":
 		case "optLogLevelMain5":
 		case "optLogLevelHttp5":
 		case "optLogLevelP2p5":
 		case "optLogLevelPush5":
 		case "optLogLevelMqtt5":
-			return "Protokollierungsstrufe Fatal";
+			return "Protokollierungsstufe Fatal";
 		case "optLogLevelAddon6":
 		case "optLogLevelMain6":
 		case "optLogLevelHttp6":
