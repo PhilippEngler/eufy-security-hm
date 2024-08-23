@@ -2155,7 +2155,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                             event_count: record.payload.event_count,
                                             crop_local_path: record.payload.crop_hb3_path
                                         });
-                                    } else {
+                                    } else if (record.payload.crop_cloud_path !== "") {
                                         result.push({
                                             device_sn: record.device_sn,
                                             event_count: record.payload.event_count,
