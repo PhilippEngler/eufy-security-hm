@@ -3136,7 +3136,8 @@ function loadDataStatechange(showLoading)
 						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? translateString("strActivate") : translateString("strDeactivate")}`, true, undefined, undefined, true)}</div>`;
 					}
 					buttons += `</div>`;
-					if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != "undefined")
+					alert(`${objResp.data[station].serialNumber}: ${objResp.data[station].guardModeTime}`);
+					if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != undefined)
 					{
 						lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
 						if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
@@ -3144,7 +3145,7 @@ function loadDataStatechange(showLoading)
 							lastChangeTimeAll = parseInt(objResp.data[station].guardModeTime);
 						}
 					}
-					else if(objResp.data[station].pictureTime == "n/a")
+					else if(objResp.data[station].guardModeTime == "n/a")
 					{
 						lastChangeTime = translateContent("lblUnknown");
 					}
