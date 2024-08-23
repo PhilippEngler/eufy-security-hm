@@ -4,7 +4,7 @@ import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error
 import { EufySecurityApi } from "./eufySecurityApi";
 import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, DeviceType } from "./http";
 import { EufySecurityEvents } from "./interfaces";
-import { DynamicLighting, MotionZone, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
+import { DynamicLighting, MotionZone, P2PConnectionType, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
 import { DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
@@ -205,7 +205,11 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
                         if (!station.isConnected() && station.isP2PConnectableDevice()) {
-                            station.setConnectionType(this.api.getP2PConnectionType());
+                            if (device.hasBattery()) {
+                                station.setConnectionType(P2PConnectionType.QUICKEST);
+                            } else {
+                                station.setConnectionType(this.api.getP2PConnectionType());
+                            }
                             station.connect();
                         }
                     }).catch ((err) => {
@@ -424,6 +428,19 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Checks if the device a battery powered device. 
+     * @param deviceSerial The deviceSerial of the device.
+     * @returns True if device is a battery powered device, otherwise false.
+     */
+    public async hasDeviceBattery(deviceSerial: string): Promise<boolean> {
+        let res = this.existDevice(deviceSerial);
+        if (res) {
+            res = (await (this.getDevice(deviceSerial))).hasBattery();
+        }
+        return res;
     }
 
     /**

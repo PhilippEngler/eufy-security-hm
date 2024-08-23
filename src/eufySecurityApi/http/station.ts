@@ -50,6 +50,9 @@ export class Station extends TypedEmitter<StationEvents> {
         this.api = api;
         this.rawStation = station;
         this.lockPublicKey = publicKey;
+        if (connectionType !== undefined) {
+            this.p2pConnectionType = connectionType;
+        }
         this.update(this.rawStation);
 
         this.p2pSession = new P2PClientProtocol(this.rawStation, this.api, this.getLANIPAddress() as string, this.lockPublicKey, enableEmbeddedPKCS1Support, udpPort, connectionType);

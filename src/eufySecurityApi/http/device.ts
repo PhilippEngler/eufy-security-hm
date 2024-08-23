@@ -1050,7 +1050,9 @@ export class Device extends TypedEmitter<DeviceEvents> {
     }
 
     static isStation(type: number): boolean {
-        if (type == DeviceType.STATION || type === DeviceType.MINIBASE_CHIME)
+        if (type === DeviceType.STATION ||
+            type === DeviceType.HB3 ||
+            type === DeviceType.MINIBASE_CHIME)
             return true;
         return false;
     }

@@ -6,7 +6,7 @@ import { sleep } from "./push/utils";
 import { AddUserError, DeleteUserError, DeviceNotFoundError, NotSupportedError, ReadOnlyPropertyError, StationNotFoundError, UpdateUserPasscodeError, UpdateUserScheduleError, UpdateUserUsernameError, ensureError } from "./error";
 import internal from "stream";
 import EventEmitter from "events";
-import { AlarmEvent, CommandResult, CommandType, CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
+import { AlarmEvent, CommandResult, CommandType, CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { getError, parseValue, waitForEvent } from "./utils";
 import { convertTimeStampToTimeStampMs } from "./utils/utils";
@@ -81,7 +81,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 if (udpPort === null) {
                     udpPort = undefined;
                 }
-                const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, enableEmbeddedPKCS1Support, udpPort, this.api.getP2PConnectionType());
+                let p2pMethod: P2PConnectionType;
+                if (Device.hasBattery(resStations[stationSerial].device_type)) {
+                    p2pMethod = P2PConnectionType.QUICKEST;
+                } else {
+                    p2pMethod = this.api.getP2PConnectionType();
+                }
+                const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, enableEmbeddedPKCS1Support, udpPort, p2pMethod);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
 
@@ -214,7 +220,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
             if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
-                this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                if (!Device.hasBattery(this.stations[hub.station_sn].getDeviceType())) {
+                    this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
+                } else {
+                    this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                }
                 this.stations[hub.station_sn].connect();
             }
             this.getStorageInfo(hub.station_sn);
@@ -253,12 +263,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (this.stations !== null) {
             for (const stationSerial in this.stations) {
                 if (this.stations[stationSerial]) {
-                    await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
-                        return;
-                    }, () => {
-                        rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
-                        return;
-                    });
+                    if (this.stations[stationSerial].isConnected() === true) {
+                        await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
+                            return;
+                        }, () => {
+                            rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
+                            return;
+                        });
+                    }
 
                     this.removeEventListener(this.stations[stationSerial], "GuardMode");
                     this.removeEventListener(this.stations[stationSerial], "CurrentMode");
@@ -1172,12 +1184,11 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      * @param station The station as Station object.
      */
     private async onStationClose(station: Station): Promise<void> {
-        rootAddonLogger.info(`Event "Close": station: ${station.getSerial()}`);
-        this.emit("station close", station);
-
-        if (this.api.getServiceState() !== "shutdown") {
-
+        if (station.isEnergySavingDevice() === false || this.api.getServiceState() === "shutdown") {
+            rootAddonLogger.info(`Event "Close": station: ${station.getSerial()}`);
+            this.emit("station close", station);
         }
+
         for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
             this.api.getDevice(device_sn).then((device: Device) => {
                 if (device !== null && device.getStationSerial() === station.getSerial()) {
