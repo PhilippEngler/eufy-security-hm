@@ -6,7 +6,7 @@ var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.12";
+var version = "3.0.13";
 
 /**
  * common used java script functions
@@ -424,9 +424,9 @@ function downloadFile(filetype)
 	window.open(url);
 }
 
-function makeDateTimeString(dateTime)
+function makeDateTimeString(dateTime, withSeconds)
 {
-	return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}:${dateTime.getSeconds().toString().padStart(2,'0')}`);
+	return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}${withSeconds === undefined || withSeconds === true ? `:${dateTime.getSeconds().toString().padStart(2,'0')}` : ""}`);
 }
 
 function getWifiSignalLevelIcon(wifiSignalLevel, wifiRssi)
@@ -1018,8 +1018,9 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	var setEventHandler = true;
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
-							<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
-								<div style="text-align:left; float:left;"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div>${deviceProperties.wifiSignalLevel !== undefined || deviceProperties.wifiRssi !== undefined ? `<div style="text-align:right;"><h5 class="mb-0"><span class="text-nowrap"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel, deviceProperties.wifiRssi)}" title="${translateContent("titleWifiSignalLevel")}: ${deviceProperties.wifiRssi}dB"></i></span></h5></div>` : ""}
+							<div class="modal-header text-bg-secondary w-100" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
+								<div class="float-start w-100"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div>
+								${deviceProperties.wifiSignalLevel !== undefined || deviceProperties.wifiRssi !== undefined ? `<div class="float-end" style="text-align:right;"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel, deviceProperties.wifiRssi)}" title="${translateContent("titleWifiSignalLevel")}: ${deviceProperties.wifiRssi}dB"></i></h5></div>` : ""}
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
@@ -1727,30 +1728,28 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(isDevicePanAndTilt !== undefined)
+	if(isDevicePanAndTilt !== undefined && isDevicePanAndTilt === true)
 	{
 		deviceModal += `
 								<div class="card mb-3" id="cardDevicePanAndTiltSettings">
 									<h5 class="card-header">${translateContent("lblHeaderPanAndTilt")}</h5>
 									<div class="card-body">`;
-		if(isDevicePanAndTilt !== undefined)
+		if(isDevicePanAndTilt && isDevicePanAndTilt === true)
 		{
 			deviceModal += `
 										<h5>${translateContent("lblMoveToPreset")}</h5>
-										<div class="container text-center">
-											<div class="row">
-												<div class="col">
-													${makeButtonElement("btnDeviceMoveToPreset00", "btn btn-primary", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/0')`, translateString("strMoveToPreset01"), true, undefined, undefined, setEventHandler)}
-												</div>
-												<div class="col">
-													${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/1')`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
-												</div>
-												<div class="col">
-													${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/2')`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
-												</div>
-												<div class="col">
-													${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/3')`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
-												</div>
+										<div class="row g-2">
+											<div class="col-sm-3">
+												${makeButtonElement("btnDeviceMoveToPreset00", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/0')`, translateString("strMoveToPreset01"), true, undefined, undefined, setEventHandler)}
+											</div>
+											<div class="col-sm-3">
+											${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/1')`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
+											</div>
+											<div class="col-sm-3">
+											${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/2')`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
+											</div>
+											<div class="col-sm-3">
+											${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/3')`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
 											</div>
 										</div>`;
 		}
@@ -2190,6 +2189,18 @@ function isStationOrDevicesKnown(modell)
 	}
 }
 
+function isDeviceSupportingPrivacyMode(modell)
+{
+	switch(modell)
+	{
+		case "T8410":
+		case "T8416":
+			return true;
+		default:
+			return false;
+	}
+}
+
 function generateElementTextBox(type, serialNumber, name, propertyName, hint, placeholder, value, disabled, readonly)
 {
 	return `<div class="mb-2">
@@ -2572,7 +2583,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 							<div class="modal-content">
 								<div class="modal-header text-bg-secondary placeholder-glow" style="--bs-bg-opacity: .5;" id="lblModalStationSettingsTitle">
 									<div style="text-align:left; float:left;"><h5 class="mb-0">${stationProperties.name} (${stationId})</h5></div>
-									${makeButtonElement("btnCloseModalStationSettingsTop", "btn-close", undefined, "", true, "modal", "close", true)}
+									${makeButtonElement("btnStationSettingsModalCloseTop", "btn-close", undefined, "", true, "modal", "close", true)}
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
@@ -2614,7 +2625,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 											<span id="lblStationInfo">
 												<h6 class="card-subtitle text-muted">
 													<div class="row">
-														${generateColumnForProperty("col", "lblStationFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), `${stationProperties.softwareVersion}<br /><small>${makeDateTimeString(new Date(parseInt(stationProperties.softwareTime*1000)))}</small>`)}
+														${generateColumnForProperty("col", "lblStationFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), `${stationProperties.softwareVersion}${stationProperties.softwareTime !== undefined && stationProperties.softwareTime !== "" ? `<br /><small>${makeDateTimeString(new Date(parseInt(stationProperties.softwareTime*1000)), false)}</small>` : ""}`)}
 														${generateColumnForProperty("col", "lblStationLanIpAddress", "text-nowrap", "", "", "bi-router", translateContent("lblStationLanIpAddress"), stationProperties.lanIpAddress)}
 													</div>
 												</h6>
@@ -3120,7 +3131,7 @@ function loadDataStatechange(showLoading)
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}')`}`, translateGuardMode(1), (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, translateGuardMode(2), (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, translateGuardMode(63), (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
-					if(objResp.data[station].deviceType == "indoorcamera" && (objResp.data[station].model == "T8410" || objResp.data[station].model == "T8416"))
+					if(objResp.data[station].deviceType == "indoorcamera" && isDeviceSupportingPrivacyMode(objResp.data[station].model.slice(0,5)))
 					{
 						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? translateString("strActivate") : translateString("strDeactivate")}`, true, undefined, undefined, true)}</div>`;
 					}
