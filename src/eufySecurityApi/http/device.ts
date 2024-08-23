@@ -857,6 +857,14 @@ export class Device extends TypedEmitter<DeviceEvents> {
             newMetadata[PropertyName.DeviceMotionDetection] = DeviceMotionDetectionProperty;
 
             metadata = newMetadata;
+        } else if (this.isIndoorPanAndTiltCameraS350() && Station.isStationHomeBase3BySn(this.getStationSerial())) {
+            const newMetadata = {
+                ...metadata
+            };
+
+            newMetadata[PropertyName.DeviceMotionDetection] = DeviceMotionDetectionProperty;
+
+            metadata = newMetadata;
         }
         if (Station.isStationHomeBase3BySn(this.getStationSerial()) && (metadata[PropertyName.DeviceMotionDetectionType] !== undefined || metadata[PropertyName.DeviceMotionDetectionTypeAllOtherMotions] !== undefined) && this.isCamera()) {
             const newMetadata = {
@@ -1001,7 +1009,6 @@ export class Device extends TypedEmitter<DeviceEvents> {
             type == DeviceType.CAMERA_GARAGE_T8452 ||
             type == DeviceType.CAMERA_FG ||
             type == DeviceType.INDOOR_PT_CAMERA_S350 ||
-            type == DeviceType.INDOOR_PT_CAMERA_S350_SOLO ||
             type == DeviceType.SMART_DROP)
             return true;
         return false;
@@ -1115,8 +1122,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
             type == DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT ||
             type == DeviceType.INDOOR_OUTDOOR_CAMERA_2K ||
             type == DeviceType.INDOOR_COST_DOWN_CAMERA ||
-            type == DeviceType.INDOOR_PT_CAMERA_S350 ||
-            type == DeviceType.INDOOR_PT_CAMERA_S350_SOLO)
+            type == DeviceType.INDOOR_PT_CAMERA_S350)
             return true;
         return false;
     }
@@ -1128,8 +1134,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
             type == DeviceType.FLOODLIGHT_CAMERA_8425 ||
             type == DeviceType.INDOOR_COST_DOWN_CAMERA ||
             type == DeviceType.OUTDOOR_PT_CAMERA ||
-            type == DeviceType.INDOOR_PT_CAMERA_S350 ||
-            type == DeviceType.INDOOR_PT_CAMERA_S350_SOLO)
+            type == DeviceType.INDOOR_PT_CAMERA_S350)
             return true;
         return false;
     }
@@ -1141,8 +1146,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
     }
 
     static isIndoorPanAndTiltCameraS350(type: number): boolean {
-        if (type == DeviceType.INDOOR_PT_CAMERA_S350 ||
-            type == DeviceType.INDOOR_PT_CAMERA_S350_SOLO)
+        if (type == DeviceType.INDOOR_PT_CAMERA_S350)
             return true;
         return false;
     }

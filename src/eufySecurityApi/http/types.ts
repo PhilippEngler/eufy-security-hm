@@ -61,7 +61,6 @@ export enum DeviceType {
     CAMERA_GUN = 101,
     CAMERA_SNAIL = 102,
     INDOOR_PT_CAMERA_S350 = 104,
-    INDOOR_PT_CAMERA_S350_SOLO = -104,
     CAMERA_FG = 110, //T8150
     CAMERA_GARAGE_T8453_COMMON = 131,
     CAMERA_GARAGE_T8452 = 132,
@@ -5307,55 +5306,6 @@ export const LockT8520PDeviceProperties: IndexedProperty = {
     [PropertyName.DevicePersonName]: DevicePersonNameProperty,
 };
 
-export const IndoorPanAndTiltCameraS350StandardDeviceProperties: IndexedProperty = {
-    ...GenericDeviceProperties,
-    [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
-    [PropertyName.DeviceWifiSignalLevel]: DeviceWifiSignalLevelProperty,
-    [PropertyName.DeviceEnabled]: DeviceEnabledIndoorS350Property,
-    [PropertyName.DeviceNightvision]: DeviceNightvisionS350Property,
-    [PropertyName.DeviceSoundDetection]: DeviceSoundDetectionProperty,
-    [PropertyName.DeviceWatermark]: DeviceWatermarkProperty,
-    [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
-    [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
-    [PropertyName.DevicePetDetected]: DevicePetDetectedProperty,
-    [PropertyName.DeviceSoundDetected]: DeviceSoundDetectedProperty,
-    [PropertyName.DeviceSoundDetectionType]: DeviceSoundDetectionTypeS350Property,
-    [PropertyName.DeviceSoundDetectionSensitivity]: DeviceSoundDetectionSensitivityProperty,
-    [PropertyName.DeviceCryingDetected]: DeviceCryingDetectedProperty,
-    [PropertyName.DeviceStatusLed]: DeviceStatusLedIndoorS350Property,
-    [PropertyName.DevicePicture]: DevicePictureProperty,
-    [PropertyName.DevicePictureTime]: DevicePictureTimeProperty,
-    [PropertyName.DevicePictureUrl]: DevicePictureUrlProperty,
-    [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivityBatteryDoorbellProperty,
-    [PropertyName.DeviceMicrophone]: DeviceMicrophoneProperty,
-    [PropertyName.DeviceSpeaker]: DeviceSpeakerProperty,
-    [PropertyName.DeviceSpeakerVolume]: DeviceSpeakerVolumeIndoorFloodDoorbellProperty,
-    [PropertyName.DeviceAudioRecording]: DeviceAudioRecordingProperty,
-    [PropertyName.DeviceMotionDetectionType]: DeviceMotionDetectionTypeIndoorProperty,
-    [PropertyName.DeviceVideoStreamingQuality]: DeviceVideoStreamingQualityS350Property,
-    [PropertyName.DeviceVideoRecordingQuality]: DeviceVideoRecordingQualityS350Property,
-    [PropertyName.DeviceNotificationType]: DeviceNotificationTypeIndoorFloodlightProperty,
-    [PropertyName.DeviceNotificationPerson]: DeviceNotificationPersonS350Property,
-    [PropertyName.DeviceNotificationPet]: DeviceNotificationPetS350Property,
-    [PropertyName.DeviceNotificationAllOtherMotion]: DeviceNotificationAllOtherMotionS350Property,
-    [PropertyName.DeviceNotificationAllSound]: DeviceNotificationAllSoundS350Property,
-    [PropertyName.DeviceNotificationCrying]: DeviceNotificationCryingS350Property,
-    [PropertyName.DeviceSnooze]: DeviceSnoozeProperty,
-    [PropertyName.DeviceSnoozeTime]: DeviceSnoozeTimeProperty,
-    [PropertyName.DeviceSnoozeStartTime]: DeviceSnoozeStartTimeProperty,
-    [PropertyName.DevicePersonName]: DevicePersonNameProperty,
-    [PropertyName.DeviceMotionTracking]: DeviceMotionTrackingProperty,
-    [PropertyName.DeviceSoundDetectionRoundLook]: DeviceSoundDetectionRoundLookS350Property,
-    [PropertyName.DeviceRotationSpeed]: DeviceRotationSpeedProperty,
-    [PropertyName.DeviceMotionAutoCruise]: DeviceMotionAutoCruiseProperty,
-    [PropertyName.DeviceAutoCalibration]: DeviceAutoCalibrationProperty,
-    [PropertyName.DeviceDualCamWatchViewMode]: DeviceDualCamWatchViewModeS340Property,
-    [PropertyName.DeviceImageMirrored]: DeviceImageMirroredProperty,
-    [PropertyName.DeviceNotificationIntervalTime]: DeviceNotificationIntervalTimeProperty,
-    [PropertyName.DeviceContinuousRecording]: DeviceContinuousRecordingProperty,
-    [PropertyName.DeviceContinuousRecordingType]: DeviceContinuousRecordingTypeProperty,
-};
-
 export const DeviceProperties: Properties = {
     [DeviceType.CAMERA2]: {
         ...GenericDeviceProperties,
@@ -6783,12 +6733,53 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceDualCamWatchViewMode]: DeviceDualCamWatchViewModeS340Property,
     },
     [DeviceType.INDOOR_PT_CAMERA_S350]: {
-        ...IndoorPanAndTiltCameraS350StandardDeviceProperties,
-        [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionProperty,
-    },
-    [DeviceType.INDOOR_PT_CAMERA_S350_SOLO]: {
-        ...IndoorPanAndTiltCameraS350StandardDeviceProperties,
+        ...GenericDeviceProperties,
+        [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
+        [PropertyName.DeviceWifiSignalLevel]: DeviceWifiSignalLevelProperty,
+        [PropertyName.DeviceEnabled]: DeviceEnabledIndoorS350Property,
+        [PropertyName.DeviceNightvision]: DeviceNightvisionS350Property,
         [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceSoundDetection]: DeviceSoundDetectionProperty,
+        [PropertyName.DeviceWatermark]: DeviceWatermarkProperty,
+        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
+        [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
+        [PropertyName.DevicePetDetected]: DevicePetDetectedProperty,
+        [PropertyName.DeviceSoundDetected]: DeviceSoundDetectedProperty,
+        [PropertyName.DeviceSoundDetectionType]: DeviceSoundDetectionTypeS350Property,
+        [PropertyName.DeviceSoundDetectionSensitivity]: DeviceSoundDetectionSensitivityProperty,
+        [PropertyName.DeviceCryingDetected]: DeviceCryingDetectedProperty,
+        [PropertyName.DeviceStatusLed]: DeviceStatusLedIndoorS350Property,
+        [PropertyName.DevicePicture]: DevicePictureProperty,
+        [PropertyName.DevicePictureTime]: DevicePictureTimeProperty,
+        [PropertyName.DevicePictureUrl]: DevicePictureUrlProperty,
+        [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivityBatteryDoorbellProperty,
+        [PropertyName.DeviceMicrophone]: DeviceMicrophoneProperty,
+        [PropertyName.DeviceSpeaker]: DeviceSpeakerProperty,
+        [PropertyName.DeviceSpeakerVolume]: DeviceSpeakerVolumeIndoorFloodDoorbellProperty,
+        [PropertyName.DeviceAudioRecording]: DeviceAudioRecordingProperty,
+        [PropertyName.DeviceMotionDetectionType]: DeviceMotionDetectionTypeIndoorProperty,
+        [PropertyName.DeviceVideoStreamingQuality]: DeviceVideoStreamingQualityS350Property,
+        [PropertyName.DeviceVideoRecordingQuality]: DeviceVideoRecordingQualityS350Property,
+        [PropertyName.DeviceNotificationType]: DeviceNotificationTypeIndoorFloodlightProperty,
+        [PropertyName.DeviceNotificationPerson]: DeviceNotificationPersonS350Property,
+        [PropertyName.DeviceNotificationPet]: DeviceNotificationPetS350Property,
+        [PropertyName.DeviceNotificationAllOtherMotion]: DeviceNotificationAllOtherMotionS350Property,
+        [PropertyName.DeviceNotificationAllSound]: DeviceNotificationAllSoundS350Property,
+        [PropertyName.DeviceNotificationCrying]: DeviceNotificationCryingS350Property,
+        [PropertyName.DeviceSnooze]: DeviceSnoozeProperty,
+        [PropertyName.DeviceSnoozeTime]: DeviceSnoozeTimeProperty,
+        [PropertyName.DeviceSnoozeStartTime]: DeviceSnoozeStartTimeProperty,
+        [PropertyName.DevicePersonName]: DevicePersonNameProperty,
+        [PropertyName.DeviceMotionTracking]: DeviceMotionTrackingProperty,
+        [PropertyName.DeviceSoundDetectionRoundLook]: DeviceSoundDetectionRoundLookS350Property,
+        [PropertyName.DeviceRotationSpeed]: DeviceRotationSpeedProperty,
+        [PropertyName.DeviceMotionAutoCruise]: DeviceMotionAutoCruiseProperty,
+        [PropertyName.DeviceAutoCalibration]: DeviceAutoCalibrationProperty,
+        [PropertyName.DeviceDualCamWatchViewMode]: DeviceDualCamWatchViewModeS340Property,
+        [PropertyName.DeviceImageMirrored]: DeviceImageMirroredProperty,
+        [PropertyName.DeviceNotificationIntervalTime]: DeviceNotificationIntervalTimeProperty,
+        [PropertyName.DeviceContinuousRecording]: DeviceContinuousRecordingProperty,
+        [PropertyName.DeviceContinuousRecordingType]: DeviceContinuousRecordingTypeProperty,
     },
     [DeviceType.CAMERA_FG]: {
         ...GenericDeviceProperties,
@@ -8275,21 +8266,6 @@ export const StationCrossTrackingGroupListProperty: PropertyMetadataObject = {
     },
 }
 
-export const IndoorPanAndTiltCameraS350StandardStationProperties: IndexedProperty = {
-    ...BaseStationProperties,
-    [PropertyName.StationLANIpAddress]: StationLanIpAddressProperty,
-    [PropertyName.StationMacAddress]: StationMacAddressProperty,
-    [PropertyName.StationGuardMode]: StationGuardModeProperty,
-    [PropertyName.StationCurrentMode]: StationCurrentModeProperty,
-    [PropertyName.StationTimeFormat]: StationTimeFormatProperty,
-    [PropertyName.StationTimeZone]: StationTimeZoneProperty,
-    [PropertyName.StationAlarm]: StationAlarmProperty,
-    [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
-    [PropertyName.StationSdStatus]: StationSdStatusProperty,
-    [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
-    [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
-};
-
 export const StationProperties: Properties = {
     [DeviceType.STATION]: {
         ...BaseStationProperties,
@@ -8475,10 +8451,18 @@ export const StationProperties: Properties = {
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA_S350]: {
-        ...IndoorPanAndTiltCameraS350StandardStationProperties,
-    },
-    [DeviceType.INDOOR_PT_CAMERA_S350_SOLO]: {
-        ...IndoorPanAndTiltCameraS350StandardStationProperties,
+        ...BaseStationProperties,
+        [PropertyName.StationLANIpAddress]: StationLanIpAddressProperty,
+        [PropertyName.StationMacAddress]: StationMacAddressProperty,
+        [PropertyName.StationGuardMode]: StationGuardModeProperty,
+        [PropertyName.StationCurrentMode]: StationCurrentModeProperty,
+        [PropertyName.StationTimeFormat]: StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: StationTimeZoneProperty,
+        [PropertyName.StationAlarm]: StationAlarmProperty,
+        [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationSdStatus]: StationSdStatusProperty,
+        [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
+        [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
     },
     [DeviceType.INDOOR_OUTDOOR_CAMERA_2K]: {
         ...BaseStationProperties,
@@ -8823,21 +8807,6 @@ export enum CommandName {
     StationDatabaseCountByDate = "stationDatabaseCoundByDate",
 }
 
-export const IndoorPanAndTiltCameraS350StandardDeviceCommands: Array<CommandName> = [
-    CommandName.DeviceStartLivestream,
-    CommandName.DeviceStopLivestream,
-    CommandName.DevicePanAndTilt,
-    CommandName.DeviceStartDownload,
-    CommandName.DeviceCancelDownload,
-    CommandName.DeviceCalibrate,
-    CommandName.DeviceStartTalkback,
-    CommandName.DeviceStopTalkback,
-    CommandName.DeviceSnooze,
-    CommandName.DevicePresetPosition,
-    CommandName.DeviceSavePresetPosition,
-    CommandName.DeviceDeletePresetPosition,
-];
-
 export const DeviceCommands: Commands = {
     [DeviceType.CAMERA]: [
         CommandName.DeviceStartLivestream,
@@ -9066,10 +9035,18 @@ export const DeviceCommands: Commands = {
         CommandName.DeviceSnooze,
     ],
     [DeviceType.INDOOR_PT_CAMERA_S350]: [
-        ...IndoorPanAndTiltCameraS350StandardDeviceCommands,
-    ],
-    [DeviceType.INDOOR_PT_CAMERA_S350_SOLO]: [
-        ...IndoorPanAndTiltCameraS350StandardDeviceCommands,
+        CommandName.DeviceStartLivestream,
+        CommandName.DeviceStopLivestream,
+        CommandName.DevicePanAndTilt,
+        CommandName.DeviceStartDownload,
+        CommandName.DeviceCancelDownload,
+        CommandName.DeviceCalibrate,
+        CommandName.DeviceStartTalkback,
+        CommandName.DeviceStopTalkback,
+        CommandName.DeviceSnooze,
+        CommandName.DevicePresetPosition,
+        CommandName.DeviceSavePresetPosition,
+        CommandName.DeviceDeletePresetPosition,
     ],
     [DeviceType.OUTDOOR_PT_CAMERA]: [
         CommandName.DeviceStartLivestream,
@@ -9352,16 +9329,6 @@ export const DeviceCommands: Commands = {
     ],
 }
 
-export const IndoorPanAndTiltCameraS350StandardStationCommands: Array<CommandName> = [
-    CommandName.StationReboot,
-    CommandName.StationTriggerAlarmSound,
-    CommandName.StationDownloadImage,
-    CommandName.StationDatabaseQueryLatestInfo,
-    CommandName.StationDatabaseQueryLocal,
-    CommandName.StationDatabaseCountByDate,
-    CommandName.StationDatabaseDelete,
-];
-
 export const StationCommands: Commands = {
     [DeviceType.STATION]: [
         CommandName.StationReboot,
@@ -9465,10 +9432,13 @@ export const StationCommands: Commands = {
         CommandName.StationDatabaseDelete,
     ],
     [DeviceType.INDOOR_PT_CAMERA_S350]: [
-        ...IndoorPanAndTiltCameraS350StandardStationCommands,
-    ],
-    [DeviceType.INDOOR_PT_CAMERA_S350_SOLO]: [
-        ...IndoorPanAndTiltCameraS350StandardStationCommands,
+        CommandName.StationReboot,
+        CommandName.StationTriggerAlarmSound,
+        CommandName.StationDownloadImage,
+        CommandName.StationDatabaseQueryLatestInfo,
+        CommandName.StationDatabaseQueryLocal,
+        CommandName.StationDatabaseCountByDate,
+        CommandName.StationDatabaseDelete,
     ],
     [DeviceType.OUTDOOR_PT_CAMERA]: [
         CommandName.StationReboot,
