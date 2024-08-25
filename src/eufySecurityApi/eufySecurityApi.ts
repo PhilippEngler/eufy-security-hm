@@ -750,7 +750,10 @@ export class EufySecurityApi {
             clearTimeout(this.refreshEufySecurityCloudTimeout);
         }
 
-        this.refreshEufySecurityCloudTimeout = setTimeout(() => { this.refreshCloudData() }, this.config.getUpdateDeviceDataIntervall() * 60 * 1000);
+        if (this.config.getUpdateDeviceDataIntervall() > 0)
+            this.refreshEufySecurityCloudTimeout = setTimeout(() => { this.refreshCloudData() }, this.config.getUpdateDeviceDataIntervall() * 60 * 1000);
+        else
+            rootAddonLogger.info(`Automatic retrieval of data from the cloud has been deactivated (config pollingIntervalMinutes: ${this.config.getUpdateDeviceDataIntervall()})`);
     }
 
     /**
@@ -2818,6 +2821,6 @@ export class EufySecurityApi {
      * @returns The version of the used eufy-security-client.
      */
     public getEufySecurityClientVersion(): string {
-        return "3.1.0-b_ca37fa2";
+        return "3.1.0-b_efe3c41";
     }
 }

@@ -87,7 +87,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 } else {
                     p2pMethod = this.api.getP2PConnectionType();
                 }
-                const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, enableEmbeddedPKCS1Support, udpPort, p2pMethod);
+                const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
 
@@ -225,6 +225,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 } else {
                     this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 }
+                rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
                 this.stations[hub.station_sn].connect();
             }
             this.getStorageInfo(hub.station_sn);

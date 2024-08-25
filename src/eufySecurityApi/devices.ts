@@ -202,6 +202,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                             } else {
                                 station.setConnectionType(this.api.getP2PConnectionType());
                             }
+                            rootAddonLogger.debug(`Initiate first station connection to get data over p2p`, { stationSN: station.getSerial() });
                             station.connect();
                         }
                     }).catch ((err) => {

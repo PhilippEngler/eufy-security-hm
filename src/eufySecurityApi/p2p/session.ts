@@ -120,7 +120,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
     private connectAddress: Address | undefined = undefined;
     private localIPAddress: string | undefined = undefined;
     private preferredIPAddress: string | undefined = undefined;
-    private preferredUdpPort: number | undefined = undefined;
+    private listeningPort: number = 0;
     private dskKey = "";
     private dskExpiration: Date | null = null;
     private deviceSNs: DeviceSerial = {};
@@ -136,15 +136,15 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private lookupTimeoutErrorCounter = 0;
 
-    constructor(rawStation: StationListResponse, api: HTTPApi, ipAddress?:string, publicKey = "", enableEmbeddedPKCS1Support = false, preferredUdpPort?: number | null, connectionType?: P2PConnectionType) {
+    constructor(rawStation: StationListResponse, api: HTTPApi, ipAddress?:string, listeningPort = 0, publicKey = "", enableEmbeddedPKCS1Support = false, connectionType?: P2PConnectionType) {
         super();
         this.api = api;
         this.lockPublicKey = publicKey;
         this.preferredIPAddress = ipAddress;
+        if (listeningPort >= 0)
+            this.listeningPort = listeningPort;
         this.enableEmbeddedPKCS1Support = enableEmbeddedPKCS1Support;
-        if(preferredUdpPort !== undefined && preferredUdpPort !== null) {
-            this.preferredUdpPort = preferredUdpPort;
-        }
+        
         if(connectionType !== undefined && connectionType !== null) {
             this.connectionType = connectionType;
         }
@@ -521,7 +521,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             this.terminating = false;
             await this.renewDSKKey();
             if (!this.binded)
-                this.socket.bind(this.preferredUdpPort, () => {
+                this.socket.bind(this.listeningPort, () => {
                     this.binded = true;
                     try {
                         this.socket.setRecvBufferSize(this.UDP_RECVBUFFERSIZE_BYTES);
@@ -668,6 +668,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     }
                 }
             } else if (!this.connected && this.sendQueue.filter((queue) => queue.p2pCommand.commandType !== CommandType.CMD_PING && queue.p2pCommand.commandType !== CommandType.CMD_GET_DEVICE_PING).length > 0) {
+                rootP2PLogger.debug(`Initiate station p2p connection to send queued data`, { stationSN: this.rawStation.station_sn, queuedDataCount: this.sendQueue.filter((queue) => queue.p2pCommand.commandType !== CommandType.CMD_PING && queue.p2pCommand.commandType !== CommandType.CMD_GET_DEVICE_PING).length });
                 this.connect();
             }
         }
