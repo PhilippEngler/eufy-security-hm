@@ -3,6 +3,8 @@ import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from ".
 import { rootConfLogger, setLoggingLevel } from "./logging";
 import { LogLevel } from "typescript-logging";
 import { DeviceConfig, PropertyValue } from ".";
+import { PhoneModels } from "./http/const";
+import { randomNumber } from "./http/utils";
 
 export class Config {
     private configJson: any;
@@ -170,7 +172,7 @@ export class Config {
         const tokenData = {"token": "", "tokenExpires": 0};
         config.tokenData = tokenData;
 
-        const pushData = {"trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
+        const pushData = {"trustedDeviceName": PhoneModels[randomNumber(0, PhoneModels.length)], "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
         const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false, "enableEmbeddedPKCS1Support": false};
@@ -539,6 +541,16 @@ export class Config {
                 }
             }
         }*/
+        if (this.configJson.apiConfig.updateCloudInfoIntervall < 10 || this.configJson.apiConfig.updateCloudInfoIntervall > 240) {
+            rootConfLogger.info(`Set updateCloudInfoIntervall to default value "10"`);
+            this.configJson.apiConfig.updateCloudInfoIntervall = 10;
+            updated = true;
+        }
+        if (this.configJson.apiConfig.updateDeviceDataIntervall < 10 || this.configJson.apiConfig.updateDeviceDataIntervall > 240) {
+            rootConfLogger.info(`Set updateDeviceDataIntervall to default value "10"`);
+            this.configJson.apiConfig.updateDeviceDataIntervall = 10;
+            updated = true;
+        }
         if (this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240)) {
             rootConfLogger.info(`Set stateUpdateIntervallTimespan to default value "15"`);
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
