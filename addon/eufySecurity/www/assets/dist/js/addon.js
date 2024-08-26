@@ -6,7 +6,7 @@ var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.14";
+var version = "3.0.15";
 
 /**
  * common used java script functions
@@ -447,7 +447,7 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 
 	card += `<div class="col"><div class="card">`;
 	card += `<div class="card-header"><div style="text-align:left; float:left;"><h5 class="mb-0">${station.name}</h5></div>`;
-	card += `<div style="text-align:right;"><h5 class="mb-0">${station.isP2PConnected === false ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${showSettingsIcon === true ? `<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="generateStationSettingsModal('${station.serialNumber}')"></i>` : ""}</h5></div>`;
+	card += `<div style="text-align:right;"><h5 class="mb-0">${(station.isStationP2PConnected === false && station.isEnergySavingDevice === false) ? `<i class="bi-exclamation-triangle" title="${translateContent("titleNoP2PConnection")}"></i>&nbsp;&nbsp;` : ""}${showSettingsIcon === true ? `<i class="bi-gear" title="${translateContent("titleSettings")}" onclick="generateStationSettingsModal('${station.serialNumber}')"></i>` : ""}</h5></div>`;
 	card += `</div>`;
 	
 	card += `<div class="card-body p-0"><div class="row g-0">`;
@@ -1130,7 +1130,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
 		return;
 	}
-	if(deviceProperties.enabled !== undefined || deviceProperties.antitheftDetection !== undefined || deviceProperties.statusLed !== undefined || deviceProperties.imageMirrored !== undefined || deviceProperties.motionAutoCruise !== undefined || deviceProperties.autoCalibration !== undefined)
+	if(deviceProperties.enabled !== undefined || deviceProperties.antitheftDetection !== undefined || deviceProperties.statusLed !== undefined || deviceProperties.imageMirrored !== undefined || deviceProperties.motionAutoCruise !== undefined || deviceProperties.autoCalibration !== undefined || deviceProperties.light !== undefined)
 	{
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceCommonSettings">
@@ -1184,6 +1184,14 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 											<div class="col">
 												<h5>${translateContent("lblAutoCalibration")}</h5>
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.autoCalibration.name, deviceProperties.autoCalibration, setEventHandler)}
+											</div>`;
+		}
+		if(deviceProperties.light !== undefined)
+		{
+			deviceModal += `
+											<div class="col">
+												<h5>${translateContent("lblLight")}</h5>
+												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.light.name, deviceProperties.light, setEventHandler)}
 											</div>`;
 		}
 		deviceModal += `
@@ -1741,16 +1749,16 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>${translateContent("lblMoveToPreset")}</h5>
 										<div class="row g-2">
 											<div class="col-sm-3">
-												${makeButtonElement("btnDeviceMoveToPreset00", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/0')`, translateString("strMoveToPreset01"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset00", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 0)`, translateString("strMoveToPreset01"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-											${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/1')`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
+											${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 1)`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-											${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/2')`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
+											${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 2)`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-											${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}/3')`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
+											${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 3)`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
 											</div>
 										</div>`;
 		}
@@ -3039,10 +3047,10 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 	document.getElementById("modalStationSettings").innerHTML = stationModal;
 }
 
-function changeStationProperty(stationId, stationName, propertyName, propertyValue)
+function changeStationProperty(stationId, stationName, propertyName, propertyValue, additionalArg)
 {
 	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}${propertyValue !== undefined ? `/${propertyValue}` : ``}`;
+	var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}${propertyValue !== undefined ? `/${propertyValue}${additionalArg === undefined ? "" : `/${additionalArg}`}` : ``}`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
 	xmlhttp.onreadystatechange = function()
@@ -3061,12 +3069,12 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 				else if(propertyName == "moveToPreset")
 				{
 					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageMoveToPresetOkMessage");
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageMoveToPresetOkMessage", additionalArg+1);
 				}
 				else
 				{
 					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage", additionalArg+1);
 				}
 				toast.show();
 				generateStationSettingsModal(stationId, stationName)
@@ -3137,7 +3145,6 @@ function loadDataStatechange(showLoading)
 						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? translateString("strActivate") : translateString("strDeactivate")}`, true, undefined, undefined, true)}</div>`;
 					}
 					buttons += `</div>`;
-					alert(`${objResp.data[station].serialNumber}: ${objResp.data[station].guardModeTime}`);
 					if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != undefined)
 					{
 						lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));

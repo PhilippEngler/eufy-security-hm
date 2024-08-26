@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.19
-20240823
+Schema v9.20
+20240826
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240823 (v9.19)";
+var languageVersion = "20240826 (v9.20)";
 
 function translateNavbarElement(element)
 {
@@ -573,11 +573,11 @@ function translateMessages(message, ...options)
 		case "messageDeleteInteractionFailedMessage":
 			return "The interaction could not be removed.";
 		case "messageMoveToPresetHeader":
-			return "Move to preset position.";
+			return "Move to Preset Position.";
 		case "messageMoveToPresetOkMessage":
-			return `Moved to preset position ${options[0]}.`;
+			return `Moved to Preset Position ${options[0]}.`;
 		case "messageMoveToPresetFailedMessage":
-			return "An error occured during moving to the preset position.";
+			return "An error occured during moving to the Preset Position.";
 		case "messageSaveSettingsHeader":
 			return "Save settings.";
 		case "messageSaveSettingsOkMessage":
@@ -828,6 +828,8 @@ function translateContent(content, ...options)
 			return "Auto-Cruise";
 		case "lblAutoCalibration":
 			return "Automatic Calibration";
+		case "lblLight":
+			return "Spotlight";
 		case "lblHeaderMotionDetection":
 			return "Motion Detection";
 		case "lblMotionDetection":
@@ -937,9 +939,9 @@ function translateContent(content, ...options)
 		case "lblChirpTone":
 			return "Chirp Tone";
 		case "lblHeaderPanAndTilt":
-			return "Pan and tilt";
+			return "Pan and Tilt";
 		case "lblMoveToPreset":
-			return "Move to preset position";
+			return "Move to Preset Position";
 		case "lblHeaderNotificationSettings":
 			return "Notification Settings";
 		case "lblNotification":
@@ -1196,13 +1198,13 @@ function translateString(content)
 		case "strVersion":
 			return "Version";
 		case "strMoveToPreset01":
-			return "Move to position 1";
+			return "Move to Position 1";
 		case "strMoveToPreset02":
-			return "Move to position 2";
+			return "Move to Position 2";
 		case "strMoveToPreset03":
-			return "Move to position 3";
+			return "Move to Position 3";
 		case "strMoveToPreset04":
-			return "Move to position 4";
+			return "Move to Position 4";
 		case "strEditInteractionStart":
 			return "Expand for editing";
 		case "strEditInteractionEnd":
@@ -1257,6 +1259,8 @@ function translatePropertyName(propertyName)
 			return "Enable Auto-Cruise";
 		case "autoCalibration":
 			return "Enable Automatic Calibration";
+		case "light":
+			return "Enable Spotlight";
 		case "motionDetection":
 			return "Enable Motion Detection";
 		case "motionDetectionSensitivity":

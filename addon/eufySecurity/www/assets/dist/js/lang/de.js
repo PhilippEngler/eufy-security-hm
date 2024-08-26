@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.19
-20240823
+Schema v9.20
+20240826
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240823 (v9.19)";
+var languageVersion = "20240826 (v9.20)";
 
 function translateNavbarElement(element)
 {
@@ -828,6 +828,8 @@ function translateContent(content, ...options)
 			return "Auto-Cruise";
 		case "lblAutoCalibration":
 			return "automatische Kalibirierung";
+		case "lblLight":
+			return "Scheinwerfer";
 		case "lblHeaderMotionDetection":
 			return "Bewegungserkennung";
 		case "lblMotionDetection":
@@ -1257,6 +1259,8 @@ function translatePropertyName(propertyName)
 			return "Auto-Cruise aktivieren";
 		case "autoCalibration":
 			return "automatische Kalibirierung aktivieren";
+		case "light":
+			return "Scheinwerfer aktivieren";
 		case "motionDetection":
 			return "Bewegungserkennung aktivieren";
 		case "motionDetectionSensitivity":
