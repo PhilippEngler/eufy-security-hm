@@ -2683,8 +2683,8 @@ export class EufySecurityApi {
         }
         switch (name) {
             case "updateDeviceData":
-                task = setInterval(async() => { await this.updateDeviceData(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
-                rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
+                task = setInterval(async() => { await this.updateDeviceData(); }, (this.config.getUpdateDeviceDataIntervall() * 60 * 1000));
+                rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getUpdateDeviceDataIntervall()} minutes).`);
                 break;
             case "getState":
                 task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
