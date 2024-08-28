@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.20
-20240826
+Schema v9.21
+20240828
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240826 (v9.20)";
+var languageVersion = "20240828 (v9.21)";
 
 function translateNavbarElement(element)
 {
@@ -450,7 +450,7 @@ function translateStaticContentElement(element)
 		case "entryGetDeviceImage":
 			return "<code>/getDeviceImage/<i>DEVICE_SERIAL</i></code>: Returns the last image of the device with the serial number <i>DEVICE_SERIAL</i> as an image.";
 		case "entryMoveToPreset":
-			return "<code>/setStationProperty/<i>STATION_SERIAL</i>/moveToPreset/<i>DEVICE_SERIAL</i>/<i>PRESET_NUMBER</i></code>: The device with the serial number <i>DEVICE_SERIAL</i>, connected to station with the serial number <i>STATION_SERIAL</i>, will move to the saved preset <i>PRESET_NUMBER</i>. <i>PRESET_NUMBER</i> can have the values <code>0</code>, <code>1</code>, <code>2</code> or <code>3</code>.";
+			return "<code>/moveToPresetPosition/<i>DEVICE_SERIAL</i>/<i>PRESET_NUMBER</i></code>: The device with the serial number <i>DEVICE_SERIAL</i> will move to the saved preset <i>PRESET_NUMBER</i>. <i>PRESET_NUMBER</i> can have the values <code>0</code>, <code>1</code>, <code>2</code> or <code>3</code>. There is no feedback as to whether the corresponding preset is proven and whether the position has been approached.";
 		case "hintModeNotSupported":
 			return "Please note that some modes can only be used with certain device types. If you want to set a mode that is not supported by the device, you will receive a corresponding message.";
 		case "textUseApi":

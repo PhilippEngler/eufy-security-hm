@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.20
-20240826
+Schema v9.21
+20240828
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240826 (v9.20)";
+var languageVersion = "20240828 (v9.21)";
 
 function translateNavbarElement(element)
 {
@@ -450,7 +450,7 @@ function translateStaticContentElement(element)
 		case "entryGetDeviceImage":
 			return "<code>/getDeviceImage/<i>DEVICE_SERIAL</i></code>: Gibt das letzte Bild des Gerätes mit der Seriennummer <i>DEVICE_SERIAL</i> als Bild zurück.";
 		case "entryMoveToPreset":
-			return "<code>/setStationProperty/<i>STATION_SERIAL</i>/moveToPreset/<i>DEVICE_SERIAL</i>/<i>PRESET_NUMBER</i></code>: Fährt für das Gerät mit der Seriennummer <i>DEVICE_SERIAL</i>, dass mit der Station mit der Seriennummer <i>STATION_SERIAL</i> verbunden ist, die gespeicherte Position <i>PRESET_NUMBER</i> an. <i>PRESET_NUMBER</i> kann die Werte <code>0</code>, <code>1</code>, <code>2</code> oder <code>3</code> annehmen.";
+			return "<code>/moveToPresetPosition/<i>DEVICE_SERIAL</i>/<i>PRESET_NUMBER</i></code>: Fährt für das Gerät mit der Seriennummer <i>DEVICE_SERIAL</i> die gespeicherte Position <i>PRESET_NUMBER</i> an. <i>PRESET_NUMBER</i> kann die Werte <code>0</code>, <code>1</code>, <code>2</code> oder <code>3</code> annehmen. Es erfolgt keine Rückmeldung, ob der entsprechende Preset belegt ist und ob die Position angefahren wurde.";
 		case "hintModeNotSupported":
 			return "Bitte beachten Sie, dass einige Modi nur mit bestimmten Gerätetypen genutzt werden könnnen. Sollten Sie einen vom Gerät nicht unterstützen Modus setzten wollen, erhalten Sie eine entsprechende Meldung.";
 		case "textUseApi":
