@@ -19,7 +19,9 @@ export interface Logger {
 export declare const dummyLogger: Logger;
 
 export class InternalLogger {
+
     public static logger: Logger | undefined;
+
 }
 
 const getMethodName = function(): string | undefined {

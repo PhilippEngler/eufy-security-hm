@@ -2197,7 +2197,7 @@ export class Camera extends Device {
                                     this.updateProperty(PropertyName.DeviceStrangerPersonDetected, false);
                                     this.eventTimeouts.delete(DeviceEvent.StrangerPersonDetected);
                                 }, eventDurationSeconds * 1000));
-
+                               
                                 if (this.config.simultaneousDetections) {
                                     this.updateProperty(PropertyName.DevicePersonDetected, true);
                                     this.clearEventTimeout(DeviceEvent.PersonDetected);
