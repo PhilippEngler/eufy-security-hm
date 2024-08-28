@@ -1418,35 +1418,42 @@ export class EufySecurityApi {
 
     /**
      * Move a given device connected to a given station to a given position.
-     * @param stationSerial The serial of the station.
      * @param deviceSerial The serial of the device.
      * @param presetPosition The preset position as string.
      * @returns A JSON-String.
      */
-    public async moveToPreset(stationSerial: string, deviceSerial: string, presetPosition: string): Promise<string> {
+    public async moveToPresetPosition(deviceSerial: string, presetPosition: string): Promise<string> {
         let json: any = {};
         try {
             if (this.stations && this.devices) {
-                if (!this.stations.existStation(stationSerial)) {
-                    json = {"success":false,"reason":`The station with serial ${stationSerial} does not exists.`};
-                }
-                try {
-                    const presetPositionNumber = Number.parseInt(presetPosition);
-                    await (await this.stations.getStation(stationSerial)).presetPosition(await this.devices.getDevice(deviceSerial), presetPositionNumber);
-                    await sleep(5000);
-                    json = {"success":true,"reason":`The device ${deviceSerial} has been moved to preset ${presetPosition}.`};
-                } catch (e: any) {
-                    if (e instanceof NotSupportedError) {
-                        json = {"success":false,"reason":`This functionality is not implemented or supported by station ${stationSerial} or device ${deviceSerial}`};
+                const device = (await this.getDevices())[deviceSerial];
+                if (device) {
+                    const station = await this.stations.getStation(device.getStationSerial());
+                    if (station) {
+                        try {
+                            const presetPositionNumber = Number.parseInt(presetPosition);
+                            station.presetPosition(device, presetPositionNumber);
+                            await sleep(5000);
+                            json = {"success":true,"reason":`The device ${deviceSerial} has been moved to preset ${presetPosition}.`};
+                        } catch (e: any) {
+                            if (e instanceof NotSupportedError) {
+                                json = {"success":false,"reason":`This functionality is not implemented or supported by device ${deviceSerial}`};
+                            } else {
+                                json = {"success":false,"reason":`Other error occured. Error: ${e.message}.`};
+                            }
+                            rootAddonLogger.error(`Error occured at moveToPresetPosition(). Error: ${e.message}.`, JSON.stringify(e));
+                        }
                     } else {
-                        json = {"success":false,"reason":`Other error occured. Error: ${e.message}.`};
+                        json = {"success":false,"reason":`The station with serial ${device.getStationSerial()} does not exists.`};
                     }
+                } else {
+                    json = {"success":false,"reason":`The device with serial ${deviceSerial} does not exists.`};
                 }
             } else {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at moveToPreset(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at moveToPresetPosition(). Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }

@@ -194,6 +194,13 @@ class ApiServer {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "moveToPresetPosition":
+                        if (url.length === 4) {
+                            responseData = await api.moveToPresetPosition(url[2], url[3]);
+                        } else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "getStations":
                     case "getBases":
                         responseData = await api.getStationsAsJson();
@@ -246,7 +253,7 @@ class ApiServer {
                         } else if (url[3] === "rebootStation" && url.length === 4) {
                             responseData = await api.rebootStation(url[2]);
                         } else if (url[3] === "moveToPreset" && url.length === 6) {
-                            responseData = await api.moveToPreset(url[2], url[4], url[5]);
+                            responseData = `{"success":false,"message":"This call is deprecated. Please use 'moveToPresetPosition' instead."}`;
                         } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
