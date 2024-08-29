@@ -4,6 +4,8 @@ exports.Config = void 0;
 const fs_1 = require("fs");
 const logging_1 = require("./logging");
 const typescript_logging_1 = require("typescript-logging");
+const const_1 = require("./http/const");
+const utils_1 = require("./http/utils");
 class Config {
     configJson;
     hasChanged;
@@ -14,11 +16,11 @@ class Config {
     constructor() {
         (0, logging_1.setLoggingLevel)("conf", typescript_logging_1.LogLevel.Info);
         this.hasChanged = false;
-        if (this.isConfigFileAvailable() == false) {
+        if (this.isConfigFileAvailable() === false) {
             this.configJson = this.createEmptyConfigJson();
             this.hasChanged = true;
         }
-        if (this.existUploadedConfig() == true) {
+        if (this.existUploadedConfig() === true) {
             try {
                 this.configJson = this.checkConfigFile(this.loadConfigJson("./config.json.upload"));
                 this.hasChanged = true;
@@ -26,11 +28,11 @@ class Config {
                 logging_1.rootConfLogger.info("Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
             }
             catch {
-                if (this.existUploadedConfig() == true) {
+                if (this.existUploadedConfig() === true) {
                     (0, fs_1.unlinkSync)("./config.json.upload");
                 }
                 logging_1.rootConfLogger.info("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
-                if (this.isConfigFileAvailable() == false) {
+                if (this.isConfigFileAvailable() === false) {
                     this.configJson = this.createEmptyConfigJson();
                     this.hasChanged = true;
                 }
@@ -40,7 +42,7 @@ class Config {
             }
         }
         else {
-            if (this.isConfigFileAvailable() == false) {
+            if (this.isConfigFileAvailable() === false) {
                 this.configJson = this.createEmptyConfigJson();
                 this.hasChanged = true;
             }
@@ -56,8 +58,7 @@ class Config {
      * @param logLevel The logLevel.
      * @param message The message.
      */
-    /*private log(logLevel: string, message: string): void
-    {
+    /*private log(logLevel: string, message: string): void {
         console.log(`${formatDate(Date.now())} ${logLevel.padEnd(5, " ")} [conf]  ${message}`);
     }*/
     /**
@@ -94,7 +95,7 @@ class Config {
      * @returns The expected version of the config file.
      */
     getConfigFileTemplateVersion() {
-        return 19;
+        return 20;
     }
     /**
      * Load the config from the given file and returns the config.
@@ -122,7 +123,7 @@ class Config {
      * @param filecontent The string to check.
      */
     updateConfigFileTemplateStage1(filecontent) {
-        if (filecontent.indexOf("config_file_version") == -1) {
+        if (filecontent.indexOf("config_file_version") === -1) {
             logging_1.rootConfLogger.info("Configfile needs Stage1 update. Adding 'config_file_version'.");
             filecontent = "[ConfigFileInfo]\r\nconfig_file_version=0\r\n\r\n" + filecontent;
         }
@@ -132,7 +133,7 @@ class Config {
      * Write given config json to file.
      */
     writeConfig(configJson) {
-        if (this.hasChanged == true) {
+        if (this.hasChanged === true) {
             try {
                 (0, fs_1.writeFileSync)("./config.json", JSON.stringify(configJson));
                 this.hasChanged = false;
@@ -164,9 +165,9 @@ class Config {
         config.accountData = accountData;
         const tokenData = { "token": "", "tokenExpires": 0 };
         config.tokenData = tokenData;
-        const pushData = { "trustedDeviceName": "", "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": "" };
+        const pushData = { "trustedDeviceName": const_1.PhoneModels[(0, utils_1.randomNumber)(0, const_1.PhoneModels.length)], "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": "" };
         config.pushData = pushData;
-        const apiConfig = { "httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false };
+        const apiConfig = { "httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false, "enableEmbeddedPKCS1Support": false };
         config.apiConfig = apiConfig;
         const logConfig = { "logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2 };
         config.logConfig = logConfig;
@@ -174,6 +175,8 @@ class Config {
         config.stations = stations;
         const devicePublicKeys = [];
         config.devicePublicKeys = devicePublicKeys;
+        const deviceConfig = { "simultaneousDetections": true };
+        config.deviceConfig = deviceConfig;
         const interactions = null;
         config.interactions = interactions;
         return config;
@@ -184,7 +187,7 @@ class Config {
      * @returns A boolean value, true if the config need to be updated, otherwise false.
      */
     updateConfigNeeded(configJson) {
-        if (configJson.configVersion == this.getConfigFileTemplateVersion()) {
+        if (configJson.configVersion === this.getConfigFileTemplateVersion()) {
             return false;
         }
         return true;
@@ -292,7 +295,19 @@ class Config {
                 }
                 updated = true;
             }
-            if (updated == true) {
+            if (configJson.configVersion < 20) {
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 20...");
+                if (configJson.apiConfig.enableEmbeddedPKCS1Support === undefined) {
+                    logging_1.rootConfLogger.info(" adding 'enableEmbeddedPKCS1Support'.");
+                    configJson.apiConfig.enableEmbeddedPKCS1Support = false;
+                }
+                if (configJson.deviceConfig === undefined) {
+                    logging_1.rootConfLogger.info(" adding 'deviceConfig'.");
+                    configJson.deviceConfig = { simultaneousDetections: true };
+                }
+                updated = true;
+            }
+            if (updated === true) {
                 configJson.configVersion = this.getConfigFileTemplateVersion();
                 configJson = this.checkConfigFile(configJson);
                 this.hasChanged = true;
@@ -434,6 +449,9 @@ class Config {
             if (configJson.apiConfig.secureApiAccessBySid !== undefined) {
                 newConfigJson.apiConfig.secureApiAccessBySid = configJson.apiConfig.secureApiAccessBySid;
             }
+            if (configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined) {
+                newConfigJson.apiConfig.enableEmbeddedPKCS1Support = configJson.apiConfig.enableEmbeddedPKCS1Support;
+            }
         }
         if (configJson.logConfig !== undefined) {
             if (configJson.logConfig.logLevelAddon !== undefined) {
@@ -458,40 +476,37 @@ class Config {
         if (configJson.stations !== undefined) {
             newConfigJson.stations = configJson.stations;
         }
+        if (configJson.deviceConfig !== undefined) {
+            newConfigJson.deviceConfig = configJson.deviceConfig;
+        }
         return newConfigJson;
     }
     checkConfigValues() {
         let updated = false;
-        if (this.configJson.apiConfig.httpActive == true && (this.configJson.apiConfig.httpPort < 1 || this.configJson.httpPort > 65535)) {
+        if (this.configJson.apiConfig.httpActive === true && (this.configJson.apiConfig.httpPort < 1 || this.configJson.httpPort > 65535)) {
             logging_1.rootConfLogger.info(`Set httpPort to default value "52789"`);
             this.configJson.apiConfig.httpPort = 52789;
             updated = true;
         }
-        if (this.configJson.apiConfig.httpsActive == true && (this.configJson.apiConfig.httpsPort < 1 || this.configJson.apiConfig.httpsPort > 65535)) {
+        if (this.configJson.apiConfig.httpsActive === true && (this.configJson.apiConfig.httpsPort < 1 || this.configJson.apiConfig.httpsPort > 65535)) {
             logging_1.rootConfLogger.info(`Set httpsPort to default value "52790"`);
             this.configJson.apiConfig.httpsPort = 52790;
             updated = true;
         }
-        if (this.configJson.apiConfig.httpActive == true && this.configJson.apiConfig.httpsActive == true && this.configJson.apiConfig.httpPort == this.configJson.apiConfig.httpsPort) {
+        if (this.configJson.apiConfig.httpActive === true && this.configJson.apiConfig.httpsActive === true && this.configJson.apiConfig.httpPort === this.configJson.apiConfig.httpsPort) {
             logging_1.rootConfLogger.info(`Set httpPort to default value "52789" and httpsPort to default value "52790"`);
             this.configJson.apiConfig.httpPort = 52789;
             this.configJson.apiConfig.httpsPort = 52790;
             updated = true;
         }
-        /*if(this.configJson.apiConfig.localStaticUdpPortsActive == true)
-        {
+        /*if (this.configJson.apiConfig.localStaticUdpPortsActive === true) {
             var udpPorts = [];
             var stations = this.configJson.stations;
-            if(stations.length > 2)
-            {
-                for(var station in stations)
-                {
-                    if(udpPorts[this.configJson.stations[station].udpPort] === undefined)
-                    {
+            if (stations.length > 2) {
+                for (var station in stations) {
+                    if (udpPorts[this.configJson.stations[station].udpPort] === undefined) {
                         udpPorts[this.configJson.stations[station].udpPort] = this.configJson.stations[station].udpPort;
-                    }
-                    else
-                    {
+                    } else {
                         rootConfLogger.info(`Set localStaticUdpPortsActive to default value "false". Please check updPorts for stations, they must be unique.`);
                         this.configJson.localStaticUdpPortsActive = false;
                         updated = true;
@@ -499,6 +514,16 @@ class Config {
                 }
             }
         }*/
+        if (this.configJson.apiConfig.updateCloudInfoIntervall < 10 || this.configJson.apiConfig.updateCloudInfoIntervall > 240) {
+            logging_1.rootConfLogger.info(`Set updateCloudInfoIntervall to default value "10"`);
+            this.configJson.apiConfig.updateCloudInfoIntervall = 10;
+            updated = true;
+        }
+        if (this.configJson.apiConfig.updateDeviceDataIntervall < 10 || this.configJson.apiConfig.updateDeviceDataIntervall > 240) {
+            logging_1.rootConfLogger.info(`Set updateDeviceDataIntervall to default value "10"`);
+            this.configJson.apiConfig.updateDeviceDataIntervall = 10;
+            updated = true;
+        }
         if (this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240)) {
             logging_1.rootConfLogger.info(`Set stateUpdateIntervallTimespan to default value "15"`);
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
@@ -565,7 +590,7 @@ class Config {
         if (Array.isArray(this.configJson.stations)) {
             let station;
             for (station in this.configJson.stations) {
-                if (this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial == stationSerial) {
+                if (this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial === stationSerial) {
                     return true;
                 }
             }
@@ -581,7 +606,7 @@ class Config {
         if (Array.isArray(this.configJson.stations)) {
             let station;
             for (station in this.configJson.stations) {
-                if (this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial == stationSerial) {
+                if (this.configJson.stations[station] !== undefined && this.configJson.stations[station].stationSerial === stationSerial) {
                     return station;
                 }
             }
@@ -616,7 +641,7 @@ class Config {
      * @param email The eMail address to set.
      */
     setEmailAddress(eMail) {
-        if (this.configJson.accountData.eMail != eMail) {
+        if (this.configJson.accountData.eMail !== eMail) {
             this.configJson.accountData.eMail = eMail;
             this.setToken("");
             this.hasChanged = true;
@@ -638,7 +663,7 @@ class Config {
      * @param userId The user id to set.
      */
     setUserId(userId) {
-        if (this.configJson.accountData.userId != userId) {
+        if (this.configJson.accountData.userId !== userId) {
             this.configJson.accountData.userId = userId;
             this.hasChanged = true;
         }
@@ -659,7 +684,7 @@ class Config {
      * @param password The password to set.
      */
     setPassword(password) {
-        if (this.configJson.accountData.password != password) {
+        if (this.configJson.accountData.password !== password) {
             this.configJson.accountData.password = password;
             this.hasChanged = true;
         }
@@ -680,7 +705,7 @@ class Config {
      * @param nickName The nickname to set.
      */
     setNickName(nickName) {
-        if (this.configJson.accountData.nickName != nickName) {
+        if (this.configJson.accountData.nickName !== nickName) {
             this.configJson.accountData.nickName = nickName;
             this.hasChanged = true;
         }
@@ -701,7 +726,7 @@ class Config {
      * @param clientPrivateKey The client private key to set.
      */
     setClientPrivateKey(clientPrivateKey) {
-        if (this.configJson.accountData.clientPrivateKey != clientPrivateKey) {
+        if (this.configJson.accountData.clientPrivateKey !== clientPrivateKey) {
             this.configJson.accountData.clientPrivateKey = clientPrivateKey;
             this.hasChanged = true;
         }
@@ -722,7 +747,7 @@ class Config {
      * @param serverPublicKey The server public key to set.
      */
     setServerPublicKey(serverPublicKey) {
-        if (this.configJson.accountData.serverPublicKey != serverPublicKey) {
+        if (this.configJson.accountData.serverPublicKey !== serverPublicKey) {
             this.configJson.accountData.serverPublicKey = serverPublicKey;
             this.hasChanged = true;
         }
@@ -743,7 +768,7 @@ class Config {
      * @param devicePublicKeys The device public keys to set.
      */
     setDevicePublicKeys(devicePublicKeys) {
-        if (this.configJson.devicePublicKeys != devicePublicKeys) {
+        if (this.configJson.devicePublicKeys !== devicePublicKeys) {
             this.configJson.devicePublicKeys = devicePublicKeys;
             this.hasChanged = true;
         }
@@ -764,7 +789,7 @@ class Config {
      * @param connectionTypeP2p Boolean value.
      */
     setConnectionType(connectionTypeP2p) {
-        if (this.configJson.apiConfig.connectionTypeP2p != connectionTypeP2p) {
+        if (this.configJson.apiConfig.connectionTypeP2p !== connectionTypeP2p) {
             this.configJson.apiConfig.connectionTypeP2p = connectionTypeP2p;
             this.hasChanged = true;
         }
@@ -785,7 +810,7 @@ class Config {
      * @param localStaticUdpPortsActive Boolean value.
      */
     setLocalStaticUdpPortsActive(localStaticUdpPortsActive) {
-        if (this.configJson.apiConfig.localStaticUdpPortsActive != localStaticUdpPortsActive) {
+        if (this.configJson.apiConfig.localStaticUdpPortsActive !== localStaticUdpPortsActive) {
             this.configJson.apiConfig.localStaticUdpPortsActive = localStaticUdpPortsActive;
             this.hasChanged = true;
         }
@@ -799,13 +824,13 @@ class Config {
         if (ports) {
             for (const array of ports) {
                 let portNumber;
-                if (array[1] == null) {
+                if (array[1] === null) {
                     portNumber = null;
                 }
                 else {
                     portNumber = Number.parseInt(array[1]);
                 }
-                if (this.setLocalStaticUdpPortPerStation(array[0], portNumber) == true) {
+                if (this.setLocalStaticUdpPortPerStation(array[0], portNumber) === true) {
                     done = true;
                 }
             }
@@ -828,7 +853,7 @@ class Config {
      * @param systemVariableActive Set system variables on the CCU.
      */
     setSystemVariableActive(systemVariableActive) {
-        if (this.configJson.apiConfig.systemVariableActive != systemVariableActive) {
+        if (this.configJson.apiConfig.systemVariableActive !== systemVariableActive) {
             this.configJson.apiConfig.systemVariableActive = systemVariableActive;
             this.hasChanged = true;
         }
@@ -849,7 +874,7 @@ class Config {
      * @param httpActive Use http for the api.
      */
     setHttpActive(httpActive) {
-        if (this.configJson.apiConfig.httpActive != httpActive) {
+        if (this.configJson.apiConfig.httpActive !== httpActive) {
             this.configJson.apiConfig.httpActive = httpActive;
             this.hasChanged = true;
         }
@@ -870,7 +895,7 @@ class Config {
      * @param httpPort The port the api should be accessable.
      */
     setHttpPort(httpPort) {
-        if (this.configJson.apiConfig.httpPort != httpPort) {
+        if (this.configJson.apiConfig.httpPort !== httpPort) {
             this.configJson.apiConfig.httpPort = httpPort;
             this.hasChanged = true;
         }
@@ -891,7 +916,7 @@ class Config {
      * @param httpsActive Use https for the api.
      */
     setHttpsActive(httpsActive) {
-        if (this.configJson.apiConfig.httpsActive != httpsActive) {
+        if (this.configJson.apiConfig.httpsActive !== httpsActive) {
             this.configJson.apiConfig.httpsActive = httpsActive;
             this.hasChanged = true;
         }
@@ -912,7 +937,7 @@ class Config {
      * @param httpsPort The port the api should be accessable.
      */
     setHttpsPort(httpsPort) {
-        if (this.configJson.apiConfig.httpsPort != httpsPort) {
+        if (this.configJson.apiConfig.httpsPort !== httpsPort) {
             this.configJson.apiConfig.httpsPort = httpsPort;
             this.hasChanged = true;
         }
@@ -933,7 +958,7 @@ class Config {
      * @param httpsMethod The method for https.
      */
     setHttpsMethod(httpsMethod) {
-        if (this.configJson.apiConfig.httpsMethod != httpsMethod) {
+        if (this.configJson.apiConfig.httpsMethod !== httpsMethod) {
             this.configJson.apiConfig.httpsMethod = httpsMethod;
             this.hasChanged = true;
         }
@@ -954,7 +979,7 @@ class Config {
      * @param httpsPkeyFile The path to the key file for https.
      */
     setHttpsPKeyFile(httpsPkeyFile) {
-        if (this.configJson.apiConfig.httpsPKeyFile != httpsPkeyFile) {
+        if (this.configJson.apiConfig.httpsPKeyFile !== httpsPkeyFile) {
             this.configJson.apiConfig.httpsPKeyFile = httpsPkeyFile;
             this.hasChanged = true;
         }
@@ -975,7 +1000,7 @@ class Config {
      * @param httpsCertFile The cert file for https.
      */
     setHttpsCertFile(httpsCertFile) {
-        if (this.configJson.apiConfig.httpsCertFile != httpsCertFile) {
+        if (this.configJson.apiConfig.httpsCertFile !== httpsCertFile) {
             this.configJson.apiConfig.httpsCertFile = httpsCertFile;
             this.hasChanged = true;
         }
@@ -996,7 +1021,7 @@ class Config {
      * @param houseId The id for the house as string.
      */
     setHouseId(houseId) {
-        if (this.configJson.apiConfig.houseId != houseId) {
+        if (this.configJson.apiConfig.houseId !== houseId) {
             this.configJson.apiConfig.houseId = houseId;
             this.hasChanged = true;
         }
@@ -1017,7 +1042,7 @@ class Config {
      * @param httpsPkeyString The key for https as string.
      */
     setHttpsPkeyString(httpsPkeyString) {
-        if (this.configJson.apiConfig.httpsPkeyString != httpsPkeyString) {
+        if (this.configJson.apiConfig.httpsPkeyString !== httpsPkeyString) {
             this.configJson.apiConfig.httpsPkeyString = httpsPkeyString;
             this.hasChanged = true;
         }
@@ -1039,7 +1064,7 @@ class Config {
      * @param updateCloudInfoIntervall The timespan duration as number.
      */
     setUpdateCloudInfoIntervall(updateCloudInfoIntervall) {
-        if (this.configJson.apiConfig.updateCloudInfoIntervall != updateCloudInfoIntervall) {
+        if (this.configJson.apiConfig.updateCloudInfoIntervall !== updateCloudInfoIntervall) {
             this.configJson.apiConfig.updateCloudInfoIntervall = updateCloudInfoIntervall;
             this.hasChanged = true;
         }
@@ -1061,7 +1086,7 @@ class Config {
      * @param updateDeviceDataIntervall The timespan duration as number.
      */
     setUpdateDeviceDataIntervall(updateDeviceDataIntervall) {
-        if (this.configJson.apiConfig.updateDeviceDataIntervall != updateDeviceDataIntervall) {
+        if (this.configJson.apiConfig.updateDeviceDataIntervall !== updateDeviceDataIntervall) {
             this.configJson.apiConfig.updateDeviceDataIntervall = updateDeviceDataIntervall;
             this.hasChanged = true;
         }
@@ -1082,7 +1107,7 @@ class Config {
      * @param stateUpdateEventActive The value if the state should updated eventbased.
      */
     setStateUpdateEventActive(stateUpdateEventActive) {
-        if (this.configJson.apiConfig.stateUpdateEventActive != stateUpdateEventActive) {
+        if (this.configJson.apiConfig.stateUpdateEventActive !== stateUpdateEventActive) {
             this.configJson.apiConfig.stateUpdateEventActive = stateUpdateEventActive;
             this.hasChanged = true;
         }
@@ -1103,7 +1128,7 @@ class Config {
      * @param stateUpdateIntervallActive The value if the state should updated scheduled.
      */
     setStateUpdateIntervallActive(stateUpdateIntervallActive) {
-        if (this.configJson.apiConfig.stateUpdateIntervallActive != stateUpdateIntervallActive) {
+        if (this.configJson.apiConfig.stateUpdateIntervallActive !== stateUpdateIntervallActive) {
             this.configJson.apiConfig.stateUpdateIntervallActive = stateUpdateIntervallActive;
             this.hasChanged = true;
         }
@@ -1124,7 +1149,7 @@ class Config {
      * @param stateUpdateIntervallTimespan The time in minutes.
      */
     setStateUpdateIntervallTimespan(stateUpdateIntervallTimespan) {
-        if (this.configJson.apiConfig.stateUpdateIntervallTimespan != stateUpdateIntervallTimespan) {
+        if (this.configJson.apiConfig.stateUpdateIntervallTimespan !== stateUpdateIntervallTimespan) {
             this.configJson.apiConfig.stateUpdateIntervallTimespan = stateUpdateIntervallTimespan;
             this.hasChanged = true;
         }
@@ -1145,7 +1170,7 @@ class Config {
      * @param logLevel The log level as number to set
      */
     setLogLevelAddon(logLevel) {
-        if (this.configJson.logConfig.logLevelAddon != logLevel) {
+        if (this.configJson.logConfig.logLevelAddon !== logLevel) {
             this.configJson.logConfig.logLevelAddon = logLevel;
             this.hasChanged = true;
         }
@@ -1166,7 +1191,7 @@ class Config {
      * @param logLevel The log level as number to set
      */
     setLogLevelMain(logLevel) {
-        if (this.configJson.logConfig.logLevelMain != logLevel) {
+        if (this.configJson.logConfig.logLevelMain !== logLevel) {
             this.configJson.logConfig.logLevelmain = logLevel;
             this.hasChanged = true;
         }
@@ -1187,7 +1212,7 @@ class Config {
      * @param logLevel The log level as number to set
      */
     setLogLevelHttp(logLevel) {
-        if (this.configJson.logConfig.logLevelHttp != logLevel) {
+        if (this.configJson.logConfig.logLevelHttp !== logLevel) {
             this.configJson.logConfig.logLevelHttp = logLevel;
             this.hasChanged = true;
         }
@@ -1208,7 +1233,7 @@ class Config {
      * @param logLevel The log level as number to set
      */
     setLogLevelP2p(logLevel) {
-        if (this.configJson.logConfig.logLevelP2p != logLevel) {
+        if (this.configJson.logConfig.logLevelP2p !== logLevel) {
             this.configJson.logConfig.logLevelP2p = logLevel;
             this.hasChanged = true;
         }
@@ -1229,7 +1254,7 @@ class Config {
      * @param logLevel The log level as number to set
      */
     setLogLevelPush(logLevel) {
-        if (this.configJson.logConfig.logLevelPush != logLevel) {
+        if (this.configJson.logConfig.logLevelPush !== logLevel) {
             this.configJson.logConfig.logLevelPush = logLevel;
             this.hasChanged = true;
         }
@@ -1250,7 +1275,7 @@ class Config {
      * @param logLevel The log level as number to set
      */
     setLogLevelMqtt(logLevel) {
-        if (this.configJson.logConfig.logLevelMqtt != logLevel) {
+        if (this.configJson.logConfig.logLevelMqtt !== logLevel) {
             this.configJson.logConfig.logLevelMqtt = logLevel;
             this.hasChanged = true;
         }
@@ -1271,7 +1296,7 @@ class Config {
      * @param token The token for login.
      */
     setToken(token) {
-        if (this.configJson.tokenData.token != token) {
+        if (this.configJson.tokenData.token !== token) {
             if (token === undefined) {
                 token = "";
             }
@@ -1295,7 +1320,7 @@ class Config {
      * @param tokenexpire The time the token expires.
      */
     setTokenExpire(tokenexpire) {
-        if (this.configJson.tokenData.tokenExpires != tokenexpire) {
+        if (this.configJson.tokenData.tokenExpires !== tokenexpire) {
             if (tokenexpire === undefined) {
                 tokenexpire = 0;
             }
@@ -1324,7 +1349,7 @@ class Config {
     setP2PDataP2pDid(stationSerial, p2pDid) {
         const station = this.getStationIterator(stationSerial);
         if (station !== undefined) {
-            if (this.configJson.stations[station].p2pDid != p2pDid) {
+            if (this.configJson.stations[station].p2pDid !== p2pDid) {
                 this.configJson.stations[station].p2pDid = p2pDid;
                 this.hasChanged = true;
             }
@@ -1351,7 +1376,7 @@ class Config {
     setP2PDataStationIpAddress(stationSerial, stationIpAddress) {
         const station = this.getStationIterator(stationSerial);
         if (station !== undefined) {
-            if (this.configJson.stations[station].stationIpAddress != stationIpAddress) {
+            if (this.configJson.stations[station].stationIpAddress !== stationIpAddress) {
                 this.configJson.stations[station].stationIpAddress = stationIpAddress;
                 this.hasChanged = true;
             }
@@ -1424,21 +1449,27 @@ class Config {
      */
     setP2PData(stationSerial, p2pDid, station_ip_address) {
         let res;
-        if (this.isStationInConfig(stationSerial) == false) {
+        if (this.isStationInConfig(stationSerial) === false) {
             res = this.updateWithNewStation(stationSerial);
         }
         else {
             res = true;
         }
         if (res) {
-            this.setP2PDataP2pDid(stationSerial, p2pDid);
-            this.setP2PDataStationIpAddress(stationSerial, station_ip_address);
-            this.writeConfig(this.configJson);
+            if (p2pDid !== undefined) {
+                this.setP2PDataP2pDid(stationSerial, p2pDid);
+            }
+            if (station_ip_address !== undefined) {
+                this.setP2PDataStationIpAddress(stationSerial, station_ip_address.toString());
+            }
+            if (p2pDid !== undefined || station_ip_address !== undefined) {
+                this.writeConfig(this.configJson);
+            }
         }
     }
     /**
-     * Get the value for enableing or diableing push service.
-     * @returns Boolean for enableing or diableing.
+     * Get the value for enableing or disableing push service.
+     * @returns Boolean for enableing or disableing.
      */
     getPushServiceActive() {
         if (this.configJson.apiConfig.pushServiceActive !== undefined) {
@@ -1453,14 +1484,14 @@ class Config {
      * @param pushServiceActive The value if push service is used.
      */
     setPushServiceActive(pushServiceActive) {
-        if (this.configJson.apiConfig.pushServiceActive != pushServiceActive) {
+        if (this.configJson.apiConfig.pushServiceActive !== pushServiceActive) {
             this.configJson.apiConfig.pushServiceActive = pushServiceActive;
             this.hasChanged = true;
         }
     }
     /**
      * Get the value for securing the access to api by sid.
-     * @returns Boolean for enableing or diableing.
+     * @returns Boolean for enableing or disableing.
      */
     getSecureApiAccessBySid() {
         if (this.configJson.apiConfig.secureApiAccessBySid !== undefined) {
@@ -1475,8 +1506,30 @@ class Config {
      * @param secureApiAccessBySid The value if securing api access by sid is used.
      */
     setSecureApiAccessBySid(secureApiAccessBySid) {
-        if (this.configJson.apiConfig.secureApiAccessBySid != secureApiAccessBySid) {
+        if (this.configJson.apiConfig.secureApiAccessBySid !== secureApiAccessBySid) {
             this.configJson.apiConfig.secureApiAccessBySid = secureApiAccessBySid;
+            this.hasChanged = true;
+        }
+    }
+    /**
+     * Get the value for enable embedded PKCS1 support.
+     * @returns Boolean for enableing or disableing.
+     */
+    getEnableEmbeddedPKCS1Support() {
+        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined) {
+            return this.configJson.apiConfig.enableEmbeddedPKCS1Support;
+        }
+        else {
+            return false;
+        }
+    }
+    /**
+     * Set if enableing embedded PKCS1 support.
+     * @param enableEmbeddedPKCS1Support The value if securing api access by sid is used.
+     */
+    setEnableEmbeddedPKCS1Support(enableEmbeddedPKCS1Support) {
+        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== enableEmbeddedPKCS1Support) {
+            this.configJson.apiConfig.enableEmbeddedPKCS1Support = enableEmbeddedPKCS1Support;
             this.hasChanged = true;
         }
     }
@@ -1497,7 +1550,7 @@ class Config {
      * @param trustedDeviceName The trusted device name
      */
     setTrustedDeviceName(trustedDeviceName) {
-        if (this.configJson.pushData.trustedDeviceName != trustedDeviceName) {
+        if (this.configJson.pushData.trustedDeviceName !== trustedDeviceName) {
             this.configJson.pushData.trustedDeviceName = trustedDeviceName;
             this.setSerialNumber("");
             this.hasChanged = true;
@@ -1520,7 +1573,7 @@ class Config {
      * @param eventDurationSeconds A String value contaiong the seconds
      */
     setEventDurationSeconds(eventDurationSeconds) {
-        if (this.configJson.pushData.eventDurationSeconds != eventDurationSeconds) {
+        if (this.configJson.pushData.eventDurationSeconds !== eventDurationSeconds) {
             this.configJson.pushData.eventDurationSeconds = eventDurationSeconds;
             this.hasChanged = true;
         }
@@ -1542,7 +1595,7 @@ class Config {
      * @param acceptInvitations A boolean value
      */
     setAcceptInvitations(acceptInvitations) {
-        if (this.configJson.pushData.acceptInvitations != acceptInvitations) {
+        if (this.configJson.pushData.acceptInvitations !== acceptInvitations) {
             this.configJson.pushData.acceptInvitations = acceptInvitations;
             this.hasChanged = true;
         }
@@ -1564,7 +1617,7 @@ class Config {
      * @param openudid The openudid to set
      */
     setOpenudid(openudid) {
-        if (this.configJson.pushData.openUdid != openudid) {
+        if (this.configJson.pushData.openUdid !== openudid) {
             this.configJson.pushData.openUdid = openudid;
             this.hasChanged = true;
         }
@@ -1586,7 +1639,7 @@ class Config {
      * @param serialNumber The serial number to set
      */
     setSerialNumber(serialNumber) {
-        if (this.configJson.pushData.serialNumber != serialNumber) {
+        if (this.configJson.pushData.serialNumber !== serialNumber) {
             this.configJson.pushData.serialNumber = serialNumber;
             this.hasChanged = true;
         }
@@ -1596,7 +1649,7 @@ class Config {
      * @returns true if the credentals are set, otherwise false.
      */
     hasPushCredentials() {
-        if (this.getCredentialsCheckinResponse() != null && this.getCredentialsFidResponse() != null && this.getCredentialsGcmResponse() != null) {
+        if (this.getCredentialsCheckinResponse() !== null && this.getCredentialsFidResponse() !== null && this.getCredentialsGcmResponse() !== null) {
             return true;
         }
         else {
@@ -1620,7 +1673,7 @@ class Config {
      * @param fidResponse The fid response credentials.
      */
     setCredentialsFidResponse(fidResponse) {
-        if (this.configJson.pushData.fidResponse != fidResponse) {
+        if (this.configJson.pushData.fidResponse !== fidResponse) {
             this.configJson.pushData.fidResponse = fidResponse;
             this.hasChanged = true;
         }
@@ -1642,7 +1695,7 @@ class Config {
      * @param checkinResponse The checkin response credentials
      */
     setCredentialsCheckinResponse(checkinResponse) {
-        if (this.configJson.pushData.checkinResponse != checkinResponse) {
+        if (this.configJson.pushData.checkinResponse !== checkinResponse) {
             this.configJson.pushData.checkinResponse = checkinResponse;
             this.hasChanged = true;
         }
@@ -1665,7 +1718,7 @@ class Config {
      * @param gcmResponse the gcm response credentials
      */
     setCredentialsGcmResponse(gcmResponse) {
-        if (this.configJson.pushData.gcmResponseToken != gcmResponse.token) {
+        if (this.configJson.pushData.gcmResponseToken !== gcmResponse.token) {
             this.configJson.pushData.gcmResponseToken = gcmResponse.token;
             this.hasChanged = true;
         }
@@ -1687,7 +1740,7 @@ class Config {
      * @param persistentIds The persistent id credentials
      */
     setCredentialsPersistentIds(persistentIds) {
-        if (this.configJson.pushData.persistentIds != persistentIds) {
+        if (this.configJson.pushData.persistentIds !== persistentIds) {
             this.configJson.pushData.persistentIds = persistentIds;
             this.hasChanged = true;
         }
@@ -1709,7 +1762,7 @@ class Config {
      * @param country The country code.
      */
     setCountry(country) {
-        if (this.configJson.accountData.country != country) {
+        if (this.configJson.accountData.country !== country) {
             this.configJson.accountData.country = country;
             this.hasChanged = true;
         }
@@ -1731,7 +1784,7 @@ class Config {
      * @param language The language code
      */
     setLanguage(language) {
-        if (this.configJson.accountData.language != language) {
+        if (this.configJson.accountData.language !== language) {
             this.configJson.accountData.language = language;
             this.hasChanged = true;
         }
@@ -1761,6 +1814,26 @@ class Config {
      */
     removeInteractions() {
         this.configJson.interactions = null;
+    }
+    /**
+     * Retrieves the device config from the config.
+     * @returns The device config.
+     */
+    getDeviceConfig() {
+        if (this.configJson.deviceConfig !== undefined) {
+            return this.configJson.deviceConfig;
+        }
+        return undefined;
+    }
+    /**
+     * Set the device config.
+     * @param deviceConfig The device config to set.
+     */
+    setDeviceConfig(deviceConfig) {
+        if (this.configJson.deviceConfig !== deviceConfig) {
+            this.configJson.deviceConfig = deviceConfig;
+            this.hasChanged = true;
+        }
     }
 }
 exports.Config = Config;

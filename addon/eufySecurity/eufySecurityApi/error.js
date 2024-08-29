@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PinNotVerifiedError = exports.UpdateUserPasscodeError = exports.UpdateUserScheduleError = exports.UpdateUserUsernameError = exports.DeleteUserError = exports.AddUserError = exports.StationConnectTimeoutError = exports.TalkbackError = exports.LivestreamError = exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.RTSPPropertyNotEnabledError = exports.WrongStationError = exports.NotSupportedError = exports.DeviceNotFoundError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = exports.ensureError = exports.BaseError = void 0;
+exports.PinNotVerifiedError = exports.UpdateUserPasscodeError = exports.UpdateUserScheduleError = exports.UpdateUserUsernameError = exports.DeleteUserError = exports.AddUserError = exports.StationConnectTimeoutError = exports.TalkbackError = exports.LivestreamError = exports.ReadOnlyPropertyError = exports.InvalidCommandValueError = exports.InvalidPropertyValueError = exports.RTSPPropertyNotEnabledError = exports.WrongStationError = exports.NotSupportedError = exports.DeviceNotFoundError = exports.StationNotFoundError = exports.InvalidLanguageCodeError = exports.InvalidCountryCodeError = exports.BaseError = void 0;
+exports.ensureError = ensureError;
 class BaseError extends Error {
     context;
     constructor(message, options = {}) {
@@ -22,7 +23,6 @@ function ensureError(value) {
     const error = new Error(`This value was thrown as is, not through an Error: ${stringified}`);
     return error;
 }
-exports.ensureError = ensureError;
 class InvalidCountryCodeError extends BaseError {
     constructor(message, options = {}) {
         super(message, options);

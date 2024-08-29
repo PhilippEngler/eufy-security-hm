@@ -8,6 +8,7 @@ const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const events_1 = __importDefault(require("events"));
 const error_1 = require("./error");
 const http_1 = require("./http");
+const p2p_1 = require("./p2p");
 const utils_1 = require("./utils");
 const types_1 = require("./utils/types");
 const eventInteractions_1 = require("./eventInteractions");
@@ -36,7 +37,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         this.api = api;
         this.httpService = httpService;
         this.eventInteractions = new eventInteractions_1.EventInteractions(this.api);
-        if (this.api.getApiUsePushService() == false) {
+        if (this.api.getApiUsePushService() === false) {
             logging_1.rootAddonLogger.info("Retrieving last video event times disabled in settings.");
         }
         const filePath = "www/assets/images";
@@ -87,8 +88,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         const deviceSNs = Object.keys(this.devices);
         const newDeviceSNs = Object.keys(devices);
         const promises = [];
+        const deviceConfig = this.api.getDeviceConfig();
         let deviceSerial;
-        if (resDevices != null) {
+        if (resDevices !== null) {
             for (deviceSerial in resDevices) {
                 if (this.api.getHouseId() !== undefined && resDevices[deviceSerial].house_id !== undefined && this.api.getHouseId() !== "all" && resDevices[deviceSerial].house_id !== this.api.getHouseId()) {
                     logging_1.rootAddonLogger.debug(`Device ${deviceSerial} does not match houseId (got ${resDevices[deviceSerial].house_id} want ${this.api.getHouseId()}).`);
@@ -103,58 +105,58 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     }
                     let new_device;
                     if (http_1.Device.isIndoorCamera(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.IndoorCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isSoloCameras(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.SoloCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.SoloCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isLockWifiVideo(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.DoorbellLock.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.DoorbellLock.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isBatteryDoorbell(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.BatteryDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.BatteryDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isWiredDoorbell(resDevices[deviceSerial].device_type) || http_1.Device.isWiredDoorbellDual(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.WiredDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.WiredDoorbellCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isFloodLight(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.FloodlightCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.FloodlightCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isWallLightCam(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.WallLightCam.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.WallLightCam.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isGarageCamera(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.GarageCamera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.GarageCamera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isSmartDrop(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.SmartDrop.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.SmartDrop.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isCamera(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.Camera.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.Camera.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isLock(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.Lock.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.Lock.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isMotionSensor(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.MotionSensor.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.MotionSensor.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isEntrySensor(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.EntrySensor.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.EntrySensor.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isKeyPad(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.Keypad.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.Keypad.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isSmartSafe(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.SmartSafe.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.SmartSafe.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isSmartTrack(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.Tracker.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.Tracker.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else if (http_1.Device.isLockKeypad(resDevices[deviceSerial].device_type)) {
-                        new_device = http_1.LockKeypad.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.LockKeypad.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     else {
-                        new_device = http_1.UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial]);
+                        new_device = http_1.UnknownDevice.getInstance(this.httpService, resDevices[deviceSerial], deviceConfig);
                     }
                     promises.push(new_device.then((device) => {
                         try {
@@ -206,7 +208,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station) => {
                         if (!station.isConnected() && station.isP2PConnectableDevice()) {
-                            station.setConnectionType(this.api.getP2PConnectionType());
+                            if (device.hasBattery()) {
+                                station.setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+                            }
+                            else {
+                                station.setConnectionType(this.api.getP2PConnectionType());
+                            }
+                            logging_1.rootAddonLogger.debug(`Initiate first station connection to get data over p2p`, { stationSN: station.getSerial() });
                             station.connect();
                         }
                     }).catch((err) => {
@@ -302,7 +310,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      * Close all connections for all devices.
      */
     closeDevices() {
-        if (this.devices != null) {
+        if (this.devices !== null) {
             for (const deviceSerial in this.devices) {
                 this.removeEventListener(this.devices[deviceSerial], "PropertyChanged");
                 this.removeEventListener(this.devices[deviceSerial], "RawPropertyChanged");
@@ -414,6 +422,18 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         else {
             return false;
         }
+    }
+    /**
+     * Checks if the device a battery powered device.
+     * @param deviceSerial The deviceSerial of the device.
+     * @returns True if device is a battery powered device, otherwise false.
+     */
+    async hasDeviceBattery(deviceSerial) {
+        let res = this.existDevice(deviceSerial);
+        if (res) {
+            res = (await (this.getDevice(deviceSerial))).hasBattery();
+        }
+        return res;
     }
     /**
      * Snoozes a given device for a given time.

@@ -34,13 +34,16 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
     static CHANNEL = 255;
     static CHANNEL_INDOOR = 1000;
     pinVerified = false;
-    constructor(api, station, ipAddress, udpPort, connectionType, publicKey = "") {
+    constructor(api, station, ipAddress, listeningPort = 0, publicKey = "", enableEmbeddedPKCS1Support = false, connectionType) {
         super();
         this.api = api;
         this.rawStation = station;
         this.lockPublicKey = publicKey;
+        if (connectionType !== undefined) {
+            this.p2pConnectionType = connectionType;
+        }
         this.update(this.rawStation);
-        this.p2pSession = new session_1.P2PClientProtocol(this.rawStation, this.api, this.getLANIPAddress(), udpPort, connectionType, this.lockPublicKey);
+        this.p2pSession = new session_1.P2PClientProtocol(this.rawStation, this.api, ipAddress, listeningPort, publicKey, enableEmbeddedPKCS1Support, connectionType);
         this.p2pSession.on("connect", (address) => this.onConnect(address));
         this.p2pSession.on("close", () => this.onDisconnect());
         this.p2pSession.on("timeout", () => this.onTimeout());
@@ -94,12 +97,12 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
     initialize() {
         this.initializeState();
     }
-    static async getInstance(api, stationData, ipAddress, udpPort, connectionType) {
+    static async getInstance(api, stationData, ipAddress, listeningPort, enableEmbeddedPKCS1Support, connectionType) {
         let publicKey;
-        if (device_1.Device.isLock(stationData.device_type) && !device_1.Device.isLockWifiT8506(stationData.device_type)) {
+        if (device_1.Device.isLock(stationData.device_type) && !device_1.Device.isLockWifiT8506(stationData.device_type) && !device_1.Device.isLockWifiT8502(stationData.device_type) && !device_1.Device.isLockWifiT8510P(stationData.device_type, stationData.station_sn) && !device_1.Device.isLockWifiT8520P(stationData.device_type, stationData.station_sn)) {
             publicKey = await api.getPublicKey(stationData.station_sn, types_1.PublicKeyType.LOCK);
         }
-        return new Station(api, stationData, ipAddress, udpPort, connectionType, publicKey);
+        return new Station(api, stationData, ipAddress, listeningPort, publicKey, enableEmbeddedPKCS1Support, connectionType);
     }
     //TODO: To remove
     getStateID(state, level = 2) {
@@ -335,7 +338,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             else if (property.type === "boolean") {
                 const booleanProperty = property;
                 try {
-                    return value !== undefined ? (value === "1" || value.toLowerCase() === "true" ? true : false) : (booleanProperty.default !== undefined ? booleanProperty.default : false);
+                    return value !== undefined ? (typeof value === "number" ? !!value : (value === "1" || value.toLowerCase() === "true" ? true : false)) : (booleanProperty.default !== undefined ? booleanProperty.default : false);
                 }
                 catch (err) {
                     const error = (0, error_1.ensureError)(err);
@@ -1545,7 +1548,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         if (!(direction in types_2.PanTiltDirection)) {
             throw new error_1.InvalidCommandValueError("Invalid value for this command", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
-        logging_1.rootHTTPLogger.debug(`Station pan adn tilt - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), direction: types_2.PanTiltDirection[direction], command });
+        logging_1.rootHTTPLogger.debug(`Station pan and tilt - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), direction: types_2.PanTiltDirection[direction], command });
         if (device.getDeviceType() === types_1.DeviceType.FLOODLIGHT_CAMERA_8423) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
@@ -1655,7 +1658,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isStarlight4GLTE() || device.isOutdoorPanAndTiltCamera()) {
+        else if (device.isStarlight4GLTE()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10068,7 +10071,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_1.InvalidCommandValueError("Invalid value for this command", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
         logging_1.rootHTTPLogger.debug(`Station preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10098,7 +10101,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_1.InvalidCommandValueError("Invalid value for this command", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
         logging_1.rootHTTPLogger.debug(`Station save preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10128,7 +10131,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_1.InvalidCommandValueError("Invalid value for this command", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
         logging_1.rootHTTPLogger.debug(`Station delete preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({

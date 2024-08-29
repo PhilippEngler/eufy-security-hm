@@ -23,7 +23,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isValidUrl = exports.getShortUrl = exports.waitForEvent = exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = exports.getError = void 0;
+exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = exports.getError = void 0;
+exports.waitForEvent = waitForEvent;
+exports.getShortUrl = getShortUrl;
+exports.isValidUrl = isValidUrl;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const getError = function (error) {
@@ -232,7 +235,6 @@ function waitForEvent(emitter, event) {
         emitter.once("error", fail);
     });
 }
-exports.waitForEvent = waitForEvent;
 function getShortUrl(url, prefixUrl) {
     if (url.password) {
         url = new URL(url.toString()); // prevent original url mutation
@@ -244,7 +246,6 @@ function getShortUrl(url, prefixUrl) {
     }
     return shortUrl;
 }
-exports.getShortUrl = getShortUrl;
 function isValidUrl(value, protocols = ["http", "https"]) {
     try {
         const url = new URL(value);
@@ -258,5 +259,4 @@ function isValidUrl(value, protocols = ["http", "https"]) {
         return false;
     }
 }
-exports.isValidUrl = isValidUrl;
 ;

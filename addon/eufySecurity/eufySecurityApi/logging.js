@@ -3,7 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formatDate = exports.setLoggingLevel = exports.rootConfLogger = exports.rootP2PLogger = exports.rootPushLogger = exports.rootMQTTLogger = exports.rootHTTPLogger = exports.rootAddonLogger = exports.rootMainLogger = exports.InternalLogger = exports.LogLevel = void 0;
+exports.setLoggingLevel = exports.rootConfLogger = exports.rootP2PLogger = exports.rootPushLogger = exports.rootMQTTLogger = exports.rootHTTPLogger = exports.rootAddonLogger = exports.rootMainLogger = exports.InternalLogger = exports.LogLevel = void 0;
+exports.formatDate = formatDate;
 const fs_1 = require("fs");
 const typescript_logging_1 = require("typescript-logging");
 const typescript_logging_category_style_1 = require("typescript-logging-category-style");
@@ -158,7 +159,6 @@ function formatDate(millisSinceEpoch) {
     const millis = date.getMilliseconds().toString().padStart(3, "0");
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${millis}`;
 }
-exports.formatDate = formatDate;
 function logMessageForClient(message, ...messageArgs) {
     let fileHandle;
     try {

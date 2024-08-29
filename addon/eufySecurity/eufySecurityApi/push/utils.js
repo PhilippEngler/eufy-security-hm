@@ -23,7 +23,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertTimestampMs = exports.sleep = exports.parseCheckinResponse = exports.buildCheckinRequest = exports.generateFid = exports.VALID_FID_PATTERN = void 0;
+exports.sleep = exports.parseCheckinResponse = exports.buildCheckinRequest = exports.VALID_FID_PATTERN = void 0;
+exports.generateFid = generateFid;
+exports.convertTimestampMs = convertTimestampMs;
 const crypto_1 = require("crypto");
 const path = __importStar(require("path"));
 const protobufjs_1 = require("protobufjs");
@@ -42,7 +44,6 @@ function generateFid() {
     }
     throw new error_1.FidGenerationError("Generated invalid FID", { context: { fid: fid } });
 }
-exports.generateFid = generateFid;
 const buildCheckinRequest = async () => {
     const root = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/checkin.proto"));
     const CheckinRequestModel = root.lookupType("CheckinRequest");
@@ -100,4 +101,3 @@ function convertTimestampMs(timestamp) {
     }
     return timestamp;
 }
-exports.convertTimestampMs = convertTimestampMs;

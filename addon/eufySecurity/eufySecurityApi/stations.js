@@ -40,7 +40,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         super();
         this.api = api;
         this.httpService = httpService;
-        if (this.api.getStateUpdateEventActive() == false) {
+        if (this.api.getStateUpdateEventActive() === false) {
             logging_1.rootAddonLogger.info("Retrieving last guard mode change times disabled in settings.");
         }
         this.httpService.on("hubs", (hubs) => this.handleHubs(hubs));
@@ -67,11 +67,19 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 if (this.stationsLoaded === undefined) {
                     this.stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
                 }
+                const enableEmbeddedPKCS1Support = this.api.getEnableEmbeddedPKCS1Support();
                 let udpPort = this.api.getLocalStaticUdpPortForStation(stationSerial);
                 if (udpPort === null) {
                     udpPort = undefined;
                 }
-                const new_station = http_1.Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, this.api.getP2PConnectionType());
+                let p2pMethod;
+                if (http_1.Device.hasBattery(resStations[stationSerial].device_type)) {
+                    p2pMethod = p2p_1.P2PConnectionType.QUICKEST;
+                }
+                else {
+                    p2pMethod = this.api.getP2PConnectionType();
+                }
+                const new_station = http_1.Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
                 this.skipNextModeChangeEvent[stationSerial] = false;
                 this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
                 promises.push(new_station.then((station) => {
@@ -197,7 +205,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
             if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
-                this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                if (http_1.Device.hasBattery(this.stations[hub.station_sn].getDeviceType())) {
+                    this.stations[hub.station_sn].setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+                }
+                else {
+                    this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                }
+                logging_1.rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
                 this.stations[hub.station_sn].connect();
             }
             this.getStorageInfo(hub.station_sn);
@@ -231,15 +245,17 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * Close all P2P connection for all stations.
      */
     async closeP2PConnections() {
-        if (this.stations != null) {
+        if (this.stations !== null) {
             for (const stationSerial in this.stations) {
                 if (this.stations[stationSerial]) {
-                    await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
-                        return;
-                    }, () => {
-                        logging_1.rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
-                        return;
-                    });
+                    if (this.stations[stationSerial].isConnected() === true) {
+                        await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
+                            return;
+                        }, () => {
+                            logging_1.rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
+                            return;
+                        });
+                    }
                     this.removeEventListener(this.stations[stationSerial], "GuardMode");
                     this.removeEventListener(this.stations[stationSerial], "CurrentMode");
                     this.removeEventListener(this.stations[stationSerial], "PropertyChanged");
@@ -505,11 +521,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async setGuardMode(guardMode) {
         let err = 0;
         for (const stationSerial in this.stations) {
-            if (await this.setGuardModeStation(stationSerial, guardMode) == false) {
+            if (await this.setGuardModeStation(stationSerial, guardMode) === false) {
                 err = err + 1;
             }
         }
-        if (err == 0) {
+        if (err === 0) {
             return true;
         }
         else {
@@ -536,7 +552,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     throw value;
                 }
             });
-            if (res == true) {
+            if (res === true) {
                 this.setLastGuardModeChangeTimeNow(stationSerial);
                 this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
             }
@@ -611,7 +627,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param delayed false if add instantly, for a 5s delay set true.
      */
     async addEventListener(station, eventListenerName, delayed) {
-        if (delayed == true) {
+        if (delayed === true) {
             await (0, utils_1.sleep)(5000);
         }
         switch (eventListenerName) {
@@ -1125,9 +1141,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param station The station as Station object.
      */
     async onStationClose(station) {
-        logging_1.rootAddonLogger.info(`Event "Close": station: ${station.getSerial()}`);
-        this.emit("station close", station);
-        if (this.api.getServiceState() != "shutdown") {
+        if (station.isEnergySavingDevice() === false || this.api.getServiceState() === "shutdown") {
+            logging_1.rootAddonLogger.info(`Event "Close": station: ${station.getSerial()}`);
+            this.emit("station close", station);
         }
         for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
             this.api.getDevice(device_sn).then((device) => {
@@ -1409,7 +1425,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async onStationGuardMode(station, guardMode) {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
-        if (this.skipNextModeChangeEvent[station.getSerial()] == true) {
+        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
             logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
             this.skipNextModeChangeEvent[station.getSerial()] = false;
         }
@@ -1424,7 +1440,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param guardMode The new guard mode as GuardMode.
      */
     async onStationCurrentMode(station, guardMode) {
-        if (this.skipNextModeChangeEvent[station.getSerial()] == true) {
+        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
             logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
             this.skipNextModeChangeEvent[station.getSerial()] = false;
         }
@@ -1483,7 +1499,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param value The value and timestamp of the new value as PropertyValue.
      */
     async onStationPropertyChanged(station, name, value, ready) {
-        if (ready && (!name.startsWith("hidden-") && name != "guardMode" && name != "currentMode")) {
+        if (ready && (!name.startsWith("hidden-") && name !== "guardMode" && name !== "currentMode")) {
             logging_1.rootAddonLogger.debug(`Event "PropertyChanged": station: ${station.getSerial()} | name: ${name} | value: ${value}`);
         }
     }
@@ -1494,7 +1510,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param value The new value as string.
      */
     async onStationRawPropertyChanged(station, type, value) {
-        if (type != 1102 && type != 1137 && type != 1147 && type != 1151 && type != 1154 && type != 1162 && type != 1165 && type != 1224 && type != 1279 && type != 1281 && type != 1282 && type != 1283 && type != 1284 && type != 1285 && type != 1660 && type != 1664 && type != 1665) {
+        if (type !== 1102 && type !== 1137 && type !== 1147 && type !== 1151 && type !== 1154 && type !== 1162 && type !== 1165 && type !== 1224 && type !== 1279 && type !== 1281 && type !== 1282 && type !== 1283 && type !== 1284 && type !== 1285 && type !== 1660 && type !== 1664 && type !== 1665) {
             logging_1.rootAddonLogger.debug(`Event "RawPropertyChanged": station: ${station.getSerial()} | type: ${type} | value: ${value}`);
         }
     }
@@ -1783,7 +1799,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
             }
-            if (channel == -1) {
+            if (channel === -1) {
                 logging_1.rootAddonLogger.error(`onStationImageDownload - Channel could not be extracted for file '${file}' on station ${station.getSerial()}.`);
                 return;
             }
@@ -2111,7 +2127,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                             for (const entry of user.password_list) {
                                 if (entry.password_type === http_1.UserPasswordType.PIN) {
                                     let schedule = entry.schedule;
-                                    if (schedule !== undefined && typeof schedule == "string") {
+                                    if (schedule !== undefined && typeof schedule === "string") {
                                         schedule = JSON.parse(schedule);
                                     }
                                     if (schedule !== undefined && schedule.endDay !== undefined && schedule.endTime !== undefined && schedule.startDay !== undefined && schedule.startTime !== undefined && schedule.week !== undefined) {

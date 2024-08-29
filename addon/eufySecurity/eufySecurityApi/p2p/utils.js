@@ -26,8 +26,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.isP2PQueueMessage = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.paddingP2PData = exports.decryptP2PData = exports.encryptP2PData = exports.getP2PCommandEncryptionKey = exports.isP2PCommandEncrypted = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
-exports.getSmartLockP2PCommand = exports.generateSmartLockAESKey = exports.getSmartLockCurrentTimeInSeconds = exports.isCharging = exports.isPlugSolarCharging = exports.isSolarCharging = exports.isUsbCharging = exports.getNullTerminatedString = exports.RGBColorToDecimal = exports.DecimalToRGBColor = exports.getLockV12P2PCommand = exports.getLockP2PCommand = void 0;
+exports.getLockP2PCommand = exports.getSmartSafeP2PCommand = exports.decodeSmartSafeData = exports.decodeP2PCloudIPs = exports.buildTalkbackAudioFrameHeader = exports.getLockV12Key = exports.getAdvancedLockKey = exports.eufyKDF = exports.decryptPayloadData = exports.encryptPayloadData = exports.buildVoidCommandPayload = exports.checkT8420 = exports.getVideoCodec = exports.generateAdvancedLockAESKey = exports.eslTimestamp = exports.decodeBase64 = exports.decodeLockPayload = exports.getLockVectorBytes = exports.encodeLockPayload = exports.generateLockSequence = exports.getCurrentTimeInSeconds = exports.generateBasicLockAESKey = exports.encryptLockAESData = exports.decryptLockAESData = exports.isIFrame = exports.findStartCode = exports.decryptAESData = exports.getNewRSAPrivateKey = exports.getRSAPrivateKey = exports.sortP2PMessageParts = exports.buildCommandWithStringTypePayload = exports.buildCommandHeader = exports.hasHeader = exports.sendMessage = exports.buildIntStringCommandPayload = exports.buildStringTypeCommandPayload = exports.buildIntCommandPayload = exports.buildCheckCamPayload2 = exports.buildCheckCamPayload = exports.buildLookupWithKeyPayload3 = exports.buildLookupWithKeyPayload2 = exports.buildLookupWithKeyPayload = exports.paddingP2PData = exports.decryptP2PData = exports.encryptP2PData = exports.getP2PCommandEncryptionKey = exports.isP2PCommandEncrypted = exports.getLocalIpAddress = exports.isPrivateIp = exports.MAGIC_WORD = void 0;
+exports.getSmartLockP2PCommand = exports.generateSmartLockAESKey = exports.getSmartLockCurrentTimeInSeconds = exports.isCharging = exports.isPlugSolarCharging = exports.isSolarCharging = exports.isUsbCharging = exports.getNullTerminatedString = exports.RGBColorToDecimal = exports.DecimalToRGBColor = exports.getLockV12P2PCommand = void 0;
+exports.isP2PQueueMessage = isP2PQueueMessage;
 const node_rsa_1 = __importDefault(require("node-rsa"));
 const CryptoJS = __importStar(require("crypto-js"));
 const crypto_1 = require("crypto");
@@ -318,7 +319,7 @@ const sortP2PMessageParts = (messages) => {
     return completeMessage;
 };
 exports.sortP2PMessageParts = sortP2PMessageParts;
-const getRSAPrivateKey = (pem) => {
+const getRSAPrivateKey = (pem, enableEmbeddedPKCS1Support = false) => {
     const key = new node_rsa_1.default();
     if (pem.indexOf("\n") !== -1) {
         pem = pem.replaceAll("\n", "");
@@ -327,17 +328,25 @@ const getRSAPrivateKey = (pem) => {
         pem = pem.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
     }
     key.importKey(pem, "pkcs8");
-    key.setOptions({
+    const options = {
         encryptionScheme: "pkcs1"
-    });
+    };
+    if (enableEmbeddedPKCS1Support) {
+        options.environment = "browser";
+    }
+    key.setOptions(options);
     return key;
 };
 exports.getRSAPrivateKey = getRSAPrivateKey;
-const getNewRSAPrivateKey = () => {
+const getNewRSAPrivateKey = (enableEmbeddedPKCS1Support = false) => {
     const key = new node_rsa_1.default({ b: 1024 });
-    key.setOptions({
+    const options = {
         encryptionScheme: "pkcs1"
-    });
+    };
+    if (enableEmbeddedPKCS1Support) {
+        options.environment = "browser";
+    }
+    key.setOptions(options);
     return key;
 };
 exports.getNewRSAPrivateKey = getNewRSAPrivateKey;
@@ -422,8 +431,9 @@ const getCurrentTimeInSeconds = function () {
 };
 exports.getCurrentTimeInSeconds = getCurrentTimeInSeconds;
 const generateLockSequence = (deviceType, serialnumber) => {
-    if (device_1.Device.isLockWifi(deviceType, serialnumber) || device_1.Device.isLockWifiNoFinger(deviceType))
-        return Math.trunc(Math.random() * 1000);
+    if (deviceType !== undefined && serialnumber !== undefined)
+        if (device_1.Device.isLockWifi(deviceType, serialnumber) || device_1.Device.isLockWifiNoFinger(deviceType))
+            return Math.trunc(Math.random() * 1000);
     return (0, exports.getCurrentTimeInSeconds)();
 };
 exports.generateLockSequence = generateLockSequence;
@@ -523,7 +533,6 @@ exports.buildVoidCommandPayload = buildVoidCommandPayload;
 function isP2PQueueMessage(type) {
     return type.p2pCommand !== undefined;
 }
-exports.isP2PQueueMessage = isP2PQueueMessage;
 const encryptPayloadData = (data, key, iv) => {
     const cipher = (0, crypto_1.createCipheriv)("aes-128-cbc", key, iv);
     return Buffer.concat([

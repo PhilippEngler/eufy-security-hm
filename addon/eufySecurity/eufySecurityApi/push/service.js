@@ -461,13 +461,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 if ((0, utils_3.isEmpty)(normalizedMessage.device_sn) && !(0, utils_3.isEmpty)(normalizedMessage.station_sn)) {
                     normalizedMessage.device_sn = normalizedMessage.station_sn;
                 }
-                if (station_1.Station.isStationHomeBase3(normalizedMessage.type) ||
-                    (normalizedMessage.station_sn.startsWith("T8030") && (device_1.Device.isCamera1Product(normalizedMessage.type) ||
-                        device_1.Device.isCamera2Product(normalizedMessage.type) ||
-                        device_1.Device.isCamera3(normalizedMessage.type) ||
-                        device_1.Device.isCamera3C(normalizedMessage.type) ||
-                        normalizedMessage.type === types_1.DeviceType.CAMERA_SNAIL ||
-                        normalizedMessage.type === types_1.DeviceType.CAMERA_GUN))) {
+                if (station_1.Station.isStationHomeBase3(normalizedMessage.type) || (normalizedMessage.station_sn.startsWith("T8030") && (device_1.Device.isCamera(normalizedMessage.type)))) {
                     const platformPushData = payload.payload;
                     normalizedMessage.name = platformPushData.name ? platformPushData.name : "";
                     normalizedMessage.channel = platformPushData.channel !== undefined ? platformPushData.channel : 0;
@@ -496,6 +490,9 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                     //Get family face names from Doorbell Dual "Family Recognition" event
                     if (batteryDoorbellPushData.objects !== undefined) {
                         normalizedMessage.person_name = batteryDoorbellPushData.objects.names !== undefined ? batteryDoorbellPushData.objects.names.join(",") : "";
+                    }
+                    if (normalizedMessage.person_name === "") {
+                        normalizedMessage.person_name = batteryDoorbellPushData.nick_name;
                     }
                     normalizedMessage.channel = batteryDoorbellPushData.channel !== undefined ? batteryDoorbellPushData.channel : 0;
                     normalizedMessage.cipher = batteryDoorbellPushData.cipher !== undefined ? batteryDoorbellPushData.cipher : 0;
