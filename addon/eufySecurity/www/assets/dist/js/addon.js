@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240822
+ * 20240829
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.15";
+var version = "3.0.16";
 
 /**
  * common used java script functions
@@ -1068,7 +1068,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		if(deviceProperties.softwareVersion !== undefined)
 		{
 			deviceModal += `
-													${generateColumnForProperty("col", "spnFimware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), deviceProperties.softwareVersion)}`;
+													${generateColumnForProperty("col", "spnFimware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), `${deviceProperties.softwareVersion}${deviceProperties.softwareTime !== undefined && deviceProperties.softwareTime !== "" ? `<br /><small>${makeDateTimeString(new Date(parseInt(deviceProperties.softwareTime*1000)), false)}</small>` : ""}`)}`;
 		}
 		if(deviceProperties.battery !== undefined || deviceProperties.batteryLow !== undefined)
 		{
