@@ -2820,7 +2820,7 @@ export class EufySecurityApi {
      * @returns The version of this API.
      */
     public getEufySecurityApiVersion(): string {
-        return "3.1.0-b1";
+        return "3.1.0";
     }
 
     /**
@@ -2828,6 +2828,6 @@ export class EufySecurityApi {
      * @returns The version of the used eufy-security-client.
      */
     public getEufySecurityClientVersion(): string {
-        return "3.1.0-b_efe3c41";
+        return "3.1.0";
     }
 }
