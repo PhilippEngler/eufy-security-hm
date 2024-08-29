@@ -1,6 +1,6 @@
 {
   "name": "eufy-security-hm",
-  "version": "3.1.0-b1",
+  "version": "3.1.0",
   "description": "eufy Security AddOn for HomeMatic",
   "author": {
     "name": "Philipp Engler",
@@ -25,13 +25,13 @@
   "license": "MIT",
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "^20.16.1",
+    "@types/node": "^20.16.2",
     "@types/node-rsa": "^1.1.4",
     "@types/node-schedule": "^2.1.7",
     "@types/qs": "^6.9.15",
-    "@typescript-eslint/eslint-plugin": "^8.0.1",
-    "@typescript-eslint/parser": "^8.0.1",
-    "eslint": "^9.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.3.0",
+    "@typescript-eslint/parser": "^8.3.0",
+    "eslint": "^9.9.1",
     "typescript": "5.5.4",
     "@types/ws": "^8.5.12"
   },
@@ -47,12 +47,12 @@
     "node-rsa": "^1.1.1",
     "node-schedule": "^2.1.1",
     "p-throttle": "^6.2.0",
-    "protobufjs": "^7.3.2",
+    "protobufjs": "^7.4.0",
     "qs": "^6.13.0",
     "sweet-collections": "^1.1.0",
     "tiny-typed-emitter": "^2.1.0",
     "typescript-logging": "^2.2.0",
     "typescript-logging-category-style": "^2.2.0",
-    "axios": "^1.7.4"
+    "axios": "^1.7.5"
   }
 }
