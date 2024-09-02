@@ -253,7 +253,7 @@ class ApiServer {
                         } else if (url[3] === "rebootStation" && url.length === 4) {
                             responseData = await api.rebootStation(url[2]);
                         } else if (url[3] === "moveToPreset" && url.length === 6) {
-                            responseData = `{"success":false,"message":"This call is deprecated. Please use 'moveToPresetPosition' instead."}`;
+                            responseData = await api.moveToPresetPosition(url[4], url[5]);
                         } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
