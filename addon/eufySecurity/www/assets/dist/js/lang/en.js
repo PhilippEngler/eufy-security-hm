@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.21
-20240828
+Schema v9.22
+202400902
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240828 (v9.21)";
+var languageVersion = "20240902 (v9.22)";
 
 function translateNavbarElement(element)
 {
@@ -562,6 +562,10 @@ function translateMessages(message, ...options)
 			return `The type of interaction to be tested is unknown ('${options[0]}').`;
 		case "messageTestInteractionOkMessage":
 			return "The interaction was executed.";
+		case "messageTestInteractionErrorStatusMessage":
+			return `The interaction could not be tested.<br />Status: '${options[0]}'`;
+		case "messageTestInteractionErrorCodeMessage":
+			return `The interaction could not be tested.<br />Code: '${options[0]}'`;
 		case "messageTestInteractionFailedMessage":
 			return "The interaction could not be tested.";
 		case "messageDeleteInteractionHeader":
@@ -1534,6 +1538,58 @@ function translatePropertyName(propertyName)
 		case "dogPoopEventUseHttps":
 		case "ringEventUseHttps":
 			return "Establish connection via HTTPS";
+		case "motionEventUser":
+		case "radarMotionEventUser":
+		case "personEventUser":
+		case "petEventUser":
+		case "soundEventUser":
+		case "cryingEventUser":
+		case "strangerPersonEventUser":
+		case "vehicleEventUser":
+		case "dogEventUser":
+		case "dogLickEventUser":
+		case "dogPoopEventUser":
+		case "ringEventUser":
+			return "User name for logging in to the CCU";
+		case "motionEventUserHint":
+		case "radarMotionEventUserHint":
+		case "personEventUserHint":
+		case "petEventUserHint":
+		case "soundEventUserHint":
+		case "cryingEventUserHint":
+		case "strangerPersonEventUserHint":
+		case "vehicleEventUserHint":
+		case "dogEventUserHint":
+		case "dogLickEventUserHint":
+		case "dogPoopEventUserHint":
+		case "ringEventUserHint":
+			return "The user name is only required if you have activated authentication in the CCU settings and select a CCU other than the one on which this add-on is running.";
+		case "motionEventPassword":
+		case "radarMotionEventPassword":
+		case "personEventPassword":
+		case "petEventPassword":
+		case "soundEventPassword":
+		case "cryingEventPassword":
+		case "strangerPersonEventPassword":
+		case "vehicleEventPassword":
+		case "dogEventPassword":
+		case "dogLickEventPassword":
+		case "dogPoopEventPassword":
+		case "ringEventPassword":
+			return "Password for logging in to the CCU";
+		case "motionEventPasswordHint":
+		case "radarMotionEventPasswordHint":
+		case "personEventPasswordHint":
+		case "petEventPasswordHint":
+		case "soundEventPasswordHint":
+		case "cryingEventPasswordHint":
+		case "strangerPersonEventPasswordHint":
+		case "vehicleEventPasswordHint":
+		case "dogEventPasswordHint":
+		case "dogLickEventPasswordHint":
+		case "dogPoopEventPasswordHint":
+		case "ringEventPasswordHint":
+			return "The password is only required if you have activated authentication in the CCU settings and select a CCU other than the one on which this add-on is running.";
 		case "motionEventCommand":
 		case "radarMotionEventCommand":
 		case "personEventCommand":

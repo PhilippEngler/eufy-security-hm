@@ -794,7 +794,7 @@ class ApiServer {
                         request.on("end", async function() {
                             try {
                                 const resJson = JSON.parse(postData);
-                                responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
+                                responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command), resJson.user, resJson.password);
 
                                 response.setHeader("Access-Control-Allow-Origin", "*");
                                 response.setHeader("Content-Type", "application/json; charset=UTF-8");

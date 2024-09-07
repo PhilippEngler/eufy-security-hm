@@ -809,7 +809,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CRYING);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -831,7 +831,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.SOUND);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -853,7 +853,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PET);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -876,7 +876,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.VEHICLE);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -898,7 +898,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -921,7 +921,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -943,7 +943,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
         try {
             const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
             if (deviceEventInteraction !== null) {
-                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
             }
         }
         catch {}
@@ -1035,7 +1035,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RADAR_MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -1112,7 +1112,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.STRANGER_PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -1133,7 +1133,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -1154,7 +1154,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_LICK);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}
@@ -1175,7 +1175,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_POOP);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch {}

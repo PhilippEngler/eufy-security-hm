@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.21
-20240828
+Schema v9.22
+20240902
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240828 (v9.21)";
+var languageVersion = "20240902 (v9.22)";
 
 function translateNavbarElement(element)
 {
@@ -562,6 +562,10 @@ function translateMessages(message, ...options)
 			return `Der Typ der zu testenden Interaktion ist unbekannt ('${options[0]}').`;
 		case "messageTestInteractionOkMessage":
 			return "Die Interaktion wurde ausgeführt.";
+		case "messageTestInteractionErrorStatusMessage":
+			return `Die Interaktion konnte nicht getestet werden.<br />Status: '${options[0]}'`;
+		case "messageTestInteractionErrorCodeMessage":
+			return `Die Interaktion konnte nicht getestet werden.<br />Code: '${options[0]}'`;
 		case "messageTestInteractionFailedMessage":
 			return "Die Interaktion konnte nicht getestet werden.";
 		case "messageDeleteInteractionHeader":
@@ -1534,6 +1538,58 @@ function translatePropertyName(propertyName)
 		case "dogPoopEventUseHttps":
 		case "ringEventUseHttps":
 			return "Verbindung über HTTPS herstellen";
+		case "motionEventUser":
+		case "radarMotionEventUser":
+		case "personEventUser":
+		case "petEventUser":
+		case "soundEventUser":
+		case "cryingEventUser":
+		case "strangerPersonEventUser":
+		case "vehicleEventUser":
+		case "dogEventUser":
+		case "dogLickEventUser":
+		case "dogPoopEventUser":
+		case "ringEventUser":
+			return "Benutzername zur Anmeldung and die CCU";
+		case "motionEventUserHint":
+		case "radarMotionEventUserHint":
+		case "personEventUserHint":
+		case "petEventUserHint":
+		case "soundEventUserHint":
+		case "cryingEventUserHint":
+		case "strangerPersonEventUserHint":
+		case "vehicleEventUserHint":
+		case "dogEventUserHint":
+		case "dogLickEventUserHint":
+		case "dogPoopEventUserHint":
+		case "ringEventUserHint":
+			return "Der Benutzername wird nur benötigt, wenn Sie die Autentifizierung in den Einstellungen der CCU aktiviert haben und eine andere als die CCU auswählen, auf der dieses Addon ausgeführt wird.";
+		case "motionEventPassword":
+		case "radarMotionEventPassword":
+		case "personEventPassword":
+		case "petEventPassword":
+		case "soundEventPassword":
+		case "cryingEventPassword":
+		case "strangerPersonEventPassword":
+		case "vehicleEventPassword":
+		case "dogEventPassword":
+		case "dogLickEventPassword":
+		case "dogPoopEventPassword":
+		case "ringEventPassword":
+			return "Passwort zur Anmeldung and die CCU";
+		case "motionEventPasswordHint":
+		case "radarMotionEventPasswordHint":
+		case "personEventPasswordHint":
+		case "petEventPasswordHint":
+		case "soundEventPasswordHint":
+		case "cryingEventPasswordHint":
+		case "strangerPersonEventPasswordHint":
+		case "vehicleEventPasswordHint":
+		case "dogEventPasswordHint":
+		case "dogLickEventPasswordHint":
+		case "dogPoopEventPasswordHint":
+		case "ringEventPasswordHint":
+			return "Das Passwort wird nur benötigt, wenn Sie die Autentifizierung in den Einstellungen der CCU aktiviert haben und eine andere als die CCU auswählen, auf der dieses Addon ausgeführt wird.";
 		case "motionEventCommand":
 		case "radarMotionEventCommand":
 		case "personEventCommand":

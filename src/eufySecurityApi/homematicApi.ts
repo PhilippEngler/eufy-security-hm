@@ -10,6 +10,8 @@ import { extractEnclosedString } from "./utils/utils";
  */
 export class HomematicApi {
     private api: EufySecurityApi;
+    private portHttp: number = 8181;
+    private portHttps: number = 8181;
 
     /**
      * Create the api object.
@@ -35,7 +37,7 @@ export class HomematicApi {
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      */
     private getUrl(hostName: string, useHttps: boolean): string {
-        return `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
+        return `http${useHttps === true ? "s" : ""}://${hostName}:${useHttps === true ? this.portHttp : this.portHttps}/esapi.exe`;
     }
 
     /**
@@ -211,15 +213,21 @@ export class HomematicApi {
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param command The command to be executed.
      */
-    public async sendInteractionCommand(hostName: string, useHttps: boolean, command: string): Promise<void> {
+    public async sendInteractionCommand(hostName: string, useHttps: boolean, user: string | undefined, password: string | undefined, command: string): Promise<number> {
         const requestData = command;
-        const requestConfig = { headers: {"Content-Type": "text/plain" } };
+        let headers: any = {"Content-Type": "text/plain"};
+        if (hostName !== "localhost" && user && password) {
+            headers.Authorization = `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`;
+        }
+        const requestConfig = { "headers": headers };
 
         try {
-            await this.request(hostName, useHttps, requestData, requestConfig);
+            const res = await this.request(hostName, useHttps, requestData, requestConfig);
+            return res.status;
         } catch (error: any) {
             rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${error.code}; message: ${error.message}`);
             rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(error));
+            throw error;
         }
     }
 
@@ -247,6 +255,6 @@ export class HomematicApi {
      * Returns the version info of the homematic api.
      */
     public getHomematicApiVersion(): string {
-        return "3.0.1";
+        return "3.1.0";
     }
 }
