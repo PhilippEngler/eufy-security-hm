@@ -532,10 +532,20 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         const error = ensureError(err);
                         rootP2PLogger.error(`connect - Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host, currentRecBufferSize: this.socket.getRecvBufferSize(), recBufferRequestedSize: this.UDP_RECVBUFFERSIZE_BYTES });
                     }
-                    this.lookup(host);
+                    try {
+                        this.lookup(host);
+                    } catch (err) {
+                        const error = ensureError(err);
+                        rootP2PLogger.error(`connect - Lookup Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host });
+                    }
                 });
             else {
-                this.lookup(host);
+                try {
+                    this.lookup(host);
+                } catch (err) {
+                    const error = ensureError(err);
+                    rootP2PLogger.error(`connect - Lookup Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host });
+                }
             }
         }
     }
