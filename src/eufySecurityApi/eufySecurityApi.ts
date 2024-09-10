@@ -2234,11 +2234,17 @@ export class EufySecurityApi {
         this.config.setPushServiceActive(pushServiceActive);
         this.config.setSecureApiAccessBySid(secureApiAccessSidActive)
         this.config.setLogLevelAddon(logLevelAddon);
+        this.updateLogLevelAddon(logLevelAddon);
         this.config.setLogLevelMain(logLevelMain);
+        this.updateLogLevelMain(logLevelMain);
         this.config.setLogLevelHttp(logLevelHttp);
+        this.updateLogLevelHttp(logLevelHttp);
         this.config.setLogLevelP2p(logLevelP2p);
+        this.updateLogLevelP2p(logLevelP2p);
         this.config.setLogLevelPush(logLevelPush);
+        this.updateLogLevelPush(logLevelPush);
         this.config.setLogLevelMqtt(logLevelMqtt);
+        this.updateLogLevelMqtt(logLevelMqtt);
 
         const res = this.config.writeCurrentConfig();
         if (res == "saved") {
@@ -2262,6 +2268,66 @@ export class EufySecurityApi {
             return `{"success":true,"message":"No new values in config. Write config not neccesary."}`;
         } else {
             return `{"success":false,"serviceRestart":false,"message":"Error during writing config."}`;
+        }
+    }
+
+    /**
+     * Update the log level for the addon-logger with the given value on runtime.
+     * @param logLevel The log level to set.
+     */
+    private updateLogLevelAddon(logLevel: number): void {
+        if(this.getLogLevelAddon() !== logLevel) {
+            setLoggingLevel("addon", logLevel);
+        }
+    }
+
+    /**
+     * Update the log level for the main-logger with the given value on runtime.
+     * @param logLevel The log level to set.
+     */
+    private updateLogLevelMain(logLevel: number): void {
+        if(this.getLogLevelMain() !== logLevel) {
+            setLoggingLevel("main", logLevel);
+        }
+    }
+
+    /**
+     * Update the log level for the http-logger with the given value on runtime.
+     * @param logLevel The log level to set.
+     */
+    private updateLogLevelHttp(logLevel: number): void {
+        if(this.getLogLevelHttp() !== logLevel) {
+            setLoggingLevel("http", logLevel);
+        }
+    }
+
+    /**
+     * Update the log level for the p2p-logger with the given value on runtime.
+     * @param logLevel The log level to set.
+     */
+    private updateLogLevelP2p(logLevel: number): void {
+        if(this.getLogLevelP2p() !== logLevel) {
+            setLoggingLevel("p2p", logLevel);
+        }
+    }
+
+    /**
+     * Update the log level for the push-logger with the given value on runtime.
+     * @param logLevel The log level to set.
+     */
+    private updateLogLevelPush(logLevel: number): void {
+        if(this.getLogLevelPush() !== logLevel) {
+            setLoggingLevel("push", logLevel);
+        }
+    }
+
+    /**
+     * Update the log level for the mqtt-logger with the given value on runtime.
+     * @param logLevel The log level to set.
+     */
+    private updateLogLevelMqtt(logLevel: number): void {
+        if(this.getLogLevelMqtt() !== logLevel) {
+            setLoggingLevel("mqtt", logLevel);
         }
     }
 
