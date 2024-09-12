@@ -34,7 +34,6 @@ export class EufySecurityApi {
     private captchaState = { captchaId: "", captcha: "" };
     private tfaCodeRequested = false;
 
-    private taskUpdateDeviceInfo !: NodeJS.Timeout;
     private taskUpdateState !: NodeJS.Timeout;
     private waitUpdateState !: NodeJS.Timeout;
     private refreshEufySecurityCloudTimeout?: NodeJS.Timeout;
@@ -2713,13 +2712,6 @@ export class EufySecurityApi {
      */
     private setupScheduledTasks(): void {
         rootAddonLogger.info(`Setting up scheduled tasks...`);
-        if (this.taskUpdateDeviceInfo) {
-            rootAddonLogger.info(`  updateDeviceData already scheduled, remove scheduling...`);
-            clearInterval(this.taskUpdateDeviceInfo);
-        }
-        this.taskUpdateDeviceInfo = setInterval(async() => { await this.updateDeviceData(); }, (this.config.getUpdateDeviceDataIntervall() * 60 * 1000));
-        rootAddonLogger.info(`  updateDeviceData scheduled (runs every ${this.config.getUpdateDeviceDataIntervall()} minutes).`);
-
         if (this.config.getStateUpdateIntervallActive()) {
             if (this.taskUpdateState) {
                 rootAddonLogger.info(`  getState already scheduled, remove scheduling...`);
@@ -2728,6 +2720,7 @@ export class EufySecurityApi {
             this.taskUpdateState = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
             rootAddonLogger.info(`  getState scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
         } else {
+            clearInterval(this.taskUpdateState);
             rootAddonLogger.info(`  scheduling getState disabled in settings${this.config.getStateUpdateEventActive() == true ? " (state changes will be received by event)": ""}.`)
         }
 
@@ -2738,10 +2731,6 @@ export class EufySecurityApi {
      * Clear all scheduled tasks.
      */
     public clearScheduledTasks(): void {
-        if (this.taskUpdateDeviceInfo) {
-            rootAddonLogger.info(`Remove scheduling for updateDeviceDataData.`);
-            clearInterval(this.taskUpdateDeviceInfo);
-        }
         if (this.taskUpdateState) {
             rootAddonLogger.info(`Remove scheduling for getState.`);
             clearInterval(this.taskUpdateState);
@@ -2758,19 +2747,12 @@ export class EufySecurityApi {
         if (task) {
             rootAddonLogger.info(`Remove scheduling for ${name}.`);
             switch (name) {
-                case "updateDeviceData":
-                    clearInterval(this.taskUpdateDeviceInfo);
-                    break;
                 case "getState":
                     clearInterval(this.taskUpdateState);
                     break;
             }
         }
         switch (name) {
-            case "updateDeviceData":
-                task = setInterval(async() => { await this.updateDeviceData(); }, (this.config.getUpdateDeviceDataIntervall() * 60 * 1000));
-                rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getUpdateDeviceDataIntervall()} minutes).`);
-                break;
             case "getState":
                 task = setInterval(async() => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
                 rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
