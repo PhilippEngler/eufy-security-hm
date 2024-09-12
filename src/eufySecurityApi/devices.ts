@@ -197,10 +197,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station: Station) => {
                         if (!station.isConnected() && station.isP2PConnectableDevice()) {
-                            if (device.hasBattery()) {
+                            if (device.isSoloCameras() && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
                                 station.setConnectionType(P2PConnectionType.QUICKEST);
-                            } else {
+                                rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
+                            } else if (!device.isSoloCameras() && station.getConnectionType() !== this.api.getP2PConnectionType()) {
                                 station.setConnectionType(this.api.getP2PConnectionType());
+                                rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
                             }
                             rootAddonLogger.debug(`Initiate first station connection to get data over p2p`, { stationSN: station.getSerial() });
                             station.connect();
@@ -432,6 +434,19 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
         let res = this.existDevice(deviceSerial);
         if (res) {
             res = (await (this.getDevice(deviceSerial))).hasBattery();
+        }
+        return res;
+    }
+
+    /**
+     * Checks if the device a solo device.
+     * @param deviceSerial The deviceSerial of the device.
+     * @returns True if device is a solo device, otherwise false.
+     */
+    public async isSoloDevices(deviceSerial: string): Promise<boolean> {
+        let res =  this.existDevice(deviceSerial);
+        if (res) {
+            res = (await (this.getDevice(deviceSerial))).isSoloCameras();
         }
         return res;
     }

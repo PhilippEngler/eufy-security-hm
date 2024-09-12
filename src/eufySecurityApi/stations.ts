@@ -81,11 +81,13 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 if (udpPort === null) {
                     udpPort = undefined;
                 }
-                let p2pMethod: P2PConnectionType;
-                if (Device.hasBattery(resStations[stationSerial].device_type)) {
+                let p2pMethod = this.api.getP2PConnectionType();
+                if (Device.isSoloCameras(resStations[stationSerial].device_type) && p2pMethod !== P2PConnectionType.QUICKEST) {
                     p2pMethod = P2PConnectionType.QUICKEST;
-                } else {
+                    rootAddonLogger.debug(`Detected solo device '${stationSerial}': connect with connection type ${P2PConnectionType[p2pMethod]}.`);
+                } else if (!Device.isSoloCameras(resStations[stationSerial].device_type) && p2pMethod !== this.api.getP2PConnectionType()) {
                     p2pMethod = this.api.getP2PConnectionType();
+                    rootAddonLogger.debug(`Set p2p connection type for device ${stationSerial} to value from settings (${P2PConnectionType[p2pMethod]}).`);
                 }
                 const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
                 this.skipNextModeChangeEvent[stationSerial] = false;

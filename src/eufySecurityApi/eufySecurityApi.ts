@@ -1868,10 +1868,12 @@ export class EufySecurityApi {
                 if (station.isConnected() === true) {
                     json = {"success":false, "message":"P2P connection to station already established."};
                 } else if (station.isP2PConnectableDevice()) {
-                    if (await(this.devices.hasDeviceBattery(stationSerial))) {
+                    if (await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
                         station.setConnectionType(P2PConnectionType.QUICKEST);
-                    } else {
+                        rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
+                    } else if (!(await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== this.getP2PConnectionType())) {
                         station.setConnectionType(this.getP2PConnectionType());
+                        rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
                     }
                     await station.connect();
                     await sleep(500);
