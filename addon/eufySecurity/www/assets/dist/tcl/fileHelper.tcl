@@ -1,5 +1,13 @@
 #!/usr/bin/tclsh
 
+proc existFile { filePath } {
+    if { [file exist $filePath] } {
+        return true
+    } else {
+        return false
+    }
+}
+
 proc getFileContent { filePath } {
     set fileData ""
     set filePointer -1
