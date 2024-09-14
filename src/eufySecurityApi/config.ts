@@ -97,7 +97,7 @@ export class Config {
      * @returns The expected version of the config file.
      */
     private getConfigFileTemplateVersion(): number {
-        return 20;
+        return 21;
     }
 
     /**
@@ -175,7 +175,7 @@ export class Config {
         const pushData = {"trustedDeviceName": PhoneModels[randomNumber(0, PhoneModels.length)], "serialNumber": "", "eventDurationSeconds": 10, "acceptInvitations": false, "openUdid": "", "fidResponse": "", "checkinResponse": "", "gcmResponseToken": "", "persistentIds": ""};
         config.pushData = pushData;
 
-        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false, "enableEmbeddedPKCS1Support": false};
+        const apiConfig = {"httpActive": true, "httpPort": 52789, "httpsActive": true, "httpsPort": 52790, "httpsMethod": "", "httpsPkeyFile": "/usr/local/etc/config/server.pem", "httpsCertFile": "/usr/local/etc/config/server.pem", "httpsPkeyString": "", "houseId": "all", "connectionTypeP2p": 1, "localStaticUdpPortsActive": false, "systemVariableActive": false, "updateCloudInfoIntervall": 10, "updateDeviceDataIntervall": 10, "refreshP2PEnergySavingOmits": 2, "stateUpdateEventActive": false, "stateUpdateIntervallActive": false, "stateUpdateIntervallTimespan": 15, "pushServiceActive": false, "secureApiAccessBySid": false, "enableEmbeddedPKCS1Support": false};
         config.apiConfig = apiConfig;
 
         const logConfig = {"logLevelAddon": 2, "logLevelMain": 2, "logLevelHttp": 2, "logLevelP2p": 2, "logLevelPush": 2, "logLevelMqtt": 2};
@@ -323,6 +323,14 @@ export class Config {
                 }
                 updated = true;
             }
+            if (configJson.configVersion < 21) {
+                rootConfLogger.info("Configfile needs Stage2 update to version 21...");
+                if (configJson.apiConfig.refreshP2PEnergySavingOmits === undefined) {
+                    rootConfLogger.info(" adding 'refreshP2PEnergySavingOmits'.");
+                    configJson.apiConfig.refreshP2PEnergySavingOmits = 2;
+                }
+                updated = true;
+            }
             if (updated === true) {
                 configJson.configVersion = this.getConfigFileTemplateVersion();
                 configJson = this.checkConfigFile(configJson);
@@ -456,6 +464,9 @@ export class Config {
             if (configJson.apiConfig.updateDeviceDataIntervall !== undefined) {
                 newConfigJson.apiConfig.updateDeviceDataIntervall = configJson.apiConfig.updateDeviceDataIntervall;
             }
+            if (configJson.apiConfig.refreshP2PEnergySavingOmits !== undefined) {
+                newConfigJson.apiConfig.refreshP2PEnergySavingOmits = configJson.apiConfig.refreshP2PEnergySavingOmits;
+            }
             if (configJson.apiConfig.stateUpdateEventActive !== undefined) {
                 newConfigJson.apiConfig.stateUpdateEventActive = configJson.apiConfig.stateUpdateEventActive;
             }
@@ -549,6 +560,11 @@ export class Config {
         if (this.configJson.apiConfig.updateDeviceDataIntervall < 10 || this.configJson.apiConfig.updateDeviceDataIntervall > 240) {
             rootConfLogger.info(`Set updateDeviceDataIntervall to default value "10"`);
             this.configJson.apiConfig.updateDeviceDataIntervall = 10;
+            updated = true;
+        }
+        if (this.configJson.apiConfig.refreshP2PEnergySavingOmits < 0 || this.configJson.apiConfig.refreshP2PEnergySavingOmits > 20) {
+            rootConfLogger.info(`Set refreshP2PEnergySavingOmits to default value "2"`);
+            this.configJson.apiConfig.refreshP2PEnergySavingOmits = 2;
             updated = true;
         }
         if (this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240)) {
@@ -1146,6 +1162,29 @@ export class Config {
     public setUpdateDeviceDataIntervall(updateDeviceDataIntervall: number): void {
         if (this.configJson.apiConfig.updateDeviceDataIntervall !== updateDeviceDataIntervall) {
             this.configJson.apiConfig.updateDeviceDataIntervall = updateDeviceDataIntervall;
+            this.hasChanged = true;
+        }
+    }
+
+    /**
+     * Get the number of omits for refresh device data over p2p for energy saving device.
+     * @returns The timespan duration as number.
+     */
+    public getRefreshP2PEnergySavingOmits(): number {
+        if (this.configJson.apiConfig.refreshP2PEnergySavingOmits !== undefined) {
+            return this.configJson.apiConfig.refreshP2PEnergySavingOmits;
+        } else {
+            return 10;
+        }
+    }
+
+    /**
+     * Set the number of omits for refresh device data over p2p for energy saving device.
+     * @param refreshP2PEnergySavingOmits The number of omits for refresh device data over p2p for energy saving device.
+     */
+    public setRefreshP2PEnergySavingOmits(refreshP2PEnergySavingOmits: number): void {
+        if (this.configJson.apiConfig.refreshP2PEnergySavingOmits !== refreshP2PEnergySavingOmits) {
+            this.configJson.apiConfig.refresP2PEnergySavingOmits = refreshP2PEnergySavingOmits;
             this.hasChanged = true;
         }
     }

@@ -35,6 +35,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private refreshEufySecurityP2PTimeout: {
         [dataType: string]: NodeJS.Timeout;
     } = {};
+    private refreshEufySecurityP2PEnergySavingOmitsCounter: {
+        [dataType: string]: number;
+    } = {};
 
     /**
      * Create the Bases objects holding all stations in the account.
@@ -187,6 +190,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (serial && !Object.keys(this.stations).includes(serial)) {
             this.stations[serial] = station;
             this.getStorageInfo(serial);
+            if (station.isEnergySavingDevice()) {
+                this.refreshEufySecurityP2PEnergySavingOmitsCounter[serial] = 0;
+            }
             this.emit("station added", station);
         } else {
             rootAddonLogger.debug(`Station with this serial ${station.getSerial()} exists already and couldn't be added again!`);
@@ -221,16 +227,35 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         }
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
-            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
-                if (Device.hasBattery(this.stations[hub.station_sn].getDeviceType())) {
-                    this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
-                } else {
+            if (this.stations[hub.station_sn].isP2PConnectableDevice()) {
+                if (!this.stations[hub.station_sn].isEnergySavingDevice() && !this.stations[hub.station_sn].isConnected()) {
                     this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                    rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
+                    this.stations[hub.station_sn].connect();
+                    this.getStorageInfo(hub.station_sn);
+                } else if (this.stations[hub.station_sn].isEnergySavingDevice() && !this.stations[hub.station_sn].isConnected()) {
+                    if (this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] === 0) {
+                        this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
+                        rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
+                        this.stations[hub.station_sn].connect();
+                        this.getStorageInfo(hub.station_sn);
+                        if (this.api.getConfig().getRefreshP2PEnergySavingOmits() !== 0) {
+                            this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn]++;
+                        }
+                    } else if (this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] === this.api.getConfig().getRefreshP2PEnergySavingOmits()) {
+                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] = 0;
+                    } else if (this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] > 0 && this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] < 2) {
+                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn]++;
+                    } else {
+                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] = 0;
+                    }
+                } else if (this.stations[hub.station_sn].isConnected()) {
+                    this.getStorageInfo(hub.station_sn);
+                    if (this.stations[hub.station_sn].isEnergySavingDevice() && this.api.getConfig().getRefreshP2PEnergySavingOmits() !== 0) {
+                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] = 1;
+                    }
                 }
-                rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
-                this.stations[hub.station_sn].connect();
             }
-            this.getStorageInfo(hub.station_sn);
         } else {
             rootAddonLogger.error(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
         }

@@ -3982,6 +3982,8 @@ function loadDataSettings()
 							}
 						}
 					}
+
+					document.getElementById('txtRefreshP2PEnergySavingOmits').value = objResp.data.refreshP2PEnergySavingOmits;
 					if(objResp.data.stateUpdateEventActive == true)
 					{
 						document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);

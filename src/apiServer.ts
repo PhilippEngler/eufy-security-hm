@@ -589,6 +589,11 @@ class ApiServer {
                                     updatestatetimespan = getDataFromPOSTData(postData, "updateStateIntervallTimespan", "number");
                                 }
 
+                                let refreshP2PEnergySavingOmits = 2;
+                                if (postData.indexOf("updateRefreshP2PEnergySavingOmits") >= 0) {
+                                    refreshP2PEnergySavingOmits = getDataFromPOSTData(postData, "updateRefreshP2PEnergySavingOmits", "number");
+                                } 
+
                                 let usepushservice = false;
                                 if (postData.indexOf("usePushService") >= 0) {
                                     usepushservice = getDataFromPOSTData(postData, "usePushService", "boolean");
@@ -674,11 +679,15 @@ class ApiServer {
                                     isDataOK = false;
                                     rootAddonLogger.info("The value for 'updatestatetimespan' is out of range. Please use a value between '15' and '240'.");
                                 }
+                                if (checkNumberValue(refreshP2PEnergySavingOmits, 0, 20) === false) {
+                                    isDataOK = false;
+                                    rootAddonLogger.info("The value for 'refreshP2PEnergySavingOmits' is out of range. Please use a value between '0' and '20'.");
+                                }
 
                                 if (isDataOK === true) {
                                     apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
-                                    responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, usesecureapiaccesssid, logleveladdon, loglevelmain, loglevelhttp, loglevelp2p, loglevelpush, loglevelmqtt);
+                                    responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, refreshP2PEnergySavingOmits, usepushservice, usesecureapiaccesssid, logleveladdon, loglevelmain, loglevelhttp, loglevelp2p, loglevelpush, loglevelmqtt);
                                 } else {
                                     responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check logfile and values."}`;
                                 }

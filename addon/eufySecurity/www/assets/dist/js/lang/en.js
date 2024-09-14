@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.22
-202400902
+Schema v9.23
+202400913
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240902 (v9.22)";
+var languageVersion = "20240913 (v9.23)";
 
 function translateNavbarElement(element)
 {
@@ -180,6 +180,14 @@ function translateStaticContentElement(element)
 			return `This setting is used for all stations and devices supplied with power. For battery-powered devices, the connection is always established with the "Fastest connection" option.`;
 		case "lblUseUdpStaticPorts":
 			return "Establish connection to the stations via fixed ports";
+		case "settingsHeaderRefreshP2PEnergySavingOmits":
+			return "Setting for connections with battery-operated solo-devices";
+		case "lblRefreshP2PEnergySavingOmits":
+			return "Number of connections to battery-operated solo-devices to be omitted";
+		case "hintRefreshP2PEnergySavingOmits":
+			return "The setting causes the regular update of battery-operated solo-devices to be skipped for the specified number of times in order to reduce the energy consumption of the devices. The default value of 2 means that with an update interval of 10 minutes, the battery-operated solo-devices are only updated every 30 minutes. In addition, if a connection is established within the update interval, the counter is reset again to save more energy. This function can be deactivated with the value 0.";
+		case "divRefreshP2PEnergySavingOmitsError":
+			return "Please enter an value between 0 and 20."
 		case "settingsHeaderConfigUpdateSystemVariables":
 			return "Settings for updating the system variables";
 		case "lblUseSystemVariables":

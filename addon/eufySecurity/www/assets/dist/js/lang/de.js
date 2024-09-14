@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.22
-20240902
+Schema v9.23
+20240913
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240902 (v9.22)";
+var languageVersion = "20240913 (v9.23)";
 
 function translateNavbarElement(element)
 {
@@ -180,6 +180,14 @@ function translateStaticContentElement(element)
 			return `Diese Einstellung wird für alle mit Strom versorgten Stationen und Geräten genutzt. Bei batteriebetriebenen Geräten wird die Verbindung immer mit der Option "schnellste Verbindung" hergestellt.`;
 		case "lblUseUdpStaticPorts":
 			return "Verbindung zu den Station über feste Ports aufbauen";
+		case "settingsHeaderRefreshP2PEnergySavingOmits":
+			return "Einstellung für Verbindungen mit batteriebetriebenen Solo-Geräten";
+		case "lblRefreshP2PEnergySavingOmits":
+			return "Anzahl auszulassender Verbindungen zu batteriebetriebenen Solo-Geräten";
+		case "hintRefreshP2PEnergySavingOmits":
+			return "Die Einstellung bewirkt, dass bei batteriebetriebenen Solo-Geräten die regelmäßige Aktualisierung für die angegebene Anzahl übersprungen wird, um den Energieverbrauch der Geräte zu senken. Der Standardwert von 2 bedeutet, dass bei einem Aktualisierungsintervall von 10 Minuten die batteriebetriebenen Solo-Geräte nur alle 30 Minuten aktualisiert werden. Darüber hinaus wird bei einem Verbindungsaufbau innerhalb des Aktualisierungsintervalls der Zähler wieder zurückgesetzt, um weitere Energie einzusparen. Diese Funktion kann mit dem Wert 0 deaktiviert werden.";
+		case "divRefreshP2PEnergySavingOmitsError":
+			return "Bitte geben Sie einen Wert zwischen 0 und 20 ein."
 		case "settingsHeaderConfigUpdateSystemVariables":
 			return "Einstellungen für die Aktualisierung der Systemvariablen";
 		case "lblUseSystemVariables":
