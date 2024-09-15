@@ -8477,7 +8477,7 @@ export const StationProperties: Properties = {
     },
     [DeviceType.OUTDOOR_PT_CAMERA]: {
         ...BaseStationProperties,
-        [PropertyName.StationLANIpAddress]: StationLanIpAddressStandaloneProperty,
+        [PropertyName.StationLANIpAddress]: StationLanIpAddressProperty,
         [PropertyName.StationMacAddress]: StationMacAddressProperty,
         [PropertyName.StationGuardMode]: StationGuardModeProperty,
         [PropertyName.StationCurrentMode]: StationCurrentModeProperty,
