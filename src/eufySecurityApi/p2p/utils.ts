@@ -11,6 +11,8 @@ import { DeviceType } from "../http/types";
 import { Device, Lock, SmartSafe } from "../http/device";
 import { BleCommandFactory } from "./ble";
 import { rootP2PLogger } from "../logging";
+import { ensureError } from "../error";
+import { getError } from "../utils";
 
 export const MAGIC_WORD = "XZYH";
 
@@ -34,19 +36,25 @@ const stringWithLength = (input: string, chunkLength = 128): Buffer => {
 };
 
 export const getLocalIpAddress = (init = ""): string => {
-    const ifaces = os.networkInterfaces();
-    let localAddress = init;
-    for (const name in ifaces) {
-        const iface = ifaces[name]!.filter(function(details) {
-            return details.family === "IPv4" && details.internal === false;
-        });
+    try {
+        const ifaces = os.networkInterfaces();
+        let localAddress = init;
+        for (const name in ifaces) {
+            const iface = ifaces[name]!.filter(function(details) {
+                return details.family === "IPv4" && details.internal === false;
+            });
 
-        if(iface.length > 0) {
-            localAddress = iface[0].address;
-            break;
+            if(iface.length > 0) {
+                localAddress = iface[0].address;
+                break;
+            }
         }
+        return localAddress;
+    } catch (err) {
+        const error = ensureError(err);
+        rootP2PLogger.error(`getLocalIpAddress - Error`, { error: getError(error) });
+        return init;
     }
-    return localAddress;
 }
 
 const p2pDidToBuffer = (p2pDid: string): Buffer => {
