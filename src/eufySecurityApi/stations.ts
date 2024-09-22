@@ -35,9 +35,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private refreshEufySecurityP2PTimeout: {
         [dataType: string]: NodeJS.Timeout;
     } = {};
-    private refreshEufySecurityP2PEnergySavingOmitsCounter: {
-        [dataType: string]: number;
-    } = {};
 
     /**
      * Create the Bases objects holding all stations in the account.
@@ -189,10 +186,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         const serial = station.getSerial();
         if (serial && !Object.keys(this.stations).includes(serial)) {
             this.stations[serial] = station;
-            this.getStorageInfo(serial);
-            if (station.isEnergySavingDevice()) {
-                this.refreshEufySecurityP2PEnergySavingOmitsCounter[serial] = 0;
-            }
             this.emit("station added", station);
         } else {
             rootAddonLogger.debug(`Station with this serial ${station.getSerial()} exists already and couldn't be added again!`);
@@ -222,42 +215,22 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      * @param hub The object containg the specific hub.
      */
     private async updateStation(hub: StationListResponse): Promise<void> {
-        if (this.stationsLoaded) {
+        if (this.stationsLoaded)
             await this.stationsLoaded;
-        }
+        
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
-            if (this.stations[hub.station_sn].isP2PConnectableDevice()) {
-                if (!this.stations[hub.station_sn].isEnergySavingDevice() && !this.stations[hub.station_sn].isConnected()) {
+            if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
+                if (!this.stations[hub.station_sn].isEnergySavingDevice()) {
                     this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
-                    rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
-                    this.stations[hub.station_sn].connect();
-                    this.getStorageInfo(hub.station_sn);
-                } else if (this.stations[hub.station_sn].isEnergySavingDevice() && !this.stations[hub.station_sn].isConnected()) {
-                    if (this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] === 0) {
-                        this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
-                        rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
-                        this.stations[hub.station_sn].connect();
-                        this.getStorageInfo(hub.station_sn);
-                        if (this.api.getConfig().getRefreshP2PEnergySavingOmits() !== 0) {
-                            this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn]++;
-                        }
-                    } else if (this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] === this.api.getConfig().getRefreshP2PEnergySavingOmits()) {
-                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] = 0;
-                    } else if (this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] > 0 && this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] < 2) {
-                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn]++;
-                    } else {
-                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] = 0;
-                    }
-                } else if (this.stations[hub.station_sn].isConnected()) {
-                    this.getStorageInfo(hub.station_sn);
-                    if (this.stations[hub.station_sn].isEnergySavingDevice() && this.api.getConfig().getRefreshP2PEnergySavingOmits() !== 0) {
-                        this.refreshEufySecurityP2PEnergySavingOmitsCounter[hub.station_sn] = 1;
-                    }
+                } else {
+                    this.stations[hub.station_sn].setConnectionType(P2PConnectionType.QUICKEST);
                 }
+                rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
+                this.stations[hub.station_sn].connect();
             }
         } else {
-            rootAddonLogger.error(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
+            rootAddonLogger.debug(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
         }
     }
 
@@ -265,12 +238,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      * (Re)Loads all stations and the settings of them.
      */
     public async loadStations(): Promise<void> {
-        try {
+        /*try {
             await this.handleHubs(this.httpService.getHubs());
         } catch (e: any) {
             this.stations = {};
             throw new Error(e);
-        }
+        }*/
     }
 
     /**
@@ -397,6 +370,27 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 station.getCameraInfo();
             }
         });
+    }
+
+    /**
+     * Refresh data over p2p connection.
+     * @param station The station for refreshing data over p2p.
+     */
+    private async refreshP2PData(station: Station): Promise<void> {
+        if (this.stationsLoaded)
+            await this.stationsLoaded;
+        if (station.isStation() || (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType()))) {
+            station.getCameraInfo();
+        }
+        if (Device.isLock(station.getDeviceType())) {
+            station.getLockParameters();
+            station.getLockStatus();
+        }
+        if (station.isStation() || (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE)) {
+            station.getStorageInfoEx();
+        } else {
+            rootAddonLogger.info(`No refresh storage for ${station.getSerial()} - hasProperty: ${station.hasProperty(PropertyName.StationSdStatus)} | value: ${station.getPropertyValue(PropertyName.StationSdStatus)}`);
+        }
     }
 
     /**
@@ -655,36 +649,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 reject(e);
             }
         });
-    }
-
-    /**
-     * Retrieves the storage information from ether all station or a given station.
-     * @param stationSerial The serial of the station.
-     */
-    public async getStorageInfo(stationSerial?: string): Promise<void> {
-        if (stationSerial === undefined) {
-            for (const serial in this.stations) {
-                await this.getStorageInfoStation(serial);
-            }
-        } else {
-            await this.getStorageInfoStation(stationSerial);
-        }
-    }
-
-    /**
-     * Retrieves the storage information from the given station.
-     * @param stationSerial The serial of the station.
-     */
-    private async getStorageInfoStation(stationSerial: string): Promise<void> {
-        try {
-            const station = await this.getStation(stationSerial);
-            if (station.isStation() || (station.hasProperty(PropertyName.StationSdStatus) && station.getPropertyValue(PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(PropertyName.StationSdStatus) !== TFCardStatus.REMOVE)) {
-                station.getStorageInfoEx();
-            }
-        } catch (err) {
-            const error = ensureError(err);
-            rootAddonLogger.error("getStorageInfo Error", { error: getError(error), stationSN: stationSerial });
-        }
     }
 
     /**
@@ -1174,27 +1138,14 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      */
     private async onStationConnect(station: Station): Promise<void> {
         this.emit("station connect", station);
-        if (Station.isStation(station.getDeviceType()) || (Device.isCamera(station.getDeviceType()) && !Device.isWiredDoorbell(station.getDeviceType()) || Device.isSmartSafe(station.getDeviceType()))) {
-            station.getCameraInfo();
-            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
-                clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
-                delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
-            }
-            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                station.getCameraInfo();
-            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
-        } else if (Device.isLock(station.getDeviceType())) {
-            station.getLockParameters();
-            station.getLockStatus();
-            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
-                clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
-                delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
-            }
-            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                station.getLockParameters();
-                station.getLockStatus();
-            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+        this.refreshP2PData(station);
+        if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
+            clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
+            delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
         }
+        this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+            this.refreshP2PData(station);
+        }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
     }
 
     /**

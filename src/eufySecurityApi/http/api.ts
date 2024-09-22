@@ -1,4 +1,4 @@
-import type { Got, OptionsOfBufferResponseBody, OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got" with {
+import type { Got, OptionsOfBufferResponseBody, OptionsOfJSONResponseBody, OptionsOfTextResponseBody, OptionsOfUnknownResponseBody } from "got" with {
     "resolution-mode": "import"
 };
 import type { AnyFunction, ThrottledFunction } from "p-throttle" with {
