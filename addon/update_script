@@ -320,6 +320,9 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/node_modules/@aashutoshrathi ]; then
     rm -r ${ADDON_DIR}/node_modules/@aashutoshrathi
   fi
+  if [ -e ${ADDON_DIR}/node_modules/@ungap ]; then
+    rm -r ${ADDON_DIR}/node_modules/@ungap
+  fi
   # remove unused asset files
   if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css ]; then
     rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.css
