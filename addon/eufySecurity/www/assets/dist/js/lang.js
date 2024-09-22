@@ -123,10 +123,6 @@ function translateStaticPageContent(page)
             translateInnerHtml("optConnectionTypeFastest");
             translateInnerHtml("hintConnectionType");
             translateInnerHtml("lblUseUdpStaticPorts");
-            translateInnerHtml("settingsHeaderRefreshP2PEnergySavingOmits");
-            translateInnerHtml("lblRefreshP2PEnergySavingOmits");
-            translateInnerHtml("hintRefreshP2PEnergySavingOmits");
-            translateInnerHtml("divRefreshP2PEnergySavingOmitsError");
             translateInnerHtml("settingsHeaderConfigUpdateSystemVariables");
             translateInnerHtml("lblUseSystemVariables");
             translateInnerHtml("settingsHeaderConfigUpdateState");
