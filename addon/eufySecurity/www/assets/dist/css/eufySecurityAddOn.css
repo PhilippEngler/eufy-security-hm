@@ -165,3 +165,25 @@ code {
 .div-tab-header {
   background: #f8f8f8;
 }
+
+/* change colors for accordion to fit with styles */
+.accordion {
+	--bs-accordion-border-color: #cccccc;
+  --bs-accordion-btn-color: #212529;
+	--bs-accordion-btn-bg: #f8f8f8;
+	--bs-accordion-active-color: #4f5255;
+	--bs-accordion-active-bg: #f8f8f8;
+}
+
+/* set padding for accordion header */
+.accordion-button {
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* set padding for accordion content */
+.accordion-body {
+  padding: 16px;
+}

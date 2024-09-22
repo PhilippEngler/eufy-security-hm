@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.23
-202400913
+Schema v9.24
+202400921
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240913 (v9.23)";
+var languageVersion = "20240921 (v9.24)";
 
 function translateNavbarElement(element)
 {
@@ -522,6 +522,8 @@ function translateMessages(message, ...options)
 			return `Return value 'Status' is '${options[0]}'. Return value 'ReadyState' is '${options[1]}'.`;
 		case "messageCaptchaErrorHeader":
 			return "Error loading the captcha status.";
+		case "messageErrorCheckingAddonStateHeader":
+			return "Error retrieving state of add-on.";
 		case "messageErrorAddonNotRunning":
 			return "The addon may not be executed. Restarting the add-on or the CCU could solve the problem.";
 		case "messageCaptchaError":

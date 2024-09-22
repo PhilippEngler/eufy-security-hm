@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240902
+ * 20240921
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.17";
+var version = "3.0.18";
 
 /**
  * common used java script functions
@@ -188,6 +188,7 @@ function checkConfigNeeded(page)
 	{
 		if(this.readyState == 4 && this.status == 200)
 		{
+			document.getElementById("commonError").innerHTML = "";
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
@@ -200,10 +201,10 @@ function checkConfigNeeded(page)
 					initContent(page);
 				}
 			}
-			else
-			{
-				//document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
-			}
+		}
+		else if(this.readyState == 4)
+		{
+			document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
 		}
 	};
 	xmlhttp.open("GET", url, true);
@@ -1813,97 +1814,74 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	}
 	if(deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.soundDetected !== undefined || deviceProperties.strangerPersonDetected !== undefined || deviceProperties.vehicleDetected !== undefined || deviceProperties.dogDetected !== undefined || deviceProperties.dogLickDetected !== undefined || deviceProperties.dogPoopDetected !== undefined || deviceProperties.ringing !== undefined)
 	{
-		var isFirstElement = true;
 		deviceModal += `
 								<div class="card mt-3" id="cardDeviceInteraction">
 									<h5 class="card-header">${translateContent("lblHeaderInteractionCCU")}</h5>
 									<div class="card-body">
-										${createMessageContainer("alert alert-warning", translateMessages("messageInteractionHintHeader"), translateMessages("messageInteractionHintMessage"), "")}`;
+										${createMessageContainer("alert alert-warning", translateMessages("messageInteractionHintHeader"), translateMessages("messageInteractionHintMessage"), "")}
+										<div class="accordion" id="accordionInteractions">`;
 		if(deviceProperties.motionDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("motion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("motion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.radarMotionDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("radarMotion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("radarMotion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.personDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("person", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("person", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.petDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("pet", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("pet", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.cryingDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("crying", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("crying", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.soundDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("sound", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("sound", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.strangerPersonDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("strangerPerson", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("strangerPerson", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.vehicleDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("vehicle", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("vehicle", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.dogDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("dog", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("dog", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.dogLickDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("dogLick", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("dogLick", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.dogPoopDetected !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("dogPoop", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("dogPoop", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		if(deviceProperties.ringing !== undefined)
 		{
 			deviceModal += `
-										${isFirstElement === false ? `<hr />` : ``}
-										${generateInteractionExpander("ring", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
-			isFirstElement = false;
+											${generateInteractionExpander("ring", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
 		deviceModal += `
+										</div>
 									</div>
 								</div>`;
 	}
@@ -2327,28 +2305,34 @@ function generateElementTimePickerStartEnd(deviceType, serialNumber, caption, st
 function generateInteractionExpander(event, enabled, deviceProperties, deviceInteractions, deviceId, setEventHandler)
 {
 	var interactionExpander = `
-										<h5 ${enabled === true ? `onclick="toggleInteractionDiv('divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}', 'imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}')"` : `class="text-muted"`}><div class="row"><div class="col-auto me-0 pe-0"><i id="imgToggleInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="${enabled === true ? `bi-chevron-down` : `bi-chevron-right`}" title="${translateString("strEditInteractionStart")}"></i></div><div class="col">${translateContent(`lblInteraction${event.charAt(0).toUpperCase() + event.slice(1)}`)}</div></div></h5>
-										<div id="divInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="collapse">
-											${generateElementTextBox("text", deviceProperties.serialNumber, deviceProperties.name, `${event}EventTarget`, `${event}EventTargetHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" ? deviceInteractions.eventInteractions[`${getEventId(event)}`].target : ""}`, false, false)}
-											${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps : false}`, true, false)}
-											${generateElementTextBox("text", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUser`, `${event}EventUserHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].user !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].user : ""}`, false, false)}
-											${generateElementTextBox("password", deviceProperties.serialNumber, deviceProperties.name, `${event}EventPassword`, `${event}EventPasswordHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].password !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].password : ""}`, false, false)}
-											${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 100, 2, `${event}EventCommand`, `${event}EventCommandHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "" ? atob(deviceInteractions.eventInteractions[`${getEventId(event)}`].command) : ""}`, false, false)}
-											<div class="btn-group" role="group">
-												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}SaveEventInteraction`, "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-floppy" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
-	if(deviceInteractions !== null && (deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== ""))
-	{
-		interactionExpander += `
-												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
-												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
-	}
-	else
-	{
-		interactionExpander += `
-												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
-												${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
-	}
-	interactionExpander += `
+										<div class="accordion-item">
+											<div class="accordion-header">
+												<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInteraction${event.charAt(0).toUpperCase() + event.slice(1)}"><h5 class="mb-0 ps-0">${translateContent(`lblInteraction${event.charAt(0).toUpperCase() + event.slice(1)}`)}</h5></button>
+											</div>
+											<div id="collapseInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="accordion-collapse collapse">
+												<div class="accordion-body">
+													${generateElementTextBox("text", deviceProperties.serialNumber, deviceProperties.name, `${event}EventTarget`, `${event}EventTargetHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" ? deviceInteractions.eventInteractions[`${getEventId(event)}`].target : ""}`, false, false)}
+													${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps : false}`, true, false)}
+													${generateElementTextBox("text", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUser`, `${event}EventUserHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].user !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].user : ""}`, false, false)}
+													${generateElementTextBox("password", deviceProperties.serialNumber, deviceProperties.name, `${event}EventPassword`, `${event}EventPasswordHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].password !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].password : ""}`, false, false)}
+													${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 100, 2, `${event}EventCommand`, `${event}EventCommandHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "" ? atob(deviceInteractions.eventInteractions[`${getEventId(event)}`].command) : ""}`, false, false)}
+													<div class="btn-group" role="group">
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}SaveEventInteraction`, "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-floppy" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, true, undefined, undefined, setEventHandler)}`;
+			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== ""))
+			{
+				interactionExpander += `
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, true, undefined, undefined, setEventHandler)}
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, true, undefined, undefined, setEventHandler)}`;
+			}
+			else
+			{
+				interactionExpander += `
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, false, undefined, undefined, setEventHandler)}
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, false, undefined, undefined, setEventHandler)}`;
+			}
+			interactionExpander += `
+													</div>
+												</div>
 											</div>
 										</div>`;
 	return interactionExpander;
@@ -4739,11 +4723,11 @@ function checkLogLevel(elementName, value)
 		document.getElementById(elementName).setAttribute("role", "alert");
 		if(value == "0")
 		{
-			document.getElementById(elementName).innerHTML += `${translateContent("lblLogLevelToHighTraceMessage")}<br />`;
+			document.getElementById(elementName).innerHTML = `${translateContent("lblLogLevelToHighTraceMessage")}<br />`;
 		}
 		if(value == "1")
 		{
-			document.getElementById(elementName).innerHTML += `${translateContent("lblLogLevelToHighDebugMessage")}<br />`;
+			document.getElementById(elementName).innerHTML = `${translateContent("lblLogLevelToHighDebugMessage")}<br />`;
 		}
 		document.getElementById(elementName).innerHTML += `<small class="form-text text-muted">${translateContent("lblLogLevelToHighSubText")}</small>`;
 	}
