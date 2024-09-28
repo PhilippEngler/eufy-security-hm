@@ -3089,8 +3089,8 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 				}
 				else if(propertyName == "moveToPreset")
 				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageMoveToPresetFailedMessage");
+					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageMoveToPresetFailedMessage");
 				}
 				else
 				{
