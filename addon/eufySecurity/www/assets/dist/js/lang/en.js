@@ -625,7 +625,7 @@ function translateMessages(message, ...options)
 		case "messageErrorThreeValues":
 			return `The return value '${options[0]}' is '${options[1]}'.<br />Message: '${options[2]}'`;
 		case "messageSystemVariableHintHeader":
-			return "Option 'Automatically update system variables for API actionsn' is activated.";
+			return "Option 'Automatically update system variables for API actions' is activated.";
 		case "messageSystemVariableHintMessage":
 			return "The AddOn will update the corresponding system variables. In the following table you will find all the system variables that this AddOn requires on the CCU. If the respective line is green, the system variable has already been created on the CCU, otherwise the line is red.</br >If system variables are found that begin with 'eufy' and are no longer required (e.g. for deleted devices), these appear in a second table. These system variables can be deleted there.";
 		case "messageSystemVariableHintSubText":

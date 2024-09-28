@@ -1582,7 +1582,7 @@ export class EufySecurityApi {
                         this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(mode));
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     } else {
-                        this.setSystemVariableString("eufyCurrentState", "unbenkannt");
+                        this.setSystemVariableString("eufyCurrentState", "unbekannt");
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     }
 
