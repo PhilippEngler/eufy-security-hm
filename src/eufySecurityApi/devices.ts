@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import EventEmitter from "events";
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from "./eufySecurityApi";
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, DeviceType } from "./http";
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, DeviceType, IndoorS350DetectionTypes } from "./http";
 import { EufySecurityEvents } from "./interfaces";
 import { DynamicLighting, MotionZone, P2PConnectionType, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
@@ -1799,14 +1799,20 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                     station.setMotionDetectionTypeHuman(device, value as boolean);
                 } else if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, T8170DetectionTypes.HUMAN_DETECTION, value as boolean);
-                } else if (device.isSoloCameraC210()) {
+                } else if (device.isSoloCameras()) {
                     station.setMotionDetectionTypeHB3(device, SoloCameraDetectionTypes.HUMAN_DETECTION, value as boolean);
+                } else if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setMotionDetectionTypeHB3(device, IndoorS350DetectionTypes.HUMAN_DETECTION, value as boolean);
                 } else {
                     station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.HUMAN_DETECTION, value as boolean);
                 }
                 break;
             case PropertyName.DeviceMotionDetectionTypePet:
-                station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.PET_DETECTION, value as boolean);
+                if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setMotionDetectionTypeHB3(device, IndoorS350DetectionTypes.PET_DETECTION, value as boolean);
+                } else {
+                    station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.PET_DETECTION, value as boolean);
+                }
                 break;
             case PropertyName.DeviceMotionDetectionTypeVehicle:
                 if (device.isOutdoorPanAndTiltCamera()) {
@@ -1820,12 +1826,13 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                     station.setMotionDetectionTypeAllOtherMotions(device, value as boolean);
                 } else if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, T8170DetectionTypes.ALL_OTHER_MOTION, value as boolean);
-                } else if (device.isSoloCameraC210()) {
+                } else if (device.isSoloCameras()) {
                     station.setMotionDetectionTypeHB3(device, SoloCameraDetectionTypes.ALL_OTHER_MOTION, value as boolean);
+                } else if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setMotionDetectionTypeHB3(device, IndoorS350DetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 } else {
                     station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 }
-                break;
             case PropertyName.DeviceLightSettingsManualLightingActiveMode:
                 station.setLightSettingsManualLightingActiveMode(device, value as number);
                 break;

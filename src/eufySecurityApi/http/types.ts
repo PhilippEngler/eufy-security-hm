@@ -357,6 +357,12 @@ export enum SoloCameraDetectionTypes {
     ALL_OTHER_MOTION = 32771,
 }
 
+export enum IndoorS350DetectionTypes {
+    HUMAN_DETECTION = 3,
+    PET_DETECTION = 8,
+    ALL_OTHER_MOTION = 32768,
+}
+
 export enum IndoorDetectionTypes {
     PERSON_DETECTION = 1,
     PET_DETECTION = 2,
@@ -1823,6 +1829,18 @@ export const DeviceMotionDetectionTypeIndoorProperty: PropertyMetadataNumeric = 
         1: "Person",
         2: "Pet",
         3: "Person and Pet",
+        4: "All other motions",
+        5: "Person and all other motions",
+        6: "Pet and all other motions",
+        7: "Person, Pet and all other motions",
+    },
+}
+
+export const DeviceMotionDetectionTypeIndoorS350Property: PropertyMetadataNumeric = {
+    ...DeviceMotionDetectionTypeProperty,
+    key: CommandType.CMD_INDOOR_DET_SET_MOTION_DETECT_TYPE,
+    states: {
+        3: "Person",
         4: "All other motions",
         5: "Person and all other motions",
         6: "Pet and all other motions",
@@ -6748,16 +6766,18 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceSoundDetectionType]: DeviceSoundDetectionTypeS350Property,
         [PropertyName.DeviceSoundDetectionSensitivity]: DeviceSoundDetectionSensitivityProperty,
         [PropertyName.DeviceCryingDetected]: DeviceCryingDetectedProperty,
-        [PropertyName.DeviceStatusLed]: DeviceStatusLedIndoorS350Property,
+        [PropertyName.DeviceStatusLed]: DeviceStatusLedIndoorFloodProperty,
         [PropertyName.DevicePicture]: DevicePictureProperty,
         [PropertyName.DevicePictureTime]: DevicePictureTimeProperty,
         [PropertyName.DevicePictureUrl]: DevicePictureUrlProperty,
-        [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivityBatteryDoorbellProperty,
+        [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivityIndoorProperty,
         [PropertyName.DeviceMicrophone]: DeviceMicrophoneProperty,
         [PropertyName.DeviceSpeaker]: DeviceSpeakerProperty,
         [PropertyName.DeviceSpeakerVolume]: DeviceSpeakerVolumeIndoorFloodDoorbellProperty,
-        [PropertyName.DeviceAudioRecording]: DeviceAudioRecordingProperty,
-        [PropertyName.DeviceMotionDetectionType]: DeviceMotionDetectionTypeIndoorProperty,
+        [PropertyName.DeviceAudioRecording]: DeviceAudioRecordingIndoorSoloFloodlightProperty,
+        [PropertyName.DeviceMotionDetectionTypeHuman]: DeviceMotionHB3DetectionTypeHumanProperty,
+        [PropertyName.DeviceMotionDetectionTypePet]: DeviceMotionHB3DetectionTypePetProperty,
+        [PropertyName.DeviceMotionDetectionTypeAllOtherMotions]: DeviceMotionHB3DetectionTypeAllOtherMotionsProperty,
         [PropertyName.DeviceVideoStreamingQuality]: DeviceVideoStreamingQualityS350Property,
         [PropertyName.DeviceVideoRecordingQuality]: DeviceVideoRecordingQualityS350Property,
         [PropertyName.DeviceNotificationType]: DeviceNotificationTypeIndoorFloodlightProperty,
@@ -6780,6 +6800,9 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceNotificationIntervalTime]: DeviceNotificationIntervalTimeProperty,
         [PropertyName.DeviceContinuousRecording]: DeviceContinuousRecordingProperty,
         [PropertyName.DeviceContinuousRecordingType]: DeviceContinuousRecordingTypeProperty,
+        [PropertyName.DeviceRTSPStream]: DeviceRTSPStreamProperty,
+        [PropertyName.DeviceRTSPStreamUrl]: DeviceRTSPStreamUrlProperty,
+        [PropertyName.DeviceVideoTypeStoreToNAS]: DeviceVideoTypeStoreToNASProperty,
     },
     [DeviceType.CAMERA_FG]: {
         ...GenericDeviceProperties,
