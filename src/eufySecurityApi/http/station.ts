@@ -233,7 +233,9 @@ export class Station extends TypedEmitter<StationEvents> {
 
                 try {
                     if (type === ParamType.GUARD_MODE) {
-                        this.emit("guard mode", this, Number.parseInt(parsedValue));
+                        if(this.getGuardMode() !== undefined) {
+                            this.emit("guard mode", this, Number.parseInt(parsedValue));
+                        }
                     } else if (type === CommandType.CMD_GET_ALARM_MODE) {
                         this.emit("current mode", this, Number.parseInt(parsedValue));
                     }
