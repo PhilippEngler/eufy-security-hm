@@ -9058,6 +9058,9 @@ export const DeviceCommands: Commands = {
         CommandName.DeviceStartTalkback,
         CommandName.DeviceStopTalkback,
         CommandName.DeviceSnooze,
+        CommandName.DevicePresetPosition,
+        CommandName.DeviceSavePresetPosition,
+        CommandName.DeviceDeletePresetPosition,
     ],
     [DeviceType.CAMERA_FG]: [
         CommandName.DeviceStartLivestream,
