@@ -1234,6 +1234,7 @@ export class Config {
     public setLogLevelAddon(logLevel: number): void {
         if (this.configJson.logConfig.logLevelAddon !== logLevel) {
             this.configJson.logConfig.logLevelAddon = logLevel;
+            setLoggingLevel("addon", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1256,6 +1257,7 @@ export class Config {
     public setLogLevelMain(logLevel: number): void {
         if (this.configJson.logConfig.logLevelMain !== logLevel) {
             this.configJson.logConfig.logLevelMain = logLevel;
+            setLoggingLevel("main", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1278,6 +1280,7 @@ export class Config {
     public setLogLevelHttp(logLevel: number): void {
         if (this.configJson.logConfig.logLevelHttp !== logLevel) {
             this.configJson.logConfig.logLevelHttp = logLevel;
+            setLoggingLevel("http", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1300,6 +1303,7 @@ export class Config {
     public setLogLevelP2p(logLevel: number): void {
         if (this.configJson.logConfig.logLevelP2p !== logLevel) {
             this.configJson.logConfig.logLevelP2p = logLevel;
+            setLoggingLevel("p2p", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1322,6 +1326,7 @@ export class Config {
     public setLogLevelPush(logLevel: number): void {
         if (this.configJson.logConfig.logLevelPush !== logLevel) {
             this.configJson.logConfig.logLevelPush = logLevel;
+            setLoggingLevel("push", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1344,6 +1349,7 @@ export class Config {
     public setLogLevelMqtt(logLevel: number): void {
         if (this.configJson.logConfig.logLevelMqtt !== logLevel) {
             this.configJson.logConfig.logLevelMqtt = logLevel;
+            setLoggingLevel("mqtt", logLevel);
             this.hasChanged = true;
         }
     }

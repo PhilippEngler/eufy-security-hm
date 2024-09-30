@@ -2233,19 +2233,13 @@ export class EufySecurityApi {
             this.setupScheduledTask(this.taskUpdateState, "getState");
         }
         this.config.setPushServiceActive(pushServiceActive);
-        this.config.setSecureApiAccessBySid(secureApiAccessSidActive)
+        this.config.setSecureApiAccessBySid(secureApiAccessSidActive);
         this.config.setLogLevelAddon(logLevelAddon);
-        this.updateLogLevelAddon(logLevelAddon);
         this.config.setLogLevelMain(logLevelMain);
-        this.updateLogLevelMain(logLevelMain);
         this.config.setLogLevelHttp(logLevelHttp);
-        this.updateLogLevelHttp(logLevelHttp);
         this.config.setLogLevelP2p(logLevelP2p);
-        this.updateLogLevelP2p(logLevelP2p);
         this.config.setLogLevelPush(logLevelPush);
-        this.updateLogLevelPush(logLevelPush);
         this.config.setLogLevelMqtt(logLevelMqtt);
-        this.updateLogLevelMqtt(logLevelMqtt);
 
         const res = this.config.writeCurrentConfig();
         if (res == "saved") {
