@@ -971,7 +971,7 @@ function getDeviceProperties(deviceId, devicePropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.isDevicePanAndTilt, objResp.data, objResp.interactions);
+					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.isDevicePanAndTilt, objResp.data.properties, objResp.data.commands, objResp.interactions);
 				}
 				else
 				{
@@ -1014,7 +1014,7 @@ function generateDeviceModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, isDeviceKnownByClient, isDevicePanAndTilt, deviceProperties, deviceInteractions)
+function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, isDeviceKnownByClient, isDevicePanAndTilt, deviceProperties, deviceCommands, deviceInteractions)
 {
 	var setEventHandler = true;
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
@@ -1738,13 +1738,14 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(isDevicePanAndTilt !== undefined && isDevicePanAndTilt === true)
+	alert(deviceCommands);
+	if(deviceCommands.includes("devicePresetPosition"))
 	{
 		deviceModal += `
 								<div class="card mb-3" id="cardDevicePanAndTiltSettings">
 									<h5 class="card-header">${translateContent("lblHeaderPanAndTilt")}</h5>
 									<div class="card-body">`;
-		if(isDevicePanAndTilt && isDevicePanAndTilt === true)
+		if(deviceCommands.includes("devicePresetPosition"))
 		{
 			deviceModal += `
 										<h5>${translateContent("lblMoveToPreset")}</h5>
@@ -2541,7 +2542,7 @@ function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillStationSettingsModal(stationId, objResp.modelName, objResp.isP2PConnected, objResp.isEnergySavingDevice, objResp.isDeviceKnownByClient, objResp.deviceType, objResp.isIntegratedDevice, objResp.data, stationPropertiesMetadata, timeZones);
+					fillStationSettingsModal(stationId, objResp.modelName, objResp.isP2PConnected, objResp.isEnergySavingDevice, objResp.isDeviceKnownByClient, objResp.deviceType, objResp.isIntegratedDevice, objResp.data.properties, objResp.data.commands, stationPropertiesMetadata, timeZones);
 				}
 				else
 				{
@@ -2584,7 +2585,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergySavingDevice, isDeviceKnownByClient, deviceType, isIntegratedDevice, stationProperties, stationPropertiesMetadata, timeZone)
+function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergySavingDevice, isDeviceKnownByClient, deviceType, isIntegratedDevice, stationProperties, stationCommands, stationPropertiesMetadata, timeZone)
 {
 	var setEventHandler = true;
 	var stationModal =  `
@@ -3034,8 +3035,11 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	stationModal +=  `
+	if(stationCommands.includes("stationReboot"))
+	{
+		stationModal +=  `
 									${makeButtonElement("btnStationReboot", "btn btn-outline-danger", `changeStationProperty('${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, translateString("strRebootStation"), true, undefined, undefined, setEventHandler)}`;
+	}
 	stationModal +=  `
 								</div>
 								<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
