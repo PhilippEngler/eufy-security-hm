@@ -1738,7 +1738,6 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	alert(deviceCommands);
 	if(deviceCommands.includes("devicePresetPosition"))
 	{
 		deviceModal += `
@@ -1754,13 +1753,13 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 												${makeButtonElement("btnDeviceMoveToPreset00", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 0)`, translateString("strMoveToPreset01"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-											${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 1)`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 1)`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-											${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 2)`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 2)`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-											${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 3)`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 3)`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
 											</div>
 										</div>`;
 		}
