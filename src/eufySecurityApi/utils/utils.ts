@@ -1,4 +1,4 @@
-import { Device, DeviceType, Station } from "../http";
+import { Device, DeviceType, GuardMode, Station, StationEvents } from "../http";
 import { Logger } from "../logging";
 
 export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
@@ -198,7 +198,7 @@ export const getDeviceTypeAsString = function(device: Device): string {
 
 /**
  * Returns a string with the type of the station.
- * @param station Rhe station.
+ * @param station The station.
  * @returns A string with the type of the station.
  */
 export const getStationTypeString = function(station: Station): string {
@@ -303,4 +303,51 @@ export const extractEnclosedString = function(data: string, startString: string,
         logger.debug(JSON.stringify({"data": data, "start": startString, "end": endString}));
     }
     return data.substring(data.indexOf(startString) + startString.length, data.indexOf(endString));
+}
+
+/**
+ * Wait for a given station event.
+ * @param station The station.
+ * @param eventName The event name.
+ * @param timeout The timeout in ms.
+ * @param guardMode The guardmode.
+ * @returns true if event occurs, otherwise false.
+ */
+export function waitForStationEvent(station: Station, eventName: keyof StationEvents, timeout: number, guardMode?: GuardMode): Promise<boolean> {
+    return new Promise<boolean>(async (resolve, reject) => {
+        // eslint-disable-next-line prefer-const
+        let timer: NodeJS.Timeout;
+        const funcListener = (): void => listener();
+
+        function listener(): void {
+            station.removeListener(eventName, funcListener);
+            clearTimeout(timer);
+            resolve(true);
+        }
+
+        station.addListener(eventName, funcListener);
+        timer = setTimeout(() => {
+            station.removeListener(eventName, funcListener);
+            reject(false);
+        }, timeout);
+        try {
+            switch (eventName) {
+                case "connect":
+                    await station.connect();
+                    break;
+                case "close":
+                    station.close();
+                    break;
+                case "guard mode":
+                    if (guardMode !== undefined) {
+                        station.setGuardMode(guardMode);
+                    }
+                    break;
+            }
+            
+        } catch (e :any) {
+            station.removeListener(eventName, funcListener);
+            reject(e);
+        }
+    });
 }

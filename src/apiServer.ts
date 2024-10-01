@@ -252,6 +252,8 @@ class ApiServer {
                             responseData = await api.setStationProperty(url[2], url[3], url[4]);
                         } else if (url[3] === "rebootStation" && url.length === 4) {
                             responseData = await api.rebootStation(url[2]);
+                        } else if (url[3] === "moveToPreset" && url.length === 6) {
+                            responseData = await api.moveToPresetPosition(url[4], url[5]);
                         } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
@@ -398,6 +400,20 @@ class ApiServer {
                     case "connect":
                         if (url.length === 3) {
                             responseData = await api.connectStation(url[2]);
+                        } else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "disconnect":
+                        if (url.length === 3) {
+                            responseData = await api.disconnectStation(url[2]);
+                        } else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "reconnect":
+                        if (url.length === 3) {
+                            responseData = await api.reconnectStation(url[2]);
                         } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }

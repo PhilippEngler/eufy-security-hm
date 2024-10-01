@@ -1,5 +1,5 @@
 import { Config } from "./config";
-import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig, PresetPositionType, CommandName } from "./http";
+import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig, CommandName } from "./http";
 import { HomematicApi } from "./homematicApi";
 import { rootAddonLogger, setLoggingLevel } from "./logging";
 
@@ -14,7 +14,7 @@ import { EufyHouses } from "./houses";
 import { NotSupportedError, ReadOnlyPropertyError, ensureError } from "./error";
 import { getDateTimeFromImageFilePath, randomNumber } from "./http/utils";
 import { PhoneModels, timeZoneData } from "./http/const";
-import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString } from "./utils/utils";
+import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString, waitForStationEvent } from "./utils/utils";
 import { countryData } from "./utils/const";
 import { EventInteractionType } from "./utils/types";
 
@@ -1163,6 +1163,9 @@ export class EufySecurityApi {
         }
 
         json = {"eufyDeviceId":station.getId(), "isDeviceKnownByClient":Object.values(DeviceType).includes(station.getDeviceType()), "deviceType":getStationTypeString(station), "wanIpAddress":station.getIPAddress(), "isP2PConnected":station.isConnected(), "isEnergySavingDevice":station.isEnergySavingDevice()};
+        if (privacyMode !== undefined) {
+            json.privacyMode = privacyMode;
+        }
         for (const property in properties) {
             switch (property) {
                 case PropertyName.Model:
@@ -1171,9 +1174,6 @@ export class EufySecurityApi {
                     break;
                 case PropertyName.StationGuardMode:
                     json[property] = properties[property] === undefined ? "n/a": properties[property];
-                    if (privacyMode !== undefined) {
-                        json.privacyMode = privacyMode;
-                    }
                     json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d": (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a": this.stations.getLastGuardModeChangeTime(station.getSerial()));
                     break;
                 case PropertyName.StationHomeSecuritySettings:
@@ -1864,7 +1864,7 @@ export class EufySecurityApi {
             let station = await this.stations.getStation(stationSerial);
 
             if (station) {
-                if (station.isConnected() === true) {
+                if (station.isConnected()) {
                     json = {"success":false, "message":"P2P connection to station already established."};
                 } else if (station.isP2PConnectableDevice()) {
                     if (await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
@@ -1874,13 +1874,128 @@ export class EufySecurityApi {
                         station.setConnectionType(this.getP2PConnectionType());
                         rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
                     }
-                    await station.connect();
-                    await sleep(500);
+                    let connected = false;
 
-                    await this.httpService.refreshStationData();
-                    station = await this.stations.getStation(stationSerial);
-                    const connected = station.isConnected();
-                    json = {"success":connected, "conneceted":connected};
+                    const res = await waitForStationEvent(station, "connect", 10000).then(() => {
+                        connected = station.isConnected();
+                        return true;
+                    }, (value: any) => {
+                        if (typeof value === "boolean") {
+                            connected = station.isConnected();
+                            return false;
+                        } else {
+                            throw value;
+                        }
+                    });
+
+                    json = {"success":res, "conneceted":connected};
+                }
+            } else {
+                json = {"success":false, "message":"The specified station could not be found."};
+            }
+        } else {
+            json = {"success":false, "message":"No connection to eufy."};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Forces to disconnect the p2p connection to a station specified by serial.
+     * @param stationSerial The serial of the station.
+     * @returns A JSON string with the result.
+     */
+    public async disconnectStation(stationSerial: string): Promise<string> {
+        let json: any = {};
+
+        if (this.stations) {
+            await this.httpService.refreshStationData();
+            let station = await this.stations.getStation(stationSerial);
+
+            if (station) {
+                if (!station.isConnected()) {
+                    json = {"success":false, "message":"No P2P connection to station established."};
+                } else {
+                    let connected = false;
+
+                    const res = await waitForStationEvent(station, "close", 10000).then(() => {
+                        connected = station.isConnected();
+                        return true;
+                    }, (value: any) => {
+                        if (typeof value === "boolean") {
+                            connected = station.isConnected();
+                            return false;
+                        } else {
+                            throw value;
+                        }
+                    });
+
+                    json = {"success":res, "disconneceted":!connected};
+                }
+            } else {
+                json = {"success":false, "message":"The specified station could not be found."};
+            }
+        } else {
+            json = {"success":false, "message":"No connection to eufy."};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Forces to reconnect the p2p connection to a station specified by serial.
+     * @param stationSerial The serial of the station.
+     * @returns A JSON string with the result.
+     */
+
+    public async reconnectStation(stationSerial: string): Promise<string> {
+        let json: any = {};
+
+        if (this.stations) {
+            await this.httpService.refreshStationData();
+            let station = await this.stations.getStation(stationSerial);
+
+            if (station) {
+                if (!station.isConnected()) {
+                    json = {"success":false, "message":"No P2P connection to station established."};
+                } else if (station.isP2PConnectableDevice()) {
+                    if (await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
+                        station.setConnectionType(P2PConnectionType.QUICKEST);
+                        rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
+                    } else if (!(await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== this.getP2PConnectionType())) {
+                        station.setConnectionType(this.getP2PConnectionType());
+                        rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
+                    }
+                    let connected = false;
+
+                    let res = await waitForStationEvent(station, "close", 10000).then(() => {
+                        connected = station.isConnected();
+                        return true;
+                    }, (value: any) => {
+                        if (typeof value === "boolean") {
+                            connected = station.isConnected();
+                            return false;
+                        } else {
+                            throw value;
+                        }
+                    });
+
+                    if (res === true && connected === false) {
+                        await sleep(1000);
+                        res = await waitForStationEvent(station, "connect", 10000).then(() => {
+                            connected = station.isConnected();
+                            return true;
+                        }, (value: any) => {
+                            if (typeof value === "boolean") {
+                                connected = station.isConnected();
+                                return false;
+                            } else {
+                                throw value;
+                            }
+                        });
+                    }
+
+                    json = {"success":res, "conneceted":connected};
                 }
             } else {
                 json = {"success":false, "message":"The specified station could not be found."};

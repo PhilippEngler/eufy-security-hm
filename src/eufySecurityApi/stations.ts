@@ -9,7 +9,7 @@ import EventEmitter from "events";
 import { AlarmEvent, CommandResult, CommandType, CrossTrackingGroupEntry, DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLatestInfoCloud, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, StorageInfoBodyHB3, StreamMetadata, TFCardStatus } from "./p2p";
 import { TalkbackStream } from "./p2p/talkback";
 import { getError, parseValue, waitForEvent } from "./utils";
-import { convertTimeStampToTimeStampMs } from "./utils/utils";
+import { convertTimeStampToTimeStampMs, waitForStationEvent } from "./utils/utils";
 import path from "path";
 import { rootAddonLogger } from "./logging";
 import { isCharging } from "./p2p/utils";
@@ -265,7 +265,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             for (const stationSerial in this.stations) {
                 if (this.stations[stationSerial]) {
                     if (this.stations[stationSerial].isConnected() === true) {
-                        await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
+                        await waitForStationEvent(this.stations[stationSerial], "close", 10000).then(() => {
                             return;
                         }, () => {
                             rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
@@ -323,38 +323,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 }
             }
         }
-    }
-
-    /**
-     * Wait for the P2P closed event.
-     * @param station The station for waiting for the GuardMode event.
-     * @param timeout The timespan in ms maximal to wait for the event.
-     * @returns Returns true or false.
-     */
-    private async waitForP2PCloseEvent(station: Station, timeout: number): Promise<boolean> {
-        return new Promise<boolean>(async (resolve, reject) => {
-            // eslint-disable-next-line prefer-const
-            let timer: NodeJS.Timeout;
-            const funcListener = (): void => listener();
-
-            function listener(): void {
-                station.removeListener("close", funcListener);
-                clearTimeout(timer);
-                resolve(true);
-            }
-
-            station.addListener("close", funcListener);
-            timer = setTimeout(() => {
-                station.removeListener("close", funcListener);
-                reject(false);
-            }, timeout);
-            try {
-                this.stations[station.getSerial()].close();
-            } catch (e :any) {
-                station.removeListener("close", funcListener);
-                reject(e);
-            }
-        });
     }
 
     /**
@@ -601,7 +569,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (this.stations[stationSerial].getGuardMode() === guardMode) {
             return true;
         } else {
-            const res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
+            const res = await waitForStationEvent(this.stations[stationSerial], "guard mode", 10000, guardMode = guardMode).then(() => {
                 return true;
             }, (value: any) => {
                 if (typeof value === "boolean") {
@@ -616,39 +584,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             }
             return res;
         }
-    }
-
-    /**
-     * Wait for the GuardModeEvent after changing guardMode for a given base.
-     * @param station The station for waiting for the GuardMode event.
-     * @param guardMode The guard mode to set.
-     * @param timeout The timespan in ms maximal to wait for the event.
-     * @returns Returns true or false.
-     */
-    private async waitForGuardModeEvent(station: Station, guardMode: number, timeout: number): Promise<boolean> {
-        return new Promise<boolean>(async (resolve, reject) => {
-            // eslint-disable-next-line prefer-const
-            let timer: NodeJS.Timeout;
-            const funcListener = (): void => listener();
-
-            function listener(): void {
-                station.removeListener("guard mode", funcListener);
-                clearTimeout(timer);
-                resolve(true);
-            }
-
-            station.addListener("guard mode", funcListener);
-            timer = setTimeout(() => {
-                station.removeListener("guard mode", funcListener);
-                reject(false);
-            }, timeout);
-            try {
-                this.setStationProperty(station.getSerial(), PropertyName.StationGuardMode, guardMode);
-            } catch (e :any) {
-                station.removeListener("guard mode", funcListener);
-                reject(e);
-            }
-        });
     }
 
     /**
