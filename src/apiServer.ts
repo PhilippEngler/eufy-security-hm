@@ -250,10 +250,15 @@ class ApiServer {
                     case "setStationProperty":
                         if (url.length === 5) {
                             responseData = await api.setStationProperty(url[2], url[3], url[4]);
-                        } else if (url[3] === "rebootStation" && url.length === 4) {
-                            responseData = await api.rebootStation(url[2]);
-                        } else if (url[3] === "moveToPreset" && url.length === 6) {
-                            responseData = await api.moveToPresetPosition(url[4], url[5]);
+                        } else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "sendCommand":
+                        if (url.length === 4 && url[2] === "rebootStation") {
+                            responseData = await api.rebootStation(url[3]);
+                        } else if (url.length === 5 && url[2] === "moveToPreset") {
+                            responseData = await api.moveToPresetPosition(url[3], url[4]);
                         } else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }

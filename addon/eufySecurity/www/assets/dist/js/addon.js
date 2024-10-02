@@ -1,12 +1,12 @@
 /**
  * Javascript for eufySecurity Addon
- * 20240921
+ * 20241002
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
-var version = "3.0.18";
+var version = "3.1.0";
 
 /**
  * common used java script functions
@@ -1750,16 +1750,16 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>${translateContent("lblMoveToPreset")}</h5>
 										<div class="row g-2">
 											<div class="col-sm-3">
-												${makeButtonElement("btnDeviceMoveToPreset00", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 0)`, translateString("strMoveToPreset01"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset00", "btn btn-primary col-12 h-100", `sendCommand('Device', '${deviceProperties.serialNumber}', '${deviceProperties.name}', 'moveToPreset', 0)`, translateString("strMoveToPreset01"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-												${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 1)`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset01", "btn btn-primary col-12 h-100", `sendCommand('Device', '${deviceProperties.serialNumber}', '${deviceProperties.name}', 'moveToPreset', 1)`, translateString("strMoveToPreset02"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-												${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 2)`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset02", "btn btn-primary col-12 h-100", `sendCommand('Device', '${deviceProperties.serialNumber}', '${deviceProperties.name}', 'moveToPreset', 2)`, translateString("strMoveToPreset03"), true, undefined, undefined, setEventHandler)}
 											</div>
 											<div class="col-sm-3">
-												${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary col-12 h-100", `changeStationProperty('${deviceProperties.stationSerialNumber}', '${deviceProperties.name}', 'moveToPreset', '${deviceProperties.serialNumber}', 3)`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
+												${makeButtonElement("btnDeviceMoveToPreset03", "btn btn-primary col-12 h-100", `sendCommand('Device', '${deviceProperties.serialNumber}', '${deviceProperties.name}', 'moveToPreset', 3)`, translateString("strMoveToPreset04"), true, undefined, undefined, setEventHandler)}
 											</div>
 										</div>`;
 		}
@@ -3037,7 +3037,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 	if(stationCommands.includes("stationReboot"))
 	{
 		stationModal +=  `
-									${makeButtonElement("btnStationReboot", "btn btn-outline-danger", `changeStationProperty('${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, translateString("strRebootStation"), true, undefined, undefined, setEventHandler)}`;
+									${makeButtonElement("btnStationReboot", "btn btn-outline-danger", `sendCommand('Station', '${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, translateString("strRebootStation"), true, undefined, undefined, setEventHandler)}`;
 	}
 	stationModal +=  `
 								</div>
@@ -3064,36 +3064,83 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 			if(objResp.success == true)
 			{
 				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
-				if(propertyName == "rebootStation")
-				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessage("messageRebootStationHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessage("messageRebootStationOkMessage");
-				}
-				else if(propertyName == "moveToPreset")
-				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageMoveToPresetOkMessage", additionalArg+1);
-				}
-				else
-				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage", additionalArg+1);
-				}
+				document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
 				toast.show();
 				generateStationSettingsModal(stationId, stationName)
 			}
 			else
 			{
 				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				if(propertyName == "rebootStation")
+				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
+				toast.show();
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			
+		}
+		else
+		{
+			generateContentStationSettingsModal(stationId, stationName);
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+
+function sendCommand(deviceType, deviceId, deviceName, commandName, commandValue)
+{
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/sendCommand/${commandName}/${deviceId}${commandValue !== undefined ? `/${commandValue}` : ``}`;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success == true)
+			{
+				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+				if(commandName == "rebootStation")
+				{
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageRebootStationHeader");
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageRebootStationOkMessage");
+				}
+				else if(commandName == "moveToPreset")
+				{
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageMoveToPresetOkMessage", commandValue+1);
+				}
+				else
+				{
+					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
+				}
+				toast.show();
+				if(deviceType == "Station")
+				{
+					generateStationSettingsModal(deviceId, deviceName);
+				}
+				else if(deviceType == "Device" && commandName != "moveToPreset")
+				{
+					generateDeviceSettingsModal(deviceId, deviceName);
+				}
+			}
+			else
+			{
+				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				if(commandName == "rebootStation")
 				{
 					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateContent("messageRebootStationHeader");
 					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateContent("messageSaveSettingsOkMessage");
 				}
-				else if(propertyName == "moveToPreset")
+				else if(commandName == "moveToPreset")
 				{
 					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageMoveToPresetFailedMessage");
+					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageMoveToPresetFailedMessage", commandValue+1);
 				}
 				else
 				{
@@ -3109,7 +3156,14 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 		}
 		else
 		{
-			generateContentStationSettingsModal(stationId, stationName);
+			if(deviceType == "Station")
+			{
+				generateContentStationSettingsModal(deviceId, deviceName);
+			}
+			else if(deviceType == "Device" && commandName != "moveToPreset")
+			{
+				generateContentDeviceSettingsModal(deviceId, deviceName);
+			}
 		}
 	};
 	xmlhttp.open("GET", url, true);
