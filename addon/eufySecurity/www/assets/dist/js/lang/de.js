@@ -96,13 +96,16 @@ function translateStaticContentElement(element)
 			return "Weitere Einstellungen";
 		case "lblCountry":
 			return "Land des eufy Security Accounts.";
-		case "optPleaseSelect":
-		case "optLogLevelPleaseSelectAddon":
-		case "optLogLevelPleaseSelectMain":
-		case "optLogLevelPleaseSelectHttp":
-		case "optLogLevelPleaseSelectP2p":
-		case "optLogLevelPleaseSelectPush":
-		case "optLogLevelPleaseSelectMqtt":
+		case "optPleaseSelectCountry":
+		case "optPleaseSelectLanguage":
+		case "optPleaseSelectHouse":
+		case "optPleaseSelectConnectionType":
+		case "optPleaseSelectLogLevelAddon":
+		case "optPleaseSelectLogLevelMain":
+		case "optPleaseSelectLogLevelHttp":
+		case "optPleaseSelectLogLevelP2p":
+		case "optPleaseSelectLogLevelPush":
+		case "optPleaseSelectLogLevelMqtt":
 			return "Bitte auswählen...";
 		case "hintCountry":
 			return "Das Land, für den Sie den eufy Security Account erstellt haben.";

@@ -120,7 +120,7 @@
 
 													</div>
 													<select name="country" id="cbCountry" class="form-select" required>
-														<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelectCountry">{optPleaseSelect}</option>
 													</select>
 												</div>
 												<small class="form-text text-muted" id="hintCountry">{hintCountry}</small>
@@ -128,7 +128,7 @@
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="my-2" for="cbLanguage" id="lblLanguage">{lblLanguage}</label>
 												<select name="language" id="cbLanguage" class="form-select" required>
-													<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+													<option disabled selected value style="display: none;" id="optPleaseSelectLanguage">{optPleaseSelect}</option>
 													<option value="de">deutsch</option>
 													<option value="en">english</option>
 												</select>
@@ -203,7 +203,7 @@
 												<div id="houseSelection">
 													<div id="houseSelectionMessage"></div>
 													<select name="house" id="cbHouseSelection" class="form-select" required>
-														<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelectHouse">{optPleaseSelect}</option>
 														<option value="all" id="optAllStationsDevices">{optAllStationsDevices}</option>
 													</select>
 													<small class="form-text text-muted mb-2" id="hintHouseSelection">{hintHouseSelection}</small>
@@ -214,7 +214,7 @@
 											<div class="form-label-group was-validated" class="container-fluid">
 												<label class="mb-2" for="cbConnectionType" id="lblConnectionType">{lblConnectionType}</label>
 												<select name="connectionType" id="cbConnectionType" class="form-select" required>
-													<option disabled selected value style="display: none;" id="optPleaseSelect">{optPleaseSelect}</option>
+													<option disabled selected value style="display: none;" id="optPleaseSelectConnectionType">{optPleaseSelect}</option>
 													<option value="1" id="optConnectionTypeLocal">{optConnectionTypeLocal}</option>
 													<option value="2" id="optConnectionTypeFastest">{optConnectionTypeFastest}</option>
 												</select>
@@ -275,7 +275,7 @@
 													<div id="alertLogLevelAddon">
 													</div>
 													<select name="logLevelAddon" id="cbLogLevelAddon" class="form-select" oninput="checkLogLevel('alertLogLevelAddon', this.value);" required>
-														<option disabled selected value="-1" style="display: none;" id="optLogLevelPleaseSelectAddon">{optPleaseSelect}</option>
+														<option disabled selected value="-1" style="display: none;" id="optPleaseSelectLogLevelAddon">{optPleaseSelect}</option>
 														<option value="0" id="optLogLevelAddon0">{optLogLevel0}</option>
 														<option value="1" id="optLogLevelAddon1">{optLogLevel1}</option>
 														<option value="2" id="optLogLevelAddon2">{optLogLevel2}</option>
@@ -294,7 +294,7 @@
 													<div id="alertLogLevelMain">
 													</div>
 													<select name="logLevelMain" id="cbLogLevelMain" class="form-select" oninput="checkLogLevel('alertLogLevelMain', this.value);" required>
-														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectMain">{optPleaseSelect}</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelectLogLevelMain">{optPleaseSelect}</option>
 														<option value="0" id="optLogLevelMain0">{optLogLevel0}</option>
 														<option value="1" id="optLogLevelMain1">{optLogLevel1}</option>
 														<option value="2" id="optLogLevelMain2">{optLogLevel2}</option>
@@ -313,7 +313,7 @@
 													<div id="alertLogLevelHttp">
 													</div>
 													<select name="logLevelHttp" id="cbLogLevelHttp" class="form-select" oninput="checkLogLevel('alertLogLevelHttp', this.value);" required>
-														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectHttp">{optPleaseSelect}</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelectLogLevelHttp">{optPleaseSelect}</option>
 														<option value="0" id="optLogLevelHttp0">{optLogLevel0}</option>
 														<option value="1" id="optLogLevelHttp1">{optLogLevel1}</option>
 														<option value="2" id="optLogLevelHttp2">{optLogLevel2}</option>
@@ -332,7 +332,7 @@
 													<div id="alertLogLevelP2p">
 													</div>
 													<select name="logLevelP2p" id="cbLogLevelP2p" class="form-select" oninput="checkLogLevel('alertLogLevelP2p', this.value);" required>
-														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectP2p">{optPleaseSelect}</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelectLogLevelP2p">{optPleaseSelect}</option>
 														<option value="0" id="optLogLevelP2p0">{optLogLevel0}</option>
 														<option value="1" id="optLogLevelP2p1">{optLogLevel1}</option>
 														<option value="2" id="optLogLevelP2p2">{optLogLevel2}</option>
@@ -351,7 +351,7 @@
 													<div id="alertLogLevelPush">
 													</div>
 													<select name="logLevelPush" id="cbLogLevelPush" class="form-select" oninput="checkLogLevel('alertLogLevelPush', this.value);" required>
-														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectPush">{optPleaseSelect}</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelectLogLevelPush">{optPleaseSelect}</option>
 														<option value="0" id="optLogLevelPush0">{optLogLevel0}</option>
 														<option value="1" id="optLogLevelPush1">{optLogLevel1}</option>
 														<option value="2" id="optLogLevelPush2">{optLogLevel2}</option>
@@ -370,7 +370,7 @@
 													<div id="alertLogLevelMqtt">
 													</div>
 													<select name="logLevelMqtt" id="cbLogLevelMqtt" class="form-select" oninput="checkLogLevel('alertLogLevelMqtt', this.value);" required>
-														<option disabled selected value style="display: none;" id="optLogLevelPleaseSelectMqtt">{optPleaseSelect}</option>
+														<option disabled selected value style="display: none;" id="optPleaseSelectLogLevelMqtt">{optPleaseSelect}</option>
 														<option value="0" id="optLogLevelMqtt0">{optLogLevel0}</option>
 														<option value="1" id="optLogLevelMqtt1">{optLogLevel1}</option>
 														<option value="2" id="optLogLevelMqtt2">{optLogLevel2}</option>
