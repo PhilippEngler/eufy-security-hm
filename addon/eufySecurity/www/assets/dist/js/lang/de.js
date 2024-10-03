@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.24
-20240921
+Schema v9.25
+20241003
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20240921 (v9.24)";
+var languageVersion = "20241003 (v9.25)";
 
 function translateNavbarElement(element)
 {
@@ -106,6 +106,7 @@ function translateStaticContentElement(element)
 		case "optPleaseSelectLogLevelP2p":
 		case "optPleaseSelectLogLevelPush":
 		case "optPleaseSelectLogLevelMqtt":
+		case "optPleaseSelectReconnectStation":
 			return "Bitte auswählen...";
 		case "hintCountry":
 			return "Das Land, für den Sie den eufy Security Account erstellt haben.";
@@ -322,6 +323,12 @@ function translateStaticContentElement(element)
 			return "Es werden alle Interaktionen aus den Einstellungen gelöscht.";
 		case "btnRemoveInteractions":
 			return "Interaktionen löschen";
+		case "headerReconnectStation":
+			return "P2P Verbindung neu herstellen";
+		case "hintReconnectStation":
+			return "Falls Sie in den Logdateien P2P-Verbindungfehler angezeigt werden und Sie dort aufgefordert werden, die P2P-Verbindung erneut zu initialisieren, können Sie dies hier tun. Wählen Sie dazu die entsprechende Station aus und klicken Sie auf 'P2P Verbindung neu herstellen'.";
+		case "btnReconnectStation":
+			return "P2P Verbindung neu herstellen";
 		case "headerDeleteTokenData":
 			return "Token löschen";
 		case "hintDeleteToken":
@@ -334,38 +341,6 @@ function translateStaticContentElement(element)
 			return "Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.";
 		case "btnRestartService":
 			return "Service neu starten";
-		case "headerCheckConfigFailed":
-			return "Überprüfung der Eingaben.";
-		case "divCheckConfigFailed":
-			return "Die Überprüfung der Eingaben ist fehlgeschlagen. Bitte überprüfen Sie die rot markierten Eingabefelder und beachten Sie die Hinweise.";
-		case "headerSaveConfigOK":
-			return "Speicherung der Einstellungen.";
-		case "divSaveConfigOK":
-			return "Die Einstellungen wurden erfolgreich gespeichert.";
-		case "headerSaveConfigFailed":
-			return "Speicherung der Einstellungen.";
-		case "divSaveConfigFailed":
-			return "Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.";
-		case "headerUploadConfigFailed":
-			return "Upload der Konfigurationsdatei.";
-		case "divUploadConfigFailed":
-			return "Bei dem Hochladen der Konfigrationsdatei ist ein Fehler aufgetreten.";
-		case "headerRemoveTokenOK":
-			return "Tokendaten löschen.";
-		case "divRemoveTokenOK":
-			return "Die Tokendaten wurden erfolgreich gelöscht.";
-		case "headerRemoveTokenFailed":
-			return "Tokendaten löschen.";
-		case "divRemoveTokenFailed":
-			return "Bei dem Löschen der Tokendaten ist ein Fehler aufgetreten.";
-		case "headerRestartOK":
-			return "Service neu starten.";
-		case "divRestartOK":
-			return "Der Service wird neu gestartet.";
-		case "headerRestartFailed":
-			return "Service neu starten.";
-		case "divRestartFailed":
-			return "Bei dem Neustart des Services ist ein Fehler aufgetreten.";
 		case "lblModalAtLeastOneNeedsActivationTitle":
 			return "Einstellungen überprüfen.";
 		case "lblModalAtLeastOneNeedsActivationMessage":
@@ -400,10 +375,6 @@ function translateStaticContentElement(element)
 			return "Warte auf Start des Services...";
 		case "lblWaitServiceInit":
 			return "Warte auf Initialisierung des Services...";
-		case "headerSaveConfigOKRestart":
-			return "Speicherung der Einstellungen.";
-		case "divSaveConfigOKRestart":
-			return "Die Einstellungen wurden erfolgreich gespeichert. Der Service wird neu gestartet.";
 		case "aboutIntroHeader":
 			return "Über eufy Security AddOn für HomeMatic";
 		case "headerVersionInfo":
@@ -587,12 +558,52 @@ function translateMessages(message, ...options)
 			return `Die Position ${options[0]} wurde angefahren.`;
 		case "messageMoveToPresetFailedMessage":
 			return "Beim Anfahren der Position ist ein Fehler aufgetreten.";
+		case "messageCheckConfigFailedHeader":
+			return "Überprüfung der Eingaben.";
+		case "messageCheckConfigFailedMessage":
+			return "Die Überprüfung der Eingaben ist fehlgeschlagen. Bitte überprüfen Sie die rot markierten Eingabefelder und beachten Sie die Hinweise.";
+		case "messageSaveConfigOKHeader":
+			return "Speicherung der Einstellungen.";
+		case "messageSaveConfigOKMessage":
+			return "Die Einstellungen wurden erfolgreich gespeichert.";
+		case "messageSaveConfigFailedHeader":
+			return "Speicherung der Einstellungen.";
+		case "messageSaveConfigFailedMessage":
+			return "Bei dem Speichern der Einstellungen ist ein Fehler aufgetreten.";
+		case "messageUploadConfigFailedHeader":
+			return "Upload der Konfigurationsdatei.";
+		case "messageUploadConfigFailedMessage":
+			return "Bei dem Hochladen der Konfigrationsdatei ist ein Fehler aufgetreten.";
+		case "messageRemoveTokenFailedHeader":
+			return "Tokendaten löschen.";
+		case "messageRemoveTokenFailedMessage":
+			return "Bei dem Löschen der Tokendaten ist ein Fehler aufgetreten.";
+		case "messageRestartOKHeader":
+			return "Service neu starten.";
+		case "messageRestartOKMessage":
+			return "Der Service wird neu gestartet.";
+		case "messageRestartFailedHeader":
+			return "Service neu starten.";
+		case "messageRestartFailedMessage":
+			return "Bei dem Neustart des Services ist ein Fehler aufgetreten.";
 		case "messageSaveSettingsHeader":
 			return "Einstellungen speichern.";
 		case "messageSaveSettingsOkMessage":
 			return "Die Einstellungen wurden erfolgreich gespeichert.";
 		case "messageSaveSettingsFailedMessage":
 			return "Die Einstellungen konnten nicht gespeichert werden.";
+		case "messageSendCommandHeader":
+			return "Befehl senden.";
+		case "messageSendCommandOkMessage":
+			return "Der Befehl wurde erfolgreich gesendet.";
+		case "messageSendCommandFailedMessage":
+			return "Der Befehl konnte nicht gesendet werden.";
+		case "messageReconnectStationHeader":
+			return "P2P Verbindung neu aufbauen.";
+		case "messageReconnectStationOkMessage":
+			return "Die Verbindung wurde neu aufgebaut.";
+		case "messageReconnectStationFailedMessage":
+			return "Die Verbindung konnte nicht neu aufgebaut werden.";
 		case "messageLoadTimeZoneInfoNotSuccessfullMessage":
 			return "Zeitzoneninformationen konnte nicht geladen werden.";
 		case "messageLoadTimeZoneInfoFailedMessage":

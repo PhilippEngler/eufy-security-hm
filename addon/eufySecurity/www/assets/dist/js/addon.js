@@ -1022,6 +1022,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 							<div class="modal-header text-bg-secondary w-100" style="--bs-bg-opacity: .5;" id="lblModalDeviceSettingsTitle">
 								<div class="float-start w-100"><h5 class="mb-0">${deviceProperties.name} (${deviceId})</h5></div>
 								${deviceProperties.wifiSignalLevel !== undefined || deviceProperties.wifiRssi !== undefined ? `<div class="float-end" style="text-align:right;"><h5 class="mb-0"><i class="${getWifiSignalLevelIcon(deviceProperties.wifiSignalLevel, deviceProperties.wifiRssi)}" title="${translateContent("titleWifiSignalLevel")}: ${deviceProperties.wifiRssi}dB"></i></h5></div>` : ""}
+								${makeButtonElement("btnStationSettingsModalCloseTop", "btn-close ms-2", undefined, "", true, "modal", "close", true)}
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
@@ -1951,9 +1952,9 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 	var eventType = getEventId(event);
 	if(eventType == -1)
 	{
-		const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-		document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-		document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveInteractionUnknownInteractionMessage", event);
+		const toast = new bootstrap.Toast(toastFailed);
+		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+		document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveInteractionUnknownInteractionMessage", event);
 		toast.show();
 		return;
 	}
@@ -1980,33 +1981,33 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateOK);
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveInteractionOkMessage");
+					const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveInteractionOkMessage");
 					toast.show();
 					generateDeviceSettingsModal(deviceId, deviceName)
 				}
 				else
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveInteractionFailedMessage");
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveInteractionFailedMessage");
 					toast.show();
 				}
 			}
 			catch (e)
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 				toast.show();
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
 			toast.show();
 		}
 		else
@@ -2022,9 +2023,9 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 	var eventType = getEventId(event);
 	if(eventType == -1)
 	{
-		const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-		document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-		document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionUnknownInteractionMessage", event);
+		const toast = new bootstrap.Toast(toastFailed);
+		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+		document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionUnknownInteractionMessage", event);
 		toast.show();
 		return;
 	}
@@ -2042,47 +2043,47 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateOK);
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageTestInteractionOkMessage");
+					const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageTestInteractionOkMessage");
 					toast.show();
 					generateDeviceSettingsModal(deviceId, deviceName)
 				}
 				else if(objResp.success == false && objResp.status != undefined)
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionErrorStatusMessage", objResp.status);
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionErrorStatusMessage", objResp.status);
 					toast.show();
 				}
 				else if(objResp.success == false && objResp.code != undefined)
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionErrorCodeMessage", objResp.code);
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionErrorCodeMessage", objResp.code);
 					toast.show();
 				}
 				else
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageTestInteractionFailedMessage");
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionFailedMessage");
 					toast.show();
 				}
 			}
 			catch (e)
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 				toast.show();
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
 			toast.show();
 		}
 		else
@@ -2098,9 +2099,9 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 	var eventType = getEventId(event);
 	if(eventType == -1)
 	{
-		const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-		document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-		document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageDeleteInteractionUnknownInteractionMessage", event);
+		const toast = new bootstrap.Toast(toastFailed);
+		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+		document.getElementById("toastFailedText").innerHTML = translateMessages("messageDeleteInteractionUnknownInteractionMessage", event);
 		toast.show();
 		return;
 	}
@@ -2118,33 +2119,33 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateOK);
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageDeleteInteractionOkMessage");
+					const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageDeleteInteractionOkMessage");
 					toast.show();
 					generateDeviceSettingsModal(deviceId, deviceName)
 				}
 				else
 				{
-					const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageDeleteInteractionFailedMessage");
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageDeleteInteractionFailedMessage");
 					toast.show();
 				}
 			}
 			catch (e)
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 				toast.show();
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-			document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-			document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
 			toast.show();
 		}
 		else
@@ -2351,25 +2352,25 @@ function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
-				document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
 				toast.show();
 				generateDeviceSettingsModal(deviceId, deviceName)
 			}
 			else
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
 				toast.show();
 			}
 		}
 		else if(this.readyState == 4)
 		{
-			const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastPropertyUpdateFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
 				toast.show();
 		}
 		else
@@ -3063,17 +3064,17 @@ function changeStationProperty(stationId, stationName, propertyName, propertyVal
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
-				document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
 				toast.show();
 				generateStationSettingsModal(stationId, stationName)
 			}
 			else
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
-				document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
 				toast.show();
 			}
 		}
@@ -3103,21 +3104,21 @@ function sendCommand(deviceType, deviceId, deviceName, commandName, commandValue
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success == true)
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateOK);
+				const toast = new bootstrap.Toast(toastOK);
 				if(commandName == "rebootStation")
 				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageRebootStationHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageRebootStationOkMessage");
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageRebootStationHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageRebootStationOkMessage");
 				}
 				else if(commandName == "moveToPreset")
 				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageMoveToPresetOkMessage", commandValue+1);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageMoveToPresetOkMessage", commandValue+1);
 				}
 				else
 				{
-					document.getElementById("toastPropertyUpdateOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-					document.getElementById("toastPropertyUpdateOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSendCommandHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageSendCommandOkMessage");
 				}
 				toast.show();
 				if(deviceType == "Station")
@@ -3131,21 +3132,21 @@ function sendCommand(deviceType, deviceId, deviceName, commandName, commandValue
 			}
 			else
 			{
-				const toast = new bootstrap.Toast(toastPropertyUpdateFailed);
+				const toast = new bootstrap.Toast(toastFailed);
 				if(commandName == "rebootStation")
 				{
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateContent("messageRebootStationHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateContent("messageSaveSettingsOkMessage");
+					document.getElementById("toastFailedHeader").innerHTML = translateContent("messageRebootStationHeader");
+					document.getElementById("toastFailedText").innerHTML = translateContent("messageSaveSettingsOkMessage");
 				}
 				else if(commandName == "moveToPreset")
 				{
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageMoveToPresetFailedMessage", commandValue+1);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageMoveToPresetFailedMessage", commandValue+1);
 				}
 				else
 				{
-					document.getElementById("toastPropertyUpdateFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-					document.getElementById("toastPropertyUpdateFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSendCommandHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSendCommandFailedMessage");
 				}
 				toast.show();
 			}
@@ -3703,7 +3704,9 @@ function validateFormSettings()
 		{
 			event.preventDefault();
 			event.stopPropagation();
-			const toast = new bootstrap.Toast(toastCheckConfigFailed);
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageCheckConfigFailedHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageCheckConfigFailedMessage");
 			toast.show();
 		}
 		//form.classList.add('was-validated');
@@ -3866,6 +3869,11 @@ function loadStationsSettings()
 						stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="${translateContent("lblUDPPortStationPlaceholder", objResp.data[station].serialNumber)}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
 						stations += `<small class="form-text text-muted">${translateContent("lblUDPPortStationSubText")}</small>`;
 						stations += `<div class="invalid-feedback">${translateContent("lblUDPPortStationError")}</div></div>`;
+
+						var option = document.createElement("option");
+						option.value=objResp.data[station].serialNumber;
+						option.text=`${objResp.data[station].name} (${objResp.data[station].serialNumber})`;
+						document.getElementById("cbReconnectStation").add(option);
 					}
 					document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
 					document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
@@ -4266,7 +4274,9 @@ function saveConfig()
 	xmlHttp.addEventListener( "error", function(event)
 	{
 		document.getElementById("resultMessage").innerHTML = "";
-		const toast = new bootstrap.Toast(toastSaveConfigFailed);
+		const toast = new bootstrap.Toast(toastFailed);
+		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
+		document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
 		toast.show();
 	});
 	xmlHttp.onreadystatechange = function()
@@ -4287,7 +4297,9 @@ function saveConfig()
 					else
 					{
 						document.getElementById("resultMessage").innerHTML = "";
-						const toast = new bootstrap.Toast(toastSaveConfigOK);
+						const toast = new bootstrap.Toast(toastOK);
+						document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveConfigOKHeader");
+						document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveConfigOKMessage");
 						toast.show();
 					}
 					loadDataSettings();
@@ -4296,7 +4308,9 @@ function saveConfig()
 				else
 				{
 					document.getElementById("resultMessage").innerHTML = "";
-					const toast = new bootstrap.Toast(toastSaveConfigFailed);
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
 					toast.show();
 				}
 			}
@@ -4458,7 +4472,9 @@ async function uploadFile(filetype)
 	xmlHttp.addEventListener("error", function(event)
 	{
 		document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), "", translateMessages("messageUploadConfigErrorFileToLargeMessage"));
-		const toast = new bootstrap.Toast(toastUploadConfigFailed);
+		const toast = new bootstrap.Toast(toastFailed);
+		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageUploadConfigFailedHeader");
+		document.getElementById("toastFailedText").innerHTML = translateMessages("messageUploadConfigFailedMessage");
 		toast.show();
 		document.getElementById("btnSelectConfigFile").value = "";
 		document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
@@ -4479,7 +4495,9 @@ async function uploadFile(filetype)
 				else
 				{
 					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), translateMessages("messageUploadConfigErrorCommonMessage"), translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-					const toast = new bootstrap.Toast(toastUploadConfigFailed);
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageUploadConfigFailedHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageUploadConfigFailedMessage");
 					toast.show();
 					document.getElementById("btnSelectConfigFile").value = "";
 					document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
@@ -4524,19 +4542,25 @@ function removeInteractions()
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true && objResp.interactionsRemoved == true)
 				{
-					const toast = new bootstrap.Toast(toastSaveConfigOK);
+					const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveConfigOKHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveConfigOKMessage");
 					toast.show();
 					return;
 				}
 				else
 				{
-					const toast = new bootstrap.Toast(toastSaveConfigFailed);
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
 					toast.show();
 				}
 			}
 			catch (e)
 			{
-				const toast = new bootstrap.Toast(toastSaveConfigFailed);
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
 				toast.show();
 			}
 		}
@@ -4547,6 +4571,59 @@ function removeInteractions()
 	};
 	xmlHttp.open("GET", url, true);
 	xmlHttp.send();
+}
+
+function checkReconnectStation(stationId)
+{
+	if(stationId == "0")
+	{
+		document.getElementById("btnReconnectStation").setAttribute("disabled", true);
+	}
+	else
+	{
+		document.getElementById("btnReconnectStation").removeAttribute("disabled");
+	}
+}
+
+function reconnectStation()
+{
+	var xmlhttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/reconnect/${document.getElementById("cbReconnectStation").value}`;
+	alert(url);
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.overrideMimeType('application/json');
+	xmlhttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			objResp = JSON.parse(this.responseText);
+			if(objResp.success == true)
+			{
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageReconnectStationHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageReconnectStationOkMessage");
+				toast.show();
+			}
+			else
+			{
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
+				toast.show();
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
+			toast.show();
+		}
+		else
+		{}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
 }
 
 function removeTokenData()
@@ -4564,20 +4641,26 @@ function removeTokenData()
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true && objResp.dataRemoved == true)
 				{
-					//const toast = new bootstrap.Toast(toastRemoveTokenOK);
-					//toast.show();
+					/*const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("");
+					document.getElementById("toastOKText").innerHTML = translateMessages("");
+					toast.show();*/
 					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
 					return;
 				}
 				else
 				{
-					const toast = new bootstrap.Toast(toastRestartFailed);
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRemoveTokenFailedHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageRemoveTokenFailedMessage");
 					toast.show();
 				}
 			}
 			catch (e)
 			{
-				const toast = new bootstrap.Toast(toastRestartFailed);
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRemoveTokenFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageRemoveTokenFailedMessage");
 				toast.show();
 			}
 		}
@@ -4605,20 +4688,26 @@ function restartService()
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					//const toast = new bootstrap.Toast(toastRestartOK);
-					//toast.show();
+					/*const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageRestartOKHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageRestartOKMessage");
+					toast.show();*/
 					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
 					return;
 				}
 				else
 				{
-					const toast = new bootstrap.Toast(toastRestartFailed);
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartFailedHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartFailedMessage");
 					toast.show();
 				}
 			}
 			catch (e)
 			{
-				const toast = new bootstrap.Toast(toastRestartFailed);
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartFailedMessage");
 				toast.show();
 			}
 		}
@@ -4638,8 +4727,14 @@ function enableButtons(enable)
 		document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(false)");
 		document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-warning btn-block");
 		document.getElementById("btnEnableTroubleShooting").innerHTML = translateContent("lblSettingsTroubleShootingDisable");
+		document.getElementById("btnSelectConfigFile").removeAttribute("disabled");
 		document.getElementById("headerRemoveInteractions").removeAttribute("class");
 		document.getElementById("btnRemoveInteractions").removeAttribute("disabled");
+		document.getElementById("cbReconnectStation").removeAttribute("disabled");
+		if(document.getElementById("cbReconnectStation").value != "0")
+		{
+			document.getElementById("btnReconnectStation").removeAttribute("disabled");
+		}
 		document.getElementById("headerDeleteTokenData").removeAttribute("class");
 		document.getElementById("btnDeleteTokenData").removeAttribute("disabled");
 		document.getElementById("headerRestartService").removeAttribute("class");
@@ -4650,8 +4745,11 @@ function enableButtons(enable)
 		document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(true)");
 		document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-outline-warning btn-block");
 		document.getElementById("btnEnableTroubleShooting").innerHTML = translateContent("lblSettingsTroubleShootingEnable");
+		document.getElementById("btnSelectConfigFile").setAttribute("disabled", true);
 		document.getElementById("headerRemoveInteractions").setAttribute("class", "text-muted");
 		document.getElementById("btnRemoveInteractions").setAttribute("disabled", true);
+		document.getElementById("cbReconnectStation").setAttribute("disabled", true);
+		document.getElementById("btnReconnectStation").setAttribute("disabled", true);
 		document.getElementById("headerDeleteTokenData").setAttribute("class", "text-muted");
 		document.getElementById("btnDeleteTokenData").setAttribute("disabled", true);
 		document.getElementById("headerRestartService").setAttribute("class", "text-muted");
@@ -5094,7 +5192,9 @@ async function restartAPIService()
 	{
 		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsError");
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsError");
-		const toast = new bootstrap.Toast(toastRestartOK);
+		const toast = new bootstrap.Toast(toastOK);
+		document.getElementById("toastOKHeader").innerHTML = translateMessages("messageRestartOKHeader");
+		document.getElementById("toastOKText").innerHTML = translateMessages("messageRestartOKMessage");
 		toast.show();
 		await delay(7500);
 		checkServiceState(0, 0, 0);

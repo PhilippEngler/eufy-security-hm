@@ -435,7 +435,7 @@
 											<div class="form-label-group" class="container-fluid">
 												<h6 id="headerUploadConfig">{headerUploadConfig}</h6>
 												<small id="hintUploadConfig" class="form-text text-muted mt-0">{hintUploadConfig}</small><br>
-												<input class="form-control mt-2 mb-2" type="file" id="btnSelectConfigFile" onchange="selectedFile('conf')">
+												<input class="form-control mt-2 mb-2" type="file" id="btnSelectConfigFile" onchange="selectedFile('conf')" disabled>
 												<button id="btnUploadConfigFile" onclick="uploadFile('conf')" type="button" class="btn btn-outline-primary mt-2" disabled>{btnUploadConfigFile}</button>
 												<div class="mt-3" id="resultUploadMessage"></div>
 											</div>
@@ -444,6 +444,15 @@
 												<h6 id="headerRemoveInteractions" class="text-muted">{headerRemoveInteractions}</h6>
 												<small class="form-text text-muted mt-0 mb-2" id="hintRemoveInteractions">{hintRemoveInteractions}</small><br />
 												<button id="btnRemoveInteractions" onclick="removeInteractions()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnRemoveInteractions}</button>
+											</div>
+											<hr />
+											<div class="form-label-group" class="container-fluid">
+												<h6 id="headerReconnectStation" class="text-muted">{headerReconnectStation}</h6>
+												<small class="form-text text-muted mt-0 mb-2" id="hintReconnectStation">{hintReconnectStation}</small><br />
+												<select name="selReconnectStation" id="cbReconnectStation" class="form-select mt-2 mb-2" oninput="checkReconnectStation(this.value);" disabled>
+													<option selected value="0" id="optPleaseSelectReconnectStation">{optPleaseSelect}</option>
+												</select>
+												<button id="btnReconnectStation" onclick="reconnectStation()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnReconnectStation}</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
@@ -474,84 +483,20 @@
 			</div>
 		</footer>
 		
-		<div id="toastCheckConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto" id="headerCheckConfigFailed">{headerCheckConfigFailed}</strong>
+				<strong id="toastFailedHeader" class="me-auto"></strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white" id="divCheckConfigFailed">
-				{divCheckConfigFailed}
-			</div>
+			<div id="toastFailedText" class="toast-body text-white"></div>
 		</div>
 
-		<div id="toastSaveConfigOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
+		<div id="toastOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto" id="headerSaveConfigOK">{headerSaveConfigOK}</strong>
+				<strong id="toastOKHeader" class="me-auto"></strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white" id="divSaveConfigOK">
-				{divSaveConfigOK}
-			</div>
-		</div>
-		
-		<div id="toastSaveConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
-			<div class="toast-header">
-				<strong class="me-auto" id="headerSaveConfigFailed">{headerSaveConfigFailed}</strong>
-				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
-			</div>
-			<div class="toast-body text-white" id="divSaveConfigFailed">
-				{divSaveConfigFailed}
-			</div>
-		</div>
-
-		<div id="toastUploadConfigFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
-			<div class="toast-header">
-				<strong class="me-auto" id="headerUploadConfigFailed">{headerUploadConfigFailed}</strong>
-				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
-			</div>
-			<div class="toast-body text-white" id="divUploadConfigFailed">
-				{divUploadConfigFailed}
-			</div>
-		</div>
-		
-		<div id="toastRemoveTokenOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
-			<div class="toast-header">
-				<strong class="me-auto" id="headerRemoveTokenOK">{headerRemoveTokenOK}</strong>
-				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
-			</div>
-			<div class="toast-body text-white" id="divRemoveTokenOK">
-				{divRemoveTokenOK}
-			</div>
-		</div>
-		
-		<div id="toastRemoveTokenFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
-			<div class="toast-header">
-				<strong class="me-auto" id="headerRemoveTokenFailed">{headerRemoveTokenFailed}</strong>
-				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
-			</div>
-			<div class="toast-body text-white" id="divRemoveTokenFailed">
-				{divRemoveTokenFailed}
-			</div>
-		</div>
-
-		<div id="toastRestartOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="7000" style="position: fixed; bottom: 10px; right: 10px;">
-			<div class="toast-header">
-				<strong class="me-auto" id="headerRestartOK">{headerRestartOK}</strong>
-				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
-			</div>
-			<div class="toast-body text-white" id="divRestartOK">
-				{divRestartOK}
-			</div>
-		</div>
-		
-		<div id="toastRestartFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="15000" style="position: fixed; bottom: 10px; right: 10px;">
-			<div class="toast-header">
-				<strong class="me-auto" id="headerRestartFailed">{headerRestartFailed}</strong>
-				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
-			</div>
-			<div class="toast-body text-white" id="divRestartFailed">
-				{divRestartFailed}
-			</div>
+			<div id="toastOKText" class="toast-body text-white"></div>
 		</div>
 
 		<div class="modal fade" id="modalAtLeastOneNeedsActivation" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalAtLeastOneNeedsActivation" aria-hidden="true">

@@ -221,31 +221,19 @@ function translateStaticPageContent(page)
             translateInnerHtml("headerUploadConfig");
             translateInnerHtml("hintUploadConfig");
             translateInnerHtml("btnUploadConfigFile");
+            translateInnerHtml("optPleaseSelectReconnectStation");
             translateInnerHtml("headerDeleteTokenData");
             translateInnerHtml("hintDeleteToken");
             translateInnerHtml("btnDeleteTokenData");
             translateInnerHtml("headerRestartService");
             translateInnerHtml("hintRestartService");
             translateInnerHtml("btnRestartService");
-            translateInnerHtml("headerCheckConfigFailed");
-            translateInnerHtml("divCheckConfigFailed");
-            translateInnerHtml("headerSaveConfigOK");
-            translateInnerHtml("divSaveConfigOK");
-            translateInnerHtml("headerSaveConfigFailed");
-            translateInnerHtml("divSaveConfigFailed");
-            translateInnerHtml("headerUploadConfigFailed");
-            translateInnerHtml("divUploadConfigFailed");
             translateInnerHtml("headerRemoveInteractions");
             translateInnerHtml("hintRemoveInteractions");
             translateInnerHtml("btnRemoveInteractions");
-            translateInnerHtml("headerRemoveTokenOK");
-            translateInnerHtml("divRemoveTokenOK");
-            translateInnerHtml("headerRemoveTokenFailed");
-            translateInnerHtml("divRemoveTokenFailed");
-            translateInnerHtml("headerRestartOK");
-            translateInnerHtml("divRestartOK");
-            translateInnerHtml("headerRestartFailed");
-            translateInnerHtml("divRestartFailed");
+            translateInnerHtml("headerReconnectStation");
+            translateInnerHtml("hintReconnectStation");
+            translateInnerHtml("btnReconnectStation");
             translateInnerHtml("lblModalAtLeastOneNeedsActivationTitle");
             translateInnerHtml("lblModalAtLeastOneNeedsActivationMessage");
             translateInnerHtml("modalAtLeastOneNeedsActivationBtnOK");
@@ -312,12 +300,6 @@ function translateStaticPageContent(page)
         case "restartWaiter":
             translateInnerHtml("lblWaitServiceStart");
             translateInnerHtml("lblWaitServiceInit");
-            translateInnerHtml("headerSaveConfigOKRestart");
-            translateInnerHtml("divSaveConfigOKRestart");
-            translateInnerHtml("headerRemoveTokenOK");
-            translateInnerHtml("divRemoveTokenOK");
-            translateInnerHtml("headerRestartOK");
-            translateInnerHtml("divRestartOK");
             break;
     }
 }

@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.24
-202400921
+Schema v9.25
+20241003
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20240921 (v9.24)";
+var languageVersion = "20241003 (v9.25)";
 
 function translateNavbarElement(element)
 {
@@ -106,6 +106,7 @@ function translateStaticContentElement(element)
 		case "optPleaseSelectLogLevelP2p":
 		case "optPleaseSelectLogLevelPush":
 		case "optPleaseSelectLogLevelMqtt":
+		case "optPleaseSelectReconnectStation":
 			return "Please select...";
 		case "hintCountry":
 			return "The country for which you have created the eufy Security Account.";
@@ -322,6 +323,12 @@ function translateStaticContentElement(element)
 			return "All interactions will be deleted in the settings.";
 		case "btnRemoveInteractions":
 			return "Delete Interactions";
+		case "headerReconnectStation":
+			return "Reconnect P2P Connection";
+		case "hintReconnectStation":
+			return "If P2P connection errors are displayed in the log files and you are prompted to reinitialize the P2P connection, you can do this here. To do this, select the relevant station and click on 'Reconnect P2P Connection'.";
+		case "btnReconnectStation":
+			return "Reconnect P2P Connection";
 		case "headerDeleteTokenData":
 			return "Delete token";
 		case "hintDeleteToken":
@@ -334,38 +341,6 @@ function translateStaticContentElement(element)
 			return "It may be necessary to restart the service. All changes that have already been transferred are saved and the service is restarted.";
 		case "btnRestartService":
 			return "Restart service";
-		case "headerCheckConfigFailed":
-			return "Checking the entries.";
-		case "divCheckConfigFailed":
-			return "The input check has failed. Please check the input fields marked in red and follow the instructions.";
-		case "headerSaveConfigOK":
-			return "Saving the settings.";
-		case "divSaveConfigOK":
-			return "The settings have been saved successfully.";
-		case "headerSaveConfigFailed":
-			return "Saving the settings.";
-		case "divSaveConfigFailed":
-			return "An error occurred while saving the settings.";
-		case "headerUploadConfigFailed":
-			return "Upload of the configuration file.";
-		case "divUploadConfigFailed":
-			return "An error occurred while uploading the configuration file.";
-		case "headerRemoveTokenOK":
-			return "Delete token data.";
-		case "divRemoveTokenOK":
-			return "The token data has been successfully deleted.";
-		case "headerRemoveTokenFailed":
-			return "Delete token data.";
-		case "divRemoveTokenFailed":
-			return "An error has occurred while deleting the token data.";
-		case "headerRestartOK":
-			return "Restart the service.";
-		case "divRestartOK":
-			return "The service will be restarted.";
-		case "headerRestartFailed":
-			return "Restart the service.";
-		case "divRestartFailed":
-			return "An error occurred when restarting the service.";
 		case "lblModalAtLeastOneNeedsActivationTitle":
 			return "Check the settings.";
 		case "lblModalAtLeastOneNeedsActivationMessage":
@@ -400,10 +375,6 @@ function translateStaticContentElement(element)
 			return "Waiting for the service to start...";
 		case "lblWaitServiceInit":
 			return "Waiting for the service to initialize...";
-		case "headerSaveConfigOKRestart":
-			return "Saving the settings.";
-		case "divSaveConfigOKRestart":
-			return "The settings have been saved successfully. The service will restart.";
 		case "aboutIntroHeader":
 			return "About eufy Security AddOn for HomeMatic";
 		case "headerVersionInfo":
@@ -587,12 +558,52 @@ function translateMessages(message, ...options)
 			return `Moved to Preset Position ${options[0]}.`;
 		case "messageMoveToPresetFailedMessage":
 			return "An error occured during moving to the Preset Position.";
+		case "messageCheckConfigFailedHeader":
+			return "Checking the entries.";
+		case "messageCheckConfigFailedMessage":
+			return "The input check has failed. Please check the input fields marked in red and follow the instructions.";
+		case "messageSaveConfigOKHeader":
+			return "Saving the settings.";
+		case "messageSaveConfigOKMessage":
+			return "The settings have been saved successfully.";
+		case "messageSaveConfigFailedHeader":
+			return "Saving the settings.";
+		case "messageSaveConfigFailedMessage":
+			return "An error occurred while saving the settings.";
+		case "messageUploadConfigFailedHeader":
+			return "Upload of the configuration file.";
+		case "messageUploadConfigFailedMessage":
+			return "An error occurred while uploading the configuration file.";
+		case "messageRemoveTokenFailedHeader":
+			return "Delete token data.";
+		case "messageRemoveTokenFailedMessage":
+			return "An error has occurred while deleting the token data.";
+		case "messageRestartOKHeader":
+			return "Restart the service.";
+		case "messageRestartOKMessage":
+			return "The service will be restarted.";
+		case "messageRestartFailedHeader":
+			return "Restart the service.";
+		case "messageRestartFailedMessage":
+			return "An error occurred when restarting the service.";
 		case "messageSaveSettingsHeader":
 			return "Save settings.";
 		case "messageSaveSettingsOkMessage":
 			return "The settings were saved successfully.";
 		case "messageSaveSettingsFailedMessage":
 			return "The settings could not be saved.";
+		case "messageSendCommandHeader":
+			return "Send Command.";
+		case "messageSendCommandOkMessage":
+			return "The command was sent successfully.";
+		case "messageSendCommandFailedMessage":
+			return "The command was not sent successfully.";
+		case "messageReconnectStationHeader":
+			return "Reconnect P2P Connection.";
+		case "messageReconnectStationOkMessage":
+			return "The connection has been reconnected.";
+		case "messageReconnectStationFailedMessage":
+			return "The connection could not be reconnect.";
 		case "messageLoadTimeZoneInfoNotSuccessfullMessage":
 			return "Time zone information could not be loaded.";
 		case "messageLoadTimeZoneInfoFailedMessage":
