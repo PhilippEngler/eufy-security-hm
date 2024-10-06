@@ -4982,6 +4982,7 @@ function initLogViewer(logfiletype, showLoading)
 function loadLogfile(logfiletype, showLoading)
 {
 	var xmlHttp, url, objResp, logData;
+	codeMirrorEditor.setValue("");
 	switch(logfiletype)
 	{
 		case "log":
@@ -5034,9 +5035,10 @@ function loadLogfile(logfiletype, showLoading)
 			objResp = JSON.parse(this.responseText);
 			if(objResp.success === true)
 			{
-				document.getElementById("logHandlingInfo").innerHTML = "";
 				if(objResp.hasData === true)
 				{
+					document.getElementById("logHandlingInfo").innerHTML = "";
+					document.getElementById("logHandlingInfo").setAttribute("disabled", true);
 					codeMirrorEditor.setValue(decodeURIComponent(objResp.data).slice(0,-1));
 					document.getElementById("btnReloadLogfileData").removeAttribute("disabled");
 					document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
@@ -5047,13 +5049,13 @@ function loadLogfile(logfiletype, showLoading)
 					switch(logfiletype)
 					{
 						case "log":
-							codeMirrorEditor.setValue(`${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.log')}`);
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.log')}</code>`;
 							break;
 						case "err":
-							codeMirrorEditor.setValue(`${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.err')}`);
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.err')}</code>`;
 							break;
 						case "clientLog":
-							codeMirrorEditor.setValue(`${translateContent("lblFileIsEmpty", '/var/log/eufySecurityClient.log')}`);
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurityClient.log')}</code>`;
 							break;
 					}
 					document.getElementById("btnReloadLogfileData").setAttribute("disabled", true);
@@ -5063,6 +5065,7 @@ function loadLogfile(logfiletype, showLoading)
 			}
 			else
 			{
+				document.getElementById("logHandlingInfo").removeAttribute("disabled");
 				document.getElementById("logHandlingInfo").innerHTML = `<code>${objResp.reason}</code>`;
 				document.getElementById("btnReloadLogfileData").setAttribute("disabled", true);
 				document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
@@ -5071,12 +5074,14 @@ function loadLogfile(logfiletype, showLoading)
 		}
 		else if(this.readyState == 4)
 		{
+			document.getElementById("logHandlingInfo").removeAttribute("disabled");
 			document.getElementById("logHandlingInfo").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageLoadLogFileErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 		}
 		else
 		{
 			if(showLoading == true)
 			{
+				document.getElementById("logHandlingInfo").removeAttribute("disabled");
 				document.getElementById("logHandlingInfo").innerHTML = createWaitMessage(translateString("strLoadingLogFile"));
 			}
 		}
