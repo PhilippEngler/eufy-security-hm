@@ -187,3 +187,21 @@ code {
 .accordion-body {
   padding: 16px;
 }
+
+/* calculate hight for the log div */
+.div-log {
+  height: calc(100vh - 4.5rem - 216px);
+}
+
+/* calculate hight for the logViewer div */
+.div-logViewer {
+  height: calc(100vh - 4.5rem - 224px);
+  align-items: stretch;
+}
+
+/* set CodeMirror height and font size */
+.CodeMirror {
+  height: 100%;
+  /*height: calc(100vh - 4.5rem - 228px);*/
+  font-size: 80%;
+}

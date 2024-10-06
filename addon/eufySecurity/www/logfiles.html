@@ -11,6 +11,10 @@
 		
 		<!-- Bootstrap icon font CSS -->
 		<link href="assets/dist/css/bootstrap-icons.css" rel="stylesheet">
+
+		<!-- CodeMirror -->
+		<link href="assets/dist/css/codemirror.css" rel="stylesheet">
+		<link href="assets/dist/css/codemirror-neo.css" rel="stylesheet">
 		
 		<style>
 			/* used for nav bar toggle */
@@ -87,7 +91,7 @@
 						<a class="nav-link text-body" onclick="loadLogfile('clientLog', true)" id="tabHeaderClientLog">{tabHeaderClientLog}</a>
 					</li>
 				</ul>
-				<div class="div-tab border border-top-0 rounded-bottom-2 mb-3 p-2">
+				<div class="div-tab border border-top-0 rounded-bottom-2 mb-3 p-2 container-fluid">
 					<div class="div-tab div-tab-header border p-2">
 						<div style="text-align:left; margin:auto; float:left;"><h5 class="mb-0" id="txtLogfileLocation">{txtLogfileLocation}</h5></div>
 						<div style="text-align:right;">
@@ -100,8 +104,9 @@
 							</span>
 						</div>
 					</div>
-					<div class="div-tab p-2">
-						<div id="log"></div>
+					<div class="div-tab p-2 div-log d-flex">
+						<div class="w-100" id="logHandlingInfo"></div>
+						<div class="div-logViewer w-100" id="logContent"></div>
 					</div>
 				</div>
 			</div>
@@ -120,6 +125,7 @@
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>
 		<script src="assets/dist/js/lang.js"></script>
+		<script src="assets/dist/js/codemirror.js"></script>
 		<script>
 			document.getElementById("footerCopyright").innerHTML = `&copy; 2020-${new Date().getFullYear()} Philipp Engler`;
 			if(window.navigator.userAgent.indexOf("Trident") > 0)
