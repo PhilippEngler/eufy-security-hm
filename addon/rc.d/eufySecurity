@@ -16,8 +16,7 @@ if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
 fi
 
 dir="/usr/local/addons/eufySecurity"
-#cmd="/usr/local/addons/eufySecurity/bin/node --security-revert=CVE-2023-46809 /usr/local/addons/eufySecurity/apiServer.js"
-cmd="/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServer.js"
+cmd="/usr/local/addons/eufySecurity/bin/node --security-revert=CVE-2023-46809 /usr/local/addons/eufySecurity/apiServer.js"
 user="root"
 
 name=`basename $0`
