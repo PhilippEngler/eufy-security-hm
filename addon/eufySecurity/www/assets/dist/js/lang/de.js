@@ -326,7 +326,7 @@ function translateStaticContentElement(element)
 		case "headerReconnectStation":
 			return "P2P Verbindung neu herstellen";
 		case "hintReconnectStation":
-			return "Falls Sie in den Logdateien P2P-Verbindungfehler angezeigt werden und Sie dort aufgefordert werden, die P2P-Verbindung erneut zu initialisieren, können Sie dies hier tun. Wählen Sie dazu die entsprechende Station aus und klicken Sie auf 'P2P Verbindung neu herstellen'.";
+			return "Falls in den Logdateien P2P-Verbindungfehler angezeigt werden und Sie dort aufgefordert werden, die P2P-Verbindung erneut zu initialisieren, können Sie dies hier tun. Wählen Sie dazu die entsprechende Station aus und klicken Sie auf 'P2P Verbindung neu herstellen'.";
 		case "btnReconnectStation":
 			return "P2P Verbindung neu herstellen";
 		case "headerDeleteTokenData":
