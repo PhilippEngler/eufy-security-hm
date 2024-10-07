@@ -195,13 +195,16 @@ code {
 
 /* calculate hight for the logViewer div */
 .div-logViewer {
-  height: calc(100vh - 4.5rem - 224px);
+  height: calc(100vh - 4.5rem - 216px);
   align-items: stretch;
 }
 
 /* set CodeMirror height and font size */
 .CodeMirror {
   height: 100%;
-  /*height: calc(100vh - 4.5rem - 228px);*/
   font-size: 80%;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #cccccc;
+  border-top: none;
 }

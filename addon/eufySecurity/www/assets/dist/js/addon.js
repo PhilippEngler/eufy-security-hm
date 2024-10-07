@@ -4970,8 +4970,8 @@ function clearInputField(elementName)
 function initLogViewer(logfiletype, showLoading)
 {
 	codeMirrorEditor = CodeMirror(document.getElementById("logContent"), {
-		lineNumbers: false, 
-		mode: "logfile", 
+		lineNumbers: false,
+		//mode: "logfile",
 		theme: "neo",
 		lineWrapping: false,
 		readOnly: true
@@ -4982,6 +4982,7 @@ function initLogViewer(logfiletype, showLoading)
 function loadLogfile(logfiletype, showLoading)
 {
 	var xmlHttp, url, objResp, logData;
+	document.getElementById("logContent").style.display = 'none';
 	codeMirrorEditor.setValue("");
 	switch(logfiletype)
 	{
@@ -5037,8 +5038,8 @@ function loadLogfile(logfiletype, showLoading)
 			{
 				if(objResp.hasData === true)
 				{
-					document.getElementById("logHandlingInfo").innerHTML = "";
-					document.getElementById("logHandlingInfo").setAttribute("disabled", true);
+					document.getElementById("logHandlingInfo").style.display = 'none';
+					document.getElementById("logContent").style.display = 'block';
 					codeMirrorEditor.setValue(decodeURIComponent(objResp.data).slice(0,-1));
 					document.getElementById("btnReloadLogfileData").removeAttribute("disabled");
 					document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
@@ -5046,6 +5047,7 @@ function loadLogfile(logfiletype, showLoading)
 				}
 				else
 				{
+					document.getElementById("logHandlingInfo").style.display = 'block';
 					switch(logfiletype)
 					{
 						case "log":
@@ -5065,7 +5067,7 @@ function loadLogfile(logfiletype, showLoading)
 			}
 			else
 			{
-				document.getElementById("logHandlingInfo").removeAttribute("disabled");
+				document.getElementById("logHandlingInfo").style.display = 'block';
 				document.getElementById("logHandlingInfo").innerHTML = `<code>${objResp.reason}</code>`;
 				document.getElementById("btnReloadLogfileData").setAttribute("disabled", true);
 				document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
@@ -5074,14 +5076,14 @@ function loadLogfile(logfiletype, showLoading)
 		}
 		else if(this.readyState == 4)
 		{
-			document.getElementById("logHandlingInfo").removeAttribute("disabled");
+			document.getElementById("logHandlingInfo").style.display = 'block';
 			document.getElementById("logHandlingInfo").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageLoadLogFileErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 		}
 		else
 		{
 			if(showLoading == true)
 			{
-				document.getElementById("logHandlingInfo").removeAttribute("disabled");
+				document.getElementById("logHandlingInfo").style.display = 'block';
 				document.getElementById("logHandlingInfo").innerHTML = createWaitMessage(translateString("strLoadingLogFile"));
 			}
 		}
