@@ -411,13 +411,13 @@ function downloadFile(filetype)
 	switch(filetype)
 	{
 		case "log":
-			url = `logfileAddonLogDownload.cgi`;
+			url = `logfiles.cgi?download&${filetype}`;
 			break;
 		case "err":
-			url = `logfileAddonErrDownload.cgi`;
+			url = `logfiles.cgi?download&${filetype}`;
 			break;
 		case "clientLog":
-			url = `logfileClientDownload.cgi`;
+			url = `logfiles.cgi?download&${filetype}`;
 			break;
 		case "conf":
 			url = `${location.protocol}//${location.hostname}:${port}/downloadConfig`;
@@ -4987,7 +4987,7 @@ function loadLogfile(logfiletype, showLoading)
 	switch(logfiletype)
 	{
 		case "log":
-			url=`logfileAddonLogGetContent.cgi`;
+			url=`logfiles.cgi?getContent&${logfiletype}`;
 			document.getElementById("tabHeaderAddonLog").classList.add("active");
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
@@ -4997,7 +4997,7 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('log')");
 			break;
 		case "err":
-			url=`logfileAddonErrGetContent.cgi`;
+			url=`logfiles.cgi?getContent&${logfiletype}`;
 			document.getElementById("tabHeaderAddonLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.add("active");
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
@@ -5007,7 +5007,7 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('err')");
 			break;
 		case "clientLog":
-			url=`logfileClientGetContent.cgi`;
+			url=`logfiles.cgi?getContent&${logfiletype}`;
 			document.getElementById("tabHeaderAddonLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.add("active");
@@ -5098,13 +5098,13 @@ function emptyLogfile(logfiletype)
 	switch(logfiletype)
 	{
 		case "log":
-			url = `logfileAddonLogEmpty.cgi`;
+			url = `logfiles.cgi?emptyFile&${logfiletype}`;
 			break;
 		case "err":
-			url = `logfileAddonErrEmpty.cgi`;
+			url = `logfiles.cgi?emptyFile&${logfiletype}`;
 			break;
 		case "clientLog":
-			url = `logfileClientEmpty.cgi`;
+			url = `logfiles.cgi?emptyFile&${logfiletype}`;
 			break;
 		default:
 			document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger m-0", translateMessages("messageEmptyLogFileErrorHeader"), translateMessages("messageErrorLogfileUnknown", logfiletype), "");
