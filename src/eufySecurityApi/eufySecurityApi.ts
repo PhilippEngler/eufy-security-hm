@@ -1956,9 +1956,32 @@ export class EufySecurityApi {
             let station = await this.stations.getStation(stationSerial);
 
             if (station) {
-                if (!station.isConnected()) {
-                    json = {"success":false, "message":"No P2P connection to station established."};
-                } else if (station.isP2PConnectableDevice()) {
+                if (!station.isP2PConnectableDevice()) {
+                    json = {"success":false, "message":"Not a P2P connectable device."};
+                } else {
+                    let connected = station.isConnected();
+                    let res = false;
+                    if (connected === true) {
+                        try {
+                            res = await waitForStationEvent(station, "close", 10000).then(() => {
+                                connected = station.isConnected();
+                                return true;
+                            }, (value: any) => {
+                                if (typeof value === "boolean") {
+                                    connected = station.isConnected();
+                                    return false;
+                                } else {
+                                    throw value;
+                                }
+                            });
+                        } catch (ex: any) {
+                            rootAddonLogger.error(`Error during closing p2p connection to station ${stationSerial}. Got value '${JSON.stringify(ex)}'.`);
+                            json = {"success":false, "message":`Error during closing p2p connection to station ${stationSerial}. Error: '${JSON.stringify(ex)}'.`};
+                            return JSON.stringify(json);
+                        }
+                        await sleep(1000);
+                    }
+
                     if (await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
                         station.setConnectionType(P2PConnectionType.QUICKEST);
                         rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
@@ -1966,33 +1989,26 @@ export class EufySecurityApi {
                         station.setConnectionType(this.getP2PConnectionType());
                         rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
                     }
-                    let connected = false;
 
-                    let res = await waitForStationEvent(station, "close", 10000).then(() => {
-                        connected = station.isConnected();
-                        return true;
-                    }, (value: any) => {
-                        if (typeof value === "boolean") {
-                            connected = station.isConnected();
-                            return false;
-                        } else {
-                            throw value;
-                        }
-                    });
-
-                    if (res === true && connected === false) {
-                        await sleep(1000);
-                        res = await waitForStationEvent(station, "connect", 10000).then(() => {
-                            connected = station.isConnected();
-                            return true;
-                        }, (value: any) => {
-                            if (typeof value === "boolean") {
+                    if (connected === false) {
+                        try {
+                            await sleep(1000);
+                            res = await waitForStationEvent(station, "connect", 10000).then(() => {
                                 connected = station.isConnected();
-                                return false;
-                            } else {
-                                throw value;
-                            }
-                        });
+                                return true;
+                            }, (value: any) => {
+                                if (typeof value === "boolean") {
+                                    connected = station.isConnected();
+                                    return false;
+                                } else {
+                                    throw value;
+                                }
+                            });
+                        } catch (ex: any) {
+                            rootAddonLogger.error(`Error during reconnecting p2p connection to station ${stationSerial}. Got value '${JSON.stringify(ex)}'.`);
+                            json = {"success":false, "message":`Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(ex)}'.`};
+                            return JSON.stringify(json);
+                        }
                     }
 
                     json = {"success":res, "conneceted":connected};
