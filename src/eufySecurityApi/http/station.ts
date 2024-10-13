@@ -10764,7 +10764,8 @@ export class Station extends TypedEmitter<StationEvents> {
         }
 
         rootHTTPLogger.debug(`Station preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || (device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera())) {
+            rootHTTPLogger.info(`Station preset position [first] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10773,6 +10774,17 @@ export class Station extends TypedEmitter<StationEvents> {
                         "value": position,
                     }
                 }),
+                channel: device.getChannel()
+            }, {
+                command: commandData
+            });
+        } else if (!device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera()) {
+            rootHTTPLogger.info(`Station preset position [second] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
+            this.p2pSession.sendCommandWithIntString({
+                commandType: CommandType.CMD_FLOODLIGHT_SET_MOTION_PRESET_POSITION,
+                value: position,
+                valueSub: device.getChannel(),
+                strValue: this.rawStation.member.admin_user_id,
                 channel: device.getChannel()
             }, {
                 command: commandData
