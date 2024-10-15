@@ -26,6 +26,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private lastGuardModeChangeTimeForStations: { [stationSerial: string]: number | undefined } = {};
     private loadingEmitter = new EventEmitter();
     private stationsLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "stations loaded");
+    private lightTimeouts = new Map<string, NodeJS.Timeout>();
 
     private readonly P2P_REFRESH_INTERVAL_MIN = 720;
 
@@ -254,13 +255,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             this.stopStationLivestream(device_sn);
         }
 
+        this.lightTimeouts.forEach((timeout) => {
+            clearTimeout(timeout);
+        });
+        this.lightTimeouts.clear();
+
         await this.closeP2PConnections();
     }
 
     /**
      * Close all P2P connection for all stations.
      */
-    public async closeP2PConnections(): Promise<void> {
+    private async closeP2PConnections(): Promise<void> {
         if (this.stations !== null) {
             for (const stationSerial in this.stations) {
                 if (this.stations[stationSerial]) {
@@ -1567,6 +1573,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             if (device.hasProperty(PropertyName.DeviceLight)) {
                 const metadataLight = device.getPropertyMetadata(PropertyName.DeviceLight);
                 device.updateRawProperty(metadataLight.key as number, enabled === true ? "1": "0", "p2p");
+                if (enabled === true) {
+                    this.lightTimeouts.set(device.getSerial(), setTimeout(async () => {
+                        station.switchLight(device, false);
+                        this.lightTimeouts.delete(device.getSerial());
+                    }, 30 * 1000));
+                }
             }
         }).catch ((err) => {
             const error = ensureError(err);

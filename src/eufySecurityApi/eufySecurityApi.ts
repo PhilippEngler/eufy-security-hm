@@ -307,7 +307,7 @@ export class EufySecurityApi {
             this.devices.close();
         }
         if (this.stations !== null && this.stations !== undefined) {
-            await this.stations.closeP2PConnections();
+            await this.stations.close();
         }
     }
 
