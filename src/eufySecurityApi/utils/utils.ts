@@ -1,5 +1,7 @@
-import { Device, DeviceType, GuardMode, Station, StationEvents } from "../http";
+import { Devices } from "../devices";
+import { Device, DeviceEvents, DeviceType, GuardMode, Station, StationEvents } from "../http";
 import { Logger } from "../logging";
+import { Stations } from "../stations";
 
 export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
 export const pathToTemp = "/var/tmp/eufySecurity";
@@ -313,7 +315,7 @@ export const extractEnclosedString = function(data: string, startString: string,
  * @param guardMode The guardmode.
  * @returns true if event occurs, otherwise false.
  */
-export function waitForStationEvent(station: Station, eventName: keyof StationEvents, timeout: number, guardMode?: GuardMode): Promise<boolean> {
+export function waitForStationEvent(station: Station, eventName: keyof StationEvents, timeout: number, guardMode?: GuardMode, stations?: Stations, propertyName?: string, propertyValue?: unknown): Promise<boolean> {
     return new Promise<boolean>(async (resolve, reject) => {
         // eslint-disable-next-line prefer-const
         let timer: NodeJS.Timeout;
@@ -343,10 +345,62 @@ export function waitForStationEvent(station: Station, eventName: keyof StationEv
                         station.setGuardMode(guardMode);
                     }
                     break;
+                case "property changed":
+                    if (stations && propertyName && propertyValue) {
+                        await stations.setStationProperty(station.getSerial(), propertyName, propertyValue);
+                    } else {
+                        throw new Error(`Failed to set property for device ${station.getSerial()}. ${JSON.stringify({"propertyName": propertyName, "propertyValue": propertyValue})}`);
+                    }
+                    break;
             }
             
-        } catch (e :any) {
+        } catch (e: any) {
             station.removeListener(eventName, funcListener);
+            reject(e);
+        }
+    });
+}
+
+/**
+ * Wait for a given device event.
+ * @param devices The devices object.
+ * @param device The device.
+ * @param eventName The event name.
+ * @param timeout The timeout in ms.
+ * @param propertyName The name of the property to set.
+ * @param propertyValue The value of the property to set.
+ * @returns true if event occurs, otherwise false.
+ */
+export function waitForDeviceEvent(device: Device, eventName: keyof DeviceEvents, timeout: number, devices?: Devices, propertyName?: string, propertyValue?: unknown): Promise<boolean> {
+    return new Promise<boolean>(async (resolve, reject) => {
+        // eslint-disable-next-line prefer-const
+        let timer: NodeJS.Timeout;
+        const funcListener = (): void => listener();
+
+        function listener(): void {
+            device.removeListener(eventName, funcListener);
+            clearTimeout(timer);
+            resolve(true);
+        }
+
+        device.addListener(eventName, funcListener);
+        timer = setTimeout(() => {
+            device.removeListener(eventName, funcListener);
+            reject(false);
+        }, timeout);
+        try {
+            switch (eventName) {
+                case "property changed":
+                    if (devices && propertyName && propertyValue) {
+                        await devices.setDeviceProperty(device.getSerial(), propertyName, propertyValue);
+                    } else {
+                        throw new Error(`Failed to set property for device ${device.getSerial()}. ${JSON.stringify({"propertyName": propertyName, "propertyValue": propertyValue})}`);
+                    }
+                    break;
+            }
+            
+        } catch (e: any) {
+            device.removeListener(eventName, funcListener);
             reject(e);
         }
     });
