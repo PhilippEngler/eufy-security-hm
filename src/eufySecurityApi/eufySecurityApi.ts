@@ -14,7 +14,7 @@ import { EufyHouses } from "./houses";
 import { NotSupportedError, ReadOnlyPropertyError, ensureError } from "./error";
 import { getDateTimeFromImageFilePath, randomNumber } from "./http/utils";
 import { PhoneModels, timeZoneData } from "./http/const";
-import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString, waitForStationEvent } from "./utils/utils";
+import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString, waitForStationEvent, waitForDeviceEvent } from "./utils/utils";
 import { countryData } from "./utils/const";
 import { EventInteractionType } from "./utils/types";
 
@@ -906,7 +906,7 @@ export class EufySecurityApi {
         try {
             if (this.devices) {
                 //await this.httpService.refreshStationData();
-                await this.httpService.refreshDeviceData();
+                //await this.httpService.refreshDeviceData();
 
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
@@ -940,7 +940,7 @@ export class EufySecurityApi {
      * @returns All devices as object
      */
     public async getRawDevices(): Promise<Devices> {
-        await this.httpService.refreshDeviceData();
+        //await this.httpService.refreshDeviceData();
         await this.updateDeviceData();
         await this.devices.loadDevices();
 
@@ -968,7 +968,7 @@ export class EufySecurityApi {
         try {
             if (this.devices) {
                 //await this.httpService.refreshStationData();
-                await this.httpService.refreshDeviceData();
+                //await this.httpService.refreshDeviceData();
 
                 await this.updateDeviceData();
                 await this.devices.loadDevices();
@@ -1118,9 +1118,16 @@ export class EufySecurityApi {
                     json = {"success":false,"reason":`The device with serial ${deviceSerial} does not exists.`};
                 }
                 try {
-                    await this.devices.setDeviceProperty(deviceSerial, propertyName, propertyValue);
-                    await sleep(5000);
-                    json = {"success":true,"reason":`The property ${propertyName} for device ${deviceSerial} has been processed.`};
+                    const res = await waitForDeviceEvent(await this.getDevice(deviceSerial), "property changed", 10000, this.devices, propertyName, propertyValue).then(() => {
+                        return true;
+                    }, (value: any) => {
+                        if (typeof value === "boolean") {
+                            return false;
+                        } else {
+                            throw value;
+                        }
+                    });
+                    json = {"success":res,"reason":`The property change for property ${propertyName} on device ${deviceSerial} ${res === true ? `has been processed` : `has failed`}.`};
                 } catch (e) {
                     if (e instanceof InvalidPropertyError) {
                         json = {"success":false,"reason":`The device ${deviceSerial} does not support the property ${propertyName}.`};
@@ -1229,7 +1236,7 @@ export class EufySecurityApi {
      * @returns All stations as object.
      */
     public async getRawStations(): Promise<Stations> {
-        await this.httpService.refreshStationData();
+        //await this.httpService.refreshStationData();
         await this.updateDeviceData();
         await this.stations.loadStations();
 
@@ -1356,9 +1363,16 @@ export class EufySecurityApi {
                     json = {"success":false,"reason":`The station with serial ${stationSerial} does not exists.`};
                 }
                 try {
-                    await this.stations.setStationProperty(stationSerial, propertyName, propertyValue);
-                    await sleep(5000);
-                    json = {"success":true,"reason":`The property ${propertyName} for station ${stationSerial} has been processed.`};
+                    const res = await waitForStationEvent(await this.getStation(stationSerial), "property changed", 10000, undefined, this.stations, propertyName, propertyValue).then(() => {
+                        return true;
+                    }, (value: any) => {
+                        if (typeof value === "boolean") {
+                            return false;
+                        } else {
+                            throw value;
+                        }
+                    });
+                    json = {"success":res,"reason":`The property change for property ${propertyName} on station ${stationSerial} ${res === true ? `has been processed` : `has failed`}.`};
                 } catch (e: any) {
                     if (e instanceof InvalidPropertyError) {
                         json = {"success":false,"reason":`The station ${stationSerial} does not support the property ${propertyName}.`};
@@ -1831,17 +1845,16 @@ export class EufySecurityApi {
                 if (device.isEnabled() == value) {
                     return `{"success":true,"info":"The value for privacy mode on device ${deviceSerial} already set."}`;
                 } else {
-                    await this.devices.setDeviceProperty(deviceSerial, PropertyName.DeviceEnabled, value);
-                    await sleep(2500);
-                    await this.updateDeviceData();
-                    await this.httpService.refreshStationData();
-                    //await this.httpService.refreshDeviceData();
-                    await this.devices.loadDevices();
-                    if ((await this.getDevices())[deviceSerial].isEnabled() == value as boolean) {
-                        return `{"success":true,"enabled":${value as boolean}}`;
-                    } else {
-                        return `{"success":false,"enabled":${!(value as boolean)}}`;
-                    }
+                    const res = await waitForDeviceEvent(await this.getDevice(deviceSerial), "property changed", 10000, this.devices, PropertyName.DeviceEnabled, value).then(() => {
+                        return true;
+                    }, (value: any) => {
+                        if (typeof value === "boolean") {
+                            return false;
+                        } else {
+                            throw value;
+                        }
+                    });
+                    return `{"success":${res},"enabled":${res === true ? value as boolean : !(value as boolean)}}`;
                 }
             } else {
                 return `{"success":false,"reason":"Device ${deviceSerial} does not support privacy mode."}`;
