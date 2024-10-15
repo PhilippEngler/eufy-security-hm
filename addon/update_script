@@ -459,6 +459,33 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map ]; then
     rm ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map
   fi
+  if [ -e ${ADDON_DIR}/www/logfileAddonErrDownload.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileAddonErrDownload.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileAddonErrEmpty.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileAddonErrEmpty.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileAddonErrGetContent.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileAddonErrGetContent.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileAddonLogDownload.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileAddonLogDownload.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileAddonLogEmpty.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileAddonLogEmpty.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileAddonLogGetContent.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileAddonLogGetContent.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileClientDownload.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileClientDownload.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileClientEmpty.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileClientEmpty.cgi
+  fi
+  if [ -e ${ADDON_DIR}/www/logfileClientGetContent.cgi ]; then
+    rm ${ADDON_DIR}/www/logfileClientGetContent.cgi
+  fi
   # remove renamed / deleted addon files
   if [ -e ${ADDON_DIR}/eufySecurityApi/bases.js ]; then
     rm ${ADDON_DIR}/eufySecurityApi/bases.js
