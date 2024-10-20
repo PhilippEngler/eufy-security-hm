@@ -346,14 +346,13 @@ export function waitForStationEvent(station: Station, eventName: keyof StationEv
                     }
                     break;
                 case "property changed":
-                    if (stations && propertyName && propertyValue) {
+                    if (stations !== undefined && propertyName !== undefined && propertyValue !== undefined) {
                         await stations.setStationProperty(station.getSerial(), propertyName, propertyValue);
                     } else {
-                        throw new Error(`Failed to set property for device ${station.getSerial()}. ${JSON.stringify({"propertyName": propertyName, "propertyValue": propertyValue})}`);
+                        throw new Error(`Failed to set property for station ${station.getSerial()}. ${JSON.stringify({"stations": stations !== undefined ? true : false, "propertyName": propertyName, "propertyValue": propertyValue})}`);
                     }
                     break;
             }
-            
         } catch (e: any) {
             station.removeListener(eventName, funcListener);
             reject(e);
@@ -391,14 +390,13 @@ export function waitForDeviceEvent(device: Device, eventName: keyof DeviceEvents
         try {
             switch (eventName) {
                 case "property changed":
-                    if (devices && propertyName && propertyValue) {
+                    if (devices !== undefined && propertyName !== undefined && propertyValue !== undefined) {
                         await devices.setDeviceProperty(device.getSerial(), propertyName, propertyValue);
                     } else {
-                        throw new Error(`Failed to set property for device ${device.getSerial()}. ${JSON.stringify({"propertyName": propertyName, "propertyValue": propertyValue})}`);
+                        throw new Error(`Failed to set property for device ${device.getSerial()}. ${JSON.stringify({"devices": devices !== undefined ? true : false, "propertyName": propertyName, "propertyValue": propertyValue})}`);
                     }
                     break;
             }
-            
         } catch (e: any) {
             device.removeListener(eventName, funcListener);
             reject(e);

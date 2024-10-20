@@ -443,7 +443,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
      * @param deviceSerial The deviceSerial of the device.
      * @returns True if device is a solo device, otherwise false.
      */
-    public async isSoloDevices(deviceSerial: string): Promise<boolean> {
+    public async isSoloDevice(deviceSerial: string): Promise<boolean> {
         let res =  this.existDevice(deviceSerial);
         if (res) {
             res = (await (this.getDevice(deviceSerial))).isSoloCameras();

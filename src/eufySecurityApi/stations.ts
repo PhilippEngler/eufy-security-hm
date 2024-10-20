@@ -271,12 +271,12 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             for (const stationSerial in this.stations) {
                 if (this.stations[stationSerial]) {
                     if (this.stations[stationSerial].isConnected() === true) {
-                        await waitForStationEvent(this.stations[stationSerial], "close", 10000).then(() => {
+                        try {
+                            await this.disconnectStation(this.stations[stationSerial]);
+                        } catch (error: any) {
+                            rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`, JSON.stringify(error));
                             return;
-                        }, () => {
-                            rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
-                            return;
-                        });
+                        }
                     }
 
                     this.removeEventListener(this.stations[stationSerial], "GuardMode");
@@ -329,6 +329,60 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 }
             }
         }
+    }
+
+    /**
+     * Helper function to force a new p2p connection to a specified station.
+     * @param station The serial of the station.
+     * @returns A boolean value with the result.
+     */
+    public async connectStation(station: Station): Promise<boolean> {
+        if (await(this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
+            station.setConnectionType(P2PConnectionType.QUICKEST);
+            rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
+        } else if (!(await(this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== this.api.getP2PConnectionType())) {
+            station.setConnectionType(this.api.getP2PConnectionType());
+            rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
+        }
+
+        const res = await waitForStationEvent(station, "connect", 10000).then(() => {
+            return true;
+        }, (value: any) => {
+            if (typeof value === "boolean") {
+                return false;
+            } else {
+                throw new Error(`Error while connect to station ${station.getSerial()}. Unexpected return value '${value.toString()}'.`);
+            }
+        });
+
+        return res;
+    }
+
+    /**
+     * Helper function to disconnect the p2p connection of a specified station.
+     * @param station The serial of the station.
+     * @returns A boolean value with the result.
+     */
+    public async disconnectStation(station: Station): Promise<boolean> {
+        if (await(this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
+            station.setConnectionType(P2PConnectionType.QUICKEST);
+            rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
+        } else if (!(await(this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== this.api.getP2PConnectionType())) {
+            station.setConnectionType(this.api.getP2PConnectionType());
+            rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
+        }
+
+        const res = await waitForStationEvent(station, "close", 10000).then(() => {
+            return true;
+        }, (value: any) => {
+            if (typeof value === "boolean") {
+                return false;
+            } else {
+                throw new Error(`Error while disconnect from station ${station.getSerial()}. Unexpected return value '${value.toString()}'.`);
+            }
+        });
+
+        return res;
     }
 
     /**
@@ -575,20 +629,25 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (this.stations[stationSerial].getGuardMode() === guardMode) {
             return true;
         } else {
-            const res = await waitForStationEvent(this.stations[stationSerial], "guard mode", 10000, guardMode = guardMode).then(() => {
-                return true;
-            }, (value: any) => {
-                if (typeof value === "boolean") {
-                    return false;
-                } else {
-                    throw value;
+            try {
+                const res = await waitForStationEvent(this.stations[stationSerial], "guard mode", 10000, guardMode = guardMode).then(() => {
+                    return true;
+                }, (value: any) => {
+                    if (typeof value === "boolean") {
+                        return false;
+                    } else {
+                        throw value;
+                    }
+                });
+                if (res === true) {
+                    this.setLastGuardModeChangeTimeNow(stationSerial);
+                    this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
                 }
-            });
-            if (res === true) {
-                this.setLastGuardModeChangeTimeNow(stationSerial);
-                this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
+                return res;
+            } catch (error: any) {
+                rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`, JSON.stringify(error));
+                return false;
             }
-            return res;
         }
     }
 

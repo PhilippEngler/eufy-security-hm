@@ -322,6 +322,15 @@ export class EufySecurityApi {
     }
 
     /**
+     * Checks if the device a solo device.
+     * @param serial The serial of the station or device.
+     * @returns True if device is a solo device, otherwise false.
+     */
+    public async isSoloDevice(serial: string): Promise<boolean> {
+        return await this.devices.isSoloDevice(serial);
+    }
+
+    /**
      * Login with the in the api provoded login information.
      * @param options Options for login.
      */
@@ -1845,16 +1854,20 @@ export class EufySecurityApi {
                 if (device.isEnabled() === value) {
                     return `{"success":true,"info":"The value for privacy mode on device ${deviceSerial} already set."}`;
                 } else {
-                    const res = await waitForDeviceEvent(await this.getDevice(deviceSerial), "property changed", 10000, this.devices, PropertyName.DeviceEnabled, value).then(() => {
-                        return true;
-                    }, (value: any) => {
-                        if (typeof value === "boolean") {
-                            return false;
-                        } else {
-                            throw value;
-                        }
-                    });
-                    return `{"success":${res},"enabled":${res === true ? value as boolean : !(value as boolean)}}`;
+                    try {
+                        const res = await waitForDeviceEvent(await this.getDevice(deviceSerial), "property changed", 10000, this.devices, PropertyName.DeviceEnabled, value).then(() => {
+                            return true;
+                        }, (value: any) => {
+                            if (typeof value === "boolean") {
+                                return false;
+                            } else {
+                                throw value;
+                            }
+                        });
+                        return `{"success":${res},"enabled":${res === true ? value as boolean : !(value as boolean)}}`;
+                    } catch (error: any) {
+                        return `{"success":false,"reason":"${JSON.stringify(error)}"}`;
+                    }
                 }
             } else {
                 return `{"success":false,"reason":"Device ${deviceSerial} does not support privacy mode."}`;
@@ -1880,28 +1893,16 @@ export class EufySecurityApi {
                 if (station.isConnected()) {
                     json = {"success":false, "message":"P2P connection to station already established."};
                 } else if (station.isP2PConnectableDevice()) {
-                    if (await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
-                        station.setConnectionType(P2PConnectionType.QUICKEST);
-                        rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
-                    } else if (!(await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== this.getP2PConnectionType())) {
-                        station.setConnectionType(this.getP2PConnectionType());
-                        rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
-                    }
-                    let connected = false;
+                    try {
+                        let connected = false;
 
-                    const res = await waitForStationEvent(station, "connect", 10000).then(() => {
+                        const res = await this.stations.connectStation(station);
                         connected = station.isConnected();
-                        return true;
-                    }, (value: any) => {
-                        if (typeof value === "boolean") {
-                            connected = station.isConnected();
-                            return false;
-                        } else {
-                            throw value;
-                        }
-                    });
 
-                    json = {"success":res, "conneceted":connected};
+                        json = {"success":res, "connected":connected};
+                    } catch (error: any) {
+                        json = {"success":false, "message":error.message};
+                    }
                 }
             } else {
                 json = {"success":false, "message":"The specified station could not be found."};
@@ -1929,21 +1930,16 @@ export class EufySecurityApi {
                 if (!station.isConnected()) {
                     json = {"success":false, "message":"No P2P connection to station established."};
                 } else {
-                    let connected = false;
+                    try {
+                        let connected = false;
 
-                    const res = await waitForStationEvent(station, "close", 10000).then(() => {
+                        const res = await this.stations.disconnectStation(station);
                         connected = station.isConnected();
-                        return true;
-                    }, (value: any) => {
-                        if (typeof value === "boolean") {
-                            connected = station.isConnected();
-                            return false;
-                        } else {
-                            throw value;
-                        }
-                    });
 
-                    json = {"success":res, "disconneceted":!connected};
+                        json = {"success":res, "disconnected":!connected};
+                    } catch (error: any) {
+                        json = {"success":false, "message":error.message};
+                    }
                 }
             } else {
                 json = {"success":false, "message":"The specified station could not be found."};
@@ -1976,55 +1972,27 @@ export class EufySecurityApi {
                     let res = false;
                     if (connected === true) {
                         try {
-                            res = await waitForStationEvent(station, "close", 10000).then(() => {
-                                connected = station.isConnected();
-                                return true;
-                            }, (value: any) => {
-                                if (typeof value === "boolean") {
-                                    connected = station.isConnected();
-                                    return false;
-                                } else {
-                                    throw value;
-                                }
-                            });
-                        } catch (ex: any) {
-                            rootAddonLogger.error(`Error during closing p2p connection to station ${stationSerial}. Got value '${JSON.stringify(ex)}'.`);
-                            json = {"success":false, "message":`Error during closing p2p connection to station ${stationSerial}. Error: '${JSON.stringify(ex)}'.`};
+                            res = await this.stations.disconnectStation(station);
+                        } catch (error: any) {
+                            rootAddonLogger.error(`Error during closing p2p connection to station ${stationSerial}. Got value '${JSON.stringify(error)}'.`);
+                            json = {"success":false, "message":`Error during closing p2p connection to station ${stationSerial}. Error: '${JSON.stringify(error)}'.`};
                             return JSON.stringify(json);
                         }
                         await sleep(1000);
                     }
 
-                    if (await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== P2PConnectionType.QUICKEST) {
-                        station.setConnectionType(P2PConnectionType.QUICKEST);
-                        rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${P2PConnectionType[station.getConnectionType()]}.`);
-                    } else if (!(await(this.devices.isSoloDevices(stationSerial)) && station.getConnectionType() !== this.getP2PConnectionType())) {
-                        station.setConnectionType(this.getP2PConnectionType());
-                        rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${P2PConnectionType[station.getConnectionType()]}).`);
-                    }
-
                     if (connected === false) {
                         try {
                             await sleep(1000);
-                            res = await waitForStationEvent(station, "connect", 10000).then(() => {
-                                connected = station.isConnected();
-                                return true;
-                            }, (value: any) => {
-                                if (typeof value === "boolean") {
-                                    connected = station.isConnected();
-                                    return false;
-                                } else {
-                                    throw value;
-                                }
-                            });
-                        } catch (ex: any) {
-                            rootAddonLogger.error(`Error during reconnecting p2p connection to station ${stationSerial}. Got value '${JSON.stringify(ex)}'.`);
-                            json = {"success":false, "message":`Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(ex)}'.`};
+                            res = await this.stations.connectStation(station);
+                        } catch (error: any) {
+                            rootAddonLogger.error(`Error during reconnecting p2p connection to station ${stationSerial}. Got value '${JSON.stringify(error)}'.`);
+                            json = {"success":false, "message":`Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(error)}'.`};
                             return JSON.stringify(json);
                         }
                     }
 
-                    json = {"success":res, "conneceted":connected};
+                    json = {"success":res, "connected":connected};
                 }
             } else {
                 json = {"success":false, "message":"The specified station could not be found."};
