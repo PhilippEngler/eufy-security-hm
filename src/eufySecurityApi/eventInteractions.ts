@@ -90,9 +90,9 @@ export class EventInteractions
             if (this.interactions !== null) {
                 if (this.interactions.deviceInteractions[deviceSerial].eventInteractions.hasOwnProperty(eventInteractionType)) {
                     delete this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType];
-                    if (Object.keys(this.interactions.deviceInteractions[deviceSerial].eventInteractions).length == 0) {
+                    if (Object.keys(this.interactions.deviceInteractions[deviceSerial].eventInteractions).length === 0) {
                         delete this.interactions.deviceInteractions[deviceSerial];
-                        if (Object.keys(this.interactions.deviceInteractions).length == 0) {
+                        if (Object.keys(this.interactions.deviceInteractions).length === 0) {
                             this.interactions = null;
                         }
                     }
