@@ -541,12 +541,12 @@ export class Config {
                 }
             }
         }*/
-        if (this.configJson.apiConfig.updateCloudInfoIntervall < 10 || this.configJson.apiConfig.updateCloudInfoIntervall > 240) {
+        if (this.configJson.apiConfig.updateCloudInfoIntervall !== 0 && (this.configJson.apiConfig.updateCloudInfoIntervall < 10 || this.configJson.apiConfig.updateCloudInfoIntervall > 240)) {
             rootConfLogger.info(`Set updateCloudInfoIntervall to default value "10"`);
             this.configJson.apiConfig.updateCloudInfoIntervall = 10;
             updated = true;
         }
-        if (this.configJson.apiConfig.updateDeviceDataIntervall < 10 || this.configJson.apiConfig.updateDeviceDataIntervall > 240) {
+        if (this.configJson.apiConfig.updateDeviceDataIntervall !== 0 && (this.configJson.apiConfig.updateDeviceDataIntervall < 10 || this.configJson.apiConfig.updateDeviceDataIntervall > 240)) {
             rootConfLogger.info(`Set updateDeviceDataIntervall to default value "10"`);
             this.configJson.apiConfig.updateDeviceDataIntervall = 10;
             updated = true;
