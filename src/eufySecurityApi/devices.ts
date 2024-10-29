@@ -22,7 +22,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
     private devices: { [deviceSerial: string]: any } = {};
     private loadingEmitter = new EventEmitter();
     private devicesLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "devices loaded");
-    private deviceSnoozeTimeout: { [dataType: string]: NodeJS.Timeout; } = {};
+    private deviceSnoozeTimeout = new Map<string, NodeJS.Timeout>();
 
     private errorImage: Picture | undefined = undefined;
     private defaultImage: Picture | undefined = undefined;
@@ -351,8 +351,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
      */
     public close(): void {
         Object.keys(this.deviceSnoozeTimeout).forEach(device_sn => {
-            clearTimeout(this.deviceSnoozeTimeout[device_sn]);
-            delete this.deviceSnoozeTimeout[device_sn];
+            clearTimeout(this.deviceSnoozeTimeout.get(device_sn));
+            this.deviceSnoozeTimeout.delete(device_sn);
         });
     }
 
@@ -457,7 +457,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
      * @param timeoutMS The snooze time in ms.
      */
     public setDeviceSnooze(device: Device, timeoutMS: number): void {
-        this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
+        this.deviceSnoozeTimeout.set(device.getSerial(), setTimeout(() => {
             device.updateProperty(PropertyName.DeviceSnooze, false);
             device.updateProperty(PropertyName.DeviceSnoozeTime, 0);
             device.updateProperty(PropertyName.DeviceSnoozeStartTime, 0);
@@ -470,8 +470,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             if (device.hasProperty(PropertyName.DeviceSnoozeChime)) {
                 device.updateProperty(PropertyName.DeviceSnoozeChime, false);
             }
-            delete this.deviceSnoozeTimeout[device.getSerial()];
-        }, timeoutMS);
+            this.deviceSnoozeTimeout.delete(device.getSerial());
+        }, timeoutMS));
     }
 
     /**

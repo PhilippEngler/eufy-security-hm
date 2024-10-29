@@ -22,8 +22,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private api: EufySecurityApi;
     private httpService: HTTPApi;
     private stations: { [stationSerial: string ]: Station } = {};
-    private skipNextModeChangeEvent: { [stationSerial: string]: boolean } = {};
-    private lastGuardModeChangeTimeForStations: { [stationSerial: string]: number | undefined } = {};
+    private skipNextModeChangeEvent = new Map<string, boolean>();
+    private lastGuardModeChangeTimeForStations = new Map<string, number | undefined>();
     private loadingEmitter = new EventEmitter();
     private stationsLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "stations loaded");
     private lightTimeouts = new Map<string, NodeJS.Timeout>();
@@ -91,8 +91,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                     rootAddonLogger.debug(`Set p2p connection type for device ${stationSerial} to value from settings (${P2PConnectionType[p2pMethod]}).`);
                 }
                 const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
-                this.skipNextModeChangeEvent[stationSerial] = false;
-                this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
+                this.skipNextModeChangeEvent.set(stationSerial, false);
+                this.lastGuardModeChangeTimeForStations.set(stationSerial, undefined);
 
                 promises.push(new_station.then((station: Station) => {
                     try {
@@ -1448,9 +1448,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private async onStationGuardMode(station: Station, guardMode: number): Promise<void> {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
-        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
+        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
             rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
-            this.skipNextModeChangeEvent[station.getSerial()] = false;
+            this.skipNextModeChangeEvent.set(station.getSerial(), false);
         } else {
             rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeStation(station.getSerial());
@@ -1463,9 +1463,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      * @param guardMode The new guard mode as GuardMode.
      */
     private async onStationCurrentMode(station: Station, guardMode: number): Promise<void> {
-        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
+        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
             rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
-            this.skipNextModeChangeEvent[station.getSerial()] = false;
+            this.skipNextModeChangeEvent.set(station.getSerial(), false);
         } else {
             rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
             await this.api.updateGuardModeStation(station.getSerial());
@@ -2012,8 +2012,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (timeStamp !== undefined) {
             timeStamp = convertTimeStampToTimeStampMs(timeStamp, timeStampType);
         }
-        this.lastGuardModeChangeTimeForStations[stationSerial] = timeStamp;
-        this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations[stationSerial]);
+        this.lastGuardModeChangeTimeForStations.set(stationSerial, timeStamp);
+        this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations.get(stationSerial));
     }
 
     /**
@@ -2030,7 +2030,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      * @returns The timestamp as number or undefined.
      */
     public getLastGuardModeChangeTime(stationSerial: string): number | undefined {
-        return this.lastGuardModeChangeTimeForStations[stationSerial];
+        return this.lastGuardModeChangeTimeForStations.get(stationSerial);
     }
 
     /**
