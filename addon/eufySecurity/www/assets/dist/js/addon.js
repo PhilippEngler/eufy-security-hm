@@ -2192,18 +2192,6 @@ function isStationOrDevicesKnown(modell)
 	}
 }
 
-function isDeviceSupportingPrivacyMode(modell)
-{
-	switch(modell)
-	{
-		case "T8410":
-		case "T8416":
-			return true;
-		default:
-			return false;
-	}
-}
-
 function generateElementTextBox(textBoxType, serialNumber, name, propertyName, hint, placeholder, value, disabled, readonly)
 {
 	return `<div class="mb-2">
@@ -3199,7 +3187,7 @@ function loadDataStatechange(showLoading)
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}')`}`, translateGuardMode(1), (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, translateGuardMode(2), (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, translateGuardMode(63), (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
-					if(objResp.data[station].deviceType == "indoorcamera" && isDeviceSupportingPrivacyMode(objResp.data[station].model.slice(0,5)))
+					if(objResp.data[station].deviceType == "indoorcamera" && objResp.data[station].privacyMode === true)
 					{
 						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? translateString("strActivate") : translateString("strDeactivate")}`, true, undefined, undefined, true)}</div>`;
 					}
@@ -4981,7 +4969,7 @@ function initLogViewer(logfiletype, showLoading)
 
 function loadLogfile(logfiletype, showLoading)
 {
-	var xmlHttp, url, objResp, logData;
+	var xmlHttp, url, objResp;
 	document.getElementById("logContent").style.display = 'none';
 	codeMirrorEditor.setValue("");
 	switch(logfiletype)
