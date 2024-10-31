@@ -1,13 +1,13 @@
 /**
  * Javascript for eufySecurity Addon
- * 20241002
+ * 20241030
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
-var version = "3.1.0";
+var version = "3.1.1";
 
 /**
  * common used java script functions
@@ -1882,6 +1882,12 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 			deviceModal += `
 											${generateInteractionExpander("ring", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
+		if(deviceProperties.sensorOpen !== undefined)
+		{
+			deviceModal += `
+											${generateInteractionExpander("sensorOpen", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}
+											${generateInteractionExpander("sensorClose", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
+		}
 		deviceModal += `
 										</div>
 									</div>
@@ -1942,6 +1948,10 @@ function getEventId(event)
 			return 11;
 		case "ring":
 			return 12;
+		case "sensorOpen":
+			return 13;
+		case "sensorClose":
+			return 14;
 		default:
 			return -1;
 	}

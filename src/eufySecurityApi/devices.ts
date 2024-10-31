@@ -980,6 +980,24 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
      */
     private async onOpen(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
+        if (state === true) {
+            try {
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.OPEN);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
+        if (state === false) {
+            try {
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CLOSE);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                }
+            }
+            catch {}
+        }
     }
 
     /**

@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.25
-20241003
+Schema v9.26
+20241030
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20241003 (v9.25)";
+var languageVersion = "20241030 (v9.26)";
 
 function translateNavbarElement(element)
 {
@@ -181,7 +181,7 @@ function translateStaticContentElement(element)
 		case "optConnectionTypeFastest":
 			return "Fastest connection";
 		case "hintConnectionType":
-			return `This setting is used for all stations and devices supplied with power. For battery-powered devices, the connection is always established with the "Fastest connection" option.`;
+			return `This setting is used for all stations and devices supplied with power. For battery-powered devices, the connection is always established with the '${translateStaticContentElement("optConnectionTypeFastest")}' option.`;
 		case "lblUseUdpStaticPorts":
 			return "Establish connection to the stations via fixed ports";
 		case "settingsHeaderConfigUpdateSystemVariables":
@@ -350,7 +350,7 @@ function translateStaticContentElement(element)
 		case "lblModaStateEventOrIntervalllTitle":
 			return "Check the settings.";
 		case "lblModaStateEventOrIntervalllMessage":
-			return `The option "Update mode automatically by events sent by the station" and the option "Update mode regularly based on intervals" cannot be activated at the same time.<br /><br />The last activated option is deactivated with clicking on 'OK'.`;
+			return `The option '${translateStaticContentElement("lblUpdateStateEvent")}' and the option '${translateStaticContentElement("lblUpdateStateIntervall")}' cannot be activated at the same time.<br /><br />The last activated option is deactivated with clicking on 'OK'.`;
 		case "modalStateEventOrIntervallBtnOK":
 			return "OK";
 		case "lblModalUDPPortsEqualWrongTitle":
@@ -434,7 +434,7 @@ function translateStaticContentElement(element)
 		case "entryApiReturnValues":
 			return `If you want to evaluate the response, you can use the following code:<br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><br />The JSON response can be found in the string <code>res</code>.`;
 		case "descApiSystemVariables":
-			return `With both variants, the corresponding system variables are set automatically if the option "Automatically update system variables for API actions" has been activated in the settings.`;
+			return `With both variants, the corresponding system variables are set automatically if the option '${translateStaticContentElement("lblUseSystemVariables")}' has been activated in the settings.`;
 		case "descApiIpAddress":
 			return "Use the IP address of your CCU instead of <code>127.0.0.1</code> if you want to access the API from devices in your network (e.g. with a browser).";
 		case "descApiTimeout":
@@ -442,7 +442,7 @@ function translateStaticContentElement(element)
 		case "hintApiTimestamps":
 			return "The timestamps of the last events are only set and updated in the following cases:";
 		case "descTimestampStation":
-			return `Time of mode change for stations: the setting "Update mode automatically by events sent by the station" must be activated`;
+			return `Time of mode change for stations: the setting '${translateStaticContentElement("lblUpdateStateEvent")}' must be activated`;
 		case "descTimestampVideo":
 			return `Time of the last video event for cameras: the "Activate push notifications" setting must be activated`;
 		case "descTimestampNoValue":
@@ -639,17 +639,17 @@ function translateMessages(message, ...options)
 		case "messageErrorThreeValues":
 			return `The return value '${options[0]}' is '${options[1]}'.<br />Message: '${options[2]}'`;
 		case "messageSystemVariableHintHeader":
-			return "Option 'Automatically update system variables for API actions' is activated.";
+			return `Option '${translateStaticContentElement("lblUseSystemVariables")}' is activated.`;
 		case "messageSystemVariableHintMessage":
 			return "The AddOn will update the corresponding system variables. In the following table you will find all the system variables that this AddOn requires on the CCU. If the respective line is green, the system variable has already been created on the CCU, otherwise the line is red.</br >If system variables are found that begin with 'eufy' and are no longer required (e.g. for deleted devices), these appear in a second table. These system variables can be deleted there.";
 		case "messageSystemVariableHintSubText":
-			return "Please ensure that all system variables have been created. If you do not want the system variables to be updated, please deactivate the option 'Automatically update system variables for API actions'.";
+			return `Please ensure that all system variables have been created. If you do not want the system variables to be updated, please deactivate the option '${translateStaticContentElement("lblUseSystemVariables")}'.`;
 		case "messageSystemVariablesDeactivatedHeader":
 			return "No system variables.";
 		case "messageSystemVariablesDeactivatedMessage":
 			return "The updating of system variables for API actions is deactivated.";
 		case "messageSystemVariablesDeactivatedSubText":
-			return "Activate the setting 'Automatically update system variables for API actions' if you want to work with the system variables.";
+			return `Activate the setting '${translateStaticContentElement("lblUseSystemVariables")}' if you want to work with the system variables.`;
 		case "messageSystemVariablesLoadingErrorHeader":
 			return "Error when determining the system variables.";
 		case "messageSettingsSaveErrorHeader":
@@ -696,7 +696,7 @@ function translateContent(content, ...options)
 		case "lblConfigNeededHeader":
 			return "Settings incomplete";
 		case "lblConfigNeeded":
-			return "You must configure the add-on before you can use it. Click on the 'Go To Settings' button to make the settings.";
+			return `You must configure the add-on before you can use it. Click on the '${translateContent("btnGoToSettings")}' button to make the settings.`;
 		case "btnGoToSettings":
 			return "Go To Settings";
 		case "lblTfaHeader":
@@ -998,6 +998,10 @@ function translateContent(content, ...options)
 			return "Response on Detected DogPoop";
 		case "lblInteractionRing":
 			return "Response on Ringing";
+		case "lblInteractionSensorOpen":
+			return "Response on open shutter contact";
+		case "lblInteractionSensorClose":
+			return "Response on close shutter contact";
 		case "lblNotSupportedStationHeading":
 			return "This device is not fully supported.";
 		case "lblNotSupportedStationMessage":
@@ -1527,6 +1531,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventTarget":
 		case "dogPoopEventTarget":
 		case "ringEventTarget":
+		case "sensorOpenEventTarget":
+		case "sensorCloseEventTarget":
 			return "CCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
 		case "radarMotionEventTargetHint":
@@ -1540,6 +1546,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventTargetHint":
 		case "dogPoopEventTargetHint":
 		case "ringEventTargetHint":
+		case "sensorOpenEventTargetHint":
+		case "sensorCloseEventTargetHint":
 			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
 		case "radarMotionEventUseHttps":
@@ -1553,6 +1561,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventUseHttps":
 		case "dogPoopEventUseHttps":
 		case "ringEventUseHttps":
+		case "sensorOpenEventUseHttps":
+		case "sensorCloseEventUseHttps":
 			return "Establish connection via HTTPS";
 		case "motionEventUser":
 		case "radarMotionEventUser":
@@ -1566,6 +1576,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventUser":
 		case "dogPoopEventUser":
 		case "ringEventUser":
+		case "sensorOpenEventUser":
+		case "sensorCloseEventUser":
 			return "User name for logging in to the CCU";
 		case "motionEventUserHint":
 		case "radarMotionEventUserHint":
@@ -1579,6 +1591,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventUserHint":
 		case "dogPoopEventUserHint":
 		case "ringEventUserHint":
+		case "sensorOpenEventUserHint":
+		case "sensorCloseEventUserHint":
 			return "The user name is only required if you have activated authentication in the CCU settings and select a CCU other than the one on which this add-on is running.";
 		case "motionEventPassword":
 		case "radarMotionEventPassword":
@@ -1592,6 +1606,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventPassword":
 		case "dogPoopEventPassword":
 		case "ringEventPassword":
+		case "sensorOpenEventPassword":
+		case "sensorCloseEventPassword":
 			return "Password for logging in to the CCU";
 		case "motionEventPasswordHint":
 		case "radarMotionEventPasswordHint":
@@ -1605,6 +1621,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventPasswordHint":
 		case "dogPoopEventPasswordHint":
 		case "ringEventPasswordHint":
+		case "sensorOpenEventPasswordHint":
+		case "sensorCloseEventPasswordHint":
 			return "The password is only required if you have activated authentication in the CCU settings and select a CCU other than the one on which this add-on is running.";
 		case "motionEventCommand":
 		case "radarMotionEventCommand":
@@ -1618,6 +1636,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventCommand":
 		case "dogPoopEventCommand":
 		case "ringEventCommand":
+		case "sensorOpenEventCommand":
+		case "sensorCloseEventCommand":
 			return "Command to be executed";
 		case "motionEventCommandHint":
 		case "radarMotionEventCommandHint":
@@ -1631,6 +1651,8 @@ function translatePropertyName(propertyName)
 		case "dogLickEventCommandHint":
 		case "dogPoopEventCommandHint":
 		case "ringEventCommandHint":
+		case "sensorOpenEventCommandHint":
+		case "sensorCloseEventCommandHint":
 			return "The command to be entered here should be tested in advance using the script test function of the CCU.";
 		case "notificationIntervalTime":
 			return "Duration between Notifications";
