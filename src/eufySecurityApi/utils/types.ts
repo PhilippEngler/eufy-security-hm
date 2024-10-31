@@ -14,5 +14,7 @@ export enum EventInteractionType {
     DOG = 9,
     DOG_LICK = 10,
     DOG_POOP = 11,
-    RING = 12
+    RING = 12,
+    OPEN = 13,
+    CLOSE = 14
 }
