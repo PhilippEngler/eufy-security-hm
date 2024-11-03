@@ -935,8 +935,8 @@ export class EufySecurityApi {
                 //await this.httpService.refreshStationData();
                 //await this.httpService.refreshDeviceData();
 
-                await this.updateDeviceData();
-                await this.devices.loadDevices();
+                //await this.updateDeviceData();
+                //await this.devices.loadDevices();
 
                 const devices = await this.devices.getDevices();
                 if (devices) {
@@ -945,6 +945,7 @@ export class EufySecurityApi {
                         const station = await this.stations.getStation(devices[deviceSerial].getStationSerial());
                         json.data.push(this.makeJsonObjectForDevice(devices[deviceSerial], station.isEnergySavingDevice(), station.isConnected()));
                     }
+                    json.data.push({"eufyDeviceId":11,"isEnergySavingDevice":false,"isStationP2PConnected":true,"isDeviceKnownByClient":true,"deviceType":"sensor","model":"T8910","modelName":"Motion Sensor","name":"Aussen Esszimmer","hardwareVersion":"0.0.1","softwareVersion":"2.0.1.1","stationSerialNumber":"T8030TXXXXXXXXXX","motionDetected":false,"motionDetectionSensitivity":37,"state":1,"wifiRssi":-63,"wifiSignalLevel":3,"serialNumber":"T8910PXXXXXXXXXX","type":10,"secHardwareVersion":"0.0.1","secSoftwareVersion":"2.0.1.1","batteryLow":false,"motionSensorPirEvent":1730562681000});
                     this.setLastConnectionInfo(true);
                 } else {
                     json = {"success":false, "reason":"No devices found."};
@@ -997,8 +998,8 @@ export class EufySecurityApi {
                 //await this.httpService.refreshStationData();
                 //await this.httpService.refreshDeviceData();
 
-                await this.updateDeviceData();
-                await this.devices.loadDevices();
+                //await this.updateDeviceData();
+                //await this.devices.loadDevices();
 
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device) {

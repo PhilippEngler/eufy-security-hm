@@ -1053,7 +1053,7 @@ export const GenericTypeProperty: PropertyMetadataNumeric = {
 }
 
 export const GenericWifiSsid: PropertyMetadataString = {
-    key: "wifi_ssid	",
+    key: "wifi_ssid",
     name: PropertyName.DeviceWifiSSID,
     label: "Wifi Ssid",
     readable: true,
@@ -1305,6 +1305,11 @@ export const DeviceWifiRSSILockProperty: PropertyMetadataNumeric = {
 };
 
 export const DeviceWifiRSSIEntrySensorProperty: PropertyMetadataNumeric = {
+    ...DeviceWifiRSSIProperty,
+    key: CommandType.CMD_GET_SUB1G_RSSI,
+};
+
+export const DeviceWifiRSSIMotionSensorProperty: PropertyMetadataNumeric = {
     ...DeviceWifiRSSIProperty,
     key: CommandType.CMD_GET_SUB1G_RSSI,
 };
@@ -1920,6 +1925,22 @@ export const DeviceMotionDetectionSensitivityGarageCameraProperty: PropertyMetad
     key: CommandType.CMD_SET_MOTION_SENSITIVITY,
     min: 0,
     max: 4,
+}
+
+export const DeviceMotionDetectionSensitivityMotionSensorProperty: PropertyMetadataNumeric = {
+    key: CommandType.CMD_MOTION_SENSOR_SET_PIR_SENSITIVITY,
+    name: PropertyName.DeviceMotionDetectionSensitivity,
+    label: "Motion Detection Sensitivity",
+    readable: true,
+    writeable: true,
+    type: "number",
+    states: {
+        8: "9-11m",
+        18: "7-9m",
+        37: "6-7m",
+        53: "5-6m",
+        80: "3-5m",
+    },
 }
 
 export const DeviceHiddenMotionDetectionSensitivityWiredDoorbellProperty: PropertyMetadataNumeric = {
@@ -7309,7 +7330,11 @@ export const DeviceProperties: Properties = {
         ...GenericDeviceProperties,
         [PropertyName.DeviceBatteryLow]: DeviceBatteryLowMotionSensorProperty,
         [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
+        [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivityMotionSensorProperty,
         [PropertyName.DeviceMotionSensorPIREvent]: DeviceMotionSensorPIREventProperty,
+        [PropertyName.DeviceState]: DeviceStateProperty,
+        [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIMotionSensorProperty,
+        [PropertyName.DeviceWifiSignalLevel]: DeviceWifiSignalLevelProperty,
     },
     [DeviceType.SENSOR]: {
         ...GenericDeviceProperties,

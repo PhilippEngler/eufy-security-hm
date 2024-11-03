@@ -1,13 +1,13 @@
 /**
  * Javascript for eufySecurity Addon
- * 20241030
+ * 20241103
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
-var version = "3.1.1";
+var version = "3.1.2";
 
 /**
  * common used java script functions
@@ -682,13 +682,24 @@ function getDeviceLastEventTime(device)
 {
 	if(device.type === 2)
 	{
-		if(device.sensorChangeTime !== undefined)
+		if(device.sensorChangeTime !== undefined && device.sensorChangeTime >= 0)
 		{
-			return `${translateContent("lblLastUpdated")}: ${makeDateTimeString(new Date(parseInt(device.sensorChangeTime)))}`;
+			return `${translateContent("lblLastEvent")}: ${makeDateTimeString(new Date(parseInt(device.sensorChangeTime)))}`;
 		}
 		else
 		{
-			return `${translateContent("lblLastUpdated")}: ${translateContent("lblNotAvailable")}`;
+			return `${translateContent("lblLastEvent")}: ${translateContent("lblNotAvailable")}`;
+		}
+	}
+	else if(device.type === 10)
+	{
+		if(device.motionSensorPirEvent !== undefined && device.motionSensorPirEvent >= 0)
+		{
+			return `${translateContent("lblLastEvent")}: ${makeDateTimeString(new Date(parseInt(device.motionSensorPirEvent)))}`;
+		}
+		else
+		{
+			return `${translateContent("lblLastEvent")}: ${translateContent("lblNotAvailable")}`;
 		}
 	}
 	else
@@ -1208,17 +1219,32 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 								<div class="card mb-3" id="cardDeviceMotionDetectionSettings">
 									<h5 class="card-header">${translateContent("lblHeaderMotionDetection")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.motionDetection !== undefined)
+		if(deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionSensitivityStandard !== undefined || deviceProperties.motionDetectionSensitivityAdvancedA !== undefined || deviceProperties.motionDetectionSensitivityAdvancedB !== undefined || deviceProperties.motionDetectionSensitivityAdvancedC !== undefined || deviceProperties.motionDetectionSensitivityAdvancedD !== undefined || deviceProperties.motionDetectionSensitivityAdvancedE !== undefined || deviceProperties.motionDetectionSensitivityAdvancedF !== undefined || deviceProperties.motionDetectionSensitivityAdvancedG !== undefined || deviceProperties.motionDetectionSensitivityAdvancedH !== undefined)
 		{
-			deviceModal += `
+			if(deviceProperties.motionDetection !== undefined)
+			{
+				deviceModal += `
 										<h5>${translateContent("lblMotionDetection")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetection.name, deviceProperties.motionDetection, false, setEventHandler)}`;
+			}
 			if(deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionSensitivityStandard !== undefined || deviceProperties.motionDetectionSensitivityAdvancedA !== undefined || deviceProperties.motionDetectionSensitivityAdvancedB !== undefined || deviceProperties.motionDetectionSensitivityAdvancedC !== undefined || deviceProperties.motionDetectionSensitivityAdvancedD !== undefined || deviceProperties.motionDetectionSensitivityAdvancedE !== undefined || deviceProperties.motionDetectionSensitivityAdvancedF !== undefined || deviceProperties.motionDetectionSensitivityAdvancedG !== undefined || deviceProperties.motionDetectionSensitivityAdvancedH !== undefined)
 			{
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined ? `<hr />`: ``}
-										<h5>${translateContent("lblMotionDetectionSensitivity")}</h5>
-										${deviceProperties.motionDetectionSensitivity !== undefined ? `${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivity.unit, devicePropertiesMetadata.motionDetectionSensitivity.min, devicePropertiesMetadata.motionDetectionSensitivity.max, devicePropertiesMetadata.motionDetectionSensitivity.default)}` : ""}
+										<h5>${translateContent("lblMotionDetectionSensitivity")}</h5>`;
+				if (deviceProperties.motionDetectionSensitivity !== undefined)
+				{
+					if(devicePropertiesMetadata.motionDetectionSensitivity.states === undefined)
+					{
+						deviceModal += `
+										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivity.unit, devicePropertiesMetadata.motionDetectionSensitivity.min, devicePropertiesMetadata.motionDetectionSensitivity.max, devicePropertiesMetadata.motionDetectionSensitivity.default)}`;
+					}
+					else
+					{
+						deviceModal += `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, false, devicePropertiesMetadata.motionDetectionSensitivity.states)}`;
+					}
+				}
+				deviceModal += `
 										${deviceProperties.motionDetectionSensitivityMode !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityMode.name, deviceProperties.motionDetectionSensitivityMode, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityMode.states)}` : ``}`;
 				if(deviceProperties.motionDetectionSensitivityMode !== undefined)
 				{
@@ -2196,6 +2222,7 @@ function isStationOrDevicesKnown(modell)
 		case "T8170":
 		//Sensors
 		case "T8900":
+		case "T8910":
 			return true;
 		default:
 			return false;

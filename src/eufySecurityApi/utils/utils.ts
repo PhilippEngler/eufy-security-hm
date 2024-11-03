@@ -189,7 +189,7 @@ export const getDeviceTypeAsString = function(device: Device): string {
         return "starlight4glte"
     } else if(device.isLock()) {
         return "lock";
-    } else if(device.isEntrySensor()) {
+    } else if(device.isEntrySensor() || device.isMotionSensor()) {
         return "sensor";
     } else if(device.isKeyPad()) {
         return "keypad";

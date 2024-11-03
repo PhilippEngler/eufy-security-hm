@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.26
-20241030
+Schema v9.27
+20241103
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20241030 (v9.26)";
+var languageVersion = "20241103 (v9.27)";
 
 function translateNavbarElement(element)
 {
@@ -794,8 +794,8 @@ function translateContent(content, ...options)
 			return "Temperatur";
 		case "lblState":
 			return "Status";
-		case "lblLastUpdated":
-			return "letzte Änderung";
+		case "lblLastEvent":
+			return "letztes Ereignis";
 		case "lblNotAvailable":
 			return "nicht verfügbar";
 		case "lblUnknown":
@@ -1129,7 +1129,7 @@ function translateString(content)
 			return "Laden der Einstellungen...";
 		case "strWaitWhileLoading":
 			return "wird geladen...";
-		case "strOK":
+		case "strOk":
 			return "OK";
 		case "strLow":
 			return "niedrig";
