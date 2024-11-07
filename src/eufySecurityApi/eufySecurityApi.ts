@@ -1093,7 +1093,7 @@ export class EufySecurityApi {
             if (this.devices) {
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
-                    json = device.getRawDevice()
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "params":device.getRawDevice()};
                     this.setLastConnectionInfo(true);
                 } else {
                     json = {"success":false, "reason":`The device with serial ${deviceSerial} does not exists.`};
@@ -1314,7 +1314,7 @@ export class EufySecurityApi {
                 const station = await this.stations.getStation(stationSerial);
 
                 if (station) {
-                    json = station.getRawStation();
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "params":station.getRawStation()};
                     this.setLastConnectionInfo(true);
                 } else {
                     json = {"success":false, "reason":`No station with serial ${stationSerial} found.`};
