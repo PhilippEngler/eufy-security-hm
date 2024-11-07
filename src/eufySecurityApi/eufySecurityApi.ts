@@ -14,9 +14,9 @@ import { EufyHouses } from "./houses";
 import { NotSupportedError, ReadOnlyPropertyError, ensureError } from "./error";
 import { getDateTimeFromImageFilePath, randomNumber } from "./http/utils";
 import { PhoneModels, timeZoneData } from "./http/const";
-import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString, waitForStationEvent, waitForDeviceEvent } from "./utils/utils";
+import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString, waitForStationEvent, waitForDeviceEvent, waitForHttpApiEvent, convertMapToObject } from "./utils/utils";
 import { countryData } from "./utils/const";
-import { EventInteractionType } from "./utils/types";
+import { EventInteractionType, RefreshDataTarget } from "./utils/types";
 
 export class EufySecurityApi {
     private config: Config;
@@ -783,12 +783,27 @@ export class EufySecurityApi {
     }
 
     /**
-     * (Re)Loads all Stations and Devices and the settings of them.
+     * Refresh all Devices, Station and/or Houses and the settings of them.
      */
-    public async loadData(): Promise<void> {
-        await this.httpService.refreshHouseData();
-        await this.httpService.refreshStationData();
-        await this.httpService.refreshDeviceData();
+    public async refreshData(target: RefreshDataTarget): Promise<Map<RefreshDataTarget, boolean>> {
+        let result = new Map<RefreshDataTarget, boolean>();
+        switch (target) {
+            case "all":
+                result.set("devices", await waitForHttpApiEvent(this.httpService, "devices", 1000));
+                result.set("houses", await waitForHttpApiEvent(this.httpService, "houses", 1000));
+                result.set("stations", await waitForHttpApiEvent(this.httpService, "hubs", 1000));
+                break;
+            case "devices":
+                result.set("devices", await waitForHttpApiEvent(this.httpService, "devices", 1000));
+                break;
+            case "houses":
+                result.set("houses", await waitForHttpApiEvent(this.httpService, "houses", 1000));
+                break;
+            case "stations":
+                result.set("stations", await waitForHttpApiEvent(this.httpService, "hubs", 1000));
+                break;
+        }
+        return result;
     }
 
     /**
@@ -932,12 +947,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-
                 const devices = await this.devices.getDevices();
                 if (devices) {
                     json = {"success":true, "data":[]};
@@ -945,7 +954,6 @@ export class EufySecurityApi {
                         const station = await this.stations.getStation(devices[deviceSerial].getStationSerial());
                         json.data.push(this.makeJsonObjectForDevice(devices[deviceSerial], station.isEnergySavingDevice(), station.isConnected()));
                     }
-                    json.data.push({"eufyDeviceId":11,"isEnergySavingDevice":false,"isStationP2PConnected":true,"isDeviceKnownByClient":true,"deviceType":"sensor","model":"T8910","modelName":"Motion Sensor","name":"Aussen Esszimmer","hardwareVersion":"0.0.1","softwareVersion":"2.0.1.1","stationSerialNumber":"T8030TXXXXXXXXXX","motionDetected":false,"motionDetectionSensitivity":37,"state":1,"wifiRssi":-63,"wifiSignalLevel":3,"serialNumber":"T8910PXXXXXXXXXX","type":10,"secHardwareVersion":"0.0.1","secSoftwareVersion":"2.0.1.1","batteryLow":false,"motionSensorPirEvent":1730562681000});
                     this.setLastConnectionInfo(true);
                 } else {
                     json = {"success":false, "reason":"No devices found."};
@@ -968,10 +976,6 @@ export class EufySecurityApi {
      * @returns All devices as object
      */
     public async getRawDevices(): Promise<Devices> {
-        //await this.httpService.refreshDeviceData();
-        await this.updateDeviceData();
-        await this.devices.loadDevices();
-
         return this.devices;
     }
 
@@ -995,12 +999,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
                     const station = await this.stations.getStation(device.getStationSerial());
@@ -1031,12 +1029,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
                     json = {"success":true, "version":this.getEufySecurityApiVersion(), "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":device.getPropertiesMetadata()};
@@ -1066,12 +1058,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
                     let temp = this.devices.getDeviceInteractions(device.getSerial());
@@ -1105,12 +1091,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
                     json = device.getRawDevice()
@@ -1230,11 +1210,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                await this.stations.loadStations();
-
                 const stations = await this.stations.getStations();
 
                 if (stations) {
@@ -1264,10 +1239,6 @@ export class EufySecurityApi {
      * @returns All stations as object.
      */
     public async getRawStations(): Promise<Stations> {
-        //await this.httpService.refreshStationData();
-        await this.updateDeviceData();
-        await this.stations.loadStations();
-
         return this.stations;
     }
 
@@ -1280,11 +1251,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.stations) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.stations.loadStations();
-
                 const station = await this.stations.getStation(stationSerial);
 
                 if (station) {
@@ -1315,11 +1281,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.stations) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.stations.loadStations();
-
                 const station = await this.stations.getStation(stationSerial);
 
                 if (station) {
@@ -1350,11 +1311,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.stations) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.stations.loadStations();
-
                 const station = await this.stations.getStation(stationSerial);
 
                 if (station) {
@@ -1509,11 +1465,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                await this.stations.loadStations();
-
                 const station = await this.stations.getStation(stationSerial);
 
                 if (station) {
@@ -1598,11 +1549,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                await this.stations.loadStations();
-
                 let mode = -1;
                 const stations = await this.stations.getStations();
 
@@ -1686,11 +1632,6 @@ export class EufySecurityApi {
         let json: any = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-
-                //await this.stations.loadStations();
-
                 await this.stations.loadStations();
 
                 const station = await this.stations.getStation(stationSerial);
@@ -1897,6 +1838,35 @@ export class EufySecurityApi {
     }
 
     /**
+     * Refresh the given type of data from the cloud.
+     * @param target The type of the data to refresh.
+     * @returns A JSON string with the result. 
+     */
+    public async refreshCloudDeviceData(target: RefreshDataTarget): Promise<string> {
+        let json: any = {};
+
+        try {
+            let res = await this.refreshData(target);
+            rootAddonLogger.info(`res: ${JSON.stringify(res)}`);
+            if (target === "all") {
+                if (res.get("devices") === true && res.get("houses") === true && res.get("stations") === true) {
+                    json = {"success":true, "data":convertMapToObject(res)};
+                } else {
+                    json = {"success":false, "data":convertMapToObject(res)};
+                }
+            } else {
+                json = {"success":res.get(target), "data":convertMapToObject(res)};
+            }
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured at refreshCloudDeviceData: ${e.message}.`);
+            this.setLastConnectionInfo(false);
+            json = {"success":false, "reason":e.message.replaceAll(`"`, `'`)};
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
      * Forces a new p2p connection to a station specified by serial.
      * @param stationSerial The serial of the station.
      * @returns A JSON string with the result.
@@ -1905,7 +1875,6 @@ export class EufySecurityApi {
         let json: any = {};
 
         if (this.stations) {
-            await this.httpService.refreshStationData();
             let station = await this.stations.getStation(stationSerial);
 
             if (station) {
@@ -1942,7 +1911,6 @@ export class EufySecurityApi {
         let json: any = {};
 
         if (this.stations) {
-            await this.httpService.refreshStationData();
             let station = await this.stations.getStation(stationSerial);
 
             if (station) {
@@ -1980,7 +1948,6 @@ export class EufySecurityApi {
         let json: any = {};
 
         if (this.stations) {
-            await this.httpService.refreshStationData();
             let station = await this.stations.getStation(stationSerial);
 
             if (station) {
@@ -2417,8 +2384,6 @@ export class EufySecurityApi {
             try {
                 if (this.config.getSystemVariableActive() === true) {
                     if (this.stations && this.devices) {
-                        await this.loadData();
-
                         let station: Station;
                         let device: Device;
                         const stations = await this.stations.getStations();
@@ -2945,7 +2910,7 @@ export class EufySecurityApi {
      * @returns The version of this API.
      */
     public getEufySecurityApiVersion(): string {
-        return "3.1.1-b3";
+        return "3.1.1-rc1";
     }
 
     /**

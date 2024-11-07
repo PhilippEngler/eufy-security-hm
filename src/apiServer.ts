@@ -383,6 +383,28 @@ class ApiServer {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "refreshCloudDeviceData":
+                        if (url.length === 2) {
+                            responseData = await api.refreshCloudDeviceData("all");
+                        } else if (url.length === 3) {
+                            switch (url[2]) {
+                                case "devices":
+                                    responseData = await api.refreshCloudDeviceData("devices");
+                                    break;
+                                case "houses":
+                                    responseData = await api.refreshCloudDeviceData("houses");
+                                    break;
+                                case "stations":
+                                    responseData = await api.refreshCloudDeviceData("stations");
+                                    break;
+                                default:
+                                    responseData = `{"success":false,"message":"Argument not supported."}`;
+                            }
+                            
+                        } else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "checkSystemVariables":
                         responseData = await api.checkSystemVariables();
                         break;

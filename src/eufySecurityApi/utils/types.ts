@@ -18,3 +18,8 @@ export enum EventInteractionType {
     OPEN = 13,
     CLOSE = 14
 }
+
+/**
+ * The type for refresh data target.
+ */
+export type RefreshDataTarget = "all" | "devices" | "houses" | "stations";

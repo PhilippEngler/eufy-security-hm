@@ -1,5 +1,5 @@
 import { Devices } from "../devices";
-import { Device, DeviceEvents, DeviceType, GuardMode, Station, StationEvents } from "../http";
+import { Device, DeviceEvents, DeviceType, GuardMode, HTTPApi, HTTPApiEvents, Station, StationEvents } from "../http";
 import { Logger } from "../logging";
 import { Stations } from "../stations";
 
@@ -402,4 +402,62 @@ export function waitForDeviceEvent(device: Device, eventName: keyof DeviceEvents
             reject(e);
         }
     });
+}
+
+/**
+ * Wait for a given http api event.
+ * @param httpApi The httpApi object.
+ * @param eventName The event name.
+ * @param timeout The timeout in ms.
+ * @returns true if event occurs, otherwise false.
+ */
+export function waitForHttpApiEvent(httpApi: HTTPApi, eventName: keyof HTTPApiEvents, timeout: number): Promise<boolean> {
+    return new Promise<boolean>(async (resolve, reject) => {
+        // eslint-disable-next-line prefer-const
+        let timer: NodeJS.Timeout;
+        const funcListener = (): void => listener();
+
+        function listener(): void {
+            httpApi.removeListener(eventName, funcListener);
+            clearTimeout(timer);
+            resolve(true);
+        }
+
+        httpApi.addListener(eventName, funcListener);
+        timer = setTimeout(() => {
+            httpApi.removeListener(eventName, funcListener);
+            reject(false);
+        }, timeout);
+        try {
+            switch (eventName) {
+                case "devices":
+                    await httpApi.refreshDeviceData();
+                    break;
+                case "houses":
+                    await httpApi.refreshHouseData();
+                    break;
+                case "hubs":
+                    await httpApi.refreshStationData();
+                    break;
+                default:
+                    throw new Error(`Not implemented event '${eventName}' during waitForHttpApiEvent.`);
+            }
+        } catch (e: any) {
+            httpApi.removeListener(eventName, funcListener);
+            reject(e);
+        }
+    });
+}
+
+/**
+ * Converts a given map to an array.
+ * @param map The map.
+ * @returns The array with the key-values pairs of the map.
+ */
+export function convertMapToObject(map: Map<any, any>): {[key: string | number]: any}  {
+    const object: {[key: number | string]: string } = {};
+    map.forEach((value, key) => {
+        object[key] = value;
+    });
+    return object;
 }
