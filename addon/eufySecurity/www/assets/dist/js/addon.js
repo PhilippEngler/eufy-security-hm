@@ -513,7 +513,14 @@ function loadStations()
 							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", translateContent("lblCurrentState"), `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? translateGuardMode(objResp.data[station].guardMode) : translateContent("lblPrivacy")}`)}</div>`, `<small class="text-muted">${translateContent("lblIpAddress")}: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
-					text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
+					if(stations == "")
+					{
+						text = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-primary", translateMessages("messageNoManageableStationsFoundHeader"), translateMessages("messageNoManageableStationsFoundMessage"), translateMessages("messageNoManageableStationsFoundSubText"))}`
+					}
+					else
+					{
+						text = createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
+					}
 					document.getElementById("stations").innerHTML =  text;
 				}
 				else

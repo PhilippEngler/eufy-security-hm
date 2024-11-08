@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.27
-20241103
+Schema v9.28
+20241108
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20241103 (v9.27)";
+var languageVersion = "20241108 (v9.28)";
 
 function translateNavbarElement(element)
 {
@@ -502,6 +502,12 @@ function translateMessages(message, ...options)
 			return "Es wurden keine vefügbaren Stationen gefunden.";
 		case "messageNoStationsFoundSubText":
 			return "Überprüfen Sie, ob Sie dem Account Stationen freigegeben haben beziehungsweise ob Sie das Haus für den Account freigegeben haben und ob Sie das korrekte Haus in den Einstellungen freigegeben haben.";
+		case "messageNoManageableStationsFoundHeader":
+			return "Es wurden keine verwaltbaren Stationen gefunden.";
+		case "messageNoManageableStationsFoundMessage":
+			return "Es wurden keine Stationen gefunden, die hier verwaltbar sind.";
+		case "messageNoManageableStationsFoundSubText":
+			return "Es sind Geräte vorhanden, die gleichzeitig eine Station sind. Rufen Sie die Einstellungen für diese Geräte auf, um Einstellungen für die Station vornehmen zu können.";
 		case "messageErrorLoadingStationsHeader":
 			return "Fehler beim Laden der Station.";
 		case "messageNoDevicesFoundHeader":

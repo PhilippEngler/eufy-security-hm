@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.27
-20241103
+Schema v9.28
+20241108
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20241103 (v9.27)";
+var languageVersion = "20241108 (v9.28)";
 
 function translateNavbarElement(element)
 {
@@ -502,6 +502,12 @@ function translateMessages(message, ...options)
 			return "No available stations were found.";
 		case "messageNoStationsFoundSubText":
 			return "Check whether you have enabled stations for the account or whether you have enabled the house for the account and whether you have enabled the correct house in the settings.";
+		case "messageNoManageableStationsFoundHeader":
+			return "No manageable stations were found.";
+		case "messageNoManageableStationsFoundMessage":
+			return "There are no stations that where manageable here.";
+		case "messageNoManageableStationsFoundSubText":
+			return "There are devices that are also a station. To change settings for these stations, open the settings for these devices.";
 		case "messageErrorLoadingStationsHeader":
 			return "Error loading the station.";
 		case "messageNoDevicesFoundHeader":
