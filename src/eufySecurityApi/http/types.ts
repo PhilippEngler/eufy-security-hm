@@ -1410,6 +1410,12 @@ export const DeviceStatusLedT8200XProperty: PropertyMetadataBoolean = {
     commandId: ParamType.COMMAND_LED_NIGHT_OPEN,
 };
 
+export const DeviceStatusLedMotionSensorProperty: PropertyMetadataBoolean = {
+    ...DeviceStatusLedProperty,
+    key:CommandType.CMD_MOTION_SENSOR_ENABLE_LED,
+    writeable: false,
+}
+
 export const DeviceMotionDetectionProperty: PropertyMetadataBoolean = {
     key: CommandType.CMD_PIR_SWITCH,
     name: PropertyName.DeviceMotionDetection,
@@ -1932,7 +1938,7 @@ export const DeviceMotionDetectionSensitivityMotionSensorProperty: PropertyMetad
     name: PropertyName.DeviceMotionDetectionSensitivity,
     label: "Motion Detection Sensitivity",
     readable: true,
-    writeable: true,
+    writeable: false,
     type: "number",
     states: {
         8: "9-11m",
@@ -7329,6 +7335,7 @@ export const DeviceProperties: Properties = {
     [DeviceType.MOTION_SENSOR]: {
         ...GenericDeviceProperties,
         [PropertyName.DeviceBatteryLow]: DeviceBatteryLowMotionSensorProperty,
+        [PropertyName.DeviceStatusLed]: DeviceStatusLedMotionSensorProperty,
         [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
         [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivityMotionSensorProperty,
         [PropertyName.DeviceMotionSensorPIREvent]: DeviceMotionSensorPIREventProperty,
