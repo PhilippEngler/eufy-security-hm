@@ -990,7 +990,7 @@ function getDeviceProperties(deviceId, devicePropertiesMetadata)
 			{
 				if(objResp.data.length = 1)
 				{
-					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.isDevicePanAndTilt, objResp.data.properties, objResp.data.commands, objResp.interactions);
+					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.data.properties, objResp.data.commands, objResp.interactions);
 				}
 				else
 				{
@@ -1033,7 +1033,7 @@ function generateDeviceModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, isDeviceKnownByClient, isDevicePanAndTilt, deviceProperties, deviceCommands, deviceInteractions)
+function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, isDeviceKnownByClient, deviceProperties, deviceCommands, deviceInteractions)
 {
 	var setEventHandler = true;
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">

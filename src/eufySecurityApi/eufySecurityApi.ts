@@ -1060,11 +1060,11 @@ export class EufySecurityApi {
             if (this.devices) {
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
-                    let temp = this.devices.getDeviceInteractions(device.getSerial());
-                    if (temp === undefined || temp === null) {
-                        temp = null;
+                    let interactions = this.devices.getDeviceInteractions(device.getSerial());
+                    if (interactions === undefined || interactions === null) {
+                        interactions = null;
                     }
-                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "isDevicePanAndTilt":device.hasCommand(CommandName.DevicePanAndTilt), "data":{properties: device.getProperties(), commands: device.getCommands()}, "interactions":temp};
+                    json = {"success":true, "version":this.getEufySecurityApiVersion(), "model":device.getModel(), "modelName":getModelName(device.getModel()), "isDeviceKnownByClient":Object.values(DeviceType).includes(device.getDeviceType()), "deviceType":getDeviceTypeAsString(device), "data":{properties: device.getProperties(), "commands": device.getCommands()}, "interactions":interactions};
                     this.setLastConnectionInfo(true);
                 } else {
                     json = {"success":false, "reason":`The device with serial ${deviceSerial} does not exists.`};
