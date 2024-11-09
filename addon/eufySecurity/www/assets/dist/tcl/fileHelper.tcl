@@ -24,7 +24,7 @@ proc getFileContent { filePath } {
 
 proc emptyFile { filePath } {
     if { ![file exist $filePath] || [catch {open $filePath r+} filePointer] } {
-        return false        
+        return false
     } else {
         chan truncate $filePointer 0
         close $filePointer
