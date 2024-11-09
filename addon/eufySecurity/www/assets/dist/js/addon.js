@@ -1279,7 +1279,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 
 			}
 			if(deviceProperties.motionDetectionType !== undefined || deviceProperties.motionDetectionTypeHuman !== undefined || deviceProperties.motionDetectionTypeHumanRecognition !== undefined || deviceProperties.motionDetectionTypePet !== undefined || deviceProperties.motionDetectionTypeVehicle !== undefined || deviceProperties.motionDetectionTypeAllOtherMotions !== undefined)
-			{d
+			{
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity ? `<hr />`: ``}
 										<h5>${translateContent("lblMotionDetectionType")}</h5>
