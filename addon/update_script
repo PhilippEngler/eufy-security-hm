@@ -499,6 +499,9 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   if [ -e ${ADDON_DIR}/www/apiPorts.txt ]; then
     rm ${ADDON_DIR}/www/apiPorts.txt
   fi
+  if [ -e ${ADDON_DIR}/eufySecurityApi/utils/logging.js ]; then
+    rm ${ADDON_DIR}/eufySecurityApi/utils/logging.js
+  fi
 fi
 
 # create necessary directories
