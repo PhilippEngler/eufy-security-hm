@@ -135,7 +135,7 @@ case "$1" in
 		fi
         rm -rf $dir
         rm -rf /usr/local/etc/config/addons/www/eufySecurity
-        rm -rf /usr/local/etc/config/addons/www/rc.d/eufySecurity
+        rm -rf /usr/local/etc/config/rc.d/eufySecurity
     ;;
     *)
     echo "Usage: $0 {start|stop|restart|status|info}"
