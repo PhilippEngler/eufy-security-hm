@@ -1,85 +1,69 @@
 #!/bin/bash
 #
-# script to generate the CCU addon packages.
+# script to generate the addon packages.
 
-echo "Start createing the addon packages..."
+CURRENT_DIR=$(pwd)
+
+PKG_VERSION=$(cat $CURRENT_DIR/AddOnData/VERSION)
+
+echo "Start creating the addon packages..."
 
 # generate tempdir
 echo "Create directory tmp."
-mkdir -p tmp
-rm -rf tmp/*
+WORK_DIR=$(mktemp -d)
+echo $WORK_DIR
 
 # copy all relevant stuff
 echo "Copy all common addon files."
-cp -a AddOnData/update_script tmp/
-chmod 755 tmp/update_script
-cp -a AddOnData/rc.d tmp/
-cp -a AddOnData/eufySecurity tmp/
-#cp -a AddOnData/devices-ext/. tmp/eufySecurity/www/assets/devices
-cp -a AddOnData/eufySecurity-addon.cfg tmp/
-cp -a AddOnData/VERSION tmp/
+cp -a $CURRENT_DIR/AddOnData/update_script $WORK_DIR/
+chmod 755 $WORK_DIR/update_script
+cp -a $CURRENT_DIR/AddOnData/rc.d $WORK_DIR/
+cp -a $CURRENT_DIR/AddOnData/eufySecurity $WORK_DIR/
+cp -a $CURRENT_DIR/AddOnData/eufySecurity-addon.cfg $WORK_DIR/
+cp -a $CURRENT_DIR/AddOnData/VERSION $WORK_DIR/
 
 # generate Version folder
 echo "Create a folder for the addon packages."
-mkdir -p build/$(cat AddOnData/VERSION)
+BUILD_DIR=$(mkdir -p $CURRENT_DIR/build/$PKG_VERSION)
 
-# generate official ccu3 archive
-#echo "Create ccu3 addon package..."
-#cp -a AddOnData/node-ccu3/. tmp/eufySecurity/bin/
-#cd tmp
-#tar --owner=root --group=root -czf ../build/$(cat VERSION)/eufySecurity-ccu3-$(cat VERSION).tar.gz *
-#cd ..
-#echo "...done."
+# creating the architecure array
+#declare -A architectures=(["ccu3"]="0" ["arm32"]="1" ["arm64"]="2" ["amd64"]="3")
+declare -A architectures=(["arm32"]="0" ["arm64"]="1" ["amd64"]="2")
 
-# generate official arm32 archive
-echo "Create arm32 addon package..."
-cp -a AddOnData/node-arm32/. tmp/eufySecurity/bin/
-cd tmp
-tar --owner=root --group=root -czf ../build/$(cat VERSION)/eufySecurity-arm32-$(cat VERSION).tar.gz *
-cd ..
-echo "...done."
+for ARCH in "${!architectures[@]}"
+do
+    echo "Creating $ARCH addon packages..."
+    echo "  Creating $ARCH tar.gz addon package..."
+    cp -a $CURRENT_DIR/AddOnData/node-$ARCH/. $WORK_DIR/eufySecurity/bin/
+    cd $WORK_DIR
+    tar --owner=root --group=root -czf $CURRENT_DIR/build/$PKG_VERSION/eufySecurity-$ARCH-$PKG_VERSION.tar.gz *
+    echo "  ...done."
 
-# generate official arm64 archive
-echo "Create arm64 addon package..."
-cp -a AddOnData/node-arm64/. tmp/eufySecurity/bin/
-cd tmp
-tar --owner=root --group=root -czf ../build/$(cat VERSION)/eufySecurity-arm64-$(cat VERSION).tar.gz *
-cd ..
-echo "...done."
+    echo "  Creating $ARCH deb addon package..."
+    TARGET_DIR=$WORK_DIR/eufySecurity-$ARCH-$PKG_VERSION
+    mkdir -p $TARGET_DIR/usr/local/addons/eufySecurity
+    cp -a $WORK_DIR/eufySecurity-addon.cfg $TARGET_DIR/usr/local/addons/eufySecurity
+    cp -a $WORK_DIR/eufySecurity/* $TARGET_DIR/usr/local/addons/eufySecurity
+    cp -a $CURRENT_DIR/AddOnData/debmatic/* $TARGET_DIR
 
-# generate official amd64 archive
-echo "Create amd64 addon package..."
-cp -a AddOnData/node-amd64/. tmp/eufySecurity/bin/
-cd tmp
-tar --owner=root --group=root -czf ../build/$(cat VERSION)/eufySecurity-amd64-$(cat VERSION).tar.gz *
-cd ..
-echo "...done."
+    for file in $TARGET_DIR/DEBIAN/*
+    do
+        DEPENDS="Pre-Depends: debmatic (>= 3.67.10-100)"
+        #DEPENDS="$DEPENDS, tcl8.6"
 
-# generate internal ccu3 archive
-#echo "Create ccu3 internal addon package..."
-#cp -a AddOnData/devices-int/. tmp/eufySecurity/www/assets/devices
-#cp -a AddOnData/node-armv7/. tmp/eufySecurity/bin/
-#cd tmp
-#tar --owner=root --group=root -czf ../build/$(cat VERSION)/eufySecurity-ccu3-$(cat VERSION)_INTERNAL.tar.gz *
-#cd ..
-#echo "...done."
+        sed -i "s/{PKG_VERSION}/$PKG_VERSION/g" $file
+        sed -i "s/{PKG_ARCH}/$ARCH/g" $file
+        sed -i "s/{DEPENDS}/$DEPENDS/g" $file
+    done
 
-# generate internal arm64 archive
-#echo "Create arm64 internal addon package..."
-#cp -a AddOnData/node-arm64/. tmp/eufySecurity/bin/
-#cd tmp
-#tar --owner=root --group=root -czf ../build/$(cat VERSION)/eufySecurity-arm64-$(cat VERSION)_INTERNAL.tar.gz *
-#cd ..
-#echo "...done."
+    dpkg-deb --build $WORK_DIR/eufySecurity-$ARCH-$PKG_VERSION $CURRENT_DIR/build/$PKG_VERSION/eufySecurity-$ARCH-$PKG_VERSION.deb
+    rm -rf $TARGET_DIR
 
-# generate internal amd64 archive
-#echo "Create amd64 internal addon package..."
-#cp -a AddOnData/node-amd64/. tmp/eufySecurity/bin/
-#cd tmp
-#tar --owner=root --group=root -czf ../build/$(cat VERSION)/eufySecurity-amd64-$(cat VERSION)_INTERNAL.tar.gz *
-#cd ..
-#echo "...done."
+    echo "  ...done."
+    cd $CURRENT_DIR
+    echo "...done."
+done
 
 echo "Removing tmp directory."
-rm -rf tmp
-echo "Done createing addon packages. Exiting."
+rm -rf $WORK_DIR
+echo "Done creating addon packages. Exiting."
