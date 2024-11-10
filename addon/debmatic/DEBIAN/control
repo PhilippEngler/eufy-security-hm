@@ -1,0 +1,10 @@
+Package: eufySecurity
+Version: {PKG_VERSION}
+Architecture: {PKG_ARCH}
+Maintainer: Philipp Engler <developer@p-engler.com>
+{DEPENDS}
+Section: debmatic-addons
+Priority: extra
+Homepage: http://github.com/PhilippEngler/eufySecurity
+Description: eufySecurity addon for debmatic
+

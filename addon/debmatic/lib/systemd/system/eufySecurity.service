@@ -1,0 +1,23 @@
+[Unit]
+Description=eufySecurity
+PartOf=debmatic.service
+After=debmatic.service
+After=debmatic-prepareinterfaceslist.service
+Before=debmatic-lighttpd.service
+Before=debmatic-rega.service
+
+[Service]
+Type=simple
+Environment=LD_LIBRARY_PATH=/usr/local/addons/eufySecurity
+#ExecStartPre=/bin/touch /etc/config/hm_addons.cfg
+#ExecStartPre=/usr/local/addons/eufySecurity/update_addon eufySecurity /usr/local/addons/eufySecurity/eufySecurity_addon.cfg
+ExecStartPre=/bin/ln -sf /usr/local/addons/eufySecurity/www /usr/local/etc/config/addons/www/eufySecurity
+ExecStart=/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServer.js
+StandardOutput=append:/var/log/eufySecurity.log
+StandardError=append:/var/log/eufySecurity.err
+
+[Install]
+WantedBy=debmatic.service
+WantedBy=debmatic-rega.service
+WantedBy=debmatic-startupfinished.service
+
