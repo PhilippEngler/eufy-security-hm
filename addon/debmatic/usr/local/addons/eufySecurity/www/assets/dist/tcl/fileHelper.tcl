@@ -32,6 +32,11 @@ proc emptyFile { filePath } {
     }
 }
 
+proc deleteFile { filePath } {
+    file delete $filePath
+    return true
+}
+
 proc init {} {
     variable replaceMap
     # characters that should not be replaced
