@@ -1,18 +1,18 @@
 #!/usr/bin/tclsh
 
-proc existFile { filePath } {
-    if { [file exist $filePath] } {
+proc existFile {filePath} {
+    if {[file exist $filePath]} {
         return true
     } else {
         return false
     }
 }
 
-proc getFileContent { filePath } {
+proc getFileContent {filePath} {
     set fileData ""
     set filePointer -1
     
-    if { ![file exist $filePath] || [catch {open $filePath r} filePointer] } {
+    if {![file exist $filePath] || [catch {open $filePath r} filePointer]} {
         set fileData "-1"
     } else {
         set fileData [read $filePointer]
@@ -22,17 +22,17 @@ proc getFileContent { filePath } {
     return $fileData
 }
 
-proc emptyFile { filePath } {
-    if { ![file exist $filePath] || [catch {open $filePath r+} filePointer] } {
+proc emptyFile {filePath} {
+    if {![file exist $filePath] || [catch {open $filePath r+} filePointer]} {
         return false
     } else {
         close $filePointer
-        close [ open $filePath "w" ]
+        close [open $filePath "w"]
         return true
     }
 }
 
-proc deleteFile { filePath } {
+proc deleteFile {filePath} {
     file delete $filePath
     return true
 }

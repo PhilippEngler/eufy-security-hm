@@ -1,21 +1,21 @@
 #!/usr/bin/tclsh
 
-proc getServicePath { } {
+proc getServicePath {} {
     return /usr/local/etc/config/rc.d/eufySecurity
 }
 
 # returns 0 for stopped, 1 for running and -1 for unknown
-proc getServiceState { } {
-    set servicePath [ getServicePath ]
+proc getServiceState {} {
+    set servicePath [getServicePath]
 
-    if { [ file exist $servicePath ] } {
+    if {[file exist $servicePath]} {
         catch {
-            set serviceState [ exec $servicePath status ]
+            set serviceState [exec $servicePath status]
         } serviceState
         regsub {\nchild\ process\ exited\ abnormally$} $serviceState {} serviceState
-        if { [ string match "Running" $serviceState ] } {
+        if {[string match "Running" $serviceState]} {
             return 1
-        } elseif { [ string match "Stopped" $serviceState ] } {
+        } elseif {[string match "Stopped" $serviceState]} {
             return 0
         } else {
             return -1
@@ -23,12 +23,12 @@ proc getServiceState { } {
     } else {
         set serviceState ""
         catch {
-            set serviceState [ exec systemctl status eufySecurity.service ]
+            set serviceState [exec systemctl status eufySecurity.service]
         } serviceState
         regsub {\nchild\ process\ exited\ abnormally$} $serviceState {} serviceState
-        if { [ string match "*Started eufySecurity.service - eufySecurity." $serviceState ] } {
+        if {[ string match "*Started eufySecurity.service - eufySecurity." $serviceState ]} {
             return 1
-        } elseif { [ string match "*s CPU time." $serviceState ] } {
+        } elseif {[string match "*s CPU time." $serviceState]} {
             return 0
         } else {
             return -1
@@ -37,47 +37,47 @@ proc getServiceState { } {
 }
 
 # returns the state of the service after the command: 0 for stopped, 1 for running and -1 for unknown
-proc startService { } {
-    set servicePath [ getServicePath ]
-    set serviceState [ getServiceState ]
+proc startService {} {
+    set servicePath [getServicePath]
+    set serviceState [getServiceState]
 
-    if { $serviceState == "1" } {
+    if {$serviceState == "1"} {
         return -1
     }
     
-    if { [ file exist $servicePath ] } {
+    if {[file exist $servicePath]} {
         exec $servicePath start
     } else {
         exec systemctl start eufySecurity.service
     }
-    return [ getServiceState ]
+    return [getServiceState]
 }
 
 # returns the state of the service after the command: 0 for stopped, 1 for running and -1 for unknown
-proc stopService { } {
-    set servicePath [ getServicePath ]
-    set serviceState [ getServiceState ]
+proc stopService {} {
+    set servicePath [getServicePath]
+    set serviceState [getServiceState]
 
-    if { $serviceState == "0" } {
+    if {$serviceState == "0"} {
         return -1
     }
     
-    if { [ file exist $servicePath ] } {
+    if {[file exist $servicePath]} {
         exec $servicePath stop
     } else {
         exec systemctl stop eufySecurity.service
     }
-    return [ getServiceState ]
+    return [getServiceState]
 }
 
 # returns the state of the service after the command: 0 for stopped, 1 for running and -1 for unknown
-proc restartService { } {
-    set servicePath [ getServicePath ]
+proc restartService {} {
+    set servicePath [getServicePath]
     
-    if { [ file exist  $servicePath ] } {
+    if {[file exist $servicePath]} {
         exec $servicePath restart
     } else {
         exec systemctl restart eufySecurity.service
     }
-    return [ getServiceState ]
+    return [getServiceState]
 }

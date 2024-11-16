@@ -1,5 +1,5 @@
 #!/bin/tclsh
-cd [ file dirname [ info script ] ]
+cd [file dirname [info script]]
 
 source assets/dist/tcl/fileHelper.tcl
 source assets/dist/tcl/dateHelper.tcl
