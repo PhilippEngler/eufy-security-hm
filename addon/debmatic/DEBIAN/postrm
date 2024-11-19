@@ -6,9 +6,6 @@ case "$1" in
     ;;
 
   remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
-    rm -f /var/log/eufySecurity.log
-    rm -f /var/log/eufySecurity.err
-    rm -f /var/log/eufySecurityClient.log
     ;;
 esac
 

@@ -8,6 +8,10 @@ case "$1" in
     rm -f /usr/local/etc/config/addons/www/eufySecurity
     systemctl disable eufySecurity.service
     systemctl restart debmatic.service
+    rm -rf /usr/local/addons/eufySecurity
+    rm -f /var/log/eufySecurity.log
+    rm -f /var/log/eufySecurity.err
+    rm -f /var/log/eufySecurityClient.log
     ;;
 
   failed-upgrade)
