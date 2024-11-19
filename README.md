@@ -1,20 +1,28 @@
 # eufy Security AddOn for HomeMatic - eufy-security-hm
-**:warning: This addon is independent of Anker and eufy. eufy does not provide an open api, in case of any problems with this addon please *do not* contact eufy.**
+> [!IMPORTANT]
+> This addon is independent of Anker and eufy. eufy does not provide an open API, in case of any problems with this addon please *do not* contact eufy.
 
-**:warning: CCU3 users with the *original firmware provided by eq-3* please note: Starting with version v3.0, this addon will no longer be compatible to the CCU3 with the original firmware provided by eq-3. You can upgrade your CCU3 to RaspberryMatic to use addon version v3.0 and newer. This step is unfortunately necessary because since 2023-09-11 node.js v16 is out of support. With the CCU3s original firmware, node.js newer than v16 cannot be executed. That means, no new devices will be implementent nor changes in the communication with the devices will be implemented anymore for CCU3 with the original firmware. If the CCU3 is already running on RaspberryMatic, no action is necessary.**
+> [!NOTE]
+> CCU3 users with the *original firmware provided by eq-3* please note:
+> Starting with version v3.0.0, this addon will no longer be compatible to the CCU3 with the original firmware provided by eq-3. If you operate a CCU3 with original firmware provided by eq-3 please read the [Notes | CCU3 with original firmware provided by eq-3](#ccu3-with-original-firmware-provided-by-eq-3) section.
 
-With this addon for the ELV/eq-3 CCU3 (operated with RaspberryMatic) or a central based on RaspberryMatic you can control your eufy security system and integrate it in your existing connected home environment. The addon provide a web-based user interface for configuration and monitoring. The communication between your eufy security system and your CCU is done by using predefined system variables. For interaction with your eufy security device there is an API.
+With this addon for the ELV/eq-3 CCU3 (operated with RaspberryMatic) or a central based on RaspberryMatic or debmatic you can control your eufy security system and integrate it in your existing connected home environment. The addon provide a web-based user interface for configuration and monitoring. The communication between your eufy security system and your CCU is done by using predefined system variables. For interaction with your eufy security device there is an API.
 
 ## Features
 This addon supports multiple stations and multiple cams. The login token is stored in the config, so there is no need to login every time a connection to eufy is established. After retrieving the stations at startup, the local network address of each station is stored in the config and will be used for switching the guard mode.
 Since v2.6.0 the addon has a multi-language website. Currently German and English are supported.
 
 ## Devices
-The addon will only run with the original CCU3 Firmware and other community projects (RaspberryMatic, piVCCU and debmatic).
-* CCU3 with original software: use the *ccu3* package (CCU1 and CCU2 are not supported) [not supported by branch 2.7 and newer]
-* RaspberryMatic running on other hardware than RaspberryPi 3 or 4 based hardware: use the *arm32* package
-* RaspberryMatic running on RaspberryPi 3 or 4 based hardware (including RaspberryMatic running on CCU3): you can use the *arm64* instead of the *arm32* package
-* RaspberryMatic on OVA platforms: use the *amd64* package
+Starting with v3.0.0, the addon will only run with RaspberryMatic and debmatic. The CCU3 with the original firmware provided by eq-3 and piVCCU will currently not support v3.0.0 and newer.
+* CCU3 with original software: use the *ccu3* package (CCU1 and CCU2 are not supported) [not supported by v3.0.0 and newer]
+* RaspberryMatic:
+  * on arm-based hardware other than RaspberryPi 3 or 4: use the *arm32* flagged *.tar.gz*-package
+  * on RaspberryPi 3 or 4 based hardware (including RaspberryMatic running on CCU3): you can use the *arm64* flagged *.tar.gz*-package
+  * on OVA platforms: use the *amd64* flagged *.tar.gz*-package
+* debmatic:
+  * on other arm-based hardware than RaspberryPi 3 or 4: use the *arm32* flagged *.deb*-package
+  * on RaspberryPi 3 or 4 based hardware (including RaspberryMatic running on CCU3): you can use the *arm64* flagged *.deb*-package
+  * on OVA platforms: use the *amd64* flagged *.deb*-package
 
 Most of the eufy security devices should be compatible, but there might be issues with recently released devices. The following eufy security devices are known as compatible:
 * HomeBase: HomeBase E (T8002), HomeBase 2 (T8010) and HomeBase 3 (T8030)
@@ -24,52 +32,71 @@ Most of the eufy security devices should be compatible, but there might be issue
 * SoloCam: SoloCam S340 (T8170)<sup>1</sup>
 * WallLightCam: Wall Light Cam S100 (T84A1)<sup>1</sup>
 
-<sup>1</sup>: This device is compatible with v3.0.0 and newer.
+<sup>1</sup>: This device is not compatible with versions before v3.0.0.
 
 If you are using other devices, please send the files you can find on top of the settings page of the device to me, so that they can properly be integrated in one of the next releases.
 
 ## Installation
-To install this addon on your CCU follow these steps:
-1. Download the latest version from release as tar.gz-file. Do not extract this file (important for Apple users).
-2. Open the WebUI of your CCU and navigate to "Einstellungen" -> "Systemsteuerung" -> "Zusatzsoftware" and select the tar.gz-file downloaded in step 1.
-3. Click on "Installieren" and wait about one minute.
-4. In the new popup, select "Installation starten".
+To install this addon on your CCU or RaspberryMatic follow these steps:
+1. Download the latest version from release as `.tar.gz`-file for your architecture. Do not extract this file (important for Apple users).
+2. Open the WebUI and navigate to "Settings" -> "Control Panel" -> "Additional software" -> "Choose file..." and select the `.tar.gz`-file downloaded in step 1.
+3. Click on "Install" and wait about one minute.
+4. In the new popup, select "Start installation".
 5. - If you use the original CCU3 firmware: Wait at least 10 minutes to install. During this time, the WebUI is not accessible, and you will receive several error messages. Please ignore these messages. When the installation is done, the CCU will reboot automatically.
-   - If you use a RaspberryMatic: The installation is much faster and the CCU will not reboot.
-6. When the installation is done, navigate to http://<IP_OF_CCU>/addons/eufySecurity and start configuration of the addon.
+   - If you use RaspberryMatic: The installation is much faster and the CCU will not reboot.
+6. When the installation is done, please go to [Configuration](#configuration).
+
+To install this addon on debmatic follow these steps:
+1. Download the latest version from release as `.deb`-file for your architecture.
+2. Start installation on your debmatic's command line by typing `sudo apt install <PATH_TO_DEB_FILE>`
+6. When the installation is done, please go to [Configuration](#configuration).
 
 ## Configuration
-On the website of the addon (http://<IP_OF_CCU>/addons/eufySecurity), navigate to "Einstellungen" and provide your eufy security account data. Please also read the Notes section.
-After you click on "Einstellungen speichern", the addon will restart the API and you will see your stations and devices under "Geräte". More information how to use this addon you will find on the "Über" page in the addon website.
+After installation, on the website of the addon (`http://<IP_OF_CCU>/addons/eufySecurity`) you will see a popup that will bring you to the "Settings" page. On this page you must provide at least your eufy security account data. Please also read the [Notes | Addon](#addon) section.
+> [!TIP]
+> If you receive error messages while opening the settings page, please check the [Notes | Firewall settings](#firewall-settings) section.
 
-For creating the needed system variables, please use the table of system variables on the "Einstellungen" page of the addons website.
+> [!CAUTION]
+> Please use an account created and used only for this addon. Please refer to the [Notes | Addon](#addon) section.
+
+After you click on "Save settings", the addon will restart the API and you will see your stations and devices under "Devices". You will find more information on how to use this addon you will find on the "About" page on the addon website.
+
+For creating the needed system variables, please use the table of system variables on the "Settings" page of the addons website.
 
 ## Notes
 ### Account
-1. Please do not use 2FA with the the eufy security account you want to use with this addon.
-2. Please do not use the account on multiple devices (use the account only for this addon).
-3. You can share the stations and cams are with the account *or* include the account to your created home.
+- Please do not use 2FA with the eufy security account you want to use with this addon.
+- Please do not use the account on multiple devices (use the account only for this addon).
+- You can share the stations and cams with the account *or* include the account to your created home.
 
 ### Addon
-1. To reduce the size of the backup, some folders are excluded. The configfile is included in the backup. So simply reinstall the addon after restoring the ccu.
-2. For communication between API and stations or devices you need to change the firewall settings of your CCU.
-   - For communicating with the API, you have to open at least these two ports (standard setting: 52789 and 52790). You can specify individual ports for the API.
-   - For communicating with the stations or devices you must set the firewall to open all ports (set the rule to ports open) if you are using the default setting. Alternatively, you can specify ports to use. and exclude these in the firewall settings.
-3. If you run piVCCU in a container add the port forwarding to the ports, e.g. in /etc/network/if-up.d/pivccu add `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52789 -j DNAT --to-destination $CCU_IP:52789` and `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52790 -j DNAT --to-destination $CCU_IP:52790` (for the two standard ports).
+- To reduce the size of the backup, some folders are excluded. The configfile is included in the backup. After restoring the CCU from the backup you must reinstall the addon.
+- ONLY FOR VERSIONS OLDER THAN v3.0.0: If you run piVCCU in a container add the port forwarding to the ports, e.g. in `/etc/network/if-up.d/pivccu` add `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52789 -j DNAT --to-destination $CCU_IP:52789` and `iptables -t nat -A PREROUTING -p tcp -i $HOST_IF --dport 52790 -j DNAT --to-destination $CCU_IP:52790` (for the two standard ports).
+
+### Firewall settings
+For communication between API and stations or devices you need to change the firewall settings of your CCU.
+- For communicating with the API, you have to open at least the two ports 52789 and 52790 (default values). You can specify individual ports for the API.
+- For communicating with the stations or devices you must set the firewall to open all ports (set the rule to ports open) if you are using the default setting. Alternatively, you can specify for each station one port and exclude these in the firewall settings.
+
+### CCU3 with original firmware provided by eq-3
+If you are using a CCU3 with the original firmware provided by eq-3, this addon will no longer be compatible. If you want to use the addon from v3.0.0 onwards with your CCU3, please update your CCU3 to RaspberryMatic. If your CCU3 is already running on RaspberryMatic, no additional steps are necessary.
 
 ## Credits
-This addon based on the [eufy-security-client](https://github.com/bropat/eufy-security-client) of @bropat. Some changes were done for adapting the client to the api. The following projects also influenced this project:
+This addon based on the [eufy-security-client](https://github.com/bropat/eufy-security-client) of @bropat. Some changes were made to adapt adapting the client to the API. The following projects also influenced this project:
 - [https://github.com/FuzzyMistborn/python-eufy-security](https://github.com/FuzzyMistborn/python-eufy-security)
 - [https://github.com/keshavdv/python-eufy-security/tree/p2p](https://github.com/keshavdv/python-eufy-security/tree/p2p)
 - [https://github.com/JanLoebel/eufy-node-client](https://github.com/JanLoebel/eufy-node-client)
 
-For integrating into the CCU the knowledge of
-- Jens Maus [https://github.com/jens-maus](https://github.com/jens-maus)
-- Sebastian Raff [https://github.com/hobbyquaker](https://github.com/hobbyquaker)
-and the community of the HomeMatic-Forum [https://www.homematic-forum.de](https://www.homematic-forum.de) was appreciated.
+For integrating into the CCU and debmatic environments the knowledge of
+- Jens Maus [https://github.com/jens-maus](https://github.com/jens-maus),
+- Sebastian Raff [https://github.com/hobbyquaker](https://github.com/hobbyquaker), 
+- Alexander Reinert [https://github.com/alexreinert](https://github.com/alexreinert) and
+- the community of the HomeMatic-Forum [https://www.homematic-forum.de](https://www.homematic-forum.de)
+
+was appreciated.
 
 The addons website is built on bootstrap [https://getbootstrap.com/](https://getbootstrap.com/).
 
-I would also like to thank the people who sponsoring and support this project. I appreciate that. Thank you very much.
+I would also like to thank the people who are sponsoring and supporting this project. I appreciate that. Thank you very much.
 
-eufy, eufy security, ELV, eq-3, CCU, HomeMatic, homematic ip and RaspberryMatic are trademarks of their respective owners.
+eufy, eufy security, ELV, eq-3, CCU, HomeMatic, homematic ip, RaspberryMatic and debmatic are trademarks of their respective owners.
