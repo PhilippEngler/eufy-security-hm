@@ -3,12 +3,33 @@
 set -e
 
 case "$1" in
-  remove|upgrade|deconfigure)
+  remove|deconfigure)
     #/usr/local/addons/eufySecurity/update_addon eufySecurity
     rm -f /usr/local/etc/config/addons/www/eufySecurity
     systemctl disable eufySecurity.service
     systemctl restart debmatic.service
     rm -rf /usr/local/addons/eufySecurity
+    rm -f /var/log/eufySecurity.log
+    rm -f /var/log/eufySecurity.err
+    rm -f /var/log/eufySecurityClient.log
+    ;;
+
+  upgrade)
+    #/usr/local/addons/eufySecurity/update_addon eufySecurity
+    rm -f /usr/local/etc/config/addons/www/eufySecurity
+    systemctl disable eufySecurity.service
+    systemctl restart debmatic.service
+    rm -rf /usr/local/addons/eufySecurity/bin
+    rm -rf /usr/local/addons/eufySecurity/eufySecurityApi
+    rm -rf /usr/local/addons/eufySecurity/node_modules
+    rm -rf /usr/local/addons/eufySecurity/www
+    rm -f /usr/local/addons/eufySecurity/apiServer.js
+    rm -f /usr/local/addons/eufySecurity/apiServerRestarter.js
+    rm -f /usr/local/addons/eufySecurity/eufySecurity-addon.cfg
+    rm -f /usr/local/addons/eufySecurity/LICENCE
+    rm -f /usr/local/addons/eufySecurity/LICENCE.eufy-security-client
+    rm -f /usr/local/addons/eufySecurity/package.json
+    rm -f /usr/local/addons/eufySecurity/package-lock.json
     rm -f /var/log/eufySecurity.log
     rm -f /var/log/eufySecurity.err
     rm -f /var/log/eufySecurityClient.log
