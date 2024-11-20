@@ -161,16 +161,16 @@ class ApiServer {
                         if (url.length === 3) {
                             const json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
                             if (json.success === true) {
-                                json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
-                                json.data.stationSerialNumber = replaceLastChars(json.data.stationSerialNumber, "X", 6);
-                                if (json.data.rtspStreamUrl !== undefined) {
-                                    json.data.rtspStreamUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                                json.data.properties.serialNumber = replaceLastChars(json.data.properties.serialNumber, "X", 6);
+                                json.data.properties.stationSerialNumber = replaceLastChars(json.data.properties.stationSerialNumber, "X", 6);
+                                if (json.data.properties.rtspStreamUrl !== undefined) {
+                                    json.data.properties.rtspStreamUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
-                                if (json.data.pictureUrl !== undefined) {
-                                    json.data.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
+                                if (json.data.properties.pictureUrl !== undefined) {
+                                    json.data.properties.pictureUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
-                                if (json.data.picture !== undefined) {
-                                    json.data.picture = "REMOVED DUE TO PRIVACY REASONS.";
+                                if (json.data.properties.picture !== undefined) {
+                                    json.data.properties.picture = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
                             }
                             responseData = JSON.stringify(json);
@@ -251,9 +251,9 @@ class ApiServer {
                         if (url.length === 3) {
                             const json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
                             if (json.success === true) {
-                                json.data.serialNumber = replaceLastChars(json.data.serialNumber, "X", 6);
-                                json.data.macAddress = "XX:XX:XX:XX:XX:XX";
-                                json.data.lanIpAddress = "XXX.XXX.XXX.XXX";
+                                json.data.properties.serialNumber = replaceLastChars(json.data.properties.serialNumber, "X", 6);
+                                json.data.properties.macAddress = "XX:XX:XX:XX:XX:XX";
+                                json.data.properties.lanIpAddress = "XXX.XXX.XXX.XXX";
                             }
                             responseData = JSON.stringify(json);
                         }
@@ -265,11 +265,16 @@ class ApiServer {
                         if (url.length === 5) {
                             responseData = await api.setStationProperty(url[2], url[3], url[4]);
                         }
-                        else if (url[3] === "rebootStation" && url.length === 4) {
-                            responseData = await api.rebootStation(url[2]);
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
-                        else if (url[3] === "moveToPreset" && url.length === 6) {
-                            responseData = `{"success":false,"message":"This call is deprecated. Please use 'moveToPresetPosition' instead."}`;
+                        break;
+                    case "sendCommand":
+                        if (url.length === 4 && url[2] === "rebootStation") {
+                            responseData = await api.rebootStation(url[3]);
+                        }
+                        else if (url.length === 5 && url[2] === "moveToPreset") {
+                            responseData = await api.moveToPresetPosition(url[3], url[4]);
                         }
                         else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -402,6 +407,29 @@ class ApiServer {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
+                    case "refreshCloudDeviceData":
+                        if (url.length === 2) {
+                            responseData = await api.refreshCloudDeviceData("all");
+                        }
+                        else if (url.length === 3) {
+                            switch (url[2]) {
+                                case "devices":
+                                    responseData = await api.refreshCloudDeviceData("devices");
+                                    break;
+                                case "houses":
+                                    responseData = await api.refreshCloudDeviceData("houses");
+                                    break;
+                                case "stations":
+                                    responseData = await api.refreshCloudDeviceData("stations");
+                                    break;
+                                default:
+                                    responseData = `{"success":false,"message":"Argument not supported."}`;
+                            }
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
                     case "checkSystemVariables":
                         responseData = await api.checkSystemVariables();
                         break;
@@ -427,6 +455,22 @@ class ApiServer {
                     case "connect":
                         if (url.length === 3) {
                             responseData = await api.connectStation(url[2]);
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "disconnect":
+                        if (url.length === 3) {
+                            responseData = await api.disconnectStation(url[2]);
+                        }
+                        else {
+                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
+                        }
+                        break;
+                    case "reconnect":
+                        if (url.length === 3) {
+                            responseData = await api.reconnectStation(url[2]);
                         }
                         else {
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
@@ -786,7 +830,7 @@ class ApiServer {
                         request.on("end", async function () {
                             try {
                                 const resJson = JSON.parse(postData);
-                                responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command));
+                                responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command), resJson.user, resJson.password);
                                 response.setHeader("Access-Control-Allow-Origin", "*");
                                 response.setHeader("Content-Type", "application/json; charset=UTF-8");
                                 response.writeHead(200);

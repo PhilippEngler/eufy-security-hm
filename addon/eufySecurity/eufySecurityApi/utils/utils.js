@@ -1,6 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractEnclosedString = exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToClientLog = exports.pathToTemp = exports.pathToNodeJs = void 0;
+exports.waitForStationEvent = waitForStationEvent;
+exports.waitForDeviceEvent = waitForDeviceEvent;
+exports.waitForHttpApiEvent = waitForHttpApiEvent;
+exports.convertMapToObject = convertMapToObject;
 const http_1 = require("../http");
 exports.pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
 exports.pathToTemp = "/var/tmp/eufySecurity";
@@ -196,7 +200,7 @@ const getDeviceTypeAsString = function (device) {
     else if (device.isLock()) {
         return "lock";
     }
-    else if (device.isEntrySensor()) {
+    else if (device.isEntrySensor() || device.isMotionSensor()) {
         return "sensor";
     }
     else if (device.isKeyPad()) {
@@ -209,7 +213,7 @@ const getDeviceTypeAsString = function (device) {
 exports.getDeviceTypeAsString = getDeviceTypeAsString;
 /**
  * Returns a string with the type of the station.
- * @param station Rhe station.
+ * @param station The station.
  * @returns A string with the type of the station.
  */
 const getStationTypeString = function (station) {
@@ -316,3 +320,153 @@ const extractEnclosedString = function (data, startString, endString, logger) {
     return data.substring(data.indexOf(startString) + startString.length, data.indexOf(endString));
 };
 exports.extractEnclosedString = extractEnclosedString;
+/**
+ * Wait for a given station event.
+ * @param station The station.
+ * @param eventName The event name.
+ * @param timeout The timeout in ms.
+ * @param guardMode The guardmode.
+ * @returns true if event occurs, otherwise false.
+ */
+function waitForStationEvent(station, eventName, timeout, guardMode, stations, propertyName, propertyValue) {
+    return new Promise(async (resolve, reject) => {
+        // eslint-disable-next-line prefer-const
+        let timer;
+        const funcListener = () => listener();
+        function listener() {
+            station.removeListener(eventName, funcListener);
+            clearTimeout(timer);
+            resolve(true);
+        }
+        station.addListener(eventName, funcListener);
+        timer = setTimeout(() => {
+            station.removeListener(eventName, funcListener);
+            reject(false);
+        }, timeout);
+        try {
+            switch (eventName) {
+                case "connect":
+                    await station.connect();
+                    break;
+                case "close":
+                    station.close();
+                    break;
+                case "guard mode":
+                    if (guardMode !== undefined) {
+                        station.setGuardMode(guardMode);
+                    }
+                    break;
+                case "property changed":
+                    if (stations !== undefined && propertyName !== undefined && propertyValue !== undefined) {
+                        await stations.setStationProperty(station.getSerial(), propertyName, propertyValue);
+                    }
+                    else {
+                        throw new Error(`Failed to set property for station ${station.getSerial()}. ${JSON.stringify({ "stations": stations !== undefined ? true : false, "propertyName": propertyName, "propertyValue": propertyValue })}`);
+                    }
+                    break;
+            }
+        }
+        catch (e) {
+            station.removeListener(eventName, funcListener);
+            reject(e);
+        }
+    });
+}
+/**
+ * Wait for a given device event.
+ * @param devices The devices object.
+ * @param device The device.
+ * @param eventName The event name.
+ * @param timeout The timeout in ms.
+ * @param propertyName The name of the property to set.
+ * @param propertyValue The value of the property to set.
+ * @returns true if event occurs, otherwise false.
+ */
+function waitForDeviceEvent(device, eventName, timeout, devices, propertyName, propertyValue) {
+    return new Promise(async (resolve, reject) => {
+        // eslint-disable-next-line prefer-const
+        let timer;
+        const funcListener = () => listener();
+        function listener() {
+            device.removeListener(eventName, funcListener);
+            clearTimeout(timer);
+            resolve(true);
+        }
+        device.addListener(eventName, funcListener);
+        timer = setTimeout(() => {
+            device.removeListener(eventName, funcListener);
+            reject(false);
+        }, timeout);
+        try {
+            switch (eventName) {
+                case "property changed":
+                    if (devices !== undefined && propertyName !== undefined && propertyValue !== undefined) {
+                        await devices.setDeviceProperty(device.getSerial(), propertyName, propertyValue);
+                    }
+                    else {
+                        throw new Error(`Failed to set property for device ${device.getSerial()}. ${JSON.stringify({ "devices": devices !== undefined ? true : false, "propertyName": propertyName, "propertyValue": propertyValue })}`);
+                    }
+                    break;
+            }
+        }
+        catch (e) {
+            device.removeListener(eventName, funcListener);
+            reject(e);
+        }
+    });
+}
+/**
+ * Wait for a given http api event.
+ * @param httpApi The httpApi object.
+ * @param eventName The event name.
+ * @param timeout The timeout in ms.
+ * @returns true if event occurs, otherwise false.
+ */
+function waitForHttpApiEvent(httpApi, eventName, timeout) {
+    return new Promise(async (resolve, reject) => {
+        // eslint-disable-next-line prefer-const
+        let timer;
+        const funcListener = () => listener();
+        function listener() {
+            httpApi.removeListener(eventName, funcListener);
+            clearTimeout(timer);
+            resolve(true);
+        }
+        httpApi.addListener(eventName, funcListener);
+        timer = setTimeout(() => {
+            httpApi.removeListener(eventName, funcListener);
+            reject(false);
+        }, timeout);
+        try {
+            switch (eventName) {
+                case "devices":
+                    await httpApi.refreshDeviceData();
+                    break;
+                case "houses":
+                    await httpApi.refreshHouseData();
+                    break;
+                case "hubs":
+                    await httpApi.refreshStationData();
+                    break;
+                default:
+                    throw new Error(`Not implemented event '${eventName}' during waitForHttpApiEvent.`);
+            }
+        }
+        catch (e) {
+            httpApi.removeListener(eventName, funcListener);
+            reject(e);
+        }
+    });
+}
+/**
+ * Converts a given map to an array.
+ * @param map The map.
+ * @returns The array with the key-values pairs of the map.
+ */
+function convertMapToObject(map) {
+    const object = {};
+    map.forEach((value, key) => {
+        object[key] = value;
+    });
+    return object;
+}

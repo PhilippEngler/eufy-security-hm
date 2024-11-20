@@ -19,4 +19,6 @@ var EventInteractionType;
     EventInteractionType[EventInteractionType["DOG_LICK"] = 10] = "DOG_LICK";
     EventInteractionType[EventInteractionType["DOG_POOP"] = 11] = "DOG_POOP";
     EventInteractionType[EventInteractionType["RING"] = 12] = "RING";
+    EventInteractionType[EventInteractionType["OPEN"] = 13] = "OPEN";
+    EventInteractionType[EventInteractionType["CLOSE"] = 14] = "CLOSE";
 })(EventInteractionType || (exports.EventInteractionType = EventInteractionType = {}));

@@ -405,7 +405,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                 const error = (0, error_2.ensureError)(err);
                 logging_1.rootPushLogger.error(`Normalize push message - type - Error`, { error: (0, utils_3.getError)(error), message: message });
             }
-            if (normalizedMessage.type >= 10000) {
+            if (normalizedMessage.type in _1.ServerPushEvent) {
                 // server push notification
                 const serverPushData = payload.payload;
                 normalizedMessage.email = serverPushData.email;

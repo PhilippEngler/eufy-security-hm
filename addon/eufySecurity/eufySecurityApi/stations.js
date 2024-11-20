@@ -23,10 +23,11 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     api;
     httpService;
     stations = {};
-    skipNextModeChangeEvent = {};
-    lastGuardModeChangeTimeForStations = {};
+    skipNextModeChangeEvent = new Map();
+    lastGuardModeChangeTimeForStations = new Map();
     loadingEmitter = new events_1.default();
     stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
+    lightTimeouts = new Map();
     P2P_REFRESH_INTERVAL_MIN = 720;
     cameraMaxLivestreamSeconds = 30;
     cameraStationLivestreamTimeout = new Map();
@@ -72,16 +73,18 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 if (udpPort === null) {
                     udpPort = undefined;
                 }
-                let p2pMethod;
-                if (http_1.Device.hasBattery(resStations[stationSerial].device_type)) {
+                let p2pMethod = this.api.getP2PConnectionType();
+                if (http_1.Device.isSoloCameras(resStations[stationSerial].device_type) && p2pMethod !== p2p_1.P2PConnectionType.QUICKEST) {
                     p2pMethod = p2p_1.P2PConnectionType.QUICKEST;
+                    logging_1.rootAddonLogger.debug(`Detected solo device '${stationSerial}': connect with connection type ${p2p_1.P2PConnectionType[p2pMethod]}.`);
                 }
-                else {
+                else if (!http_1.Device.isSoloCameras(resStations[stationSerial].device_type) && p2pMethod !== this.api.getP2PConnectionType()) {
                     p2pMethod = this.api.getP2PConnectionType();
+                    logging_1.rootAddonLogger.debug(`Set p2p connection type for device ${stationSerial} to value from settings (${p2p_1.P2PConnectionType[p2pMethod]}).`);
                 }
                 const new_station = http_1.Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
-                this.skipNextModeChangeEvent[stationSerial] = false;
-                this.lastGuardModeChangeTimeForStations[stationSerial] = undefined;
+                this.skipNextModeChangeEvent.set(stationSerial, false);
+                this.lastGuardModeChangeTimeForStations.set(stationSerial, undefined);
                 promises.push(new_station.then((station) => {
                     try {
                         if (this.api.getStateUpdateEventActive()) {
@@ -169,7 +172,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         const serial = station.getSerial();
         if (serial && !Object.keys(this.stations).includes(serial)) {
             this.stations[serial] = station;
-            this.getStorageInfo(serial);
             this.emit("station added", station);
         }
         else {
@@ -199,38 +201,35 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param hub The object containg the specific hub.
      */
     async updateStation(hub) {
-        if (this.stationsLoaded) {
+        if (this.stationsLoaded)
             await this.stationsLoaded;
-        }
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
             if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {
-                if (http_1.Device.hasBattery(this.stations[hub.station_sn].getDeviceType())) {
-                    this.stations[hub.station_sn].setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+                if (!this.stations[hub.station_sn].isEnergySavingDevice()) {
+                    this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
                 }
                 else {
-                    this.stations[hub.station_sn].setConnectionType(this.api.getP2PConnectionType());
+                    this.stations[hub.station_sn].setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
                 }
                 logging_1.rootAddonLogger.debug(`Updating station cloud data - initiate station connection to get local data over p2p`, { stationSN: hub.station_sn });
                 this.stations[hub.station_sn].connect();
             }
-            this.getStorageInfo(hub.station_sn);
         }
         else {
-            logging_1.rootAddonLogger.error(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
+            logging_1.rootAddonLogger.debug(`Station with this serial ${hub.station_sn} doesn't exists and couldn't be updated!`);
         }
     }
     /**
      * (Re)Loads all stations and the settings of them.
      */
     async loadStations() {
-        try {
+        /*try {
             await this.handleHubs(this.httpService.getHubs());
-        }
-        catch (e) {
+        } catch (e: any) {
             this.stations = {};
             throw new Error(e);
-        }
+        }*/
     }
     /**
      * Close all Livestreams.
@@ -239,6 +238,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         for (const device_sn of this.cameraStationLivestreamTimeout.keys()) {
             this.stopStationLivestream(device_sn);
         }
+        this.lightTimeouts.forEach((timeout) => {
+            clearTimeout(timeout);
+        });
+        this.lightTimeouts.clear();
         await this.closeP2PConnections();
     }
     /**
@@ -249,12 +252,13 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             for (const stationSerial in this.stations) {
                 if (this.stations[stationSerial]) {
                     if (this.stations[stationSerial].isConnected() === true) {
-                        await this.waitForP2PCloseEvent(this.stations[stationSerial], 10000).then(() => {
+                        try {
+                            await this.disconnectStation(this.stations[stationSerial]);
+                        }
+                        catch (error) {
+                            logging_1.rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`, JSON.stringify(error));
                             return;
-                        }, () => {
-                            logging_1.rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`);
-                            return;
-                        });
+                        }
                     }
                     this.removeEventListener(this.stations[stationSerial], "GuardMode");
                     this.removeEventListener(this.stations[stationSerial], "CurrentMode");
@@ -307,34 +311,56 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
     /**
-     * Wait for the P2P closed event.
-     * @param station The station for waiting for the GuardMode event.
-     * @param timeout The timespan in ms maximal to wait for the event.
-     * @returns Returns true or false.
+     * Helper function to force a new p2p connection to a specified station.
+     * @param station The serial of the station.
+     * @returns A boolean value with the result.
      */
-    async waitForP2PCloseEvent(station, timeout) {
-        return new Promise(async (resolve, reject) => {
-            // eslint-disable-next-line prefer-const
-            let timer;
-            const funcListener = () => listener();
-            function listener() {
-                station.removeListener("close", funcListener);
-                clearTimeout(timer);
-                resolve(true);
+    async connectStation(station) {
+        if (await (this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== p2p_1.P2PConnectionType.QUICKEST) {
+            station.setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+            logging_1.rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${p2p_1.P2PConnectionType[station.getConnectionType()]}.`);
+        }
+        else if (!(await (this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== this.api.getP2PConnectionType())) {
+            station.setConnectionType(this.api.getP2PConnectionType());
+            logging_1.rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${p2p_1.P2PConnectionType[station.getConnectionType()]}).`);
+        }
+        const res = await (0, utils_3.waitForStationEvent)(station, "connect", 10000).then(() => {
+            return true;
+        }, (value) => {
+            if (typeof value === "boolean") {
+                return false;
             }
-            station.addListener("close", funcListener);
-            timer = setTimeout(() => {
-                station.removeListener("close", funcListener);
-                reject(false);
-            }, timeout);
-            try {
-                this.stations[station.getSerial()].close();
-            }
-            catch (e) {
-                station.removeListener("close", funcListener);
-                reject(e);
+            else {
+                throw new Error(`Error while connect to station ${station.getSerial()}. Unexpected return value '${value.toString()}'.`);
             }
         });
+        return res;
+    }
+    /**
+     * Helper function to disconnect the p2p connection of a specified station.
+     * @param station The serial of the station.
+     * @returns A boolean value with the result.
+     */
+    async disconnectStation(station) {
+        if (await (this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== p2p_1.P2PConnectionType.QUICKEST) {
+            station.setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+            logging_1.rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${p2p_1.P2PConnectionType[station.getConnectionType()]}.`);
+        }
+        else if (!(await (this.api.isSoloDevice(station.getSerial())) && station.getConnectionType() !== this.api.getP2PConnectionType())) {
+            station.setConnectionType(this.api.getP2PConnectionType());
+            logging_1.rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${p2p_1.P2PConnectionType[station.getConnectionType()]}).`);
+        }
+        const res = await (0, utils_3.waitForStationEvent)(station, "close", 10000).then(() => {
+            return true;
+        }, (value) => {
+            if (typeof value === "boolean") {
+                return false;
+            }
+            else {
+                throw new Error(`Error while disconnect from station ${station.getSerial()}. Unexpected return value '${value.toString()}'.`);
+            }
+        });
+        return res;
     }
     /**
      * Update the infos of all connected devices over P2P.
@@ -349,6 +375,27 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 station.getCameraInfo();
             }
         });
+    }
+    /**
+     * Refresh data over p2p connection.
+     * @param station The station for refreshing data over p2p.
+     */
+    async refreshP2PData(station) {
+        if (this.stationsLoaded)
+            await this.stationsLoaded;
+        if (station.isStation() || (http_1.Device.isCamera(station.getDeviceType()) && !http_1.Device.isWiredDoorbell(station.getDeviceType()) || http_1.Device.isSmartSafe(station.getDeviceType()))) {
+            station.getCameraInfo();
+        }
+        if (http_1.Device.isLock(station.getDeviceType())) {
+            station.getLockParameters();
+            station.getLockStatus();
+        }
+        if (station.isStation() || (station.hasProperty(http_1.PropertyName.StationSdStatus) && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== p2p_1.TFCardStatus.REMOVE)) {
+            station.getStorageInfoEx();
+        }
+        else {
+            logging_1.rootAddonLogger.info(`No refresh storage for ${station.getSerial()} - hasProperty: ${station.hasProperty(http_1.PropertyName.StationSdStatus)} | value: ${station.getPropertyValue(http_1.PropertyName.StationSdStatus)}`);
+        }
     }
     /**
      * Set the maximum livestream duration.
@@ -542,82 +589,27 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             return true;
         }
         else {
-            const res = await this.waitForGuardModeEvent(this.stations[stationSerial], guardMode, 10000).then(() => {
-                return true;
-            }, (value) => {
-                if (typeof value === "boolean") {
-                    return false;
-                }
-                else {
-                    throw value;
-                }
-            });
-            if (res === true) {
-                this.setLastGuardModeChangeTimeNow(stationSerial);
-                this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
-            }
-            return res;
-        }
-    }
-    /**
-     * Wait for the GuardModeEvent after changing guardMode for a given base.
-     * @param station The station for waiting for the GuardMode event.
-     * @param guardMode The guard mode to set.
-     * @param timeout The timespan in ms maximal to wait for the event.
-     * @returns Returns true or false.
-     */
-    async waitForGuardModeEvent(station, guardMode, timeout) {
-        return new Promise(async (resolve, reject) => {
-            // eslint-disable-next-line prefer-const
-            let timer;
-            const funcListener = () => listener();
-            function listener() {
-                station.removeListener("guard mode", funcListener);
-                clearTimeout(timer);
-                resolve(true);
-            }
-            station.addListener("guard mode", funcListener);
-            timer = setTimeout(() => {
-                station.removeListener("guard mode", funcListener);
-                reject(false);
-            }, timeout);
             try {
-                this.setStationProperty(station.getSerial(), http_1.PropertyName.StationGuardMode, guardMode);
+                const res = await (0, utils_3.waitForStationEvent)(this.stations[stationSerial], "guard mode", 10000, guardMode = guardMode).then(() => {
+                    return true;
+                }, (value) => {
+                    if (typeof value === "boolean") {
+                        return false;
+                    }
+                    else {
+                        throw value;
+                    }
+                });
+                if (res === true) {
+                    this.setLastGuardModeChangeTimeNow(stationSerial);
+                    this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
+                }
+                return res;
             }
-            catch (e) {
-                station.removeListener("guard mode", funcListener);
-                reject(e);
+            catch (error) {
+                logging_1.rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`, JSON.stringify(error));
+                return false;
             }
-        });
-    }
-    /**
-     * Retrieves the storage information from ether all station or a given station.
-     * @param stationSerial The serial of the station.
-     */
-    async getStorageInfo(stationSerial) {
-        if (stationSerial === undefined) {
-            for (const serial in this.stations) {
-                await this.getStorageInfoStation(serial);
-            }
-        }
-        else {
-            await this.getStorageInfoStation(stationSerial);
-        }
-    }
-    /**
-     * Retrieves the storage information from the given station.
-     * @param stationSerial The serial of the station.
-     */
-    async getStorageInfoStation(stationSerial) {
-        try {
-            const station = await this.getStation(stationSerial);
-            if (station.isStation() || (station.hasProperty(http_1.PropertyName.StationSdStatus) && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== undefined && station.getPropertyValue(http_1.PropertyName.StationSdStatus) !== p2p_1.TFCardStatus.REMOVE)) {
-                station.getStorageInfoEx();
-            }
-        }
-        catch (err) {
-            const error = (0, error_1.ensureError)(err);
-            logging_1.rootAddonLogger.error("getStorageInfo Error", { error: (0, utils_2.getError)(error), stationSN: stationSerial });
         }
     }
     /**
@@ -1104,28 +1096,14 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onStationConnect(station) {
         this.emit("station connect", station);
-        if (http_1.Station.isStation(station.getDeviceType()) || (http_1.Device.isCamera(station.getDeviceType()) && !http_1.Device.isWiredDoorbell(station.getDeviceType()) || http_1.Device.isSmartSafe(station.getDeviceType()))) {
-            station.getCameraInfo();
-            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
-                clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
-                delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
-            }
-            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                station.getCameraInfo();
-            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
+        this.refreshP2PData(station);
+        if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
+            clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
+            delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
         }
-        else if (http_1.Device.isLock(station.getDeviceType())) {
-            station.getLockParameters();
-            station.getLockStatus();
-            if (this.refreshEufySecurityP2PTimeout[station.getSerial()] !== undefined) {
-                clearTimeout(this.refreshEufySecurityP2PTimeout[station.getSerial()]);
-                delete this.refreshEufySecurityP2PTimeout[station.getSerial()];
-            }
-            this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
-                station.getLockParameters();
-                station.getLockStatus();
-            }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
-        }
+        this.refreshEufySecurityP2PTimeout[station.getSerial()] = setTimeout(() => {
+            this.refreshP2PData(station);
+        }, this.P2P_REFRESH_INTERVAL_MIN * 60 * 1000);
     }
     /**
      * The action to be done when event Connection Error is fired.
@@ -1425,9 +1403,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     async onStationGuardMode(station, guardMode) {
         this.setLastGuardModeChangeTimeNow(station.getSerial());
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
-        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
+        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
             logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
-            this.skipNextModeChangeEvent[station.getSerial()] = false;
+            this.skipNextModeChangeEvent.set(station.getSerial(), false);
         }
         else {
             logging_1.rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
@@ -1440,9 +1418,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param guardMode The new guard mode as GuardMode.
      */
     async onStationCurrentMode(station, guardMode) {
-        if (this.skipNextModeChangeEvent[station.getSerial()] === true) {
+        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
             logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
-            this.skipNextModeChangeEvent[station.getSerial()] = false;
+            this.skipNextModeChangeEvent.set(station.getSerial(), false);
         }
         else {
             logging_1.rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
@@ -1600,6 +1578,12 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             if (device.hasProperty(http_1.PropertyName.DeviceLight)) {
                 const metadataLight = device.getPropertyMetadata(http_1.PropertyName.DeviceLight);
                 device.updateRawProperty(metadataLight.key, enabled === true ? "1" : "0", "p2p");
+                if (enabled === true) {
+                    this.lightTimeouts.set(device.getSerial(), setTimeout(async () => {
+                        station.switchLight(device, false);
+                        this.lightTimeouts.delete(device.getSerial());
+                    }, 30 * 1000));
+                }
             }
         }).catch((err) => {
             const error = (0, error_1.ensureError)(err);
@@ -1952,8 +1936,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         if (timeStamp !== undefined) {
             timeStamp = (0, utils_3.convertTimeStampToTimeStampMs)(timeStamp, timeStampType);
         }
-        this.lastGuardModeChangeTimeForStations[stationSerial] = timeStamp;
-        this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations[stationSerial]);
+        this.lastGuardModeChangeTimeForStations.set(stationSerial, timeStamp);
+        this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations.get(stationSerial));
     }
     /**
      * Set the time for the last guard mode change to the current time.
@@ -1968,7 +1952,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @returns The timestamp as number or undefined.
      */
     getLastGuardModeChangeTime(stationSerial) {
-        return this.lastGuardModeChangeTimeForStations[stationSerial];
+        return this.lastGuardModeChangeTimeForStations.get(stationSerial);
     }
     /**
      * Set the given property for the given station to the given value.

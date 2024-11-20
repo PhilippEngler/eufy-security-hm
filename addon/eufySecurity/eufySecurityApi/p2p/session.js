@@ -463,10 +463,22 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                         const error = (0, error_1.ensureError)(err);
                         logging_1.rootP2PLogger.error(`connect - Error`, { error: (0, utils_3.getError)(error), stationSN: this.rawStation.station_sn, host: host, currentRecBufferSize: this.socket.getRecvBufferSize(), recBufferRequestedSize: this.UDP_RECVBUFFERSIZE_BYTES });
                     }
-                    this.lookup(host);
+                    try {
+                        this.lookup(host);
+                    }
+                    catch (err) {
+                        const error = (0, error_1.ensureError)(err);
+                        logging_1.rootP2PLogger.error(`connect - Lookup Error`, { error: (0, utils_3.getError)(error), stationSN: this.rawStation.station_sn, host: host });
+                    }
                 });
             else {
-                this.lookup(host);
+                try {
+                    this.lookup(host);
+                }
+                catch (err) {
+                    const error = (0, error_1.ensureError)(err);
+                    logging_1.rootP2PLogger.error(`connect - Lookup Error`, { error: (0, utils_3.getError)(error), stationSN: this.rawStation.station_sn, host: host });
+                }
             }
         }
     }
@@ -881,7 +893,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                         this.sendQueue.push(element);
                     });
                 }
-                else if (this.rawStation.devices !== undefined && this.rawStation.devices !== null && this.rawStation.devices.length !== undefined && this.rawStation.devices.length > 0 && device_1.Device.isLockWifiVideo(this.rawStation.devices[0].device_type)) {
+                else if (this.rawStation.devices !== undefined && this.rawStation.devices !== null && this.rawStation.devices.length !== undefined && this.rawStation.devices.length > 0 && device_1.Device.isLockWifiVideo(this.rawStation.devices[0]?.device_type)) {
                     const tmpSendQueue = [...this.sendQueue];
                     this.sendQueue = [];
                     const payload = (0, utils_1.buildVoidCommandPayload)(http_1.Station.CHANNEL);
@@ -1180,8 +1192,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 }
                 logging_1.rootP2PLogger.trace(`Parsing message - DATA ${types_1.P2PDataType[message.type]} - Received data`, { stationSN: this.rawStation.station_sn, seqNo: message.seqNo, header: this.currentMessageBuilder[message.type].header, bytesRead: this.currentMessageBuilder[message.type].bytesRead, bytesToRead: this.currentMessageBuilder[message.type].header.bytesToRead, firstPartMessage: firstPartMessage, messageSize: message.data.length, runaway_limit: runaway_limit });
-                if (this.currentMessageBuilder[message.type].bytesRead === this.currentMessageBuilder[message.type].header.bytesToRead &&
-                    this.currentMessageBuilder[message.type].bytesRead > 0 && this.currentMessageBuilder[message.type].header.bytesToRead > 0) {
+                if (this.currentMessageBuilder[message.type].bytesRead === this.currentMessageBuilder[message.type].header.bytesToRead) {
                     const completeMessage = (0, utils_1.sortP2PMessageParts)(this.currentMessageBuilder[message.type].messages);
                     const data_message = {
                         ...this.currentMessageBuilder[message.type].header,
@@ -1195,11 +1206,6 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                         logging_1.rootP2PLogger.debug(`Parsing message - DATA ${types_1.P2PDataType[message.type]} - Parsed data`, { stationSN: this.rawStation.station_sn, seqNo: message.seqNo, data_message: data_message, datalen: data.length, data: data.toString("hex"), offsetDataSeqNumber: this.offsetDataSeqNumber, seqNumber: this.seqNumber, p2pDataSeqNumber: this.p2pDataSeqNumber });
                         this.offsetDataSeqNumber++;
                     }
-                }
-                else if (this.currentMessageBuilder[message.type].bytesRead === 0 && this.currentMessageBuilder[message.type].header.bytesToRead === 0) {
-                    logging_1.rootP2PLogger.warn(`Unparsable message detected and discarded`, { stationSN: this.rawStation.station_sn, seqNo: message.seqNo, dataType: types_1.P2PDataType[message.type], header: this.currentMessageBuilder[message.type].header, bytesRead: this.currentMessageBuilder[message.type].bytesRead, bytesToRead: this.currentMessageBuilder[message.type].header.bytesToRead, message: message.data.toString("hex"), messageSize: message.data.length, runaway_limit: runaway_limit });
-                    this.initializeMessageBuilder(message.type);
-                    break;
                 }
                 runaway_limit++;
             } while ((data.length > 0) && (runaway_limit < this.LOOP_RUNAWAY_LIMIT));
@@ -1697,7 +1703,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                 this.emit("parameter", message.channel, types_1.CommandType.CMD_SMARTLOCK_NIGHT_VISION_SIDE, payload.slOpenDirection);
                             }
                             else if (json.cmd === types_1.CommandType.CMD_DOORLOCK_P2P_SEQ) {
-                                if (device_1.Device.isLockWifi(this.rawStation.devices[0].device_type, this.rawStation.devices[0].device_sn) || device_1.Device.isLockWifiNoFinger(this.rawStation.devices[0].device_type)) {
+                                if (device_1.Device.isLockWifi(this.rawStation.devices[0]?.device_type, this.rawStation.devices[0]?.device_sn) || device_1.Device.isLockWifiNoFinger(this.rawStation.devices[0]?.device_type)) {
                                     const payload = json.payload;
                                     if (payload.seq_num !== undefined) {
                                         this.lockSeqNumber = payload.seq_num;
@@ -1714,10 +1720,10 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                         this.lockSeqNumber = payload.seq_num + 1;
                                     }
                                     if (payload.lock_cmd > 0) {
-                                        if (device_1.Device.isLockWifiR10(this.rawStation.devices[0].device_type) || device_1.Device.isLockWifiR20(this.rawStation.devices[0].device_type)) {
+                                        if (device_1.Device.isLockWifiR10(this.rawStation.devices[0]?.device_type) || device_1.Device.isLockWifiR20(this.rawStation.devices[0]?.device_type)) {
                                             this.emit("sequence error", message.channel, types_1.ESLCommand[types_1.ESLBleCommand[payload.lock_cmd]], payload.seq_num, payload.dev_sn);
                                         }
-                                        else if (device_1.Device.isLockWifiT8506(this.rawStation.devices[0].device_type) || device_1.Device.isLockWifiT8502(this.rawStation.devices[0].device_type) || device_1.Device.isLockWifiT8510P(this.rawStation.devices[0].device_type, this.rawStation.devices[0].device_sn) || device_1.Device.isLockWifiT8520P(this.rawStation.devices[0].device_type, this.rawStation.devices[0].device_sn)) {
+                                        else if (device_1.Device.isLockWifiT8506(this.rawStation.devices[0]?.device_type) || device_1.Device.isLockWifiT8502(this.rawStation.devices[0]?.device_type) || device_1.Device.isLockWifiT8510P(this.rawStation.devices[0]?.device_type, this.rawStation.devices[0]?.device_sn) || device_1.Device.isLockWifiT8520P(this.rawStation.devices[0]?.device_type, this.rawStation.devices[0]?.device_sn)) {
                                             this.emit("sequence error", message.channel, types_1.SmartLockCommand[payload.bus_type == types_1.SmartLockFunctionType.TYPE_2 ? types_1.SmartLockBleCommandFunctionType2[payload.lock_cmd] : types_1.SmartLockBleCommandFunctionType1[payload.lock_cmd]], payload.seq_num, payload.dev_sn);
                                         }
                                         else {
@@ -2248,8 +2254,8 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                 case types_1.CommandType.CMD_GATEWAYINFO:
                     const cipherID = data.subarray(0, 2).readUInt16LE();
                     //const unknownNumber = data.subarray(2, 2).readUInt16LE();
-                    const encryptedKey = data.subarray(4, data.length - 1);
                     logging_1.rootP2PLogger.debug(`Handle DATA ${types_1.P2PDataType[message.dataType]} - CMD_GATEWAYINFO - cipherID`, { stationSN: this.rawStation.station_sn, channel: message.channel, data: data.toString("hex"), cipherID: cipherID });
+                    const encryptedKey = (0, utils_1.readNullTerminatedBuffer)(data.subarray(4));
                     this.api.getCipher(/*this.rawStation.station_sn, */ cipherID, this.rawStation.member.admin_user_id).then((cipher) => {
                         logging_1.rootP2PLogger.debug(`Handle DATA ${types_1.P2PDataType[message.dataType]} - CMD_GATEWAYINFO - get cipher with cipherID`, { stationSN: this.rawStation.station_sn, channel: message.channel, data: data.toString("hex"), cipherID: cipherID, cipher: JSON.stringify(cipher) });
                         if (cipher !== undefined) {

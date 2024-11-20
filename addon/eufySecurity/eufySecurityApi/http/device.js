@@ -652,6 +652,19 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
                 }
             }
             else if ((property.name === types_1.PropertyName.DeviceMotionDetectionTypeHuman ||
+                property.name === types_1.PropertyName.DeviceMotionDetectionTypePet ||
+                property.name === types_1.PropertyName.DeviceMotionDetectionTypeAllOtherMotions) && this.isIndoorPanAndTiltCameraS350()) {
+                const booleanProperty = property;
+                try {
+                    return (0, utils_1.isIndoorS350DetectionModeEnabled)(Number.parseInt(value), property.name === types_1.PropertyName.DeviceMotionDetectionTypeHuman ? types_1.IndoorS350DetectionTypes.HUMAN_DETECTION : property.name === types_1.PropertyName.DeviceMotionDetectionTypePet ? types_1.IndoorS350DetectionTypes.PET_DETECTION : types_1.IndoorS350DetectionTypes.ALL_OTHER_MOTION);
+                }
+                catch (err) {
+                    const error = (0, error_2.ensureError)(err);
+                    logging_1.rootHTTPLogger.error("Device convert raw property - T8416 motion detection type Error", { error: (0, utils_3.getError)(error), deviceSN: this.getSerial(), property: property, value: value });
+                    return booleanProperty.default !== undefined ? booleanProperty.default : false;
+                }
+            }
+            else if ((property.name === types_1.PropertyName.DeviceMotionDetectionTypeHuman ||
                 property.name === types_1.PropertyName.DeviceMotionDetectionTypeAllOtherMotions) && this.isSoloCameras()) {
                 const booleanProperty = property;
                 try {
@@ -918,6 +931,9 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
                 ...metadata
             };
             newMetadata[types_1.PropertyName.DeviceMotionDetection] = types_1.DeviceMotionDetectionProperty;
+            newMetadata[types_1.PropertyName.DeviceAudioRecording] = types_1.DeviceAudioRecordingProperty;
+            newMetadata[types_1.PropertyName.DeviceMotionDetectionSensitivity] = types_1.DeviceMotionDetectionSensitivityBatteryDoorbellProperty;
+            newMetadata[types_1.PropertyName.DeviceStatusLed] = types_1.DeviceStatusLedIndoorS350Property;
             metadata = newMetadata;
         }
         if (station_1.Station.isStationHomeBase3BySn(this.getStationSerial()) && (metadata[types_1.PropertyName.DeviceMotionDetectionType] !== undefined || metadata[types_1.PropertyName.DeviceMotionDetectionTypeAllOtherMotions] !== undefined) && this.isCamera()) {

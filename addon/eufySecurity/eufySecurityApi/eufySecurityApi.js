@@ -33,7 +33,6 @@ class EufySecurityApi {
     serviceState = "init";
     captchaState = { captchaId: "", captcha: "" };
     tfaCodeRequested = false;
-    taskUpdateDeviceInfo;
     taskUpdateState;
     waitUpdateState;
     refreshEufySecurityCloudTimeout;
@@ -55,13 +54,13 @@ class EufySecurityApi {
      * Initialize the api and make basic settings check.
      */
     async initialize() {
-        if (this.config.getEmailAddress() == "" || this.config.getPassword() == "") {
+        if (this.config.getEmailAddress() === "" || this.config.getPassword() === "") {
             let missingSettings = "";
-            if (this.config.getEmailAddress() == "") {
+            if (this.config.getEmailAddress() === "") {
                 missingSettings = "email";
             }
-            if (this.config.getPassword() == "") {
-                if (missingSettings != "") {
+            if (this.config.getPassword() === "") {
+                if (missingSettings !== "") {
                     missingSettings += ", ";
                 }
                 missingSettings += "password";
@@ -83,7 +82,7 @@ class EufySecurityApi {
             this.httpApiPersistentData.device_public_keys = this.config.getDevicePublicKeys();
             this.httpService = await http_1.HTTPApi.initialize(this.config.getCountry(), this.config.getEmailAddress(), this.config.getPassword(), this.httpApiPersistentData);
             this.httpService.setLanguage(this.config.getLanguage());
-            if (this.config.getTrustedDeviceName() === undefined || this.config.getTrustedDeviceName() == "" || this.config.getTrustedDeviceName() == "eufyclient") {
+            if (this.config.getTrustedDeviceName() === undefined || this.config.getTrustedDeviceName() === "" || this.config.getTrustedDeviceName() === "eufyclient") {
                 this.config.setTrustedDeviceName(const_1.PhoneModels[(0, utils_3.randomNumber)(0, const_1.PhoneModels.length)]);
             }
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
@@ -96,17 +95,17 @@ class EufySecurityApi {
             this.httpService.on("connection error", (error) => this.onAPIConnectionError(error));
             this.httpService.setToken(this.getToken());
             this.httpService.setTokenExpiration(new Date(this.getTokenExpire()));
-            if (this.config.getOpenudid() == "") {
+            if (this.config.getOpenudid() === "") {
                 this.config.setOpenudid((0, utils_1.generateUDID)());
                 logging_1.rootAddonLogger.debug("Generated new openudid", { openudid: this.config.getOpenudid() });
             }
             this.httpService.setOpenUDID(this.config.getOpenudid());
-            if (this.config.getSerialNumber() == "") {
+            if (this.config.getSerialNumber() === "") {
                 this.config.setSerialNumber((0, utils_1.generateSerialnumber)(12));
                 logging_1.rootAddonLogger.debug("Generated new serial_number", { serialnumber: this.config.getSerialNumber() });
             }
             this.httpService.setSerialNumber(this.config.getSerialNumber());
-            if (this.config.getPushServiceActive() == true) {
+            if (this.config.getPushServiceActive() === true) {
                 logging_1.rootAddonLogger.info("Started initializing push notification connection.");
                 try {
                     this.pushService = new pushService_1.PushService(this, this.httpService, this.config);
@@ -140,7 +139,7 @@ class EufySecurityApi {
      * @returns The account info as PassportProfileResponse.
      */
     async getAccountInfo() {
-        if (this.connected == true) {
+        if (this.connected === true) {
             return await this.httpService.getPassportProfile();
         }
         else {
@@ -169,7 +168,7 @@ class EufySecurityApi {
     getTfaCaptchaState() {
         let json = {};
         let captchaNeeded = false;
-        if (this.captchaState.captchaId != "" || this.captchaState.captcha != "") {
+        if (this.captchaState.captchaId !== "" || this.captchaState.captcha !== "") {
             captchaNeeded = true;
         }
         json = { "success": true, "tfaNeeded": this.tfaCodeRequested, "captchaNeeded": captchaNeeded, "captcha": this.captchaState };
@@ -184,7 +183,7 @@ class EufySecurityApi {
         let json = {};
         let success = false;
         let message = "No captcha code requested.";
-        if (this.captchaState.captchaId != "" || this.captchaState.captcha != "") {
+        if (this.captchaState.captchaId !== "" || this.captchaState.captcha !== "") {
             this.connect({ captcha: { captchaId: this.captchaState.captchaId, captchaCode: code }, force: false });
             success = true;
             message = "Connecting again with the captcha code provided.";
@@ -267,7 +266,7 @@ class EufySecurityApi {
             this.devices.close();
         }
         if (this.stations !== null && this.stations !== undefined) {
-            await this.stations.closeP2PConnections();
+            await this.stations.close();
         }
     }
     /**
@@ -275,9 +274,17 @@ class EufySecurityApi {
      */
     async closeDevice() {
         logging_1.rootAddonLogger.info("Closing connections to all devices...");
-        if (this.devices != null || this.devices !== undefined) {
+        if (this.devices !== null || this.devices !== undefined) {
             this.devices.closeDevices();
         }
+    }
+    /**
+     * Checks if the device a solo device.
+     * @param serial The serial of the station or device.
+     * @returns True if device is a solo device, otherwise false.
+     */
+    async isSoloDevice(serial) {
+        return await this.devices.isSoloDevice(serial);
     }
     /**
      * Login with the in the api provoded login information.
@@ -368,11 +375,13 @@ class EufySecurityApi {
         if (this.httpService.getPersistentData() !== undefined) {
             this.updateApiPersistentData(this.httpService.getPersistentData());
         }
+        this.stations.on("station removed", (station) => this.onStationRemoved(station));
         this.stations.on("station image download", (station, file, image) => this.onStationImageDownload(station, file, image));
         this.stations.on("station database query local", (station, returnCode, data) => this.onStationDatabaseQueryLocal(station, returnCode, data));
         this.stations.on("station database query latest", (station, returnCode, data) => this.onStationDatabaseQueryLatest(station, returnCode, data));
         //this.devices.on("device added", (device: Device) => this.onDeviceAdded(device));
         //this.devices.once("devices loaded", () => this.onDevicesLoaded());
+        this.devices.on("device removed", (device) => this.onDeviceRemoved(device));
         await (0, utils_2.sleep)(10);
         await this.refreshCloudData();
         this.setupScheduledTasks();
@@ -404,7 +413,7 @@ class EufySecurityApi {
      * @param token_expiration The new token expiration time.
      */
     onAuthTokenRenewed(token, token_expiration) {
-        if (token == null) {
+        if (token === null) {
             this.setTokenData(undefined, 0);
         }
         else {
@@ -426,6 +435,13 @@ class EufySecurityApi {
         //this.emit("tfa request");
         this.tfaCodeRequested = true;
         logging_1.rootAddonLogger.info(`A tfa (two factor authentication) request received. This addon does not support tfa at the moment.`);
+    }
+    /**
+     * The action to be performed when event station removed is fired.
+     * @param station The station as Station object.
+     */
+    onStationRemoved(station) {
+        logging_1.rootAddonLogger.info(`The station ${station.getSerial()} has been removed.`);
     }
     /**
      * The action to be performed when event station image download is fired.
@@ -464,7 +480,7 @@ class EufySecurityApi {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async onStationDatabaseQueryLocal(station, returnCode, data) {
         /*var deviceSerials: string[] = [];
-        if (returnCode == 0 && data && data.length > 0) {
+        if (returnCode === 0 && data && data.length > 0) {
             for (let i=0; i<data.length; i++) {
                 let deviceSerial = data[i].device_sn;
                 if (deviceSerial) {
@@ -487,7 +503,7 @@ class EufySecurityApi {
      * @param data The result data.
      */
     async onStationDatabaseQueryLatest(station, returnCode, data) {
-        if (returnCode == 0 && data && data.length > 0) {
+        if (returnCode === 0 && data && data.length > 0) {
             for (let i = 0; i < data.length; i++) {
                 try {
                     const response = data[i];
@@ -544,6 +560,13 @@ class EufySecurityApi {
     async onDevicesLoaded() {
         //this.devices.getDevicesEvents();
         this.devices.getDevicesLastEvent();
+    }
+    /**
+     * The action to be performed when event device removed is fired.
+     * @param device The device as Device object.
+     */
+    onDeviceRemoved(device) {
+        logging_1.rootAddonLogger.info(`The device ${device.getSerial()} has been removed.`);
     }
     /**
      * Returns the all stations as array.
@@ -669,12 +692,27 @@ class EufySecurityApi {
             logging_1.rootAddonLogger.info(`Automatic retrieval of data from the cloud has been deactivated (config pollingIntervalMinutes: ${this.config.getUpdateDeviceDataIntervall()})`);
     }
     /**
-     * (Re)Loads all Stations and Devices and the settings of them.
+     * Refresh all Devices, Station and/or Houses and the settings of them.
      */
-    async loadData() {
-        await this.httpService.refreshHouseData();
-        await this.httpService.refreshStationData();
-        await this.httpService.refreshDeviceData();
+    async refreshData(target) {
+        let result = new Map();
+        switch (target) {
+            case "all":
+                result.set("devices", await (0, utils_4.waitForHttpApiEvent)(this.httpService, "devices", 1000));
+                result.set("houses", await (0, utils_4.waitForHttpApiEvent)(this.httpService, "houses", 1000));
+                result.set("stations", await (0, utils_4.waitForHttpApiEvent)(this.httpService, "hubs", 1000));
+                break;
+            case "devices":
+                result.set("devices", await (0, utils_4.waitForHttpApiEvent)(this.httpService, "devices", 1000));
+                break;
+            case "houses":
+                result.set("houses", await (0, utils_4.waitForHttpApiEvent)(this.httpService, "houses", 1000));
+                break;
+            case "stations":
+                result.set("stations", await (0, utils_4.waitForHttpApiEvent)(this.httpService, "hubs", 1000));
+                break;
+        }
+        return result;
     }
     /**
      * Generate a new random trusted device name from the device name list.
@@ -714,7 +752,7 @@ class EufySecurityApi {
                     json = { "success": true, "data": [] };
                     for (const house_id in houses) {
                         const house = await this.getHouse(house_id);
-                        if (house && house != null) {
+                        if (house && house !== null) {
                             json.data.push(this.makeJsonObjectForHouse(house));
                         }
                     }
@@ -745,7 +783,7 @@ class EufySecurityApi {
             if (this.houses) {
                 await this.httpService.refreshHouseData();
                 const house = await this.getHouse(houseId);
-                if (house && house != null) {
+                if (house && house !== null) {
                     json = { "success": true, "data": this.makeJsonObjectForHouse(house) };
                     this.setLastConnectionInfo(true);
                 }
@@ -808,11 +846,7 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                await this.httpService.refreshDeviceData();
-                await this.updateDeviceData();
-                await this.devices.loadDevices();
-                const devices = await this.getDevices();
+                const devices = await this.devices.getDevices();
                 if (devices) {
                     json = { "success": true, "data": [] };
                     for (const deviceSerial in devices) {
@@ -842,9 +876,6 @@ class EufySecurityApi {
      * @returns All devices as object
      */
     async getRawDevices() {
-        await this.httpService.refreshDeviceData();
-        await this.updateDeviceData();
-        await this.devices.loadDevices();
         return this.devices;
     }
     /**
@@ -853,7 +884,7 @@ class EufySecurityApi {
      * @returns The picture.
      */
     async getDeviceImage(deviceSerial) {
-        const device = (await this.getDevices())[deviceSerial];
+        const device = await this.devices.getDevice(deviceSerial);
         if (device) {
             return device.getPropertyValue(http_1.PropertyName.DevicePicture);
         }
@@ -866,11 +897,7 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                await this.httpService.refreshDeviceData();
-                await this.updateDeviceData();
-                await this.devices.loadDevices();
-                const device = (await this.getDevices())[deviceSerial];
+                const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
                     const station = await this.stations.getStation(device.getStationSerial());
                     json = { "success": true, "data": this.makeJsonObjectForDevice(device, station.isEnergySavingDevice(), station.isConnected()) };
@@ -901,11 +928,7 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-                const device = (await this.getDevices())[deviceSerial];
+                const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
                     json = { "success": true, "version": this.getEufySecurityApiVersion(), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": (0, utils_4.getDeviceTypeAsString)(device), "data": device.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
@@ -935,17 +958,13 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-                const device = (await this.getDevices())[deviceSerial];
+                const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
-                    let temp = this.devices.getDeviceInteractions(device.getSerial());
-                    if (temp === undefined || temp === null) {
-                        temp = null;
+                    let interactions = this.devices.getDeviceInteractions(device.getSerial());
+                    if (interactions === undefined || interactions === null) {
+                        interactions = null;
                     }
-                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": (0, utils_4.getDeviceTypeAsString)(device), "isDevicePanAndTilt": device.hasCommand(http_1.CommandName.DevicePanAndTilt), "data": device.getProperties(), "interactions": temp };
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "model": device.getModel(), "modelName": (0, utils_4.getModelName)(device.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(device.getDeviceType()), "deviceType": (0, utils_4.getDeviceTypeAsString)(device), "data": { properties: device.getProperties(), "commands": device.getCommands() }, "interactions": interactions };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -973,13 +992,9 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.devices) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                //await this.updateDeviceData();
-                //await this.devices.loadDevices();
-                const device = (await this.getDevices())[deviceSerial];
+                const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
-                    json = device.getRawDevice();
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "params": device.getRawDevice() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1013,9 +1028,17 @@ class EufySecurityApi {
                     json = { "success": false, "reason": `The device with serial ${deviceSerial} does not exists.` };
                 }
                 try {
-                    await this.devices.setDeviceProperty(deviceSerial, propertyName, propertyValue);
-                    await (0, utils_2.sleep)(5000);
-                    json = { "success": true, "reason": `The property ${propertyName} for device ${deviceSerial} has been processed.` };
+                    const res = await (0, utils_4.waitForDeviceEvent)(await this.devices.getDevice(deviceSerial), "property changed", 10000, this.devices, propertyName, propertyValue).then(() => {
+                        return true;
+                    }, (value) => {
+                        if (typeof value === "boolean") {
+                            return false;
+                        }
+                        else {
+                            throw value;
+                        }
+                    });
+                    json = { "success": res, "reason": `The property change for property ${propertyName} on device ${deviceSerial} ${res === true ? `has been processed` : `has failed`}.` };
                 }
                 catch (e) {
                     if (e instanceof http_1.InvalidPropertyError) {
@@ -1049,7 +1072,7 @@ class EufySecurityApi {
         let json = {};
         let privacyMode = undefined;
         if (this.devices.existDevice(station.getSerial())) {
-            const device = (await this.devices.getDevices())[station.getSerial()];
+            const device = await this.devices.getDevice(station.getSerial());
             if (device.isPanAndTiltCamera()) {
                 if (device.isEnabled()) {
                     privacyMode = false;
@@ -1060,6 +1083,9 @@ class EufySecurityApi {
             }
         }
         json = { "eufyDeviceId": station.getId(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "wanIpAddress": station.getIPAddress(), "isP2PConnected": station.isConnected(), "isEnergySavingDevice": station.isEnergySavingDevice() };
+        if (privacyMode !== undefined) {
+            json.privacyMode = privacyMode;
+        }
         for (const property in properties) {
             switch (property) {
                 case http_1.PropertyName.Model:
@@ -1068,10 +1094,7 @@ class EufySecurityApi {
                     break;
                 case http_1.PropertyName.StationGuardMode:
                     json[property] = properties[property] === undefined ? "n/a" : properties[property];
-                    if (privacyMode !== undefined) {
-                        json.privacyMode = privacyMode;
-                    }
-                    json.guardModeTime = this.getStateUpdateEventActive() == false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
+                    json.guardModeTime = this.getStateUpdateEventActive() === false ? "n/d" : (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a" : this.stations.getLastGuardModeChangeTime(station.getSerial()));
                     break;
                 case http_1.PropertyName.StationHomeSecuritySettings:
                 case http_1.PropertyName.StationAwaySecuritySettings:
@@ -1090,10 +1113,7 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                await this.stations.loadStations();
-                const stations = await this.getStations();
+                const stations = await this.stations.getStations();
                 if (stations) {
                     json = { "success": true, "data": [] };
                     for (const stationSerial in stations) {
@@ -1122,9 +1142,6 @@ class EufySecurityApi {
      * @returns All stations as object.
      */
     async getRawStations() {
-        await this.httpService.refreshStationData();
-        await this.updateDeviceData();
-        await this.stations.loadStations();
         return this.stations;
     }
     /**
@@ -1136,10 +1153,7 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                //await this.stations.loadStations();
-                const station = await this.getStation(stationSerial);
+                const station = await this.stations.getStation(stationSerial);
                 if (station) {
                     json = { "success": true, "version": this.getEufySecurityApiVersion(), "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "data": station.getPropertiesMetadata() };
                     this.setLastConnectionInfo(true);
@@ -1169,12 +1183,9 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                //await this.stations.loadStations();
-                const station = await this.getStation(stationSerial);
+                const station = await this.stations.getStation(stationSerial);
                 if (station) {
-                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "isEnergySavingDevice": station.isEnergySavingDevice(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "isIntegratedDevice": await this.stations.isStationIntegratedDevice(station), "data": station.getProperties() };
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "type": station.getModel(), "modelName": (0, utils_4.getModelName)(station.getModel()), "isP2PConnected": station.isConnected(), "isEnergySavingDevice": station.isEnergySavingDevice(), "isDeviceKnownByClient": Object.values(http_1.DeviceType).includes(station.getDeviceType()), "deviceType": (0, utils_4.getStationTypeString)(station), "isIntegratedDevice": await this.stations.isStationIntegratedDevice(station), "data": { properties: station.getProperties(), commands: station.getCommands() } };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1202,12 +1213,9 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                //await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                //await this.stations.loadStations();
-                const station = await this.getStation(stationSerial);
+                const station = await this.stations.getStation(stationSerial);
                 if (station) {
-                    json = station.getRawStation();
+                    json = { "success": true, "version": this.getEufySecurityApiVersion(), "params": station.getRawStation() };
                     this.setLastConnectionInfo(true);
                 }
                 else {
@@ -1241,9 +1249,17 @@ class EufySecurityApi {
                     json = { "success": false, "reason": `The station with serial ${stationSerial} does not exists.` };
                 }
                 try {
-                    await this.stations.setStationProperty(stationSerial, propertyName, propertyValue);
-                    await (0, utils_2.sleep)(5000);
-                    json = { "success": true, "reason": `The property ${propertyName} for station ${stationSerial} has been processed.` };
+                    const res = await (0, utils_4.waitForStationEvent)(await this.stations.getStation(stationSerial), "property changed", 10000, undefined, this.stations, propertyName, propertyValue).then(() => {
+                        return true;
+                    }, (value) => {
+                        if (typeof value === "boolean") {
+                            return false;
+                        }
+                        else {
+                            throw value;
+                        }
+                    });
+                    json = { "success": res, "reason": `The property change for property ${propertyName} on station ${stationSerial} ${res === true ? `has been processed` : `has failed`}.` };
                 }
                 catch (e) {
                     if (e instanceof http_1.InvalidPropertyError) {
@@ -1315,7 +1331,7 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations && this.devices) {
-                const device = (await this.getDevices())[deviceSerial];
+                const device = await this.devices.getDevice(deviceSerial);
                 if (device) {
                     const station = await this.stations.getStation(device.getStationSerial());
                     if (station) {
@@ -1361,10 +1377,7 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                await this.stations.loadStations();
-                const station = await this.getStation(stationSerial);
+                const station = await this.stations.getStation(stationSerial);
                 if (station) {
                     json = { "success": true, "data": await this.makeJsonObjectForStation(station) };
                     this.setLastConnectionInfo(true);
@@ -1443,19 +1456,16 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                await this.stations.loadStations();
                 let mode = -1;
-                const stations = await this.getStations();
+                const stations = await this.stations.getStations();
                 if (stations) {
                     json = { "success": true, "data": [] };
                     for (const stationSerial in stations) {
                         json.data.push(await this.makeJsonObjectForStation(stations[stationSerial]));
-                        if (mode == -1) {
+                        if (mode === -1) {
                             mode = stations[stationSerial].getGuardMode();
                         }
-                        else if (mode != stations[stationSerial].getGuardMode()) {
+                        else if (mode !== stations[stationSerial].getGuardMode()) {
                             mode = -2;
                         }
                         this.updateStationGuardModeSystemVariable(stations[stationSerial].getSerial(), stations[stationSerial].getGuardMode());
@@ -1465,7 +1475,7 @@ class EufySecurityApi {
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     }
                     else {
-                        this.setSystemVariableString("eufyCurrentState", "unbenkannt");
+                        this.setSystemVariableString("eufyCurrentState", "unbekannt");
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
                     }
                     this.setLastConnectionInfo(true);
@@ -1494,15 +1504,15 @@ class EufySecurityApi {
         try {
             if (this.stations) {
                 await this.stations.loadStations();
-                const stations = await this.getStations();
+                const stations = await this.stations.getStations();
                 let station;
                 if (stations) {
                     for (const stationSerial in stations) {
                         station = stations[stationSerial];
-                        if (mode == -1) {
+                        if (mode === -1) {
                             mode = station.getGuardMode();
                         }
-                        else if (mode != station.getGuardMode()) {
+                        else if (mode !== station.getGuardMode()) {
                             mode = -2;
                         }
                     }
@@ -1524,11 +1534,8 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                await this.httpService.refreshStationData();
-                //await this.httpService.refreshDeviceData();
-                //await this.stations.loadStations();
                 await this.stations.loadStations();
-                const station = await this.getStation(stationSerial);
+                const station = await this.stations.getStation(stationSerial);
                 if (station) {
                     json = { "success": true, "data": await this.makeJsonObjectForStation(station) };
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
@@ -1587,13 +1594,13 @@ class EufySecurityApi {
             if (this.stations) {
                 let err = 0;
                 const res = await this.stations.setGuardMode(guardMode);
-                if (res == true) {
-                    const stations = await this.getStations();
+                if (res === true) {
+                    const stations = await this.stations.getStations();
                     let station;
                     json = { "success": true, "data": [] };
                     for (const stationSerial in stations) {
                         station = stations[stationSerial];
-                        if (guardMode == station.getGuardMode()) {
+                        if (guardMode === station.getGuardMode()) {
                             json.data.push({ "stationSerial": station.getSerial(), "result": "success", "guardMode": station.getGuardMode() });
                             this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                         }
@@ -1642,15 +1649,15 @@ class EufySecurityApi {
         let json = {};
         try {
             if (this.stations) {
-                if (this.devices.existDevice(stationSerial) == true) {
-                    const device = (await this.getDevices())[stationSerial];
-                    if (device.isEnabled() == false) {
+                if (this.devices.existDevice(stationSerial) === true) {
+                    const device = await this.devices.getDevice(stationSerial);
+                    if (device.isEnabled() === false) {
                         await this.setPrivacyMode(stationSerial, true);
                     }
                 }
                 const res = await this.stations.setGuardModeStation(stationSerial, guardMode);
-                //var stations = await this.getStations();
-                const station = await this.getStation(stationSerial);
+                //var stations = await this.stations.getStations();
+                const station = await this.stations.getStation(stationSerial);
                 if (res) {
                     json = { "success": true, "data": [] };
                     json.data.push({ "stationSerial": station.getSerial(), "result": "success", "guardMode": station.getGuardMode() });
@@ -1698,24 +1705,28 @@ class EufySecurityApi {
      * @returns A JSON string with the result.
      */
     async setPrivacyMode(deviceSerial, value) {
-        if (this.devices.existDevice(deviceSerial) == true) {
-            const device = (await this.getDevices())[deviceSerial];
+        if (this.devices.existDevice(deviceSerial) === true) {
+            const device = await this.devices.getDevice(deviceSerial);
             if (device.isPanAndTiltCamera()) {
-                if (device.isEnabled() == value) {
+                if (device.isEnabled() === value) {
                     return `{"success":true,"info":"The value for privacy mode on device ${deviceSerial} already set."}`;
                 }
                 else {
-                    await this.devices.setDeviceProperty(deviceSerial, http_1.PropertyName.DeviceEnabled, value);
-                    await (0, utils_2.sleep)(2500);
-                    await this.updateDeviceData();
-                    await this.httpService.refreshStationData();
-                    //await this.httpService.refreshDeviceData();
-                    await this.devices.loadDevices();
-                    if ((await this.getDevices())[deviceSerial].isEnabled() == value) {
-                        return `{"success":true,"enabled":${value}}`;
+                    try {
+                        const res = await (0, utils_4.waitForDeviceEvent)(await this.devices.getDevice(deviceSerial), "property changed", 10000, this.devices, http_1.PropertyName.DeviceEnabled, value).then(() => {
+                            return true;
+                        }, (value) => {
+                            if (typeof value === "boolean") {
+                                return false;
+                            }
+                            else {
+                                throw value;
+                            }
+                        });
+                        return `{"success":${res},"enabled":${res === true ? value : !value}}`;
                     }
-                    else {
-                        return `{"success":false,"enabled":${!value}}`;
+                    catch (error) {
+                        return `{"success":false,"reason":"${JSON.stringify(error)}"}`;
                     }
                 }
             }
@@ -1728,6 +1739,35 @@ class EufySecurityApi {
         }
     }
     /**
+     * Refresh the given type of data from the cloud.
+     * @param target The type of the data to refresh.
+     * @returns A JSON string with the result.
+     */
+    async refreshCloudDeviceData(target) {
+        let json = {};
+        try {
+            let res = await this.refreshData(target);
+            logging_1.rootAddonLogger.info(`res: ${JSON.stringify(res)}`);
+            if (target === "all") {
+                if (res.get("devices") === true && res.get("houses") === true && res.get("stations") === true) {
+                    json = { "success": true, "data": (0, utils_4.convertMapToObject)(res) };
+                }
+                else {
+                    json = { "success": false, "data": (0, utils_4.convertMapToObject)(res) };
+                }
+            }
+            else {
+                json = { "success": res.get(target), "data": (0, utils_4.convertMapToObject)(res) };
+            }
+        }
+        catch (e) {
+            logging_1.rootAddonLogger.error(`Error occured at refreshCloudDeviceData: ${e.message}.`);
+            this.setLastConnectionInfo(false);
+            json = { "success": false, "reason": e.message.replaceAll(`"`, `'`) };
+        }
+        return JSON.stringify(json);
+    }
+    /**
      * Forces a new p2p connection to a station specified by serial.
      * @param stationSerial The serial of the station.
      * @returns A JSON string with the result.
@@ -1735,25 +1775,105 @@ class EufySecurityApi {
     async connectStation(stationSerial) {
         let json = {};
         if (this.stations) {
-            await this.httpService.refreshStationData();
             let station = await this.stations.getStation(stationSerial);
             if (station) {
-                if (station.isConnected() === true) {
+                if (station.isConnected()) {
                     json = { "success": false, "message": "P2P connection to station already established." };
                 }
                 else if (station.isP2PConnectableDevice()) {
-                    if (await (this.devices.hasDeviceBattery(stationSerial))) {
-                        station.setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+                    try {
+                        let connected = false;
+                        const res = await this.stations.connectStation(station);
+                        connected = station.isConnected();
+                        json = { "success": res, "connected": connected };
                     }
-                    else {
-                        station.setConnectionType(this.getP2PConnectionType());
+                    catch (error) {
+                        json = { "success": false, "message": error.message };
                     }
-                    await station.connect();
-                    await (0, utils_2.sleep)(500);
-                    await this.httpService.refreshStationData();
-                    station = await this.stations.getStation(stationSerial);
-                    const connected = station.isConnected();
-                    json = { "success": connected, "conneceted": connected };
+                }
+            }
+            else {
+                json = { "success": false, "message": "The specified station could not be found." };
+            }
+        }
+        else {
+            json = { "success": false, "message": "No connection to eufy." };
+        }
+        return JSON.stringify(json);
+    }
+    /**
+     * Forces to disconnect the p2p connection to a station specified by serial.
+     * @param stationSerial The serial of the station.
+     * @returns A JSON string with the result.
+     */
+    async disconnectStation(stationSerial) {
+        let json = {};
+        if (this.stations) {
+            let station = await this.stations.getStation(stationSerial);
+            if (station) {
+                if (!station.isConnected()) {
+                    json = { "success": false, "message": "No P2P connection to station established." };
+                }
+                else {
+                    try {
+                        let connected = false;
+                        const res = await this.stations.disconnectStation(station);
+                        connected = station.isConnected();
+                        json = { "success": res, "disconnected": !connected };
+                    }
+                    catch (error) {
+                        json = { "success": false, "message": error.message };
+                    }
+                }
+            }
+            else {
+                json = { "success": false, "message": "The specified station could not be found." };
+            }
+        }
+        else {
+            json = { "success": false, "message": "No connection to eufy." };
+        }
+        return JSON.stringify(json);
+    }
+    /**
+     * Forces to reconnect the p2p connection to a station specified by serial.
+     * @param stationSerial The serial of the station.
+     * @returns A JSON string with the result.
+     */
+    async reconnectStation(stationSerial) {
+        let json = {};
+        if (this.stations) {
+            let station = await this.stations.getStation(stationSerial);
+            if (station) {
+                if (!station.isP2PConnectableDevice()) {
+                    json = { "success": false, "message": "Not a P2P connectable device." };
+                }
+                else {
+                    let connected = station.isConnected();
+                    let res = false;
+                    if (connected === true) {
+                        try {
+                            res = await this.stations.disconnectStation(station);
+                        }
+                        catch (error) {
+                            logging_1.rootAddonLogger.error(`Error during closing p2p connection to station ${stationSerial}. Got value '${JSON.stringify(error)}'.`);
+                            json = { "success": false, "message": `Error during closing p2p connection to station ${stationSerial}. Error: '${JSON.stringify(error)}'.` };
+                            return JSON.stringify(json);
+                        }
+                        await (0, utils_2.sleep)(1000);
+                    }
+                    if (connected === false) {
+                        try {
+                            await (0, utils_2.sleep)(1000);
+                            res = await this.stations.connectStation(station);
+                        }
+                        catch (error) {
+                            logging_1.rootAddonLogger.error(`Error during reconnecting p2p connection to station ${stationSerial}. Got value '${JSON.stringify(error)}'.`);
+                            json = { "success": false, "message": `Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(error)}'.` };
+                            return JSON.stringify(json);
+                        }
+                    }
+                    json = { "success": res, "connected": connected };
                 }
             }
             else {
@@ -1778,7 +1898,7 @@ class EufySecurityApi {
      * @param timestamp The timestamp to set.
      */
     updateStationGuardModeChangeTimeSystemVariable(stationSerial, timestamp) {
-        if (this.getStateUpdateEventActive() == true && timestamp !== undefined) {
+        if (this.getStateUpdateEventActive() === true && timestamp !== undefined) {
             this.setSystemVariableTime("eufyLastModeChangeTime" + stationSerial, new Date(timestamp));
         }
         else {
@@ -1790,7 +1910,7 @@ class EufySecurityApi {
      * Update the global station guard mode change time systemvariable.
      */
     async updateGlobalStationGuardModeChangeTimeSystemVariable() {
-        const stations = await this.getStations();
+        const stations = await this.stations.getStations();
         let station;
         let tempModeChange;
         let lastModeChange = new Date(1970, 1, 1);
@@ -1809,7 +1929,7 @@ class EufySecurityApi {
      * @param timestamp The timestamp to set.
      */
     updateCameraEventTimeSystemVariable(deviceSerial, timestamp) {
-        if (this.getApiUsePushService() == true && timestamp !== undefined) {
+        if (this.getApiUsePushService() === true && timestamp !== undefined) {
             this.setSystemVariableTime("eufyCameraVideoTime" + deviceSerial, new Date(timestamp));
         }
         else {
@@ -1844,7 +1964,7 @@ class EufySecurityApi {
         this.config.setToken(token);
         this.config.setTokenExpire(tokenExpire);
         const res = this.config.writeCurrentConfig();
-        if (res == "saved" || res == "ok") {
+        if (res === "saved" || res === "ok") {
             json = `{"success":true,"dataRemoved":true}`;
         }
         else {
@@ -1907,7 +2027,7 @@ class EufySecurityApi {
     async getLocalStaticUdpPorts() {
         const json = [];
         if (this.stations) {
-            const stations = await this.getStations();
+            const stations = await this.stations.getStations();
             if (stations) {
                 for (const stationSerial in stations) {
                     json.push({ "stationSerial": stationSerial, "port": this.config.getLocalStaticUdpPortPerStation(stationSerial) });
@@ -1922,7 +2042,7 @@ class EufySecurityApi {
      * @returns The UDP port for the connection to the station.
      */
     getLocalStaticUdpPortForStation(stationSerial) {
-        if (this.getLocalStaticUdpPortsActive() == true) {
+        if (this.getLocalStaticUdpPortsActive() === true) {
             try {
                 return this.config.getLocalStaticUdpPortPerStation(stationSerial);
             }
@@ -2030,10 +2150,10 @@ class EufySecurityApi {
     async setConfig(eMail, password, country, language, trustedDeviceName, httpActive, httpPort, httpsActive, httpsPort, httpsKeyFile, httpsCertFile, acceptInvitations, houseId, connectionTypeP2p, localStaticUdpPortsActive, localStaticUdpPorts, systemVariableActive, stateUpdateEventActive, stateUpdateIntervallActive, stateUpdateIntervallTimespan, pushServiceActive, secureApiAccessSidActive, logLevelAddon, logLevelMain, logLevelHttp, logLevelP2p, logLevelPush, logLevelMqtt) {
         let serviceRestart = false;
         let taskSetupStateNeeded = false;
-        if (this.config.getEmailAddress() != eMail || this.config.getPassword() != password || this.config.getTrustedDeviceName() != trustedDeviceName || this.config.getHttpActive() != httpActive || this.config.getHttpPort() != httpPort || this.config.getHttpsActive() != httpsActive || this.config.getHttpsPort() != httpsPort || this.config.getHttpsPKeyFile() != httpsKeyFile || this.config.getHttpsCertFile() != httpsCertFile || this.config.getHouseId() != houseId || this.config.getConnectionType() != connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() != localStaticUdpPortsActive || this.config.getStateUpdateEventActive() != stateUpdateEventActive) {
+        if (this.config.getEmailAddress() !== eMail || this.config.getPassword() !== password || this.config.getTrustedDeviceName() !== trustedDeviceName || this.config.getHttpActive() !== httpActive || this.config.getHttpPort() !== httpPort || this.config.getHttpsActive() !== httpsActive || this.config.getHttpsPort() !== httpsPort || this.config.getHttpsPKeyFile() !== httpsKeyFile || this.config.getHttpsCertFile() !== httpsCertFile || this.config.getHouseId() !== houseId || this.config.getConnectionType() !== connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() !== localStaticUdpPortsActive || this.config.getStateUpdateEventActive() !== stateUpdateEventActive) {
             serviceRestart = true;
         }
-        if (this.config.getEmailAddress() != eMail) {
+        if (this.config.getEmailAddress() !== eMail) {
             this.setTokenData("", 0);
         }
         this.config.setEmailAddress(eMail);
@@ -2052,16 +2172,16 @@ class EufySecurityApi {
         this.config.setConnectionType(connectionTypeP2p);
         if (localStaticUdpPorts !== undefined) {
             this.config.setLocalStaticUdpPortsActive(localStaticUdpPortsActive);
-            if (this.config.setLocalStaticUdpPorts(localStaticUdpPorts) == true) {
+            if (this.config.setLocalStaticUdpPorts(localStaticUdpPorts) === true) {
                 serviceRestart = true;
             }
         }
         else {
             if (this.stations) {
-                const stations = await this.getStations();
+                const stations = await this.stations.getStations();
                 if (stations) {
                     for (const stationSerial in stations) {
-                        if (this.config.setLocalStaticUdpPortPerStation(stationSerial, null) == true) {
+                        if (this.config.setLocalStaticUdpPortPerStation(stationSerial, null) === true) {
                             serviceRestart = true;
                         }
                     }
@@ -2071,18 +2191,18 @@ class EufySecurityApi {
         }
         this.config.setSystemVariableActive(systemVariableActive);
         this.config.setStateUpdateEventActive(stateUpdateEventActive);
-        if (this.config.getStateUpdateIntervallActive() == true && stateUpdateIntervallActive == false) {
+        if (this.config.getStateUpdateIntervallActive() === true && stateUpdateIntervallActive === false) {
             this.clearScheduledTask(this.taskUpdateState, "getState");
         }
-        else if (this.config.getStateUpdateIntervallActive() != stateUpdateIntervallActive) {
+        else if (this.config.getStateUpdateIntervallActive() !== stateUpdateIntervallActive) {
             taskSetupStateNeeded = true;
         }
         this.config.setStateUpdateIntervallActive(stateUpdateIntervallActive);
-        if (this.config.getStateUpdateIntervallTimespan() != stateUpdateIntervallTimespan) {
+        if (this.config.getStateUpdateIntervallTimespan() !== stateUpdateIntervallTimespan) {
             taskSetupStateNeeded = true;
         }
         this.config.setStateUpdateIntervallTimespan(stateUpdateIntervallTimespan);
-        if (taskSetupStateNeeded == true) {
+        if (taskSetupStateNeeded === true) {
             this.setupScheduledTask(this.taskUpdateState, "getState");
         }
         this.config.setPushServiceActive(pushServiceActive);
@@ -2094,10 +2214,10 @@ class EufySecurityApi {
         this.config.setLogLevelPush(logLevelPush);
         this.config.setLogLevelMqtt(logLevelMqtt);
         const res = this.config.writeCurrentConfig();
-        if (res == "saved") {
+        if (res === "saved") {
             return `{"success":true,"serviceRestart":${serviceRestart},"message":"Config saved."}`;
         }
-        else if (res == "ok") {
+        else if (res === "ok") {
             return `{"success":true,"serviceRestart":${serviceRestart},"message":"No change in config. Write config not neccesary."}`;
         }
         else {
@@ -2109,10 +2229,10 @@ class EufySecurityApi {
      */
     writeConfig() {
         const res = this.config.writeCurrentConfig();
-        if (res == "saved") {
+        if (res === "saved") {
             return `{"success":true,"message":"Config saved."}`;
         }
-        else if (res == "ok") {
+        else if (res === "ok") {
             return `{"success":true,"message":"No new values in config. Write config not neccesary."}`;
         }
         else {
@@ -2137,13 +2257,12 @@ class EufySecurityApi {
         }
         else {
             try {
-                if (this.config.getSystemVariableActive() == true) {
+                if (this.config.getSystemVariableActive() === true) {
                     if (this.stations && this.devices) {
-                        await this.loadData();
                         let station;
                         let device;
-                        const stations = await this.getStations();
-                        const devices = await this.getDevices();
+                        const stations = await this.stations.getStations();
+                        const devices = await this.devices.getDevices();
                         const commonSystemVariablesName = ["eufyCurrentState", "eufyLastConnectionResult", "eufyLastConnectionTime", "eufyLastStatusUpdateTime", "eufyLastModeChangeTime"];
                         const commonSystemVariablesInfo = ["aktueller Modus des eufy Systems", "Ergebnis der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Kommunikation mit eufy", "Zeitpunkt der letzten Aktualisierung der eufy Links", "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus", "Zeitpunkt des letzten Moduswechsels"];
                         json = { "success": true, "data": [] };
@@ -2212,7 +2331,7 @@ class EufySecurityApi {
      */
     async createSystemVariable(variableName, variableInfo) {
         const res = await this.homematicApi.createSystemVariable("localhost", false, variableName, variableInfo);
-        if (res !== undefined && res == variableName) {
+        if (res !== undefined && res === variableName) {
             return `{"success":true,"message":"System variable created."}`;
         }
         else if (res === undefined) {
@@ -2244,7 +2363,7 @@ class EufySecurityApi {
      */
     setLastConnectionInfo(success) {
         const nowDateTime = new Date();
-        if (success == true) {
+        if (success === true) {
             this.setSystemVariableString("eufyLastConnectionResult", "erfolgreich");
             this.setSystemVariableTime("eufyLastConnectionTime", nowDateTime);
         }
@@ -2267,7 +2386,7 @@ class EufySecurityApi {
      * @param newValue The value to set.
      */
     setSystemVariableString(systemVariable, newValue) {
-        if (this.config.getSystemVariableActive() == true) {
+        if (this.config.getSystemVariableActive() === true) {
             this.homematicApi.setSystemVariable("localhost", false, systemVariable, newValue);
         }
     }
@@ -2277,8 +2396,8 @@ class EufySecurityApi {
      * @param useHttps true if use https, otherwise false.
      * @param command The command to be executed.
      */
-    async sendInteractionCommand(hostName, useHttps, command) {
-        await this.homematicApi.sendInteractionCommand(hostName, useHttps, command);
+    async sendInteractionCommand(hostName, useHttps, user, password, command) {
+        return await this.homematicApi.sendInteractionCommand(hostName, useHttps, user, password, command);
     }
     /**
      * Set the interaction.
@@ -2288,11 +2407,11 @@ class EufySecurityApi {
      * @param useHttps true if use https, otherwise false.
      * @param command The command to be executed.
      */
-    setInteraction(serialNumber, eventInteractionType, target, useHttps, command) {
+    setInteraction(serialNumber, eventInteractionType, target, useHttps, command, user, password) {
         let json = {};
         try {
             if (serialNumber !== "" && eventInteractionType >= 0 && eventInteractionType <= 12 && target !== "" && command !== "") {
-                const res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, { target: target, useHttps: useHttps, command: command });
+                const res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, { target: target, useHttps: useHttps, user, password, command: command });
                 if (res === true) {
                     json = { "success": true, "data": `Interaction has been added successfully.` };
                 }
@@ -2319,15 +2438,28 @@ class EufySecurityApi {
         try {
             const deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
             if (deviceInteraction !== null) {
-                await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.command);
-                json = { "success": true, "data": `Sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.` };
+                const res = await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.user, deviceInteraction.password, deviceInteraction.command);
+                if (res === 200) {
+                    json = { "success": true, "data": `Successfully sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status": res };
+                }
+                else {
+                    json = { "success": false, "reason": `Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status": res };
+                }
             }
             else {
-                json = { "success": false, "data": `No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.` };
+                json = { "success": false, "reason": `No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.` };
             }
         }
         catch (error) {
-            json = { "success": false, "reason": `${error.message}` };
+            if (error.status) {
+                json = { "success": false, "reason": `Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status": error.status };
+            }
+            else if (error.code) {
+                json = { "success": false, "reason": `Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "code": error.code };
+            }
+            else {
+                json = { "success": false, "reason": `${error.message}` };
+            }
         }
         return JSON.stringify(json);
     }
@@ -2469,12 +2601,6 @@ class EufySecurityApi {
      */
     setupScheduledTasks() {
         logging_1.rootAddonLogger.info(`Setting up scheduled tasks...`);
-        if (this.taskUpdateDeviceInfo) {
-            logging_1.rootAddonLogger.info(`  updateDeviceData already scheduled, remove scheduling...`);
-            clearInterval(this.taskUpdateDeviceInfo);
-        }
-        this.taskUpdateDeviceInfo = setInterval(async () => { await this.updateDeviceData(); }, (this.config.getUpdateDeviceDataIntervall() * 60 * 1000));
-        logging_1.rootAddonLogger.info(`  updateDeviceData scheduled (runs every ${this.config.getUpdateDeviceDataIntervall()} minutes).`);
         if (this.config.getStateUpdateIntervallActive()) {
             if (this.taskUpdateState) {
                 logging_1.rootAddonLogger.info(`  getState already scheduled, remove scheduling...`);
@@ -2484,7 +2610,8 @@ class EufySecurityApi {
             logging_1.rootAddonLogger.info(`  getState scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
         }
         else {
-            logging_1.rootAddonLogger.info(`  scheduling getState disabled in settings${this.config.getStateUpdateEventActive() == true ? " (state changes will be received by event)" : ""}.`);
+            clearInterval(this.taskUpdateState);
+            logging_1.rootAddonLogger.info(`  scheduling getState disabled in settings${this.config.getStateUpdateEventActive() === true ? " (state changes will be received by event)" : ""}.`);
         }
         logging_1.rootAddonLogger.info(`...done setting up scheduled tasks.`);
     }
@@ -2492,10 +2619,6 @@ class EufySecurityApi {
      * Clear all scheduled tasks.
      */
     clearScheduledTasks() {
-        if (this.taskUpdateDeviceInfo) {
-            logging_1.rootAddonLogger.info(`Remove scheduling for updateDeviceDataData.`);
-            clearInterval(this.taskUpdateDeviceInfo);
-        }
         if (this.taskUpdateState) {
             logging_1.rootAddonLogger.info(`Remove scheduling for getState.`);
             clearInterval(this.taskUpdateState);
@@ -2511,19 +2634,12 @@ class EufySecurityApi {
         if (task) {
             logging_1.rootAddonLogger.info(`Remove scheduling for ${name}.`);
             switch (name) {
-                case "updateDeviceData":
-                    clearInterval(this.taskUpdateDeviceInfo);
-                    break;
                 case "getState":
                     clearInterval(this.taskUpdateState);
                     break;
             }
         }
         switch (name) {
-            case "updateDeviceData":
-                task = setInterval(async () => { await this.updateDeviceData(); }, (this.config.getUpdateDeviceDataIntervall() * 60 * 1000));
-                logging_1.rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getUpdateDeviceDataIntervall()} minutes).`);
-                break;
             case "getState":
                 task = setInterval(async () => { await this.setScheduleState(); }, (this.config.getStateUpdateIntervallTimespan() * 60 * 1000));
                 logging_1.rootAddonLogger.info(`${name} scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
@@ -2567,7 +2683,7 @@ class EufySecurityApi {
         let json = {};
         json = { "success": true, "data": { "serviceState": this.getServiceState(), "isConnectedToEufy": this.isConnected(), "stations": [] } };
         if (this.stations) {
-            const stations = await this.getStations();
+            const stations = await this.stations.getStations();
             for (const stationSerial in stations) {
                 const station = stations[stationSerial];
                 json.data.stations.push({ "stationSerial": station.getSerial(), "stationName": station.getName(), "isP2pConnected": station.isConnected(), "isEnergySavingDevice": station.isEnergySavingDevice() });
@@ -2639,14 +2755,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.1.0";
+        return "3.1.1";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "3.1.0";
+        return "3.1.1";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

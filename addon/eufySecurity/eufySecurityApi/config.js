@@ -514,12 +514,12 @@ class Config {
                 }
             }
         }*/
-        if (this.configJson.apiConfig.updateCloudInfoIntervall < 10 || this.configJson.apiConfig.updateCloudInfoIntervall > 240) {
+        if (this.configJson.apiConfig.updateCloudInfoIntervall !== 0 && (this.configJson.apiConfig.updateCloudInfoIntervall < 10 || this.configJson.apiConfig.updateCloudInfoIntervall > 240)) {
             logging_1.rootConfLogger.info(`Set updateCloudInfoIntervall to default value "10"`);
             this.configJson.apiConfig.updateCloudInfoIntervall = 10;
             updated = true;
         }
-        if (this.configJson.apiConfig.updateDeviceDataIntervall < 10 || this.configJson.apiConfig.updateDeviceDataIntervall > 240) {
+        if (this.configJson.apiConfig.updateDeviceDataIntervall !== 0 && (this.configJson.apiConfig.updateDeviceDataIntervall < 10 || this.configJson.apiConfig.updateDeviceDataIntervall > 240)) {
             logging_1.rootConfLogger.info(`Set updateDeviceDataIntervall to default value "10"`);
             this.configJson.apiConfig.updateDeviceDataIntervall = 10;
             updated = true;
@@ -1172,6 +1172,7 @@ class Config {
     setLogLevelAddon(logLevel) {
         if (this.configJson.logConfig.logLevelAddon !== logLevel) {
             this.configJson.logConfig.logLevelAddon = logLevel;
+            (0, logging_1.setLoggingLevel)("addon", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1192,7 +1193,8 @@ class Config {
      */
     setLogLevelMain(logLevel) {
         if (this.configJson.logConfig.logLevelMain !== logLevel) {
-            this.configJson.logConfig.logLevelmain = logLevel;
+            this.configJson.logConfig.logLevelMain = logLevel;
+            (0, logging_1.setLoggingLevel)("main", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1214,6 +1216,7 @@ class Config {
     setLogLevelHttp(logLevel) {
         if (this.configJson.logConfig.logLevelHttp !== logLevel) {
             this.configJson.logConfig.logLevelHttp = logLevel;
+            (0, logging_1.setLoggingLevel)("http", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1235,6 +1238,7 @@ class Config {
     setLogLevelP2p(logLevel) {
         if (this.configJson.logConfig.logLevelP2p !== logLevel) {
             this.configJson.logConfig.logLevelP2p = logLevel;
+            (0, logging_1.setLoggingLevel)("p2p", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1256,6 +1260,7 @@ class Config {
     setLogLevelPush(logLevel) {
         if (this.configJson.logConfig.logLevelPush !== logLevel) {
             this.configJson.logConfig.logLevelPush = logLevel;
+            (0, logging_1.setLoggingLevel)("push", logLevel);
             this.hasChanged = true;
         }
     }
@@ -1277,6 +1282,7 @@ class Config {
     setLogLevelMqtt(logLevel) {
         if (this.configJson.logConfig.logLevelMqtt !== logLevel) {
             this.configJson.logConfig.logLevelMqtt = logLevel;
+            (0, logging_1.setLoggingLevel)("mqtt", logLevel);
             this.hasChanged = true;
         }
     }

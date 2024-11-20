@@ -14,6 +14,8 @@ const utils_1 = require("./utils/utils");
  */
 class HomematicApi {
     api;
+    portHttp = 8181;
+    portHttps = 8181;
     /**
      * Create the api object.
      */
@@ -36,7 +38,7 @@ class HomematicApi {
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      */
     getUrl(hostName, useHttps) {
-        return `http${useHttps === true ? "s" : ""}://${hostName}:8181/esapi.exe`;
+        return `http${useHttps === true ? "s" : ""}://${hostName}:${useHttps === true ? this.portHttp : this.portHttps}/esapi.exe`;
     }
     /**
      * Get the vaulue of a given system variable.
@@ -193,15 +195,21 @@ class HomematicApi {
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param command The command to be executed.
      */
-    async sendInteractionCommand(hostName, useHttps, command) {
+    async sendInteractionCommand(hostName, useHttps, user, password, command) {
         const requestData = command;
-        const requestConfig = { headers: { "Content-Type": "text/plain" } };
+        let headers = { "Content-Type": "text/plain" };
+        if (hostName !== "localhost" && user && password) {
+            headers.Authorization = `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`;
+        }
+        const requestConfig = { "headers": headers };
         try {
-            await this.request(hostName, useHttps, requestData, requestConfig);
+            const res = await this.request(hostName, useHttps, requestData, requestConfig);
+            return res.status;
         }
         catch (error) {
             logging_1.rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${error.code}; message: ${error.message}`);
             logging_1.rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(error));
+            throw error;
         }
     }
     /**
@@ -229,7 +237,7 @@ class HomematicApi {
      * Returns the version info of the homematic api.
      */
     getHomematicApiVersion() {
-        return "3.0.1";
+        return "3.1.0";
     }
 }
 exports.HomematicApi = HomematicApi;

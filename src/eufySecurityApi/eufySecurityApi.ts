@@ -2910,7 +2910,7 @@ export class EufySecurityApi {
      * @returns The version of this API.
      */
     public getEufySecurityApiVersion(): string {
-        return "3.1.1-rc1";
+        return "3.1.1";
     }
 
     /**

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDateTimeFromImageFilePath = exports.loadEventImage = exports.loadImageOverP2P = exports.getWaitSeconds = exports.isSmartLockNotification = exports.switchSmartLockNotification = exports.getLockEventType = exports.getFloodLightT8425Notification = exports.isFloodlightT8425NotitficationEnabled = exports.getIndoorNotification = exports.isIndoorNotitficationEnabled = exports.getT8170DetectionMode = exports.isT8170DetectionModeEnabled = exports.decryptTrackerData = exports.isPrioritySourceType = exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexStringScheduleToSchedule = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.ParsePayload = exports.WritePayload = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
+exports.getDateTimeFromImageFilePath = exports.loadEventImage = exports.loadImageOverP2P = exports.getWaitSeconds = exports.isSmartLockNotification = exports.switchSmartLockNotification = exports.getLockEventType = exports.getFloodLightT8425Notification = exports.isFloodlightT8425NotitficationEnabled = exports.getIndoorNotification = exports.isIndoorNotitficationEnabled = exports.getIndoorS350DetectionMode = exports.isIndoorS350DetectionModeEnabled = exports.getT8170DetectionMode = exports.isT8170DetectionModeEnabled = exports.decryptTrackerData = exports.isPrioritySourceType = exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexStringScheduleToSchedule = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.ParsePayload = exports.WritePayload = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
 const crypto_1 = require("crypto");
 const const_1 = require("./const");
 const md5_1 = __importDefault(require("crypto-js/md5"));
@@ -635,6 +635,8 @@ const isT8170DetectionModeEnabled = function (value, type) {
 exports.isT8170DetectionModeEnabled = isT8170DetectionModeEnabled;
 const getT8170DetectionMode = function (value, type, enable) {
     let result = 0;
+    if ((Object.values(types_1.T8170DetectionTypes).includes(type) && Object.values(types_1.T8170DetectionTypes).includes(value)) && !enable)
+        return value;
     if (!enable) {
         result = type ^ value;
     }
@@ -644,6 +646,23 @@ const getT8170DetectionMode = function (value, type, enable) {
     return result;
 };
 exports.getT8170DetectionMode = getT8170DetectionMode;
+const isIndoorS350DetectionModeEnabled = function (value, type) {
+    return (type & value) == type;
+};
+exports.isIndoorS350DetectionModeEnabled = isIndoorS350DetectionModeEnabled;
+const getIndoorS350DetectionMode = function (value, type, enable) {
+    let result = 0;
+    if ((Object.values(types_1.IndoorS350DetectionTypes).includes(type) && Object.values(types_1.IndoorS350DetectionTypes).includes(value)) && !enable)
+        return value;
+    if (!enable) {
+        result = type ^ value;
+    }
+    else {
+        result = type | value;
+    }
+    return result;
+};
+exports.getIndoorS350DetectionMode = getIndoorS350DetectionMode;
 const isIndoorNotitficationEnabled = function (value, type) {
     return (type & value) == type;
 };

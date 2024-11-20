@@ -24,7 +24,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     devices = {};
     loadingEmitter = new events_1.default();
     devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
-    deviceSnoozeTimeout = {};
+    deviceSnoozeTimeout = new Map();
     errorImage = undefined;
     defaultImage = undefined;
     /**
@@ -208,11 +208,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 devices.forEach((device) => {
                     this.api.getStation(device.getStationSerial()).then((station) => {
                         if (!station.isConnected() && station.isP2PConnectableDevice()) {
-                            if (device.hasBattery()) {
+                            if (device.isSoloCameras() && station.getConnectionType() !== p2p_1.P2PConnectionType.QUICKEST) {
                                 station.setConnectionType(p2p_1.P2PConnectionType.QUICKEST);
+                                logging_1.rootAddonLogger.debug(`Detected solo device '${station.getSerial()}': connect with connection type ${p2p_1.P2PConnectionType[station.getConnectionType()]}.`);
                             }
-                            else {
+                            else if (!device.isSoloCameras() && station.getConnectionType() !== this.api.getP2PConnectionType()) {
                                 station.setConnectionType(this.api.getP2PConnectionType());
+                                logging_1.rootAddonLogger.debug(`Set p2p connection type for device ${station.getSerial()} to value from settings (${p2p_1.P2PConnectionType[station.getConnectionType()]}).`);
                             }
                             logging_1.rootAddonLogger.debug(`Initiate first station connection to get data over p2p`, { stationSN: station.getSerial() });
                             station.connect();
@@ -354,8 +356,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     close() {
         Object.keys(this.deviceSnoozeTimeout).forEach(device_sn => {
-            clearTimeout(this.deviceSnoozeTimeout[device_sn]);
-            delete this.deviceSnoozeTimeout[device_sn];
+            clearTimeout(this.deviceSnoozeTimeout.get(device_sn));
+            this.deviceSnoozeTimeout.delete(device_sn);
         });
     }
     /**
@@ -436,12 +438,24 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         return res;
     }
     /**
+     * Checks if the device a solo device.
+     * @param deviceSerial The deviceSerial of the device.
+     * @returns True if device is a solo device, otherwise false.
+     */
+    async isSoloDevice(deviceSerial) {
+        let res = this.existDevice(deviceSerial);
+        if (res) {
+            res = (await (this.getDevice(deviceSerial))).isSoloCameras();
+        }
+        return res;
+    }
+    /**
      * Snoozes a given device for a given time.
      * @param device The device as object.
      * @param timeoutMS The snooze time in ms.
      */
     setDeviceSnooze(device, timeoutMS) {
-        this.deviceSnoozeTimeout[device.getSerial()] = setTimeout(() => {
+        this.deviceSnoozeTimeout.set(device.getSerial(), setTimeout(() => {
             device.updateProperty(http_1.PropertyName.DeviceSnooze, false);
             device.updateProperty(http_1.PropertyName.DeviceSnoozeTime, 0);
             device.updateProperty(http_1.PropertyName.DeviceSnoozeStartTime, 0);
@@ -454,8 +468,8 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             if (device.hasProperty(http_1.PropertyName.DeviceSnoozeChime)) {
                 device.updateProperty(http_1.PropertyName.DeviceSnoozeChime, false);
             }
-            delete this.deviceSnoozeTimeout[device.getSerial()];
-        }, timeoutMS);
+            this.deviceSnoozeTimeout.delete(device.getSerial());
+        }, timeoutMS));
     }
     /**
      * Add a given event listener for a given device.
@@ -806,7 +820,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.CRYING);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -827,7 +841,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.SOUND);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -848,7 +862,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PET);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -869,7 +883,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.VEHICLE);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -890,7 +904,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -912,7 +926,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -933,7 +947,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         try {
             const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RING);
             if (deviceEventInteraction !== null) {
-                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
             }
         }
         catch { }
@@ -953,6 +967,24 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onOpen(device, state) {
         logging_1.rootAddonLogger.debug(`Event "Open": device: ${device.getSerial()} | state: ${state}`);
+        if (state === true) {
+            try {
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.OPEN);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
+        if (state === false) {
+            try {
+                const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.CLOSE);
+                if (deviceEventInteraction !== null) {
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                }
+            }
+            catch { }
+        }
     }
     /**
      * The action to be one when event Ready is fired.
@@ -1018,7 +1050,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RADAR_MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -1088,7 +1120,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.STRANGER_PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -1108,7 +1140,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -1128,7 +1160,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_LICK);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -1148,7 +1180,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_POOP);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
             catch { }
@@ -1749,15 +1781,23 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 else if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, http_1.T8170DetectionTypes.HUMAN_DETECTION, value);
                 }
-                else if (device.isSoloCameraC210()) {
+                else if (device.isSoloCameras()) {
                     station.setMotionDetectionTypeHB3(device, http_1.SoloCameraDetectionTypes.HUMAN_DETECTION, value);
+                }
+                else if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.IndoorS350DetectionTypes.HUMAN_DETECTION, value);
                 }
                 else {
                     station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.HUMAN_DETECTION, value);
                 }
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypePet:
-                station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.PET_DETECTION, value);
+                if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.IndoorS350DetectionTypes.PET_DETECTION, value);
+                }
+                else {
+                    station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.PET_DETECTION, value);
+                }
                 break;
             case http_1.PropertyName.DeviceMotionDetectionTypeVehicle:
                 if (device.isOutdoorPanAndTiltCamera()) {
@@ -1774,13 +1814,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 else if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, http_1.T8170DetectionTypes.ALL_OTHER_MOTION, value);
                 }
-                else if (device.isSoloCameraC210()) {
+                else if (device.isSoloCameras()) {
                     station.setMotionDetectionTypeHB3(device, http_1.SoloCameraDetectionTypes.ALL_OTHER_MOTION, value);
+                }
+                else if (device.isIndoorPanAndTiltCameraS350()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.IndoorS350DetectionTypes.ALL_OTHER_MOTION, value);
                 }
                 else {
                     station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);
                 }
-                break;
             case http_1.PropertyName.DeviceLightSettingsManualLightingActiveMode:
                 station.setLightSettingsManualLightingActiveMode(device, value);
                 break;
