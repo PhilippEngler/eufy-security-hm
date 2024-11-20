@@ -26,7 +26,11 @@ proc getServiceState {} {
 }
 
 proc getServiceVersion {} {
-    return [exec cat ../VERSION]
+    if {[file exist ../VERSION]} {
+        return [exec cat ../VERSION]
+    } else {
+        return -1
+    }
 }
 
 # returns the state of the service after the command: 0 for stopped, 1 for running and -1 for unknown

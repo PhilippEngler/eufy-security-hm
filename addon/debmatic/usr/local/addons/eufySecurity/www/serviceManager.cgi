@@ -16,6 +16,18 @@ puts "Content-Type: application/json; charset=utf-8"
 puts ""
 
 switch $queryStringParams(action) {
+	getServiceVersion {
+		if {[array size queryStringParams] == 1} {
+			set res [getServiceVersion]
+			if {$res != -1} {
+				puts \{"success":true,"version":"$res"\}
+				return
+			} else {
+				puts \{"success":false,"reason":"The\ file\ does\ not\ exists."\}
+				return
+			}
+		}
+	}
 	getServiceState {
 		if {[array size queryStringParams] == 1} {
 			set res [getServiceState]
