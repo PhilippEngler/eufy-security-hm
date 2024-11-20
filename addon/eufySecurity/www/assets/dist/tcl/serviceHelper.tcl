@@ -9,31 +9,24 @@ proc getServiceState {} {
     set servicePath [getServicePath]
 
     if {[file exist $servicePath]} {
-        catch {
-            set serviceState [exec $servicePath status]
-        } serviceState
-        regsub {\nchild\ process\ exited\ abnormally$} $serviceState {} serviceState
-        if {[string match "Running" $serviceState]} {
-            return 1
-        } elseif {[string match "Stopped" $serviceState]} {
-            return 0
-        } else {
-            return -1
-        }
+        set serviceState [catch {exec $servicePath status} result]
+        return [expr {!$serviceState}]
     } else {
-        set serviceState ""
-        catch {
-            set serviceState [exec systemctl status eufySecurity.service]
-        } serviceState
-        regsub {\nchild\ process\ exited\ abnormally$} $serviceState {} serviceState
-        if {[ string match "*Started eufySecurity.service - eufySecurity." $serviceState ]} {
+        set activeState [exec systemctl show -p ActiveState --value eufySecurity.service]
+        set subState [exec systemctl show -p SubState --value eufySecurity.service]
+        
+        if {$activeState == "active" && $subState == "running"} {
             return 1
-        } elseif {[string match "*s CPU time." $serviceState]} {
+        } elseif {$activeState == "inactive"} {
             return 0
         } else {
             return -1
         }
     }
+}
+
+proc getServiceVersion {} {
+    return [exec cat ../VERSION]
 }
 
 # returns the state of the service after the command: 0 for stopped, 1 for running and -1 for unknown
