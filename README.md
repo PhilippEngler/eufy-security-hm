@@ -31,6 +31,7 @@ Most of the eufy security devices should be compatible, but there might be issue
 * Doorbell: Video Doorbell 2K (T8210), Video Doorbell Dual (T8213) and Video Doorbell Dual E340 (T8214)<sup>1</sup>
 * SoloCam: SoloCam S340 (T8170)<sup>1</sup>
 * WallLightCam: Wall Light Cam S100 (T84A1)<sup>1</sup>
+* Sensor: Motion Sensor (T8900) and Entry Sensor (T8910)<sup>1</sup>
 
 <sup>1</sup>: This device is not compatible with versions before v3.0.0.
 
