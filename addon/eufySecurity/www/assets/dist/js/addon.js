@@ -1,13 +1,14 @@
 /**
  * Javascript for eufySecurity Addon
- * 20241103
+ * 20241120
  */
 var action = "";
 var port = "";
 var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
-var version = "3.1.3";
+var serviceState = undefined;
+var version = "3.2.0";
 
 /**
  * common used java script functions
@@ -77,7 +78,7 @@ function init(page)
 			action = "";
 		}
 	}
-	getAPIPort(page);
+	getServiceState(page);
 }
 
 function getParameterFromURLSearchParams(urlParams, parameterName)
@@ -96,10 +97,12 @@ function addUrlParams(urlParameter)
 	document.getElementById("niInfo").setAttribute("href", document.getElementById("niInfo").getAttribute("href") + urlParameter);
 }
 
-function getAPIPort(page)
+function getServiceState(page)
 {
-	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.json`;
+	var xmlHttp, objResp;
+	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=getServiceState`;
 	xmlHttp = new XMLHttpRequest();
+	xmlHttp.overrideMimeType('application/json');
 	xmlHttp.onreadystatechange = function()
 	{
 		if(this.readyState == 4 && this.status == 200)
@@ -107,40 +110,92 @@ function getAPIPort(page)
 			try
 			{
 				objResp = JSON.parse(this.responseText);
-				if(location.protocol == "http:")
+				if(objResp.success == true)
 				{
-					if(objResp.useHttp == true && objResp.httpPort !== undefined)
+					if(objResp.running == true)
 					{
-						port = objResp.httpPort;
-						document.getElementById("loadApiSettingsError").innerHTML = "";
-						checkConfigNeeded(page);
-						return;
+						serviceState = "running";
+					}
+					else
+					{
+						serviceState = "stopped";
 					}
 				}
 				else
 				{
-					if(objResp.useHttps == true && objResp.httpsPort !== undefined)
-					{
-						port = objResp.httpsPort;
-						document.getElementById("loadApiSettingsError").innerHTML = "";
-						checkConfigNeeded(page);
-						return;
-					}
+					serviceState = undefined;
 				}
-				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortInactiveHeader", location.protocol.replace(":", "")), "", translateMessages("messageApiPortInactiveSubText", location.protocol == "http:" ? "https-" : "http-"));
 			}
 			catch (e)
 			{
-				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorPrintErrorMessage", e));
+				serviceState =  undefined;
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+			getAPIPort(page)
 		}
 	};
 	xmlHttp.open("GET", url, true);
 	xmlHttp.send();
+}
+
+function getAPIPort(page)
+{
+	if(serviceState == "running")
+	{
+		var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.json`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = function()
+		{
+			if(this.readyState == 4 && this.status == 200)
+			{
+				try
+				{
+					objResp = JSON.parse(this.responseText);
+					if(location.protocol == "http:")
+					{
+						if(objResp.useHttp == true && objResp.httpPort !== undefined)
+						{
+							port = objResp.httpPort;
+							document.getElementById("loadApiSettingsError").innerHTML = "";
+							checkConfigNeeded(page);
+							return;
+						}
+					}
+					else
+					{
+						if(objResp.useHttps == true && objResp.httpsPort !== undefined)
+						{
+							port = objResp.httpsPort;
+							document.getElementById("loadApiSettingsError").innerHTML = "";
+							checkConfigNeeded(page);
+							return;
+						}
+					}
+					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortInactiveHeader", location.protocol.replace(":", "")), "", translateMessages("messageApiPortInactiveSubText", location.protocol == "http:" ? "https-" : "http-"));
+				}
+				catch (e)
+				{
+					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorPrintErrorMessage", e));
+				}
+			}
+			else if(this.readyState == 4)
+			{
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+	else
+	{
+		if(page !== "logfiles" && page !== "info" && page !== "restartWaiter")
+		{
+			document.getElementById("serviceNotRunningError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorServiceNotRunningHeader"), "", translateMessages("messageErrorServiceNotRunningMessage"));
+		}
+		else
+		{
+			checkConfigNeeded(page);
+		}
+	}
 }
 
 function initContent(page)
@@ -181,67 +236,77 @@ function checkConfigNeeded(page)
 		initContent(page);
 		return;
 	}
-	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/getApiState`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
+	if(serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlhttp, objResp;
+		var url = `${location.protocol}//${location.hostname}:${port}/getApiState`;
+		xmlhttp = new XMLHttpRequest();
+		xmlhttp.overrideMimeType('application/json');
+		xmlhttp.onreadystatechange = function()
 		{
-			document.getElementById("commonError").innerHTML = "";
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
+			if(this.readyState == 4 && this.status == 200)
 			{
-				if(objResp.data.serviceState == "configNeeded")
+				document.getElementById("commonError").innerHTML = "";
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
 				{
-					generateConfigNeeded(page);
-				}
-				else
-				{
-					initContent(page);
+					if(objResp.data.serviceState == "configNeeded")
+					{
+						generateConfigNeeded(page);
+					}
+					else
+					{
+						initContent(page);
+					}
 				}
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+			else if(this.readyState == 4)
+			{
+				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+			}
+		};
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+	}
+	else
+	{
+		initContent(page);
+	}
 }
 
 function checkTfaCaptchaState(page)
 {
-	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/getTfaCaptchaState`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
+	if(serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlhttp, objResp;
+		var url = `${location.protocol}//${location.hostname}:${port}/getTfaCaptchaState`;
+		xmlhttp = new XMLHttpRequest();
+		xmlhttp.overrideMimeType('application/json');
+		xmlhttp.onreadystatechange = function()
 		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
+			if(this.readyState == 4 && this.status == 200)
 			{
-				if(objResp.tfaNeeded == true)
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
 				{
-					generateTfaCodeModal(page, objResp);
+					if(objResp.tfaNeeded == true)
+					{
+						generateTfaCodeModal(page, objResp);
+					}
+					else if(objResp.captchaNeeded == true)
+					{
+						generateCaptchaCodeModal(page, objResp);
+					}
 				}
-				else if(objResp.captchaNeeded == true)
+				else
 				{
-					generateCaptchaCodeModal(page, objResp);
+					document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 				}
 			}
-			else
-			{
-				document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
-			}
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+		};
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send();
+	}
 }
 
 function generateConfigNeeded(page)
@@ -411,13 +476,13 @@ function downloadFile(filetype)
 	switch(filetype)
 	{
 		case "log":
-			url = `logfiles.cgi?download&${filetype}`;
+			url = `logfiles.cgi?action=download&file=${filetype}`;
 			break;
 		case "err":
-			url = `logfiles.cgi?download&${filetype}`;
+			url = `logfiles.cgi?action=download&file=${filetype}`;
 			break;
 		case "clientLog":
-			url = `logfiles.cgi?download&${filetype}`;
+			url = `logfiles.cgi?action=download&file=${filetype}`;
 			break;
 		case "conf":
 			url = `${location.protocol}//${location.hostname}:${port}/downloadConfig`;
@@ -3778,519 +3843,556 @@ function generateNewTrustedDeviceName()
 
 function loadCountries()
 {
-	var xmlHttp, objResp, country;
-	var url = `${location.protocol}//${location.hostname}:${port}/getCountries`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
+	if(serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlHttp, objResp, country;
+		var url = `${location.protocol}//${location.hostname}:${port}/getCountries`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
 		{
-			try
+			if(this.readyState == 4 && this.status == 200)
 			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
+				try
 				{
-					for(country in objResp.data)
+					objResp = JSON.parse(this.responseText);
+					if(objResp.success == true)
 					{
-						var option = document.createElement("option");
-						option.value=objResp.data[country].countryCode;
-						option.text=objResp.data[country].countryName;
-						document.getElementById("cbCountry").add(option);
+						for(country in objResp.data)
+						{
+							var option = document.createElement("option");
+							option.value=objResp.data[country].countryCode;
+							option.text=objResp.data[country].countryName;
+							document.getElementById("cbCountry").add(option);
+						}
+						document.getElementById("countrySelectionMessage").innerHTML = "";
+						loadHouses();
 					}
-					document.getElementById("countrySelectionMessage").innerHTML = "";
-					loadHouses();
+					else
+					{
+						document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+						loadHouses();
+					}
 				}
-				else
+				catch (e)
 				{
-					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 					loadHouses();
 				}
 			}
-			catch (e)
+			else if(this.readyState == 4)
 			{
-				document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 				loadHouses();
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-			loadHouses();
-		}
-		else
-		{
-			document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-			document.getElementById("countrySelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingCountries")}</strong></div>`;
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+			else
+			{
+				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
+				document.getElementById("countrySelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingCountries")}</strong></div>`;
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+	else
+	{
+		loadHouses();
+	}
 }
 
 function loadHouses()
 {
-	var xmlHttp, objResp, house;
-	var url = `${location.protocol}//${location.hostname}:${port}/getHouses`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
+	if(serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlHttp, objResp, house;
+		var url = `${location.protocol}//${location.hostname}:${port}/getHouses`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
 		{
-			try
+			if(this.readyState == 4 && this.status == 200)
 			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
+				try
 				{
-					for(house in objResp.data)
+					objResp = JSON.parse(this.responseText);
+					if(objResp.success == true)
 					{
-						var option = document.createElement("option");
-						option.value=objResp.data[house].houseId;
-						option.text=translateContent("lblHouseManagementStationsAndDevicesOfHome", objResp.data[house].houseName);
-						document.getElementById("cbHouseSelection").add(option);
+						for(house in objResp.data)
+						{
+							var option = document.createElement("option");
+							option.value=objResp.data[house].houseId;
+							option.text=translateContent("lblHouseManagementStationsAndDevicesOfHome", objResp.data[house].houseName);
+							document.getElementById("cbHouseSelection").add(option);
+						}
+						document.getElementById("houseSelectionMessage").innerHTML = "";
+						loadStationsSettings();
 					}
-					document.getElementById("houseSelectionMessage").innerHTML = "";
-					loadStationsSettings();
+					else
+					{
+						document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+						loadStationsSettings();
+					}
 				}
-				else
+				catch (e)
 				{
-					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 					loadStationsSettings();
 				}
 			}
-			catch (e)
+			else if(this.readyState == 4)
 			{
-				document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 				loadStationsSettings();
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-			loadStationsSettings();
-		}
-		else
-		{
-			document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-			document.getElementById("houseSelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingHouses")}</strong></div>`;
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+			else
+			{
+				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
+				document.getElementById("houseSelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingHouses")}</strong></div>`;
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+	else
+	{
+		loadStationsSettings();
+	}
 }
 
 function loadStationsSettings()
 {
-	var xmlHttp, objResp, station, stations = "";
-	var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
+	if(serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlHttp, objResp, station, stations = "";
+		var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
 		{
-			try
+			if(this.readyState == 4 && this.status == 200)
 			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
+				try
 				{
-					for(station in objResp.data)
+					objResp = JSON.parse(this.responseText);
+					if(objResp.success == true)
 					{
-						stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="my-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">${translateContent("lblUDPPortStationLabel", objResp.data[station].serialNumber, objResp.data[station].name)}</label>`;
-						stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="${translateContent("lblUDPPortStationPlaceholder", objResp.data[station].serialNumber)}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
-						stations += `<small class="form-text text-muted">${translateContent("lblUDPPortStationSubText")}</small>`;
-						stations += `<div class="invalid-feedback">${translateContent("lblUDPPortStationError")}</div></div>`;
+						for(station in objResp.data)
+						{
+							stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="my-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">${translateContent("lblUDPPortStationLabel", objResp.data[station].serialNumber, objResp.data[station].name)}</label>`;
+							stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="${translateContent("lblUDPPortStationPlaceholder", objResp.data[station].serialNumber)}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
+							stations += `<small class="form-text text-muted">${translateContent("lblUDPPortStationSubText")}</small>`;
+							stations += `<div class="invalid-feedback">${translateContent("lblUDPPortStationError")}</div></div>`;
 
-						var option = document.createElement("option");
-						option.value=objResp.data[station].serialNumber;
-						option.text=`${objResp.data[station].name} (${objResp.data[station].serialNumber})`;
-						document.getElementById("cbReconnectStation").add(option);
+							var option = document.createElement("option");
+							option.value=objResp.data[station].serialNumber;
+							option.text=`${objResp.data[station].name} (${objResp.data[station].serialNumber})`;
+							document.getElementById("cbReconnectStation").add(option);
+						}
+						document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
+						document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
+						loadSystemVariables();
 					}
-					document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
-					document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
-					loadSystemVariables();
+					else
+					{
+						document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+						document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+						loadSystemVariables();
+					}
 				}
-				else
+				catch (e)
 				{
-					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", e));
 					document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 					loadSystemVariables();
 				}
 			}
-			catch (e)
+			else if(this.readyState == 4)
 			{
-				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 				document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 				loadSystemVariables();
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-			document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
-			loadSystemVariables();
-		}
-		else
-		{
-			document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-			document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingStations")}</strong></div>`;
-			document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+			else
+			{
+				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
+				document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingStations")}</strong></div>`;
+				document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+	else
+	{
+		loadSystemVariables();
+	}
 }
 
 function loadDataSettings()
 {
-	var xmlHttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/getConfig${sid !== "" ? `/${sid}` : ""}`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
+	if(serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlHttp, objResp;
+		var url = `${location.protocol}//${location.hostname}:${port}/getConfig${sid !== "" ? `/${sid}` : ""}`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
 		{
-			try
+			if(this.readyState == 4 && this.status == 200)
 			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
+				try
 				{
-					document.getElementById('txtUsername').value = objResp.data.eMail;
-					document.getElementById('txtPassword').value = objResp.data.password;
-					if(objResp.data.country === undefined || objResp.data.country == "")
+					objResp = JSON.parse(this.responseText);
+					if(objResp.success == true)
 					{
-						document.getElementById("cbCountry").selectedIndex = "";
-					}
-					else
-					{
-						document.getElementById("cbCountry").value = objResp.data.country;
-					}
-					if(objResp.data.language === undefined || objResp.data.language == "")
-					{
-						document.getElementById("cbLanguage").selectedIndex = "";
-					}
-					else
-					{
-						document.getElementById("cbLanguage").value = objResp.data.language;
-					}
-					document.getElementById('txtTrustedDeviceName').value = objResp.data.trustedDeviceName;
-					if(objResp.data.httpActive == true)
-					{
-						document.getElementById("chkUseHttp").setAttribute("checked", true);
-						document.getElementById("txtPortHttp").removeAttribute("disabled");
-					}
-					else
-					{
-						document.getElementById("txtPortHttp").setAttribute("disabled", true);
-					}
-					document.getElementById('txtPortHttp').value = objResp.data.httpPort;
-					if(objResp.data.httpsActive == true)
-					{
-						document.getElementById("chkUseHttps").setAttribute("checked", true);
-						document.getElementById("txtPortHttps").removeAttribute("disabled");
-						document.getElementById("txtHttpsKeyFile").removeAttribute("disabled");
-						document.getElementById("txtHttpsCertFile").removeAttribute("disabled");
-					}
-					else
-					{
-						document.getElementById("txtPortHttps").setAttribute("disabled", true);
-						document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
-						document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
-					}
-					document.getElementById('txtPortHttps').value = objResp.data.httpsPort;
-					document.getElementById('txtHttpsKeyFile').value = objResp.data.httpsPKeyFile;
-					document.getElementById('txtHttpsCertFile').value = objResp.data.httpsCertFile;
-					if(objResp.data.acceptInvitations == true)
-					{
-						document.getElementById("chkAcceptInvitations").setAttribute("checked", true);
-					}
-					if(objResp.data.houseId === undefined)
-					{
-						document.getElementById("cbHouseSelection").selectedIndex = 0;
-					}
-					else
-					{
-						document.getElementById("cbHouseSelection").value = objResp.data.houseId;
-					}
-					if(objResp.data.connectionTypeP2p === undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2"))
-					{
-						document.getElementById("cbConnectionType").selectedIndex = 0;
-					}
-					else
-					{
-						document.getElementById("cbConnectionType").value = objResp.data.connectionTypeP2p;
-					}
-					if(objResp.data.systemVariableActive == true)
-					{
-						document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
-					}
-					if(objResp.data.localStaticUdpPortsActive == true)
-					{
-						document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
-					}
-
-					var element = document.getElementsByTagName("INPUT");
-					var max = element.length;
-					for(var i=0; i<max; i++)
-					{
-						if(element[i].name.startsWith("udpPortsStation"))
+						document.getElementById('txtUsername').value = objResp.data.eMail;
+						document.getElementById('txtPassword').value = objResp.data.password;
+						if(objResp.data.country === undefined || objResp.data.country == "")
 						{
-							var tempSerial = element[i].name.replace("udpPortsStation", "");
-							var tempPorts;
-							var portItem;
-							for(var portItem in objResp.data.localStaticUdpPorts)
-							{
-								if(objResp.data.localStaticUdpPorts[portItem].stationSerial == tempSerial)
-								{
-									tempPorts = objResp.data.localStaticUdpPorts[portItem].port;
-									break;
-								}
-							}
-							if(tempPorts === undefined || tempPorts == null || tempPorts == "undefined")
-							{
-								document.getElementById('txtUdpPortsStation' + tempSerial).value = "";
-							}
-							else
-							{
-								document.getElementById('txtUdpPortsStation' + tempSerial).value = tempPorts;
-							}
-							changeValue("useUdpStaticPorts");
-							if(objResp.data.localStaticUdpPortsActive == false)
-							{
-								document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
-							}
-						}
-					}
-					if(objResp.data.stateUpdateEventActive == true)
-					{
-						document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);
-					}
-					else
-					{
-						document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
-					}
-					if(objResp.data.stateUpdateIntervallActive == true)
-					{
-						document.getElementById("chkUpdateStateIntervall").setAttribute("checked", true);
-						document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
-					}
-					else
-					{
-						document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
-					}
-					document.getElementById('txtUpdateStateIntervallTimespan').value=objResp.data.stateUpdateIntervallTimespan;
-					if(objResp.data.pushServiceActive == true)
-					{
-						document.getElementById("chkUsePushService").setAttribute("checked", true);
-					}
-					if(objResp.data.secureApiAccessBySid == true)
-					{
-						document.getElementById("chkUseSecureApiAccessSid").setAttribute("checked", true);
-					}
-					if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6"))
-					{
-						document.getElementById("cbLogLevelAddon").selectedIndex = 3;
-					}
-					else
-					{
-						document.getElementById("cbLogLevelAddon").selectedIndex = (Number.parseInt(objResp.data.logLevelAddon)) + 1;
-					}
-					if(objResp.data.logLevelMain === undefined || (objResp.data.logLevelMain < "0" || objResp.data.logLevelMain > "6"))
-					{
-						document.getElementById("cbLogLevelMain").selectedIndex = 3;
-					}
-					else
-					{
-						document.getElementById("cbLogLevelMain").selectedIndex = (Number.parseInt(objResp.data.logLevelMain)) + 1;
-					}
-					if(objResp.data.logLevelHttp === undefined || (objResp.data.logLevelHttp < "0" || objResp.data.logLevelHttp > "6"))
-					{
-						document.getElementById("cbLogLevelHttp").selectedIndex = 3;
-					}
-					else
-					{
-						document.getElementById("cbLogLevelHttp").selectedIndex = (Number.parseInt(objResp.data.logLevelHttp)) + 1;
-					}
-					if(objResp.data.logLevelP2p === undefined || (objResp.data.logLevelP2p < "0" || objResp.data.logLevelP2p > "6"))
-					{
-						document.getElementById("cbLogLevelP2p").selectedIndex = 3;
-					}
-					else
-					{
-						document.getElementById("cbLogLevelP2p").selectedIndex = (Number.parseInt(objResp.data.logLevelP2p)) + 1;
-					}
-					if(objResp.data.logLevelPush === undefined || (objResp.data.logLevelPush < "0" || objResp.data.logLevelPush > "6"))
-					{
-						document.getElementById("cbLogLevelPush").selectedIndex = 3;
-					}
-					else
-					{
-						document.getElementById("cbLogLevelPush").selectedIndex = (Number.parseInt(objResp.data.logLevelPush)) + 1;
-					}
-					if(objResp.data.logLevelMqtt === undefined || (objResp.data.logLevelMqtt < "0" || objResp.data.logLevelMqtt > "6"))
-					{
-						document.getElementById("cbLogLevelMqtt").selectedIndex = 3;
-					}
-					else
-					{
-						document.getElementById("cbLogLevelMqtt").selectedIndex = (Number.parseInt(objResp.data.logLevelMqtt)) + 1;
-					}
-					if(objResp.data.tokenExpire === undefined)
-					{
-						document.getElementById("hintTokenData").innerHTML = ``;
-					}
-					else
-					{
-						if(objResp.data.tokenExpire == 0)
-						{
-							document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenNoToken")}<br />`;
-						}
-						else if(objResp.data.tokenExpire.toString().length == 10 || objResp.data.tokenExpire.toString().length == 13)
-						{
-							document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenOk", objResp.data.tokenExpire.toString().length == 10 ? makeDateTimeString(new Date(objResp.data.tokenExpire*1000)) : makeDateTimeString(new Date(objResp.data.tokenExpire)))}<br />`;
+							document.getElementById("cbCountry").selectedIndex = "";
 						}
 						else
 						{
-							document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenUnknown", objResp.data.tokenExpire)}.<br />`;
+							document.getElementById("cbCountry").value = objResp.data.country;
 						}
+						if(objResp.data.language === undefined || objResp.data.language == "")
+						{
+							document.getElementById("cbLanguage").selectedIndex = "";
+						}
+						else
+						{
+							document.getElementById("cbLanguage").value = objResp.data.language;
+						}
+						document.getElementById('txtTrustedDeviceName').value = objResp.data.trustedDeviceName;
+						if(objResp.data.httpActive == true)
+						{
+							document.getElementById("chkUseHttp").setAttribute("checked", true);
+							document.getElementById("txtPortHttp").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("txtPortHttp").setAttribute("disabled", true);
+						}
+						document.getElementById('txtPortHttp').value = objResp.data.httpPort;
+						if(objResp.data.httpsActive == true)
+						{
+							document.getElementById("chkUseHttps").setAttribute("checked", true);
+							document.getElementById("txtPortHttps").removeAttribute("disabled");
+							document.getElementById("txtHttpsKeyFile").removeAttribute("disabled");
+							document.getElementById("txtHttpsCertFile").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("txtPortHttps").setAttribute("disabled", true);
+							document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
+							document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
+						}
+						document.getElementById('txtPortHttps').value = objResp.data.httpsPort;
+						document.getElementById('txtHttpsKeyFile').value = objResp.data.httpsPKeyFile;
+						document.getElementById('txtHttpsCertFile').value = objResp.data.httpsCertFile;
+						if(objResp.data.acceptInvitations == true)
+						{
+							document.getElementById("chkAcceptInvitations").setAttribute("checked", true);
+						}
+						if(objResp.data.houseId === undefined)
+						{
+							document.getElementById("cbHouseSelection").selectedIndex = 0;
+						}
+						else
+						{
+							document.getElementById("cbHouseSelection").value = objResp.data.houseId;
+						}
+						if(objResp.data.connectionTypeP2p === undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2"))
+						{
+							document.getElementById("cbConnectionType").selectedIndex = 0;
+						}
+						else
+						{
+							document.getElementById("cbConnectionType").value = objResp.data.connectionTypeP2p;
+						}
+						if(objResp.data.systemVariableActive == true)
+						{
+							document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
+						}
+						if(objResp.data.localStaticUdpPortsActive == true)
+						{
+							document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
+						}
+
+						var element = document.getElementsByTagName("INPUT");
+						var max = element.length;
+						for(var i=0; i<max; i++)
+						{
+							if(element[i].name.startsWith("udpPortsStation"))
+							{
+								var tempSerial = element[i].name.replace("udpPortsStation", "");
+								var tempPorts;
+								var portItem;
+								for(var portItem in objResp.data.localStaticUdpPorts)
+								{
+									if(objResp.data.localStaticUdpPorts[portItem].stationSerial == tempSerial)
+									{
+										tempPorts = objResp.data.localStaticUdpPorts[portItem].port;
+										break;
+									}
+								}
+								if(tempPorts === undefined || tempPorts == null || tempPorts == "undefined")
+								{
+									document.getElementById('txtUdpPortsStation' + tempSerial).value = "";
+								}
+								else
+								{
+									document.getElementById('txtUdpPortsStation' + tempSerial).value = tempPorts;
+								}
+								changeValue("useUdpStaticPorts");
+								if(objResp.data.localStaticUdpPortsActive == false)
+								{
+									document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
+								}
+							}
+						}
+						if(objResp.data.stateUpdateEventActive == true)
+						{
+							document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);
+						}
+						else
+						{
+							document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
+						}
+						if(objResp.data.stateUpdateIntervallActive == true)
+						{
+							document.getElementById("chkUpdateStateIntervall").setAttribute("checked", true);
+							document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
+						}
+						else
+						{
+							document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
+						}
+						document.getElementById('txtUpdateStateIntervallTimespan').value=objResp.data.stateUpdateIntervallTimespan;
+						if(objResp.data.pushServiceActive == true)
+						{
+							document.getElementById("chkUsePushService").setAttribute("checked", true);
+						}
+						if(objResp.data.secureApiAccessBySid == true)
+						{
+							document.getElementById("chkUseSecureApiAccessSid").setAttribute("checked", true);
+						}
+						if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6"))
+						{
+							document.getElementById("cbLogLevelAddon").selectedIndex = 3;
+						}
+						else
+						{
+							document.getElementById("cbLogLevelAddon").selectedIndex = (Number.parseInt(objResp.data.logLevelAddon)) + 1;
+						}
+						if(objResp.data.logLevelMain === undefined || (objResp.data.logLevelMain < "0" || objResp.data.logLevelMain > "6"))
+						{
+							document.getElementById("cbLogLevelMain").selectedIndex = 3;
+						}
+						else
+						{
+							document.getElementById("cbLogLevelMain").selectedIndex = (Number.parseInt(objResp.data.logLevelMain)) + 1;
+						}
+						if(objResp.data.logLevelHttp === undefined || (objResp.data.logLevelHttp < "0" || objResp.data.logLevelHttp > "6"))
+						{
+							document.getElementById("cbLogLevelHttp").selectedIndex = 3;
+						}
+						else
+						{
+							document.getElementById("cbLogLevelHttp").selectedIndex = (Number.parseInt(objResp.data.logLevelHttp)) + 1;
+						}
+						if(objResp.data.logLevelP2p === undefined || (objResp.data.logLevelP2p < "0" || objResp.data.logLevelP2p > "6"))
+						{
+							document.getElementById("cbLogLevelP2p").selectedIndex = 3;
+						}
+						else
+						{
+							document.getElementById("cbLogLevelP2p").selectedIndex = (Number.parseInt(objResp.data.logLevelP2p)) + 1;
+						}
+						if(objResp.data.logLevelPush === undefined || (objResp.data.logLevelPush < "0" || objResp.data.logLevelPush > "6"))
+						{
+							document.getElementById("cbLogLevelPush").selectedIndex = 3;
+						}
+						else
+						{
+							document.getElementById("cbLogLevelPush").selectedIndex = (Number.parseInt(objResp.data.logLevelPush)) + 1;
+						}
+						if(objResp.data.logLevelMqtt === undefined || (objResp.data.logLevelMqtt < "0" || objResp.data.logLevelMqtt > "6"))
+						{
+							document.getElementById("cbLogLevelMqtt").selectedIndex = 3;
+						}
+						else
+						{
+							document.getElementById("cbLogLevelMqtt").selectedIndex = (Number.parseInt(objResp.data.logLevelMqtt)) + 1;
+						}
+						if(objResp.data.tokenExpire === undefined)
+						{
+							document.getElementById("hintTokenData").innerHTML = ``;
+						}
+						else
+						{
+							if(objResp.data.tokenExpire == 0)
+							{
+								document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenNoToken")}<br />`;
+							}
+							else if(objResp.data.tokenExpire.toString().length == 10 || objResp.data.tokenExpire.toString().length == 13)
+							{
+								document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenOk", objResp.data.tokenExpire.toString().length == 10 ? makeDateTimeString(new Date(objResp.data.tokenExpire*1000)) : makeDateTimeString(new Date(objResp.data.tokenExpire)))}<br />`;
+							}
+							else
+							{
+								document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenUnknown", objResp.data.tokenExpire)}.<br />`;
+							}
+						}
+						checkLogLevel("alertLogLevelAddon", objResp.data.logLevelAddon);
+						checkLogLevel("alertLogLevelMain", objResp.data.logLevelMain);
+						checkLogLevel("alertLogLevelHttp", objResp.data.logLevelHttp);
+						checkLogLevel("alertLogLevelP2p", objResp.data.logLevelP2p);
+						checkLogLevel("alertLogLevelPush", objResp.data.logLevelPush);
+						checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelMqtt);
+						document.getElementById("resultLoading").innerHTML = "";
+						deCollapseUICards();
+						enableUIElements();
 					}
-					checkLogLevel("alertLogLevelAddon", objResp.data.logLevelAddon);
-					checkLogLevel("alertLogLevelMain", objResp.data.logLevelMain);
-					checkLogLevel("alertLogLevelHttp", objResp.data.logLevelHttp);
-					checkLogLevel("alertLogLevelP2p", objResp.data.logLevelP2p);
-					checkLogLevel("alertLogLevelPush", objResp.data.logLevelPush);
-					checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelMqtt);
-					document.getElementById("resultLoading").innerHTML = "";
-					deCollapseUICards();
-					enableUIElements();
+					else
+					{
+						document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorThreeValuesMessage", "success", objResp.success, objResp.message));
+						collapseUICards();
+						disableUIElements();
+					}
 				}
-				else
+				catch (e)
 				{
-					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorThreeValues", "success", objResp.success, objResp.message));
-					collapseUICards();
-					disableUIElements();
+					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 				}
 			}
-			catch (e)
+			else if(this.readyState == 4)
 			{
-				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-		}
-		else
-		{
-			document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+			else
+			{
+				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+	else
+	{
+		document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorServiceNotRunningHeader"), "", translateMessages("messageErrorServiceNotRunningMessage"));
+		collapseUICards();
+		disableUIElements();
+	}
 }
 
 function loadSystemVariables()
 {
-	var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "", sysVarDeprTable = "";
-	var sysVarToDelete = false;
-	var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
+	if(serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "", sysVarDeprTable = "";
+		var sysVarToDelete = false;
+		var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
 		{
-			try
+			if(this.readyState == 4 && this.status == 200)
 			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
+				try
 				{
-					document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", translateMessages("messageSystemVariableHintHeader"), translateMessages("messageSystemVariableHintMessage"), translateMessages("messageSystemVariableHintSubText"));
-					sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
-					for(systemVariable in objResp.data)
+					objResp = JSON.parse(this.responseText);
+					if(objResp.success == true)
 					{
-						sysVarName = objResp.data[systemVariable].sysVarName;
-						sysVarInfo = objResp.data[systemVariable].sysVarInfo;
-						sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
-						if(objResp.data[systemVariable].sysVarCurrent==true)
+						document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", translateMessages("messageSystemVariableHintHeader"), translateMessages("messageSystemVariableHintMessage"), translateMessages("messageSystemVariableHintSubText"));
+						sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
+						for(systemVariable in objResp.data)
 						{
-							if(sysVarAvailable==true)
+							sysVarName = objResp.data[systemVariable].sysVarName;
+							sysVarInfo = objResp.data[systemVariable].sysVarInfo;
+							sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
+							if(objResp.data[systemVariable].sysVarCurrent==true)
 							{
-								sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+								if(sysVarAvailable==true)
+								{
+									sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+								}
+								else
+								{
+									sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="${translateString("strSystemVariableNotAvailable")}"></i></th>`;
+								}
+								sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
+								if(sysVarAvailable==true)
+								{
+									sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-outline-primary mb-1", undefined, translateContent("lblSystemVariableAvailable"), false, undefined, undefined, false)}</div></td>`;
+								}
+								else
+								{
+									sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, translateContent("lblSystemVariableCreate"), true, undefined, undefined, true)}</div></td>`;
+								}
+								sysVarTable += `</tr>`;
 							}
 							else
 							{
-								sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="${translateString("strSystemVariableNotAvailable")}"></i></th>`;
+								if(sysVarToDelete==false)
+								{
+									sysVarDeprTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
+								}
+								sysVarToDelete = true;
+								sysVarDeprTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+								sysVarDeprTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
+								sysVarDeprTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, translateContent("lblSystemVariableRemove"), true, undefined, undefined, true)}</div></td>`;
+								sysVarDeprTable += `</tr>`;
 							}
-							sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
-							if(sysVarAvailable==true)
-							{
-								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-outline-primary mb-1", undefined, translateContent("lblSystemVariableAvailable"), false, undefined, undefined, false)}</div></td>`;
-							}
-							else
-							{
-								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, translateContent("lblSystemVariableCreate"), true, undefined, undefined, true)}</div></td>`;
-							}
-							sysVarTable += `</tr>`;
 						}
-						else
+						sysVarTable += `</tbody></table>`;
+						document.getElementById("divSystemVariables").innerHTML = sysVarTable;
+						if(sysVarToDelete==true)
 						{
-							if(sysVarToDelete==false)
-							{
-								sysVarDeprTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
-							}
-							sysVarToDelete = true;
-							sysVarDeprTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
-							sysVarDeprTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
-							sysVarDeprTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, translateContent("lblSystemVariableRemove"), true, undefined, undefined, true)}</div></td>`;
-							sysVarDeprTable += `</tr>`;
+							sysVarDeprTable += `</tbody></table>`;
+							document.getElementById("divDeprecatedSystemVariables").innerHTML = sysVarDeprTable;
+							document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = `<hr /><div class="form-label-group" class="container-fluid"><label for="btnShowDeprecatedSystemVariables" class="mb-2">${translateString("strSystemVariablesUnusedHintHeader")}<br /><small class="form-text text-muted">${translateString("strSystemVariablesUnusedHintMessage")}</small></label></div>`;
 						}
-					}
-					sysVarTable += `</tbody></table>`;
-					document.getElementById("divSystemVariables").innerHTML = sysVarTable;
-					if(sysVarToDelete==true)
-					{
-						sysVarDeprTable += `</tbody></table>`;
-						document.getElementById("divDeprecatedSystemVariables").innerHTML = sysVarDeprTable;
-						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = `<hr /><div class="form-label-group" class="container-fluid"><label for="btnShowDeprecatedSystemVariables" class="mb-2">${translateString("strSystemVariablesUnusedHintHeader")}<br /><small class="form-text text-muted">${translateString("strSystemVariablesUnusedHintMessage")}</small></label></div>`;
-					}
-				}
-				else
-				{
-					if(objResp.reason == "System variables in config disabled.")
-					{
-						document.getElementById("divSystemVariablesHint").innerHTML = "";
-						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", translateMessages("messageSystemVariablesDeactivatedHeader"), translateMessages("messageSystemVariablesDeactivatedMessage"), translateMessages("messageSystemVariablesDeactivatedSubText"));
 					}
 					else
 					{
-						document.getElementById("divSystemVariablesHint").innerHTML = "";
-						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+						if(objResp.reason == "System variables in config disabled.")
+						{
+							document.getElementById("divSystemVariablesHint").innerHTML = "";
+							document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", translateMessages("messageSystemVariablesDeactivatedHeader"), translateMessages("messageSystemVariablesDeactivatedMessage"), translateMessages("messageSystemVariablesDeactivatedSubText"));
+						}
+						else
+						{
+							document.getElementById("divSystemVariablesHint").innerHTML = "";
+							document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+						}
 					}
+					loadDataSettings();
 				}
-				loadDataSettings();
+				catch (e)
+				{
+					document.getElementById("divSystemVariablesHint").innerHTML = "";
+					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+					loadDataSettings();
+				}
 			}
-			catch (e)
+			else if(this.readyState == 4)
 			{
-				document.getElementById("divSystemVariablesHint").innerHTML = "";
-				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 				loadDataSettings();
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-			loadDataSettings();
-		}
-		else
-		{
-			document.getElementById("divSystemVariables").innerHTML = createWaitMessage(translateString("strLoadingSystemVariables"));
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+			else
+			{
+				document.getElementById("divSystemVariables").innerHTML = createWaitMessage(translateString("strLoadingSystemVariables"));
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+	else
+	{
+		loadDataSettings();
+	}
 }
 
 function saveConfig()
@@ -4621,7 +4723,6 @@ function reconnectStation()
 {
 	var xmlhttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/reconnect/${document.getElementById("cbReconnectStation").value}`;
-	alert(url);
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
 	xmlhttp.onreadystatechange = function()
@@ -4705,10 +4806,29 @@ function removeTokenData()
 	xmlHttp.send();
 }
 
-function restartService()
+function openServiceManagerModal()
 {
+	const myModal = new bootstrap.Modal(document.getElementById('modalServiceManager'));
+	if(serviceState == "running")
+	{
+		document.getElementById("btnServiceManagerStartService").setAttribute("disabled", true);
+		document.getElementById("btnServiceManagerStopService").removeAttribute("disabled");
+	}
+	else if(serviceState == "stopped")
+	{
+		document.getElementById("btnServiceManagerStartService").removeAttribute("disabled");
+		document.getElementById("btnServiceManagerStopService").setAttribute("disabled", true);
+	}
+	myModal.show();
+}
+
+function serviceManager(action)
+{
+	var deleteLogfile = document.getElementById("chkDeleteLogfile").checked;
+	var deleteErrfile = document.getElementById("chkDeleteErrfile").checked;
+	var deleteClientLogfile = document.getElementById("chkDeleteClientLogfile").checked;
 	var xmlHttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/restartService`;
+	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=${action}&deleteLogfile=${deleteLogfile}&deleteErrfile=${deleteErrfile}&deleteClientLogfile=${deleteClientLogfile}`;
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
 	xmlHttp.onreadystatechange = function()
@@ -4720,26 +4840,29 @@ function restartService()
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					/*const toast = new bootstrap.Toast(toastOK);
-					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageRestartOKHeader");
-					document.getElementById("toastOKText").innerHTML = translateMessages("messageRestartOKMessage");
-					toast.show();*/
-					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+					if(action == "stopService")
+					{
+						window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/logfiles.html`;
+					}
+					else
+					{
+						window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=${action}&redirect=logfiles.html`;
+					}
 					return;
 				}
 				else
 				{
 					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartFailedHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartFailedMessage");
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageStartFailedHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
 					toast.show();
 				}
 			}
 			catch (e)
 			{
 				const toast = new bootstrap.Toast(toastFailed);
-				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartFailedHeader");
-				document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartFailedMessage");
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageStartFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
 				toast.show();
 			}
 		}
@@ -4759,18 +4882,36 @@ function enableButtons(enable)
 		document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(false)");
 		document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-warning btn-block");
 		document.getElementById("btnEnableTroubleShooting").innerHTML = translateContent("lblSettingsTroubleShootingDisable");
-		document.getElementById("btnSelectConfigFile").removeAttribute("disabled");
-		document.getElementById("headerRemoveInteractions").removeAttribute("class");
-		document.getElementById("btnRemoveInteractions").removeAttribute("disabled");
-		document.getElementById("cbReconnectStation").removeAttribute("disabled");
-		if(document.getElementById("cbReconnectStation").value != "0")
+		if(serviceState == "running")
 		{
-			document.getElementById("btnReconnectStation").removeAttribute("disabled");
+			document.getElementById("headerUploadConfig").removeAttribute("class");
+			document.getElementById("btnDownloadConfigFile").removeAttribute("disabled");
+			document.getElementById("btnSelectConfigFile").removeAttribute("disabled");
+			document.getElementById("headerRemoveInteractions").removeAttribute("class");
+			document.getElementById("btnRemoveInteractions").removeAttribute("disabled");
+			document.getElementById("cbReconnectStation").removeAttribute("disabled");
+			if(document.getElementById("cbReconnectStation").value != "0")
+			{
+				document.getElementById("btnReconnectStation").removeAttribute("disabled");
+			}
+			document.getElementById("headerDeleteTokenData").removeAttribute("class");
+			document.getElementById("btnDeleteTokenData").removeAttribute("disabled");
 		}
-		document.getElementById("headerDeleteTokenData").removeAttribute("class");
-		document.getElementById("btnDeleteTokenData").removeAttribute("disabled");
-		document.getElementById("headerRestartService").removeAttribute("class");
-		document.getElementById("btnRestartService").removeAttribute("disabled");
+		else 
+		{
+			document.getElementById("headerUploadConfig").setAttribute("class", "text-muted");
+			document.getElementById("btnDownloadConfigFile").setAttribute("disabled", true);
+			document.getElementById("btnSelectConfigFile").setAttribute("disabled", true);
+			document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
+			document.getElementById("headerRemoveInteractions").setAttribute("class", "text-muted");
+			document.getElementById("btnRemoveInteractions").setAttribute("disabled", true);
+			document.getElementById("cbReconnectStation").setAttribute("disabled", true);
+			document.getElementById("btnReconnectStation").setAttribute("disabled", true);
+			document.getElementById("headerDeleteTokenData").setAttribute("class", "text-muted");
+			document.getElementById("btnDeleteTokenData").setAttribute("disabled", true);
+		}
+		document.getElementById("headerServiceManager").removeAttribute("class");
+		document.getElementById("btnServiceManager").removeAttribute("disabled");
 	}
 	else
 	{
@@ -4784,8 +4925,8 @@ function enableButtons(enable)
 		document.getElementById("btnReconnectStation").setAttribute("disabled", true);
 		document.getElementById("headerDeleteTokenData").setAttribute("class", "text-muted");
 		document.getElementById("btnDeleteTokenData").setAttribute("disabled", true);
-		document.getElementById("headerRestartService").setAttribute("class", "text-muted");
-		document.getElementById("btnRestartService").setAttribute("disabled", true);
+		document.getElementById("headerServiceManager").setAttribute("disabled", true);
+		document.getElementById("btnServiceManager").setAttribute("disabled", true);
 	}
 }
 
@@ -5018,7 +5159,7 @@ function loadLogfile(logfiletype, showLoading)
 	switch(logfiletype)
 	{
 		case "log":
-			url=`logfiles.cgi?getContent&${logfiletype}`;
+			url=`logfiles.cgi?action=getcontent&file=${logfiletype}`;
 			document.getElementById("tabHeaderAddonLog").classList.add("active");
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
@@ -5028,7 +5169,7 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('log')");
 			break;
 		case "err":
-			url=`logfiles.cgi?getContent&${logfiletype}`;
+			url=`logfiles.cgi?action=getcontent&file=${logfiletype}`;
 			document.getElementById("tabHeaderAddonLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.add("active");
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
@@ -5038,7 +5179,7 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('err')");
 			break;
 		case "clientLog":
-			url=`logfiles.cgi?getContent&${logfiletype}`;
+			url=`logfiles.cgi?action=getcontent&file=${logfiletype}`;
 			document.getElementById("tabHeaderAddonLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.add("active");
@@ -5129,13 +5270,13 @@ function emptyLogfile(logfiletype)
 	switch(logfiletype)
 	{
 		case "log":
-			url = `logfiles.cgi?emptyFile&${logfiletype}`;
+			url = `logfiles.cgi?action=emptyfile&file=${logfiletype}`;
 			break;
 		case "err":
-			url = `logfiles.cgi?emptyFile&${logfiletype}`;
+			url = `logfiles.cgi?action=emptyfile&file=${logfiletype}`;
 			break;
 		case "clientLog":
-			url = `logfiles.cgi?emptyFile&${logfiletype}`;
+			url = `logfiles.cgi?action=emptyfile&file=${logfiletype}`;
 			break;
 		default:
 			document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger m-0", translateMessages("messageEmptyLogFileErrorHeader"), translateMessages("messageErrorLogfileUnknown", logfiletype), "");
@@ -5177,39 +5318,78 @@ function emptyLogfile(logfiletype)
 //#region info.html
 function loadDataInfo(showLoading)
 {
-	var xmlHttp, objResp, info = "";
-	var url = `${location.protocol}//${location.hostname}:${port}/getApiInfo`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
+	if (serviceState == "running")
 	{
-		if(this.readyState == 4 && this.status == 200)
+		var xmlHttp, objResp, info = "";
+		var url = `${location.protocol}//${location.hostname}:${port}/getApiInfo`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
 		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
+			if(this.readyState == 4 && this.status == 200)
 			{
-				info = `${translateString("strAddOnName")}: ${objResp.apiVersion}<br />${translateString("strClientName")}: ${objResp.eufySecurityClientVersion}<br />${translateString("strHomeMaticApi")}: ${objResp.homematicApiVersion}<br />${translateString("strWebsite")}: ${version}<br />${getLanguageInfo()}`;
-				document.getElementById("versionInfo").innerHTML = info;
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					info = `${translateString("strAddOnName")}: ${objResp.apiVersion}<br />${translateString("strClientName")}: ${objResp.eufySecurityClientVersion}<br />${translateString("strHomeMaticApi")}: ${objResp.homematicApiVersion}<br />${translateString("strWebsite")}: ${version}<br />${getLanguageInfo()}`;
+					document.getElementById("versionInfo").innerHTML = info;
+				}
+				else
+				{
+					document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
+				}
+			}
+			else if(this.readyState == 4)
+			{
+				document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
 			}
 			else
 			{
-				document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
+				if(showLoading == true)
+				{
+					document.getElementById("versionInfo").innerHTML = createWaitMessage(translateString("strLoadingVersionInfo"));
+				}
 			}
-		}
-		else if(this.readyState == 4)
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
+	else
+	{
+		var xmlHttp, objResp, info = "";
+		var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=getServiceVersion`;
+		xmlHttp = new XMLHttpRequest();
+		xmlHttp.overrideMimeType('application/json');
+		xmlHttp.onreadystatechange = function()
 		{
-			document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-		}
-		else
-		{
-			if(showLoading == true)
+			if(this.readyState == 4 && this.status == 200)
 			{
-				document.getElementById("versionInfo").innerHTML = createWaitMessage(translateString("strLoadingVersionInfo"));
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					info = `${translateString("strAddOnName")}: ${objResp.version}`;
+					document.getElementById("versionInfo").innerHTML = info;
+				}
+				else
+				{
+					document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
+				}
 			}
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+			else if(this.readyState == 4)
+			{
+				document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+			}
+			else
+			{
+				if(showLoading == true)
+				{
+					document.getElementById("versionInfo").innerHTML = createWaitMessage(translateString("strLoadingVersionInfo"));
+				}
+			}
+		};
+		xmlHttp.open("GET", url, true);
+		xmlHttp.send();
+	}
 }
 //#endregion
 
@@ -5230,13 +5410,14 @@ async function restartAPIService()
 		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsErrorTfa");
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsErrorTfa");
 		checkServiceState(0, 0, 0);
-	}else
+	}
+	else
 	{
 		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsError");
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsError");
 		const toast = new bootstrap.Toast(toastOK);
-		document.getElementById("toastOKHeader").innerHTML = translateMessages("messageRestartOKHeader");
-		document.getElementById("toastOKText").innerHTML = translateMessages("messageRestartOKMessage");
+		document.getElementById("toastOKHeader").innerHTML = translateMessages("messageStartOKHeader");
+		document.getElementById("toastOKText").innerHTML = translateMessages("messageStartOKMessage");
 		toast.show();
 		await delay(7500);
 		checkServiceState(0, 0, 0);
@@ -5295,6 +5476,63 @@ async function checkServiceState(cntStart, cntInit, postInit)
 						}
 					}
 					else if(objResp.message == "ok")
+					{
+						if(cntInit == 0 && postInit == 0)
+						{
+							var startDone = "";
+							if(action == "captcha")
+							{
+								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
+							}
+							else
+							{
+								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
+							}
+							document.getElementById("serviceRestart").innerHTML = startDone;
+							var initStart = "";
+							if(action == "captcha")
+							{
+								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
+							}
+							else
+							{
+								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
+							}
+							document.getElementById("serviceInit").innerHTML = initStart;
+						}
+						if(postInit < 5)
+						{
+							postInit = postInit + 1;
+							await delay(1000);
+							checkServiceState(cntStart, cntInit, postInit);
+						}
+						else
+						{
+							var startDone = "";
+							if(action == "captcha")
+							{
+								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
+							}
+							else
+							{
+								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
+							}
+							document.getElementById("serviceRestart").innerHTML = startDone;
+							var initDone = "";
+							if(action == "captcha")
+							{
+								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strLoginFinished")}</div>`;
+							}
+							else
+							{
+								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strInitFinished")}</div>`;
+							}
+							document.getElementById("serviceInit").innerHTML = initDone;
+							await delay(5000);
+							window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/` + redirectTarget;
+						}
+					}
+					else if(objResp.message == "configNeeded")
 					{
 						if(cntInit == 0 && postInit == 0)
 						{

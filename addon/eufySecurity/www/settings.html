@@ -72,6 +72,7 @@
 		</header>
 		
 		<main class="container-fluid">
+			<div id="serviceNotRunningError"></div>
 			<div id="loadApiSettingsError"></div>
 			<div id="content">
 				<div id="captchaMessage"></div>
@@ -429,7 +430,7 @@
 											<div class="form-label-group" class="container-fluid">
 												<h6 id="headerSaveConfig">{headerSaveConfig}</h6>
 												<small id="hintSaveConfig" class="form-text text-muted mt-0 mb-2">{hintSaveConfig}</small><br>
-												<button id="btnDownloadConfigFile" onclick="downloadFile('conf')" type="button" class="btn btn-outline-primary mt-2">{btnDownloadConfigFile}</button>
+												<button id="btnDownloadConfigFile" onclick="downloadFile('conf')" type="button" class="btn btn-outline-primary mt-2" disabled>{btnDownloadConfigFile}</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
@@ -463,9 +464,9 @@
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
-												<h6 id="headerRestartService" class="text-muted">{headerRestartService}</h6>
-												<small class="form-text text-muted" id="hintRestartService">{hintRestartService}</small><br />
-												<button id="btnRestartService" onclick="restartService()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnRestartService}</button>
+												<h6 id="headerServiceManager" class="text-muted">{headerServiceManager}</h6>
+												<small class="form-text text-muted" id="hintServiceManager">{hintServiceManager}</small><br />
+												<button id="btnServiceManager" onclick="openServiceManagerModal()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnServiceManager}</button>
 											</div>
 										</div>
 									</div>
@@ -542,6 +543,41 @@
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
 						<button type="button" id="modalUDPPortsEqualWrongBtnOK" class="btn btn-primary" data-bs-dismiss="modal">{modalUDPPortsEqualWrongBtnOK}</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="modalServiceManager" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalServiceManager" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header text-bg-secondary" style="--bs-bg-opacity: .5;" >
+						<h5 class="modal-title" id="lblModalServiceManagerTitle">{lblModalServiceManagerTitle}</h5>
+					</div>
+					<div class="modal-body" id="modalServiceManagerMessage">
+
+					</div>
+					<div class="modal-body" id="modalServiceManagerSettings">
+						<div class="form-check form-switch mt-2">
+							<input class="form-check-input" type="checkbox" role="switch" name="deleteLogfile" id="chkDeleteLogfile">
+							<label class="form-check-label" for="chkDeleteLogfile" id="lblDeleteLogfile">{lblDeleteLogfile}</label>
+						</div>
+						<div class="form-check form-switch mt-2">
+							<input class="form-check-input" type="checkbox" role="switch" name="deleteErrfile" id="chkDeleteErrfile">
+							<label class="form-check-label" for="chkDeleteErrfile" id="lblDeleteErrfile">{lblDeleteErrfile}</label>
+						</div>
+						<div class="form-check form-switch mt-2">
+							<input class="form-check-input" type="checkbox" role="switch" name="deleteClientLogfile" id="chkDeleteClientLogfile">
+							<label class="form-check-label" for="chkDeleteClientLogfile" id="lblDeleteClientLogfile">{lblDeleteClientLogfile}</label>
+						</div>
+						<div class="d-grid">
+							<button id="btnServiceManagerStartService" onclick="serviceManager('startService')" type="button" class="btn btn-primary mt-2 btn-block" disabled>{btnServiceManagerStartService}</button>
+							<button id="btnServiceManagerStopService" onclick="serviceManager('stopService')" type="button" class="btn btn-primary mt-2 btn-block" disabled>{btnServiceManagerStopService}</button>
+							<button id="btnServiceManagerRestartService" onclick="serviceManager('restartService')" type="button" class="btn btn-primary mt-2 btn-block">{btnServiceManagerRestartService}</button>
+						</div>
+					</div>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="modalServiceManagerBtnCancel" class="btn btn-primary btn-sm" data-bs-dismiss="modal">{modalServiceManagerBtnCancel}</button>
 					</div>
 				</div>
 			</div>

@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.28
-20241108
+Schema v9.30
+20241117
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20241108 (v9.28)";
+var languageVersion = "20241117 (v9.30)";
 
 function translateNavbarElement(element)
 {
@@ -335,12 +335,30 @@ function translateStaticContentElement(element)
 			return "Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.";
 		case "btnDeleteTokenData":
 			return "Token löschen";
-		case "headerRestartService":
+		case "headerServiceManager":
+			return "Service Manager";
+		case "hintServiceManager":
+			return "Unter Umständen kann es notwendig sein, den Service zu starten, zu beenden oder neu zu starten.";
+		case "btnServiceManager":
+			return "Service Manager starten...";
+		case "lblModalServiceManagerTitle":
+			return "Service Manager";
+		case "modalServiceManagerMessage":
+			return "Unter Umständen kann es notwendig sein, den Service zu starten, zu beenden oder neu zu starten. Wählen Sie aus, welche Logdateien bei der Aktion gelöscht werden sollen und klicken Sie auf die entsprechende Schaltfläche, um die gewünschte Aktion auszuführen.";
+		case "lblDeleteLogfile":
+			return "Logdatei bei der Aktion entfernen";
+		case "lblDeleteErrfile":
+			return "Fehlerlogdatei bei der Aktion entfernen";
+		case "lblDeleteClientLogfile":
+			return "Client Logdatei bei der Aktion entfernen";
+		case "btnServiceManagerStartService":
+			return "Service starten";
+		case "btnServiceManagerStopService":
+			return "Service stoppen";
+		case "btnServiceManagerRestartService":
 			return "Service neu starten";
-		case "hintRestartService":
-			return "Unter Umständen kann es notwendig sein, den Service neu zu starten. Dabei werden alle bereits übertragenen Änderungen gespeichert und der Service neu gestartet.";
-		case "btnRestartService":
-			return "Service neu starten";
+		case "modalServiceManagerBtnCancel":
+			return "Abbrechen";
 		case "lblModalAtLeastOneNeedsActivationTitle":
 			return "Einstellungen überprüfen.";
 		case "lblModalAtLeastOneNeedsActivationMessage":
@@ -584,14 +602,14 @@ function translateMessages(message, ...options)
 			return "Tokendaten löschen.";
 		case "messageRemoveTokenFailedMessage":
 			return "Bei dem Löschen der Tokendaten ist ein Fehler aufgetreten.";
-		case "messageRestartOKHeader":
-			return "Service neu starten.";
-		case "messageRestartOKMessage":
-			return "Der Service wird neu gestartet.";
-		case "messageRestartFailedHeader":
-			return "Service neu starten.";
-		case "messageRestartFailedMessage":
-			return "Bei dem Neustart des Services ist ein Fehler aufgetreten.";
+		case "messageStartOKHeader":
+			return "Service starten.";
+		case "messageStartOKMessage":
+			return "Der Service wird gestartet.";
+		case "messageStartFailedHeader":
+			return "Service starten.";
+		case "messageStartFailedMessage":
+			return "Bei dem Starten des Services ist ein Fehler aufgetreten.";
 		case "messageSaveSettingsHeader":
 			return "Einstellungen speichern.";
 		case "messageSaveSettingsOkMessage":
@@ -642,8 +660,12 @@ function translateMessages(message, ...options)
 			return "Fehler bei der Ermittlung der Stationen.";
 		case "messageSettingsLoadingErrorHeader":
 			return "Fehler bei der Ermittlung der Einstellungen.";
-		case "messageErrorThreeValues":
+		case "messageErrorThreeValuesMessage":
 			return `Der Rückgabewert '${options[0]}' ist '${options[1]}'.<br />Fehlermeldung: '${options[2]}'`;
+		case "messageErrorServiceNotRunningHeader":
+			return "Service nicht aktiv";
+		case "messageErrorServiceNotRunningMessage":
+			return "Der Service wird zur Zeit nicht ausgeführt.";
 		case "messageSystemVariableHintHeader":
 			return `Option '${translateStaticContentElement("lblUseSystemVariables")}' ist aktiviert.`;
 		case "messageSystemVariableHintMessage":

@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.28
-20241108
+Schema v9.30
+20241117
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20241108 (v9.28)";
+var languageVersion = "20241117 (v9.30)";
 
 function translateNavbarElement(element)
 {
@@ -335,12 +335,30 @@ function translateStaticContentElement(element)
 			return "If you receive the error <code>401 (Unauthorized)</code> in the log file, you can try to delete the existing token. This will generate a new token for the next request.";
 		case "btnDeleteTokenData":
 			return "Delete token";
-		case "headerRestartService":
+		case "headerServiceManager":
+			return "Service Manager";
+		case "hintServiceManager":
+			return "It may be necessary to start, stop or restart the service.";
+		case "btnServiceManager":
+			return "Open Service Manager...";
+		case "lblModalServiceManagerTitle":
+			return "Service Manager";
+		case "modalServiceManagerMessage":
+			return "It may be necessary to start, stop or restart the service. Please select the logfiles to delete and click the button for the action you want to perform.";
+		case "lblDeleteLogfile":
+			return "delete logfles";
+		case "lblDeleteErrfile":
+			return "delete error logfile";
+		case "lblDeleteClientLogfile":
+			return "delete client logfile";
+		case "btnServiceManagerStartService":
+			return "Start service";
+		case "btnServiceManagerStopService":
+			return "Stop service";
+		case "btnServiceManagerRestartService":
 			return "Restart service";
-		case "hintRestartService":
-			return "It may be necessary to restart the service. All changes that have already been transferred are saved and the service is restarted.";
-		case "btnRestartService":
-			return "Restart service";
+		case "modalServiceManagerBtnCancel":
+			return "Cancel";
 		case "lblModalAtLeastOneNeedsActivationTitle":
 			return "Check the settings.";
 		case "lblModalAtLeastOneNeedsActivationMessage":
@@ -584,14 +602,14 @@ function translateMessages(message, ...options)
 			return "Delete token data.";
 		case "messageRemoveTokenFailedMessage":
 			return "An error has occurred while deleting the token data.";
-		case "messageRestartOKHeader":
-			return "Restart the service.";
-		case "messageRestartOKMessage":
-			return "The service will be restarted.";
-		case "messageRestartFailedHeader":
-			return "Restart the service.";
-		case "messageRestartFailedMessage":
-			return "An error occurred when restarting the service.";
+		case "messageStartOKHeader":
+			return "Start the service.";
+		case "messageStartOKMessage":
+			return "The service will be started.";
+		case "messageStartFailedHeader":
+			return "Start the service.";
+		case "messageStartFailedMessage":
+			return "An error occurred when starting the service.";
 		case "messageSaveSettingsHeader":
 			return "Save settings.";
 		case "messageSaveSettingsOkMessage":
@@ -642,8 +660,12 @@ function translateMessages(message, ...options)
 			return "Error determining the stations.";
 		case "messageSettingsLoadingErrorHeader":
 			return "Error determining the settings.";
-		case "messageErrorThreeValues":
+		case "messageErrorThreeValuesMessage":
 			return `The return value '${options[0]}' is '${options[1]}'.<br />Message: '${options[2]}'`;
+		case "messageErrorServiceNotRunningHeader":
+			return "Service is not active";
+		case "messageErrorServiceNotRunningMessage":
+			return "The service is currently not running.";
 		case "messageSystemVariableHintHeader":
 			return `Option '${translateStaticContentElement("lblUseSystemVariables")}' is activated.`;
 		case "messageSystemVariableHintMessage":
