@@ -111,7 +111,22 @@ switch $queryStringParams(action) {
 		}
 	}
 	restartService {
-		if {[array size queryStringParams] == 4} {
+		if {[array size queryStringParams] == 1} {
+			set res [restartService]
+			if {$res == -1} {
+				puts \{"success":false,"reason":"The\ service\ is\ already\ running."\}
+				return
+			} elseif {$res == 0} {
+				puts \{"success":false,"reason":"The\ service\ could\ not\ been\ started."\}
+				return
+			} elseif {$res == 1} {
+				puts \{"success":true\}
+				return
+			} else {
+				puts \{"success":false,"reason":"The\ return\ value\ is\ unknown\ (got:\ '$res')."\}
+				return
+			}
+		} elseif {[array size queryStringParams] == 4} {
 			set res [stopService]
 			if {$res == 1} {
 				puts \{"success":false,"reason":"The\ service\ could\ not\ been\ stopped."\}

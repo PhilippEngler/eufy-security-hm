@@ -1082,7 +1082,7 @@ async function stopServer(): Promise<void> {
  */
 async function restartServer(): Promise<void> {
     rootAddonLogger.info("Going to restart with apiServerRestarter...");
-    exec("/usr/local/addons/eufySecurity/bin/node /usr/local/addons/eufySecurity/apiServerRestarter.js");
+    exec(`/usr/local/addons/eufySecurity/bin/node "/usr/local/addons/eufySecurity/apiServerRestarter.js" >> "/var/log/eufySecurity.log" 2>> "/var/log/eufySecurity.err"`);
 }
 
 /**
