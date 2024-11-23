@@ -5,8 +5,33 @@ source assets/dist/tcl/fileHelper.tcl
 source assets/dist/tcl/dateHelper.tcl
 source assets/dist/tcl/queryHelper.tcl
 
-set querystring $env(QUERY_STRING)
-set queryStringParams [getParametersFromQueryString $querystring]
+if {[info exists env(QUERY_STRING)] && $env(QUERY_STRING) != "" && argc == 0} {
+	set queryStringParams [getParametersFromQueryString $env(QUERY_STRING)]
+} elseif {$argc > 0} {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Detected\ arguments.\ This\ script\ can\ not\ handle\ arguments."\}
+	return
+} else {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Could\ not\ detect\ querystring."\}
+	return
+}
+
+if {![dict exists $queryStringParams action]} {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Could\ not\ detect\ value\ 'action'\ in\ querystring."\}
+	return
+}
+
+if {![dict exists $queryStringParams file]} {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Could\ not\ detect\ value\ 'file'\ in\ querystring."\}
+	return
+}
 
 if {[dict size $queryStringParams] == 2} {
 	switch [dict get $queryStringParams file] {

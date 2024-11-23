@@ -5,12 +5,23 @@ source assets/dist/tcl/serviceHelper.tcl
 source assets/dist/tcl/fileHelper.tcl
 source assets/dist/tcl/queryHelper.tcl
 
-set querystring $env(QUERY_STRING)
-set queryStringParams [getParametersFromQueryString $querystring]
+if {[info exists env(QUERY_STRING)] && $env(QUERY_STRING) != "" && $argc == 0} {
+	set queryStringParams [getParametersFromQueryString $env(QUERY_STRING)]
+} elseif {[info exists argv] && $argc == 1} {
+	set queryStringParams [getParametersFromQueryString [lindex $argv 0]]
+} else {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Could\ not\ detect\ querystring\ or\ arguments."\}
+	return
+}
 
-set filePathLogfile /var/log/eufySecurity.log
-set filePathErrfile /var/log/eufySecurity.err
-set filePathClientlLogfile /var/log/eufySecurityClient.log
+if {![dict exists $queryStringParams action]} {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Could\ not\ detect\ value\ 'action'\ in\ querystring\ or\ arguments."\}
+	return
+}
 
 puts "Content-Type: application/json; charset=utf-8"
 puts ""
@@ -45,13 +56,13 @@ switch [dict get $queryStringParams action] {
 	}
 	startService {
 		if {[dict size $queryStringParams] == 4} {
-			if {[dict get $queryStringParams deleteLogfile] == "true"} {
+			if {[dict exists $queryStringParams deleteLogfile] && [dict get $queryStringParams deleteLogfile] == "true"} {
 				deleteFile [getFilePath log]
 			}
-			if {[dict get $queryStringParams deleteErrfile] == "true"} {
+			if {[dict exists $queryStringParams deleteErrfile] && [dict get $queryStringParams deleteErrfile] == "true"} {
 				deleteFile [getFilePath err]
 			}
-			if {[dict get $queryStringParams deleteClientLogfile] == "true"} {
+			if {[dict exists $queryStringParams deleteClientLogfile] && [dict get $queryStringParams deleteClientLogfile] == "true"} {
 				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]
@@ -73,13 +84,13 @@ switch [dict get $queryStringParams action] {
 	stopService {
 		if {[dict size $queryStringParams] == 4} {
 			set res [stopService]
-			if {[dict get $queryStringParams deleteLogfile] == "true"} {
+			if {[dict exists $queryStringParams deleteLogfile] && [dict get $queryStringParams deleteLogfile] == "true"} {
 				deleteFile [getFilePath log]
 			}
-			if {[dict get $queryStringParams deleteErrfile] == "true"} {
+			if {[dict exists $queryStringParams deleteErrfile] && [dict get $queryStringParams deleteErrfile] == "true"} {
 				deleteFile [getFilePath err]
 			}
-			if {[dict get $queryStringParams deleteClientLogfile] == "true"} {
+			if {[dict exists $queryStringParams deleteClientLogfile] && [dict get $queryStringParams deleteClientLogfile] == "true"} {
 				deleteFile [getFilePath clientLog]
 			}
 			if {$res == -1} {
@@ -107,13 +118,13 @@ switch [dict get $queryStringParams action] {
 				puts \{"success":false,"reason":"The\ return\ value\ is\ unknown\ (got:\ '$res')."\}
 				return
 			}
-			if {[dict get $queryStringParams deleteLogfile] == "true"} {
+			if {[dict exists $queryStringParams deleteLogfile] && [dict get $queryStringParams deleteLogfile] == "true"} {
 				deleteFile [getFilePath log]
 			}
-			if {[dict get $queryStringParams deleteErrfile] == "true"} {
+			if {[dict exists $queryStringParams deleteErrfile] && [dict get $queryStringParams deleteErrfile] == "true"} {
 				deleteFile [getFilePath err]
 			}
-			if {[dict get $queryStringParams deleteClientLogfile] == "true"} {
+			if {[dict exists $queryStringParams deleteClientLogfile] && [dict get $queryStringParams deleteClientLogfile] == "true"} {
 				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]

@@ -5,12 +5,25 @@ source assets/dist/tcl/serviceHelper.tcl
 source assets/dist/tcl/fileHelper.tcl
 source assets/dist/tcl/queryHelper.tcl
 
-set querystring $env(QUERY_STRING)
+if {[info exists env(QUERY_STRING)] && $env(QUERY_STRING) != "" && $argc == 0} {
+	set querystring $env(QUERY_STRING)
+} elseif {[info exists argv] && $argc == 1} {
+	set querystring [lindex $argv 0]
+} else {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Could\ not\ detect\ querystring\ or\ arguments."\}
+	return
+}
+
 array set queryStringParams [getParametersFromQueryString $querystring]
 
-set filePathLogfile /var/log/eufySecurity.log
-set filePathErrfile /var/log/eufySecurity.err
-set filePathClientlLogfile /var/log/eufySecurityClient.log
+if {![info exists queryStringParams(action)]} {
+	puts "Content-Type: application/json; charset=utf-8"
+	puts ""
+	puts \{"success":false,"reason":"Could\ not\ detect\ value\ 'action'\ in\ querystring\ or\ arguments."\}
+	return
+}
 
 puts "Content-Type: application/json; charset=utf-8"
 puts ""
@@ -45,13 +58,13 @@ switch $queryStringParams(action) {
 	}
 	startService {
 		if {[array size queryStringParams] == 4} {
-			if {$queryStringParams(deleteLogfile) == "true"} {
+			if {[info exists queryStringParams(deleteLogfile)] && $queryStringParams(deleteLogfile) == "true"} {
 				deleteFile [getFilePath log]
 			}
-			if {$queryStringParams(deleteErrfile) == "true"} {
+			if {[info exists queryStringParams(deleteErrfile)] && $queryStringParams(deleteErrfile) == "true"} {
 				deleteFile [getFilePath err]
 			}
-			if {$queryStringParams(deleteClientLogfile) == "true"} {
+			if {[info exists queryStringParams(deleteClientLogfile)] && $queryStringParams(deleteClientLogfile) == "true"} {
 				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]
@@ -73,13 +86,13 @@ switch $queryStringParams(action) {
 	stopService {
 		if {[array size queryStringParams] == 4} {
 			set res [stopService]
-			if {$queryStringParams(deleteLogfile) == "true"} {
+			if {[info exists queryStringParams(deleteLogfile)] && $queryStringParams(deleteLogfile) == "true"} {
 				deleteFile [getFilePath log]
 			}
-			if {$queryStringParams(deleteErrfile) == "true"} {
+			if {[info exists queryStringParams(deleteErrfile)] && $queryStringParams(deleteErrfile) == "true"} {
 				deleteFile [getFilePath err]
 			}
-			if {$queryStringParams(deleteClientLogfile) == "true"} {
+			if {[info exists queryStringParams(deleteClientLogfile)] && $queryStringParams(deleteClientLogfile) == "true"} {
 				deleteFile [getFilePath clientLog]
 			}
 			if {$res == -1} {
@@ -107,13 +120,13 @@ switch $queryStringParams(action) {
 				puts \{"success":false,"reason":"The\ return\ value\ is\ unknown\ (got:\ '$res')."\}
 				return
 			}
-			if {$queryStringParams(deleteLogfile) == "true"} {
+			if {[info exists queryStringParams(deleteLogfile)] && $queryStringParams(deleteLogfile) == "true"} {
 				deleteFile [getFilePath log]
 			}
-			if {$queryStringParams(deleteErrfile) == "true"} {
+			if {[info exists queryStringParams(deleteErrfile)] && $queryStringParams(deleteErrfile) == "true"} {
 				deleteFile [getFilePath err]
 			}
-			if {$queryStringParams(deleteClientLogfile) == "true"} {
+			if {[info exists queryStringParams(deleteClientLogfile)] && $queryStringParams(deleteClientLogfile) == "true"} {
 				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]
