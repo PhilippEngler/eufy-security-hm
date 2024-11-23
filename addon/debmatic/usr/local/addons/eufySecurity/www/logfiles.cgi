@@ -10,17 +10,11 @@ array set queryStringParams [getParametersFromQueryString $querystring]
 
 if {[array size queryStringParams] == 2} {
 	switch $queryStringParams(file) {
-		log {
-			set fileExists [existFile /var/log/eufySecurity.log]
-			set fileContent [getFileContent /var/log/eufySecurity.log]
-		}
-		err {
-			set fileExists [existFile /var/log/eufySecurity.err]
-			set fileContent [getFileContent /var/log/eufySecurity.err]
-		}
+		log -
+		err -
 		clientLog {
-			set fileExists [existFile /var/log/eufySecurityClient.log]
-			set fileContent [getFileContent /var/log/eufySecurityClient.log]
+			set fileExists [existFile [getFilePath $queryStringParams(file)]]
+			set fileContent [getFileContent [getFilePath $queryStringParams(file)]]
 		}
 		default {
 			puts "Content-Type: application/json; charset=utf-8"
@@ -72,14 +66,10 @@ switch $queryStringParams(action) {
 	}
 	emptyfile {
 		switch $queryStringParams(file) {
-			log {
-				set res [emptyFile /var/log/eufySecurity.log]
-			}
-			err {
-				set res [emptyFile /var/log/eufySecurity.err]
-			}
+			log -
+			err -
 			clientLog {
-				set res [emptyFile /var/log/eufySecurityClient.log]
+				set res [emptyFile [getFilePath $queryStringParams(file)]]
 			}
 		}
 		puts "Content-Type: application/json; charset=utf-8"

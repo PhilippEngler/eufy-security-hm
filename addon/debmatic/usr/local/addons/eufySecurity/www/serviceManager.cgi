@@ -46,13 +46,13 @@ switch $queryStringParams(action) {
 	startService {
 		if {[array size queryStringParams] == 4} {
 			if {$queryStringParams(deleteLogfile) == "true"} {
-				deleteFile $filePathLogfile
+				deleteFile [getFilePath log]
 			}
 			if {$queryStringParams(deleteErrfile) == "true"} {
-				deleteFile $filePathErrfile
+				deleteFile [getFilePath err]
 			}
 			if {$queryStringParams(deleteClientLogfile) == "true"} {
-				deleteFile $filePathClientlLogfile
+				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]
 			if {$res == -1} {
@@ -74,13 +74,13 @@ switch $queryStringParams(action) {
 		if {[array size queryStringParams] == 4} {
 			set res [stopService]
 			if {$queryStringParams(deleteLogfile) == "true"} {
-				deleteFile $filePathLogfile
+				deleteFile [getFilePath log]
 			}
 			if {$queryStringParams(deleteErrfile) == "true"} {
-				deleteFile $filePathErrfile
+				deleteFile [getFilePath err]
 			}
 			if {$queryStringParams(deleteClientLogfile) == "true"} {
-				deleteFile $filePathClientlLogfile
+				deleteFile [getFilePath clientLog]
 			}
 			if {$res == -1} {
 				puts \{"success":false,"reason":"The\ service\ is\ already\ stopped."\}
@@ -108,13 +108,13 @@ switch $queryStringParams(action) {
 				return
 			}
 			if {$queryStringParams(deleteLogfile) == "true"} {
-				deleteFile $filePathLogfile
+				deleteFile [getFilePath log]
 			}
 			if {$queryStringParams(deleteErrfile) == "true"} {
-				deleteFile $filePathErrfile
+				deleteFile [getFilePath err]
 			}
 			if {$queryStringParams(deleteClientLogfile) == "true"} {
-				deleteFile $filePathClientlLogfile
+				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]
 			if {$res == -1} {

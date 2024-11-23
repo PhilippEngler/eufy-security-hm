@@ -46,13 +46,13 @@ switch [dict get $queryStringParams action] {
 	startService {
 		if {[dict size $queryStringParams] == 4} {
 			if {[dict get $queryStringParams deleteLogfile] == "true"} {
-				deleteFile $filePathLogfile
+				deleteFile [getFilePath log]
 			}
 			if {[dict get $queryStringParams deleteErrfile] == "true"} {
-				deleteFile $filePathErrfile
+				deleteFile [getFilePath err]
 			}
 			if {[dict get $queryStringParams deleteClientLogfile] == "true"} {
-				deleteFile $filePathClientlLogfile
+				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]
 			if {$res == -1} {
@@ -74,13 +74,13 @@ switch [dict get $queryStringParams action] {
 		if {[dict size $queryStringParams] == 4} {
 			set res [stopService]
 			if {[dict get $queryStringParams deleteLogfile] == "true"} {
-				deleteFile $filePathLogfile
+				deleteFile [getFilePath log]
 			}
 			if {[dict get $queryStringParams deleteErrfile] == "true"} {
-				deleteFile $filePathErrfile
+				deleteFile [getFilePath err]
 			}
 			if {[dict get $queryStringParams deleteClientLogfile] == "true"} {
-				deleteFile $filePathClientlLogfile
+				deleteFile [getFilePath clientLog]
 			}
 			if {$res == -1} {
 				puts \{"success":false,"reason":"The\ service\ is\ already\ stopped."\}
@@ -108,13 +108,13 @@ switch [dict get $queryStringParams action] {
 				return
 			}
 			if {[dict get $queryStringParams deleteLogfile] == "true"} {
-				deleteFile $filePathLogfile
+				deleteFile [getFilePath log]
 			}
 			if {[dict get $queryStringParams deleteErrfile] == "true"} {
-				deleteFile $filePathErrfile
+				deleteFile [getFilePath err]
 			}
 			if {[dict get $queryStringParams deleteClientLogfile] == "true"} {
-				deleteFile $filePathClientlLogfile
+				deleteFile [getFilePath clientLog]
 			}
 			set res [startService]
 			if {$res == -1} {

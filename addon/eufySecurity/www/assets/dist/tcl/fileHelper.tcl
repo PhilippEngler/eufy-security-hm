@@ -1,5 +1,22 @@
 #!/usr/bin/tclsh
 
+proc getFilePath {file} {
+    switch $file {
+        log {
+            return /var/log/eufySecurity.log
+        }
+        err {
+            return /var/log/eufySecurity.err
+        }
+        clientLog {
+            return /var/log/eufySecurityClient.log
+        }
+        default {
+            return ""
+        }
+    }
+}
+
 proc existFile {filePath} {
     if {[file exist $filePath]} {
         return true
