@@ -273,8 +273,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                     if (this.stations[stationSerial].isConnected() === true) {
                         try {
                             await this.disconnectStation(this.stations[stationSerial]);
-                        } catch (error: any) {
-                            rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`, JSON.stringify(error));
+                        } catch (e: any) {
+                            rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`, JSON.stringify(e));
                             return;
                         }
                     }
@@ -462,8 +462,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             } else {
                 rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at startStationLivestream.", error);
         }
     }
@@ -492,8 +492,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 clearTimeout(timeout);
                 this.cameraStationLivestreamTimeout.delete(deviceSerial);
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at stopStationLivestream.", error);
         }
     }
@@ -517,8 +517,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             } else {
                 rootAddonLogger.warn(`The station is already downloading a video for the device ${deviceSerial}!`);
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at startStationDownload.", error);
         }
     }
@@ -540,8 +540,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             } else {
                 rootAddonLogger.warn(`The station isn't downloading a video for the device ${deviceSerial}!`);
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at cancelStationDownload.", error);
         }
     }
@@ -664,8 +664,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                     this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
                 }
                 return res;
-            } catch (error: any) {
-                rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`, JSON.stringify(error));
+            } catch (e: any) {
+                rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`, JSON.stringify(e));
                 return false;
             }
         }
@@ -2155,8 +2155,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 rootAddonLogger.error(`addUser error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
                 this.emit("user error", device, username, new AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at addUser.", error);
         }
     }
@@ -2197,8 +2197,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 rootAddonLogger.error(`deleteUser error`, { error: getError(error), deviceSN: deviceSN, username: username });
                 this.emit("user error", device, username, new DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at deleteUser.", error);
         }
     }
@@ -2264,8 +2264,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 rootAddonLogger.error(`updateUser error`, { error: getError(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
                 this.emit("user error", device, username, new UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at updateUser.", error);
         }
     }
@@ -2310,8 +2310,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 rootAddonLogger.error(`updateUserPasscode error`, { error: getError(error), deviceSN: deviceSN, username: username });
                 this.emit("user error", device, username, new UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at updateUserPasscode.", error);
         }
     }
@@ -2352,8 +2352,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 rootAddonLogger.error(`updateUserSchedule error`, { error: getError(error), deviceSN: deviceSN, username: username, schedule: schedule });
                 this.emit("user error", device, username, new UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));
             }
-        } catch (err: any) {
-            const error = ensureError(err);
+        } catch (e: any) {
+            const error = ensureError(e);
             rootAddonLogger.error("Error occured at updateUserSchedule.", error);
         }
     }

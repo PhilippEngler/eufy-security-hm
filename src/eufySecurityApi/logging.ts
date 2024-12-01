@@ -184,8 +184,8 @@ function logMessageForClient(message: string, ...messageArgs: any[]): void {
         } else {
             appendFileSync(fileHandle, message + "\r\n", "utf-8");
         }
-    } catch (err: any) {
-        console.log(`${formatDate(Date.now())} ERROR [log]   ${err.message}`);
+    } catch (e: any) {
+        console.log(`${formatDate(Date.now())} ERROR [log]   ${e.message}`);
     } finally {
         if (fileHandle !== undefined) {
             closeSync(fileHandle);

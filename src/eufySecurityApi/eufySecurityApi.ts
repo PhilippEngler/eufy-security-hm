@@ -534,8 +534,8 @@ export class EufySecurityApi {
                 }
             }
             writeFileSync(`/var/eufySecurity/images/${station.getSerial()}/${device}/${filename}`, image.data);
-        } catch (error: any) {
-            rootAddonLogger.error(`StationImageDownload: Error occured: ${error.message}`);
+        } catch (e: any) {
+            rootAddonLogger.error(`StationImageDownload: Error occured: ${e.message}`);
         }*/
     }
 
@@ -609,8 +609,8 @@ export class EufySecurityApi {
                             rootAddonLogger.error(`StationDatabaseQueryLatest: There was an previous error retrieving the pictureTime.`, { station: station.getSerial(), device: device.getSerial() });
                         }
                     }
-                } catch (error: any) {
-                    rootAddonLogger.error(`StationDatabaseQueryLatest: Error occured: ${error.message}`);
+                } catch (e: any) {
+                    rootAddonLogger.error(`StationDatabaseQueryLatest: Error occured: ${e.message}`);
                     continue;
                 }
             }
@@ -862,7 +862,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getHousesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getHousesAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -892,7 +892,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getHouseAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getHouseAsJson. Error: ${e.message}.`, JSON.stringify(e));
             json = {"success":false, "reason":`The house with id ${houseId} does not exists.`};
             this.setLastConnectionInfo(false);
         }
@@ -963,7 +963,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getDevicesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getDevicesAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1018,7 +1018,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getDeviceAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getDeviceAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1047,7 +1047,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getDevicePropertiesMetadataAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getDevicePropertiesMetadataAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1080,7 +1080,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getDevicePropertiesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getDevicePropertiesAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1109,7 +1109,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getDeviceParams(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getDeviceParams. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1232,7 +1232,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getStationsAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getStationsAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1270,7 +1270,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getStationPropertiesMetadataAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getStationPropertiesMetadataAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1300,7 +1300,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getStationPropertiesAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getStationPropertiesAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1330,7 +1330,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getStationParams(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getStationParams. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1376,7 +1376,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at setStationProperty(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at setStationProperty. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1411,7 +1411,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at rebootStation(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at rebootStation. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1444,7 +1444,7 @@ export class EufySecurityApi {
                             } else {
                                 json = {"success":false,"reason":`Other error occured. Error: ${e.message}.`};
                             }
-                            rootAddonLogger.error(`Error occured at moveToPresetPosition(). Error: ${e.message}.`, JSON.stringify(e));
+                            rootAddonLogger.error(`Error occured at moveToPresetPosition. Error: ${e.message}.`, JSON.stringify(e));
                         }
                     } else {
                         json = {"success":false,"reason":`The station with serial ${device.getStationSerial()} does not exists.`};
@@ -1456,7 +1456,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at moveToPresetPosition(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at moveToPresetPosition. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1484,7 +1484,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getStationAsJson(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getStationAsJson. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1541,7 +1541,7 @@ export class EufySecurityApi {
                     try {
                         this.config.setP2PData(stationSerial, newP2pDid, newStationIpAddress);
                     } catch (e: any) {
-                        rootAddonLogger.error(`Error occured at saveStationsSettings(). Error: ${e.message}.`, JSON.stringify(e));
+                        rootAddonLogger.error(`Error occured at saveStationsSettings. Error: ${e.message}.`, JSON.stringify(e));
                     }
                 }
             }
@@ -1589,7 +1589,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getGuardMode(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getGuardMode. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1660,7 +1660,7 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":"No connection to eufy."};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at getGuardModeStation(). Error: ${e.message}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at getGuardModeStation. Error: ${e.message}.`, JSON.stringify(e));
             this.setLastConnectionInfo(false);
             json = {"success":false, "reason":e.message};
         }
@@ -1831,8 +1831,8 @@ export class EufySecurityApi {
                             }
                         });
                         return `{"success":${res},"enabled":${res === true ? value as boolean : !(value as boolean)}}`;
-                    } catch (error: any) {
-                        return `{"success":false,"reason":"${JSON.stringify(error)}"}`;
+                    } catch (e: any) {
+                        return `{"success":false,"reason":"${JSON.stringify(e)}"}`;
                     }
                 }
             } else {
@@ -1894,8 +1894,8 @@ export class EufySecurityApi {
                         connected = station.isConnected();
 
                         json = {"success":res, "connected":connected};
-                    } catch (error: any) {
-                        json = {"success":false, "message":error.message};
+                    } catch (e: any) {
+                        json = {"success":false, "message":e.message};
                     }
                 }
             } else {
@@ -1930,8 +1930,8 @@ export class EufySecurityApi {
                         connected = station.isConnected();
 
                         json = {"success":res, "disconnected":!connected};
-                    } catch (error: any) {
-                        json = {"success":false, "message":error.message};
+                    } catch (e: any) {
+                        json = {"success":false, "message":e.message};
                     }
                 }
             } else {
@@ -1965,9 +1965,9 @@ export class EufySecurityApi {
                     if (connected === true) {
                         try {
                             res = await this.stations.disconnectStation(station);
-                        } catch (error: any) {
-                            rootAddonLogger.error(`Error during closing p2p connection to station ${stationSerial}. Got value '${JSON.stringify(error)}'.`);
-                            json = {"success":false, "message":`Error during closing p2p connection to station ${stationSerial}. Error: '${JSON.stringify(error)}'.`};
+                        } catch (e: any) {
+                            rootAddonLogger.error(`Error during closing p2p connection to station ${stationSerial}. Got value '${JSON.stringify(e)}'.`);
+                            json = {"success":false, "message":`Error during closing p2p connection to station ${stationSerial}. Error: '${JSON.stringify(e)}'.`};
                             return JSON.stringify(json);
                         }
                         await sleep(1000);
@@ -1977,9 +1977,9 @@ export class EufySecurityApi {
                         try {
                             await sleep(1000);
                             res = await this.stations.connectStation(station);
-                        } catch (error: any) {
-                            rootAddonLogger.error(`Error during reconnecting p2p connection to station ${stationSerial}. Got value '${JSON.stringify(error)}'.`);
-                            json = {"success":false, "message":`Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(error)}'.`};
+                        } catch (e: any) {
+                            rootAddonLogger.error(`Error during reconnecting p2p connection to station ${stationSerial}. Got value '${JSON.stringify(e)}'.`);
+                            json = {"success":false, "message":`Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(e)}'.`};
                             return JSON.stringify(json);
                         }
                     }
@@ -2453,7 +2453,7 @@ export class EufySecurityApi {
                     json = {"success":false, "reason":"System variables in config disabled."};
                 }
             } catch (e: any) {
-                rootAddonLogger.error(`Error occured at checkSystemVariables(). Error: ${e.message}.`, JSON.stringify(e));
+                rootAddonLogger.error(`Error occured at checkSystemVariables. Error: ${e.message}.`, JSON.stringify(e));
                 this.setLastConnectionInfo(false);
                 json = {"success":false, "reason":e.message};
             }
@@ -2562,8 +2562,8 @@ export class EufySecurityApi {
             } else {
                 json = {"success":false, "reason":"One or more arguments not given."};
             }
-        } catch (error: any) {
-            json = {"success":false, "reason":`${error.message}`};
+        } catch (e: any) {
+            json = {"success":false, "reason":`${e.message}`};
         }
 
         return JSON.stringify(json);
@@ -2588,13 +2588,13 @@ export class EufySecurityApi {
             } else {
                 json = {"success":false, "reason":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
             }
-        } catch (error: any) {
-            if (error.status) {
-                json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":error.status};
-            } else if (error.code) {
-                json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "code":error.code};
+        } catch (e: any) {
+            if (e.status) {
+                json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":e.status};
+            } else if (e.code) {
+                json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "code":e.code};
             } else {
-                json = {"success":false, "reason":`${error.message}`};
+                json = {"success":false, "reason":`${e.message}`};
             }
         }
 
@@ -2616,8 +2616,8 @@ export class EufySecurityApi {
             } else {
                 json = {"success":false, "data":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
             }
-        } catch (error: any) {
-            json = {"success":false, "reason":`${error.message}`};
+        } catch (e: any) {
+            json = {"success":false, "reason":`${e.message}`};
         }
 
         return JSON.stringify(json);

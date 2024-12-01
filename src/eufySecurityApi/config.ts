@@ -114,9 +114,9 @@ export class Config {
             if (this.updateConfigNeeded(resConfigJson)) {
                 resConfigJson = this.updateConfig(resConfigJson);
             }
-        } catch (err: any) {
+        } catch (e: any) {
             rootConfLogger.error(`No '${filePath}' available.`);
-            rootConfLogger.error(JSON.stringify(err));
+            rootConfLogger.error(JSON.stringify(e));
         }
         return resConfigJson;
     }

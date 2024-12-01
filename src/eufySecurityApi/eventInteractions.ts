@@ -40,9 +40,9 @@ export class EventInteractions
         try {
             this.config.setInteractions(JSON.stringify(this.interactions));
             return true;
-        } catch (error: any) {
-            rootAddonLogger.error(`Error while adding integration to config. Error: ${error.message}`);
-            throw new Error(`Error while adding integration to config. Error: ${error.message}`)
+        } catch (e: any) {
+            rootAddonLogger.error(`Error while adding integration to config. Error: ${e.message}`);
+            throw new Error(`Error while adding integration to config. Error: ${e.message}`)
         }
     }
 
@@ -72,7 +72,8 @@ export class EventInteractions
                     eventInteraction.command = Buffer.from(eventInteraction.command, "base64").toString();
                 }
                 return eventInteraction;
-            } catch (error: any) {
+            } catch (e: any) {
+                rootAddonLogger.error(`Error occured while retrieving interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
                 throw new Error(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
             }
         }
@@ -102,9 +103,9 @@ export class EventInteractions
                 throw new Error(`No interaction for eventInteractionType ${eventInteractionType} at device ${deviceSerial}.`);
             }
             throw new Error(`No interactions for device ${deviceSerial}.`);
-        } catch (error: any) {
-            rootAddonLogger.error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
-            throw new Error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`)
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
+            throw new Error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`)
         }
     }
 
@@ -139,9 +140,9 @@ export class EventInteractions
             } else {
                 return false;
             }
-        } catch (error: any) {
-            rootAddonLogger.error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`);
-            throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${error.message}`)
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
+            throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`)
         }
     }
 

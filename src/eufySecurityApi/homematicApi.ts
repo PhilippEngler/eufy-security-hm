@@ -59,9 +59,9 @@ export class HomematicApi {
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        } catch (error: any) {
-            rootAddonLogger.error(`CCU request error on getSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            rootAddonLogger.debug(`CCU request error on getSystemVariable():`, JSON.stringify(error));
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on getSystemVariable(): code: ${e.code}; message: ${e.message}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariable():`, JSON.stringify(e));
             return undefined;
         }
     }
@@ -84,9 +84,9 @@ export class HomematicApi {
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        } catch (error: any) {
-            rootAddonLogger.error(`CCU request error on getSystemVariable1(): code: ${error.code}; message: ${error.message}`);
-            rootAddonLogger.debug(`CCU request error on getSystemVariable1():`, JSON.stringify(error));
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on getSystemVariable1(): code: ${e.code}; message: ${e.message}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariable1():`, JSON.stringify(e));
             return undefined;
         }
     }
@@ -111,9 +111,9 @@ export class HomematicApi {
             //rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             //return data;
-        } catch (error: any) {
-            rootAddonLogger.error(`CCU request error on setSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            rootAddonLogger.debug(`CCU request error on setSystemVariable():`, JSON.stringify(error));
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on setSystemVariable(): code: ${e.code}; message: ${e.message}`);
+            rootAddonLogger.debug(`CCU request error on setSystemVariable():`, JSON.stringify(e));
         }
     }
 
@@ -149,9 +149,9 @@ export class HomematicApi {
                 }
                 return res;
             }
-        } catch (error: any) {
-            rootAddonLogger.error(`CCU request error on getSystemVariables(): code: ${error.code}; message: ${error.message}`);
-            rootAddonLogger.debug(`CCU request error on getSystemVariables():`, JSON.stringify(error));
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on getSystemVariables(): code: ${e.code}; message: ${e.message}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariables():`, JSON.stringify(e));
             res = undefined;
         }
     }
@@ -175,9 +175,9 @@ export class HomematicApi {
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        } catch (error: any) {
-            rootAddonLogger.error(`CCU request error on createSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            rootAddonLogger.debug(`CCU request error on createSystemVariable():`, JSON.stringify(error));
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on createSystemVariable(): code: ${e.code}; message: ${e.message}`);
+            rootAddonLogger.debug(`CCU request error on createSystemVariable():`, JSON.stringify(e));
             return undefined;
         }
     }
@@ -200,9 +200,9 @@ export class HomematicApi {
             rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
 
             return data;
-        } catch (error: any) {
-            rootAddonLogger.error(`CCU request error on removeSystemVariable(): code: ${error.code}; message: ${error.message}`);
-            rootAddonLogger.debug(`CCU request error on removeSystemVariable():`, JSON.stringify(error));
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on removeSystemVariable(): code: ${e.code}; message: ${e.message}`);
+            rootAddonLogger.debug(`CCU request error on removeSystemVariable():`, JSON.stringify(e));
             return undefined;
         }
     }
@@ -224,10 +224,10 @@ export class HomematicApi {
         try {
             const res = await this.request(hostName, useHttps, requestData, requestConfig);
             return res.status;
-        } catch (error: any) {
-            rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${error.code}; message: ${error.message}`);
-            rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(error));
-            throw error;
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${e.code}; message: ${e.message}`);
+            rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(e));
+            throw e;
         }
     }
 
@@ -245,8 +245,8 @@ export class HomematicApi {
             } else {
                 return false;
             }
-        } catch (err: any) {
-            rootAddonLogger.error(`Error occured while checking sid.`, { error: err });
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured while checking sid.`, { error: e });
             return false;
         }
     }
