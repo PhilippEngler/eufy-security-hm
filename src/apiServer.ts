@@ -62,7 +62,15 @@ class ApiServer {
                 serverHttps.listen(portHttps);
                 rootAddonLogger.info(`...started. https listening on port '${portHttps}'`);
             } else {
-                rootAddonLogger.error("FAILED TO START SERVER (HTTPS): key or cert file not found.");
+                let keyCertFileHint = "key file and/or cert file";
+                if (!existsSync(keyHttps) && !existsSync(certHttps)) {
+                    keyCertFileHint = "key file and cert file";
+                } else if (!existsSync(keyHttps) && existsSync(certHttps)) {
+                    keyCertFileHint = "key file";
+                } else {
+                    keyCertFileHint = "cert file";
+                }
+                rootAddonLogger.error(`...failed. ${keyCertFileHint} not found`);
             }
         }
     }
