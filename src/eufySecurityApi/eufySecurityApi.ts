@@ -985,9 +985,15 @@ export class EufySecurityApi {
      * @returns The picture.
      */
     public async getDeviceImage(deviceSerial: string): Promise<any> {
-        const device = await this.devices.getDevice(deviceSerial);
-        if (device) {
-            return device.getPropertyValue(PropertyName.DevicePicture) as Picture
+        try {
+            if (this.devices && this.devices.existDevice(deviceSerial)) {
+                const device = await this.devices.getDevice(deviceSerial);
+                if (device.hasProperty(PropertyName.DevicePicture)) {
+                    return device.getPropertyValue(PropertyName.DevicePicture) as Picture
+                }
+            }
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured at getDeviceImage. Error: ${e.message}.`, JSON.stringify(e));
         }
         return null;
     }
