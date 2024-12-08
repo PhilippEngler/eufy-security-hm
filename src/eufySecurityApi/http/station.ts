@@ -159,6 +159,13 @@ export class Station extends TypedEmitter<StationEvents> {
         if (this.rawStation.params) {
             this.rawStation.params.forEach(param => {
                 this.updateRawProperty(param.param_type, param.param_value, "http");
+                if (param.param_type === ParamType.GUARD_MODE) {
+                    if (this.hasProperty(PropertyName.StationGuardModeTime)) {
+                        if (this.getPropertyValue(PropertyName.StationGuardModeTime) === 0) {
+                            this.updateProperty(PropertyName.StationGuardModeTime, param.update_time * 1000);
+                        }
+                    }
+                }
             });
         }
         rootHTTPLogger.debug("Update station cloud properties", { stationSN: this.getSerial(), properties: this.properties });

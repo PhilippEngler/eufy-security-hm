@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20241120
+ * 20241207
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.2.0";
+var version = "3.2.1";
 
 /**
  * common used java script functions
@@ -3300,17 +3300,20 @@ function loadDataStatechange(showLoading)
 						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? translateString("strActivate") : translateString("strDeactivate")}`, true, undefined, undefined, true)}</div>`;
 					}
 					buttons += `</div>`;
-					if(objResp.data[station].guardModeTime != "" && objResp.data[station].guardModeTime != "n/a" && objResp.data[station].guardModeTime != "n/d" && objResp.data[station].guardModeTime != undefined)
+					if(objResp.data[station].guardModeTime !== undefined)
 					{
-						lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
-						if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
+						if(objResp.data[station].guardModeTime <= 0)
 						{
-							lastChangeTimeAll = parseInt(objResp.data[station].guardModeTime);
+							lastChangeTime = translateContent("lblUnknown");
 						}
-					}
-					else if(objResp.data[station].guardModeTime == "n/a")
-					{
-						lastChangeTime = translateContent("lblUnknown");
+						else
+						{
+							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
+							if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
+							{
+								lastChangeTimeAll = parseInt(objResp.data[station].guardModeTime);
+							}
+						}
 					}
 					else
 					{

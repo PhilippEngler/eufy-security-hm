@@ -23,7 +23,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private httpService: HTTPApi;
     private stations: { [stationSerial: string ]: Station } = {};
     private skipNextModeChangeEvent = new Map<string, boolean>();
-    private lastGuardModeChangeTimeForStations = new Map<string, number | undefined>();
     private loadingEmitter = new EventEmitter();
     private stationsLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "stations loaded");
     private lightTimeouts = new Map<string, NodeJS.Timeout>();
@@ -92,7 +91,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 }
                 const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
                 this.skipNextModeChangeEvent.set(stationSerial, false);
-                this.lastGuardModeChangeTimeForStations.set(stationSerial, undefined);
 
                 promises.push(new_station.then((station: Station) => {
                     try {
@@ -660,7 +658,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                     }
                 });
                 if (res === true) {
-                    this.setLastGuardModeChangeTimeNow(stationSerial);
+                    if(this.stations[stationSerial].hasProperty(PropertyName.StationGuardModeTime)) {
+                        const timestamp = convertTimeStampToTimeStampMs(new Date().getTime(), "ms");
+                        this.stations[stationSerial].updateProperty(PropertyName.StationGuardModeTime, timestamp !== undefined ? timestamp : 0);
+                    }
                     this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
                 }
                 return res;
@@ -1466,7 +1467,10 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      * @param guardMode The new guard mode as GuardMode.
      */
     private async onStationGuardMode(station: Station, guardMode: number): Promise<void> {
-        this.setLastGuardModeChangeTimeNow(station.getSerial());
+        if(station.hasProperty(PropertyName.StationGuardModeTime)) {
+            const timestamp = convertTimeStampToTimeStampMs(new Date().getTime(), "ms");
+            station.updateProperty(PropertyName.StationGuardModeTime, timestamp !== undefined ? timestamp : 0);
+        }
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
         if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
             rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
@@ -2023,35 +2027,6 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         }
     }
 
-    /**
-     * Set the last guard mode change time to the array.
-     * @param stationSerial The serial of the station.
-     * @param time The time as timestamp or undefined.
-     */
-    private setLastGuardModeChangeTime(stationSerial: string, timeStamp: number | undefined, timeStampType: string): void {
-        if (timeStamp !== undefined) {
-            timeStamp = convertTimeStampToTimeStampMs(timeStamp, timeStampType);
-        }
-        this.lastGuardModeChangeTimeForStations.set(stationSerial, timeStamp);
-        this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations.get(stationSerial));
-    }
-
-    /**
-     * Set the time for the last guard mode change to the current time.
-     * @param stationSerial The serial of the station.
-     */
-    private setLastGuardModeChangeTimeNow(stationSerial: string): void {
-        this.setLastGuardModeChangeTime(stationSerial, new Date().getTime(), "ms");
-    }
-
-    /**
-     * Retrieve the last guard mode change time from the array.
-     * @param stationSerial The serial of the station.
-     * @returns The timestamp as number or undefined.
-     */
-    public getLastGuardModeChangeTime(stationSerial: string): number | undefined {
-        return this.lastGuardModeChangeTimeForStations.get(stationSerial);
-    }
 
     /**
      * Set the given property for the given station to the given value.

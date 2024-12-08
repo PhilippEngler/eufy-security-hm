@@ -1,5 +1,5 @@
 import { Config } from "./config";
-import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig, CommandName } from "./http";
+import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig } from "./http";
 import { HomematicApi } from "./homematicApi";
 import { rootAddonLogger, setLoggingLevel } from "./logging";
 
@@ -1195,7 +1195,6 @@ export class EufySecurityApi {
                     break;
                 case PropertyName.StationGuardMode:
                     json[property] = properties[property] === undefined ? "n/a": properties[property];
-                    json.guardModeTime = this.getStateUpdateEventActive() === false ? "n/d": (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined ? "n/a": this.stations.getLastGuardModeChangeTime(station.getSerial()));
                     break;
                 case PropertyName.StationHomeSecuritySettings:
                 case PropertyName.StationAwaySecuritySettings:
@@ -1647,10 +1646,10 @@ export class EufySecurityApi {
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
                     this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                    if (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined) {
-                        this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
+                    if (station.hasProperty(PropertyName.StationGuardModeTime)) {
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + station.getSerial(), new Date(station.getPropertyValue(PropertyName.StationGuardModeTime) as number));
                     } else {
-                        this.setSystemVariableTime("eufyLastModeChangeTime" + station.getSerial(), new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0));
+                        this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
                 } else {
                     json = {"success":false, "reason":`No station with serial ${stationSerial} found.`};
@@ -1773,10 +1772,10 @@ export class EufySecurityApi {
                     json.data.push({"stationSerial":station.getSerial(), "result":"success", "guardMode":station.getGuardMode()});
                     this.updateStationGuardModeSystemVariable(station.getSerial(), station.getGuardMode());
                     this.setLastConnectionInfo(true);
-                    if (this.stations.getLastGuardModeChangeTime(station.getSerial()) === undefined) {
-                        this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
+                    if (station.hasProperty(PropertyName.StationGuardModeTime)) {
+                        this.setSystemVariableTime("eufyLastModeChangeTime" + station.getSerial(), new Date(station.getPropertyValue(PropertyName.StationGuardModeTime) as number));
                     } else {
-                        this.setSystemVariableTime("eufyLastModeChangeTime" + station.getSerial(), new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0));
+                        this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
                 } else {
                     json = {"success":false, "data":[]};
@@ -2029,9 +2028,11 @@ export class EufySecurityApi {
 
         for (const stationSerial in stations) {
             station = stations[stationSerial]
-            tempModeChange = new Date(this.stations.getLastGuardModeChangeTime(station.getSerial()) ?? 0)
-            if (lastModeChange < tempModeChange) {
-                lastModeChange = tempModeChange;
+            if (station.hasProperty(PropertyName.StationGuardModeTime)) {
+                tempModeChange = new Date(station.getPropertyValue(PropertyName.StationGuardModeTime) as number)
+                if (lastModeChange < tempModeChange) {
+                    lastModeChange = tempModeChange;
+                }
             }
         }
         this.setSystemVariableTime("eufyLastModeChangeTime", lastModeChange);
