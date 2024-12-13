@@ -826,13 +826,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onCryingDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onCryingDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) {}
     }
 
     /**
@@ -848,13 +847,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onSoundDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onSoundDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) {}
     }
 
     /**
@@ -870,13 +868,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onPetDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onPetDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) {}
     }
 
     /**
@@ -893,13 +890,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onVehicleDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onVehicleDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) {}
     }
 
     /**
@@ -915,13 +911,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onMotionDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onMotionDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) {}
     }
 
     /**
@@ -938,13 +933,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onPersonDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onPersonDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) {}
     }
 
     /**
@@ -954,14 +948,15 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
      */
     private async onRings(device: Device, state: boolean): Promise<void> {
         rootAddonLogger.debug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
-        //this.setLastVideoTimeNow(device.getSerial());
         try {
             const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
             if (deviceEventInteraction !== null) {
                 this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
             }
+        } catch (e: any) {
+            rootAddonLogger.error(`Event "onRings": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+            rootAddonLogger.debug(`Event "onRings": device ${device.getSerial()}`, JSON.stringify(e));
         }
-        catch {}
     }
 
     /**
@@ -986,8 +981,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onOpen": device ${device.getSerial()} | state: ${state} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onOpen": device ${device.getSerial()} | state: ${state}`, JSON.stringify(e));
             }
-            catch {}
         }
         if (state === false) {
             try {
@@ -995,8 +992,10 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onOpen": device ${device.getSerial()} | state: ${state} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onOpen": device ${device.getSerial()} | state: ${state}`, JSON.stringify(e));
             }
-            catch {}
         }
     }
 
@@ -1070,12 +1069,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onDeviceRadarMotionDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onDeviceRadarMotionDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) {}
     }
 
     /**
@@ -1147,12 +1146,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onDeviceStrangerPersonDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onDeviceStrangerPersonDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) {}
     }
 
     /**
@@ -1168,12 +1167,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onDeviceDogDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onDeviceDogDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) {}
     }
 
     /**
@@ -1189,12 +1188,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onDeviceDogLickDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onDeviceDogLickDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) {}
     }
 
     /**
@@ -1210,12 +1209,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 if (deviceEventInteraction !== null) {
                     this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
+            } catch (e: any) {
+                rootAddonLogger.error(`Event "onDeviceDogPoopDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                rootAddonLogger.debug(`Event "onDeviceDogPoopDetected": device ${device.getSerial()}`, JSON.stringify(e));
             }
-            catch {}
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) {}
     }
 
     /**

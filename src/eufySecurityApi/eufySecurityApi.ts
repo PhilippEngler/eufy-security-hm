@@ -2539,7 +2539,11 @@ export class EufySecurityApi {
      * @param command The command to be executed.
      */
     public async sendInteractionCommand(hostName: string, useHttps: boolean, user: string | undefined, password: string | undefined, command: string): Promise<number> {
-        return await this.homematicApi.sendInteractionCommand(hostName, useHttps, user, password, command);
+        try {
+            return await this.homematicApi.sendInteractionCommand(hostName, useHttps, user, password, command);
+        } catch (e: any) {
+            throw e;
+        }
     }
 
     /**
@@ -2590,6 +2594,8 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
             }
         } catch (e: any) {
+            rootAddonLogger.error(`Error occured at testInteraction for device ${serialNumber}. code: ${e.code} | message: ${e.message.trim()}`);
+            rootAddonLogger.debug(`Error occured at testInteraction for device ${serialNumber}.`, JSON.stringify(e));
             if (e.status) {
                 json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":e.status};
             } else if (e.code) {
