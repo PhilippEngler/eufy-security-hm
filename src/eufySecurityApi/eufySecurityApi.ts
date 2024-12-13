@@ -2262,6 +2262,7 @@ export class EufySecurityApi {
      * @param httpsPort The https port for the api.
      * @param httpsKeyFile The key for https.
      * @param httpsCertFile The cert for https.
+     * @param acceptInvitations: Auto-accept invitations.
      * @param houseId The houseId for filtering station and devices.
      * @param connectionTypeP2p The connection type for connecting with station.
      * @param localStaticUdpPortsActive Should the api use static ports to connect with station.
