@@ -16,20 +16,14 @@ export class EventInteractions
     constructor(api: EufySecurityApi) {
         this.api = api;
         this.config = this.api.getConfig();
-        const temp = this.config.getInteractions();
-        if (temp === null || temp === "") {
-            this.interactions = null;
-        } else {
-            this.interactions = JSON.parse(temp);
-        }
+        this.interactions = this.config.getInteractions();
     }
 
     /**
      * Retrieve all interactions from config.
      */
     public getInteractions(): void {
-        const temp = this.config.getInteractions();
-        this.interactions = JSON.parse(`${temp !== undefined || temp !== "" ? temp : "{}"}`);
+        this.interactions = this.config.getInteractions();
     }
 
     /**
@@ -38,7 +32,7 @@ export class EventInteractions
      */
     private saveInteractions(): boolean {
         try {
-            this.config.setInteractions(JSON.stringify(this.interactions));
+            this.config.setInteractions(this.interactions);
             return true;
         } catch (e: any) {
             rootAddonLogger.error(`Error while adding integration to config. Error: ${e.message}`);

@@ -5,6 +5,7 @@ import { LogLevel } from "typescript-logging";
 import { DeviceConfig, PropertyValue } from ".";
 import { PhoneModels } from "./http/const";
 import { randomNumber } from "./http/utils";
+import { Interactions } from "./utils/models";
 
 export class Config {
     private configJson: any;
@@ -97,7 +98,7 @@ export class Config {
      * @returns The expected version of the config file.
      */
     private getConfigFileTemplateVersion(): number {
-        return 20;
+        return 21;
     }
 
     /**
@@ -323,6 +324,13 @@ export class Config {
                 }
                 updated = true;
             }
+            if (configJson.configVersion < 21) {
+                rootConfLogger.info("Configfile needs Stage2 update to version 21...");
+                if (configJson.interactions !== null) {
+                    configJson.interactions = JSON.parse(configJson.interactions);
+                }
+                updated = true;
+            }
             if (updated === true) {
                 configJson.configVersion = this.getConfigFileTemplateVersion();
                 configJson = this.checkConfigFile(configJson);
@@ -503,6 +511,10 @@ export class Config {
 
         if (configJson.deviceConfig !== undefined) {
             newConfigJson.deviceConfig = configJson.deviceConfig;
+        }
+
+        if (configJson.interactions !== undefined) {
+            newConfigJson.interactions = configJson.interactions;
         }
 
         return newConfigJson;
@@ -1886,18 +1898,18 @@ export class Config {
      * Retrieves the interactions from the config.
      * @returns The integrations.
      */
-    public getInteractions(): string | null {
+    public getInteractions(): Interactions | null {
         if (this.configJson.interactions !== undefined) {
             return this.configJson.interactions;
         }
-        return "";
+        return null;
     }
 
     /**
      * Set the integrations.
      * @param interactions The interactions to set.
      */
-    public setInteractions(interactions: string | null): void {
+    public setInteractions(interactions: Interactions | null): void {
         if (this.configJson.interactions !== interactions) {
             this.configJson.interactions = interactions;
             this.hasChanged = true;
