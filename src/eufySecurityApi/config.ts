@@ -327,6 +327,7 @@ export class Config {
             if (configJson.configVersion < 21) {
                 rootConfLogger.info("Configfile needs Stage2 update to version 21...");
                 if (configJson.interactions !== null) {
+                    rootConfLogger.info(" changing format of interactions.");
                     configJson.interactions = JSON.parse(configJson.interactions);
                 }
                 updated = true;
