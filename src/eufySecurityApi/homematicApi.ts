@@ -251,14 +251,13 @@ export class HomematicApi {
     public async sendInteractionCommand(hostName: string, useHttps: boolean, user: string | undefined, password: string | undefined, command: string): Promise<number> {
         const requestData = command;
         const requestConfig = this.getRequestConfig("text/plain", hostName !== "localhost" ? user : undefined, hostName !== "localhost" ? password : undefined, useHttps, hostName === "localhost" ? true : false);
-        rootAddonLogger.info(`requestConfig: ${JSON.stringify(requestConfig)}`);
 
         try {
             const res = await this.request(hostName, useHttps, requestData, requestConfig);
             return res.status;
         } catch (e: any) {
             rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${e.code}; message: ${e.message.trim()}`);
-            rootAddonLogger.error(`CCU request error on sendInteractionCommand():`, JSON.stringify(e));
+            rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(e));
             throw e;
         }
     }
