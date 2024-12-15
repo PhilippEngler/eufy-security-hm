@@ -1,4 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import * as https from 'https';
+import { existsSync, readFileSync } from "fs";
 import { EufySecurityApi } from "./eufySecurityApi";
 import { rootAddonLogger } from "./logging";
 import { promisify } from "util";
@@ -11,7 +13,7 @@ import { extractEnclosedString } from "./utils/utils";
 export class HomematicApi {
     private api: EufySecurityApi;
     private portHttp: number = 8181;
-    private portHttps: number = 8181;
+    private portHttps: number = 48181;
 
     /**
      * Create the api object.
@@ -37,7 +39,40 @@ export class HomematicApi {
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      */
     private getUrl(hostName: string, useHttps: boolean): string {
-        return `http${useHttps === true ? "s" : ""}://${hostName}:${useHttps === true ? this.portHttp : this.portHttps}/esapi.exe`;
+        return `http${useHttps === true ? "s" : ""}://${hostName}:${useHttps === false ? this.portHttp : this.portHttps}/esapi.exe`;
+    }
+
+    /**
+     * Create the requestConfig object for the connection.
+     * @param contentyType The type of content, e.g. "text/plain".
+     * @param user The user name for authentication.
+     * @param password The password for authentication.
+     * @param useHttps Specify if https is used or not.
+     * @returns The requestConfig object.
+     */
+    private getRequestConfig(contentyType: string, user: string | undefined, password: string | undefined, useHttps: boolean, isLocalhost: boolean): any {
+        let requestConfig: any = {};
+
+        let headers: any
+        headers = {
+            "Content-Type": contentyType
+        };
+        if (user !== undefined && password !== undefined) {
+            headers.Authorization = `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`;
+        }
+        requestConfig.headers = headers;
+
+        if (useHttps === true) {
+            let httpsAgent = new https.Agent({
+                ca: existsSync(this.api.getConfig().getHttpsCertFile()) === true ? readFileSync(this.api.getConfig().getHttpsCertFile()) : undefined,
+                cert: existsSync(this.api.getConfig().getHttpsCertFile()) === true ? readFileSync(this.api.getConfig().getHttpsCertFile()) : undefined,
+                key: existsSync(this.api.getConfig().getHttpsPKeyFile()) === true ? readFileSync(this.api.getConfig().getHttpsPKeyFile()) : undefined,
+                rejectUnauthorized: !isLocalhost
+            });
+            requestConfig.httpsAgent = httpsAgent
+        }
+
+        return requestConfig;
     }
 
     /**
@@ -48,7 +83,7 @@ export class HomematicApi {
      */
     public async getSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined> {
         const requestData = `string result='null';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject=dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName=='${variableName}'){result=svObject.Value();break;}}svName='null';svObject=null;`;
-        const requestConfig = { headers: {"Content-Type": "text/plain" } };
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, hostName === "localhost" ? true : false);
 
         let data = "";
         this.getSystemVariables(hostName, useHttps);
@@ -74,7 +109,7 @@ export class HomematicApi {
      */
     public async getSystemVariable1(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined> {
         const requestData = `result=dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').Value()`;
-        const requestConfig = { headers: {"Content-Type": "text/plain" } };
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, hostName === "localhost" ? true : false);
 
         let data = "";
 
@@ -100,7 +135,7 @@ export class HomematicApi {
      */
     public async setSystemVariable(hostName: string, useHttps: boolean, variableName: string, value: string): Promise<void> {
         const requestData = `dom.GetObject(ID_SYSTEM_VARIABLES).Get('${variableName}').State('${value}')`;
-        const requestConfig = { headers: {"Content-Type": "text/plain" } };
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, hostName === "localhost" ? true : false);
 
         //let data = "";
 
@@ -126,7 +161,7 @@ export class HomematicApi {
      */
     public async getSystemVariables(hostName: string, useHttps: boolean, variablePrefix?: string): Promise<string[] | undefined> {
         const requestData = "string result=dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames();";
-        const requestConfig = { headers: {"Content-Type": "text/plain" } };
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, hostName === "localhost" ? true : false);
 
         let data = "";
         let res: string[] | undefined;
@@ -165,7 +200,7 @@ export class HomematicApi {
      */
     public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined> {
         const requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('${variableName}');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('${variableInfo}');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);`;
-        const requestConfig = { headers: {"Content-Type": "text/plain" } };
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, hostName === "localhost" ? true : false);
 
         let data = "";
 
@@ -190,7 +225,7 @@ export class HomematicApi {
      */
     public async removeSystemVariable(hostName: string, useHttps: boolean, variableName: string): Promise<string | undefined> {
         const requestData = `string result='false';string svName;object svObject;foreach(svName, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedNames()){svObject = dom.GetObject(ID_SYSTEM_VARIABLES).Get(svName);if(svName == '${variableName}'){dom.DeleteObject(svObject);result='true';break;}}`;
-        const requestConfig = { headers: {"Content-Type": "text/plain" } };
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, hostName === "localhost" ? true : false);
 
         let data = "";
 
@@ -215,18 +250,15 @@ export class HomematicApi {
      */
     public async sendInteractionCommand(hostName: string, useHttps: boolean, user: string | undefined, password: string | undefined, command: string): Promise<number> {
         const requestData = command;
-        let headers: any = {"Content-Type": "text/plain"};
-        if (hostName !== "localhost" && user && password) {
-            headers.Authorization = `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`;
-        }
-        const requestConfig = { "headers": headers };
+        const requestConfig = this.getRequestConfig("text/plain", hostName !== "localhost" ? user : undefined, hostName !== "localhost" ? password : undefined, useHttps, hostName === "localhost" ? true : false);
+        rootAddonLogger.info(`requestConfig: ${JSON.stringify(requestConfig)}`);
 
         try {
             const res = await this.request(hostName, useHttps, requestData, requestConfig);
             return res.status;
         } catch (e: any) {
             rootAddonLogger.error(`CCU request error on sendInteractionCommand(): code: ${e.code}; message: ${e.message.trim()}`);
-            rootAddonLogger.debug(`CCU request error on sendInteractionCommand():`, JSON.stringify(e));
+            rootAddonLogger.error(`CCU request error on sendInteractionCommand():`, JSON.stringify(e));
             throw e;
         }
     }
@@ -255,6 +287,6 @@ export class HomematicApi {
      * Returns the version info of the homematic api.
      */
     public getHomematicApiVersion(): string {
-        return "3.1.0";
+        return "3.2.0";
     }
 }
