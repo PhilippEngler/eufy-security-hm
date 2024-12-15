@@ -2320,7 +2320,7 @@ function generateElementTextArea(type, serialNumber, name, maxLength, rows, prop
 
 function generateElementSwitch(deviceType, serialNumber, name, propertyName, value, enabled, setEventHandler)
 {
-	return `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == true ? " checked" : ""}${setEventHandler == true ? ` onclick="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.checked)` : ""}"${enabled != undefined && enabled == false ? " disabled" : ""}><label class="form-check-label" for="chk${propertyName}"${enabled != undefined && enabled == false ? " disabled" : ""}>${translatePropertyName(propertyName)}</label></div>`;
+	return `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${value === true ? " checked" : ""}${setEventHandler == true ? ` onclick="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.checked)` : ""}${enabled != undefined && enabled == false ? " disabled" : ""}><label class="form-check-label" for="chk${propertyName}"${enabled != undefined && enabled == false ? " disabled" : ""}>${translatePropertyName(propertyName)}</label></div>`;
 }
 
 function generateElementRadioGroup(deviceType, serialNumber, name, propertyName, value, setEventHandler, states)
