@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.30
-20241117
+Schema v9.31
+20241223
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20241117 (v9.30)";
+var languageVersion = "20241223 (v9.31)";
 
 function translateNavbarElement(element)
 {
@@ -556,18 +556,26 @@ function translateMessages(message, ...options)
 			return "Die Interaktion wurde erfolgreich gespeichert.";
 		case "messageSaveInteractionFailedMessage":
 			return "Die Interaktion konnte nicht gespeichert werden.";
+		case "messageTestUnstoredInteractionHeader":
+			return "Ungespeicherte Interaktion testen.";
+		case "messageTestUnstoredInteractionUnknownInteractionMessage":
+			return `Der Typ der zu testenden Interaktion ist unbekannt ('${options[0]}').`;
+		case "messageTestUnstoredInteractionOkMessage":
+			return "Die Interaktion wurde erfolgreich gesendet.";
+		case "messageTestUnstoredInteractionFailedMessage":
+			return "Die Interaktion konnte nicht gesendet werden.";
 		case "messageTestInteractionHeader":
 			return "Interaktion testen.";
 		case "messageTestInteractionUnknownInteractionMessage":
 			return `Der Typ der zu testenden Interaktion ist unbekannt ('${options[0]}').`;
 		case "messageTestInteractionOkMessage":
-			return "Die Interaktion wurde ausgeführt.";
+			return "Die Interaktion wurde erfolgreich gesendet.";
 		case "messageTestInteractionErrorStatusMessage":
-			return `Die Interaktion konnte nicht getestet werden.<br />Status: '${options[0]}'`;
+			return `Die Interaktion konnte nicht gesendet werden.<br />Status: '${options[0]}'`;
 		case "messageTestInteractionErrorCodeMessage":
-			return `Die Interaktion konnte nicht getestet werden.<br />Code: '${options[0]}'`;
+			return `Die Interaktion konnte nicht gesendet werden.<br />Code: '${options[0]}'`;
 		case "messageTestInteractionFailedMessage":
-			return "Die Interaktion konnte nicht getestet werden.";
+			return "Die Interaktion konnte nicht gesendet werden.";
 		case "messageDeleteInteractionHeader":
 			return "Interaktion löschen.";
 		case "messageDeleteInteractionUnknownInteractionMessage":
@@ -1161,11 +1169,13 @@ function translateString(content)
 			return "OK";
 		case "strLow":
 			return "niedrig";
-		case "strSave":
+		case "strInteractionSave":
 			return "Speichern";
-		case "strTest":
-			return "Testen";
-		case "strDelete":
+		case "strInteractionUnstoredTest":
+			return "Eingabe testen"
+		case "strInteractionStoredTest":
+			return "gespeicherte Interaktion testen";
+		case "strInteractionDelete":
 			return "Löschen";
 		case "strUserDefiniedSpec":
 			return "Benutzerdefinierte";
@@ -1592,6 +1602,36 @@ function translatePropertyName(propertyName)
 		case "sensorOpenEventUseHttps":
 		case "sensorCloseEventUseHttps":
 			return "Verbindung über HTTPS herstellen";
+		case "motionEventUseLocalCertificate":
+		case "radarMotionEventUseLocalCertificate":
+		case "personEventUseLocalCertificate":
+		case "petEventUseLocalCertificate":
+		case "soundEventUseLocalCertificate":
+		case "cryingEventUseLocalCertificate":
+		case "strangerPersonEventUseLocalCertificate":
+		case "vehicleEventUseLocalCertificate":
+		case "dogEventUseLocalCertificate":
+		case "dogLickEventUseLocalCertificate":
+		case "dogPoopEventUseLocalCertificate":
+		case "ringEventUseLocalCertificate":
+		case "sensorOpenEventUseLocalCertificate":
+		case "sensorCloseEventUseLocalCertificate":
+			return "Zertifikat der lokalen CCU benutzen";
+		case "motionEventRejectUnauthorized":
+		case "radarMotionEventRejectUnauthorized":
+		case "personEventRejectUnauthorized":
+		case "petEventRejectUnauthorized":
+		case "soundEventRejectUnauthorized":
+		case "cryingEventRejectUnauthorized":
+		case "strangerPersonEventRejectUnauthorized":
+		case "vehicleEventRejectUnauthorized":
+		case "dogEventRejectUnauthorized":
+		case "dogLickEventRejectUnauthorized":
+		case "dogPoopEventRejectUnauthorized":
+		case "ringEventRejectUnauthorized":
+		case "sensorOpenEventRejectUnauthorized":
+		case "sensorCloseEventRejectUnauthorized":
+			return "Verbindung nach negativer Zertifikatsüberprüfung abbrechnen";
 		case "motionEventUser":
 		case "radarMotionEventUser":
 		case "personEventUser":

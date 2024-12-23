@@ -2539,9 +2539,9 @@ export class EufySecurityApi {
      * @param useHttps true if use https, otherwise false.
      * @param command The command to be executed.
      */
-    public async sendInteractionCommand(hostName: string, useHttps: boolean, user: string | undefined, password: string | undefined, command: string): Promise<number> {
+    public async sendInteractionCommand(hostName: string, useHttps: boolean, useLocalCertificate: boolean, rejectUnauthorized: boolean, user: string | undefined, password: string | undefined, command: string): Promise<number> {
         try {
-            return await this.homematicApi.sendInteractionCommand(hostName, useHttps, user, password, command);
+            return await this.homematicApi.sendInteractionCommand(hostName, useHttps, useLocalCertificate, rejectUnauthorized, user, password, command);
         } catch (e: any) {
             throw e;
         }
@@ -2555,11 +2555,11 @@ export class EufySecurityApi {
      * @param useHttps true if use https, otherwise false.
      * @param command The command to be executed.
      */
-    public setInteraction(serialNumber: string, eventInteractionType: EventInteractionType, target: string, useHttps: boolean, command: string, user?: string, password?: string): string {
+    public setInteraction(serialNumber: string, eventInteractionType: EventInteractionType, target: string, useHttps: boolean, useLocalCertificate: boolean, rejectUnauthorized: boolean, command: string, user?: string, password?: string): string {
         let json = {};
         try {
             if (serialNumber !== "" && eventInteractionType >= 0 && eventInteractionType <= 12 && target !== "" && command !== "") {
-                const res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, {target: target, useHttps: useHttps, user, password, command: command});
+                const res = this.devices.setDeviceInteraction(serialNumber, eventInteractionType, {target: target, useHttps: useHttps, useLocalCertificate, rejectUnauthorized, user, password, command: command});
                 if (res === true) {
                     json = {"success":true, "data":`Interaction has been added successfully.`};
                 } else {
@@ -2576,16 +2576,18 @@ export class EufySecurityApi {
     }
 
     /**
-     * Test the interaction.
+     * Test the unstored interaction.
      * @param serialNumber The serial of the device.
      * @param eventInteractionType The eventInteractionType.
+     * @param target the target.
+     * @param useHttps true if use https, otherwise false.
+     * @param command The command to be executed.
      */
-    public async testInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string> {
+    public async testUnstoredInteraction(serialNumber: string, eventInteractionType: EventInteractionType, target: string, useHttps: boolean, useLocalCertificate: boolean, rejectUnauthorized: boolean, command: string, user?: string, password?: string): Promise<string> {
         let json = {};
         try {
-            const deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
-            if (deviceInteraction !== null) {
-                const res = await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.user, deviceInteraction.password, deviceInteraction.command);
+            if (serialNumber !== "" && eventInteractionType >= 0 && eventInteractionType <= 12 && target !== "" && command !== "") {
+                const res = await this.sendInteractionCommand(target, useHttps, useLocalCertificate, rejectUnauthorized, user, password, command);
                 if (res === 200) {
                     json = {"success":true, "data":`Successfully sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":res};
                 } else {
@@ -2595,8 +2597,42 @@ export class EufySecurityApi {
                 json = {"success":false, "reason":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
             }
         } catch (e: any) {
-            rootAddonLogger.error(`Error occured at testInteraction for device ${serialNumber}. code: ${e.code} | message: ${e.message.trim()}`);
-            rootAddonLogger.debug(`Error occured at testInteraction for device ${serialNumber}.`, JSON.stringify(e));
+            rootAddonLogger.error(`Error occured at testUnstoredInteraction for device ${serialNumber}. code: ${e.code} | message: ${e.message.trim()}`);
+            rootAddonLogger.debug(`Error occured at testUnstoredInteraction for device ${serialNumber}.`, JSON.stringify(e));
+            if (e.status) {
+                json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":e.status};
+            } else if (e.code) {
+                json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "code":e.code};
+            } else {
+                json = {"success":false, "reason":`${e.message}`};
+            }
+        }
+
+        return JSON.stringify(json);
+    }
+
+    /**
+     * Test the stored interaction.
+     * @param serialNumber The serial of the device.
+     * @param eventInteractionType The eventInteractionType.
+     */
+    public async testStoredInteraction(serialNumber: string, eventInteractionType: EventInteractionType): Promise<string> {
+        let json = {};
+        try {
+            const deviceInteraction = this.devices.getDeviceInteraction(serialNumber, eventInteractionType);
+            if (deviceInteraction !== null) {
+                const res = await this.sendInteractionCommand(deviceInteraction.target, deviceInteraction.useHttps, deviceInteraction.useLocalCertificate, deviceInteraction.rejectUnauthorized, deviceInteraction.user, deviceInteraction.password, deviceInteraction.command);
+                if (res === 200) {
+                    json = {"success":true, "data":`Successfully sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":res};
+                } else {
+                    json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":res};
+                }
+            } else {
+                json = {"success":false, "reason":`No interaction for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`};
+            }
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured at testStoredInteraction for device ${serialNumber}. code: ${e.code} | message: ${e.message.trim()}`);
+            rootAddonLogger.debug(`Error occured at testStoredInteraction for device ${serialNumber}.`, JSON.stringify(e));
             if (e.status) {
                 json = {"success":false, "reason":`Failed sent interaction command for eventInteractionType ${eventInteractionType} and device ${serialNumber}.`, "status":e.status};
             } else if (e.code) {

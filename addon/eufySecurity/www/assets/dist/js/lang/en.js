@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.30
-20241117
+Schema v9.31
+20241223
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20241117 (v9.30)";
+var languageVersion = "20241223 (v9.31)";
 
 function translateNavbarElement(element)
 {
@@ -556,18 +556,26 @@ function translateMessages(message, ...options)
 			return "The interaction was saved successfully.";
 		case "messageSaveInteractionFailedMessage":
 			return "The interaction could not be saved.";
+		case "messageTestUnstoredInteractionHeader":
+			return "Test unsaved interaction.";
+		case "messageTestUnstoredInteractionUnknownInteractionMessage":
+			return `The type of interaction to be send is unknown ('${options[0]}').`;
+		case "messageTestUnstoredInteractionOkMessage":
+			return "The interaction was executed.";
+		case "messageTestUnstoredInteractionFailedMessage":
+			return "The interaction could not be send.";
 		case "messageTestInteractionHeader":
 			return "Test interaction.";
 		case "messageTestInteractionUnknownInteractionMessage":
-			return `The type of interaction to be tested is unknown ('${options[0]}').`;
+			return `The type of interaction to be send is unknown ('${options[0]}').`;
 		case "messageTestInteractionOkMessage":
 			return "The interaction was executed.";
 		case "messageTestInteractionErrorStatusMessage":
-			return `The interaction could not be tested.<br />Status: '${options[0]}'`;
+			return `The interaction could not be send.<br />Status: '${options[0]}'`;
 		case "messageTestInteractionErrorCodeMessage":
-			return `The interaction could not be tested.<br />Code: '${options[0]}'`;
+			return `The interaction could not be send.<br />Code: '${options[0]}'`;
 		case "messageTestInteractionFailedMessage":
-			return "The interaction could not be tested.";
+			return "The interaction could not be send.";
 		case "messageDeleteInteractionHeader":
 			return "Delete interaction.";
 		case "messageDeleteInteractionUnknownInteractionMessage":
@@ -1161,11 +1169,13 @@ function translateString(content)
 			return "OK";
 		case "strLow":
 			return "low";
-		case "strSave":
+		case "strInteractionSave":
 			return "Save";
-		case "strTest":
-			return "Test";
-		case "strDelete":
+		case "strInteractionUnstoredTest":
+			return "Test interaction"
+		case "strInteractionStoredTest":
+			return "Test saved interaction";
+		case "strInteractionDelete":
 			return "Delete";
 		case "strUserDefiniedSpec":
 			return "User Defined";
@@ -1592,6 +1602,36 @@ function translatePropertyName(propertyName)
 		case "sensorOpenEventUseHttps":
 		case "sensorCloseEventUseHttps":
 			return "Establish connection via HTTPS";
+		case "motionEventUseLocalCertificate":
+		case "radarMotionEventUseLocalCertificate":
+		case "personEventUseLocalCertificate":
+		case "petEventUseLocalCertificate":
+		case "soundEventUseLocalCertificate":
+		case "cryingEventUseLocalCertificate":
+		case "strangerPersonEventUseLocalCertificate":
+		case "vehicleEventUseLocalCertificate":
+		case "dogEventUseLocalCertificate":
+		case "dogLickEventUseLocalCertificate":
+		case "dogPoopEventUseLocalCertificate":
+		case "ringEventUseLocalCertificate":
+		case "sensorOpenEventUseLocalCertificate":
+		case "sensorCloseEventUseLocalCertificate":
+			return "Use certificate of the local CCU";
+		case "motionEventRejectUnauthorized":
+		case "radarMotionEventRejectUnauthorized":
+		case "personEventRejectUnauthorized":
+		case "petEventRejectUnauthorized":
+		case "soundEventRejectUnauthorized":
+		case "cryingEventRejectUnauthorized":
+		case "strangerPersonEventRejectUnauthorized":
+		case "vehicleEventRejectUnauthorized":
+		case "dogEventRejectUnauthorized":
+		case "dogLickEventRejectUnauthorized":
+		case "dogPoopEventRejectUnauthorized":
+		case "ringEventRejectUnauthorized":
+		case "sensorOpenEventRejectUnauthorized":
+		case "sensorCloseEventRejectUnauthorized":
+			return "Cancel connection if certificate check failed";
 		case "motionEventUser":
 		case "radarMotionEventUser":
 		case "personEventUser":

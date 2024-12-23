@@ -61,11 +61,13 @@ export class EventInteractions
     public getDeviceEventInteraction(deviceSerial: string, eventInteractionType: EventInteractionType): EventInteraction | null {
         if (this.interactions !== null) {
             try {
-                const eventInteraction = JSON.parse(JSON.stringify(this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType]));
-                if (eventInteraction !== null) {
-                    eventInteraction.command = Buffer.from(eventInteraction.command, "base64").toString();
+                if (this.interactions.deviceInteractions[deviceSerial] !== undefined) {
+                    const eventInteraction = this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType];
+                    if (eventInteraction !== undefined && eventInteraction !== null) {
+                        return {target: eventInteraction.target, useHttps: eventInteraction.useHttps, useLocalCertificate: eventInteraction.useLocalCertificate, rejectUnauthorized: eventInteraction.rejectUnauthorized, user: eventInteraction.user, password: eventInteraction.password, command: Buffer.from(eventInteraction.command, "base64").toString()} 
+                    }
                 }
-                return eventInteraction;
+                return null;
             } catch (e: any) {
                 rootAddonLogger.error(`Error occured while retrieving interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
                 throw new Error(`Error while retrieving EventInteraction ${eventInteractionType} for device ${deviceSerial}.`);
@@ -113,13 +115,13 @@ export class EventInteractions
     public setDeviceInteraction(deviceSerial: string, eventInteractionType: EventInteractionType, deviceEventInteraction: EventInteraction): boolean {
         try {
             if (this.interactions === undefined || this.interactions === null) {
-                this.interactions = {deviceInteractions: {[deviceSerial]: {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}}}};
+                this.interactions = {deviceInteractions: {[deviceSerial]: {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, useLocalCertificate: deviceEventInteraction.useLocalCertificate, rejectUnauthorized: deviceEventInteraction.rejectUnauthorized, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}}}};
             } else {
                 if (this.interactions.deviceInteractions[deviceSerial] === undefined) {
-                    this.interactions.deviceInteractions[deviceSerial] = {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}};
+                    this.interactions.deviceInteractions[deviceSerial] = {eventInteractions: {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, useLocalCertificate: deviceEventInteraction.useLocalCertificate, rejectUnauthorized: deviceEventInteraction.rejectUnauthorized, command: Buffer.from(deviceEventInteraction.command).toString("base64")}}};
                 } else {
                     if (this.interactions.deviceInteractions[deviceSerial].eventInteractions === undefined) {
-                        this.interactions.deviceInteractions[deviceSerial].eventInteractions = {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, command: Buffer.from(deviceEventInteraction.command).toString("base64")}};
+                        this.interactions.deviceInteractions[deviceSerial].eventInteractions = {[eventInteractionType]: {target: deviceEventInteraction.target, useHttps: deviceEventInteraction.useHttps, useLocalCertificate: deviceEventInteraction.useLocalCertificate, rejectUnauthorized: deviceEventInteraction.rejectUnauthorized, command: Buffer.from(deviceEventInteraction.command).toString("base64")}};
                     } else {
                         deviceEventInteraction.command = Buffer.from(deviceEventInteraction.command).toString("base64");
                         this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType] = deviceEventInteraction;

@@ -824,7 +824,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CRYING);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onCryingDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -845,7 +845,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.SOUND);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onSoundDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -866,7 +866,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PET);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onPetDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -888,7 +888,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.VEHICLE);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onVehicleDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -909,7 +909,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onMotionDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -931,7 +931,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onPersonDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -951,7 +951,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
         try {
             const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RING);
             if (deviceEventInteraction !== null) {
-                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
             }
         } catch (e: any) {
             rootAddonLogger.error(`Event "onRings": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -979,7 +979,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.OPEN);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onOpen": device ${device.getSerial()} | state: ${state} | code: ${e.code} | message: ${e.message}`);
@@ -990,7 +990,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.CLOSE);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onOpen": device ${device.getSerial()} | state: ${state} | code: ${e.code} | message: ${e.message}`);
@@ -1067,7 +1067,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.RADAR_MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onDeviceRadarMotionDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -1144,7 +1144,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.STRANGER_PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onDeviceStrangerPersonDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -1165,7 +1165,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onDeviceDogDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -1186,7 +1186,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_LICK);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onDeviceDogLickDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
@@ -1207,7 +1207,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), EventInteractionType.DOG_POOP);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             } catch (e: any) {
                 rootAddonLogger.error(`Event "onDeviceDogPoopDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);

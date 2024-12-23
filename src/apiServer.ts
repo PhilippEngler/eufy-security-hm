@@ -465,10 +465,10 @@ class ApiServer {
                     case "generateNewTrustedDeviceName":
                         responseData = api.generateNewTrustedDeviceNameJson();
                         break;
-                    case "testInteraction":
+                    case "testStoredInteraction":
                         if (url.length === 4) {
                             try {
-                                responseData = await api.testInteraction(url[2], Number.parseInt(url[3]));
+                                responseData = await api.testStoredInteraction(url[2], Number.parseInt(url[3]));
                             } catch (error: any) {
                                 responseData = `{"success":false,"message":"Error occured. Error: ${error.message}"}`;
                             }
@@ -843,7 +843,7 @@ class ApiServer {
                         request.on("end", async function() {
                             try {
                                 const resJson = JSON.parse(postData);
-                                responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, decodeURIComponent(resJson.command), resJson.user, resJson.password);
+                                responseData = api.setInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, resJson.useLocalCertificate, resJson.rejectUnauthorized, decodeURIComponent(resJson.command), resJson.user, resJson.password);
 
                                 response.setHeader("Access-Control-Allow-Origin", "*");
                                 response.setHeader("Content-Type", "application/json; charset=UTF-8");
@@ -851,7 +851,27 @@ class ApiServer {
                                 response.writeHead(200);
                                 response.end(responseData);
                             } catch (e: any) {
-                                rootAddonLogger.error(e.message);
+                                rootAddonLogger.error(`Error occured at setInteraction: ${e.message}`, postData);
+                            }
+                        });
+                        break;
+                    case "testUnstoredInteraction":
+                        request.on("data", function (chunk) {
+                            postData += chunk.toString();
+                        });
+
+                        request.on("end", async function() {
+                            try {
+                                const resJson = JSON.parse(postData);
+                                responseData = await api.testUnstoredInteraction(resJson.serialNumber, resJson.eventType, resJson.target, resJson.useHttps, resJson.useLocalCertificate, resJson.rejectUnauthorized, decodeURIComponent(resJson.command), resJson.user, resJson.password);
+
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
+
+                                response.writeHead(200);
+                                response.end(responseData);
+                            } catch (e: any) {
+                                rootAddonLogger.error(`Error occured at testUnstoredInteraction: ${e.message}`, postData);
                             }
                         });
                         break;

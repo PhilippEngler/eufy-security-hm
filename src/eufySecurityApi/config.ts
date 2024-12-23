@@ -5,7 +5,7 @@ import { LogLevel } from "typescript-logging";
 import { DeviceConfig, PropertyValue } from ".";
 import { PhoneModels } from "./http/const";
 import { randomNumber } from "./http/utils";
-import { Interactions } from "./utils/models";
+import { EventInteraction, Interactions } from "./utils/models";
 
 export class Config {
     private configJson: any;
@@ -329,6 +329,27 @@ export class Config {
                 if (configJson.interactions !== null) {
                     rootConfLogger.info(" changing format of interactions.");
                     configJson.interactions = JSON.parse(configJson.interactions);
+
+                    rootConfLogger.info(" adding missing options to interactions...");
+                    let interactions = configJson.interactions as {deviceInteractions: {[deviceSerial: string]: {eventInteractions: {[eventInteractionType: number]: {target: string, useHttps: boolean, useLocalCertificate: boolean, rejectUnauthorized: boolean, user?: string, password?: string, command: string}}}}};
+                    for (let deviceSerial in interactions["deviceInteractions"]) {
+                        for (let eventInteractionType in interactions["deviceInteractions"][deviceSerial]["eventInteractions"]) {
+                            let oldEventInteraction = interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType];
+                            if (oldEventInteraction.rejectUnauthorized === undefined) {
+                                rootConfLogger.info(`  adding 'rejectUnauthorized' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            } else {
+                                rootConfLogger.info(`  skipping adding 'rejectUnauthorized' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            }
+                            if (oldEventInteraction.useLocalCertificate === undefined) {
+                                rootConfLogger.info(`  adding 'useLocalCertificate' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            } else {
+                                rootConfLogger.info(`  skipping adding 'useLocalCertificate' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            }
+                            let newEventInteraction: EventInteraction = {target: oldEventInteraction.target, useHttps: oldEventInteraction.useHttps, useLocalCertificate: oldEventInteraction.useLocalCertificate === undefined ? false : oldEventInteraction.useLocalCertificate, rejectUnauthorized: oldEventInteraction.rejectUnauthorized === undefined ? true : oldEventInteraction.rejectUnauthorized, user: oldEventInteraction.user, password: oldEventInteraction.password, command: oldEventInteraction.command}
+                            interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType] = newEventInteraction;
+                        }
+                    }
+                    rootConfLogger.info(" ...done adding missing options to interactions.");
                 }
                 updated = true;
             }
@@ -825,7 +846,7 @@ export class Config {
      * @param devicePublicKeys The device public keys to set.
      */
     public setDevicePublicKeys(devicePublicKeys: any): void {
-        if (this.configJson.devicePublicKeys !== devicePublicKeys) {
+        if (JSON.stringify(this.configJson.devicePublicKeys) !== JSON.stringify(devicePublicKeys)) {
             this.configJson.devicePublicKeys = devicePublicKeys;
             this.hasChanged = true;
         }
@@ -1773,7 +1794,7 @@ export class Config {
      * @param fidResponse The fid response credentials.
      */
     public setCredentialsFidResponse(fidResponse: FidInstallationResponse): void {
-        if (this.configJson.pushData.fidResponse as FidInstallationResponse !== fidResponse) {
+        if (JSON.stringify(this.configJson.pushData.fidResponse) !== JSON.stringify(fidResponse)) {
             this.configJson.pushData.fidResponse = fidResponse;
             this.hasChanged = true;
         }
@@ -1796,7 +1817,7 @@ export class Config {
      * @param checkinResponse The checkin response credentials
      */
     public setCredentialsCheckinResponse(checkinResponse: CheckinResponse): void {
-        if (this.configJson.pushData.checkinResponse as CheckinResponse !== checkinResponse) {
+        if (JSON.stringify(this.configJson.pushData.checkinResponse) !== JSON.stringify(checkinResponse)) {
             this.configJson.pushData.checkinResponse = checkinResponse;
             this.hasChanged = true;
         }
@@ -1820,7 +1841,7 @@ export class Config {
      * @param gcmResponse the gcm response credentials
      */
     public setCredentialsGcmResponse(gcmResponse: GcmRegisterResponse): void {
-        if (this.configJson.pushData.gcmResponseToken !== gcmResponse.token) {
+        if (JSON.stringify(this.configJson.pushData.gcmResponseToken) !== JSON.stringify(gcmResponse.token)) {
             this.configJson.pushData.gcmResponseToken = gcmResponse.token;
             this.hasChanged = true;
         }
@@ -1843,7 +1864,7 @@ export class Config {
      * @param persistentIds The persistent id credentials
      */
     public setCredentialsPersistentIds(persistentIds: string[]): void {
-        if (this.configJson.pushData.persistentIds !== persistentIds) {
+        if (JSON.stringify(this.configJson.pushData.persistentIds) !== JSON.stringify(persistentIds)) {
             this.configJson.pushData.persistentIds = persistentIds;
             this.hasChanged = true;
         }
@@ -1911,7 +1932,7 @@ export class Config {
      * @param interactions The interactions to set.
      */
     public setInteractions(interactions: Interactions | null): void {
-        if (this.configJson.interactions !== interactions) {
+        if (JSON.stringify(this.configJson.interactions) !== JSON.stringify(interactions)) {
             this.configJson.interactions = interactions;
             this.hasChanged = true;
         }
@@ -1940,7 +1961,7 @@ export class Config {
      * @param deviceConfig The device config to set.
      */
     public setDeviceConfig(deviceConfig: DeviceConfig): void {
-        if (this.configJson.deviceConfig !== deviceConfig) {
+        if (JSON.stringify(this.configJson.deviceConfig) !== JSON.stringify(deviceConfig)) {
             this.configJson.deviceConfig = deviceConfig;
             this.hasChanged = true;
         }

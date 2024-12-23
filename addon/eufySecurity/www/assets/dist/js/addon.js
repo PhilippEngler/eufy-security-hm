@@ -2067,7 +2067,7 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 		return;
 	}
 
-	eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": ${eventType}, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": false${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value === "" ? "" : `, "user": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value}"`}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value === "" ? "" : `, "password": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value}"`}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
+	eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": ${eventType}, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "useLocalCertificate": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseLocalCertificate`).checked}, "rejectUnauthorized": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventRejectUnauthorized`).checked}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value === "" ? "" : `, "user": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value}"`}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value === "" ? "" : `, "password": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value}"`}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 
 	var xmlHttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/setInteraction`;
@@ -2093,7 +2093,6 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
 					document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveInteractionOkMessage");
 					toast.show();
-					generateDeviceSettingsModal(deviceId, deviceName)
 				}
 				else
 				{
@@ -2125,7 +2124,77 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 	xmlHttp.send(eventInteraction);
 }
 
-function testEventInteraction(deviceId, deviceName, serialNumber, event)
+function testUnstoredEventInteraction(deviceId, deviceName, serialNumber, event)
+{
+	var eventInteraction;
+	var eventType = getEventId(event);
+	if(eventType == -1)
+	{
+		const toast = new bootstrap.Toast(toastFailed);
+		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
+		document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestUnstoredInteractionUnknownInteractionMessage", event);
+		toast.show();
+		return;
+	}
+
+	eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": ${eventType}, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "useLocalCertificate": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseLocalCertificate`).checked}, "rejectUnauthorized": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventRejectUnauthorized`).checked}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value === "" ? "" : `, "user": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value}"`}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value === "" ? "" : `, "password": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value}"`}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
+
+	var xmlHttp, objResp;
+	var url = `${location.protocol}//${location.hostname}:${port}/testUnstoredInteraction`;
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.addEventListener("load", function(event)
+	{
+		//
+	});
+	xmlHttp.addEventListener("error", function(event)
+	{
+		//
+	});
+	xmlHttp.onreadystatechange = function()
+	{
+		if(this.readyState == 4 && this.status == 200)
+		{
+			try
+			{
+				objResp = JSON.parse(this.responseText);
+				if(objResp.success == true)
+				{
+					const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageTestUnstoredInteractionOkMessage");
+					toast.show();
+				}
+				else
+				{
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestUnstoredInteractionFailedMessage");
+					toast.show();
+				}
+			}
+			catch (e)
+			{
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestUnstoredInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				toast.show();
+			}
+		}
+		else if(this.readyState == 4)
+		{
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestUnstoredInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			toast.show();
+		}
+		else
+		{ }
+	};
+	xmlHttp.open("POST", url);
+	xmlHttp.send(eventInteraction);
+}
+
+function testStoredEventInteraction(deviceId, deviceName, serialNumber, event)
 {
 	var eventType;
 	var eventType = getEventId(event);
@@ -2139,7 +2208,7 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 	}
 
 	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/testInteraction/${serialNumber}/${eventType}`;
+	var url = `${location.protocol}//${location.hostname}:${port}/testStoredInteraction/${serialNumber}/${eventType}`;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.overrideMimeType('application/json');
 	xmlhttp.onreadystatechange = function()
@@ -2155,7 +2224,6 @@ function testEventInteraction(deviceId, deviceName, serialNumber, event)
 					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageTestInteractionHeader");
 					document.getElementById("toastOKText").innerHTML = translateMessages("messageTestInteractionOkMessage");
 					toast.show();
-					generateDeviceSettingsModal(deviceId, deviceName)
 				}
 				else if(objResp.success == false && objResp.status != undefined)
 				{
@@ -2231,7 +2299,7 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
 					document.getElementById("toastOKText").innerHTML = translateMessages("messageDeleteInteractionOkMessage");
 					toast.show();
-					generateDeviceSettingsModal(deviceId, deviceName)
+					generateDeviceSettingsModal(deviceId, deviceName);
 				}
 				else
 				{
@@ -2320,7 +2388,7 @@ function generateElementTextArea(type, serialNumber, name, maxLength, rows, prop
 
 function generateElementSwitch(deviceType, serialNumber, name, propertyName, value, enabled, setEventHandler)
 {
-	return `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${value === true ? " checked" : ""}${setEventHandler == true ? ` onclick="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.checked)` : ""}${enabled != undefined && enabled == false ? " disabled" : ""}><label class="form-check-label" for="chk${propertyName}"${enabled != undefined && enabled == false ? " disabled" : ""}>${translatePropertyName(propertyName)}</label></div>`;
+	return `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${value === true ? " checked" : ""}${setEventHandler == true ? ` onclick="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.checked)"` : ""}${enabled != undefined && enabled == false ? " disabled" : ""}><label class="form-check-label" for="chk${propertyName}"${enabled != undefined && enabled == false ? " disabled" : ""}>${translatePropertyName(propertyName)}</label></div>`;
 }
 
 function generateElementRadioGroup(deviceType, serialNumber, name, propertyName, value, setEventHandler, states)
@@ -2410,23 +2478,27 @@ function generateInteractionExpander(event, enabled, deviceProperties, deviceInt
 											<div id="collapseInteraction${event.charAt(0).toUpperCase() + event.slice(1)}" class="accordion-collapse collapse">
 												<div class="accordion-body">
 													${generateElementTextBox("text", deviceProperties.serialNumber, deviceProperties.name, `${event}EventTarget`, `${event}EventTargetHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" ? deviceInteractions.eventInteractions[`${getEventId(event)}`].target : ""}`, enabled, false)}
-													${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps : false, enabled, false)}
+													${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseHttps`, deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps : false, enabled, true)}
+													${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUseLocalCertificate`, deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].useLocalCertificate !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].useLocalCertificate : false, deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps : false, false)}
+													${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, `${event}EventRejectUnauthorized`, deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].rejectUnauthorized !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].rejectUnauthorized : true, deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].useHttps : false, false)}
 													${generateElementTextBox("text", deviceProperties.serialNumber, deviceProperties.name, `${event}EventUser`, `${event}EventUserHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].user !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].user : ""}`, enabled, false)}
 													${generateElementTextBox("password", deviceProperties.serialNumber, deviceProperties.name, `${event}EventPassword`, `${event}EventPasswordHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].password !== undefined ? deviceInteractions.eventInteractions[`${getEventId(event)}`].password : ""}`, enabled, false)}
 													${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 100, 2, `${event}EventCommand`, `${event}EventCommandHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "" ? atob(deviceInteractions.eventInteractions[`${getEventId(event)}`].command) : ""}`, enabled, false)}
 													<div class="btn-group" role="group">
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}SaveEventInteraction`, "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-floppy" title="${translateString("strSave")}"></i> ${translateString("strSave")}`, enabled, undefined, undefined, setEventHandler)}`;
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}SaveEventInteraction`, "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-floppy" title="${translateString("strInteractionSave")}"></i> ${translateString("strInteractionSave")}`, enabled, undefined, undefined, setEventHandler)}`;
 			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== ""))
 			{
 				interactionExpander += `
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, enabled, undefined, undefined, setEventHandler)}
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestUnstoredEventInteraction`, "btn btn-outline-secondary", `testUnstoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play-circle" title="${translateString("strInteractionUnstoredTest")}"></i> ${translateString("strInteractionUnstoredTest")}`, enabled, undefined, undefined, setEventHandler)}
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, enabled, undefined, undefined, setEventHandler)}
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
 			}
 			else
 			{
 				interactionExpander += `
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestEventInteraction`, "btn btn-outline-secondary", `testEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play" title="${translateString("strTest")}"></i> ${translateString("strTest")}`, enabled, undefined, undefined, setEventHandler)}
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strDelete")}"></i> ${translateString("strDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestUnstoredEventInteraction`, "btn btn-outline-secondary", `testUnstoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play-circle" title="${translateString("strInteractionUnstoredTest")}"></i> ${translateString("strInteractionUnstoredTest")}`, enabled, undefined, undefined, setEventHandler)}
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, enabled, undefined, undefined, setEventHandler)}
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
 			}
 			interactionExpander += `
 													</div>
@@ -2438,45 +2510,75 @@ function generateInteractionExpander(event, enabled, deviceProperties, deviceInt
 
 function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 {
-	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/setDeviceProperty/${deviceId}/${propertyName}/${propertyValue}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
+	switch (propertyName)
 	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
+		case "motionEventUseHttps":
+		case "radarMotionEventUseHttps":
+		case "personEventUseHttps":
+		case "petEventUseHttps":
+		case "soundEventUseHttps":
+		case "cryingEventUseHttps":
+		case "strangerPersonEventUseHttps":
+		case "vehicleEventUseHttps":
+		case "dogEventUseHttps":
+		case "dogLickEventUseHttps":
+		case "dogPoopEventUseHttps":
+		case "ringEventUseHttps":
+		case "sensorOpenEventUseHttps":
+		case "sensorCloseEventUseHttps":
+			if(document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`).checked === true)
 			{
-				const toast = new bootstrap.Toast(toastOK);
-				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
-				toast.show();
-				generateDeviceSettingsModal(deviceId, deviceName)
+				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "UseLocalCertificate")).removeAttribute("disabled");
+				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "RejectUnauthorized")).removeAttribute("disabled");
 			}
 			else
 			{
-				const toast = new bootstrap.Toast(toastFailed);
-				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
-				toast.show();
+				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "UseLocalCertificate")).setAttribute("disabled", true);
+				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "RejectUnauthorized")).setAttribute("disabled", true);
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			const toast = new bootstrap.Toast(toastFailed);
-				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
-				toast.show();
-		}
-		else
-		{
-			generateContentDeviceSettingsModal(deviceId, deviceName);
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+			break;
+		default:
+			var xmlhttp, objResp;
+			var url = `${location.protocol}//${location.hostname}:${port}/setDeviceProperty/${deviceId}/${propertyName}/${propertyValue}`;
+			xmlhttp = new XMLHttpRequest();
+			xmlhttp.overrideMimeType('application/json');
+			xmlhttp.onreadystatechange = function()
+			{
+				if(this.readyState == 4 && this.status == 200)
+				{
+					objResp = JSON.parse(this.responseText);
+					if(objResp.success == true)
+					{
+						const toast = new bootstrap.Toast(toastOK);
+						document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+						document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
+						toast.show();
+						generateDeviceSettingsModal(deviceId, deviceName)
+					}
+					else
+					{
+						const toast = new bootstrap.Toast(toastFailed);
+						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+						document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
+						toast.show();
+					}
+				}
+				else if(this.readyState == 4)
+				{
+					const toast = new bootstrap.Toast(toastFailed);
+						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+						document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+						toast.show();
+				}
+				else
+				{
+					generateContentDeviceSettingsModal(deviceId, deviceName);
+				}
+			};
+			xmlhttp.open("GET", url, true);
+			xmlhttp.send();
+			break;
+	}
 }
 
 function updateSliderValue(element, value)
@@ -5370,7 +5472,7 @@ function loadDataInfo(showLoading)
 				objResp = JSON.parse(this.responseText);
 				if(objResp.success == true)
 				{
-					info = `${translateString("strAddOnName")}: ${objResp.version}`;
+					info = `${translateString("strAddOnName")}: ${objResp.version}<br />${translateString("strWebsite")}: ${version}<br />${getLanguageInfo()}`;
 					document.getElementById("versionInfo").innerHTML = info;
 				}
 				else

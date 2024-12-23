@@ -18,6 +18,8 @@ export interface DeviceInteractions {
 export interface EventInteraction {
     target: string;
     useHttps: boolean;
+    useLocalCertificate: boolean;
+    rejectUnauthorized: boolean;
     user?: string;
     password?: string;
     command: string;
