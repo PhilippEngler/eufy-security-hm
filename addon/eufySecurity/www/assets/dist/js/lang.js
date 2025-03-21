@@ -58,14 +58,14 @@ function translateStaticPageContent(page)
             translateInnerHtml("divStateChangeIntroMessage");
             translateInnerHtml("divStateChangeAllStationsHeader");
             translateInnerHtml("divStateChangeAllStationsDesc");
-            document.getElementById("btnArmAll").innerHTML = translateGuardMode(0);
+            document.getElementById("btnAwayAll").innerHTML = translateGuardMode(0);
             document.getElementById("btnHomeAll").innerHTML = translateGuardMode(1);
             document.getElementById("btnScheduleAll").innerHTML = translateGuardMode(2);
             document.getElementById("btnDisarmAll").innerHTML = translateGuardMode(63);
-            translateInnerHtml("divStateChangeToastOkHeader");
-            translateInnerHtml("divStateChangeToastOkMessage");
-            translateInnerHtml("divStateChangeToastFailedHeader");
-            translateInnerHtml("divStateChangeToastFailedMessage");
+            translateInnerHtml("toastOkHeader");
+            translateInnerHtml("toastOkText");
+            translateInnerHtml("toastFailedHeader");
+            translateInnerHtml("toastFailedText");
             break;
         case "settings":
             translateInnerHtml("settingsIntroHeader");
@@ -202,12 +202,12 @@ function translateStaticPageContent(page)
             translateInnerHtml("hintLogLevelP2p");
             translateInnerHtml("hintLogLevelPush");
             translateInnerHtml("hintLogLevelMqtt");
-            translateInnerHtml("divLogLevelAddonError");
+            /*translateInnerHtml("divLogLevelAddonError");
             translateInnerHtml("divLogLevelMainError");
             translateInnerHtml("divLogLevelHttpError");
             translateInnerHtml("divLogLevelP2pError");
             translateInnerHtml("divLogLevelPushError");
-            translateInnerHtml("divLogLevelMqttError");
+            translateInnerHtml("divLogLevelMqttError");*/
             translateInnerHtml("btnSave");
             translateInnerHtmlByReplace("settingsCardHeaderSystemvariables");
             translateInnerHtmlByReplace("settingsCardHeaderErrorHandling");

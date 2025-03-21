@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20241207
+ * 202501321
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.2.1";
+var version = "3.2.2";
 
 /**
  * common used java script functions
@@ -40,6 +40,7 @@ function start(page)
 
 function init(page)
 {
+	var urlParams
 	if(window.location.search != "")
 	{
 		urlParams = new URLSearchParams(window.location.search);
@@ -97,102 +98,123 @@ function addUrlParams(urlParameter)
 	document.getElementById("niInfo").setAttribute("href", document.getElementById("niInfo").getAttribute("href") + urlParameter);
 }
 
-function getServiceState(page)
-{
-	var xmlHttp, objResp;
-	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=getServiceState`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					if(objResp.running == true)
-					{
-						serviceState = "running";
-					}
-					else
-					{
-						serviceState = "stopped";
-					}
-				}
-				else
-				{
-					serviceState = undefined;
-				}
-			}
-			catch (e)
-			{
-				serviceState =  undefined;
-			}
-			getAPIPort(page)
+function retrieveData(method, url, mimeType, postData, waitElementId, waitMessage, waitFunction, waitFuntionArguments, readyStateChangeFunction, readyStateChangeFunctionArguments) {
+	return new Promise((resolve, reject) => {
+		let xmlHttp = new XMLHttpRequest();
+		if(mimeType != undefined) {
+			xmlHttp.overrideMimeType(mimeType);
 		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
-}
 
-function getAPIPort(page)
-{
-	if(serviceState == "running")
-	{
-		var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.json`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				try
-				{
-					objResp = JSON.parse(this.responseText);
-					if(location.protocol == "http:")
-					{
-						if(objResp.useHttp == true && objResp.httpPort !== undefined)
-						{
-							port = objResp.httpPort;
-							document.getElementById("loadApiSettingsError").innerHTML = "";
-							checkConfigNeeded(page);
-							return;
-						}
-					}
-					else
-					{
-						if(objResp.useHttps == true && objResp.httpsPort !== undefined)
-						{
-							port = objResp.httpsPort;
-							document.getElementById("loadApiSettingsError").innerHTML = "";
-							checkConfigNeeded(page);
-							return;
-						}
-					}
-					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortInactiveHeader", location.protocol.replace(":", "")), "", translateMessages("messageApiPortInactiveSubText", location.protocol == "http:" ? "https-" : "http-"));
-				}
-				catch (e)
-				{
-					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorPrintErrorMessage", e));
-				}
-			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+		xmlHttp.onreadystatechange = function() {
+			//called on each readyState change
+			if(readyStateChangeFunction !== undefined) {
+				readyStateChangeFunction.apply(this, readyStateChangeFunctionArguments);
 			}
 		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-	else
-	{
-		if(page !== "logfiles" && page !== "info" && page !== "restartWaiter")
-		{
-			document.getElementById("serviceNotRunningError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorServiceNotRunningHeader"), "", translateMessages("messageErrorServiceNotRunningMessage"));
+
+		xmlHttp.onloadstart = function() {
+			//called when load starts; readyState is 3
+			if(waitElementId !== undefined && waitMessage !== undefined) {
+				document.getElementById(waitElementId).innerHTML = createWaitMessage(translateContent(waitMessage));
+			} else if(waitFunction !== undefined) {
+				waitFunction.apply(this, waitFuntionArguments);
+			}
+		};
+
+		xmlHttp.onabort = function() {
+			reject({"cause": "ABORT"});
+		};
+
+		xmlHttp.onload = function() {
+			//called when load finished successfully; readyState is 4; state is 200
+			resolve(this.responseText)
+		};
+
+		xmlHttp.onerror = function() {
+			//called when load finished with error; readyState is 4; state is 0
+			reject({"cause": "ERROR", "readyState": this.readyState, "state": this.state});
+		};
+
+		xmlHttp.onloadend = function() {
+			//called when load finished (successfully and with error); readyState is 4; state is 0 or 200
+
+		};
+
+		xmlHttp.open(method, url, true);
+		if(method == "POST") {
+			xmlHttp.send(postData);
+		} else {
+			xmlHttp.send();
 		}
-		else
-		{
+	});
+};
+
+async function getServiceState(page) {
+	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=getServiceState`;
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.running == true) {
+					serviceState = "running";
+				} else {
+					serviceState = "stopped";
+				}
+			} else {
+				serviceState = undefined;
+			}
+		} catch (e) {
+			serviceState = undefined;
+		}
+	}).catch((err) => {
+		serviceState = undefined;
+	});
+
+	getAPIPort(page)
+}
+
+async function getAPIPort(page) {
+	if(serviceState == "running") {
+		var objResp, objErr;
+		var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/apiPorts.json`;
+		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(location.protocol == "http:") {
+					if(objResp.useHttp == true && objResp.httpPort !== undefined) {
+						port = objResp.httpPort;
+						document.getElementById("loadApiSettingsError").innerHTML = "";
+						checkConfigNeeded(page);
+						return;
+					}
+				} else {
+					if(objResp.useHttps == true && objResp.httpsPort !== undefined) {
+						port = objResp.httpsPort;
+						document.getElementById("loadApiSettingsError").innerHTML = "";
+						checkConfigNeeded(page);
+						return;
+					}
+				}
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortInactiveHeader", location.protocol.replace(":", "")), "", translateMessages("messageApiPortInactiveSubText", location.protocol == "http:" ? "https-" : "http-"));
+			} catch (e) {
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+			}
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("loadApiSettingsError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState));
+				}
+			} catch (e) {
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+			}
+		});
+	} else {
+		if(page !== "logfiles" && page !== "info" && page !== "restartWaiter") {
+			document.getElementById("serviceNotRunningError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorServiceNotRunningHeader"), "", translateMessages("messageErrorServiceNotRunningMessage"));
+		} else {
 			checkConfigNeeded(page);
 		}
 	}
@@ -215,7 +237,7 @@ function initContent(page)
 			break;
 		case "settings":
 			validateFormSettings();
-			loadCountries();
+			loadSettings();
 			break;
 		case "logfiles":
 			initLogViewer("log", true);
@@ -229,8 +251,7 @@ function initContent(page)
 	}
 }
 
-function checkConfigNeeded(page)
-{
+async function checkConfigNeeded(page) {
 	if(page == "settings" || page == "logfiles" || page == "info" || page == "restartWaiter")
 	{
 		initContent(page);
@@ -238,74 +259,73 @@ function checkConfigNeeded(page)
 	}
 	if(serviceState == "running")
 	{
-		var xmlhttp, objResp;
+		var objResp, objErr;
 		var url = `${location.protocol}//${location.hostname}:${port}/getApiState`;
-		xmlhttp = new XMLHttpRequest();
-		xmlhttp.overrideMimeType('application/json');
-		xmlhttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
+		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+			try {
 				document.getElementById("commonError").innerHTML = "";
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					if(objResp.data.serviceState == "configNeeded")
-					{
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
+					if(objResp.data.serviceState == "configNeeded") {
 						generateConfigNeeded(page);
-					}
-					else
-					{
+					} else {
 						initContent(page);
 					}
+				} else {
+					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 				}
+			} catch (e) {
+				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "checkConfigNeeded"))}`;
+				}
+			} catch (e) {
+				document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 			}
-		};
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
-	}
-	else
-	{
+		});
+	} else {
 		initContent(page);
 	}
 }
 
-function checkTfaCaptchaState(page)
-{
+async function checkTfaCaptchaState(page) {
 	if(serviceState == "running")
 	{
-		var xmlhttp, objResp;
+		var objResp, objErr;
 		var url = `${location.protocol}//${location.hostname}:${port}/getTfaCaptchaState`;
-		xmlhttp = new XMLHttpRequest();
-		xmlhttp.overrideMimeType('application/json');
-		xmlhttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					if(objResp.tfaNeeded == true)
-					{
+		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
+					if(objResp.tfaNeeded == true) {
 						generateTfaCodeModal(page, objResp);
-					}
-					else if(objResp.captchaNeeded == true)
-					{
+					} else if(objResp.captchaNeeded == true) {
 						generateCaptchaCodeModal(page, objResp);
 					}
-				}
-				else
-				{
+				} else {
 					document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 				}
+			} catch (e) {
+				document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 			}
-		};
-		xmlhttp.open("GET", url, true);
-		xmlhttp.send();
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "checkTfaCaptchaState"))}`;
+				}
+			} catch (e) {
+				document.getElementById("captchaMessage").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+			}
+		});
 	}
 }
 
@@ -372,37 +392,32 @@ function generateContentTfaCodeModal(page, objResp)
 	document.getElementById("modalTfaCode").innerHTML = tfaCodeModal;
 }
 
-function setTfaCode(page)
-{
-	var xmlhttp, objResp;
+async function setTfaCode(page) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/setTfaCode/${document.getElementById("txtTfaCode").value}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
 				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=tfa&redirect=${page}.html`;
-			}
-			else
-			{
+			} else {
 				document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 			}
+		} catch (e) {
+			document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "setTfaCode"))}`;
+			}
+		} catch (e) {
+			document.getElementById("tfaHint").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{
-			document.getElementById("tfaHint").innerHTML = createWaitMessage(translateContent("lblWaitMessageSendTfa"));
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
 function generateCaptchaCodeModal(page, objResp)
@@ -437,37 +452,32 @@ function generateContentCaptchaCodeModal(page, objResp)
 	document.getElementById("modalCaptchaCode").innerHTML = captchaCodeModal;
 }
 
-function setCaptchaCode(page)
-{
-	var xmlhttp, objResp;
+async function setCaptchaCode(page) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/setCaptchaCode/${document.getElementById("txtCaptchaCode").value}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, "captchaHint", "lblWaitMessageSendCaptcha", undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
 				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=captcha&redirect=${page}.html`;
-			}
-			else
-			{
+			} else {
 				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaSendError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 			}
+		} catch (e) {
+			document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "setCaptchCode"))}`;
+			}
+		} catch (e) {
+			document.getElementById("captchaHint").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{
-			document.getElementById("captchaHint").innerHTML = createWaitMessage(translateContent("lblWaitMessageSendCaptcha"));
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
 function downloadFile(filetype)
@@ -556,81 +566,59 @@ function createMessageContainer(classText, messageHeader, messageText, messageSu
  * Scripts for devices.html
  */
 //#region devices.html
-function loadStations()
-{
-	var xmlhttp, objResp, text = "", station = "", stations = "";
+async function loadStations() {
+	var objResp, objErr, text = "", station = "", stations = "";
 	var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				if(objResp.data.length > 0)
-				{
-					for(station in objResp.data)
-					{
-						if(objResp.data[station].deviceType == "station")
-						{
+	await retrieveData("GET", url, 'application/json', undefined, "stations", "lblWaitMessageLoadStations", undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.data.length > 0) {
+					for(station in objResp.data) {
+						if(objResp.data[station].deviceType == "station") {
 							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", translateContent("lblCurrentState"), `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? translateGuardMode(objResp.data[station].guardMode) : translateContent("lblPrivacy")}`)}</div>`, `<small class="text-muted">${translateContent("lblIpAddress")}: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
-					if(stations == "")
-					{
+					if(stations == "") {
 						text = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-primary", translateMessages("messageNoManageableStationsFoundHeader"), translateMessages("messageNoManageableStationsFoundMessage"), translateMessages("messageNoManageableStationsFoundSubText"))}`
-					}
-					else
-					{
+					} else {
 						text = createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
 					}
 					document.getElementById("stations").innerHTML =  text;
-				}
-				else
-				{
+				} else {
 					document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-primary", translateMessages("messageNoStationsFoundHeader"), translateMessages("messageNoStationsFoundMessage"), translateMessages("messageNoStationsFoundSubText"))}`;
 				}
-			}
-			else
-			{
+			} else {
 				document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingStationsHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 			}
+		} catch (e) {
+			document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingStationsHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingStationsHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadStations"))}`;
+			}
+		} catch (e) {
+			document.getElementById("stations").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{
-			document.getElementById("stations").innerHTML = createWaitMessage(translateContent("lblWaitMessageLoadStations"));
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
-function loadDevices()
-{
-	var xmlhttp, objResp, device;
+async function loadDevices() {
+	var objResp, objErr, device;
 	var text = "", cams = "", indoorcams = "", solocams = "", starlight4glte = "", doorbellcams = "", outdoorlights = "", locks = "", keypads = "", sensors = "", unknown = "";
 	var url = `${location.protocol}//${location.hostname}:${port}/getDevices`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				if(objResp.data.length > 0)
-				{
-					for(device in objResp.data)
-					{
-						switch(objResp.data[device].deviceType)
-						{
+	await retrieveData("GET", url, 'application/json', undefined, "devices", "lblWaitMessageLoadDevices", undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.data.length > 0) {
+					for(device in objResp.data) {
+						switch (objResp.data[device].deviceType) {
 							case "camera":
 								cams += createCardDevice(objResp.data[device]);
 								break;
@@ -675,28 +663,27 @@ function loadDevices()
 					text += createDeviceTypeCardsContainer("sensors", translateContent("lblSensors"), sensors);
 					text += createDeviceTypeCardsContainer("unknown", translateContent("lblUnknownDevice"), unknown);
 					document.getElementById("devices").innerHTML =  text;
-				}
-				else
-				{
+				} else {
 					document.getElementById("devices").innerHTML = `<h4>${translateContent("lblDevices")}</h4>${createMessageContainer("alert alert-primary", translateMessages("messageNoDevicesFoundHeader"), translateMessages("messageNoDevicesFoundMessage"), translateMessages("messageNoDevicesFoundSubText"))}`;
 				}
-			}
-			else
-			{
+			} else {
 				document.getElementById("devices").innerHTML = `<h4>${translateContent("lblDevices")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingDevicesHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
 			}
+		} catch (e) {
+			document.getElementById("devices").innerHTML = `<h4>${translateContent("lblDevices")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("devices").innerHTML = `<h4>${translateContent("lblDevices")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingDevicesHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState))}`;
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("devices").innerHTML = `<h4>${translateContent("lblDevices")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("devices").innerHTML = `<h4>${translateContent("lblDevices")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingDevicesHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadDevices"))}`;
+			}
+		} catch (e) {
+			document.getElementById("devices").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{
-			document.getElementById("devices").innerHTML = createWaitMessage(translateContent("lblWaitMessageLoadDevices"));
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
 function createCardDevice(device)
@@ -1002,80 +989,68 @@ function generateContentDeviceSettingsModal(deviceId, deviceName)
 	document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
 }
 
-function getDevicePropertiesMetadata(deviceId)
-{
-	var xmlhttp, objResp;
+async function getDevicePropertiesMetadata(deviceId) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				if(objResp.data.length = 1)
-				{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.data.length = 1) {
 					getDeviceProperties(deviceId, objResp.data);
+				} else {
+					document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorNoDeviceForGetInfo", "DevicePropertiesMetadata"));
 				}
-				else
-				{
-					document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorNoDeviceForGetInfo", "DevicePropertiesMetadata"));;
-				}
-			}
-			else
-			{
+			} else {
 				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DevicePropertiesMetadata"));
 			}
+		} catch (e) {
+			document.getElementById("modalDeviceSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DevicePropertiesMetadata"));
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("modalDeviceSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DevicePropertiesMetadata"));
+			}
+		} catch (e) {
+			document.getElementById("modalDeviceSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{ }
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
-function getDeviceProperties(deviceId, devicePropertiesMetadata)
-{
-	var xmlhttp, objResp;
+async function getDeviceProperties(deviceId, devicePropertiesMetadata) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/getDeviceProperties/${deviceId}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				if(objResp.data.length = 1)
-				{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.data.length = 1) {
 					fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, objResp.modelName, objResp.isDeviceKnownByClient, objResp.data.properties, objResp.data.commands, objResp.interactions);
-				}
-				else
-				{
+				} else {
 					document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorNoDeviceForGetInfo", "DeviceProperties"));
 				}
-			}
-			else
-			{
+			} else {
 				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DeviceProperties"));
 			}
+		} catch (e) {
+			document.getElementById("modalDeviceSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DeviceProperties"));
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DeviceProperties"));
+			}
+		} catch (e) {
+			document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{ }
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
 function generateDeviceModalErrorMessage(errorMessage)
@@ -1117,7 +1092,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedDeviceHeading"), `${translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`)}${deviceProperties.serialNumber === deviceProperties.stationSerialNumber ? `</p><p class="mt-2">${translateContent("lblNotSupportedStationMessageSolo", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`)}` : ""}`, translateContent("lblNotSupportedDeviceSubText"))}
 									${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedDeviceNoSaving"), "", "")}`;
 	}
-	else if (isDeviceKnownByClient === false)
+	else if(isDeviceKnownByClient === false)
 	{
 		setEventHandler = false;
 		deviceModal += `
@@ -1180,7 +1155,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	
-	if (deviceProperties.state !== undefined && deviceProperties.state !== 1)
+	if(deviceProperties.state !== undefined && deviceProperties.state !== 1)
 	{
 		setEventHandler = false;
 		switch (deviceProperties.state)
@@ -1303,7 +1278,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblMotionDetectionSensitivity")}</h5>`;
-				if (deviceProperties.motionDetectionSensitivity !== undefined)
+				if(deviceProperties.motionDetectionSensitivity !== undefined)
 				{
 					if(devicePropertiesMetadata.motionDetectionSensitivity.states === undefined)
 					{
@@ -2054,8 +2029,7 @@ function getEventId(event)
 	}
 }
 
-function saveEventInteraction(deviceId, deviceName, serialNumber, event)
-{
+async function saveEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventInteraction;
 	var eventType = getEventId(event);
 	if(eventType == -1)
@@ -2069,63 +2043,52 @@ function saveEventInteraction(deviceId, deviceName, serialNumber, event)
 
 	eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": ${eventType}, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "useLocalCertificate": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseLocalCertificate`).checked}, "rejectUnauthorized": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventRejectUnauthorized`).checked}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value === "" ? "" : `, "user": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value}"`}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value === "" ? "" : `, "password": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value}"`}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 
-	var xmlHttp, objResp;
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/setInteraction`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.addEventListener("load", function(event)
-	{
-		//
-	});
-	xmlHttp.addEventListener("error", function(event)
-	{
-		//
-	});
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-					document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveInteractionOkMessage");
-					toast.show();
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveInteractionFailedMessage");
-					toast.show();
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("POST", url, 'application/json', eventInteraction, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveInteractionOkMessage");
+				toast.show();
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveInteractionFailedMessage");
 				toast.show();
 			}
-		}
-		else if(this.readyState == 4)
-		{
+		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
 			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
-			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 			toast.show();
 		}
-		else
-		{ }
-	};
-	xmlHttp.open("POST", url);
-	xmlHttp.send(eventInteraction);
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
-function testUnstoredEventInteraction(deviceId, deviceName, serialNumber, event)
-{
+async function testUnstoredEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventInteraction;
 	var eventType = getEventId(event);
 	if(eventType == -1)
@@ -2139,63 +2102,52 @@ function testUnstoredEventInteraction(deviceId, deviceName, serialNumber, event)
 
 	eventInteraction = `{"serialNumber": "${serialNumber}", "eventType": ${eventType}, "target": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventTarget`).value}", "useHttps": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseHttps`).checked}, "useLocalCertificate": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventUseLocalCertificate`).checked}, "rejectUnauthorized": ${document.getElementById(`chk${event.charAt(0).toUpperCase() + event.slice(1)}EventRejectUnauthorized`).checked}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value === "" ? "" : `, "user": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventUser`).value}"`}${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value === "" ? "" : `, "password": "${document.getElementById(`txtBox${event.charAt(0).toUpperCase() + event.slice(1)}EventPassword`).value}"`}, "command": "${encodeURIComponent(document.getElementById(`txtArea${event.charAt(0).toUpperCase() + event.slice(1)}EventCommand`).value)}"}`;
 
-	var xmlHttp, objResp;
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/testUnstoredInteraction`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.addEventListener("load", function(event)
-	{
-		//
-	});
-	xmlHttp.addEventListener("error", function(event)
-	{
-		//
-	});
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
-					document.getElementById("toastOKText").innerHTML = translateMessages("messageTestUnstoredInteractionOkMessage");
-					toast.show();
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestUnstoredInteractionFailedMessage");
-					toast.show();
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("POST", url, 'application/json', eventInteraction, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageTestUnstoredInteractionOkMessage");
+				toast.show();
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
-				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestUnstoredInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestUnstoredInteractionFailedMessage");
 				toast.show();
 			}
-		}
-		else if(this.readyState == 4)
-		{
+		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
 			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
-			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestUnstoredInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestUnstoredInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 			toast.show();
 		}
-		else
-		{ }
-	};
-	xmlHttp.open("POST", url);
-	xmlHttp.send(eventInteraction);
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestUnstoredInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
-function testStoredEventInteraction(deviceId, deviceName, serialNumber, event)
-{
+async function testStoredEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventType;
 	var eventType = getEventId(event);
 	if(eventType == -1)
@@ -2207,70 +2159,62 @@ function testStoredEventInteraction(deviceId, deviceName, serialNumber, event)
 		return;
 	}
 
-	var xmlhttp, objResp;
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/testStoredInteraction/${serialNumber}/${eventType}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastOKText").innerHTML = translateMessages("messageTestInteractionOkMessage");
-					toast.show();
-				}
-				else if(objResp.success == false && objResp.status != undefined)
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionErrorStatusMessage", objResp.status);
-					toast.show();
-				}
-				else if(objResp.success == false && objResp.code != undefined)
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionErrorCodeMessage", objResp.code);
-					toast.show();
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionFailedMessage");
-					toast.show();
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageTestInteractionOkMessage");
+				toast.show();
+			} else if(objResp.success == false && objResp.status != undefined) {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionErrorStatusMessage", objResp.status);
+				toast.show();
+			} else if(objResp.success == false && objResp.code != undefined) {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionErrorCodeMessage", objResp.code);
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionFailedMessage");
 				toast.show();
 			}
-		}
-		else if(this.readyState == 4)
-		{
+		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
 			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
-			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 			toast.show();
 		}
-		else
-		{ }
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageTestInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
-function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
-{
+async function deleteEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventType;
 	var eventType = getEventId(event);
 	if(eventType == -1)
@@ -2282,53 +2226,50 @@ function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 		return;
 	}
 
-	var xmlhttp, objResp;
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/deleteInteraction/${serialNumber}/${eventType}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-					document.getElementById("toastOKText").innerHTML = translateMessages("messageDeleteInteractionOkMessage");
-					toast.show();
-					generateDeviceSettingsModal(deviceId, deviceName);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageDeleteInteractionFailedMessage");
-					toast.show();
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageDeleteInteractionOkMessage");
+				toast.show();
+				generateDeviceSettingsModal(deviceId, deviceName);
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageDeleteInteractionFailedMessage");
 				toast.show();
 			}
-		}
-		else if(this.readyState == 4)
-		{
+		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
 			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
-			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+			document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorPrintErrorMessage", e)}`;
 			toast.show();
 		}
-		else
-		{ }
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageDeleteInteractionFailedMessage")}<br />${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
 function isStationOrDevicesKnown(modell)
@@ -2359,6 +2300,7 @@ function isStationOrDevicesKnown(modell)
 		case "T84A1":
 		//SoloCams
 		case "T8170":
+		case "T8134":
 		//Sensors
 		case "T8900":
 		case "T8910":
@@ -2368,11 +2310,11 @@ function isStationOrDevicesKnown(modell)
 	}
 }
 
-function generateElementTextBox(textBoxType, serialNumber, name, propertyName, hint, placeholder, value, enabled, readonly)
+function generateElementTextBox(textBoxType, serialNumber, name, propertyName, hint, placeholder, value, enabled, readonly, onchange)
 {
 	return `<div class="mb-2">
 		<label for="txtBox${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label">${translatePropertyName(propertyName)}</label>
-		<input class="form-control" type="${textBoxType}"${placeholder !== undefined || placeholder !== "" ? ` placeholder="${placeholder}"` : ""} aria-label="" id="txtBox${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value}"${enabled == false ? " disabled" : ""}${readonly == true ? " readonly" : ""}>
+		<input class="form-control" type="${textBoxType}"${placeholder !== undefined || placeholder !== "" ? ` placeholder="${placeholder}"` : ""} aria-label="" id="txtBox${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value}"${onchange !== undefined || onchange !== "" ? ` onchange="${onchange}"` : ""}${enabled == false ? " disabled" : ""}${readonly == true ? " readonly" : ""}>
 		${hint !== undefined || hint !== "" ? `<div id="passwordHelpBlock" class="form-text">${translatePropertyName(hint)}</div>` : ""}
 	</div>`;
 }
@@ -2508,8 +2450,7 @@ function generateInteractionExpander(event, enabled, deviceProperties, deviceInt
 	return interactionExpander;
 }
 
-function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
-{
+async function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue) {
 	switch (propertyName)
 	{
 		case "motionEventUseHttps":
@@ -2526,58 +2467,56 @@ function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue)
 		case "ringEventUseHttps":
 		case "sensorOpenEventUseHttps":
 		case "sensorCloseEventUseHttps":
-			if(document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`).checked === true)
-			{
+			if(document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`).checked === true) {
 				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "UseLocalCertificate")).removeAttribute("disabled");
 				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "RejectUnauthorized")).removeAttribute("disabled");
-			}
-			else
-			{
+			} else {
 				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "UseLocalCertificate")).setAttribute("disabled", true);
 				document.getElementById(`chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}`.replace("UseHttps", "RejectUnauthorized")).setAttribute("disabled", true);
 			}
 			break;
 		default:
-			var xmlhttp, objResp;
+			var objResp, objErr;
 			var url = `${location.protocol}//${location.hostname}:${port}/setDeviceProperty/${deviceId}/${propertyName}/${propertyValue}`;
-			xmlhttp = new XMLHttpRequest();
-			xmlhttp.overrideMimeType('application/json');
-			xmlhttp.onreadystatechange = function()
-			{
-				if(this.readyState == 4 && this.status == 200)
-				{
-					objResp = JSON.parse(this.responseText);
-					if(objResp.success == true)
-					{
+			await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, generateContentDeviceSettingsModal, [deviceId, deviceName]).then((result) => {
+				try {
+					objResp = JSON.parse(result);
+					if(objResp.success == true) {
 						const toast = new bootstrap.Toast(toastOK);
 						document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
 						document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
 						toast.show();
 						generateDeviceSettingsModal(deviceId, deviceName)
-					}
-					else
-					{
+					} else {
 						const toast = new bootstrap.Toast(toastFailed);
 						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
 						document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
 						toast.show();
 					}
+				} catch (e) {
+					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 				}
-				else if(this.readyState == 4)
-				{
-					const toast = new bootstrap.Toast(toastFailed);
+			}).catch((err) => {
+				try {
+					objErr = JSON.parse(err);
+					if(objErr.cause == "ABORT") {
+						const toast = new bootstrap.Toast(toastFailed);
+						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+						document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+						toast.show();
+					} else {
+						const toast = new bootstrap.Toast(toastFailed);
 						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
-						document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState)}`;
+						document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+						toast.show();
+					}
+				} catch (e) {
+					const toast = new bootstrap.Toast(toastFailed);
+						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+						document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
 						toast.show();
 				}
-				else
-				{
-					generateContentDeviceSettingsModal(deviceId, deviceName);
-				}
-			};
-			xmlhttp.open("GET", url, true);
-			xmlhttp.send();
-			break;
+			});
 	}
 }
 
@@ -2650,118 +2589,100 @@ function generateContentStationSettingsModal(stationId, stationName)
 	document.getElementById("modalStationSettings").innerHTML = stationModal;
 }
 
-function getTimeZones(stationId)
-{
-	var xmlhttp, objResp;
+async function getTimeZones(stationId) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/getTimeZones`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				if(objResp.data.length > 0)
-				{
-					getStationPropertiesMetadata(stationId, objResp.data)
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+					if(objResp.data.length > 0) {
+						getStationPropertiesMetadata(stationId, objResp.data)
+					} else {
+						document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageLoadTimeZoneInfoNotSuccessfullMessage"));
+					}
+				} else {
+					document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageLoadTimeZoneInfoFailedMessage"));
 				}
-				else
-				{
-					document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageLoadTimeZoneInfoNotSuccessfullMessage"));;
-				}
-			}
-			else
-			{
-				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageLoadTimeZoneInfoFailedMessage"));
-			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageLoadTimeZoneInfoFailedMessage"));
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("modalStationSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				
+			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{ }
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
-function getStationPropertiesMetadata(stationId, timeZones)
-{
-	var xmlhttp, objResp;
+async function getStationPropertiesMetadata(stationId, timeZones) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				if(objResp.data.length = 1)
-				{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.data != undefined) {
 					getStationProperties(stationId, timeZones, objResp.data)
-				}
-				else
-				{
-					document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorNoStationForGetInfo", "StationPropertiesMetadata"));;
-				}
-			}
-			else
-			{
-				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationPropertiesMetadata"));
-			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationPropertiesMetadata"));
-		}
-		else
-		{ }
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
-}
-
-function getStationProperties(stationId, timeZones, stationPropertiesMetadata)
-{
-	var xmlhttp, objResp;
-	var url = `${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				if(objResp.data.length = 1)
-				{
-					fillStationSettingsModal(stationId, objResp.modelName, objResp.isP2PConnected, objResp.isEnergySavingDevice, objResp.isDeviceKnownByClient, objResp.deviceType, objResp.isIntegratedDevice, objResp.data.properties, objResp.data.commands, stationPropertiesMetadata, timeZones);
-				}
-				else
-				{
+				} else {
 					document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorNoStationForGetInfo", "StationPropertiesMetadata"));
 				}
-			}
-			else
-			{
+			} else {
 				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationPropertiesMetadata"));
 			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationPropertiesMetadata"));
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("modalStationSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationPropertiesMetadata"));
+			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{ }
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
+}
+
+async function getStationProperties(stationId, timeZones, stationPropertiesMetadata) {
+	var objResp, objErr;
+	var url = `${location.protocol}//${location.hostname}:${port}/getStationProperties/${stationId}`;
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.data != undefined) {
+					fillStationSettingsModal(stationId, objResp.modelName, objResp.isP2PConnected, objResp.isEnergySavingDevice, objResp.isDeviceKnownByClient, objResp.deviceType, objResp.isIntegratedDevice, objResp.data.properties, objResp.data.commands, stationPropertiesMetadata, timeZones);
+				} else {
+					document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorNoStationForGetInfo", "StationProperties"));
+				}
+			} else {
+				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationProperties"));
+			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+		}
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("modalStationSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationProperties"));
+			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+		}
+	});
 }
 
 function generateStationModalErrorMessage(errorMessage)
@@ -2803,7 +2724,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedStationHeading"), `${translateContent("lblNotSupportedStationMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${stationId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}`)}${isIntegratedDevice ? `</p><p class="mt-2">${translateContent("lblNotSupportedDeviceMessageSolo", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${stationId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${stationId}`)}` : ""}`, translateContent("lblNotSupportedStationSubText"))}
 										${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedStationNoSaving"), "", "")}`;
 	}
-	else if (isDeviceKnownByClient === false)
+	else if(isDeviceKnownByClient === false)
 	{
 		setEventHandler = false;
 		stationModal += `
@@ -3250,124 +3171,134 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 	document.getElementById("modalStationSettings").innerHTML = stationModal;
 }
 
-function changeStationProperty(stationId, stationName, propertyName, propertyValue, additionalArg)
-{
-	var xmlhttp, objResp;
+async function changeStationProperty(stationId, stationName, propertyName, propertyValue, additionalArg) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/setStationProperty/${stationId}/${propertyName}${propertyValue !== undefined ? `/${propertyValue}${additionalArg === undefined ? "" : `/${additionalArg}`}` : ``}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, generateContentStationSettingsModal, [stationId, stationName]).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
 				const toast = new bootstrap.Toast(toastOK);
 				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
 				document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveSettingsOkMessage");
 				toast.show();
-				generateStationSettingsModal(stationId, stationName)
-			}
-			else
-			{
+				generateStationSettingsModal(stationId, stationName);
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveSettingsFailedMessage");
 				toast.show();
 			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
 		}
-		else if(this.readyState == 4)
-		{
-			
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
 		}
-		else
-		{
-			generateContentStationSettingsModal(stationId, stationName);
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 
-function sendCommand(deviceType, deviceId, deviceName, commandName, commandValue)
-{
-	var xmlhttp, objResp;
+async function sendCommand(deviceType, deviceId, deviceName, commandName, commandValue) {
+	var objResp, objErr;
+	var waitFunction = undefined, waitFunctionArguments = undefined;
 	var url = `${location.protocol}//${location.hostname}:${port}/sendCommand/${commandName}/${deviceId}${commandValue !== undefined ? `/${commandValue}` : ``}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
+	if(deviceType == "Station") {
+		waitFunction = generateContentStationSettingsModal;
+		waitFunctionArguments = [deviceId, deviceName];
+	} else if(deviceType == "Device" && commandName != "moveToPreset") {
+		waitFunction = generateContentDeviceSettingsModal;
+		waitFunctionArguments = [deviceId, deviceName];
+	}
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, waitFunction, waitFunctionArguments).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
 				const toast = new bootstrap.Toast(toastOK);
-				if(commandName == "rebootStation")
-				{
+				if(commandName == "rebootStation") {
 					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageRebootStationHeader");
 					document.getElementById("toastOKText").innerHTML = translateMessages("messageRebootStationOkMessage");
-				}
-				else if(commandName == "moveToPreset")
-				{
+				} else if(commandName == "moveToPreset") {
 					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
 					document.getElementById("toastOKText").innerHTML = translateMessages("messageMoveToPresetOkMessage", commandValue+1);
-				}
-				else
-				{
+				} else {
 					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSendCommandHeader");
 					document.getElementById("toastOKText").innerHTML = translateMessages("messageSendCommandOkMessage");
 				}
 				toast.show();
-				if(deviceType == "Station")
-				{
+				if(deviceType == "Station") {
 					generateStationSettingsModal(deviceId, deviceName);
-				}
-				else if(deviceType == "Device" && commandName != "moveToPreset")
-				{
+				} else if(deviceType == "Device" && commandName != "moveToPreset") {
 					generateDeviceSettingsModal(deviceId, deviceName);
 				}
-			}
-			else
-			{
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
-				if(commandName == "rebootStation")
-				{
+				if(commandName == "rebootStation") {
 					document.getElementById("toastFailedHeader").innerHTML = translateContent("messageRebootStationHeader");
 					document.getElementById("toastFailedText").innerHTML = translateContent("messageSaveSettingsOkMessage");
-				}
-				else if(commandName == "moveToPreset")
-				{
+				} else if(commandName == "moveToPreset") {
 					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
 					document.getElementById("toastFailedText").innerHTML = translateMessages("messageMoveToPresetFailedMessage", commandValue+1);
-				}
-				else
-				{
+				} else {
 					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSendCommandHeader");
 					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSendCommandFailedMessage");
 				}
 				toast.show();
 			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
 		}
-		else if(this.readyState == 4)
-		{
-			
-		}
-		else
-		{
-			if(deviceType == "Station")
-			{
-				generateContentStationSettingsModal(deviceId, deviceName);
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				if(commandName == "rebootStation") {
+					document.getElementById("toastFailedHeader").innerHTML = translateContent("messageRebootStationHeader");
+					document.getElementById("toastFailedText").innerHTML = `${translateContent("messageSaveSettingsOkMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+				} else if(commandName == "moveToPreset") {
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageMoveToPresetHeader");
+					document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageMoveToPresetFailedMessage", commandValue+1)}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+				} else {
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSendCommandHeader");
+					document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSendCommandFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+				}
+				toast.show();
 			}
-			else if(deviceType == "Device" && commandName != "moveToPreset")
-			{
-				generateContentDeviceSettingsModal(deviceId, deviceName);
-			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
 		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 //#endregion
 
@@ -3375,466 +3306,199 @@ function sendCommand(deviceType, deviceId, deviceName, commandName, commandValue
  * Scripts for statechange.html
  */
 //#region statechange.html
-function loadDataStatechange(showLoading)
-{
-	var xmlHttp, objResp, station = "", stations = "", buttons = "", text = "", state, lastChangeTime;
+function showLoadingStatechange() {
+	document.getElementById("btnAwayAll").setAttribute("disabled", true);
+	document.getElementById("btnHomeAll").setAttribute("disabled", true);
+	document.getElementById("btnScheduleAll").setAttribute("disabled", true);
+	document.getElementById("btnDisarmAll").setAttribute("disabled", true);
+	document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateString("strWaitWhileLoading")}</small>`;
+	document.getElementById("stations").innerHTML = createWaitMessage(translateContent("lblWaitMessageLoadStations"));
+}
+
+async function loadDataStatechange(showLoading) {
+	var objResp, objErr, station = "", stations = "", buttons = "", text = "", state, lastChangeTime;
+	var waitFunction = undefined;
 	var lastChangeTimeAll = -1;
 	var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
-				for(station in objResp.data)
-				{
+	if(showLoading == true) {
+		waitFunction = showLoadingStatechange;
+	}
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, waitFunction, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				for(station in objResp.data) {
 					state = `${translateGuardMode(objResp.data[station].guardMode)}`;
 					buttons =  `<div class="row g-2">`;
-					buttons += `<div class="col-sm-6">${makeButtonElement(`btnArm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setArm('${objResp.data[station].serialNumber}')`}` , translateGuardMode(0), (objResp.data[station].guardMode != 0), undefined, undefined, true)}</div>`;
-					buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setHome('${objResp.data[station].serialNumber}')`}`, translateGuardMode(1), (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
-					buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setSchedule('${objResp.data[station].serialNumber}')`}`, translateGuardMode(2), (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
-					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setDisarm('${objResp.data[station].serialNumber}')`}`, translateGuardMode(63), (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
-					if(objResp.data[station].deviceType === "indoorcamera" && objResp.data[station].privacyMode !== undefined)
-					{
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnAway${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'away', 0)`}` , translateGuardMode(0), (objResp.data[station].guardMode != 0), undefined, undefined, true)}</div>`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'home', 1)`}`, translateGuardMode(1), (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'schedule', 2)`}`, translateGuardMode(2), (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'disarm', 63)`}`, translateGuardMode(63), (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
+					if(objResp.data[station].deviceType === "indoorcamera" && objResp.data[station].privacyMode !== undefined) {
 						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? translateString("strActivate") : translateString("strDeactivate")}`, true, undefined, undefined, true)}</div>`;
 					}
 					buttons += `</div>`;
-					if(objResp.data[station].guardModeTime !== undefined)
-					{
-						if(objResp.data[station].guardModeTime <= 0)
-						{
+					if(objResp.data[station].guardModeTime !== undefined) {
+						if(objResp.data[station].guardModeTime <= 0) {
 							lastChangeTime = translateContent("lblUnknown");
-						}
-						else
-						{
+						} else {
 							lastChangeTime = makeDateTimeString(new Date(parseInt(objResp.data[station].guardModeTime)));
-							if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll)
-							{
+							if(parseInt(objResp.data[station].guardModeTime) > lastChangeTimeAll) {
 								lastChangeTimeAll = parseInt(objResp.data[station].guardModeTime);
 							}
 						}
-					}
-					else
-					{
+					} else {
 						lastChangeTime = translateContent("lblNotAvailable");
 					}
 					stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="${translateString("strCurrentState")}"></i>&nbsp;${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? translateGuardMode(objResp.data[station].guardMode) : translateString("strInactive")}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">${translateContent("lblLastStateChange")}: ${lastChangeTime}</small>`);
 				}
 				text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
-				document.getElementById("btnArmAll").removeAttribute("disabled");
+				document.getElementById("btnAwayAll").removeAttribute("disabled");
 				document.getElementById("btnHomeAll").removeAttribute("disabled");
 				document.getElementById("btnScheduleAll").removeAttribute("disabled");
 				document.getElementById("btnDisarmAll").removeAttribute("disabled");
 				document.getElementById("stations").innerHTML =  text;
-				if(lastChangeTimeAll == -1)
-				{
+				if(lastChangeTimeAll == -1) {
 					lastChangeTimeAll = translateContent("lblUnknown");
-				}
-				else
-				{
+				} else {
 					lastChangeTimeAll = makeDateTimeString(new Date(lastChangeTimeAll))
 				}
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${lastChangeTimeAll}</small>`;
-			}
-			else
-			{
-				document.getElementById("btnArmAll").setAttribute("disabled", true);
+			} else {
+				document.getElementById("btnAwayAll").setAttribute("disabled", true);
 				document.getElementById("btnHomeAll").setAttribute("disabled", true);
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateContent("lblUnknown")}</small>`;
 				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageStationsNotFound"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("btnArmAll").setAttribute("disabled", true);
-			document.getElementById("btnHomeAll").setAttribute("disabled", true);
-			document.getElementById("btnScheduleAll").setAttribute("disabled", true);
-			document.getElementById("btnDisarmAll").setAttribute("disabled", true);
-			document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateContent("lblUnknown")}</small>`;
-			document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageStationsNotFound"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-		}
-		else
-		{
-			if(showLoading==true)
-			{
-				document.getElementById("btnArmAll").setAttribute("disabled", true);
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("stations").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("btnAwayAll").setAttribute("disabled", true);
 				document.getElementById("btnHomeAll").setAttribute("disabled", true);
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
 				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
-				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateString("strWaitWhileLoading")}</small>`;
-				document.getElementById("stations").innerHTML = createWaitMessage(translateContent("lblWaitMessageLoadStations"));
+				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateContent("lblUnknown")}</small>`;
+				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageStationsNotFound"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState, "loadDataStatechange"));
 			}
+		} catch (e) {
+			document.getElementById("stations").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	});
 }
 
-function setArm(stationserial)
-{
-	if(stationserial == "")
-	{
-		document.getElementById("btnArmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(0)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/away`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				document.getElementById("btnArmAll").innerHTML = translateGuardMode(0);
-			}
-			else if(this.readyState == 4)
-			{
-
-			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
+async function setMode(stationSerial, modeName, modeId) {
+	var objResp, objErr;
+	var url;
+	if(stationSerial == "") {
+		url = `${location.protocol}//${location.hostname}:${port}/setMode/${modeName}`;
+		document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}All`).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(modeId)}`;
+	} else {
+		url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationSerial}/${modeName}`;
+		document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}` + stationSerial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(modeId)}`;
 	}
-	else
-	{
-		document.getElementById("btnArm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(0)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/away`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
+	
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				const toast = new bootstrap.Toast(toastOK);
+				toast.show();
+				loadDataStatechange(false);
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				toast.show();
+				loadDataStatechange(false);
 			}
-			else if(this.readyState == 4)
-			{
-
+			if(stationSerial == "") {
+				document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}All`).innerHTML = translateGuardMode(modeId);
+			} else {
+				document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}` + stationSerial).innerHTML = translateGuardMode(modeId);
 			}
-			else
-			{
-
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+				toast.show();
 			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
-function setHome(stationserial)
-{
-	if(stationserial=="")
-	{
-		document.getElementById("btnHomeAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(1)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/home`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				document.getElementById("btnHomeAll").innerHTML = translateGuardMode(1);
-			}
-			else if(this.readyState == 4)
-			{
-
-			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-	else
-	{
-		document.getElementById("btnHome" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(1)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/home`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
-			}
-			else if(this.readyState == 4)
-			{
-
-			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-}
-
-function setSchedule(stationserial)
-{
-	if(stationserial=="")
-	{
-		document.getElementById("btnScheduleAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(2)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/schedule`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				document.getElementById("btnScheduleAll").innerHTML = translateGuardMode(2);
-			}
-			else if(this.readyState == 4)
-			{
-
-			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-	else
-	{
-		document.getElementById("btnSchedule" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(2)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/schedule`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
-			}
-			else if(this.readyState == 4)
-			{
-
-			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-}
-
-function setDisarm(stationserial)
-{
-	if(stationserial=="")
-	{
-		document.getElementById("btnDisarmAll").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(63)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/disarmed`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				document.getElementById("btnDisarmAll").innerHTML = translateGuardMode(63);
-			}
-			else if(this.readyState != 4)
-			{
-
-			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-	else
-	{
-		document.getElementById("btnDisarm" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(63)}`;
-		var xmlHttp, objResp;
-		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/disarmed`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					toast.show();
-					loadDataStatechange(false);
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					toast.show();
-					loadDataStatechange(false);
-				}
-			}
-			else if(this.readyState != 4)
-			{
-
-			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-}
-
-function setPrivacy(stationserial, enabled)
-{
-	if(stationserial=="")
-	{
+async function setPrivacy(stationserial, enabled) {
+	if(stationserial=="") {
 		const toast = new bootstrap.Toast(toastFailed);
 		toast.show();
 		loadDataStatechange(false);
-	}
-	else
-	{
+	} else {
 		document.getElementById("btnPrivacy" + stationserial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${enabled === true ? translateString("strActivate") : translateString("strDeactivate")}`;
-		var xmlHttp, objResp;
+		var objResp, objErr;
 		var url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationserial}/${enabled === false ? `privacyOn` : `privacyOff`}`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
+		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
 					const toast = new bootstrap.Toast(toastOK);
 					toast.show();
 					loadDataStatechange(false);
-				}
-				else
-				{
+				} else {
 					const toast = new bootstrap.Toast(toastFailed);
 					toast.show();
 					loadDataStatechange(false);
 				}
+			} catch (e) {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+				toast.show();
 			}
-			else if(this.readyState != 4)
-			{
-
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+					toast.show();
+				} else {
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+					document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+					toast.show();
+				}
+			} catch (e) {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+				toast.show();
 			}
-			else
-			{
-
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
+		});
 	}
 }
 //#endregion
@@ -3915,148 +3579,118 @@ function validateFormSettings()
 	}, false);
 }
 
-function generateNewTrustedDeviceName()
-{
-	var xmlHttp, objResp;
+async function generateNewTrustedDeviceName() {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/generateNewTrustedDeviceName`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					if(objResp.trustedDeviceName !== undefined)
-					{
-						document.getElementById('txtTrustedDeviceName').value = objResp.trustedDeviceName;
-					}
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.trustedDeviceName !== undefined) {
+					document.getElementById('txtTrustedDeviceName').value = objResp.trustedDeviceName;
 				}
 			}
-			catch (e)
-			{
-
-			}
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				
+			}
+		} catch (e) {
+			document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+		}
+	});
 }
 
-function loadCountries()
-{
-	if(serviceState == "running")
-	{
-		var xmlHttp, objResp, country;
+function loadSettings() {
+	document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
+	loadCountries();
+}
+
+async function loadCountries() {
+	if(serviceState == "running") {
+		var objResp, objErr, country;
 		var url = `${location.protocol}//${location.hostname}:${port}/getCountries`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				try
-				{
-					objResp = JSON.parse(this.responseText);
-					if(objResp.success == true)
-					{
-						for(country in objResp.data)
-						{
-							var option = document.createElement("option");
-							option.value=objResp.data[country].countryCode;
-							option.text=objResp.data[country].countryName;
-							document.getElementById("cbCountry").add(option);
-						}
-						document.getElementById("countrySelectionMessage").innerHTML = "";
-						loadHouses();
+		await retrieveData("GET", url, 'application/json', undefined, "countrySelectionMessage", "strLoadingSettings", undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
+					for(country in objResp.data) {
+						var option = document.createElement("option");
+						option.value=objResp.data[country].countryCode;
+						option.text=objResp.data[country].countryName;
+						document.getElementById("cbCountry").add(option);
 					}
-					else
-					{
-						document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-						loadHouses();
-					}
-				}
-				catch (e)
-				{
-					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+					document.getElementById("countrySelectionMessage").innerHTML = "";
+					loadHouses();
+				} else {
+					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 					loadHouses();
 				}
-			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+			} catch (e) {
+				document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 				loadHouses();
 			}
-			else
-			{
-				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-				document.getElementById("countrySelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingCountries")}</strong></div>`;
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("countrySelectionMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadCountries"));
+					loadHouses();
+				}
+			} catch (e) {
+				document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-	else
-	{
+		});
+	} else {
 		loadHouses();
 	}
 }
 
-function loadHouses()
-{
-	if(serviceState == "running")
-	{
-		var xmlHttp, objResp, house;
+async function loadHouses() {
+	if(serviceState == "running") {
+		var objResp, objErr, house;
 		var url = `${location.protocol}//${location.hostname}:${port}/getHouses`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				try
-				{
-					objResp = JSON.parse(this.responseText);
-					if(objResp.success == true)
-					{
-						for(house in objResp.data)
-						{
-							var option = document.createElement("option");
-							option.value=objResp.data[house].houseId;
-							option.text=translateContent("lblHouseManagementStationsAndDevicesOfHome", objResp.data[house].houseName);
-							document.getElementById("cbHouseSelection").add(option);
-						}
-						document.getElementById("houseSelectionMessage").innerHTML = "";
-						loadStationsSettings();
+		await retrieveData("GET", url, 'application/json', undefined, "houseSelectionMessage", "strLoadingHouses", undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
+					for(house in objResp.data) {
+						var option = document.createElement("option");
+						option.value=objResp.data[house].houseId;
+						option.text=translateContent("lblHouseManagementStationsAndDevicesOfHome", objResp.data[house].houseName);
+						document.getElementById("cbHouseSelection").add(option);
 					}
-					else
-					{
-						document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-						loadStationsSettings();
-					}
-				}
-				catch (e)
-				{
-					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+					document.getElementById("houseSelectionMessage").innerHTML = "";
+					loadStationsSettings();
+				} else {
+					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 					loadStationsSettings();
 				}
-			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+			} catch (e) {
+				document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 				loadStationsSettings();
 			}
-			else
-			{
-				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-				document.getElementById("houseSelectionMessage").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingHouses")}</strong></div>`;
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("houseSelectionMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadHouses"));
+					loadStationsSettings();
+				}
+			} catch (e) {
+				document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
+		});
 	}
 	else
 	{
@@ -4064,324 +3698,230 @@ function loadHouses()
 	}
 }
 
-function loadStationsSettings()
-{
-	if(serviceState == "running")
-	{
-		var xmlHttp, objResp, station, stations = "";
+async function loadStationsSettings() {
+	document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+	if(serviceState == "running") {
+		var objResp, objErr, station, stations = "";
 		var url = `${location.protocol}//${location.hostname}:${port}/getStations`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				try
-				{
-					objResp = JSON.parse(this.responseText);
-					if(objResp.success == true)
-					{
-						for(station in objResp.data)
-						{
-							stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="my-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">${translateContent("lblUDPPortStationLabel", objResp.data[station].serialNumber, objResp.data[station].name)}</label>`;
-							stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="${translateContent("lblUDPPortStationPlaceholder", objResp.data[station].serialNumber)}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
-							stations += `<small class="form-text text-muted">${translateContent("lblUDPPortStationSubText")}</small>`;
-							stations += `<div class="invalid-feedback">${translateContent("lblUDPPortStationError")}</div></div>`;
-
-							var option = document.createElement("option");
-							option.value=objResp.data[station].serialNumber;
-							option.text=`${objResp.data[station].name} (${objResp.data[station].serialNumber})`;
-							document.getElementById("cbReconnectStation").add(option);
-						}
-						document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
-						document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
-						loadSystemVariables();
+		await retrieveData("GET", url, 'application/json', undefined, "useUDPStaticPortsStations", "strLoadingStations", undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
+					for(station in objResp.data) {
+						stations += `<div class="form-label-group was-validated" class="container-fluid"><label class="my-2" for="txtUdpPortsStation${objResp.data[station].serialNumber}">${translateContent("lblUDPPortStationLabel", objResp.data[station].serialNumber, objResp.data[station].name)}</label>`;
+						stations += `<input type="text" name="udpPortsStation${objResp.data[station].serialNumber}" id="txtUdpPortsStation${objResp.data[station].serialNumber}" class="form-control" placeholder="${translateContent("lblUDPPortStationPlaceholder", objResp.data[station].serialNumber)}" onfocusout="checkUDPPorts(udpPortsStation${objResp.data[station].serialNumber})" required>`;
+						stations += `<small class="form-text text-muted">${translateContent("lblUDPPortStationSubText")}</small>`;
+						stations += `<div class="invalid-feedback">${translateContent("lblUDPPortStationError")}</div></div>`;
+						var option = document.createElement("option");
+						option.value=objResp.data[station].serialNumber;
+						option.text=`${objResp.data[station].name} (${objResp.data[station].serialNumber})`;
+						document.getElementById("cbReconnectStation").add(option);
 					}
-					else
-					{
-						document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-						document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
-						loadSystemVariables();
-					}
-				}
-				catch (e)
-				{
-					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", e));
+					document.getElementById('chkUseUdpStaticPorts').removeAttribute("disabled");
+					document.getElementById("useUDPStaticPortsStations").innerHTML = stations;
+					loadSystemVariables();
+				} else {
+					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 					document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 					loadSystemVariables();
 				}
-			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+			} catch (e) {
+				document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), "", translateMessages("messageErrorPrintErrorMessage", e));
 				document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
 				loadSystemVariables();
 			}
-			else
-			{
-				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-				document.getElementById("useUDPStaticPortsStations").innerHTML = `<div class="d-flex align-items-center mt-4"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${translateString("strLoadingStations")}</strong></div>`;
-				document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState, "loadStationsSettings"));
+					document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
+					loadSystemVariables();
+				}
+			} catch (e) {
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-	else
-	{
+		});
+	} else {
 		loadSystemVariables();
 	}
 }
 
-function loadDataSettings()
-{
-	if(serviceState == "running")
-	{
-		var xmlHttp, objResp;
+async function loadDataSettings() {
+	if(serviceState == "running") {
+		var objResp, objErr;
 		var url = `${location.protocol}//${location.hostname}:${port}/getConfig${sid !== "" ? `/${sid}` : ""}`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				try
-				{
-					objResp = JSON.parse(this.responseText);
-					if(objResp.success == true)
-					{
-						document.getElementById('txtUsername').value = objResp.data.eMail;
-						document.getElementById('txtPassword').value = objResp.data.password;
-						if(objResp.data.country === undefined || objResp.data.country == "")
-						{
-							document.getElementById("cbCountry").selectedIndex = "";
-						}
-						else
-						{
-							document.getElementById("cbCountry").value = objResp.data.country;
-						}
-						if(objResp.data.language === undefined || objResp.data.language == "")
-						{
-							document.getElementById("cbLanguage").selectedIndex = "";
-						}
-						else
-						{
-							document.getElementById("cbLanguage").value = objResp.data.language;
-						}
-						document.getElementById('txtTrustedDeviceName').value = objResp.data.trustedDeviceName;
-						if(objResp.data.httpActive == true)
-						{
-							document.getElementById("chkUseHttp").setAttribute("checked", true);
-							document.getElementById("txtPortHttp").removeAttribute("disabled");
-						}
-						else
-						{
-							document.getElementById("txtPortHttp").setAttribute("disabled", true);
-						}
-						document.getElementById('txtPortHttp').value = objResp.data.httpPort;
-						if(objResp.data.httpsActive == true)
-						{
-							document.getElementById("chkUseHttps").setAttribute("checked", true);
-							document.getElementById("txtPortHttps").removeAttribute("disabled");
-							document.getElementById("txtHttpsKeyFile").removeAttribute("disabled");
-							document.getElementById("txtHttpsCertFile").removeAttribute("disabled");
-						}
-						else
-						{
-							document.getElementById("txtPortHttps").setAttribute("disabled", true);
-							document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
-							document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
-						}
-						document.getElementById('txtPortHttps').value = objResp.data.httpsPort;
-						document.getElementById('txtHttpsKeyFile').value = objResp.data.httpsPKeyFile;
-						document.getElementById('txtHttpsCertFile').value = objResp.data.httpsCertFile;
-						if(objResp.data.acceptInvitations == true)
-						{
-							document.getElementById("chkAcceptInvitations").setAttribute("checked", true);
-						}
-						if(objResp.data.houseId === undefined)
-						{
-							document.getElementById("cbHouseSelection").selectedIndex = 0;
-						}
-						else
-						{
-							document.getElementById("cbHouseSelection").value = objResp.data.houseId;
-						}
-						if(objResp.data.connectionTypeP2p === undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2"))
-						{
-							document.getElementById("cbConnectionType").selectedIndex = 0;
-						}
-						else
-						{
-							document.getElementById("cbConnectionType").value = objResp.data.connectionTypeP2p;
-						}
-						if(objResp.data.systemVariableActive == true)
-						{
-							document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
-						}
-						if(objResp.data.localStaticUdpPortsActive == true)
-						{
-							document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
-						}
+		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
+					document.getElementById('txtUsername').value = objResp.data.eMail;
+					document.getElementById('txtPassword').value = objResp.data.password;
+					if(objResp.data.country === undefined || objResp.data.country == "") {
+						document.getElementById("cbCountry").selectedIndex = "";
+					} else {
+						document.getElementById("cbCountry").value = objResp.data.country;
+					}
+					if(objResp.data.language === undefined || objResp.data.language == "") {
+						document.getElementById("cbLanguage").selectedIndex = "";
+					} else {
+						document.getElementById("cbLanguage").value = objResp.data.language;
+					}
+					document.getElementById('txtTrustedDeviceName').value = objResp.data.trustedDeviceName;
+					if(objResp.data.httpActive == true) {
+						document.getElementById("chkUseHttp").setAttribute("checked", true);
+						document.getElementById("txtPortHttp").removeAttribute("disabled");
+					} else {
+						document.getElementById("txtPortHttp").setAttribute("disabled", true);
+					}
+					document.getElementById('txtPortHttp').value = objResp.data.httpPort;
+					if(objResp.data.httpsActive == true) {
+						document.getElementById("chkUseHttps").setAttribute("checked", true);
+						document.getElementById("txtPortHttps").removeAttribute("disabled");
+						document.getElementById("txtHttpsKeyFile").removeAttribute("disabled");
+						document.getElementById("txtHttpsCertFile").removeAttribute("disabled");
+					} else {
+						document.getElementById("txtPortHttps").setAttribute("disabled", true);
+						document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
+						document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
+					}
+					document.getElementById('txtPortHttps').value = objResp.data.httpsPort;
+					document.getElementById('txtHttpsKeyFile').value = objResp.data.httpsPKeyFile;
+					document.getElementById('txtHttpsCertFile').value = objResp.data.httpsCertFile;
+					if(objResp.data.acceptInvitations == true) {
+						document.getElementById("chkAcceptInvitations").setAttribute("checked", true);
+					}
+					if(objResp.data.houseId === undefined) {
+						document.getElementById("cbHouseSelection").selectedIndex = 0;
+					} else {
+						document.getElementById("cbHouseSelection").value = objResp.data.houseId;
+					}
+					if(objResp.data.connectionTypeP2p === undefined || (objResp.data.connectionTypeP2p != "0" && objResp.data.connectionTypeP2p != "1" && objResp.data.connectionTypeP2p != "2")) {
+						document.getElementById("cbConnectionType").selectedIndex = 0;
+					} else {
+						document.getElementById("cbConnectionType").value = objResp.data.connectionTypeP2p;
+					}
+					if(objResp.data.systemVariableActive == true) {
+						document.getElementById("chkUseSystemVariables").setAttribute("checked", true);
+					}
+					if(objResp.data.localStaticUdpPortsActive == true) {
+						document.getElementById("chkUseUdpStaticPorts").setAttribute("checked", true);
+					}
 
-						var element = document.getElementsByTagName("INPUT");
-						var max = element.length;
-						for(var i=0; i<max; i++)
-						{
-							if(element[i].name.startsWith("udpPortsStation"))
-							{
-								var tempSerial = element[i].name.replace("udpPortsStation", "");
-								var tempPorts;
-								var portItem;
-								for(var portItem in objResp.data.localStaticUdpPorts)
-								{
-									if(objResp.data.localStaticUdpPorts[portItem].stationSerial == tempSerial)
-									{
-										tempPorts = objResp.data.localStaticUdpPorts[portItem].port;
-										break;
-									}
-								}
-								if(tempPorts === undefined || tempPorts == null || tempPorts == "undefined")
-								{
-									document.getElementById('txtUdpPortsStation' + tempSerial).value = "";
-								}
-								else
-								{
-									document.getElementById('txtUdpPortsStation' + tempSerial).value = tempPorts;
-								}
-								changeValue("useUdpStaticPorts");
-								if(objResp.data.localStaticUdpPortsActive == false)
-								{
-									document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
+					var element = document.getElementsByTagName("INPUT");
+					var max = element.length;
+					for(var i=0; i<max; i++) {
+						if(element[i].name.startsWith("udpPortsStation")) {
+							var tempSerial = element[i].name.replace("udpPortsStation", "");
+							var tempPorts;
+							var portItem;
+							for(var portItem in objResp.data.localStaticUdpPorts) {
+								if(objResp.data.localStaticUdpPorts[portItem].stationSerial == tempSerial) {
+									tempPorts = objResp.data.localStaticUdpPorts[portItem].port;
+									break;
 								}
 							}
-						}
-						if(objResp.data.stateUpdateEventActive == true)
-						{
-							document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);
-						}
-						else
-						{
-							document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
-						}
-						if(objResp.data.stateUpdateIntervallActive == true)
-						{
-							document.getElementById("chkUpdateStateIntervall").setAttribute("checked", true);
-							document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
-						}
-						else
-						{
-							document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
-						}
-						document.getElementById('txtUpdateStateIntervallTimespan').value=objResp.data.stateUpdateIntervallTimespan;
-						if(objResp.data.pushServiceActive == true)
-						{
-							document.getElementById("chkUsePushService").setAttribute("checked", true);
-						}
-						if(objResp.data.secureApiAccessBySid == true)
-						{
-							document.getElementById("chkUseSecureApiAccessSid").setAttribute("checked", true);
-						}
-						if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6"))
-						{
-							document.getElementById("cbLogLevelAddon").selectedIndex = 3;
-						}
-						else
-						{
-							document.getElementById("cbLogLevelAddon").selectedIndex = (Number.parseInt(objResp.data.logLevelAddon)) + 1;
-						}
-						if(objResp.data.logLevelMain === undefined || (objResp.data.logLevelMain < "0" || objResp.data.logLevelMain > "6"))
-						{
-							document.getElementById("cbLogLevelMain").selectedIndex = 3;
-						}
-						else
-						{
-							document.getElementById("cbLogLevelMain").selectedIndex = (Number.parseInt(objResp.data.logLevelMain)) + 1;
-						}
-						if(objResp.data.logLevelHttp === undefined || (objResp.data.logLevelHttp < "0" || objResp.data.logLevelHttp > "6"))
-						{
-							document.getElementById("cbLogLevelHttp").selectedIndex = 3;
-						}
-						else
-						{
-							document.getElementById("cbLogLevelHttp").selectedIndex = (Number.parseInt(objResp.data.logLevelHttp)) + 1;
-						}
-						if(objResp.data.logLevelP2p === undefined || (objResp.data.logLevelP2p < "0" || objResp.data.logLevelP2p > "6"))
-						{
-							document.getElementById("cbLogLevelP2p").selectedIndex = 3;
-						}
-						else
-						{
-							document.getElementById("cbLogLevelP2p").selectedIndex = (Number.parseInt(objResp.data.logLevelP2p)) + 1;
-						}
-						if(objResp.data.logLevelPush === undefined || (objResp.data.logLevelPush < "0" || objResp.data.logLevelPush > "6"))
-						{
-							document.getElementById("cbLogLevelPush").selectedIndex = 3;
-						}
-						else
-						{
-							document.getElementById("cbLogLevelPush").selectedIndex = (Number.parseInt(objResp.data.logLevelPush)) + 1;
-						}
-						if(objResp.data.logLevelMqtt === undefined || (objResp.data.logLevelMqtt < "0" || objResp.data.logLevelMqtt > "6"))
-						{
-							document.getElementById("cbLogLevelMqtt").selectedIndex = 3;
-						}
-						else
-						{
-							document.getElementById("cbLogLevelMqtt").selectedIndex = (Number.parseInt(objResp.data.logLevelMqtt)) + 1;
-						}
-						if(objResp.data.tokenExpire === undefined)
-						{
-							document.getElementById("hintTokenData").innerHTML = ``;
-						}
-						else
-						{
-							if(objResp.data.tokenExpire == 0)
-							{
-								document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenNoToken")}<br />`;
+							if(tempPorts === undefined || tempPorts == null || tempPorts == "undefined") {
+								document.getElementById('txtUdpPortsStation' + tempSerial).value = "";
+							} else {
+								document.getElementById('txtUdpPortsStation' + tempSerial).value = tempPorts;
 							}
-							else if(objResp.data.tokenExpire.toString().length == 10 || objResp.data.tokenExpire.toString().length == 13)
-							{
-								document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenOk", objResp.data.tokenExpire.toString().length == 10 ? makeDateTimeString(new Date(objResp.data.tokenExpire*1000)) : makeDateTimeString(new Date(objResp.data.tokenExpire)))}<br />`;
-							}
-							else
-							{
-								document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenUnknown", objResp.data.tokenExpire)}.<br />`;
+							changeValue("useUdpStaticPorts");
+							if(objResp.data.localStaticUdpPortsActive == false) {
+								document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
 							}
 						}
-						checkLogLevel("alertLogLevelAddon", objResp.data.logLevelAddon);
-						checkLogLevel("alertLogLevelMain", objResp.data.logLevelMain);
-						checkLogLevel("alertLogLevelHttp", objResp.data.logLevelHttp);
-						checkLogLevel("alertLogLevelP2p", objResp.data.logLevelP2p);
-						checkLogLevel("alertLogLevelPush", objResp.data.logLevelPush);
-						checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelMqtt);
-						document.getElementById("resultLoading").innerHTML = "";
-						deCollapseUICards();
-						enableUIElements();
 					}
-					else
-					{
-						document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorThreeValuesMessage", "success", objResp.success, objResp.message));
-						collapseUICards();
-						disableUIElements();
+					if(objResp.data.stateUpdateEventActive == true) {
+						document.getElementById("chkUpdateStateEvent").setAttribute("checked", true);
+					} else {
+						document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
 					}
+					if(objResp.data.stateUpdateIntervallActive == true) {
+						document.getElementById("chkUpdateStateIntervall").setAttribute("checked", true);
+						document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
+					} else {
+						document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
+					}
+					document.getElementById('txtUpdateStateIntervallTimespan').value=objResp.data.stateUpdateIntervallTimespan;
+					if(objResp.data.pushServiceActive == true) {
+						document.getElementById("chkUsePushService").setAttribute("checked", true);
+					}
+					if(objResp.data.secureApiAccessBySid == true) {
+						document.getElementById("chkUseSecureApiAccessSid").setAttribute("checked", true);
+					}
+					if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6")) {
+						document.getElementById("cbLogLevelAddon").selectedIndex = 3;
+					} else {
+						document.getElementById("cbLogLevelAddon").selectedIndex = (Number.parseInt(objResp.data.logLevelAddon)) + 1;
+					}
+					if(objResp.data.logLevelMain === undefined || (objResp.data.logLevelMain < "0" || objResp.data.logLevelMain > "6")) {
+						document.getElementById("cbLogLevelMain").selectedIndex = 3;
+					} else {
+						document.getElementById("cbLogLevelMain").selectedIndex = (Number.parseInt(objResp.data.logLevelMain)) + 1;
+					}
+					if(objResp.data.logLevelHttp === undefined || (objResp.data.logLevelHttp < "0" || objResp.data.logLevelHttp > "6")) {
+						document.getElementById("cbLogLevelHttp").selectedIndex = 3;
+					} else {
+						document.getElementById("cbLogLevelHttp").selectedIndex = (Number.parseInt(objResp.data.logLevelHttp)) + 1;
+					}
+					if(objResp.data.logLevelP2p === undefined || (objResp.data.logLevelP2p < "0" || objResp.data.logLevelP2p > "6")) {
+						document.getElementById("cbLogLevelP2p").selectedIndex = 3;
+					} else {
+						document.getElementById("cbLogLevelP2p").selectedIndex = (Number.parseInt(objResp.data.logLevelP2p)) + 1;
+					}
+					if(objResp.data.logLevelPush === undefined || (objResp.data.logLevelPush < "0" || objResp.data.logLevelPush > "6")) {
+						document.getElementById("cbLogLevelPush").selectedIndex = 3;
+					} else {
+						document.getElementById("cbLogLevelPush").selectedIndex = (Number.parseInt(objResp.data.logLevelPush)) + 1;
+					}
+					if(objResp.data.logLevelMqtt === undefined || (objResp.data.logLevelMqtt < "0" || objResp.data.logLevelMqtt > "6")) {
+						document.getElementById("cbLogLevelMqtt").selectedIndex = 3;
+					} else {
+						document.getElementById("cbLogLevelMqtt").selectedIndex = (Number.parseInt(objResp.data.logLevelMqtt)) + 1;
+					}
+					if(objResp.data.tokenExpire === undefined) {
+						document.getElementById("hintTokenData").innerHTML = ``;
+					} else {
+						if(objResp.data.tokenExpire == 0) {
+							document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenNoToken")}<br />`;
+						} else if(objResp.data.tokenExpire.toString().length == 10 || objResp.data.tokenExpire.toString().length == 13) {
+							document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenOk", objResp.data.tokenExpire.toString().length == 10 ? makeDateTimeString(new Date(objResp.data.tokenExpire*1000)) : makeDateTimeString(new Date(objResp.data.tokenExpire)))}<br />`;
+						} else {
+							document.getElementById("hintTokenData").innerHTML = `${translateContent("lblTokenUnknown", objResp.data.tokenExpire)}.<br />`;
+						}
+					}
+					checkLogLevel("alertLogLevelAddon", objResp.data.logLevelAddon);
+					checkLogLevel("alertLogLevelMain", objResp.data.logLevelMain);
+					checkLogLevel("alertLogLevelHttp", objResp.data.logLevelHttp);
+					checkLogLevel("alertLogLevelP2p", objResp.data.logLevelP2p);
+					checkLogLevel("alertLogLevelPush", objResp.data.logLevelPush);
+					checkLogLevel("alertLogLevelMqtt", objResp.data.logLevelMqtt);
+					document.getElementById("resultLoading").innerHTML = "";
+					deCollapseUICards();
+					enableUIElements();
+				} else {
+					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorThreeValuesMessage", "success", objResp.success, objResp.message));
+					collapseUICards();
+					disableUIElements();
 				}
-				catch (e)
-				{
-					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+			} catch (e) {
+				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+			}
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("resultLoading").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadDataSettings"));
 				}
+			} catch (e) {
+				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-			}
-			else
-			{
-				document.getElementById("resultLoading").innerHTML = createWaitMessage(translateString("strLoadingSettings"));
-			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
+		});
 	}
 	else
 	{
@@ -4391,290 +3931,202 @@ function loadDataSettings()
 	}
 }
 
-function loadSystemVariables()
-{
-	if(serviceState == "running")
-	{
-		var xmlHttp, objResp, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "", sysVarDeprTable = "";
+async function loadSystemVariables() {
+	if(serviceState == "running") {
+		var objResp, objErr, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "", sysVarDeprTable = "";
 		var sysVarToDelete = false;
 		var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				try
-				{
-					objResp = JSON.parse(this.responseText);
-					if(objResp.success == true)
-					{
-						document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", translateMessages("messageSystemVariableHintHeader"), translateMessages("messageSystemVariableHintMessage"), translateMessages("messageSystemVariableHintSubText"));
-						sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
-						for(systemVariable in objResp.data)
-						{
-							sysVarName = objResp.data[systemVariable].sysVarName;
-							sysVarInfo = objResp.data[systemVariable].sysVarInfo;
-							sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
-							if(objResp.data[systemVariable].sysVarCurrent==true)
-							{
-								if(sysVarAvailable==true)
-								{
-									sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
-								}
-								else
-								{
-									sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="${translateString("strSystemVariableNotAvailable")}"></i></th>`;
-								}
-								sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
-								if(sysVarAvailable==true)
-								{
-									sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-outline-primary mb-1", undefined, translateContent("lblSystemVariableAvailable"), false, undefined, undefined, false)}</div></td>`;
-								}
-								else
-								{
-									sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, translateContent("lblSystemVariableCreate"), true, undefined, undefined, true)}</div></td>`;
-								}
-								sysVarTable += `</tr>`;
+		await retrieveData("GET", url, 'application/json', undefined, "divSystemVariables", "strLoadingSystemVariables", undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
+					document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", translateMessages("messageSystemVariableHintHeader"), translateMessages("messageSystemVariableHintMessage"), translateMessages("messageSystemVariableHintSubText"));
+					sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
+					for(systemVariable in objResp.data) {
+						sysVarName = objResp.data[systemVariable].sysVarName;
+						sysVarInfo = objResp.data[systemVariable].sysVarInfo;
+						sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
+						if(objResp.data[systemVariable].sysVarCurrent==true) {
+							if(sysVarAvailable==true) {
+								sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+							} else {
+								sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="${translateString("strSystemVariableNotAvailable")}"></i></th>`;
 							}
-							else
-							{
-								if(sysVarToDelete==false)
-								{
-									sysVarDeprTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
-								}
-								sysVarToDelete = true;
-								sysVarDeprTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
-								sysVarDeprTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
-								sysVarDeprTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, translateContent("lblSystemVariableRemove"), true, undefined, undefined, true)}</div></td>`;
-								sysVarDeprTable += `</tr>`;
+							sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
+							if(sysVarAvailable==true) {
+								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-outline-primary mb-1", undefined, translateContent("lblSystemVariableAvailable"), false, undefined, undefined, false)}</div></td>`;
+							} else {
+								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, translateContent("lblSystemVariableCreate"), true, undefined, undefined, true)}</div></td>`;
 							}
-						}
-						sysVarTable += `</tbody></table>`;
-						document.getElementById("divSystemVariables").innerHTML = sysVarTable;
-						if(sysVarToDelete==true)
-						{
-							sysVarDeprTable += `</tbody></table>`;
-							document.getElementById("divDeprecatedSystemVariables").innerHTML = sysVarDeprTable;
-							document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = `<hr /><div class="form-label-group" class="container-fluid"><label for="btnShowDeprecatedSystemVariables" class="mb-2">${translateString("strSystemVariablesUnusedHintHeader")}<br /><small class="form-text text-muted">${translateString("strSystemVariablesUnusedHintMessage")}</small></label></div>`;
+							sysVarTable += `</tr>`;
+						} else {
+							if(sysVarToDelete==false) {
+								sysVarDeprTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
+							}
+							sysVarToDelete = true;
+							sysVarDeprTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+							sysVarDeprTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
+							sysVarDeprTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, translateContent("lblSystemVariableRemove"), true, undefined, undefined, true)}</div></td>`;
+							sysVarDeprTable += `</tr>`;
 						}
 					}
-					else
-					{
-						if(objResp.reason == "System variables in config disabled.")
-						{
-							document.getElementById("divSystemVariablesHint").innerHTML = "";
-							document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", translateMessages("messageSystemVariablesDeactivatedHeader"), translateMessages("messageSystemVariablesDeactivatedMessage"), translateMessages("messageSystemVariablesDeactivatedSubText"));
-						}
-						else
-						{
-							document.getElementById("divSystemVariablesHint").innerHTML = "";
-							document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-						}
+					sysVarTable += `</tbody></table>`;
+					document.getElementById("divSystemVariables").innerHTML = sysVarTable;
+					if(sysVarToDelete==true) {
+						sysVarDeprTable += `</tbody></table>`;
+						document.getElementById("divDeprecatedSystemVariables").innerHTML = sysVarDeprTable;
+						document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = `<hr /><div class="form-label-group" class="container-fluid"><label for="btnShowDeprecatedSystemVariables" class="mb-2">${translateString("strSystemVariablesUnusedHintHeader")}<br /><small class="form-text text-muted">${translateString("strSystemVariablesUnusedHintMessage")}</small></label></div>`;
 					}
-					loadDataSettings();
+				} else {
+					if(objResp.reason == "System variables in config disabled.") {
+						document.getElementById("divSystemVariablesHint").innerHTML = "";
+						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-info mb-0", translateMessages("messageSystemVariablesDeactivatedHeader"), translateMessages("messageSystemVariablesDeactivatedMessage"), translateMessages("messageSystemVariablesDeactivatedSubText"));
+					} else {
+						document.getElementById("divSystemVariablesHint").innerHTML = "";
+						document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+					}
 				}
-				catch (e)
-				{
-					document.getElementById("divSystemVariablesHint").innerHTML = "";
-					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
-					loadDataSettings();
-				}
-			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+				loadDataSettings();
+			} catch (e) {
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 				loadDataSettings();
 			}
-			else
-			{
-				document.getElementById("divSystemVariables").innerHTML = createWaitMessage(translateString("strLoadingSystemVariables"));
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					document.getElementById("divSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				} else {
+					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState, "loadSystemVariables"));
+					loadDataSettings();
+				}
+			} catch (e) {
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
-	}
-	else
-	{
+		});
+	} else {
 		loadDataSettings();
 	}
 }
 
-function saveConfig()
-{
-	var xmlHttp, objFD, objResp;
+async function saveConfig() {
+	var objResp, objErr, objFD;
 	var url = `${location.protocol}//${location.hostname}:${port}/setConfig${sid !== "" ? `/${sid}` : ""}`;
-	xmlHttp = new XMLHttpRequest();
 	objFD = new FormData(document.getElementById("configform"));
-	xmlHttp.addEventListener("load", function(event)
-	{
-		//loadDataSettings();
-	});
-	xmlHttp.addEventListener( "error", function(event)
-	{
-		document.getElementById("resultMessage").innerHTML = "";
-		const toast = new bootstrap.Toast(toastFailed);
-		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
-		document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
-		toast.show();
-	});
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					if(objResp.serviceRestart == true)
-					{
-						document.getElementById("resultMessage").innerHTML = "";
-						window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
-						return;
-					}
-					else
-					{
-						document.getElementById("resultMessage").innerHTML = "";
-						const toast = new bootstrap.Toast(toastOK);
-						document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveConfigOKHeader");
-						document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveConfigOKMessage");
-						toast.show();
-					}
-					loadDataSettings();
-					loadSystemVariables();
-				}
-				else
-				{
+	await retrieveData("POST", url, undefined, objFD, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(objResp.serviceRestart == true) {
 					document.getElementById("resultMessage").innerHTML = "";
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
+					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+					return;
+				} else {
+					document.getElementById("resultMessage").innerHTML = "";
+					const toast = new bootstrap.Toast(toastOK);
+					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveConfigOKHeader");
+					document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveConfigOKMessage");
 					toast.show();
 				}
+				loadDataSettings();
+				loadSystemVariables();
+			} else {
+				document.getElementById("resultMessage").innerHTML = "";
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
+				toast.show();
 			}
-			catch (e)
-			{
-				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsSaveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+		} catch (e) {
+			document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+		}
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("resultMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsSaveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "saveConfig"));
 			}
+		} catch (e) {
+			document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsSaveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-		}
-		else
-		{
-			document.getElementById("resultMessage").innerHTML = createWaitMessage(translateString("strSettingsSaving"));
-		}
-	};
-	xmlHttp.open("POST", url);
-	xmlHttp.send(objFD);
+	});
 }
 
-function createSysVar(varName, varInfo)
-{
-	var xmlHttp, objResp;
+async function createSysVar(varName, varInfo) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/createSystemVariable/${varName}/${varInfo}`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	text = `<table class="table"><thead><tr><th scope="col">Status</th><th scope="col">Name der Systemvariable</th><th scope="col"></th></tr></thead><tbody>`;
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					loadSystemVariables();
-				}
-				else
-				{
-					document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-					document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
-					document.getElementById("divSystemVariablesHint").innerHTML = "";
-					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesCreateErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, "divSystemVariables", "strSystemVariableCreating", undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				loadSystemVariables();
+			} else {
 				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
 				document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
-				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesCreateErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesCreateErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 			}
-		}
-		else if(this.readyState == 4)
-		{
+		} catch (e) {
 			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-			document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
-			document.getElementById("divSystemVariablesHint").innerHTML = "";
-			document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesCreateErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesCreateErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{
-			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-			document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
-			document.getElementById("divSystemVariablesHint").innerHTML = "";
-			document.getElementById("divSystemVariables").innerHTML = createWaitMessage(translateString("strSystemVariableCreating"));
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
+				document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesCreateErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "createSysVar"));
+			}
+		} catch (e) {
+			document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	});
 }
 
-function removeSysVar(varName)
-{
-	var xmlHttp, objResp;
+async function removeSysVar(varName) {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/removeSystemVariable/${varName}`;
-	console.log(url);
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					loadSystemVariables();
-				}
-				else
-				{
-					document.getElementById("divSystemVariablesHint").innerHTML = "";
-					document.getElementById("divSystemVariables").innerHTML = "";
-					document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-					document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, "divDeprecatedSystemVariables", "strSystemVariableUnusedRemoving", undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				loadSystemVariables();
+			} else {
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
 				document.getElementById("divSystemVariables").innerHTML = "";
 				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 			}
-		}
-		else if(this.readyState == 4)
-		{
+		} catch (e) {
 			document.getElementById("divSystemVariablesHint").innerHTML = "";
-			document.getElementById("divSystemVariables").innerHTML = "";
-			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+				document.getElementById("divSystemVariables").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 		}
-		else
-		{
-			document.getElementById("divSystemVariablesHint").innerHTML = "";
-			document.getElementById("divSystemVariables").innerHTML = "";
-			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-			document.getElementById("divDeprecatedSystemVariables").innerHTML = createWaitMessage(translateString("strSystemVariableUnusedRemoving"));
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
+				document.getElementById("divSystemVariables").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "removeSysVar"));
+			}
+		} catch (e) {
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	});
 }
 
 function selectedFile(filetype)
@@ -4697,119 +4149,106 @@ function selectedFile(filetype)
 	}
 }
 
-async function uploadFile(filetype)
-{
-	var xmlHttp, objFD, objResp;
+function disableFileUpload() {
+	document.getElementById("btnSelectConfigFile").value = "";
+	document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
+}
+
+async function uploadFile(filetype) {
+	var objResp, objErr, objFD;
 	var url = `${location.protocol}//${location.hostname}:${port}/uploadConfig`;
-	xmlHttp = new XMLHttpRequest();
 	objFD = new FormData();
 	objFD.append("file", document.getElementById("btnSelectConfigFile").files[0]);
-	xmlHttp.addEventListener("load", function(event)
-	{
-		//
-	});
-	xmlHttp.addEventListener("error", function(event)
-	{
-		document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), "", translateMessages("messageUploadConfigErrorFileToLargeMessage"));
-		const toast = new bootstrap.Toast(toastFailed);
-		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageUploadConfigFailedHeader");
-		document.getElementById("toastFailedText").innerHTML = translateMessages("messageUploadConfigFailedMessage");
-		toast.show();
-		document.getElementById("btnSelectConfigFile").value = "";
-		document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
-	});
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true && objResp.serviceRestart == true)
-				{
-					document.getElementById("resultUploadMessage").innerHTML = "";
-					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
-					return;
-				}
-				else
-				{
-					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), translateMessages("messageUploadConfigErrorCommonMessage"), translateMessages("messageErrorPrintErrorMessage", objResp.reason));
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageUploadConfigFailedHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageUploadConfigFailedMessage");
-					toast.show();
-					document.getElementById("btnSelectConfigFile").value = "";
-					document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
-				}
-			}
-			catch (e)
-			{
-				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+	await retrieveData("POST", url, undefined, objFD, "resultUploadMessage", "strUploadConfigUploadingAndTesting", disableFileUpload, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true && objResp.serviceRestart == true) {
+				document.getElementById("resultUploadMessage").innerHTML = "";
+				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+				return;
+			} else {
+				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), translateMessages("messageUploadConfigErrorCommonMessage"), translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageUploadConfigFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageUploadConfigFailedMessage");
+				toast.show();
 				document.getElementById("btnSelectConfigFile").value = "";
 				document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
+		} catch (e) {
+			document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 			document.getElementById("btnSelectConfigFile").value = "";
 			document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
 		}
-		else
-		{
-			document.getElementById("resultUploadMessage").innerHTML = createWaitMessage(translateString("strUploadConfigUploadingAndTesting"));
-			document.getElementById("btnSelectConfigFile").value = "";
-			document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else if(objErr.readyState != undefined && objErr.status != undefined) {
+				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "uploadFile"));
+				document.getElementById("btnSelectConfigFile").value = "";
+				document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
+			} else {
+				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), "", translateMessages("messageUploadConfigErrorFileToLargeMessage"));
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageUploadConfigFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageUploadConfigFailedMessage");
+				toast.show();
+				document.getElementById("btnSelectConfigFile").value = "";
+				document.getElementById("btnUploadConfigFile").setAttribute("disabled", true);
+			}
+		} catch (e) {
+			document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
 		}
-	};
-	xmlHttp.open("POST", url);
-	xmlHttp.send(objFD);
+	});
 }
 
-function removeInteractions()
-{
-	var xmlHttp, objResp;
+async function removeInteractions() {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/removeInteractions`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true && objResp.interactionsRemoved == true)
-				{
-					const toast = new bootstrap.Toast(toastOK);
-					document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveConfigOKHeader");
-					document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveConfigOKMessage");
-					toast.show();
-					return;
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
-					toast.show();
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true && objResp.interactionsRemoved == true) {
+				const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageSaveConfigOKHeader");
+				document.getElementById("toastOKText").innerHTML = translateMessages("messageSaveConfigOKMessage");
+				toast.show();
+				return;
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
 				toast.show();
 			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveConfigFailedHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveConfigFailedMessage");
+			toast.show();
 		}
-		else if(this.readyState == 4)
-		{}
-		else
-		{}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveSettingsHeader");
+				document.getElementById("toastFailedText").innerHTML = `${translateMessages("messageSaveSettingsFailedMessage")}<br>${translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState)}`;
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
 function checkReconnectStation(stationId)
@@ -4824,91 +4263,98 @@ function checkReconnectStation(stationId)
 	}
 }
 
-function reconnectStation()
-{
-	var xmlhttp, objResp;
+async function reconnectStation() {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/reconnect/${document.getElementById("cbReconnectStation").value}`;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
 				const toast = new bootstrap.Toast(toastOK);
 				document.getElementById("toastOKHeader").innerHTML = translateMessages("messageReconnectStationHeader");
 				document.getElementById("toastOKText").innerHTML = translateMessages("messageReconnectStationOkMessage");
 				toast.show();
-			}
-			else
-			{
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
 				toast.show();
 			}
-		}
-		else if(this.readyState == 4)
-		{
+		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
-			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
-			document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
 			toast.show();
 		}
-		else
-		{}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
-function removeTokenData()
-{
-	var xmlHttp, objResp;
+async function removeTokenData() {
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/removeTokenData`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true && objResp.dataRemoved == true)
-				{
-					/*const toast = new bootstrap.Toast(toastOK);
-					document.getElementById("toastOKHeader").innerHTML = translateMessages("");
-					document.getElementById("toastOKText").innerHTML = translateMessages("");
-					toast.show();*/
-					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
-					return;
-				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRemoveTokenFailedHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageRemoveTokenFailedMessage");
-					toast.show();
-				}
-			}
-			catch (e)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true && objResp.dataRemoved == true) {
+				/*const toast = new bootstrap.Toast(toastOK);
+				document.getElementById("toastOKHeader").innerHTML = translateMessages("");
+				document.getElementById("toastOKText").innerHTML = translateMessages("");
+				toast.show();*/
+				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?redirect=settings.html`;
+				return;
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRemoveTokenFailedHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageRemoveTokenFailedMessage");
 				toast.show();
 			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRemoveTokenFailedHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageRemoveTokenFailedMessage");
+			toast.show();
 		}
-		else if(this.readyState == 4)
-		{}
-		else
-		{}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
 function openServiceManagerModal()
@@ -4927,57 +4373,55 @@ function openServiceManagerModal()
 	myModal.show();
 }
 
-function serviceManager(action)
-{
+async function serviceManager(action) {
 	var deleteLogfile = document.getElementById("chkDeleteLogfile").checked;
 	var deleteErrfile = document.getElementById("chkDeleteErrfile").checked;
 	var deleteClientLogfile = document.getElementById("chkDeleteClientLogfile").checked;
-	var xmlHttp, objResp;
+	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=${action}&deleteLogfile=${deleteLogfile}&deleteErrfile=${deleteErrfile}&deleteClientLogfile=${deleteClientLogfile}`;
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					if(action == "stopService")
-					{
-						window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/logfiles.html`;
-					}
-					else
-					{
-						window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=${action}&redirect=logfiles.html`;
-					}
-					return;
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				if(action == "stopService") {
+					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/logfiles.html`;
+				} else {
+					window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=${action}&redirect=logfiles.html`;
 				}
-				else
-				{
-					const toast = new bootstrap.Toast(toastFailed);
-					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageStartFailedHeader");
-					document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
-					toast.show();
-				}
-			}
-			catch (e)
-			{
+				return;
+			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageStartFailedHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
 				toast.show();
 			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageStartFailedHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
+				toast.show();
 		}
-		else if(this.readyState == 4)
-		{}
-		else
-		{}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
+				toast.show();
+			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	});
 }
 
 function enableButtons(enable)
@@ -5256,13 +4700,20 @@ function initLogViewer(logfiletype, showLoading)
 	loadLogfile(logfiletype, showLoading);
 }
 
-function loadLogfile(logfiletype, showLoading)
-{
-	var xmlHttp, url, objResp;
+function waitLogFile() {
+	document.getElementById("logHandlingInfo").style.display = 'block';
+	document.getElementById("logHandlingInfo").innerHTML = createWaitMessage(translateString("strLoadingLogFile"));
+}
+
+async function loadLogfile(logfiletype, showLoading) {
+	var objResp, objErr, url;
+	var waitFunction = undefined;
+	if(showLoading == true) {
+		waitFunction = waitLogFile;
+	}
 	document.getElementById("logContent").style.display = 'none';
 	codeMirrorEditor.setValue("");
-	switch(logfiletype)
-	{
+	switch(logfiletype) {
 		case "log":
 			url=`logfiles.cgi?action=getcontent&file=${logfiletype}`;
 			document.getElementById("tabHeaderAddonLog").classList.add("active");
@@ -5304,29 +4755,20 @@ function loadLogfile(logfiletype, showLoading)
 			document.getElementById("logHandlingInfo").innerHTML = createMessageContainer("alert alert-danger m-0", translateMessages("messageLoadLogFileErrorHeader"), translateMessages("messageErrorLogfileUnknown", logfiletype), "");
 			return;
 	}
-	xmlHttp = new XMLHttpRequest();
-	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success === true)
-			{
-				if(objResp.hasData === true)
-				{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, waitFunction, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success === true) {
+				if(objResp.hasData === true) {
 					document.getElementById("logHandlingInfo").style.display = 'none';
 					document.getElementById("logContent").style.display = 'block';
 					codeMirrorEditor.setValue(decodeURIComponent(objResp.data).slice(0,-1));
 					document.getElementById("btnReloadLogfileData").removeAttribute("disabled");
 					document.getElementById("btnDeleteLogfileData").removeAttribute("disabled");
 					document.getElementById("btnDownloadLogfile").removeAttribute("disabled");
-				}
-				else
-				{
+				} else {
 					document.getElementById("logHandlingInfo").style.display = 'block';
-					switch(logfiletype)
-					{
+					switch(logfiletype) {
 						case "log":
 							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurity.log')}</code>`;
 							break;
@@ -5341,37 +4783,45 @@ function loadLogfile(logfiletype, showLoading)
 					document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
 					document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
 				}
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageLoadLogFileErrorMessage");
+				toast.show();
 			}
-			else
-			{
-				document.getElementById("logHandlingInfo").style.display = 'block';
-				document.getElementById("logHandlingInfo").innerHTML = `<code>${objResp.reason}</code>`;
-				document.getElementById("btnReloadLogfileData").setAttribute("disabled", true);
-				document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
-				document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				objErr = JSON.parse(err);
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadLogfile");
+				toast.show();
 			}
+		} catch (e) {
+			objErr = JSON.parse(err);
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
 		}
-		else if(this.readyState == 4)
-		{
-			document.getElementById("logHandlingInfo").style.display = 'block';
-			document.getElementById("logHandlingInfo").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageLoadLogFileErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-		}
-		else
-		{
-			if(showLoading == true)
-			{
-				document.getElementById("logHandlingInfo").style.display = 'block';
-				document.getElementById("logHandlingInfo").innerHTML = createWaitMessage(translateString("strLoadingLogFile"));
-			}
-		}
-	};
-	xmlHttp.open("GET", url, true);
-	xmlHttp.send();
+	});
 }
 
-function emptyLogfile(logfiletype)
-{
-	var xmlhttp, objResp, url;
+async function emptyLogfile(logfiletype) {
+	var objResp, objErr, url;
 	switch(logfiletype)
 	{
 		case "log":
@@ -5387,33 +4837,44 @@ function emptyLogfile(logfiletype)
 			document.getElementById("log").innerHTML = createMessageContainer("alert alert-danger m-0", translateMessages("messageEmptyLogFileErrorHeader"), translateMessages("messageErrorLogfileUnknown", logfiletype), "");
 			return;
 	}
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.overrideMimeType('application/json');
-	xmlhttp.onreadystatechange = function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			objResp = JSON.parse(this.responseText);
-			if(objResp.success == true)
-			{
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
 				loadLogfile(logfiletype, true);
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageEmptyLogFileErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageEmptyLogFileErrorMessage");
+				toast.show();
 			}
-			else
-			{
-
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageEmptyLogFileErrorHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
+		}
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+				toast.show();
+			} else {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageEmptyLogFileErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadLogfile");
+				toast.show();
 			}
+		} catch (e) {
+			const toast = new bootstrap.Toast(toastFailed);
+			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageEmptyLogFileErrorHeader");
+			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+			toast.show();
 		}
-		else if(this.readyState == 4)
-		{
-
-		}
-		else
-		{
-
-		}
-	};
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
+	});
 }
 //#endregion
 
@@ -5421,79 +4882,95 @@ function emptyLogfile(logfiletype)
  * Scripts for info.html
  */
 //#region info.html
-function loadDataInfo(showLoading)
-{
-	if (serviceState == "running")
+async function loadDataInfo(showLoading) {
+	var waitElementId = undefined, waitMessage = undefined;
+	if(showLoading == true) {
+		waitElementId = "versionInfo";
+		waitMessage = "strLoadingVersionInfo";
+	}
+	if(serviceState == "running")
 	{
-		var xmlHttp, objResp, info = "";
+		var objResp, objErr, info = "";
 		var url = `${location.protocol}//${location.hostname}:${port}/getApiInfo`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
+		await retrieveData("GET", url, 'application/json', undefined, waitElementId, waitMessage, undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
 					info = `${translateString("strAddOnName")}: ${objResp.apiVersion}<br />${translateString("strClientName")}: ${objResp.eufySecurityClientVersion}<br />${translateString("strHomeMaticApi")}: ${objResp.homematicApiVersion}<br />${translateString("strWebsite")}: ${version}<br />${getLanguageInfo()}`;
 					document.getElementById("versionInfo").innerHTML = info;
-				}
-				else
-				{
+				} else {
 					document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
 				}
+			} catch (e) {
+				document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadVersionInfoErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+				toast.show();
 			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-			}
-			else
-			{
-				if(showLoading == true)
-				{
-					document.getElementById("versionInfo").innerHTML = createWaitMessage(translateString("strLoadingVersionInfo"));
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+					toast.show();
+				} else {
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadVersionInfoErrorHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadLogfile");
+					toast.show();
 				}
+			} catch (e) {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadVersionInfoErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+				toast.show();
 			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
+		});
 	}
 	else
 	{
-		var xmlHttp, objResp, info = "";
+		var objResp, objErr, info = "";
 		var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=getServiceVersion`;
-		xmlHttp = new XMLHttpRequest();
-		xmlHttp.overrideMimeType('application/json');
-		xmlHttp.onreadystatechange = function()
-		{
-			if(this.readyState == 4 && this.status == 200)
-			{
-				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
+		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+			try {
+				objResp = JSON.parse(result);
+				if(objResp.success == true) {
 					info = `${translateString("strAddOnName")}: ${objResp.version}<br />${translateString("strWebsite")}: ${version}<br />${getLanguageInfo()}`;
 					document.getElementById("versionInfo").innerHTML = info;
-				}
-				else
-				{
+				} else {
 					document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
 				}
+			} catch (e) {
+				document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadVersionInfoErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+				toast.show();
 			}
-			else if(this.readyState == 4)
-			{
-				document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState));
-			}
-			else
-			{
-				if(showLoading == true)
-				{
-					document.getElementById("versionInfo").innerHTML = createWaitMessage(translateString("strLoadingVersionInfo"));
+		}).catch((err) => {
+			try {
+				objErr = JSON.parse(err);
+				if(objErr.cause == "ABORT") {
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
+					toast.show();
+				} else {
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadVersionInfoErrorHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadLogfile");
+					toast.show();
 				}
+			} catch (e) {
+				const toast = new bootstrap.Toast(toastFailed);
+				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadVersionInfoErrorHeader");
+				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
+				toast.show();
 			}
-		};
-		xmlHttp.open("GET", url, true);
-		xmlHttp.send();
+		});
 	}
 }
 //#endregion
@@ -5529,234 +5006,170 @@ async function restartAPIService()
 	}
 }
 
-async function checkServiceState(cntStart, cntInit, postInit)
-{
+async function checkServiceState(cntStart, cntInit, postInit) {
 	var xmlHttp, objResp;
 	var url = `${location.protocol}//${location.hostname}:${port}/getServiceState`;
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.overrideMimeType('application/json');
-	xmlHttp.onreadystatechange = async function()
-	{
-		if(this.readyState == 4 && this.status == 200)
-		{
-			try
-			{
+	xmlHttp.onreadystatechange = async function() {
+		if(this.readyState == 4 && this.status == 200) {
+			try {
 				objResp = JSON.parse(this.responseText);
-				if(objResp.success == true)
-				{
-					if(objResp.message == "init")
-					{
-						if(cntInit == 0)
-						{
+				if(objResp.success == true) {
+					if(objResp.message == "init") {
+						if(cntInit == 0) {
 							var startDone = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
-							}
-							else
-							{
+							} else {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initStart = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
-							}
-							else
-							{
+							} else {
 								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initStart;
 						}
-						if(cntInit < 20)
-						{
+						if(cntInit < 20) {
 							cntInit = cntInit + 1;
 							await delay(1000);
 							checkServiceState(cntStart, cntInit, postInit);
+						} else {
+							const toast = new bootstrap.Toast(toastFailed);
+							document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartWaitErrorHeader");
+							document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartWaitHeaderMessage", objResp.message);
+							toast.show();
 						}
-						else
-						{
-							alert("Maximum cntInit reached.");
-						}
-					}
-					else if(objResp.message == "ok")
-					{
-						if(cntInit == 0 && postInit == 0)
-						{
+					} else if(objResp.message == "ok") {
+						if(cntInit == 0 && postInit == 0) {
 							var startDone = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
-							}
-							else
-							{
+							} else {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initStart = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
-							}
-							else
-							{
+							} else {
 								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initStart;
 						}
-						if(postInit < 5)
-						{
+						if(postInit < 5) {
 							postInit = postInit + 1;
 							await delay(1000);
 							checkServiceState(cntStart, cntInit, postInit);
-						}
-						else
-						{
+						} else {
 							var startDone = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
-							}
-							else
-							{
+							} else {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initDone = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strLoginFinished")}</div>`;
-							}
-							else
-							{
+							} else {
 								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strInitFinished")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initDone;
 							await delay(5000);
 							window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/` + redirectTarget;
 						}
-					}
-					else if(objResp.message == "configNeeded")
-					{
-						if(cntInit == 0 && postInit == 0)
-						{
+					} else if(objResp.message == "configNeeded") {
+						if(cntInit == 0 && postInit == 0) {
 							var startDone = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
-							}
-							else
-							{
+							} else {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initStart = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
-							}
-							else
-							{
+							} else {
 								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initStart;
 						}
-						if(postInit < 5)
-						{
+						if(postInit < 5) {
 							postInit = postInit + 1;
 							await delay(1000);
 							checkServiceState(cntStart, cntInit, postInit);
-						}
-						else
-						{
+						} else {
 							var startDone = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
-							}
-							else
-							{
+							} else {
 								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initDone = "";
-							if(action == "captcha")
-							{
+							if(action == "captcha") {
 								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strLoginFinished")}</div>`;
-							}
-							else
-							{
+							} else {
 								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strInitFinished")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initDone;
 							await delay(5000);
 							window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/` + redirectTarget;
 						}
-					}
-					else if(objResp.message == "shutdown")
-					{
+					} else if(objResp.message == "shutdown") {
 						cntStart = 0;
 						cntInit = 0;
 						postInit = 0;
 						await delay(5000);
 						checkServiceState(cntStart, cntInit, postInit);
-					}
-					else
-					{
-						if(cntStart < 20)
-						{
+					} else {
+						if(cntStart < 20) {
 							cntStart = cntStart + 1;
 							await delay(1000);
 							checkServiceState(cntStart, cntInit, postInit);
-							//return;
-						}
-						else
-						{
-							alert("Maximum cntStart reached (pos1).");
+						} else {
+							const toast = new bootstrap.Toast(toastFailed);
+							document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartWaitErrorHeader");
+							document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartWaitHeaderMessage", objResp.message);
+							toast.show();
 						}
 					}
-				}
-				else
-				{
-					if(cntStart < 20)
-					{
+				} else {
+					if(cntStart < 20) {
 						cntStart = cntStart + 1;
 						await delay(1000);
 						checkServiceState(cntStart, cntInit, postInit);
-					}
-					else
-					{
-						alert("Maximum cntStart reached (pos2).");
+					} else {
+						const toast = new bootstrap.Toast(toastFailed);
+						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartWaitErrorHeader");
+						document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartWaitHeaderMessage", objResp.message);
+						toast.show();
 					}
 				}
-			}
-			catch (e)
-			{
-				alert(e.message);
-				if(cntStart < 20)
-				{
+			} catch (e) {
+				if(cntStart < 20) {
 					cntStart = cntStart + 1;
 					await delay(1000);
 					checkServiceState(cntStart, cntInit, postInit);
-				}
-				else
-				{
-					alert("Maximum cntStart reached (pos3).");
+				} else {
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageRestartWaitErrorHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageRestartWaitHeaderErrorMessage", e.message);
+					toast.show();
 				}
 			}
-		}
-		else if(this.readyState == 4)
-		{
-			if(cntStart < 20)
-			{
+		} else if(this.readyState == 4) {
+			if(cntStart < 20) {
 				cntStart = cntStart + 1;
 				await delay(2000);
 				checkServiceState(cntStart, cntInit, postInit);
 			}
-		}
-		else
-		{}
+		} else {}
 	};
 	xmlHttp.open("GET", url, true);
 	xmlHttp.send();

@@ -87,16 +87,16 @@
 								<h6 class="card-text text-muted" id="divStateChangeAllStationsDesc">{divStateChangeAllStationsDesc}</h6>
 								<div class="row g-2">
 									<div class="col-sm-3">
-										<button id="btnArmAll" onclick="setArm('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnArmAll}</button>
+										<button id="btnAwayAll" onclick="setMode('', 'away', 0)" type="button" class="btn btn-primary col-12 h-100" disabled>{btnAwayAll}</button>
 									</div>
 									<div class="col-sm-3">
-										<button id="btnHomeAll" onclick="setHome('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnHomeAll}</button>
+										<button id="btnHomeAll" onclick="setMode('', 'home', 1)" type="button" class="btn btn-primary col-12 h-100" disabled>{btnHomeAll}</button>
 									</div>
 									<div class="col-sm-3">
-										<button id="btnScheduleAll" onclick="setSchedule('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnScheduleAll}</button>
+										<button id="btnScheduleAll" onclick="setMode('', 'schedule', 2)" type="button" class="btn btn-primary col-12 h-100" disabled>{btnScheduleAll}</button>
 									</div>
 									<div class="col-sm-3">
-										<button id="btnDisarmAll" onclick="setDisarm('')" type="button" class="btn btn-primary col-12 h-100" disabled>{btnDisarmAll}</button>
+										<button id="btnDisarmAll" onclick="setMode('', 'disarm', 63)" type="button" class="btn btn-primary col-12 h-100" disabled>{btnDisarmAll}</button>
 									</div>
 								</div>
 							</div>
@@ -116,19 +116,19 @@
 		
 		<div id="toastOK" class="toast bg-success" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto" id="divStateChangeToastOkHeader">{divStateChangeToastOkHeader}</strong>
+				<strong class="me-auto" id="toastOkHeader">{divStateChangeToastOkHeader}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white" id="divStateChangeToastOkMessage">
+			<div class="toast-body text-white" id="toastOkText">
 				{divStateChangeToastOkMessage}
 			</div>
 		</div>
 		<div id="toastFailed" class="toast bg-danger" role="alert" data-bs-autohide="true" data-bs-delay="5000" style="position: fixed; bottom: 10px; right: 10px;">
 			<div class="toast-header">
-				<strong class="me-auto" id="divStateChangeToastFailedHeader">{divStateChangeToastFailedHeader}</strong>
+				<strong class="me-auto" id="toastFailedHeader">{divStateChangeToastFailedHeader}</strong>
 				<button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast"></button>
 			</div>
-			<div class="toast-body text-white" id="divStateChangeToastFailedMessage">
+			<div class="toast-body text-white" id="toastFailedText">
 				{divStateChangeToastFailedMessage}
 			</div>
 		</div>

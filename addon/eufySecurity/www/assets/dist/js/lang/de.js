@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.31
-20241223
+Schema v9.32
+202050322
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20241223 (v9.31)";
+var languageVersion = "20250322 (v9.32)";
 
 function translateNavbarElement(element)
 {
@@ -56,13 +56,13 @@ function translateStaticContentElement(element)
 			return "alle Stationen";
 		case "divStateChangeAllStationsDesc":
 			return "Ändern des Status aller Stationen";
-		case "divStateChangeToastOkHeader":
+		case "toastOkHeader":
 			return "Änderung des Status.";
-		case "divStateChangeToastOkMessage":
+		case "toastOkText":
 			return "Die Änderung des Status wurde erfolgreich durchgeführt.";
-		case "divStateChangeToastFailedHeader":
+		case "toastFailedHeader":
 			return "Änderung des Status.";
-		case "divStateChangeToastFailedMessage":
+		case "toastFailedText":
 			return "Bei der Änderung des Status ist ein Fehler aufgetreten.";
 		case "settingsIntroHeader":
 			return "Einstellungen";
@@ -503,7 +503,15 @@ function translateMessages(message, ...options)
 		case "messageErrorPrintErrorMessage":
 			return `Es ist folgender Fehler aufgetreten: ${options[0]}`;
 		case "messageErrorStatusAndReadyState":
-			return `Rückgabewert 'Status' ist '${options[0]}'. Rückgabewert 'ReadyState' ist '${options[1]}'.`;
+			return `Rückgabewert 'Status' ist '${options[0]}'. Rückgabewert 'ReadyState' ist '${options[1]}'.${options[2] !== undefined ? ` Funktion: '${options[2]}'.` : ""}`;
+		case "messageAbortLoadingHeader":
+			return "Anfrage wurde abgebrochen.";
+		case "messageAbortLoadingText":
+			return "Die Anfrage wurde abgebrochen.";
+		case "messageErrorLoadingHeader":
+			return "Fehler bei der Auswertung der Antwort.";
+		case "messageErrorLoadingText":
+			return "Es wurde eine ungültige Antwort empfangen.";
 		case "messageCaptchaErrorHeader":
 			return "Fehler beim Laden des Captcha Status.";
 		case "messageErrorCheckingAddonStateHeader":
@@ -708,18 +716,30 @@ function translateMessages(message, ...options)
 			return "Sie haben einen Port eingegeben, der bereits für eine andere Station oder ein anderes Gerät eingegeben wurde.";
 		case "messageLoadLogFileErrorHeader":
 			return "Fehler beim Laden der Logdatei.";
+		case "messageLoadLogFileErrorMessage":
+			return "Es ist ein Fehler beim Laden der Logdatei aufgetreten.";
 		case "messageEmptyLogFileErrorHeader":
 			return "Fehler beim Leeren der Logdatei.";
+		case "messageEmptyLogFileErrorMessage":
+			return "Beim leeren der Logdatei ist ein Fehler aufgetreten.";
 		case "messageErrorLogfileUnknown":
 			return `Der Logdateityp '${options[0]}' ist unbekannt.`;
 		case "messageLoadVersionInfoErrorHeader":
 			return "Fehler beim Laden der Versionsinformationen.";
+		case "messageLoadVersionInfoErrorMessage":
+			return "Es ist ein Fehler beim Laden der Versionsinformationen aufgetreten.";
 		case "messageRebootStationHeader":
 			return "Station neu starten.";
 		case "messageRebootStationOkMessage":
 			return "Die Station startet neu. Dies kann einige Minuten dauern.";
 		case "messageSaveSettingsOkMessage":
 			return "Die Station konnte nicht neu gestartet werden.";
+		case "messageRestartWaitErrorHeader":
+			return "Fehler beim Neustart des Addons.";
+		case "messageRestartWaitHeaderMessage":
+			return `Es ist ein Fehler beim Neustart des Addons aufgetreten.<br />Phase: '${options[0]}'`;
+		case "messageRestartWaitHeaderErrorMessage":
+			return `Es ist ein Fehler beim Neustart des Addons aufgetreten.<br />Fehler: '${options[0]}'`;
 		default:
 			return `{${message}}`;
 	}
@@ -1152,6 +1172,16 @@ function translateContent(content, ...options)
 			return "aktuelle Temperatur";
 		case "titleDeviceDisabled":
 			return "Gerät deaktiviert";
+		case "strLoadingVersionInfo":
+			return "Lade verfügbare Versionsinformationen...";
+		case "strLoadingSettings":
+			return "Laden der Einstellungen...";
+		case "strLoadingHouses":
+			return "Laden der Häuser...";
+		case "strLoadingStations":
+			return "Laden der Stationen...";
+		case "strLoadingSystemVariables":
+			return "Laden der Systemvariablen...";
 		default:
 			return `{${content}}`;
 	}
@@ -1205,8 +1235,6 @@ function translateString(content)
 			return "ausschalten";
 		case "strLoadingCountries":
 			return "Laden der Länder...";
-		case "strLoadingHouses":
-			return "Laden der Häuser...";
 		case "strLoadingStations":
 			return "Laden der Stationen...";
 		case "strSystemVariablesTableHeaderState":
@@ -1221,8 +1249,6 @@ function translateString(content)
 			return "Veraltete Systemvariablen";
 		case "strSystemVariablesUnusedHintMessage":
 			return "Die nachfolgenden mit 'eufy' beginnenden Systemvariablen werden nicht mehr genutzt und können entfernt werden.";
-		case "strLoadingSystemVariables":
-			return "Laden der Systemvariablen...";
 		case "strSettingsSaving":
 			return "Einstellungen werden gespeichert...";
 		case "strSystemVariableCreating":
@@ -1241,8 +1267,6 @@ function translateString(content)
 			return "HomeMatic API";
 		case "strWebsite":
 			return "Webseite";
-		case "strLoadingVersionInfo":
-			return "Lade verfügbare Versionsinformationen...";
 		case "strServiceRunning":
 			return "Service läuft.";
 		case "strServiceStarted":
@@ -1275,6 +1299,30 @@ function translateString(content)
 			return "unbekanntes Gerät";
 		default:
 			return `{${content}}`;
+	}
+}
+
+function translateSystemVariableInfo(info) {
+	switch(info)
+	{
+		case "eufyCurrentState":
+			return "aktueller Modus des eufy Systems";
+		case "eufyLastConnectionResult":
+			return "Ergebnis der letzten Kommunikation mit eufy";
+		case "eufyLastConnectionTime":
+			return "Zeitpunkt der letzten Kommunikation mit eufy";
+		case "eufyLastStatusUpdateTime":
+			return "Zeitpunkt der letzten Aktualisierung des eufy Systemstatus";
+		case "eufyLastModeChangeTime":
+			return "Zeitpunkt des letzten Moduswechsels";
+		case "eufyCentralState":
+			return "aktueller Status der Basis";
+		case "eufyLastModeChangeTimeStation":
+			return "Zeitpunkt des letzten Moduswechsels der Basis";
+		case "eufyCameraVideoTime":
+			return "Zeitpunkt des letzten Videos der Kamera";
+		default:
+			return `{${info}}`;
 	}
 }
 

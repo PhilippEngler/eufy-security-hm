@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.31
-20241223
+Schema v9.32
+20250321
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20241223 (v9.31)";
+var languageVersion = "20250321 (v9.32)";
 
 function translateNavbarElement(element)
 {
@@ -56,13 +56,13 @@ function translateStaticContentElement(element)
 			return "All stations";
 		case "divStateChangeAllStationsDesc":
 			return "Change the status of all stations";
-		case "divStateChangeToastOkHeader":
+		case "toastOkHeader":
 			return "Change of status.";
-		case "divStateChangeToastOkMessage":
+		case "toastOkText":
 			return "The status has been changed successfully.";
-		case "divStateChangeToastFailedHeader":
+		case "toastFailedHeader":
 			return "Change of status.";
-		case "divStateChangeToastFailedMessage":
+		case "toastFailedText":
 			return "An error occurred while changing the status.";
 		case "settingsIntroHeader":
 			return "Settings";
@@ -503,7 +503,15 @@ function translateMessages(message, ...options)
 		case "messageErrorPrintErrorMessage":
 			return `The following error has occurred: ${options[0]}`;
 		case "messageErrorStatusAndReadyState":
-			return `Return value 'Status' is '${options[0]}'. Return value 'ReadyState' is '${options[1]}'.`;
+			return `Return value 'Status' is '${options[0]}'. Return value 'ReadyState' is '${options[1]}'.${options[2] !== undefined ? ` Function: '${options[2]}'.` : ""}`;
+		case "messageAbortLoadingHeader":
+			return "Canceled loading.";
+		case "messageAbortLoadingText":
+			return "The loading process has been canceled.";
+		case "messageErrorLoadingHeader":
+			return "Error while parsing result.";
+		case "messageErrorLoadingText":
+			return "The result has been received is nor valid.";
 		case "messageCaptchaErrorHeader":
 			return "Error loading the captcha status.";
 		case "messageErrorCheckingAddonStateHeader":
@@ -708,18 +716,30 @@ function translateMessages(message, ...options)
 			return "You have entered a port that has already been entered for another station or another device.";
 		case "messageLoadLogFileErrorHeader":
 			return "Error loading the log file.";
+		case "messageLoadLogFileErrorMessage":
+			return "An error has occurred while loading the log file.";
 		case "messageEmptyLogFileErrorHeader":
 			return "Error while emptying logfile.";
+		case "messageEmptyLogFileErrorMessage":
+			return "An error has occurred while emptying logfile.";
 		case "messageErrorLogfileUnknown":
 			return `The logfile type '${options[0]}' is unknown.`;
 		case "messageLoadVersionInfoErrorHeader":
 			return "Error loading the version information.";
+		case "messageLoadVersionInfoErrorMessage":
+			return "An error has occurred while loading the version information.";
 		case "messageRebootStationHeader":
 			return "Reboot station.";
 		case "messageRebootStationOkMessage":
 			return "The station is rebooting. This may take some minutes.";
 		case "messageSaveSettingsOkMessage":
 			return "The station reboot failed.";
+		case "messageRestartWaitErrorHeader":
+			return "Error restarting the add-on.";
+		case "messageRestartWaitHeaderMessage":
+			return `An error has occurred while restarting the add-on.<br />Phase: '${options[0]}'`;
+		case "messageRestartWaitHeaderErrorMessage":
+			return `An error has occurred while restarting the add-on.<br />Error: '${options[0]}'`;
 		default:
 			return `{${message}}`;
 	}
@@ -1152,6 +1172,16 @@ function translateContent(content, ...options)
 			return "Current Temperature";
 		case "titleDeviceDisabled":
 			return "Device disabled";
+		case "strLoadingVersionInfo":
+			return "Loaging Version Informationen...";
+		case "strLoadingSettings":
+			return "Loading Settings...";
+		case "strLoadingHouses":
+			return "Loading Houses...";
+		case "strLoadingStations":
+			return "Loading Stations...";
+		case "strLoadingSystemVariables":
+			return "Loading System Variables...";
 		default:
 			return `{${content}}`;
 	}
@@ -1205,8 +1235,6 @@ function translateString(content)
 			return "Deactivate";
 		case "strLoadingCountries":
 			return "Loading Countries...";
-		case "strLoadingHouses":
-			return "Loading Houses...";
 		case "strLoadingStations":
 			return "Loading Stations...";
 		case "strSystemVariablesTableHeaderState":
@@ -1221,8 +1249,6 @@ function translateString(content)
 			return "Obsolete System Variablen";
 		case "strSystemVariablesUnusedHintMessage":
 			return "The following system variables beginning with 'eufy' are no longer used and can be removed.";
-		case "strLoadingSystemVariables":
-			return "Loading System Variables...";
 		case "strSettingsSaving":
 			return "Settings are saved...";
 		case "strSystemVariableCreating":
@@ -1241,8 +1267,6 @@ function translateString(content)
 			return "HomeMatic API";
 		case "strWebsite":
 			return "Website";
-		case "strLoadingVersionInfo":
-			return "Loaging Version Informationen...";
 		case "strServiceRunning":
 			return "Service running.";
 		case "strServiceStarted":
@@ -1275,6 +1299,30 @@ function translateString(content)
 			return "unknown Device";
 		default:
 			return `{${content}}`;
+	}
+}
+
+function translateSystemVariableInfo(info) {
+	switch(info)
+	{
+		case "eufyCurrentState":
+			return "Current state of the eufy Systems";
+		case "eufyLastConnectionResult":
+			return "Result of last communication with eufy";
+		case "eufyLastConnectionTime":
+			return "Time of last communication with eufy";
+		case "eufyLastStatusUpdateTime":
+			return "Time of last update of the eufy system state";
+		case "eufyLastModeChangeTime":
+			return "Time of last eufy mode change";
+		case "eufyCentralState":
+			return "Current state of the eufy Station";
+		case "eufyLastModeChangeTimeStation":
+			return "Time of last mode change of station";
+		case "eufyCameraVideoTime":
+			return "Time of last recording of camera";
+		default:
+			return `{${info}}`;
 	}
 }
 
