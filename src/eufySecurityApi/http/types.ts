@@ -7623,6 +7623,7 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceRecordingRetriggerInterval]: DeviceRecordingRetriggerIntervalProperty,
         [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
         [PropertyName.DeviceWifiSignalLevel]: DeviceWifiSignalLevelProperty,
+        [PropertyName.DeviceBattery]: DeviceBatteryProperty,
         [PropertyName.DeviceSnooze]: DeviceSnoozeProperty,
         [PropertyName.DeviceSnoozeTime]: DeviceSnoozeTimeProperty,
         [PropertyName.DeviceSnoozeStartTime]: DeviceSnoozeStartTimeProperty,
