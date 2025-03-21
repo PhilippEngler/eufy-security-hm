@@ -5,7 +5,7 @@ source assets/dist/tcl/fileHelper.tcl
 source assets/dist/tcl/dateHelper.tcl
 source assets/dist/tcl/queryHelper.tcl
 
-if {[info exists env(QUERY_STRING)] && $env(QUERY_STRING) != "" && argc == 0} {
+if {[info exists env(QUERY_STRING)] && $env(QUERY_STRING) != "" && $argc == 0} {
 	set queryStringParams [getParametersFromQueryString $env(QUERY_STRING)]
 } elseif {$argc > 0} {
 	puts "Content-Type: application/json; charset=utf-8"
