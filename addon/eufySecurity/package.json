@@ -1,6 +1,6 @@
 {
   "name": "eufy-security-hm",
-  "version": "3.1.1",
+  "version": "3.1.2-rc1",
   "description": "eufy Security AddOn for HomeMatic",
   "author": {
     "name": "Philipp Engler",
@@ -25,34 +25,34 @@
   "license": "MIT",
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "^20.17.6",
+    "@types/node": "^20.17.24",
     "@types/node-rsa": "^1.1.4",
     "@types/node-schedule": "^2.1.7",
-    "@types/qs": "^6.9.17",
-    "@typescript-eslint/eslint-plugin": "^8.15.0",
-    "@typescript-eslint/parser": "^8.15.0",
-    "eslint": "^9.15.0",
+    "@types/qs": "^6.9.18",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
+    "eslint": "^9.22.0",
     "typescript": "5.5.4",
-    "@types/ws": "^8.5.13"
+    "@types/ws": "^8.18.0"
   },
   "dependencies": {
     "@cospired/i18n-iso-languages": "^4.2.0",
     "crypto-js": "^4.2.0",
     "date-and-time": "^3.6.0",
-    "got": "^14.4.4",
-    "i18n-iso-countries": "^7.13.0",
+    "got": "^14.4.6",
+    "i18n-iso-countries": "^7.14.0",
     "image-type": "^5.2.0",
-    "long": "^5.2.3",
-    "mqtt": "^5.10.2",
+    "long": "^5.3.1",
+    "mqtt": "^5.10.4",
     "node-rsa": "^1.1.1",
     "node-schedule": "^2.1.1",
     "p-throttle": "^6.2.0",
     "protobufjs": "^7.4.0",
-    "qs": "^6.13.1",
+    "qs": "^6.14.0",
     "sweet-collections": "^1.1.0",
     "tiny-typed-emitter": "^2.1.0",
     "typescript-logging": "^2.2.0",
     "typescript-logging-category-style": "^2.2.0",
-    "axios": "^1.7.7"
+    "axios": "^1.8.3"
   }
 }
