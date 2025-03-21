@@ -522,23 +522,30 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             this.connecting = true;
             this.terminating = false;
             await this.renewDSKKey();
-            if (!this.binded)
-                this.socket.bind(this.listeningPort, () => {
-                    this.binded = true;
-                    try {
-                        this.socket.setRecvBufferSize(this.UDP_RECVBUFFERSIZE_BYTES);
-                        this.socket.setBroadcast(true);
-                    } catch (err) {
-                        const error = ensureError(err);
-                        rootP2PLogger.error(`connect - Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host, currentRecBufferSize: this.socket.getRecvBufferSize(), recBufferRequestedSize: this.UDP_RECVBUFFERSIZE_BYTES });
-                    }
-                    try {
-                        this.lookup(host);
-                    } catch (err) {
-                        const error = ensureError(err);
-                        rootP2PLogger.error(`connect - Lookup Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host });
-                    }
-                });
+            if (!this.binded) {
+                try {
+                    this.socket.bind(this.listeningPort, () => {
+                        this.binded = true;
+                        try {
+                            this.socket.setRecvBufferSize(this.UDP_RECVBUFFERSIZE_BYTES);
+                            this.socket.setBroadcast(true);
+                        } catch (err) {
+                            const error = ensureError(err);
+                            rootP2PLogger.error(`connect - Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host, currentRecBufferSize: this.socket.getRecvBufferSize(), recBufferRequestedSize: this.UDP_RECVBUFFERSIZE_BYTES });
+                        }
+                        try {
+                            this.lookup(host);
+                        } catch (err) {
+                            const error = ensureError(err);
+                            rootP2PLogger.error(`connect - Lookup Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host });
+                        }
+                    });
+                } catch (err) {
+                    this.binded = false;
+                    const error = ensureError(err);
+                    rootP2PLogger.error(`connect - Socket Binding Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host });
+                }
+            }
             else {
                 try {
                     this.lookup(host);
@@ -2407,7 +2414,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private onError(err: any): void {
         const error = ensureError(err);
-        rootP2PLogger.debug(`Socket Error:`, { error: getError(error), stationSN: this.rawStation.station_sn });
+        rootP2PLogger.error(`Socket Error:`, { error: getError(error), stationSN: this.rawStation.station_sn });
     }
 
     private scheduleHeartbeat(): void {
