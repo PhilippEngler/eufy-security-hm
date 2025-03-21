@@ -211,6 +211,73 @@ export class HomematicApi {
      */
     public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined> {
         const requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('${variableName}');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('${variableInfo}');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);`;
+        /*
+        public async createSystemVariable(hostName: string, useHttps: boolean, variableData: HomeMaticSystemvariableString | HomeMaticSystemvariableFloat | HomeMaticSystemvariableBinary | HomeMaticSystemvariableInteger): Promise<string | undefined> {
+        let requestData = "";
+        switch (variableData.valueType) {
+            case "ivtString":
+                variableData = variableData as HomeMaticSystemvariableString;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
+                                object svObj=dom.CreateObject(OT_VARDP);
+                                svObj.Name('${variableData.name}');
+                                sv.Add(svObj.ID());
+                                svObj.ValueType(${variableData.valueType});
+                                svObj.ValueSubType(${variableData.valueSubType});
+                                svObj.DPInfo('${variableData.info}');
+                                svObj.ValueUnit('${variableData.valueUnit}');
+                                svObj.DPArchive(false);
+                                svObj.State('${variableData.state}');
+                                svObj.Internal(false);
+                                svObj.Visible(true);
+                                dom.RTUpdate(false);`;
+                break;
+            case "ivtFloat":
+                variableData = variableData as HomeMaticSystemvariableFloat;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
+                                object svObj=dom.CreateObject(OT_VARDP);
+                                svObj.Name('${variableData.name}');
+                                sv.Add(svObj.ID());
+                                svObj.ValueType(${variableData.valueType});
+                                svObj.ValueSubType(${variableData.valueSubType});
+                                svObj.DPInfo('${variableData.info}');
+                                svObj.ValueUnit('${variableData.valueUnit}');
+                                svObj.ValueMin(${variableData.valueMin});
+                                svObj.ValueMax(${variableData.valueMax});
+                                svObj.State(${variableData.state});
+                                svObj.Internal(false);
+                                svObj.Visible(true);
+                                dom.RTUpdate(false);`;
+                break;
+            case "ivtBinary":
+                variableData = variableData as HomeMaticSystemvariableBinary;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
+                                object svObj=dom.CreateObject(OT_VARDP);
+                                svObj.Name('${variableData.name}');
+                                sv.Add(svObj.ID());
+                                svObj.ValueType(${variableData.valueType});
+                                svObj.ValueSubType(${variableData.valueSubType});
+                                svObj.DPInfo('${variableData.info}');
+                                svObj.ValueUnit('${variableData.valueUnit}');
+                                svObj.ValueName0('${variableData.valueName0}');
+                                svObj.ValueName1('${variableData.valueName1}');
+                                svObj.State(${variableData.state});
+                                dom.RTUpdate(false);`;
+                break;
+            case "ivtInteger":
+                variableData = variableData as HomeMaticSystemvariableInteger;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
+                                object svObj=dom.CreateObject(OT_VARDP);
+                                svObj.Name('${variableData.name}');
+                                sv.Add(svObj.ID());
+                                svObj.ValueType(${variableData.valueType});
+                                svObj.ValueSubType(${variableData.valueSubType});
+                                svObj.DPInfo('${variableData.info}');
+                                svObj.ValueList('${variableData.valueList}');
+                                svObj.State(${variableData.state});
+                                dom.RTUpdate(false);`;
+                break;
+        }
+        */
         const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, true, hostName === "localhost" ? false : true);
 
         let data = "";
