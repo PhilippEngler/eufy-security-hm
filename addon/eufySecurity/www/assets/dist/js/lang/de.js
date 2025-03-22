@@ -1139,7 +1139,7 @@ function translateContent(content, ...options)
 		case "lblFileIsEmpty":
 			return `Die Datei '${options[0]}' ist leer.`;
 		case "lblFileIsNotAvailable":
-			return `Die Datei '${options[0]}' existriert nicht.`;
+			return `Die Datei '${options[0]}' existiert nicht.`;
 		case "lblHeaderApiSettingsErrorCaptcha":
 			return "Loginversuch wird durchgeführt";
 		case "lblMessageApiSettingsErrorCaptcha":
