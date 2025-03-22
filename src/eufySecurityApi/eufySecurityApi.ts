@@ -1143,6 +1143,7 @@ export class EufySecurityApi {
                     });
                     json = {"success":res,"reason":`The property change for property ${propertyName} on device ${deviceSerial} ${res === true ? `has been processed` : `has failed`}.`};
                 } catch (e) {
+                    rootAddonLogger.error(`Error occured at setDeviceProperty.`, JSON.stringify(e));
                     if (e instanceof InvalidPropertyError) {
                         json = {"success":false,"reason":`The device ${deviceSerial} does not support the property ${propertyName}.`};
                     } else if (e instanceof ReadOnlyPropertyError) {
@@ -2960,7 +2961,7 @@ export class EufySecurityApi {
      * @returns The version of this API.
      */
     public getEufySecurityApiVersion(): string {
-        return "3.1.1";
+        return "3.1.2-rc2";
     }
 
     /**
