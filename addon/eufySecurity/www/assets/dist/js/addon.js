@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 202501321
+ * 202501322
  */
 var action = "";
 var port = "";
@@ -4784,12 +4784,29 @@ async function loadLogfile(logfiletype, showLoading) {
 					document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
 				}
 			} else {
-				const toast = new bootstrap.Toast(toastFailed);
-				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
-				document.getElementById("toastFailedText").innerHTML = translateMessages("messageLoadLogFileErrorMessage");
-				toast.show();
+				if (objResp.reason === "The file does not exists.") {
+					document.getElementById("logHandlingInfo").style.display = 'block';
+					switch(logfiletype) {
+						case "log":
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsNotAvailable", '/var/log/eufySecurity.log')}</code>`;
+							break;
+						case "err":
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsNotAvailable", '/var/log/eufySecurity.err')}</code>`;
+							break;
+						case "clientLog":
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsNotAvailable", '/var/log/eufySecurityClient.log')}</code>`;
+							break;
+					}
+				} else {
+					document.getElementById("logHandlingInfo").style.display = 'none';
+					const toast = new bootstrap.Toast(toastFailed);
+					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
+					document.getElementById("toastFailedText").innerHTML = translateMessages("messageLoadLogFileErrorMessage");
+					toast.show();
+				}
 			}
 		} catch (e) {
+			document.getElementById("logHandlingInfo").style.display = 'none';
 			const toast = new bootstrap.Toast(toastFailed);
 			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
 			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);

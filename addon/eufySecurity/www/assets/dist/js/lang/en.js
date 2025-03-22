@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.32
-20250321
+Schema v9.33
+20250322
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20250321 (v9.32)";
+var languageVersion = "20250322 (v9.33)";
 
 function translateNavbarElement(element)
 {
@@ -448,15 +448,15 @@ function translateStaticContentElement(element)
 		case "textUseApi":
 			return "You can query the API via scripts. You have two options for this:";
 		case "entryApiBackground":
-			return `If you do not want to evaluate the response, you can use the following code to execute the request in the background (i.e. non-blocking):<br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code><br />`;
+			return `If you do not want to evaluate the response, you can use the following code to execute the request in the background (i.e. non-blocking):<ul><li>to RaspberryMatic 3.79.6.20241122<br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code></li><li>from RaspberryMatic 3.79.6.20250118<br /><code>system.Exec("curl 'http://127.0.0.1:52789/setMode/away' &", null, null, null, 20000);</code></li></ul>`;
 		case "entryApiReturnValues":
-			return `If you want to evaluate the response, you can use the following code:<br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><br />The JSON response can be found in the string <code>res</code>.`;
+			return `If you want to evaluate the response, you can use the following code:<ul><li>to RaspberryMatic 3.79.6.20241122<br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><li>from RaspberryMatic 3.79.6.20250118<br /><code>string res;<br />string err;<br />system.Exec("curl 'http://127.0.0.1:52789/setMode/away'", &res, &err, null, 20000);</code></li></ul><br />The JSON response can be found in the string <code>res</code>.`;
 		case "descApiSystemVariables":
 			return `With both variants, the corresponding system variables are set automatically if the option '${translateStaticContentElement("lblUseSystemVariables")}' has been activated in the settings.`;
 		case "descApiIpAddress":
 			return "Use the IP address of your CCU instead of <code>127.0.0.1</code> if you want to access the API from devices in your network (e.g. with a browser).";
 		case "descApiTimeout":
-			return "The specification <code>max-time 20</code> means that the execution is aborted after 20 seconds. The API function <code>/setMode</code> can have a maximum runtime of approx. 10 seconds per station. For this reason, the value for <code>max-time</code> in the API function <code>/setMode</code> must be adjusted according to the number of stations.";
+			return "The specification <code>max-time 20</code> (to RaspberryMatic 3.79.6.20241122) or the last argument of the system.Exec-function (<code>20000</code>, from RaspberryMatic 3.79.6.20250118, value in milliseconds)  means that the execution is aborted after 20 seconds. The API function <code>/setMode</code> can have a maximum runtime of approx. 10 seconds per station. For this reason, the value for <code>max-time</code> in the API function <code>/setMode</code> must be adjusted according to the number of stations. If you use RaspberryMatic-version from 3.79.6.20250118 and you are using the code from the older version, RaspberryMatic will exit the process automatically after 10 seconds.";
 		case "hintApiTimestamps":
 			return "The timestamps of the last events are only set and updated in the following cases:";
 		case "descTimestampStation":
@@ -1138,6 +1138,8 @@ function translateContent(content, ...options)
 			return "This setting remains permanently active even after a restart of the add-on or the CCU.";
 		case "lblFileIsEmpty":
 			return `The file '${options[0]}' is empty.`;
+		case "lblFileIsNotAvailable":
+			return `The file '${options[0]}' does not exists.`;
 		case "lblHeaderApiSettingsErrorCaptcha":
 			return "Login attempt is performed";
 		case "lblMessageApiSettingsErrorCaptcha":

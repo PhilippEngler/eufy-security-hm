@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.32
+Schema v9.33
 202050322
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20250322 (v9.32)";
+var languageVersion = "20250322 (v9.33)";
 
 function translateNavbarElement(element)
 {
@@ -448,15 +448,15 @@ function translateStaticContentElement(element)
 		case "textUseApi":
 			return "Über Skripte können Sie die API abfragen. Dazu haben Sie zwei Möglichkeiten:";
 		case "entryApiBackground":
-			return `Möchten Sie die Antwort nicht auswerten, können Sie folgenden Code verwenden, um die Anfrage im Hintergrund (d.h. nicht-blockierend) auszuführen:<br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code><br />`;
+			return `Möchten Sie die Antwort nicht auswerten, können Sie folgenden Code verwenden, um die Anfrage im Hintergrund (d.h. nicht-blockierend) auszuführen:<ul><li>bis RaspberryMatic 3.79.6.20241122<br /><code>system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away' &");</code></li><li>ab RaspberryMatic 3.79.6.20250118<br /><code>system.Exec("curl 'http://127.0.0.1:52789/setMode/away' &", null, null, null, 20000);</code></li></ul>`;
 		case "entryApiReturnValues":
-			return `Möchten Sie die Antwort auswerten, können Sie folgenden Code verwenden:<br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><br />Die JSON-Antwort finden Sie im String <code>res</code>.`;
+			return `Möchten Sie die Antwort auswerten, können Sie folgenden Code verwenden:<ul><li>bis RaspberryMatic 3.79.6.20241122<br /><code>string res;<br />string err;<br />system.Exec("curl --max-time 20 'http://127.0.0.1:52789/setMode/away'", &res, &err);</code><li>ab RaspberryMatic 3.79.6.20250118<br /><code>string res;<br />string err;<br />system.Exec("curl 'http://127.0.0.1:52789/setMode/away'", &res, &err, null, 20000);</code></li></ul>Die JSON-Antwort finden Sie im String <code>res</code>.`;
 		case "descApiSystemVariables":
 			return `Bei beiden Varianten werden die entsprechenden Systemvariablen automatisch gesetzt, wenn in den Einstellungen die Option '${translateStaticContentElement("lblUseSystemVariables")}' aktiviert wurde.`;
 		case "descApiIpAddress":
 			return "Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.";
 		case "descApiTimeout":
-			return "Die Angabe <code>max-time 20</code> bedeutet, dass die Ausführung nach 20 Sekunden abgebrochen wird. Die API-Funktion <code>/setMode</code> kann je Station eine maximale Laufzeit von ca. 10 Sekunden haben. Aus diesem Grund muss der Wert für <code>max-time</code> bei der API-Funktion <code>/setMode</code> entsprechend der Anzahl der Stationen angepasst werden.";
+			return "Die Angabe <code>max-time 20</code> (bis RaspberryMatic 3.79.6.20241122) bzw. das letzte Argument der system.Exec-Funktion (<code>20000</code>, ab RaspberryMatic 3.79.6.20250118, Angabe in Millisekunden) bedeutet, dass die Ausführung nach 20 Sekunden abgebrochen wird. Die API-Funktion <code>/setMode</code> kann je Station eine maximale Laufzeit von ca. 10 Sekunden haben. Aus diesem Grund muss der Wert für <code>max-time</code> bei der API-Funktion <code>/setMode</code> entsprechend der Anzahl der Stationen angepasst werden. Falls Sie bei RaspberryMatic-Versionen ab 3.79.6.20250118 den Code der älteren Version weiternutzen, bricht RaspberryMatic den Prozess automatisch nach 10 Sekunden ab.";
 		case "hintApiTimestamps":
 			return "Die Zeitstempel der letzten Ereignisse werden nur in folgenden Fällen gesetzt und aktualisiert:";
 		case "descTimestampStation":
@@ -1138,6 +1138,8 @@ function translateContent(content, ...options)
 			return "Diese Einstellung bleibt dauerhaft auch nach einem Neustart des Addons oder der CCU aktiv.";
 		case "lblFileIsEmpty":
 			return `Die Datei '${options[0]}' ist leer.`;
+		case "lblFileIsNotAvailable":
+			return `Die Datei '${options[0]}' existriert nicht.`;
 		case "lblHeaderApiSettingsErrorCaptcha":
 			return "Loginversuch wird durchgeführt";
 		case "lblMessageApiSettingsErrorCaptcha":
