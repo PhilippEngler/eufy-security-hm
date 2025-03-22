@@ -1850,6 +1850,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 } else {
                     station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 }
+                break;
             case PropertyName.DeviceLightSettingsManualLightingActiveMode:
                 station.setLightSettingsManualLightingActiveMode(device, value as number);
                 break;
