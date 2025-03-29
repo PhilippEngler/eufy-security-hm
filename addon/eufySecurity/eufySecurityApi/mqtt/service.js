@@ -31,6 +31,7 @@ const path = __importStar(require("path"));
 const protobufjs_1 = require("protobufjs");
 const utils_1 = require("../utils");
 const logging_1 = require("../logging");
+const error_1 = require("../error");
 class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
     CLIENT_ID_FORMAT = "android_EufySecurity_<user_id>_<android_id>";
     USERNAME_FORMAT = "eufy_<user_id>";
@@ -52,7 +53,12 @@ class MQTTService extends tiny_typed_emitter_1.TypedEmitter {
         this.deviceSmartLockMessageModel = MQTTService.proto.lookupType("DeviceSmartLockMessage");
     }
     static async init() {
-        this.proto = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/lock.proto"));
+        try {
+            this.proto = await (0, protobufjs_1.load)(path.join(__dirname, "./proto/lock.proto"));
+        }
+        catch (error) {
+            logging_1.rootMainLogger.error("Error loading MQTT proto lock file", { error: (0, error_1.ensureError)(error) });
+        }
         return new MQTTService();
     }
     parseSmartLockMessage(data) {

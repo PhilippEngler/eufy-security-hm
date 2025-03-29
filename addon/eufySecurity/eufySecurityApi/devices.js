@@ -820,15 +820,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.CRYING);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onCryingDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onCryingDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) { }
     }
     /**
      * The action to be one when event SoundDetected is fired.
@@ -841,15 +841,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.SOUND);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onSoundDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onSoundDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) { }
     }
     /**
      * The action to be one when event PetDetected is fired.
@@ -862,15 +862,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PET);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onPetDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onPetDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) { }
     }
     /**
      * The action to be one when event VehicleDetected is fired.
@@ -883,15 +883,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.VEHICLE);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onVehicleDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onVehicleDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) { }
     }
     /**
      * The action to be one when event MotionDetected is fired.
@@ -904,15 +904,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onMotionDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onMotionDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) { }
     }
     /**
      * The action to be one when event PersonDetected is fired.
@@ -926,15 +926,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onPersonDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onPersonDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
-        //this.setLastVideoTimeNow(device.getSerial());
+        if (state === false) { }
     }
     /**
      * The action to be one when event Rings is fired.
@@ -943,14 +943,16 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
      */
     async onRings(device, state) {
         logging_1.rootAddonLogger.debug(`Event "Rings": device: ${device.getSerial()} | state: ${state}`);
-        //this.setLastVideoTimeNow(device.getSerial());
         try {
             const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RING);
             if (deviceEventInteraction !== null) {
-                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
             }
         }
-        catch { }
+        catch (e) {
+            logging_1.rootAddonLogger.error(`Event "onRings": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+            logging_1.rootAddonLogger.debug(`Event "onRings": device ${device.getSerial()}`, JSON.stringify(e));
+        }
     }
     /**
      * The action to be one when event Locked is fired.
@@ -971,19 +973,25 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.OPEN);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onOpen": device ${device.getSerial()} | state: ${state} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onOpen": device ${device.getSerial()} | state: ${state}`, JSON.stringify(e));
+            }
         }
         if (state === false) {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.CLOSE);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onOpen": device ${device.getSerial()} | state: ${state} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onOpen": device ${device.getSerial()} | state: ${state}`, JSON.stringify(e));
+            }
         }
     }
     /**
@@ -1050,14 +1058,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.RADAR_MOTION);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onDeviceRadarMotionDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onDeviceRadarMotionDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) { }
     }
     /**
      * The action to be one when event Device911Alarm is fired.
@@ -1120,14 +1129,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.STRANGER_PERSON);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onDeviceStrangerPersonDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onDeviceStrangerPersonDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) { }
     }
     /**
      * The action to be one when event DeviceDogDetected is fired.
@@ -1140,14 +1150,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onDeviceDogDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onDeviceDogDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) { }
     }
     /**
      * The action to be one when event DeviceDogLickDetected is fired.
@@ -1160,14 +1171,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_LICK);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onDeviceDogLickDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onDeviceDogLickDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) { }
     }
     /**
      * The action to be one when event DeviceDogPoopDetected is fired.
@@ -1180,14 +1192,15 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             try {
                 const deviceEventInteraction = this.getDeviceInteraction(device.getSerial(), types_1.EventInteractionType.DOG_POOP);
                 if (deviceEventInteraction !== null) {
-                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
+                    this.api.sendInteractionCommand(deviceEventInteraction.target, deviceEventInteraction.useHttps, deviceEventInteraction.useLocalCertificate, deviceEventInteraction.rejectUnauthorized, deviceEventInteraction.user, deviceEventInteraction.password, deviceEventInteraction.command);
                 }
             }
-            catch { }
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Event "onDeviceDogPoopDetected": device ${device.getSerial()} | code: ${e.code} | message: ${e.message}`);
+                logging_1.rootAddonLogger.debug(`Event "onDeviceDogPoopDetected": device ${device.getSerial()}`, JSON.stringify(e));
+            }
         }
-        if (state === false) {
-            //this.loadDeviceImage(device.getSerial());
-        }
+        if (state === false) { }
     }
     /**
      * The action to be one when event DeviceTampering is fired.
@@ -1823,6 +1836,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 else {
                     station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);
                 }
+                break;
             case http_1.PropertyName.DeviceLightSettingsManualLightingActiveMode:
                 station.setLightSettingsManualLightingActiveMode(device, value);
                 break;

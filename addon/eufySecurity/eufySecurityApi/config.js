@@ -95,7 +95,7 @@ class Config {
      * @returns The expected version of the config file.
      */
     getConfigFileTemplateVersion() {
-        return 20;
+        return 21;
     }
     /**
      * Load the config from the given file and returns the config.
@@ -112,9 +112,9 @@ class Config {
                 resConfigJson = this.updateConfig(resConfigJson);
             }
         }
-        catch (err) {
+        catch (e) {
             logging_1.rootConfLogger.error(`No '${filePath}' available.`);
-            logging_1.rootConfLogger.error(JSON.stringify(err));
+            logging_1.rootConfLogger.error(JSON.stringify(e));
         }
         return resConfigJson;
     }
@@ -307,6 +307,36 @@ class Config {
                 }
                 updated = true;
             }
+            if (configJson.configVersion < 21) {
+                logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 21...");
+                if (configJson.interactions !== null) {
+                    logging_1.rootConfLogger.info(" changing format of interactions.");
+                    configJson.interactions = JSON.parse(configJson.interactions);
+                    logging_1.rootConfLogger.info(" adding missing options to interactions...");
+                    let interactions = configJson.interactions;
+                    for (let deviceSerial in interactions["deviceInteractions"]) {
+                        for (let eventInteractionType in interactions["deviceInteractions"][deviceSerial]["eventInteractions"]) {
+                            let oldEventInteraction = interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType];
+                            if (oldEventInteraction.rejectUnauthorized === undefined) {
+                                logging_1.rootConfLogger.info(`  adding 'rejectUnauthorized' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            }
+                            else {
+                                logging_1.rootConfLogger.info(`  skipping adding 'rejectUnauthorized' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            }
+                            if (oldEventInteraction.useLocalCertificate === undefined) {
+                                logging_1.rootConfLogger.info(`  adding 'useLocalCertificate' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            }
+                            else {
+                                logging_1.rootConfLogger.info(`  skipping adding 'useLocalCertificate' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
+                            }
+                            let newEventInteraction = { target: oldEventInteraction.target, useHttps: oldEventInteraction.useHttps, useLocalCertificate: oldEventInteraction.useLocalCertificate === undefined ? false : oldEventInteraction.useLocalCertificate, rejectUnauthorized: oldEventInteraction.rejectUnauthorized === undefined ? true : oldEventInteraction.rejectUnauthorized, user: oldEventInteraction.user, password: oldEventInteraction.password, command: oldEventInteraction.command };
+                            interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType] = newEventInteraction;
+                        }
+                    }
+                    logging_1.rootConfLogger.info(" ...done adding missing options to interactions.");
+                }
+                updated = true;
+            }
             if (updated === true) {
                 configJson.configVersion = this.getConfigFileTemplateVersion();
                 configJson = this.checkConfigFile(configJson);
@@ -478,6 +508,9 @@ class Config {
         }
         if (configJson.deviceConfig !== undefined) {
             newConfigJson.deviceConfig = configJson.deviceConfig;
+        }
+        if (configJson.interactions !== undefined) {
+            newConfigJson.interactions = configJson.interactions;
         }
         return newConfigJson;
     }
@@ -768,7 +801,7 @@ class Config {
      * @param devicePublicKeys The device public keys to set.
      */
     setDevicePublicKeys(devicePublicKeys) {
-        if (this.configJson.devicePublicKeys !== devicePublicKeys) {
+        if (JSON.stringify(this.configJson.devicePublicKeys) !== JSON.stringify(devicePublicKeys)) {
             this.configJson.devicePublicKeys = devicePublicKeys;
             this.hasChanged = true;
         }
@@ -1679,7 +1712,7 @@ class Config {
      * @param fidResponse The fid response credentials.
      */
     setCredentialsFidResponse(fidResponse) {
-        if (this.configJson.pushData.fidResponse !== fidResponse) {
+        if (JSON.stringify(this.configJson.pushData.fidResponse) !== JSON.stringify(fidResponse)) {
             this.configJson.pushData.fidResponse = fidResponse;
             this.hasChanged = true;
         }
@@ -1701,7 +1734,7 @@ class Config {
      * @param checkinResponse The checkin response credentials
      */
     setCredentialsCheckinResponse(checkinResponse) {
-        if (this.configJson.pushData.checkinResponse !== checkinResponse) {
+        if (JSON.stringify(this.configJson.pushData.checkinResponse) !== JSON.stringify(checkinResponse)) {
             this.configJson.pushData.checkinResponse = checkinResponse;
             this.hasChanged = true;
         }
@@ -1724,7 +1757,7 @@ class Config {
      * @param gcmResponse the gcm response credentials
      */
     setCredentialsGcmResponse(gcmResponse) {
-        if (this.configJson.pushData.gcmResponseToken !== gcmResponse.token) {
+        if (JSON.stringify(this.configJson.pushData.gcmResponseToken) !== JSON.stringify(gcmResponse.token)) {
             this.configJson.pushData.gcmResponseToken = gcmResponse.token;
             this.hasChanged = true;
         }
@@ -1746,7 +1779,7 @@ class Config {
      * @param persistentIds The persistent id credentials
      */
     setCredentialsPersistentIds(persistentIds) {
-        if (this.configJson.pushData.persistentIds !== persistentIds) {
+        if (JSON.stringify(this.configJson.pushData.persistentIds) !== JSON.stringify(persistentIds)) {
             this.configJson.pushData.persistentIds = persistentIds;
             this.hasChanged = true;
         }
@@ -1803,14 +1836,14 @@ class Config {
         if (this.configJson.interactions !== undefined) {
             return this.configJson.interactions;
         }
-        return "";
+        return null;
     }
     /**
      * Set the integrations.
      * @param interactions The interactions to set.
      */
     setInteractions(interactions) {
-        if (this.configJson.interactions !== interactions) {
+        if (JSON.stringify(this.configJson.interactions) !== JSON.stringify(interactions)) {
             this.configJson.interactions = interactions;
             this.hasChanged = true;
         }
@@ -1836,7 +1869,7 @@ class Config {
      * @param deviceConfig The device config to set.
      */
     setDeviceConfig(deviceConfig) {
-        if (this.configJson.deviceConfig !== deviceConfig) {
+        if (JSON.stringify(this.configJson.deviceConfig) !== JSON.stringify(deviceConfig)) {
             this.configJson.deviceConfig = deviceConfig;
             this.hasChanged = true;
         }

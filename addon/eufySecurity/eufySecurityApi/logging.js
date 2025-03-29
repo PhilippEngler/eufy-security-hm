@@ -175,8 +175,8 @@ function logMessageForClient(message, ...messageArgs) {
             (0, fs_1.appendFileSync)(fileHandle, message + "\r\n", "utf-8");
         }
     }
-    catch (err) {
-        console.log(`${formatDate(Date.now())} ERROR [log]   ${err.message}`);
+    catch (e) {
+        console.log(`${formatDate(Date.now())} ERROR [log]   ${e.message}`);
     }
     finally {
         if (fileHandle !== undefined) {

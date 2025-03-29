@@ -140,6 +140,13 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         if (this.rawStation.params) {
             this.rawStation.params.forEach(param => {
                 this.updateRawProperty(param.param_type, param.param_value, "http");
+                if (param.param_type === types_1.ParamType.GUARD_MODE) {
+                    if (this.hasProperty(types_1.PropertyName.StationGuardModeTime)) {
+                        if (this.getPropertyValue(types_1.PropertyName.StationGuardModeTime) === 0) {
+                            this.updateProperty(types_1.PropertyName.StationGuardModeTime, param.update_time * 1000);
+                        }
+                    }
+                }
             });
         }
         logging_1.rootHTTPLogger.debug("Update station cloud properties", { stationSN: this.getSerial(), properties: this.properties });
@@ -1650,7 +1657,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         logging_1.rootHTTPLogger.debug(`Station switch light - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
         if ((device.isFloodLight() && !device.isFloodLightT8425()) || device.isSoloCameraSpotlight1080() || device.isSoloCameraSpotlight2k() ||
             device.isSoloCameraSpotlightSolar() || device.isCamera2C() || device.isCamera2CPro() ||
-            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247()) {
+            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247() || device.isCamera3Pro()) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_SET_FLOODLIGHT_MANUAL_SWITCH,
                 value: value === true ? 1 : 0,
@@ -3533,7 +3540,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isBatteryDoorbell() || device.isCamera2CPro() || device.isWiredDoorbellDual() || device.isCamera3() || device.isCamera3C() || device.isSmartDrop() || device.isLockWifiVideo() || device.isCameraProfessional247() || (device.isSoloCameras() && this.isStationHomeBase3())) {
+        else if (device.isBatteryDoorbell() || device.isCamera2CPro() || device.isWiredDoorbellDual() || device.isCamera3() || device.isCamera3C() || device.isCamera3Pro() || device.isSmartDrop() || device.isLockWifiVideo() || device.isCameraProfessional247() || (device.isSoloCameras() && this.isStationHomeBase3())) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_BAT_DOORBELL_VIDEO_QUALITY,
                 value: value,
@@ -3627,7 +3634,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isCamera2CPro() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247()) {
+        else if (device.isCamera2CPro() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247() || device.isCamera3Pro()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3728,7 +3735,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         logging_1.rootHTTPLogger.debug(`Station set light settings brightness manual - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
         if (device.isFloodLight() || device.isSoloCameraSpotlight1080() || device.isSoloCameraSpotlight2k() ||
             device.isSoloCameraSpotlightSolar() || device.isCamera2C() || device.isCamera2CPro() ||
-            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247()) {
+            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isCamera3Pro() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247()) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_SET_FLOODLIGHT_BRIGHT_VALUE,
                 value: value,

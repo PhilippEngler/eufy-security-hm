@@ -24,7 +24,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     httpService;
     stations = {};
     skipNextModeChangeEvent = new Map();
-    lastGuardModeChangeTimeForStations = new Map();
     loadingEmitter = new events_1.default();
     stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
     lightTimeouts = new Map();
@@ -84,7 +83,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 const new_station = http_1.Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
                 this.skipNextModeChangeEvent.set(stationSerial, false);
-                this.lastGuardModeChangeTimeForStations.set(stationSerial, undefined);
                 promises.push(new_station.then((station) => {
                     try {
                         if (this.api.getStateUpdateEventActive()) {
@@ -255,8 +253,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                         try {
                             await this.disconnectStation(this.stations[stationSerial]);
                         }
-                        catch (error) {
-                            logging_1.rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`, JSON.stringify(error));
+                        catch (e) {
+                            logging_1.rootAddonLogger.error(`Could not close P2P connection to station ${stationSerial}.`, JSON.stringify(e));
                             return;
                         }
                     }
@@ -415,23 +413,29 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param deviceSerial The serial of the device.
      */
     async startStationLivestream(deviceSerial) {
-        const device = await this.api.getDevice(deviceSerial);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceStartLivestream)) {
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStartLivestream } });
-        }
-        const camera = device;
-        if (!station.isLiveStreaming(camera)) {
-            station.startLivestream(camera);
-            if (this.cameraMaxLivestreamSeconds > 0) {
-                this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
-                    logging_1.rootAddonLogger.info(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
-                    this.stopStationLivestream(deviceSerial);
-                }, this.cameraMaxLivestreamSeconds * 1000));
+        try {
+            const device = await this.api.getDevice(deviceSerial);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceStartLivestream)) {
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStartLivestream } });
+            }
+            const camera = device;
+            if (!station.isLiveStreaming(camera)) {
+                station.startLivestream(camera);
+                if (this.cameraMaxLivestreamSeconds > 0) {
+                    this.cameraStationLivestreamTimeout.set(deviceSerial, setTimeout(() => {
+                        logging_1.rootAddonLogger.info(`Stopping the station stream for the device ${deviceSerial}, because we have reached the configured maximum stream timeout (${this.cameraMaxLivestreamSeconds} seconds)`);
+                        this.stopStationLivestream(deviceSerial);
+                    }, this.cameraMaxLivestreamSeconds * 1000));
+                }
+            }
+            else {
+                logging_1.rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
             }
         }
-        else {
-            logging_1.rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be started, because it is already streaming!`);
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at startStationLivestream.", error);
         }
     }
     /**
@@ -439,21 +443,27 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param deviceSerial The serial of the device.
      */
     async stopStationLivestream(deviceSerial) {
-        const device = await this.api.getDevice(deviceSerial);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceStopLivestream)) {
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStopLivestream } });
+        try {
+            const device = await this.api.getDevice(deviceSerial);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceStopLivestream)) {
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStopLivestream } });
+            }
+            if (station.isConnected() && station.isLiveStreaming(device)) {
+                station.stopLivestream(device);
+            }
+            else {
+                logging_1.rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
+            }
+            const timeout = this.cameraStationLivestreamTimeout.get(deviceSerial);
+            if (timeout) {
+                clearTimeout(timeout);
+                this.cameraStationLivestreamTimeout.delete(deviceSerial);
+            }
         }
-        if (station.isConnected() && station.isLiveStreaming(device)) {
-            station.stopLivestream(device);
-        }
-        else {
-            logging_1.rootAddonLogger.warn(`The station stream for the device ${deviceSerial} cannot be stopped, because it isn't streaming!`);
-        }
-        const timeout = this.cameraStationLivestreamTimeout.get(deviceSerial);
-        if (timeout) {
-            clearTimeout(timeout);
-            this.cameraStationLivestreamTimeout.delete(deviceSerial);
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at stopStationLivestream.", error);
         }
     }
     /**
@@ -463,15 +473,21 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param cipherID The cipher id.
      */
     async startStationDownload(deviceSerial, path, cipherID) {
-        const device = await this.api.getDevice(deviceSerial);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceStartDownload))
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStartDownload, path: path, cipherID: cipherID } });
-        if (!station.isDownloading(device)) {
-            await station.startDownload(device, path, cipherID);
+        try {
+            const device = await this.api.getDevice(deviceSerial);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceStartDownload))
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceStartDownload, path: path, cipherID: cipherID } });
+            if (!station.isDownloading(device)) {
+                await station.startDownload(device, path, cipherID);
+            }
+            else {
+                logging_1.rootAddonLogger.warn(`The station is already downloading a video for the device ${deviceSerial}!`);
+            }
         }
-        else {
-            logging_1.rootAddonLogger.warn(`The station is already downloading a video for the device ${deviceSerial}!`);
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at startStationDownload.", error);
         }
     }
     /**
@@ -479,15 +495,21 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param deviceSerial The serial of the device.
      */
     async cancelStationDownload(deviceSerial) {
-        const device = await this.api.getDevice(deviceSerial);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceCancelDownload))
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceCancelDownload } });
-        if (station.isConnected() && station.isDownloading(device)) {
-            station.cancelDownload(device);
+        try {
+            const device = await this.api.getDevice(deviceSerial);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceCancelDownload))
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSerial, commandName: http_1.CommandName.DeviceCancelDownload } });
+            if (station.isConnected() && station.isDownloading(device)) {
+                station.cancelDownload(device);
+            }
+            else {
+                logging_1.rootAddonLogger.warn(`The station isn't downloading a video for the device ${deviceSerial}!`);
+            }
         }
-        else {
-            logging_1.rootAddonLogger.warn(`The station isn't downloading a video for the device ${deviceSerial}!`);
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at cancelStationDownload.", error);
         }
     }
     /**
@@ -601,13 +623,19 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     }
                 });
                 if (res === true) {
-                    this.setLastGuardModeChangeTimeNow(stationSerial);
+                    if (this.stations[stationSerial].hasProperty(http_1.PropertyName.StationGuardModeTime)) {
+                        const timestamp = (0, utils_3.convertTimeStampToTimeStampMs)(new Date().getTime(), "ms");
+                        this.stations[stationSerial].updateProperty(http_1.PropertyName.StationGuardModeTime, timestamp !== undefined ? timestamp : 0);
+                    }
                     this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
+                }
+                else {
+                    logging_1.rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`);
                 }
                 return res;
             }
-            catch (error) {
-                logging_1.rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`, JSON.stringify(error));
+            catch (e) {
+                logging_1.rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`, JSON.stringify(e));
                 return false;
             }
         }
@@ -1401,7 +1429,10 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param guardMode The new guard mode as GuardMode.
      */
     async onStationGuardMode(station, guardMode) {
-        this.setLastGuardModeChangeTimeNow(station.getSerial());
+        if (station.hasProperty(http_1.PropertyName.StationGuardModeTime)) {
+            const timestamp = (0, utils_3.convertTimeStampToTimeStampMs)(new Date().getTime(), "ms");
+            station.updateProperty(http_1.PropertyName.StationGuardModeTime, timestamp !== undefined ? timestamp : 0);
+        }
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
         if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
             logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
@@ -1928,33 +1959,6 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         }
     }
     /**
-     * Set the last guard mode change time to the array.
-     * @param stationSerial The serial of the station.
-     * @param time The time as timestamp or undefined.
-     */
-    setLastGuardModeChangeTime(stationSerial, timeStamp, timeStampType) {
-        if (timeStamp !== undefined) {
-            timeStamp = (0, utils_3.convertTimeStampToTimeStampMs)(timeStamp, timeStampType);
-        }
-        this.lastGuardModeChangeTimeForStations.set(stationSerial, timeStamp);
-        this.api.updateStationGuardModeChangeTimeSystemVariable(stationSerial, this.lastGuardModeChangeTimeForStations.get(stationSerial));
-    }
-    /**
-     * Set the time for the last guard mode change to the current time.
-     * @param stationSerial The serial of the station.
-     */
-    setLastGuardModeChangeTimeNow(stationSerial) {
-        this.setLastGuardModeChangeTime(stationSerial, new Date().getTime(), "ms");
-    }
-    /**
-     * Retrieve the last guard mode change time from the array.
-     * @param stationSerial The serial of the station.
-     * @returns The timestamp as number or undefined.
-     */
-    getLastGuardModeChangeTime(stationSerial) {
-        return this.lastGuardModeChangeTimeForStations.get(stationSerial);
-    }
-    /**
      * Set the given property for the given station to the given value.
      * @param stationSerial The serial of the station the property is to change.
      * @param name The name of the property.
@@ -2033,24 +2037,30 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param schedule The schedule.
      */
     async addUser(deviceSN, username, passcode, schedule) {
-        const device = await this.api.getDevice(deviceSN);
-        const station = await this.getStation(device.getStationSerial());
         try {
-            if (!device.hasCommand(http_1.CommandName.DeviceAddUser)) {
-                throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+            const device = await this.api.getDevice(deviceSN);
+            const station = await this.getStation(device.getStationSerial());
+            try {
+                if (!device.hasCommand(http_1.CommandName.DeviceAddUser)) {
+                    throw new error_1.NotSupportedError(`This functionality is not implemented or supported by ${device.getSerial()}`);
+                }
+                const addUserResponse = await this.httpService.addUser(deviceSN, username, device.getStationSerial());
+                if (addUserResponse !== null) {
+                    station.addUser(device, username, addUserResponse.short_user_id, passcode, schedule);
+                }
+                else {
+                    this.emit("user error", device, username, new error_1.AddUserError("Error on creating user through cloud api call"));
+                }
             }
-            const addUserResponse = await this.httpService.addUser(deviceSN, username, device.getStationSerial());
-            if (addUserResponse !== null) {
-                station.addUser(device, username, addUserResponse.short_user_id, passcode, schedule);
-            }
-            else {
-                this.emit("user error", device, username, new error_1.AddUserError("Error on creating user through cloud api call"));
+            catch (err) {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootAddonLogger.error(`addUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, schedule: schedule });
+                this.emit("user error", device, username, new error_1.AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
             }
         }
-        catch (err) {
-            const error = (0, error_1.ensureError)(err);
-            logging_1.rootAddonLogger.error(`addUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, schedule: schedule });
-            this.emit("user error", device, username, new error_1.AddUserError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]", schedule: schedule } }));
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at addUser.", error);
         }
     }
     /**
@@ -2059,34 +2069,40 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param username The username.
      */
     async deleteUser(deviceSN, username) {
-        const device = await this.api.getDevice(deviceSN);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceDeleteUser)) {
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceDeleteUser, username: username } });
-        }
         try {
-            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null) {
-                let found = false;
-                for (const user of users) {
-                    if (user.user_name === username) {
-                        station.deleteUser(device, user.user_name, user.short_user_id);
-                        found = true;
-                        break;
+            const device = await this.api.getDevice(deviceSN);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceDeleteUser)) {
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceDeleteUser, username: username } });
+            }
+            try {
+                const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+                if (users !== null) {
+                    let found = false;
+                    for (const user of users) {
+                        if (user.user_name === username) {
+                            station.deleteUser(device, user.user_name, user.short_user_id);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        this.emit("user error", device, username, new error_1.DeleteUserError("User not found", { context: { device: deviceSN, username: username } }));
                     }
                 }
-                if (!found) {
-                    this.emit("user error", device, username, new error_1.DeleteUserError("User not found", { context: { device: deviceSN, username: username } }));
+                else {
+                    this.emit("user error", device, username, new error_1.DeleteUserError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username } }));
                 }
             }
-            else {
-                this.emit("user error", device, username, new error_1.DeleteUserError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username } }));
+            catch (err) {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootAddonLogger.error(`deleteUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username });
+                this.emit("user error", device, username, new error_1.DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
             }
         }
-        catch (err) {
-            const error = (0, error_1.ensureError)(err);
-            logging_1.rootAddonLogger.error(`deleteUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username });
-            this.emit("user error", device, username, new error_1.DeleteUserError("Generic error", { cause: error, context: { device: deviceSN, username: username } }));
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at deleteUser.", error);
         }
     }
     /**
@@ -2096,60 +2112,66 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param newUsername The new username.
      */
     async updateUser(deviceSN, username, newUsername) {
-        const device = await this.api.getDevice(deviceSN);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceUpdateUsername)) {
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUsername, usernmae: username, newUsername: newUsername } });
-        }
         try {
-            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null) {
-                let found = false;
-                for (const user of users) {
-                    if (user.user_name === username) {
-                        if ((device.isLockWifiT8506() || device.isLockWifiT8502() || device.isLockWifiT8510P() || device.isLockWifiT8520P()) && user.password_list.length > 0) {
-                            for (const entry of user.password_list) {
-                                if (entry.password_type === http_1.UserPasswordType.PIN) {
-                                    let schedule = entry.schedule;
-                                    if (schedule !== undefined && typeof schedule === "string") {
-                                        schedule = JSON.parse(schedule);
-                                    }
-                                    if (schedule !== undefined && schedule.endDay !== undefined && schedule.endTime !== undefined && schedule.startDay !== undefined && schedule.startTime !== undefined && schedule.week !== undefined) {
-                                        station.updateUserSchedule(device, newUsername, user.short_user_id, (0, utils_5.hexStringScheduleToSchedule)(schedule.startDay, schedule.startTime, schedule.endDay, schedule.endTime, schedule.week));
+            const device = await this.api.getDevice(deviceSN);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceUpdateUsername)) {
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUsername, usernmae: username, newUsername: newUsername } });
+            }
+            try {
+                const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+                if (users !== null) {
+                    let found = false;
+                    for (const user of users) {
+                        if (user.user_name === username) {
+                            if ((device.isLockWifiT8506() || device.isLockWifiT8502() || device.isLockWifiT8510P() || device.isLockWifiT8520P()) && user.password_list.length > 0) {
+                                for (const entry of user.password_list) {
+                                    if (entry.password_type === http_1.UserPasswordType.PIN) {
+                                        let schedule = entry.schedule;
+                                        if (schedule !== undefined && typeof schedule === "string") {
+                                            schedule = JSON.parse(schedule);
+                                        }
+                                        if (schedule !== undefined && schedule.endDay !== undefined && schedule.endTime !== undefined && schedule.startDay !== undefined && schedule.startTime !== undefined && schedule.week !== undefined) {
+                                            station.updateUserSchedule(device, newUsername, user.short_user_id, (0, utils_5.hexStringScheduleToSchedule)(schedule.startDay, schedule.startTime, schedule.endDay, schedule.endTime, schedule.week));
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else if (device.isLockWifiR10() || device.isLockWifiR20()) {
-                            for (const entry of user.password_list) {
-                                if (entry.password_type === http_1.UserPasswordType.PIN) {
-                                    station.updateUsername(device, newUsername, entry.password_id);
+                            else if (device.isLockWifiR10() || device.isLockWifiR20()) {
+                                for (const entry of user.password_list) {
+                                    if (entry.password_type === http_1.UserPasswordType.PIN) {
+                                        station.updateUsername(device, newUsername, entry.password_id);
+                                    }
                                 }
                             }
+                            const result = await this.httpService.updateUser(deviceSN, device.getStationSerial(), user.short_user_id, newUsername);
+                            if (result) {
+                                this.emit("user username updated", device, username);
+                            }
+                            else {
+                                this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Error in changing username through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
+                            }
+                            found = true;
+                            break;
                         }
-                        const result = await this.httpService.updateUser(deviceSN, device.getStationSerial(), user.short_user_id, newUsername);
-                        if (result) {
-                            this.emit("user username updated", device, username);
-                        }
-                        else {
-                            this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Error in changing username through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
-                        }
-                        found = true;
-                        break;
+                    }
+                    if (!found) {
+                        this.emit("user error", device, username, new error_1.UpdateUserUsernameError("User not found", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
                     }
                 }
-                if (!found) {
-                    this.emit("user error", device, username, new error_1.UpdateUserUsernameError("User not found", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
+                else {
+                    this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
                 }
             }
-            else {
-                this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, newUsername: newUsername } }));
+            catch (err) {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootAddonLogger.error(`updateUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
+                this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
             }
         }
-        catch (err) {
-            const error = (0, error_1.ensureError)(err);
-            logging_1.rootAddonLogger.error(`updateUser error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, newUsername: newUsername });
-            this.emit("user error", device, username, new error_1.UpdateUserUsernameError("Generic error", { cause: error, context: { device: deviceSN, username: username, newUsername: newUsername } }));
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at updateUser.", error);
         }
     }
     /**
@@ -2159,37 +2181,43 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param passcode The new passcode.
      */
     async updateUserPasscode(deviceSN, username, passcode) {
-        const device = await this.api.getDevice(deviceSN);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceUpdateUserPasscode)) {
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUserPasscode, username: username, passcode: "[redacted]" } });
-        }
         try {
-            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null) {
-                let found = false;
-                for (const user of users) {
-                    if (user.user_name === username) {
-                        for (const entry of user.password_list) {
-                            if (entry.password_type === http_1.UserPasswordType.PIN) {
-                                station.updateUserPasscode(device, user.user_name, user.short_user_id, passcode);
-                                found = true;
+            const device = await this.api.getDevice(deviceSN);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceUpdateUserPasscode)) {
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUserPasscode, username: username, passcode: "[redacted]" } });
+            }
+            try {
+                const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+                if (users !== null) {
+                    let found = false;
+                    for (const user of users) {
+                        if (user.user_name === username) {
+                            for (const entry of user.password_list) {
+                                if (entry.password_type === http_1.UserPasswordType.PIN) {
+                                    station.updateUserPasscode(device, user.user_name, user.short_user_id, passcode);
+                                    found = true;
+                                }
                             }
                         }
                     }
+                    if (!found) {
+                        this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("User not found", { context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
+                    }
                 }
-                if (!found) {
-                    this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("User not found", { context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
+                else {
+                    this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("Error on getting user list through cloud api call"));
                 }
             }
-            else {
-                this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("Error on getting user list through cloud api call"));
+            catch (err) {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootAddonLogger.error(`updateUserPasscode error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username });
+                this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
             }
         }
-        catch (err) {
-            const error = (0, error_1.ensureError)(err);
-            logging_1.rootAddonLogger.error(`updateUserPasscode error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username });
-            this.emit("user error", device, username, new error_1.UpdateUserPasscodeError("Generic error", { cause: error, context: { device: deviceSN, username: username, passcode: "[redacted]" } }));
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at updateUserPasscode.", error);
         }
     }
     /**
@@ -2199,33 +2227,39 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param schedule The new schedule.
      */
     async updateUserSchedule(deviceSN, username, schedule) {
-        const device = await this.api.getDevice(deviceSN);
-        const station = await this.getStation(device.getStationSerial());
-        if (!device.hasCommand(http_1.CommandName.DeviceUpdateUserSchedule)) {
-            throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUserSchedule, usernmae: username, schedule: schedule } });
-        }
         try {
-            const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
-            if (users !== null) {
-                let found = false;
-                for (const user of users) {
-                    if (user.user_name === username) {
-                        station.updateUserSchedule(device, user.user_name, user.short_user_id, schedule);
-                        found = true;
+            const device = await this.api.getDevice(deviceSN);
+            const station = await this.getStation(device.getStationSerial());
+            if (!device.hasCommand(http_1.CommandName.DeviceUpdateUserSchedule)) {
+                throw new error_1.NotSupportedError("This functionality is not implemented or supported by this device", { context: { device: deviceSN, commandName: http_1.CommandName.DeviceUpdateUserSchedule, usernmae: username, schedule: schedule } });
+            }
+            try {
+                const users = await this.httpService.getUsers(deviceSN, device.getStationSerial());
+                if (users !== null) {
+                    let found = false;
+                    for (const user of users) {
+                        if (user.user_name === username) {
+                            station.updateUserSchedule(device, user.user_name, user.short_user_id, schedule);
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        this.emit("user error", device, username, new error_1.UpdateUserScheduleError("User not found", { context: { device: deviceSN, username: username, schedule: schedule } }));
                     }
                 }
-                if (!found) {
-                    this.emit("user error", device, username, new error_1.UpdateUserScheduleError("User not found", { context: { device: deviceSN, username: username, schedule: schedule } }));
+                else {
+                    this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, schedule: schedule } }));
                 }
             }
-            else {
-                this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Error on getting user list through cloud api call", { context: { device: deviceSN, username: username, schedule: schedule } }));
+            catch (err) {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootAddonLogger.error(`updateUserSchedule error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, schedule: schedule });
+                this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));
             }
         }
-        catch (err) {
-            const error = (0, error_1.ensureError)(err);
-            logging_1.rootAddonLogger.error(`updateUserSchedule error`, { error: (0, utils_2.getError)(error), deviceSN: deviceSN, username: username, schedule: schedule });
-            this.emit("user error", device, username, new error_1.UpdateUserScheduleError("Generic error", { cause: error, context: { device: deviceSN, username: username, schedule: schedule } }));
+        catch (e) {
+            const error = (0, error_1.ensureError)(e);
+            logging_1.rootAddonLogger.error("Error occured at updateUserSchedule.", error);
         }
     }
 }
