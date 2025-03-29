@@ -663,6 +663,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                         this.stations[stationSerial].updateProperty(PropertyName.StationGuardModeTime, timestamp !== undefined ? timestamp : 0);
                     }
                     this.api.updateStationGuardModeSystemVariable(stationSerial, guardMode);
+                } else {
+                    rootAddonLogger.error(`Error while changing guard mode for station ${stationSerial}.`);
                 }
                 return res;
             } catch (e: any) {

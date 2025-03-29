@@ -1719,7 +1719,7 @@ export class EufySecurityApi {
                             rootAddonLogger.error(`Error occured at setGuardMode: Failed to switch mode for station ${station.getSerial()}.`);
                         }
                     }
-                    if (err==0) {
+                    if (err === 0) {
                         this.setSystemVariableString("eufyCurrentState", this.convertGuardModeToString(guardMode));
                         this.setLastConnectionInfo(true);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
@@ -1728,11 +1728,11 @@ export class EufySecurityApi {
                         this.setSystemVariableString("eufyCurrentState", "unbekannt");
                         this.setLastConnectionInfo(false);
                         this.setSystemVariableTime("eufyLastStatusUpdateTime", new Date());
-                        rootAddonLogger.error("Error occured at setGuardMode: Failed to switch mode for station.");
+                        rootAddonLogger.error("Error occured at setGuardMode: Failed to switch mode for all stations. Maybe not all stations have been set to new mode.");
                     }
                 } else {
                     json = {"success":false, "reason":"Failed to communicate with station."};
-                    rootAddonLogger.error("Error occured at setGuardMode: Failed to communicate with station.");
+                    rootAddonLogger.error("Error occured at setGuardMode: Failed to switch mode for all stations. Maybe not all stations have been set to new mode.");
                 }
             } else {
                 json = {"success":false, "reason":"No connection to eufy."};
