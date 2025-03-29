@@ -5,6 +5,19 @@
 CURRENT_DIR=$(pwd)
 
 PKG_VERSION=$(cat $CURRENT_DIR/AddOnData/VERSION)
+if [[ $PKG_VERSION == *"-b"* ]]; then
+  # for debian the beta version have minor number 10X
+  PKG_VERSION_DEB_MAIN=$(echo "$PKG_VERSION" | sed -e 's/-b[0-9]*//g')
+  PKG_VERSION_DEB_ADD=$(echo "$PKG_VERSION" | sed -e 's/[0-9].[0-9].[0-9]-b/10/g')
+elif [[ $PKG_VERSION == *"-rc"* ]]; then
+  # for debian the rc version have minor number 20X
+  PKG_VERSION_DEB_MAIN=$(echo "$PKG_VERSION" | sed -e 's/-rc[0-9]*//g')
+  PKG_VERSION_DEB_ADD=$(echo "$PKG_VERSION" | sed -e 's/[0-9].[0-9].[0-9]-rc/20/g')
+else
+  # for debian the release version have minor number 300
+  PKG_VERSION_DEB_MAIN=$PKG_VERSION
+  PKG_VERSION_DEB_ADD=300
+fi
 
 echo "Start creating the addon packages..."
 
@@ -43,6 +56,7 @@ do
     TARGET_DIR=$WORK_DIR/eufySecurity-$ARCH-$PKG_VERSION
     mkdir -p $TARGET_DIR/usr/local/addons/eufySecurity
     cp -a $WORK_DIR/eufySecurity-addon.cfg $TARGET_DIR/usr/local/addons/eufySecurity
+    cp -a $WORK_DIR/VERSION $TARGET_DIR/usr/local/addons/eufySecurity
     cp -a $WORK_DIR/eufySecurity/* $TARGET_DIR/usr/local/addons/eufySecurity
     cp -a $CURRENT_DIR/AddOnData/debmatic/* $TARGET_DIR
 
@@ -51,7 +65,7 @@ do
         DEPENDS="Pre-Depends: debmatic (>= 3.67.10-100)"
         #DEPENDS="$DEPENDS, tcl8.6"
 
-        sed -i "s/{PKG_VERSION}/$PKG_VERSION/g" $file
+        sed -i "s/{PKG_VERSION}/$PKG_VERSION_DEB_MAIN-$PKG_VERSION_DEB_ADD/g" $file
         sed -i "s/{PKG_ARCH}/$ARCH/g" $file
         sed -i "s/{DEPENDS}/$DEPENDS/g" $file
     done
