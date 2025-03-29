@@ -29,7 +29,7 @@ Most of the eufy security devices should be compatible, but there might be issue
 * eufyCam: eufyCam E (T8112), eufyCam 2C (T8113), eufyCam 2 (T8114), eufyCam 2C Pro (T8142), eufyCam 2 Pro (T8140), eufyCam 3 (T8160) and eufyCam 3C (T8161)
 * IndoorCam: IndoorCam C24 (T8400), IndoorCam P24 (T8410) and IndoorCam S350 (T8416)<sup>1</sup>
 * Doorbell: Video Doorbell 2K (T8210), Video Doorbell Dual (T8213) and Video Doorbell Dual E340 (T8214)<sup>1</sup>
-* SoloCam: SoloCam S340 (T8170)<sup>1</sup>
+* SoloCam: SoloCam S340 (T8170)<sup>1</sup>, SoloCam S220 (T8134)<sup>1</sup>
 * WallLightCam: Wall Light Cam S100 (T84A1)<sup>1</sup>
 * Sensor: Motion Sensor (T8900) and Entry Sensor (T8910)<sup>1</sup>
 
