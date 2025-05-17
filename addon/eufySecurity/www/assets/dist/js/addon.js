@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 202501322
+ * 20250517
  */
 var action = "";
 var port = "";
@@ -8,14 +8,13 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.2.2";
+var version = "3.3.0";
 
 /**
  * common used java script functions
  */
 //#region common
-function loadScript(url, async, page)
-{
+function loadScript(url, async, page) {
 	var scriptElement = document.createElement("script");
 	scriptElement.setAttribute("src", url);
 	scriptElement.setAttribute("async", async);
@@ -33,62 +32,46 @@ function loadScript(url, async, page)
 	});
 }
 
-function start(page)
-{
+function start(page) {
 	loadScript(`assets/dist/js/lang/${getLanguage()}.js`, false, page);
 }
 
-function init(page)
-{
+function init(page) {
 	var urlParams
-	if(window.location.search != "")
-	{
+	if(window.location.search != "") {
 		urlParams = new URLSearchParams(window.location.search);
-		if(getParameterFromURLSearchParams(urlParams, "sid"))
-		{
+		if(getParameterFromURLSearchParams(urlParams, "sid")) {
 			redirectTarget = `${redirectTarget}${redirectTarget === "" ? "?" : "&"}sid=${getParameterFromURLSearchParams(urlParams, "sid")}`;
 			sid = getParameterFromURLSearchParams(urlParams, "sid");
 		}
-		if(getParameterFromURLSearchParams(urlParams, "lang"))
-		{
+		if(getParameterFromURLSearchParams(urlParams, "lang")) {
 			redirectTarget = `${redirectTarget}${redirectTarget === "" ? "?" : "&"}lang=${getParameterFromURLSearchParams(urlParams, "lang")}`;
 		}
 		addUrlParams(redirectTarget);
-		if(getParameterFromURLSearchParams(urlParams, "redirect"))
-		{
-			if(getParameterFromURLSearchParams(urlParams, "redirect") == "index.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "devices.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "statechange.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "settings.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "logfiles.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "info.html")
-			{
+		if(getParameterFromURLSearchParams(urlParams, "redirect")) {
+			if(getParameterFromURLSearchParams(urlParams, "redirect") == "index.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "devices.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "statechange.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "settings.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "logfiles.html" || getParameterFromURLSearchParams(urlParams, "redirect") == "info.html") {
 				redirectTarget = getParameterFromURLSearchParams(urlParams, "redirect") + redirectTarget;
-			}
-			else
-			{
+			} else {
 				redirectTarget = "";
 			}
-		}
-		else
-		{
+		} else {
 			redirectTarget = "";
 		}
 		
-		if(getParameterFromURLSearchParams(urlParams, "action"))
-		{
+		if(getParameterFromURLSearchParams(urlParams, "action")) {
 			action = getParameterFromURLSearchParams(urlParams, "action");
-		}
-		else
-		{
+		} else {
 			action = "";
 		}
 	}
 	getServiceState(page);
 }
 
-function getParameterFromURLSearchParams(urlParams, parameterName)
-{
+function getParameterFromURLSearchParams(urlParams, parameterName) {
 	return urlParams.get(parameterName);
 }
 
-function addUrlParams(urlParameter)
-{
+function addUrlParams(urlParameter) {
 	document.getElementById("niMain").setAttribute("href", document.getElementById("niMain").getAttribute("href") + urlParameter);
 	document.getElementById("niHome").setAttribute("href", document.getElementById("niHome").getAttribute("href") + urlParameter);
 	document.getElementById("niDevices").setAttribute("href", document.getElementById("niDevices").getAttribute("href") + urlParameter);
@@ -137,7 +120,6 @@ function retrieveData(method, url, mimeType, postData, waitElementId, waitMessag
 
 		xmlHttp.onloadend = function() {
 			//called when load finished (successfully and with error); readyState is 4; state is 0 or 200
-
 		};
 
 		xmlHttp.open(method, url, true);
@@ -220,14 +202,11 @@ async function getAPIPort(page) {
 	}
 }
 
-function initContent(page)
-{
-	if(page != "restartWaiter")
-	{
+function initContent(page) {
+	if(page != "restartWaiter") {
 		checkTfaCaptchaState(page);
 	}
-	switch(page)
-	{
+	switch(page) {
 		case "devices":
 			loadStations();
 			loadDevices();
@@ -252,13 +231,11 @@ function initContent(page)
 }
 
 async function checkConfigNeeded(page) {
-	if(page == "settings" || page == "logfiles" || page == "info" || page == "restartWaiter")
-	{
+	if(page == "settings" || page == "logfiles" || page == "info" || page == "restartWaiter") {
 		initContent(page);
 		return;
 	}
-	if(serviceState == "running")
-	{
+	if(serviceState == "running") {
 		var objResp, objErr;
 		var url = `${location.protocol}//${location.hostname}:${port}/getApiState`;
 		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
@@ -295,8 +272,7 @@ async function checkConfigNeeded(page) {
 }
 
 async function checkTfaCaptchaState(page) {
-	if(serviceState == "running")
-	{
+	if(serviceState == "running") {
 		var objResp, objErr;
 		var url = `${location.protocol}//${location.hostname}:${port}/getTfaCaptchaState`;
 		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
@@ -329,21 +305,18 @@ async function checkTfaCaptchaState(page) {
 	}
 }
 
-function generateConfigNeeded(page)
-{
+function generateConfigNeeded(page) {
 	generateContentConfigNeeded(page);
 
 	const myModal = new bootstrap.Modal(document.getElementById('modalConfigNeeded'));
 	myModal.show();
 }
 
-function redirectToPage(page)
-{
+function redirectToPage(page) {
 	window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/${page}.html` + redirectTarget;
 }
 
-function generateContentConfigNeeded(page)
-{
+function generateContentConfigNeeded(page) {
 	var configNeeded = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -362,16 +335,14 @@ function generateContentConfigNeeded(page)
 	document.getElementById("modalConfigNeeded").innerHTML = configNeeded;
 }
 
-function generateTfaCodeModal(page, objResp)
-{
+function generateTfaCodeModal(page, objResp) {
 	generateContentTfaCodeModal(page, objResp);
 
 	const myModal = new bootstrap.Modal(document.getElementById('modalTfaCode'));
 	myModal.show();
 }
 
-function generateContentTfaCodeModal(page, objResp)
-{
+function generateContentTfaCodeModal(page, objResp) {
 	var tfaCodeModal = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -420,16 +391,14 @@ async function setTfaCode(page) {
 	});
 }
 
-function generateCaptchaCodeModal(page, objResp)
-{
+function generateCaptchaCodeModal(page, objResp) {
 	generateContentCaptchaCodeModal(page, objResp);
 
 	const myModal = new bootstrap.Modal(document.getElementById('modalCaptchaCode'));
 	myModal.show();
 }
 
-function generateContentCaptchaCodeModal(page, objResp)
-{
+function generateContentCaptchaCodeModal(page, objResp) {
 	var captchaCodeModal = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -480,11 +449,9 @@ async function setCaptchaCode(page) {
 	});
 }
 
-function downloadFile(filetype)
-{
+function downloadFile(filetype) {
 	var url;
-	switch(filetype)
-	{
+	switch(filetype) {
 		case "log":
 			url = `logfiles.cgi?action=download&file=${filetype}`;
 			break;
@@ -501,25 +468,19 @@ function downloadFile(filetype)
 	window.open(url);
 }
 
-function makeDateTimeString(dateTime, withSeconds)
-{
+function makeDateTimeString(dateTime, withSeconds) {
 	return (`${dateTime.getDate().toString().padStart(2,'0')}.${(dateTime.getMonth()+1).toString().padStart(2,'0')}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,'0')}:${dateTime.getMinutes().toString().padStart(2,'0')}${withSeconds === undefined || withSeconds === true ? `:${dateTime.getSeconds().toString().padStart(2,'0')}` : ""}`);
 }
 
-function getWifiSignalLevelIcon(wifiSignalLevel, wifiRssi)
-{
-	if(wifiSignalLevel !== undefined)
-	{
+function getWifiSignalLevelIcon(wifiSignalLevel, wifiRssi) {
+	if(wifiSignalLevel !== undefined) {
 		return wifiSignalLevel == 0 ? "bi-reception-0" : wifiSignalLevel == 1 ? "bi-reception-1" : wifiSignalLevel == 2 ? "bi-reception-2" : wifiSignalLevel == 3 ? "bi-reception-3" : wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off";
-	}
-	else
-	{
+	} else {
 		return wifiRssi >= 0 ? "bi-reception-0" : wifiRssi >=-64 ? "bi-reception-1" : wifiRssi >=-75 ? "bi-reception-2" : wifiSignalLevel >=-85 ? "bi-reception-3" : wifiSignalLevel == 4 ? "bi-reception-4" : "bi-wifi-off";
 	}
 }
 
-function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterText)
-{
+function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterText) {
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
@@ -539,25 +500,19 @@ function createCardStation(station, showSettingsIcon, cardBodyText, cardFooterTe
 	return card;
 }
 
-function createStationTypeCardsContainer(firendlyTypeName, rowConfig, cards)
-{
-	if(cards != "")
-	{
+function createStationTypeCardsContainer(firendlyTypeName, rowConfig, cards) {
+	if(cards != "") {
 		return `<p id="stationParagraph"><h4>${firendlyTypeName}</h4><div class="${rowConfig}">${cards}</div></p>`;
-	}
-	else
-	{
+	} else {
 		return "";
 	}
 }
 
-function createWaitMessage(messageText)
-{
+function createWaitMessage(messageText) {
 	return `<div class="d-flex align-items-center"><div class="spinner-border m-4 float-left" role="status" aria-hidden="true"></div><strong>${messageText}</strong></div>`;
 }
 
-function createMessageContainer(classText, messageHeader, messageText, messageSubText)
-{
+function createMessageContainer(classText, messageHeader, messageText, messageSubText) {
 	return `<div class="${classText}" role="alert">${messageHeader != "" ? `<h5 class="mb-1 alert-heading">${messageHeader}</h5>` : ""}${messageText != "" ? `<p class="mb-0">${messageText}</p>` : ""}${messageSubText === undefined || messageSubText === "" ? "" : `<hr><p class="my-0 form-text text-muted">${messageSubText}</p>`}</div>`;
 }
 //#endregion
@@ -686,8 +641,7 @@ async function loadDevices() {
 	});
 }
 
-function createCardDevice(device)
-{
+function createCardDevice(device) {
 	var card = "";
 
 	card += `<div class="col"><div class="card">`;
@@ -701,20 +655,16 @@ function createCardDevice(device)
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
 	card += `<div class="row g-0">`;
-	if(device.softwareVersion !== undefined)
-	{
+	if(device.softwareVersion !== undefined) {
 		card += generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), device.softwareVersion);
 	}
-	if(device.battery !== undefined || device.batteryLow !== undefined)
-	{
+	if(device.battery !== undefined || device.batteryLow !== undefined) {
 		card += generateColumnForProperty("col mb-0 pe-1", "spnBattery", "text-nowrap", "", "", device.chargingStatus === 1 ? "bi-battery-charging" : "bi-battery", translateContent("lblBatteryLevel"), device.battery !== undefined ? device.battery : device.batteryLow, device.battery !== undefined ? "%" : "");
 	}
-	if(device.batteryTemperature !== undefined)
-	{
+	if(device.batteryTemperature !== undefined) {
 		card += generateColumnForProperty("col mb-0 pe-1", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", translateContent("lblTemperature"), device.state === 2 ? `---` : device.batteryTemperature, "&deg;C");
 	}
-	if(device.sensorOpen !== undefined)
-	{
+	if(device.sensorOpen !== undefined) {
 		card += generateColumnForProperty("col mb-0 pe-1", "spnSensorState", "text-nowrap", "", "", device.sensorOpen === true ? "bi-door-open" : "bi-door-closed", translateContent("lblState"), device.sensorOpen === true ? translateDeviceStateValue("Open") : translateDeviceStateValue("Closed"), "");
 	}
 	card += `</div>`;
@@ -725,122 +675,79 @@ function createCardDevice(device)
 	return card;
 }
 
-function createDeviceTypeCardsContainer(typeName, firendlyTypeName, cards)
-{
-	if(cards != "")
-	{
+function createDeviceTypeCardsContainer(typeName, firendlyTypeName, cards) {
+	if(cards != "") {
 		return `<p id="${typeName}"><h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3">${cards}</div></p>`;
-	}
-	else
-	{
+	} else {
 		return "";
 	}
 }
 
-function getDeviceLastEventTime(device)
-{
-	if(device.type === 2)
-	{
-		if(device.sensorChangeTime !== undefined && device.sensorChangeTime >= 0)
-		{
+function getDeviceLastEventTime(device) {
+	if(device.type === 2) {
+		if(device.sensorChangeTime !== undefined && device.sensorChangeTime >= 0) {
 			return `${translateContent("lblLastEvent")}: ${makeDateTimeString(new Date(parseInt(device.sensorChangeTime)))}`;
-		}
-		else
-		{
+		} else {
 			return `${translateContent("lblLastEvent")}: ${translateContent("lblNotAvailable")}`;
 		}
-	}
-	else if(device.type === 10)
-	{
-		if(device.motionSensorPirEvent !== undefined && device.motionSensorPirEvent >= 0)
-		{
+	} else if(device.type === 10) {
+		if(device.motionSensorPirEvent !== undefined && device.motionSensorPirEvent >= 0) {
 			return `${translateContent("lblLastEvent")}: ${makeDateTimeString(new Date(parseInt(device.motionSensorPirEvent)))}`;
-		}
-		else
-		{
+		} else {
 			return `${translateContent("lblLastEvent")}: ${translateContent("lblNotAvailable")}`;
 		}
-	}
-	else
-	{
-		if(device.hasPicture === true && device.pictureTime !== 0)
-		{
-			if(device.pictureTime !== undefined && device.pictureTime !== 0)
-			{
+	} else {
+		if(device.hasPicture === true && device.pictureTime !== 0) {
+			if(device.pictureTime !== undefined && device.pictureTime !== 0) {
 				return `${translateContent("lblLastRecording")}: ${makeDateTimeString(new Date(parseInt(device.pictureTime)))} | <a href="javascript:generateDeviceImageModal('${device.serialNumber}','${device.name}');">${translateContent("lblLastRecordingThumbnail")}</a>`;
-			}
-			else if(device.pictureTime === undefined)
-			{
+			} else if(device.pictureTime === undefined) {
 				return translateContent("lblLastRecordingNotAvailable");
-			}
-			else
-			{
+			} else {
 				return `${translateContent("lblLastRecording")}: ${translateContent("lblNotAvailable")}`;
 			}
-		}
-		else
-		{
+		} else {
 			return translateContent("lblLastRecordingNotAvailable");
 		}
 	}
 }
 
-function generateColumnForProperty(divClass, spanName, spanClass, displayFormatStart, displayFormatEnd, imageName, title, value, unit)
-{
-	if(value === undefined)
-	{
+function generateColumnForProperty(divClass, spanName, spanClass, displayFormatStart, displayFormatEnd, imageName, title, value, unit) {
+	if(value === undefined) {
 		return "";
 	}
-	switch (imageName)
-	{
+	switch (imageName) {
 		case "bi-battery":
-			if(value === true)
-			{
+			if(value === true) {
 				imageName = imageName + " text-danger";
 				break;
 			}
-			if(value === false)
-			{
+			if(value === false) {
 				imageName = "bi-battery-full";
 				break;
 			}
-			if(value < 20)
-			{
+			if(value < 20) {
 				imageName = "bi-battery";
-			}
-			else if(value < 55)
-			{
+			} else if(value < 55) {
 				imageName = "bi-battery-half";
-			}
-			else
-			{
+			} else {
 				imageName = "bi-battery-full";
 			}
-			if(value < 6)
-			{
+			if(value < 6) {
 				imageName = imageName + " text-danger";
 				break;
-			}
-			else if(value < 16)
-			{
+			} else if(value < 16) {
 				imageName = imageName + " text-warning";
 			}
 			break;
 		case "bi-thermometer-low":
-			if(value < -49 || value > 99)
-			{
+			if(value < -49 || value > 99) {
 				return "";
 			}
-			if(value < 0)
-			{
+			if(value < 0) {
 				imageName = "bi-thermometer-low";
-			}
-			else if(value < 30)
-			{
+			} else if(value < 30) {
 				imageName = "bi-thermometer-half";
-			}
-			else
-			{
+			} else {
 				imageName = "bi-thermometer-high";
 			}
 			break;
@@ -848,16 +755,14 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 	return `<div class="${divClass}${value === `---` ? ` text-muted` : ""}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value === false ? translateString("strOk") : value === true ? translateString("strLow") : value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
 }
 
-function generateStationDeviceSettingsSelectionModal(deviceId, deviceName)
-{
+function generateStationDeviceSettingsSelectionModal(deviceId, deviceName) {
 	generateContentStationDeviceSettingsSelectionModal(deviceId, deviceName);
 
 	const myModal = new bootstrap.Modal(document.getElementById('modalSelectStationDevice'));
 	myModal.show();
 }
 
-function generateContentStationDeviceSettingsSelectionModal(deviceId, deviceName)
-{
+function generateContentStationDeviceSettingsSelectionModal(deviceId, deviceName) {
 	var stationDeviceModal = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -882,16 +787,14 @@ function generateContentStationDeviceSettingsSelectionModal(deviceId, deviceName
 	document.getElementById("modalSelectStationDevice").innerHTML = stationDeviceModal;
 }
 
-function generateDeviceImageModal(deviceId, deviceName)
-{
+function generateDeviceImageModal(deviceId, deviceName) {
 	generateContentDeviceImageModal(deviceId, deviceName);
 
 	const myModal = new bootstrap.Modal(document.getElementById('modalDeviceImage'));
 	myModal.show();
 }
 
-function generateContentDeviceImageModal(deviceId, deviceName)
-{
+function generateContentDeviceImageModal(deviceId, deviceName) {
 	var deviceImage = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -910,12 +813,10 @@ function generateContentDeviceImageModal(deviceId, deviceName)
 	document.getElementById("modalDeviceImage").innerHTML = deviceImage;
 }
 
-function generateDeviceSettingsModal(deviceId, deviceName)
-{
+function generateDeviceSettingsModal(deviceId, deviceName) {
 	generateContentDeviceSettingsModal(deviceId, deviceName);
 
-	if(deviceName === undefined)
-	{
+	if(deviceName === undefined) {
 		const myModal = new bootstrap.Modal(document.getElementById('modalDeviceSettings'));
 		myModal.show();
 	}
@@ -923,8 +824,7 @@ function generateDeviceSettingsModal(deviceId, deviceName)
 	getDevicePropertiesMetadata(deviceId);
 }
 
-function generateContentDeviceSettingsModal(deviceId, deviceName)
-{
+function generateContentDeviceSettingsModal(deviceId, deviceName) {
 	var deviceModal = `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -1053,8 +953,7 @@ async function getDeviceProperties(deviceId, devicePropertiesMetadata) {
 	});
 }
 
-function generateDeviceModalErrorMessage(errorMessage)
-{
+function generateDeviceModalErrorMessage(errorMessage) {
 	return `
 								<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 									<div class="modal-content">
@@ -1073,8 +972,7 @@ function generateDeviceModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, isDeviceKnownByClient, deviceProperties, deviceCommands, deviceInteractions)
-{
+function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, isDeviceKnownByClient, deviceProperties, deviceCommands, deviceInteractions) {
 	var setEventHandler = true;
 	var deviceModal =  `<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -1085,15 +983,12 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 							</div>
 							<div class="modal-body placeholder-glow" id="divModalDeviceSettingsContent">
 								<div class="" id="lblModalDeviceSettingsInfo">`;
-	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,5)) === false && isDeviceKnownByClient === true)
-	{
+	if(isStationOrDevicesKnown(deviceProperties.model.slice(0,5)) === false && isDeviceKnownByClient === true) {
 		setEventHandler = false;
 		deviceModal += `
 									${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedDeviceHeading"), `${translateContent("lblNotSupportedDeviceMessage", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${deviceId}`)}${deviceProperties.serialNumber === deviceProperties.stationSerialNumber ? `</p><p class="mt-2">${translateContent("lblNotSupportedStationMessageSolo", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${deviceId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${deviceId}`)}` : ""}`, translateContent("lblNotSupportedDeviceSubText"))}
 									${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedDeviceNoSaving"), "", "")}`;
-	}
-	else if(isDeviceKnownByClient === false)
-	{
+	} else if(isDeviceKnownByClient === false) {
 		setEventHandler = false;
 		deviceModal += `
 									${createMessageContainer("alert alert-warning", translateContent("lblUnknownDeviceHeading"), translateContent("lblUnknownDeviceMessage", deviceProperties.model), "")}
@@ -1120,29 +1015,24 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										</span>
 									</div>
 									<div class="col">`;
-	if(deviceProperties.softwareVersion !== undefined || deviceProperties.battery !== undefined || deviceProperties.batteryTemperature !== undefined)
-	{
+	if(deviceProperties.softwareVersion !== undefined || deviceProperties.battery !== undefined || deviceProperties.batteryTemperature !== undefined) {
 		deviceModal += `
 										<span id="lblDeviceInfo">
 											<h6 class="card-subtitle text-muted">
 												<div class="row">`;
-		if(deviceProperties.softwareVersion !== undefined)
-		{
+		if(deviceProperties.softwareVersion !== undefined) {
 			deviceModal += `
 													${generateColumnForProperty("col", "spnFimware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), `${deviceProperties.softwareVersion}${deviceProperties.softwareTime !== undefined && deviceProperties.softwareTime !== "" ? `<br /><small>${makeDateTimeString(new Date(parseInt(deviceProperties.softwareTime*1000)), false)}</small>` : ""}`)}`;
 		}
-		if(deviceProperties.battery !== undefined || deviceProperties.batteryLow !== undefined)
-		{
+		if(deviceProperties.battery !== undefined || deviceProperties.batteryLow !== undefined) {
 			deviceModal += `
 													${generateColumnForProperty("col", "spnBattery", "text-nowrap", "", "", deviceProperties.chargingStatus == 1 ? "bi-battery-charging" : "bi-battery", translateContent("lblBatteryLevel"), deviceProperties.battery !== undefined ? deviceProperties.battery : deviceProperties.batteryLow, deviceProperties.battery !== undefined ? "%" : "")}`;
 		}
-		if(deviceProperties.batteryTemperature !== undefined && deviceProperties.batteryTemperature > -99 && deviceProperties.batteryTemperature < 99)
-		{
+		if(deviceProperties.batteryTemperature !== undefined && deviceProperties.batteryTemperature > -99 && deviceProperties.batteryTemperature < 99) {
 			deviceModal += `
 													${generateColumnForProperty("col", "spnBatteryTemperature", "text-nowrap", "", "", "bi-thermometer-low", translateContent("lblTemperature"), deviceProperties.state === 2 ? `---` : deviceProperties.batteryTemperature, "&deg;C")}`;
 		}
-		if(deviceProperties.sensorOpen !== undefined)
-		{
+		if(deviceProperties.sensorOpen !== undefined) {
 			deviceModal += `
 													${generateColumnForProperty("col", "spnSensorState", "text-nowrap", "", "", deviceProperties.sensorOpen === true ? "bi-door-open" : "bi-door-closed", translateContent("lblState"), deviceProperties.sensorOpen === true ? translateDeviceStateValue("Open") : deviceProperties.sensorOpen === false ? translateDeviceStateValue("Closed") : ``)}`;
 		}
@@ -1155,11 +1045,9 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	
-	if(deviceProperties.state !== undefined && deviceProperties.state !== 1)
-	{
+	if(deviceProperties.state !== undefined && deviceProperties.state !== 1) {
 		setEventHandler = false;
-		switch (deviceProperties.state)
-		{
+		switch (deviceProperties.state) {
 			case 0:
 				deviceModal += `
 									${createMessageContainer("alert alert-warning mb-0", translateContent("titleDeactivatedOffline"), translateContent("titleDeactivatedOfflineHint"), "")}`;
@@ -1190,64 +1078,55 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 
 		document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
 		return;
-	}
-	if(deviceProperties.enabled !== undefined || deviceProperties.antitheftDetection !== undefined || deviceProperties.statusLed !== undefined || deviceProperties.imageMirrored !== undefined || deviceProperties.motionAutoCruise !== undefined || deviceProperties.autoCalibration !== undefined || deviceProperties.light !== undefined)
-	{
+	} if(deviceProperties.enabled !== undefined || deviceProperties.antitheftDetection !== undefined || deviceProperties.statusLed !== undefined || deviceProperties.imageMirrored !== undefined || deviceProperties.motionAutoCruise !== undefined || deviceProperties.autoCalibration !== undefined || deviceProperties.light !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceCommonSettings">
 									<h5 class="card-header">${translateContent("lblHeaderCommon")}</h5>
 									<div class="card-body">
 										<div class="row gap-3">`;
-		if(deviceProperties.enabled !== undefined)
-		{
+		if(deviceProperties.enabled !== undefined) {
 			deviceModal += `
 											<div class="col">
 												<h5>${translateContent("lblEnabled")}</h5>
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.enabled.name, deviceProperties.enabled, devicePropertiesMetadata.enabled.writeable, setEventHandler)}
 											</div>`;
 		}
-		if(deviceProperties.antitheftDetection !== undefined)
-		{
+		if(deviceProperties.antitheftDetection !== undefined) {
 			deviceModal += `
 											<div class="col">
 												<h5>${translateContent("lblAntitheftDetection")}</h5>
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.antitheftDetection.name, deviceProperties.antitheftDetection, devicePropertiesMetadata.antitheftDetection.writeable, setEventHandler)}
 											</div>`;
 		}
-		if(deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "boolean")
-		{
+		if(deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "boolean") {
 			deviceModal += `
 											<div class="col">
 												<h5>${translateContent("lblStatusLed")}</h5>
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed, devicePropertiesMetadata.statusLed.writeable, setEventHandler)}
 											</div>`;
 		}
-		if(deviceProperties.imageMirrored !== undefined)
-		{
+		if(deviceProperties.imageMirrored !== undefined) {
 			deviceModal += `
 											<div class="col">
 												<h5>${translateContent("lblImageMirrored")}</h5>
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.imageMirrored.name, deviceProperties.imageMirrored, devicePropertiesMetadata.imageMirrored.writeable, setEventHandler)}
 											</div>`;
 		}
-		if(deviceProperties.motionAutoCruise !== undefined)
-		{
+		if(deviceProperties.motionAutoCruise !== undefined) {
 			deviceModal += `
 											<div class="col">
 												<h5>${translateContent("lblMotionAutoCruise")}</h5>
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionAutoCruise.name, deviceProperties.motionAutoCruise, devicePropertiesMetadata.motionAutoCruise.writeable, setEventHandler)}
 											</div>`;
 		}
-		if(deviceProperties.autoCalibration !== undefined)
-		{
+		if(deviceProperties.autoCalibration !== undefined) {
 			deviceModal += `
 											<div class="col">
 												<h5>${translateContent("lblAutoCalibration")}</h5>
 												${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.autoCalibration.name, deviceProperties.autoCalibration, devicePropertiesMetadata.autoCalibration.writeable, setEventHandler)}
 											</div>`;
 		}
-		if(deviceProperties.light !== undefined)
-		{
+		if(deviceProperties.light !== undefined) {
 			deviceModal += `
 											<div class="col">
 												<h5>${translateContent("lblLight")}</h5>
@@ -1259,41 +1138,32 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionType !== undefined)
-	{
+	if(deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionType !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceMotionDetectionSettings">
 									<h5 class="card-header">${translateContent("lblHeaderMotionDetection")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionSensitivityStandard !== undefined || deviceProperties.motionDetectionSensitivityAdvancedA !== undefined || deviceProperties.motionDetectionSensitivityAdvancedB !== undefined || deviceProperties.motionDetectionSensitivityAdvancedC !== undefined || deviceProperties.motionDetectionSensitivityAdvancedD !== undefined || deviceProperties.motionDetectionSensitivityAdvancedE !== undefined || deviceProperties.motionDetectionSensitivityAdvancedF !== undefined || deviceProperties.motionDetectionSensitivityAdvancedG !== undefined || deviceProperties.motionDetectionSensitivityAdvancedH !== undefined)
-		{
-			if(deviceProperties.motionDetection !== undefined)
-			{
+		if(deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionSensitivityStandard !== undefined || deviceProperties.motionDetectionSensitivityAdvancedA !== undefined || deviceProperties.motionDetectionSensitivityAdvancedB !== undefined || deviceProperties.motionDetectionSensitivityAdvancedC !== undefined || deviceProperties.motionDetectionSensitivityAdvancedD !== undefined || deviceProperties.motionDetectionSensitivityAdvancedE !== undefined || deviceProperties.motionDetectionSensitivityAdvancedF !== undefined || deviceProperties.motionDetectionSensitivityAdvancedG !== undefined || deviceProperties.motionDetectionSensitivityAdvancedH !== undefined) {
+			if(deviceProperties.motionDetection !== undefined) {
 				deviceModal += `
 										<h5>${translateContent("lblMotionDetection")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetection.name, deviceProperties.motionDetection, devicePropertiesMetadata.motionDetection.writeable, setEventHandler)}`;
 			}
-			if(deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionSensitivityStandard !== undefined || deviceProperties.motionDetectionSensitivityAdvancedA !== undefined || deviceProperties.motionDetectionSensitivityAdvancedB !== undefined || deviceProperties.motionDetectionSensitivityAdvancedC !== undefined || deviceProperties.motionDetectionSensitivityAdvancedD !== undefined || deviceProperties.motionDetectionSensitivityAdvancedE !== undefined || deviceProperties.motionDetectionSensitivityAdvancedF !== undefined || deviceProperties.motionDetectionSensitivityAdvancedG !== undefined || deviceProperties.motionDetectionSensitivityAdvancedH !== undefined)
-			{
+			if(deviceProperties.motionDetectionSensitivity !== undefined || deviceProperties.motionDetectionSensitivityStandard !== undefined || deviceProperties.motionDetectionSensitivityAdvancedA !== undefined || deviceProperties.motionDetectionSensitivityAdvancedB !== undefined || deviceProperties.motionDetectionSensitivityAdvancedC !== undefined || deviceProperties.motionDetectionSensitivityAdvancedD !== undefined || deviceProperties.motionDetectionSensitivityAdvancedE !== undefined || deviceProperties.motionDetectionSensitivityAdvancedF !== undefined || deviceProperties.motionDetectionSensitivityAdvancedG !== undefined || deviceProperties.motionDetectionSensitivityAdvancedH !== undefined) {
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblMotionDetectionSensitivity")}</h5>`;
-				if(deviceProperties.motionDetectionSensitivity !== undefined)
-				{
-					if(devicePropertiesMetadata.motionDetectionSensitivity.states === undefined)
-					{
+				if(deviceProperties.motionDetectionSensitivity !== undefined) {
+					if(devicePropertiesMetadata.motionDetectionSensitivity.states === undefined) {
 						deviceModal += `
 										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivity.unit, devicePropertiesMetadata.motionDetectionSensitivity.min, devicePropertiesMetadata.motionDetectionSensitivity.max, devicePropertiesMetadata.motionDetectionSensitivity.default)}`;
-					}
-					else
-					{
+					} else {
 						deviceModal += `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivity.name, deviceProperties.motionDetectionSensitivity, false, devicePropertiesMetadata.motionDetectionSensitivity.states)}`;
 					}
 				}
 				deviceModal += `
 										${deviceProperties.motionDetectionSensitivityMode !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionSensitivityMode.name, deviceProperties.motionDetectionSensitivityMode, setEventHandler, devicePropertiesMetadata.motionDetectionSensitivityMode.states)}` : ``}`;
-				if(deviceProperties.motionDetectionSensitivityMode !== undefined)
-				{
+				if(deviceProperties.motionDetectionSensitivityMode !== undefined) {
 					deviceModal += `
 										<div id="divMotionDetectionSensitivityStandard" ${deviceProperties.motionDetectionSensitivityMode == 0 ? "" : ` class="collapse"`}>
 											<div class="card card-body mt-2 mb-2">
@@ -1318,8 +1188,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 				}
 
 			}
-			if(deviceProperties.motionDetectionType !== undefined || deviceProperties.motionDetectionTypeHuman !== undefined || deviceProperties.motionDetectionTypeHumanRecognition !== undefined || deviceProperties.motionDetectionTypePet !== undefined || deviceProperties.motionDetectionTypeVehicle !== undefined || deviceProperties.motionDetectionTypeAllOtherMotions !== undefined)
-			{
+			if(deviceProperties.motionDetectionType !== undefined || deviceProperties.motionDetectionTypeHuman !== undefined || deviceProperties.motionDetectionTypeHumanRecognition !== undefined || deviceProperties.motionDetectionTypePet !== undefined || deviceProperties.motionDetectionTypeVehicle !== undefined || deviceProperties.motionDetectionTypeAllOtherMotions !== undefined) {
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity ? `<hr />`: ``}
 										<h5>${translateContent("lblMotionDetectionType")}</h5>
@@ -1330,15 +1199,13 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${deviceProperties.motionDetectionTypeVehicle !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionTypeVehicle.name, deviceProperties.motionDetectionTypeVehicle, devicePropertiesMetadata.motionDetectionTypeVehicle.writeable, setEventHandler)}` : ""}
 										${deviceProperties.motionDetectionTypeAllOtherMotions !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.motionDetectionTypeAllOtherMotions.name, deviceProperties.motionDetectionTypeAllOtherMotions, devicePropertiesMetadata.motionDetectionTypeAllOtherMotions.writeable, setEventHandler)}` : ""}`;
 			}
-			if(deviceProperties.rotationSpeed !== undefined)
-			{
+			if(deviceProperties.rotationSpeed !== undefined) {
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity || deviceProperties.motionDetectionType ? `<hr />`: ``}
 										<h5>${translateContent("lblRotationSpeed")}</h5>
 										${deviceProperties.rotationSpeed !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.rotationSpeed.name, deviceProperties.rotationSpeed, setEventHandler, devicePropertiesMetadata.rotationSpeed.states)}` : ""}`;
 			}
-			if(deviceProperties.motionTracking !== undefined)
-			{
+			if(deviceProperties.motionTracking !== undefined) {
 				deviceModal += `
 										${deviceProperties.motionDetection !== undefined || deviceProperties.motionDetectionSensitivity || deviceProperties.motionDetectionType || deviceProperties.rotationSpeed !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblMotionTracking")}</h5>
@@ -1350,34 +1217,29 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 								</div>`;
 	}
 
-	if(deviceProperties.loiteringDetection !== undefined || deviceProperties.loiteringDetectionRange !== undefined || deviceProperties.loiteringDetectionLength !== undefined || deviceProperties.loiteringCustomResponsePhoneNotification !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponse !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponseVoice !== undefined || deviceProperties.loiteringCustomResponseHomeBaseNotification !== undefined || deviceProperties.loiteringCustomResponseTimeFrom !== undefined || deviceProperties.loiteringCustomResponseTimeTo !== undefined)
-	{
+	if(deviceProperties.loiteringDetection !== undefined || deviceProperties.loiteringDetectionRange !== undefined || deviceProperties.loiteringDetectionLength !== undefined || deviceProperties.loiteringCustomResponsePhoneNotification !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponse !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponseVoice !== undefined || deviceProperties.loiteringCustomResponseHomeBaseNotification !== undefined || deviceProperties.loiteringCustomResponseTimeFrom !== undefined || deviceProperties.loiteringCustomResponseTimeTo !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceLoiteringSettings">
 									<h5 class="card-header">${translateContent("lblHeaderLoiteringDetection")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.loiteringDetection !== undefined)
-		{
+		if(deviceProperties.loiteringDetection !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblLoiteringDetection")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringDetection.name, deviceProperties.loiteringDetection, devicePropertiesMetadata.loiteringDetection.writeable, setEventHandler)}`;
 		}
-		if(deviceProperties.loiteringDetectionRange !== undefined)
-		{
+		if(deviceProperties.loiteringDetectionRange !== undefined) {
 			deviceModal += `
 										${deviceProperties.loiteringDetection !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblLoiteringDetectionRange")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringDetectionRange.name, deviceProperties.loiteringDetectionRange, setEventHandler, devicePropertiesMetadata.loiteringDetectionRange.states)}`;
 		}
-		if(deviceProperties.loiteringDetectionLength !== undefined)
-		{
+		if(deviceProperties.loiteringDetectionLength !== undefined) {
 			deviceModal += `
 										${deviceProperties.loiteringDetectionRange !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblLoiteringDetectionLength")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.loiteringDetectionLength.name, deviceProperties.loiteringDetectionLength, setEventHandler, devicePropertiesMetadata.loiteringDetectionLength.states)}`;
 		}
-		if(deviceProperties.loiteringCustomResponsePhoneNotification !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponse !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponseVoice !== undefined || deviceProperties.loiteringCustomResponseHomeBaseNotification !== undefined || deviceProperties.loiteringCustomResponseTimeFrom !== undefined || deviceProperties.loiteringCustomResponseTimeTo !== undefined)
-		{
+		if(deviceProperties.loiteringCustomResponsePhoneNotification !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponse !== undefined || deviceProperties.loiteringCustomResponseAutoVoiceResponseVoice !== undefined || deviceProperties.loiteringCustomResponseHomeBaseNotification !== undefined || deviceProperties.loiteringCustomResponseTimeFrom !== undefined || deviceProperties.loiteringCustomResponseTimeTo !== undefined) {
 			deviceModal += `
 										${deviceProperties.loiteringDetectionLength !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblLoiteringResponse")}</h5>
@@ -1391,19 +1253,16 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.deliveryGuard !== undefined || deviceProperties.deliveryGuardPackageGuarding !== undefined || deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardPackageLiveCheckAssistance !== undefined)
-	{
+	if(deviceProperties.deliveryGuard !== undefined || deviceProperties.deliveryGuardPackageGuarding !== undefined || deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardPackageLiveCheckAssistance !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceDeliveryGuardSettings">
 									<h5 class="card-header">${translateContent("lblHeaderDeliveryGuard")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.deliveryGuard !== undefined)
-		{
+		if(deviceProperties.deliveryGuard !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblDeliveryGuard")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuard.name, deviceProperties.deliveryGuard, devicePropertiesMetadata.deliveryGuard.writeable, setEventHandler)}`;
-			if(deviceProperties.deliveryGuardPackageGuarding !== undefined || deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardPackageLiveCheckAssistance !== undefined)
-			{
+			if(deviceProperties.deliveryGuardPackageGuarding !== undefined || deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardPackageLiveCheckAssistance !== undefined) {
 				deviceModal += `
 										${deviceProperties.deliveryGuard !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblDeliveryGuardPackageGuarding")}</h5>
@@ -1411,16 +1270,14 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingVoiceResponseVoice.name, deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice, setEventHandler, devicePropertiesMetadata.deliveryGuardPackageGuardingVoiceResponseVoice.states)}
 										${generateElementTimePickerStartEnd("Device", deviceProperties.serialNumber, "deliveryGuardPackageGuardingActivatedTimespan", deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingActivatedTimeFrom.name, deviceProperties.deliveryGuardPackageGuardingActivatedTimeFrom, setEventHandler, deviceProperties.name, devicePropertiesMetadata.deliveryGuardPackageGuardingActivatedTimeTo.name, deviceProperties.deliveryGuardPackageGuardingActivatedTimeTo, setEventHandler)}`;
 			}
-			if(deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlertTimeToCheck)
-			{
+			if(deviceProperties.deliveryGuardUncollectedPackageAlert !== undefined || deviceProperties.deliveryGuardUncollectedPackageAlertTimeToCheck) {
 				deviceModal += `
 										${deviceProperties.deliveryGuardPackageGuardingVoiceResponseVoice !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblDeliveryGuardUncollectedPackageAlert")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuardUncollectedPackageAlert.name, deviceProperties.deliveryGuardUncollectedPackageAlert, devicePropertiesMetadata.deliveryGuardUncollectedPackageAlert.writeable, setEventHandler)}
 										${generateElementTimePicker("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.deliveryGuardUncollectedPackageAlertTimeToCheck.name, deviceProperties.deliveryGuardUncollectedPackageAlertTimeToCheck, setEventHandler)}`;
 			}
-			if(deviceProperties.deliveryGuardPackageLiveCheckAssistance !== undefined)
-			{
+			if(deviceProperties.deliveryGuardPackageLiveCheckAssistance !== undefined) {
 				deviceModal += `
 										${deviceProperties.deliveryGuardUncollectedPackageAlertTimeToCheck !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblDeliveryGuardPackageLiveCheckAssistance")}</h5>
@@ -1431,19 +1288,16 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.ringAutoResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined)
-	{
+	if(deviceProperties.ringAutoResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceRingAutoResponseSettings">
 									<h5 class="card-header">${translateContent("lblHeaderRingAutoResponse")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.ringAutoResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined)
-		{
+		if(deviceProperties.ringAutoResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblRingAutoResponse")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringAutoResponse.name, deviceProperties.ringAutoResponse, devicePropertiesMetadata.ringAutoResponse.writeable, setEventHandler)}`;
-			if(deviceProperties.ringAutoResponseVoiceResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined)
-			{
+			if(deviceProperties.ringAutoResponseVoiceResponse !== undefined || deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined) {
 				deviceModal += `
 										${deviceProperties.ringAutoResponseVoiceResponseVoice !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblRingAutoResponseVoice")}</h5>
@@ -1456,33 +1310,28 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionSensitivity !== undefined || deviceProperties.soundDetectionType !== undefined)
-	{
+	if(deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionSensitivity !== undefined || deviceProperties.soundDetectionType !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceSoundDetectionSettings">
 									<h5 class="card-header">${translateContent("lblHeaderSoundDetection")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionRoundLook !== undefined)
-		{
+		if(deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionRoundLook !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblSoundDetection")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.soundDetection.name, deviceProperties.soundDetection, devicePropertiesMetadata.soundDetection.writeable, setEventHandler)}`;
-			if(deviceProperties.soundDetectionType !== undefined && (deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined))
-			{
+			if(deviceProperties.soundDetectionType !== undefined && (deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined)) {
 				deviceModal += `
 										${deviceProperties.soundDetection !== undefined ? `<hr />`: ``}
 										<h5>${translateContent("lblSoundDetectionType")}</h5>
 										${deviceProperties.soundDetectionType !== undefined ? `${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.soundDetectionType.name, deviceProperties.soundDetectionType, setEventHandler, devicePropertiesMetadata.soundDetectionType.states)}` : ""}`;
 			}
-			if(deviceProperties.soundDetectionSensitivity !== undefined)
-			{
+			if(deviceProperties.soundDetectionSensitivity !== undefined) {
 				deviceModal += `
 										${deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionType ? `<hr />`: ``}
 										<h5>${translateContent("lblSoundDetectionSensitivity")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.soundDetectionSensitivity.name, deviceProperties.soundDetectionSensitivity, setEventHandler, devicePropertiesMetadata.soundDetectionSensitivity.states)}`;
 			}
-			if(deviceProperties.soundDetectionRoundLook !== undefined)
-			{
+			if(deviceProperties.soundDetectionRoundLook !== undefined) {
 				deviceModal += `
 										${deviceProperties.soundDetection !== undefined || deviceProperties.soundDetectionSensitivity || (deviceProperties.soundDetectionType !== undefined && (deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined)) ? `<hr />`: ``}
 										<h5>${translateContent("lblSoundDetectionRoundLook")}</h5>
@@ -1493,23 +1342,19 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.powerWorkingMode !== undefined || deviceProperties.recordingClipLength !== undefined || deviceProperties.recordingRetriggerInterval !== undefined || deviceProperties.recordingEndClipMotionStops !== undefined || deviceProperties.powerSource !== undefined || deviceProperties.lastChargingDays !== undefined || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined))
-	{
+	if(deviceProperties.powerWorkingMode !== undefined || deviceProperties.recordingClipLength !== undefined || deviceProperties.recordingRetriggerInterval !== undefined || deviceProperties.recordingEndClipMotionStops !== undefined || deviceProperties.powerSource !== undefined || deviceProperties.lastChargingDays !== undefined || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined)) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDevicePowerManagerSettings">
 									<h5 class="card-header">${translateContent("lblHeaderPowerManager")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.powerWorkingMode !== undefined)
-		{
+		if(deviceProperties.powerWorkingMode !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblPowerWorkingMode")}</h5>
 										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.powerWorkingMode.name, deviceProperties.powerWorkingMode, setEventHandler, devicePropertiesMetadata.powerWorkingMode.states)}
 										<div id="divDeviceCustomRecordingSettings" ${deviceProperties.powerWorkingMode == 2 ? "" : ` class="collapse"`}>`;
 		}
-		if(deviceProperties.powerWorkingMode === undefined || deviceProperties.powerWorkingMode == 2)
-		{
-			if(deviceProperties.recordingClipLength !== undefined || deviceProperties.recordingRetriggerInterval !== undefined || deviceProperties.recordingEndClipMotionStops !== undefined)
-			{
+		if(deviceProperties.powerWorkingMode === undefined || deviceProperties.powerWorkingMode == 2) {
+			if(deviceProperties.recordingClipLength !== undefined || deviceProperties.recordingRetriggerInterval !== undefined || deviceProperties.recordingEndClipMotionStops !== undefined) {
 				deviceModal += `
 											${deviceProperties.powerWorkingMode !== undefined ? `<hr />` : ""}
 											<h5>${deviceProperties.powerWorkingMode !== undefined ? `${translateString("strUserDefiniedSpec")} ` : `${translateString("strPowerManagerSpec")} `}${translateString("strSettings")}</h5>`;
@@ -1530,25 +1375,21 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 				}
 			}
 		}
-		if(deviceProperties.powerWorkingMode !== undefined)
-		{
+		if(deviceProperties.powerWorkingMode !== undefined) {
 				deviceModal += `
 										</div>`;
 		}
-		if(deviceProperties.powerSource !== undefined)
-		{
+		if(deviceProperties.powerSource !== undefined) {
 			deviceModal += `
 										${deviceProperties.powerWorkingMode !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblPowerSource")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.powerSource.name, deviceProperties.powerSource, setEventHandler, devicePropertiesMetadata.powerSource.states)}`;
-			if(deviceProperties.chargingStatus !== undefined)
-			{
+			if(deviceProperties.chargingStatus !== undefined) {
 				deviceModal += `
 										<label>${translateString("strCurrentState")}: ${translateDeviceStateValue(devicePropertiesMetadata.chargingStatus.states[deviceProperties.chargingStatus])}</label>`;
 			}
 		}
-		if((deviceProperties.lastChargingDays !== undefined && deviceProperties.lastChargingDays > -1 && deviceProperties.lastChargingTotalEvents !== undefined && deviceProperties.lastChargingRecordedEvents !== undefined) || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined))
-		{
+		if((deviceProperties.lastChargingDays !== undefined && deviceProperties.lastChargingDays > -1 && deviceProperties.lastChargingTotalEvents !== undefined && deviceProperties.lastChargingRecordedEvents !== undefined) || (deviceProperties.detectionStatisticsWorkingDays !== undefined && deviceProperties.detectionStatisticsDetectedEvents !== undefined && deviceProperties.detectionStatisticsRecordedEvents !== undefined)) {
 			deviceModal += `
 										${deviceProperties.powerWorkingMode !== undefined || deviceProperties.powerSource !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblDetectionStatistic")}</h5>
@@ -1571,20 +1412,17 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.continuousRecording !== undefined || deviceProperties.continuousRecordingType !== undefined)
-	{
+	if(deviceProperties.continuousRecording !== undefined || deviceProperties.continuousRecordingType !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardContinuousRecordingSettings">
 									<h5 class="card-header">${translateContent("lblHeaderContinuousRecording")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.continuousRecording !== undefined)
-		{
+		if(deviceProperties.continuousRecording !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblContinuousRecording")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.continuousRecording.name, deviceProperties.continuousRecording, devicePropertiesMetadata.continuousRecording.writeable, setEventHandler)}`;
 		}
-		if(deviceProperties.continuousRecordingType !== undefined)
-		{
+		if(deviceProperties.continuousRecordingType !== undefined) {
 			deviceModal += `
 										${deviceProperties.continuousRecording !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblContinuousRecordingType")}</h5>
@@ -1595,41 +1433,35 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if((deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number") || deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined || deviceProperties.videoWdr !== undefined)
-	{
+	if((deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number") || deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined || deviceProperties.videoWdr !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceVideoSettings">
 									<h5 class="card-header">${translateContent("lblHeaderVideoSettings")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number")
-		{
+		if(deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number") {
 			deviceModal += `
 										<h5>${translateContent("lblStatusLed")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.statusLed.name, deviceProperties.statusLed, setEventHandler, devicePropertiesMetadata.statusLed.states)}`;
 		}
-		if(deviceProperties.watermark !== undefined)
-		{
+		if(deviceProperties.watermark !== undefined) {
 			deviceModal += `
 										${deviceProperties.statusLed !== undefined && devicePropertiesMetadata.statusLed.type === "number" ? `<hr />` : ``}
 										<h5>${translateContent("lblWatermark")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.watermark.name, deviceProperties.watermark, setEventHandler, devicePropertiesMetadata.watermark.states)}`;
 		}
-		if(deviceProperties.videoRecordingQuality !== undefined)
-		{
+		if(deviceProperties.videoRecordingQuality !== undefined) {
 			deviceModal += `
 										${deviceProperties.watermark !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblVideoRecordingQuality")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.videoRecordingQuality.name, deviceProperties.videoRecordingQuality, setEventHandler, devicePropertiesMetadata.videoRecordingQuality.states)}`;
 		}
-		if(deviceProperties.videoStreamingQuality !== undefined)
-		{
+		if(deviceProperties.videoStreamingQuality !== undefined) {
 			deviceModal += `
 										${deviceProperties.watermark !== undefined || deviceProperties.videoStreamingQuality !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblVideoStreamingQuality")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.videoStreamingQuality.name, deviceProperties.videoStreamingQuality, setEventHandler, devicePropertiesMetadata.videoStreamingQuality.states)}`;
 		}
-		if(deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined)
-		{
+		if(deviceProperties.autoNightvision !== undefined || deviceProperties.nightvision !== undefined) {
 			deviceModal += `
 										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblNightvision")}</h5>
@@ -1638,15 +1470,13 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${devicePropertiesMetadata.lightSettingsEnable === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsEnable.name, deviceProperties.lightSettingsEnable, devicePropertiesMetadata.lightSettingsEnable.writeable, setEventHandler)}
 										${devicePropertiesMetadata.lightSettingsBrightnessManual === undefined ? "" : generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessManual.name, deviceProperties.lightSettingsBrightnessManual, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessManual.unit, devicePropertiesMetadata.lightSettingsBrightnessManual.min, devicePropertiesMetadata.lightSettingsBrightnessManual.max, devicePropertiesMetadata.lightSettingsBrightnessManual.default)}`;
 		}
-		if(deviceProperties.videoWdr !== undefined)
-		{
+		if(deviceProperties.videoWdr !== undefined) {
 			deviceModal += `
 										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblVideoWdr")}</h5>
 										${devicePropertiesMetadata.videoWdr === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.videoWdr.name, deviceProperties.videoWdr, devicePropertiesMetadata.videoWdr.writeable, setEventHandler)}`;
 		}
-		if(deviceProperties.flickerAdjustment !== undefined)
-		{
+		if(deviceProperties.flickerAdjustment !== undefined) {
 			deviceModal += `
 										${deviceProperties.watermark !== undefined || deviceProperties.videoRecordingQuality !== undefined || deviceProperties.videoStreamingQuality !== undefined || deviceProperties.autoNightvision !== undefined || deviceProperties.videoWdr !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblFlickerAdjustment")}</h5>
@@ -1656,62 +1486,49 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined || deviceProperties.speaker !== undefined || deviceProperties.speakerVolume !== undefined)
-	{
+	if(deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined || deviceProperties.speaker !== undefined || deviceProperties.speakerVolume !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceAudioSettings">
 									<h5 class="card-header">${translateContent("lblHeaderAudioSettings")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined)
-		{
+		if(deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblMicrophone")}</h5>`;
-			if(deviceProperties.microphone !== undefined)
-			{
+			if(deviceProperties.microphone !== undefined) {
 				deviceModal += `
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.microphone.name, deviceProperties.microphone, devicePropertiesMetadata.microphone.writeable, setEventHandler)}`;
 			}
-			if(deviceProperties.audioRecording !== undefined && (deviceProperties.microphone === undefined || (deviceProperties.microphone !== undefined && deviceProperties.microphone === true)))
-			{
+			if(deviceProperties.audioRecording !== undefined && (deviceProperties.microphone === undefined || (deviceProperties.microphone !== undefined && deviceProperties.microphone === true))) {
 				deviceModal += `
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.audioRecording.name, deviceProperties.audioRecording, devicePropertiesMetadata.audioRecording.writeable, setEventHandler)}`;
 			}
 		}
-		if(deviceProperties.speaker !== undefined || deviceProperties.speakerVolume !== undefined)
-		{
+		if(deviceProperties.speaker !== undefined || deviceProperties.speakerVolume !== undefined) {
 			deviceModal += `
 										${deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblSpeaker")}</h5>
 										${devicePropertiesMetadata.speaker === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.speaker.name, deviceProperties.speaker, devicePropertiesMetadata.speaker.writeable, setEventHandler)}`;
-			if(devicePropertiesMetadata.speakerVolume)
-			{
-				if(devicePropertiesMetadata.speakerVolume.states === undefined)
-				{
+			if(devicePropertiesMetadata.speakerVolume) {
+				if(devicePropertiesMetadata.speakerVolume.states === undefined) {
 					deviceModal += `
 										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.speakerVolume.name, deviceProperties.speakerVolume, setEventHandler, devicePropertiesMetadata.speakerVolume.unit, devicePropertiesMetadata.speakerVolume.min, devicePropertiesMetadata.speakerVolume.max, devicePropertiesMetadata.speakerVolume.default)}`;
-				}
-				else
-				{
+				} else {
 					deviceModal += `
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.speakerVolume.name, deviceProperties.speakerVolume, setEventHandler, devicePropertiesMetadata.speakerVolume.states)}`;
 				}
 			}
 		}
-		if(deviceProperties.ringtoneVolume !== undefined)
-		{
+		if(deviceProperties.ringtoneVolume !== undefined) {
 			deviceModal += `
 										${deviceProperties.microphone !== undefined || deviceProperties.audioRecording !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblRingtoneVolume")}</h5>
 										${devicePropertiesMetadata.speaker === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.speaker.name, deviceProperties.speaker, devicePropertiesMetadata.speaker.writeable, setEventHandler)}`;
 			if(devicePropertiesMetadata.ringtoneVolume)
 			{
-				if(devicePropertiesMetadata.ringtoneVolume.states === undefined)
-				{
+				if(devicePropertiesMetadata.ringtoneVolume.states === undefined) {
 					deviceModal += `
 										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringtoneVolume.name, deviceProperties.ringtoneVolume, setEventHandler, devicePropertiesMetadata.ringtoneVolume.unit, devicePropertiesMetadata.ringtoneVolume.min, devicePropertiesMetadata.ringtoneVolume.max, devicePropertiesMetadata.ringtoneVolume.default)}`;
-				}
-				else
-				{
+				} else {
 					deviceModal += `
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.ringtoneVolume.name, deviceProperties.ringtoneVolume, setEventHandler, devicePropertiesMetadata.ringtoneVolume.states)}`;
 				}
@@ -1721,14 +1538,12 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.dualCamWatchViewMode !== undefined)
-	{
+	if(deviceProperties.dualCamWatchViewMode !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceDualCamWatchViewModeSettings">
 									<h5 class="card-header">${translateContent("lblHeaderDualCamWatchViewMode")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.dualCamWatchViewMode !== undefined)
-		{
+		if(deviceProperties.dualCamWatchViewMode !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblDualCamWatchViewMode")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.dualCamWatchViewMode.name, deviceProperties.dualCamWatchViewMode, setEventHandler, devicePropertiesMetadata.dualCamWatchViewMode.states)}`;
@@ -1737,20 +1552,17 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.chimeIndoor !== undefined || deviceProperties.chimeHomebase !== undefined)
-	{
+	if(deviceProperties.chimeIndoor !== undefined || deviceProperties.chimeHomebase !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceChimeSettings">
 									<h5 class="card-header">${translateContent("lblChimeSettings")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.chimeIndoor !== undefined)
-		{
+		if(deviceProperties.chimeIndoor !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblChimeIndoor")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chimeIndoor.name, deviceProperties.chimeIndoor, devicePropertiesMetadata.chimeIndoor.writeable, setEventHandler)}`;
 		}
-		if(deviceProperties.chimeHomebase !== undefined)
-		{
+		if(deviceProperties.chimeHomebase !== undefined) {
 			deviceModal += `
 										${deviceProperties.chimeIndoor !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblChimeHomebase")}</h5>
@@ -1762,8 +1574,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.lightSettingsBrightnessManual !== undefined && (deviceProperties.lightSettingsManualLightingActiveMode !== undefined || deviceProperties.lightSettingsManualDailyLighting !== undefined || deviceProperties.lightSettingsManualDynamicLighting !== undefined || deviceProperties.lightSettingsBrightnessSchedule !== undefined || deviceProperties.lightSettingsScheduleLightingActiveMode !== undefined || deviceProperties.lightSettingsScheduleDailyLighting !== undefined || deviceProperties.lightSettingsScheduleDynamicLighting !== undefined || deviceProperties.lightSettingsMotionTriggered !== undefined || deviceProperties.lightSettingsMotionTriggeredTimer !== undefined || deviceProperties.lightSettingsMotionActivationMode !== undefined || deviceProperties.lightSettingsBrightnessMotion !== undefined || deviceProperties.lightSettingsMotionLightingActiveMode !== undefined || deviceProperties.lightSettingsMotionDailyLighting !== undefined || deviceProperties.lightSettingsMotionDynamicLighting !== undefined))
-	{
+	if(deviceProperties.lightSettingsBrightnessManual !== undefined && (deviceProperties.lightSettingsManualLightingActiveMode !== undefined || deviceProperties.lightSettingsManualDailyLighting !== undefined || deviceProperties.lightSettingsManualDynamicLighting !== undefined || deviceProperties.lightSettingsBrightnessSchedule !== undefined || deviceProperties.lightSettingsScheduleLightingActiveMode !== undefined || deviceProperties.lightSettingsScheduleDailyLighting !== undefined || deviceProperties.lightSettingsScheduleDynamicLighting !== undefined || deviceProperties.lightSettingsMotionTriggered !== undefined || deviceProperties.lightSettingsMotionTriggeredTimer !== undefined || deviceProperties.lightSettingsMotionActivationMode !== undefined || deviceProperties.lightSettingsBrightnessMotion !== undefined || deviceProperties.lightSettingsMotionLightingActiveMode !== undefined || deviceProperties.lightSettingsMotionDailyLighting !== undefined || deviceProperties.lightSettingsMotionDynamicLighting !== undefined)) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceLightSettings">
 									<h5 class="card-header">${translateContent("lblHeaderLightSettings")}</h5>
@@ -1791,20 +1602,17 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.chirpTone !== undefined || deviceProperties.chirpVolume !== undefined)
-	{
+	if(deviceProperties.chirpTone !== undefined || deviceProperties.chirpVolume !== undefined) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceChirpSettings">
 									<h5 class="card-header">${translateContent("lblChirpSettings")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.chirpTone !== undefined)
-		{
+		if(deviceProperties.chirpTone !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblChirpTone")}</h5>
 										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chirpTone.name, deviceProperties.chirpTone, setEventHandler, devicePropertiesMetadata.chirpTone.states)}`;
 		}
-		if(deviceProperties.chirpVolume !== undefined)
-		{
+		if(deviceProperties.chirpVolume !== undefined) {
 			deviceModal += `
 										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.chirpVolume.name, deviceProperties.chirpVolume, setEventHandler, devicePropertiesMetadata.chirpVolume.unit, devicePropertiesMetadata.chirpVolume.min, devicePropertiesMetadata.chirpVolume.max, devicePropertiesMetadata.chirpVolume.default)}`;
 		}
@@ -1812,14 +1620,12 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceCommands.includes("devicePresetPosition"))
-	{
+	if(deviceCommands.includes("devicePresetPosition")) {
 		deviceModal += `
 								<div class="card mb-3" id="cardDevicePanAndTiltSettings">
 									<h5 class="card-header">${translateContent("lblHeaderPanAndTilt")}</h5>
 									<div class="card-body">`;
-		if(deviceCommands.includes("devicePresetPosition"))
-		{
+		if(deviceCommands.includes("devicePresetPosition")) {
 			deviceModal += `
 										<h5>${translateContent("lblMoveToPreset")}</h5>
 										<div class="row g-2">
@@ -1841,26 +1647,22 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.notification !== undefined || deviceProperties.notificationType !== undefined || deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined)
-	{
+	if(deviceProperties.notification !== undefined || deviceProperties.notificationType !== undefined || deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined) {
 		deviceModal += `
 								<div class="card" id="cardDeviceNotificationSettings">
 									<h5 class="card-header">${translateContent("lblHeaderNotificationSettings")}</h5>
 									<div class="card-body">`;
-		if(deviceProperties.notification !== undefined)
-		{
+		if(deviceProperties.notification !== undefined) {
 			deviceModal += `
 										<h5>${translateContent("lblNotification")}</h5>
 										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notification.name, deviceProperties.notification, devicePropertiesMetadata.notification.writeable, setEventHandler)}`;
 		}
-		if((deviceProperties.notification !== undefined && deviceProperties.notification === true) || deviceProperties.notification === undefined)
-		{
+		if((deviceProperties.notification !== undefined && deviceProperties.notification === true) || deviceProperties.notification === undefined) {
 			deviceModal += `
 										${deviceProperties.notification !== undefined ? `<hr />` : ``}
 										<h5>${translateContent("lblNotificationType")}</h5>
 										${generateElementRadioGroup("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationType.name, deviceProperties.notificationType, setEventHandler, devicePropertiesMetadata.notificationType.states)}`;
-			if(deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined)
-			{
+			if(deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined) {
 				deviceModal += `
 										
 										<hr />
@@ -1875,8 +1677,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										${deviceProperties.notificationRadarDetector !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationRadarDetector.name, deviceProperties.notificationRadarDetector, devicePropertiesMetadata.notificationRadarDetector.writeable, setEventHandler)}` : ""}`;
 			}
 		}
-		if(deviceProperties.notificationIntervalTime !== undefined)
-		{
+		if(deviceProperties.notificationIntervalTime !== undefined) {
 			deviceModal += `
 										${deviceProperties.notification !== undefined || (deviceProperties.notificationPerson || deviceProperties.notificationPet || deviceProperties.notificationCrying !== undefined || deviceProperties.notificationAllSound !== undefined || deviceProperties.notificationAllOtherMotion !== undefined || deviceProperties.notificationRing !== undefined || deviceProperties.notificationMotion !== undefined || deviceProperties.notificationRadarDetector !== undefined) ? `<hr />` : ``}
 										<h5>${translateContent("lblNotificationIntervalTime")}</h5>
@@ -1886,76 +1687,62 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 									</div>
 								</div>`;
 	}
-	if(deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.soundDetected !== undefined || deviceProperties.strangerPersonDetected !== undefined || deviceProperties.vehicleDetected !== undefined || deviceProperties.dogDetected !== undefined || deviceProperties.dogLickDetected !== undefined || deviceProperties.dogPoopDetected !== undefined || deviceProperties.ringing !== undefined)
-	{
+	if(deviceProperties.motionDetected !== undefined || deviceProperties.radarMotionDetected !== undefined || deviceProperties.personDetected !== undefined || deviceProperties.petDetected !== undefined || deviceProperties.cryingDetected !== undefined || deviceProperties.soundDetected !== undefined || deviceProperties.strangerPersonDetected !== undefined || deviceProperties.vehicleDetected !== undefined || deviceProperties.dogDetected !== undefined || deviceProperties.dogLickDetected !== undefined || deviceProperties.dogPoopDetected !== undefined || deviceProperties.ringing !== undefined) {
 		deviceModal += `
 								<div class="card mt-3" id="cardDeviceInteraction">
 									<h5 class="card-header">${translateContent("lblHeaderInteractionCCU")}</h5>
 									<div class="card-body">
 										${createMessageContainer("alert alert-warning", translateMessages("messageInteractionHintHeader"), translateMessages("messageInteractionHintMessage"), "")}
 										<div class="accordion" id="accordionInteractions">`;
-		if(deviceProperties.motionDetected !== undefined)
-		{
+		if(deviceProperties.motionDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("motion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.radarMotionDetected !== undefined)
-		{
+		if(deviceProperties.radarMotionDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("radarMotion", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.personDetected !== undefined)
-		{
+		if(deviceProperties.personDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("person", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.petDetected !== undefined)
-		{
+		if(deviceProperties.petDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("pet", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.cryingDetected !== undefined)
-		{
+		if(deviceProperties.cryingDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("crying", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.soundDetected !== undefined)
-		{
+		if(deviceProperties.soundDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("sound", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.strangerPersonDetected !== undefined)
-		{
+		if(deviceProperties.strangerPersonDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("strangerPerson", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.vehicleDetected !== undefined)
-		{
+		if(deviceProperties.vehicleDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("vehicle", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.dogDetected !== undefined)
-		{
+		if(deviceProperties.dogDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("dog", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.dogLickDetected !== undefined)
-		{
+		if(deviceProperties.dogLickDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("dogLick", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.dogPoopDetected !== undefined)
-		{
+		if(deviceProperties.dogPoopDetected !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("dogPoop", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.ringing !== undefined)
-		{
+		if(deviceProperties.ringing !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("ring", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
 		}
-		if(deviceProperties.sensorOpen !== undefined)
-		{
+		if(deviceProperties.sensorOpen !== undefined) {
 			deviceModal += `
 											${generateInteractionExpander("sensorOpen", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}
 											${generateInteractionExpander("sensorClose", true, deviceProperties, deviceInteractions, deviceId, setEventHandler)}`;
@@ -1976,26 +1763,20 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 	document.getElementById("modalDeviceSettings").innerHTML = deviceModal;
 }
 
-function toggleInteractionDiv(divElementId, imgElementId)
-{
-	if(document.getElementById(divElementId).classList.contains("collapse"))
-	{
+function toggleInteractionDiv(divElementId, imgElementId) {
+	if(document.getElementById(divElementId).classList.contains("collapse")) {
 		document.getElementById(divElementId).removeAttribute("class");
 		document.getElementById(imgElementId).setAttribute("class", "bi-chevron-up");
 		document.getElementById(imgElementId).setAttribute("title", translateString("strEditInteractionEnd"));
-	}
-	else
-	{
+	} else {
 		document.getElementById(divElementId).setAttribute("class", "collapse");
 		document.getElementById(imgElementId).setAttribute("class", "bi-chevron-down");
 		document.getElementById(imgElementId).setAttribute("title", translateString("strEditInteractionStart"));
 	}
 }
 
-function getEventId(event)
-{
-	switch(event)
-	{
+function getEventId(event) {
+	switch(event) {
 		case "motion":
 			return 0;
 		case "radarMotion":
@@ -2032,8 +1813,7 @@ function getEventId(event)
 async function saveEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventInteraction;
 	var eventType = getEventId(event);
-	if(eventType == -1)
-	{
+	if(eventType == -1) {
 		const toast = new bootstrap.Toast(toastFailed);
 		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageSaveInteractionHeader");
 		document.getElementById("toastFailedText").innerHTML = translateMessages("messageSaveInteractionUnknownInteractionMessage", event);
@@ -2091,8 +1871,7 @@ async function saveEventInteraction(deviceId, deviceName, serialNumber, event) {
 async function testUnstoredEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventInteraction;
 	var eventType = getEventId(event);
-	if(eventType == -1)
-	{
+	if(eventType == -1) {
 		const toast = new bootstrap.Toast(toastFailed);
 		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestUnstoredInteractionHeader");
 		document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestUnstoredInteractionUnknownInteractionMessage", event);
@@ -2150,8 +1929,7 @@ async function testUnstoredEventInteraction(deviceId, deviceName, serialNumber, 
 async function testStoredEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventType;
 	var eventType = getEventId(event);
-	if(eventType == -1)
-	{
+	if(eventType == -1) {
 		const toast = new bootstrap.Toast(toastFailed);
 		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageTestInteractionHeader");
 		document.getElementById("toastFailedText").innerHTML = translateMessages("messageTestInteractionUnknownInteractionMessage", event);
@@ -2217,8 +1995,7 @@ async function testStoredEventInteraction(deviceId, deviceName, serialNumber, ev
 async function deleteEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventType;
 	var eventType = getEventId(event);
-	if(eventType == -1)
-	{
+	if(eventType == -1) {
 		const toast = new bootstrap.Toast(toastFailed);
 		document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageDeleteInteractionHeader");
 		document.getElementById("toastFailedText").innerHTML = translateMessages("messageDeleteInteractionUnknownInteractionMessage", event);
@@ -2272,10 +2049,8 @@ async function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 	});
 }
 
-function isStationOrDevicesKnown(modell)
-{
-	switch(modell)
-	{
+function isStationOrDevicesKnown(modell) {
+	switch(modell) {
 		//Stations
 		case "T8002":
 		case "T8010":
@@ -2310,8 +2085,7 @@ function isStationOrDevicesKnown(modell)
 	}
 }
 
-function generateElementTextBox(textBoxType, serialNumber, name, propertyName, hint, placeholder, value, enabled, readonly, onchange)
-{
+function generateElementTextBox(textBoxType, serialNumber, name, propertyName, hint, placeholder, value, enabled, readonly, onchange) {
 	return `<div class="mb-2">
 		<label for="txtBox${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label">${translatePropertyName(propertyName)}</label>
 		<input class="form-control" type="${textBoxType}"${placeholder !== undefined || placeholder !== "" ? ` placeholder="${placeholder}"` : ""} aria-label="" id="txtBox${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value}"${onchange !== undefined || onchange !== "" ? ` onchange="${onchange}"` : ""}${enabled == false ? " disabled" : ""}${readonly == true ? " readonly" : ""}>
@@ -2319,8 +2093,7 @@ function generateElementTextBox(textBoxType, serialNumber, name, propertyName, h
 	</div>`;
 }
 
-function generateElementTextArea(type, serialNumber, name, maxLength, rows, propertyName, hint, placeholder, value, enabled, readonly)
-{
+function generateElementTextArea(type, serialNumber, name, maxLength, rows, propertyName, hint, placeholder, value, enabled, readonly) {
 	return `<div class="mb-2">
 		<label for="txtArea${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label">${translatePropertyName(propertyName)}</label>
 		<textarea class="form-control" id="txtArea${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" maxlength="${maxLength}" rows="${rows}"${enabled == false ? " disabled" : ""}${readonly == true ? " readonly" : ""} style="font-family:monospace;">${value}</textarea>
@@ -2328,90 +2101,73 @@ function generateElementTextArea(type, serialNumber, name, maxLength, rows, prop
 	</div>`;
 }
 
-function generateElementSwitch(deviceType, serialNumber, name, propertyName, value, enabled, setEventHandler)
-{
+function generateElementSwitch(deviceType, serialNumber, name, propertyName, value, enabled, setEventHandler) {
 	return `<div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chk${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${value === true ? " checked" : ""}${setEventHandler == true ? ` onclick="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.checked)"` : ""}${enabled != undefined && enabled == false ? " disabled" : ""}><label class="form-check-label" for="chk${propertyName}"${enabled != undefined && enabled == false ? " disabled" : ""}>${translatePropertyName(propertyName)}</label></div>`;
 }
 
-function generateElementRadioGroup(deviceType, serialNumber, name, propertyName, value, setEventHandler, states)
-{
+function generateElementRadioGroup(deviceType, serialNumber, name, propertyName, value, setEventHandler, states) {
 	var radioGroup = ``;
-	for(var state in states)
-	{
+	for(var state in states) {
 		radioGroup += makeRadioElement(deviceType, serialNumber, name, propertyName, state == value ? true : false, setEventHandler, states[state], state);
 	}
 	return radioGroup;
 }
 
-function makeRadioElement(deviceType, serialNumber, name, propertyName, value, setEventHandler, state, stateValue)
-{
+function makeRadioElement(deviceType, serialNumber, name, propertyName, value, setEventHandler, state, stateValue) {
 	return `<div class="form-check"><input class="form-check-input" type="radio" name="grp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" id="rb${state.charAt(0).toUpperCase() + state.slice(1)}" ${value == true ? " checked" : ""}${setEventHandler == true ? ` onclick="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', ${stateValue})` : ""}"><label class="form-check-label" for="rb${state.charAt(0).toUpperCase() + state.slice(1)}">${translateDeviceStateValue(state)}</label></div>`;
 }
 
-function generateElementRange(deviceType, serialNumber, name, propertyName, value, setEventHandler, unit, min, max, defaultValue)
-{
+function generateElementRange(deviceType, serialNumber, name, propertyName, value, setEventHandler, unit, min, max, defaultValue) {
 	return `<div><label for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label mb-0 align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}: <span id="spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value">${value === undefined ? defaultValue : value}</span>${unit === undefined ? "" : translateDeviceStateValue(unit)}</label>${min !== undefined && max !== undefined ? `<div class="d-flex justify-content-between"><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Min">${min}</small></div><div><small for="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label my-0 text-muted" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Max">${max}</small></div></div>` : ""}<input type="range" class="form-range ${min === undefined ? "mt-0" : "my-0"}" min="${min}" max="${max}" id="rg${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" value="${value === undefined ? defaultValue : value}" oninput="updateSliderValue('spn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}Value', this.value)"${setEventHandler == true ? ` onchange="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.value)"` : ""}>${defaultValue !== undefined ? `<div class="text-end">${generateElementButton(deviceType, serialNumber, name, propertyName, setEventHandler, "btn btn-outline-secondary btn-sm", true, defaultValue, (defaultValue !== undefined && defaultValue != value))}</div>` : ""}</div>`;
 }
 
-function generateElementProgress(propertyName, value)
-{
+function generateElementProgress(propertyName, value) {
 	return `<div><label for="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-label align-text-bottom" id="lbl${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}: ${isNaN(value) ? `${translateContent("lblUnknown")}` : `${value}%`}</label><div class="progress mb-3"><div id="prog${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="progress-bar" style="width: ${value}%" role="progressbar" aria-label="${translatePropertyName(propertyName)}" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100"></div></div></div>`;
 }
 
-function generateElementSelect(deviceType, serialNumber, name, propertyName, value, setEventHandler, states)
-{
+function generateElementSelect(deviceType, serialNumber, name, propertyName, value, setEventHandler, states) {
 	var selectElement = `<div><label class="mb-2" for="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}</label><select class="form-select mb-2" id="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${setEventHandler == true ? ` onchange="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.value)` : ""}"${setEventHandler == false ? " disabled" : ""}>`;
-	for(var state in states)
-	{
+	for(var state in states) {
 		selectElement += makeSelectElement(propertyName, value, state, states[state])
 	}
 	selectElement += `</select></div>`;
 	return selectElement;
 }
 
-function generateElementSelectTimeZone(deviceType, serialNumber, name, propertyName, value, setEventHandler, states)
-{
+function generateElementSelectTimeZone(deviceType, serialNumber, name, propertyName, value, setEventHandler, states) {
 	var selectElement = `<div><label class="mb-2" for="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}</label><select class="form-select mb-2" id="cb${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}"${setEventHandler == true ? ` onchange="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.value) ` : ""}" disabled>`;
-	for(var state in states)
-	{
+	for(var state in states) {
 		selectElement += makeSelectElementTimeZone(propertyName, value, states[state]);
 	}
 	selectElement += `</select></div>`;
 	return selectElement;
 }
 
-function makeSelectElement(propertyName, value, valueNumber, state)
-{
+function makeSelectElement(propertyName, value, valueNumber, state) {
 	return `<option value="${valueNumber}" id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" ${value == valueNumber ? " selected" : ""}>${translateDeviceStateValue(state, propertyName, valueNumber)}</option>`;
 }
 
-function makeSelectElementTimeZone(propertyName, value, state)
-{
+function makeSelectElementTimeZone(propertyName, value, state) {
 	return `<option value="${state.timeZoneGMT}|1.${state.timeSn}" id="chkElem${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${state.timeSn}"${value === `${state.timeZoneGMT}|1.${state.timeSn}` ? " selected" : ""}>${translateDeviceStateValue(state.timeId, propertyName, state.timeZoneGMT)}</option>`;
 }
 
-function generateElementButton(deviceType, serialNumber, name, propertyName, setEventHandler, buttonClass, setToDefault, value, enabled)
-{
+function generateElementButton(deviceType, serialNumber, name, propertyName, setEventHandler, buttonClass, setToDefault, value, enabled) {
 	return `<div>${makeButtonElement(`btn${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}${setToDefault == true ? "ToDefault" : ""}`, `${buttonClass}`, `change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}'${value !== undefined ? ` , '${value}'` : ""})`, `${setToDefault == true ? `Standardwert setzen` : `${translatePropertyName(propertyName)}`}`, enabled, undefined, undefined, setEventHandler)}</div>`;
 }
 
-function makeButtonElement(buttonId, buttonClass, buttonOnClick, description, enabled, dataBsDismiss, ariaLabel, setEventHandler)
-{
+function makeButtonElement(buttonId, buttonClass, buttonOnClick, description, enabled, dataBsDismiss, ariaLabel, setEventHandler) {
 	return `<button id="${buttonId}" type="button" class="${buttonClass}"${buttonOnClick !== undefined && setEventHandler == true ? ` onclick="${buttonOnClick}"` : ""}${dataBsDismiss !== undefined ? ` data-bs-dismiss="${dataBsDismiss}"` : ""}${ariaLabel !== undefined ? ` aria-label="${ariaLabel}"` : ""}${enabled == false ? " disabled" : ""}>${description}</button>`;
 }
 
-function generateElementTimePicker(deviceType, serialNumber, name, propertyName, value, setEventHandler)
-{
+function generateElementTimePicker(deviceType, serialNumber, name, propertyName, value, setEventHandler) {
 	return `<div class="row align-items-center"><label class="mb-2" for="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}">${translatePropertyName(propertyName)}</label><div class="col"><input type="time" id="tp${propertyName.charAt(0).toUpperCase() + propertyName.slice(1)}" class="form-control mb-2" value="${value}" ${setEventHandler == true ? ` onchange="change${deviceType}Property('${serialNumber}', '${name}', '${propertyName}', this.value)"` : ""}></div><div class="col"></div><div class="col"></div></div>`;
 }
 
-function generateElementTimePickerStartEnd(deviceType, serialNumber, caption, startName, startPropertyName, startValue, startSetEventHandler, endName, endPropertyName, endValue, endSetEventHandler)
-{
+function generateElementTimePickerStartEnd(deviceType, serialNumber, caption, startName, startPropertyName, startValue, startSetEventHandler, endName, endPropertyName, endValue, endSetEventHandler) {
 	return `${translatePropertyName(caption)}<div class="row align-items-center"><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${translatePropertyName("captionTimeFrom")}</label><input type="time" id="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}" class="form-control mb-2" value="${startValue}" ${startSetEventHandler == true ? ` onchange="change${deviceType}Property('${serialNumber}', '${startName}', '${startPropertyName}', this.value)"` : ""}></div><div class="col text-center"">${translatePropertyName("timeUntil")}</div><div class="col"><label class="col-form-label" for="tp${startPropertyName.charAt(0).toUpperCase() + startPropertyName.slice(1)}">${translatePropertyName("captionTimeTo")}</label><input type="time" id="tp${endPropertyName.charAt(0).toUpperCase() + endPropertyName.slice(1)}" class="form-control mb-2" value="${endValue}" ${endSetEventHandler == true ? ` onchange="change${deviceType}Property('${serialNumber}', '${endName}', '${endPropertyName}', this.value)"` : ""}></div></div>`;
 }
 
-function generateInteractionExpander(event, enabled, deviceProperties, deviceInteractions, deviceId, setEventHandler)
-{
+function generateInteractionExpander(event, enabled, deviceProperties, deviceInteractions, deviceId, setEventHandler) {
 	var interactionExpander = `
 										<div class="accordion-item">
 											<div class="accordion-header">
@@ -2428,15 +2184,12 @@ function generateInteractionExpander(event, enabled, deviceProperties, deviceInt
 													${generateElementTextArea("Device", deviceProperties.serialNumber, deviceProperties.name, 100, 2, `${event}EventCommand`, `${event}EventCommandHint`, "", `${deviceInteractions !== null && deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "" ? atob(deviceInteractions.eventInteractions[`${getEventId(event)}`].command) : ""}`, enabled, false)}
 													<div class="btn-group" role="group">
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}SaveEventInteraction`, "btn btn-outline-secondary", `saveEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-floppy" title="${translateString("strInteractionSave")}"></i> ${translateString("strInteractionSave")}`, enabled, undefined, undefined, setEventHandler)}`;
-			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== ""))
-			{
+			if(deviceInteractions !== null && (deviceInteractions.eventInteractions[`${getEventId(event)}`] !== undefined && deviceInteractions.eventInteractions[`${getEventId(event)}`].target !== "" && deviceInteractions.eventInteractions[`${getEventId(event)}`].command !== "")) {
 				interactionExpander += `
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestUnstoredEventInteraction`, "btn btn-outline-secondary", `testUnstoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play-circle" title="${translateString("strInteractionUnstoredTest")}"></i> ${translateString("strInteractionUnstoredTest")}`, enabled, undefined, undefined, setEventHandler)}
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, enabled, undefined, undefined, setEventHandler)}
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
-			}
-			else
-			{
+			} else {
 				interactionExpander += `
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestUnstoredEventInteraction`, "btn btn-outline-secondary", `testUnstoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play-circle" title="${translateString("strInteractionUnstoredTest")}"></i> ${translateString("strInteractionUnstoredTest")}`, enabled, undefined, undefined, setEventHandler)}
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, enabled, undefined, undefined, setEventHandler)}
@@ -2451,8 +2204,7 @@ function generateInteractionExpander(event, enabled, deviceProperties, deviceInt
 }
 
 async function changeDeviceProperty(deviceId, deviceName, propertyName, propertyValue) {
-	switch (propertyName)
-	{
+	switch (propertyName) {
 		case "motionEventUseHttps":
 		case "radarMotionEventUseHttps":
 		case "personEventUseHttps":
@@ -2520,17 +2272,14 @@ async function changeDeviceProperty(deviceId, deviceName, propertyName, property
 	}
 }
 
-function updateSliderValue(element, value)
-{
+function updateSliderValue(element, value) {
 	document.getElementById(element).innerHTML = value;
 }
 
-function generateStationSettingsModal(stationId, stationName)
-{
+function generateStationSettingsModal(stationId, stationName) {
 	generateContentStationSettingsModal(stationId, stationName);
 
-	if(stationName === undefined)
-	{
+	if(stationName === undefined) {
 		const myModal = new bootstrap.Modal(document.getElementById('modalStationSettings'));
 		myModal.show();
 	}
@@ -2538,8 +2287,7 @@ function generateStationSettingsModal(stationId, stationName)
 	getTimeZones(stationId);
 }
 
-function generateContentStationSettingsModal(stationId, stationName)
-{
+function generateContentStationSettingsModal(stationId, stationName) {
 	var stationModal =  `
 					<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 						<div class="modal-content">
@@ -2685,8 +2433,7 @@ async function getStationProperties(stationId, timeZones, stationPropertiesMetad
 	});
 }
 
-function generateStationModalErrorMessage(errorMessage)
-{
+function generateStationModalErrorMessage(errorMessage) {
 	return `
 								<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
 									<div class="modal-content">
@@ -2705,8 +2452,7 @@ function generateStationModalErrorMessage(errorMessage)
 								</div>`;
 }
 
-function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergySavingDevice, isDeviceKnownByClient, deviceType, isIntegratedDevice, stationProperties, stationCommands, stationPropertiesMetadata, timeZone)
-{
+function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergySavingDevice, isDeviceKnownByClient, deviceType, isIntegratedDevice, stationProperties, stationCommands, stationPropertiesMetadata, timeZone) {
 	var setEventHandler = true;
 	var stationModal =  `
 						<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
@@ -2717,15 +2463,12 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 								</div>
 								<div class="modal-body placeholder-glow" id="divModalStationSettingsContent">
 									<div class="" id="lblModalStationSettingsInfo">`;
-	if(isStationOrDevicesKnown(stationProperties.model.slice(0,5)) == false && isDeviceKnownByClient === true)
-	{
+	if(isStationOrDevicesKnown(stationProperties.model.slice(0,5)) == false && isDeviceKnownByClient === true) {
 		setEventHandler = false;
 		stationModal += `
 										${createMessageContainer("alert alert-warning", translateContent("lblNotSupportedStationHeading"), `${translateContent("lblNotSupportedStationMessage", `${location.protocol}//${location.hostname}:${port}/getStationPropertiesTruncated/${stationId}`, `${location.protocol}//${location.hostname}:${port}/getStationPropertiesMetadata/${stationId}`)}${isIntegratedDevice ? `</p><p class="mt-2">${translateContent("lblNotSupportedDeviceMessageSolo", `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesTruncated/${stationId}`, `${location.protocol}//${location.hostname}:${port}/getDevicePropertiesMetadata/${stationId}`)}` : ""}`, translateContent("lblNotSupportedStationSubText"))}
 										${createMessageContainer("alert alert-primary", translateContent("lblNotSupportedStationNoSaving"), "", "")}`;
-	}
-	else if(isDeviceKnownByClient === false)
-	{
+	} else if(isDeviceKnownByClient === false) {
 		setEventHandler = false;
 		stationModal += `
 										${createMessageContainer("alert alert-warning", translateContent("lblUnknownStationHeading"), translateContent("lblUnknownStationMessage", stationProperties.model), "")}
@@ -2762,8 +2505,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 											</span>
 										</div>
 									</div>`;
-	if(isP2PConnected === false && isEnergySavingDevice === false)
-	{
+	if(isP2PConnected === false && isEnergySavingDevice === false) {
 		stationModal +=  `
 									${createMessageContainer("alert alert-warning", translateContent("titleNoP2PConnection"), translateContent("titleNoP2PConnectionDesc"), "")}
 								</div>
@@ -2775,34 +2517,27 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 		document.getElementById("modalStationSettings").innerHTML = stationModal;
 		return;
 	}
-	if(stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined || stationPropertiesMetadata.promptVolume !== undefined)
-	{
+	if(stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined || stationPropertiesMetadata.promptVolume !== undefined) {
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationAudioSettings">
 										<h5 class="card-header">${translateContent("lblHeaderAudioSettings")}</h5>
 										<div class="card-body">`;
-		if(stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined)
-		{
+		if(stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined) {
 			stationModal +=  `
 											<h5>${translateContent("lblAlarmTone")}</h5>`;
-			if(stationPropertiesMetadata.alarmTone !== undefined)
-			{
+			if(stationPropertiesMetadata.alarmTone !== undefined) {
 				stationModal +=  `
 											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmTone.name, stationProperties.alarmTone, setEventHandler, stationPropertiesMetadata.alarmTone.states)}`;
 			}
-			if(stationPropertiesMetadata.alarmVolume.min !== undefined)
-			{
+			if(stationPropertiesMetadata.alarmVolume.min !== undefined) {
 				stationModal +=  `
 											${generateElementRange("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmVolume.name, stationProperties.alarmVolume, setEventHandler, stationPropertiesMetadata.alarmVolume.unit, stationPropertiesMetadata.alarmVolume.min, stationPropertiesMetadata.alarmVolume.max, stationPropertiesMetadata.alarmVolume.default)}`;
-			}
-			else if(stationPropertiesMetadata.alarmVolume.states !== undefined)
-			{
+			} else if(stationPropertiesMetadata.alarmVolume.states !== undefined) {
 				stationModal +=  `
 											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.alarmVolume.name, stationProperties.alarmVolume, setEventHandler, stationPropertiesMetadata.alarmVolume.states)}`;
 			}
 		}
-		if(stationPropertiesMetadata.promptVolume !== undefined)
-		{
+		if(stationPropertiesMetadata.promptVolume !== undefined) {
 			stationModal +=  `
 											${stationPropertiesMetadata.alarmTone !== undefined || stationPropertiesMetadata.alarmVolume !== undefined ? `<hr />`: ``}
 											<h5>${translateContent("lblPromptVolume")}</h5>
@@ -2812,8 +2547,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	if(stationPropertiesMetadata.notificationSwitchModeSchedule !== undefined || stationPropertiesMetadata.notificationSwitchModeGeofence !== undefined || stationPropertiesMetadata.notificationSwitchModeApp !== undefined || stationPropertiesMetadata.notificationSwitchModeKeypad!== undefined || stationPropertiesMetadata.notificationStartAlarmDelay !== undefined)
-	{
+	if(stationPropertiesMetadata.notificationSwitchModeSchedule !== undefined || stationPropertiesMetadata.notificationSwitchModeGeofence !== undefined || stationPropertiesMetadata.notificationSwitchModeApp !== undefined || stationPropertiesMetadata.notificationSwitchModeKeypad!== undefined || stationPropertiesMetadata.notificationStartAlarmDelay !== undefined) {
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationNotificationSettings">
 										<h5 class="card-header">${translateContent("lblHeaderNotificationSettings")}</h5>
@@ -2828,20 +2562,17 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	if(stationPropertiesMetadata.timeZone !== undefined || stationPropertiesMetadata.timeFormat !== undefined)
-	{
+	if(stationPropertiesMetadata.timeZone !== undefined || stationPropertiesMetadata.timeFormat !== undefined) {
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationTimeSettings">
 										<h5 class="card-header">${translateContent("lblTimeSettings")}</h5>
 										<div class="card-body">`;
-		if(stationPropertiesMetadata.timeZone !== undefined)
-		{
+		if(stationPropertiesMetadata.timeZone !== undefined) {
 			stationModal +=  `
 											<h5>${translateContent("lblTimeZone")}</h5>
 											${generateElementSelectTimeZone("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.timeZone.name, stationProperties.timeZone, false, timeZone)}`;
 		}
-		if(stationPropertiesMetadata.timeFormat !== undefined)
-		{
+		if(stationPropertiesMetadata.timeFormat !== undefined) {
 			stationModal +=  `
 											${stationPropertiesMetadata.timeZone !== undefined ? `<hr />`: ``}
 											<h5>${translateContent("lblTimeFormat")}</h5>
@@ -2851,27 +2582,23 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	if(stationPropertiesMetadata.crossCameraTracking !== undefined || stationPropertiesMetadata.continuousTrackingTime !== undefined || stationPropertiesMetadata.trackingAssistance !== undefined || stationPropertiesMetadata.crossTrackingCameraList !== undefined || stationPropertiesMetadata.crossTrackingGroupList !== undefined)
-	{
+	if(stationPropertiesMetadata.crossCameraTracking !== undefined || stationPropertiesMetadata.continuousTrackingTime !== undefined || stationPropertiesMetadata.trackingAssistance !== undefined || stationPropertiesMetadata.crossTrackingCameraList !== undefined || stationPropertiesMetadata.crossTrackingGroupList !== undefined) {
 		stationModal +=  `
 									<div class="card mb-3 collapse" id="cardStationCrossCameraTracking">
 										<h5 class="card-header">${translateContent("lblCrossCameraTracking")}</h5>
 										<div class="card-body">`;
-		if(stationPropertiesMetadata.crossCameraTracking !== undefined)
-		{
+		if(stationPropertiesMetadata.crossCameraTracking !== undefined) {
 			stationModal +=  `
 											<h5>${translateContent("lblCrossCameraTracking")}</h5>
 											${generateElementSwitch("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.crossCameraTracking.name, stationProperties.crossCameraTracking, stationPropertiesMetadata.crossCameraTracking.writeable, setEventHandler)}`;
 		}
-		if(stationPropertiesMetadata.continuousTrackingTime !== undefined)
-		{
+		if(stationPropertiesMetadata.continuousTrackingTime !== undefined) {
 			stationModal +=  `
 											${stationPropertiesMetadata.crossCameraTracking !== undefined ? `<hr />`: ``}
 											<h5>${translateContent("lblContinuousTrackingTime")}</h5>
 											${generateElementSelect("Station", stationProperties.serialNumber, stationProperties.name, stationPropertiesMetadata.continuousTrackingTime.name, stationProperties.continuousTrackingTime, setEventHandler, stationPropertiesMetadata.continuousTrackingTime.states)}`;
 		}
-		if(stationPropertiesMetadata.trackingAssistance !== undefined)
-		{
+		if(stationPropertiesMetadata.trackingAssistance !== undefined) {
 			stationModal +=  `
 											${stationPropertiesMetadata.crossCameraTracking !== undefined || stationPropertiesMetadata.continuousTrackingTime !== undefined ? `<hr />`: ``}
 											<h5>${translateContent("lblTrackingAssistance")}</h5>
@@ -2881,55 +2608,42 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	if(stationPropertiesMetadata.sdCapacity !== undefined || stationPropertiesMetadata.sdCapacityAvailable !== undefined)
-	{
+	if(stationPropertiesMetadata.sdCapacity !== undefined || stationPropertiesMetadata.sdCapacityAvailable !== undefined) {
 		var conversionFactor = 1000;
-		if(stationProperties.model.startsWith("T8030"))
-		{
+		if(stationProperties.model.startsWith("T8030")) {
 			conversionFactor = 1024;
 		}
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationStorageSettings">
 										<h5 class="card-header">${translateContent("lblStorageInfoHeader")}</h5>
 										<div class="card-body">`;
-		if(stationPropertiesMetadata.sdCapacity !== undefined || stationPropertiesMetadata.sdCapacityAvailable !== undefined)
-		{
+		if(stationPropertiesMetadata.sdCapacity !== undefined || stationPropertiesMetadata.sdCapacityAvailable !== undefined) {
 			stationModal +=  `
 											<h5>${translateContent("lblInternalStorage")}</h5>
 											${stationProperties.sdStatus == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.sdStatus), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.sdStatus)}`, translateMessages("messageStorageErrorSubText"))}`;
-			if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity >= 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable >= 0)
-			{
+			if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity >= 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable >= 0) {
 				var capacityUnits = ["", "", ""];
 				var rawTempValue = stationProperties.sdCapacity/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var sdCapacity = (rawTempValue/1024).toFixed(2);
 					capacityUnits[0] = "TB";
-				}
-				else
-				{
+				} else {
 					var sdCapacity = (rawTempValue).toFixed(2);
 					capacityUnits[0] = "GB";
 				}
 				rawTempValue = stationProperties.sdCapacityAvailable/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var sdCapacityAvailable = (rawTempValue/1024).toFixed(2);
 					capacityUnits[1] = "TB";
-				}
-				else
-				{
+				} else {
 					var sdCapacityAvailable = (rawTempValue).toFixed(2);
 					capacityUnits[1] = "GB";
 				}
 				rawTempValue = (stationProperties.sdCapacity/conversionFactor) - (stationProperties.sdCapacityAvailable/conversionFactor);
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var sdCapacityUsed = (rawTempValue/1024).toFixed(2);
 					capacityUnits[2] = "TB";
-				}
-				else
-				{
+				} else {
 					var sdCapacityUsed = (rawTempValue).toFixed(2);
 					capacityUnits[2] = "GB";
 				}
@@ -2950,9 +2664,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 													${translatePropertyName(stationPropertiesMetadata.sdCapacityAvailable.name)}
 												</div>
 											</div>`;
-			}
-			else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0)
-			{
+			} else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0) {
 				stationModal += `
 											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
 			}
@@ -2961,63 +2673,48 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	if(stationPropertiesMetadata.storageInfoEmmc !== undefined || stationPropertiesMetadata.storageInfoHdd !== undefined)
-	{
+	if(stationPropertiesMetadata.storageInfoEmmc !== undefined || stationPropertiesMetadata.storageInfoHdd !== undefined) {
 		var conversionFactor = 1024;
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationStorageSettings">
 										<h5 class="card-header">${translateContent("lblStorageInfoHeader")}</h5>
 										<div class="card-body">`;
-		if(stationProperties.storageInfoEmmc !== undefined)
-		{
+		if(stationProperties.storageInfoEmmc !== undefined) {
 			stationModal +=  `
 											<h5>${translateContent("lblInternalEmmcStorage")}</h5>
 											${stationProperties.storageInfoEmmc.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoEmmc.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoEmmc.health)}`, translateMessages("messageStorageErrorSubText"))}`;
-			if(stationProperties.storageInfoEmmc.disk_size !== undefined && stationProperties.storageInfoEmmc.disk_size > 0 && stationProperties.storageInfoEmmc.system_size !== undefined && stationProperties.storageInfoEmmc.system_size >= 0 && stationProperties.storageInfoEmmc.disk_used !== undefined && stationProperties.storageInfoEmmc.disk_used >= 0 && stationProperties.storageInfoEmmc.data_used_percent !== undefined && stationProperties.storageInfoEmmc.data_used_percent >= 0 && stationProperties.storageInfoEmmc.video_size !== undefined && stationProperties.storageInfoEmmc.video_size >= 0 && stationProperties.storageInfoEmmc.video_used !== undefined && stationProperties.storageInfoEmmc.video_used >= 0 && stationProperties.storageInfoEmmc.data_partition_size !== undefined && stationProperties.storageInfoEmmc.data_partition_size >= 0 && stationProperties.storageInfoEmmc.eol_percent !== undefined && stationProperties.storageInfoEmmc.eol_percent >= 0)
-			{
+			if(stationProperties.storageInfoEmmc.disk_size !== undefined && stationProperties.storageInfoEmmc.disk_size > 0 && stationProperties.storageInfoEmmc.system_size !== undefined && stationProperties.storageInfoEmmc.system_size >= 0 && stationProperties.storageInfoEmmc.disk_used !== undefined && stationProperties.storageInfoEmmc.disk_used >= 0 && stationProperties.storageInfoEmmc.data_used_percent !== undefined && stationProperties.storageInfoEmmc.data_used_percent >= 0 && stationProperties.storageInfoEmmc.video_size !== undefined && stationProperties.storageInfoEmmc.video_size >= 0 && stationProperties.storageInfoEmmc.video_used !== undefined && stationProperties.storageInfoEmmc.video_used >= 0 && stationProperties.storageInfoEmmc.data_partition_size !== undefined && stationProperties.storageInfoEmmc.data_partition_size >= 0 && stationProperties.storageInfoEmmc.eol_percent !== undefined && stationProperties.storageInfoEmmc.eol_percent >= 0) {
 				var capacityUnits = ["", "", "", ""];
 				var rawTempValue = stationProperties.storageInfoEmmc.disk_size/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var emmcCapacity = (rawTempValue/1024).toFixed(2);
 					capacityUnits[0] = "TB";
-				}
-				else
-				{
+				} else {
 					var emmcCapacity = (rawTempValue).toFixed(2);
 					capacityUnits[0] = "GB";
 				}
 				rawTempValue = stationProperties.storageInfoEmmc.disk_used/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var emmcCapacityUsed = (rawTempValue/1024).toFixed(2);
 					capacityUnits[1] = "TB";
-				}
-				else
-				{
+				} else {
 					var emmcCapacityUsed = (rawTempValue).toFixed(2);
 					capacityUnits[1] = "GB";
 				}
 				rawTempValue = (stationProperties.storageInfoEmmc.disk_size-stationProperties.storageInfoEmmc.disk_used)/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var emmcCapacityAvailable = (rawTempValue/1024).toFixed(2);
 					capacityUnits[2] = "TB";
-				}
-				else
-				{
+				} else {
 					var emmcCapacityAvailable = (rawTempValue).toFixed(2);
 					capacityUnits[2] = "GB";
 				}
 				var emmcCapacityUsedPercent = (stationProperties.storageInfoEmmc.disk_used/stationProperties.storageInfoEmmc.disk_size*100).toFixed(0);
 				rawTempValue = (stationProperties.storageInfoEmmc.video_used/conversionFactor)/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var emmcVideoUsed = (rawTempValue/1024).toFixed(2);
 					capacityUnits[3] = "TB";
-				}
-				else
-				{
+				} else {
 					var emmcVideoUsed = (rawTempValue).toFixed(2);
 					capacityUnits[3] = "GB";
 				}
@@ -3051,64 +2748,48 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 													
 												</div>
 											</div>`;
-			}
-			else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0)
-			{
+			} else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0) {
 				stationModal += `
 											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
 			}
 		}
-		if(stationProperties.storageInfoHdd !== undefined)
-		{
+		if(stationProperties.storageInfoHdd !== undefined) {
 			stationModal +=  `
 											<hr>
 											<h5>${translateContent("lblHddStorage")}</h5>
 											${stationProperties.storageInfoHdd.health == 0 ? createMessageContainer("alert alert-success", "", translateSdStatusMessageText(stationProperties.storageInfoHdd.health), "") : createMessageContainer("alert alert-warning", "", `${translateMessages("messageStorageErrorHeader")}:<br />${translateSdStatusMessageText(stationProperties.storageInfoHdd.health)}`, translateMessages("messageStorageErrorSubText"))}`;
-			if(stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.disk_size > 0 && stationProperties.storageInfoHdd.system_size !== undefined && stationProperties.storageInfoHdd.system_size >= 0 && stationProperties.storageInfoHdd.disk_used !== undefined &&  stationProperties.storageInfoHdd.disk_used >= 0 && stationProperties.storageInfoHdd.video_size !== undefined && stationProperties.storageInfoHdd.video_size >= 0 && stationProperties.storageInfoHdd.video_used !== undefined && stationProperties.storageInfoHdd.video_used >= 0)
-			{
+			if(stationProperties.storageInfoHdd.disk_size !== undefined && stationProperties.storageInfoHdd.disk_size > 0 && stationProperties.storageInfoHdd.system_size !== undefined && stationProperties.storageInfoHdd.system_size >= 0 && stationProperties.storageInfoHdd.disk_used !== undefined &&  stationProperties.storageInfoHdd.disk_used >= 0 && stationProperties.storageInfoHdd.video_size !== undefined && stationProperties.storageInfoHdd.video_size >= 0 && stationProperties.storageInfoHdd.video_used !== undefined && stationProperties.storageInfoHdd.video_used >= 0) {
 				var capacityUnits = ["", "", "", ""];
 				var rawTempValue = stationProperties.storageInfoHdd.disk_size/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var hddCapacity = (rawTempValue/1024).toFixed(2);
 					capacityUnits[0] = "TB";
-				}
-				else
-				{
+				} else {
 					var hddCapacity = (rawTempValue).toFixed(2);
 					capacityUnits[0] = "GB";
 				}
 				rawTempValue = stationProperties.storageInfoHdd.disk_used/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var hddCapacityUsed = (rawTempValue/1024).toFixed(2);
 					capacityUnits[1] = "TB";
-				}
-				else
-				{
+				} else {
 					var hddCapacityUsed = (rawTempValue).toFixed(2);
 					capacityUnits[1] = "GB";
 				}
 				rawTempValue = (stationProperties.storageInfoHdd.disk_size-stationProperties.storageInfoHdd.disk_used)/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var hddCapacityAvailable = (rawTempValue/1024).toFixed(2);
 					capacityUnits[2] = "TB";
-				}
-				else
-				{
+				} else {
 					var hddCapacityAvailable = (rawTempValue).toFixed(2);
 					capacityUnits[2] = "GB";
 				}
 				var hddCapacityUsedPercent = (stationProperties.storageInfoHdd.disk_used/stationProperties.storageInfoHdd.disk_size*100).toFixed(0);
 				rawTempValue = stationProperties.storageInfoHdd.video_used/conversionFactor;
-				if(rawTempValue >= 1024)
-				{
+				if(rawTempValue >= 1024) {
 					var hddVideoUsed = (rawTempValue/1024).toFixed(2);
 					capacityUnits[3] = "TB";
-				}
-				else
-				{
+				} else {
 					var hddVideoUsed = (rawTempValue).toFixed(2);
 					capacityUnits[3] = "GB";
 				}
@@ -3144,9 +2825,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 													${translateContent("hddCurrentTemperature")}
 												</div>
 											</div>`;
-			}
-			else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0)
-			{
+			} else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0) {
 				stationModal += `
 											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
 			}
@@ -3155,8 +2834,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	if(stationCommands.includes("stationReboot"))
-	{
+	if(stationCommands.includes("stationReboot")) {
 		stationModal +=  `
 									${makeButtonElement("btnStationReboot", "btn btn-outline-danger", `sendCommand('Station', '${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, translateString("strRebootStation"), true, undefined, undefined, setEventHandler)}`;
 	}
@@ -3507,8 +3185,7 @@ async function setPrivacy(stationserial, enabled) {
  * Scripts for settings.html
  */
 //#region settings.html
-function disableUIElements()
-{
+function disableUIElements() {
 	document.getElementById("txtUsername").setAttribute("disabled", true);
 	document.getElementById("txtPassword").setAttribute("disabled", true);
 	document.getElementById("cbCountry").setAttribute("disabled", true);
@@ -3529,8 +3206,7 @@ function disableUIElements()
 	document.getElementById("cbLogLevelMqtt").setAttribute("disabled", true);
 }
 
-function enableUIElements()
-{
+function enableUIElements() {
 	document.getElementById("txtUsername").removeAttribute("disabled");
 	document.getElementById("txtPassword").removeAttribute("disabled");
 	document.getElementById("cbCountry").removeAttribute("disabled");
@@ -3545,24 +3221,21 @@ function enableUIElements()
 	document.getElementById("cbLogLevelMqtt").removeAttribute("disabled");
 }
 
-function collapseUICards()
-{
+function collapseUICards() {
 	document.getElementById("cardEufySecurityAccountData").classList.add("collapse");
 	document.getElementById("cardEufySecurityConfig").classList.add("collapse");
 	document.getElementById("containerBtnSave").classList.add("collapse");
 	document.getElementById("cardSystemVariables").classList.add("collapse");
 }
 
-function deCollapseUICards()
-{
+function deCollapseUICards() {
 	document.getElementById("cardEufySecurityAccountData").classList.remove("collapse");
 	document.getElementById("cardEufySecurityConfig").classList.remove("collapse");
 	document.getElementById("containerBtnSave").classList.remove("collapse");
 	document.getElementById("cardSystemVariables").classList.remove("collapse");
 }
 
-function validateFormSettings()
-{
+function validateFormSettings() {
 	var form = document.getElementById("configform");
 	form.addEventListener('submit', function(event)
 	{
@@ -4129,15 +3802,11 @@ async function removeSysVar(varName) {
 	});
 }
 
-function selectedFile(filetype)
-{
-	switch(filetype)
-	{
+function selectedFile(filetype) {
+	switch(filetype) {
 		case "conf":
-			if(document.getElementById("btnSelectConfigFile").value === undefined || document.getElementById("btnSelectConfigFile").value !== "")
-			{
-				if(document.getElementById("btnSelectConfigFile").files[0].size > 500000)
-				{
+			if(document.getElementById("btnSelectConfigFile").value === undefined || document.getElementById("btnSelectConfigFile").value !== "") {
+				if(document.getElementById("btnSelectConfigFile").files[0].size > 500000) {
 					document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), translateMessages("messageUploadConfigErrorFileToLargeMessage"), "");
 					document.getElementById("btnSelectConfigFile").value = "";
 					return;
@@ -4251,14 +3920,10 @@ async function removeInteractions() {
 	});
 }
 
-function checkReconnectStation(stationId)
-{
-	if(stationId == "0")
-	{
+function checkReconnectStation(stationId) {
+	if(stationId == "0") {
 		document.getElementById("btnReconnectStation").setAttribute("disabled", true);
-	}
-	else
-	{
+	} else {
 		document.getElementById("btnReconnectStation").removeAttribute("disabled");
 	}
 }
@@ -4357,16 +4022,12 @@ async function removeTokenData() {
 	});
 }
 
-function openServiceManagerModal()
-{
+function openServiceManagerModal() {
 	const myModal = new bootstrap.Modal(document.getElementById('modalServiceManager'));
-	if(serviceState == "running")
-	{
+	if(serviceState == "running") {
 		document.getElementById("btnServiceManagerStartService").setAttribute("disabled", true);
 		document.getElementById("btnServiceManagerStopService").removeAttribute("disabled");
-	}
-	else if(serviceState == "stopped")
-	{
+	} else if(serviceState == "stopped") {
 		document.getElementById("btnServiceManagerStartService").removeAttribute("disabled");
 		document.getElementById("btnServiceManagerStopService").setAttribute("disabled", true);
 	}
@@ -4424,30 +4085,24 @@ async function serviceManager(action) {
 	});
 }
 
-function enableButtons(enable)
-{
-	if(enable == true)
-	{
+function enableButtons(enable) {
+	if(enable == true) {
 		document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(false)");
 		document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-warning btn-block");
 		document.getElementById("btnEnableTroubleShooting").innerHTML = translateContent("lblSettingsTroubleShootingDisable");
-		if(serviceState == "running")
-		{
+		if(serviceState == "running") {
 			document.getElementById("headerUploadConfig").removeAttribute("class");
 			document.getElementById("btnDownloadConfigFile").removeAttribute("disabled");
 			document.getElementById("btnSelectConfigFile").removeAttribute("disabled");
 			document.getElementById("headerRemoveInteractions").removeAttribute("class");
 			document.getElementById("btnRemoveInteractions").removeAttribute("disabled");
 			document.getElementById("cbReconnectStation").removeAttribute("disabled");
-			if(document.getElementById("cbReconnectStation").value != "0")
-			{
+			if(document.getElementById("cbReconnectStation").value != "0") {
 				document.getElementById("btnReconnectStation").removeAttribute("disabled");
 			}
 			document.getElementById("headerDeleteTokenData").removeAttribute("class");
 			document.getElementById("btnDeleteTokenData").removeAttribute("disabled");
-		}
-		else 
-		{
+		} else {
 			document.getElementById("headerUploadConfig").setAttribute("class", "text-muted");
 			document.getElementById("btnDownloadConfigFile").setAttribute("disabled", true);
 			document.getElementById("btnSelectConfigFile").setAttribute("disabled", true);
@@ -4461,9 +4116,7 @@ function enableButtons(enable)
 		}
 		document.getElementById("headerServiceManager").removeAttribute("class");
 		document.getElementById("btnServiceManager").removeAttribute("disabled");
-	}
-	else
-	{
+	} else {
 		document.getElementById("btnEnableTroubleShooting").setAttribute("onclick", "enableButtons(true)");
 		document.getElementById("btnEnableTroubleShooting").setAttribute("class", "btn btn-outline-warning btn-block");
 		document.getElementById("btnEnableTroubleShooting").innerHTML = translateContent("lblSettingsTroubleShootingEnable");
@@ -4479,48 +4132,34 @@ function enableButtons(enable)
 	}
 }
 
-function changeValue(element)
-{
-	switch(element.name)
-	{
+function changeValue(element) {
+	switch(element.name) {
 		case "useHttp":
-			if(element.checked == true)
-			{
+			if(element.checked == true) {
 				document.getElementById("txtPortHttp").removeAttribute("disabled");
-			}
-			else
-			{
-				if((element.checked == false) && (document.getElementById("chkUseHttps").checked == false))
-				{
+			} else {
+				if((element.checked == false) && (document.getElementById("chkUseHttps").checked == false)) {
 					const myModal = new bootstrap.Modal(document.getElementById('modalAtLeastOneNeedsActivation'));
 					document.getElementById("modalAtLeastOneNeedsActivationBtnOK").removeAttribute("onClick");
 					document.getElementById("modalAtLeastOneNeedsActivationBtnOK").setAttribute("onClick", `checkCheckField("chkUseHttp")`);
 					myModal.show();
-				}
-				else
-				{
+				} else {
 					document.getElementById("txtPortHttp").setAttribute("disabled", true);
 				}
 			}
 			break;
 		case "useHttps":
-			if(element.checked == true)
-			{
+			if(element.checked == true) {
 				document.getElementById("txtPortHttps").removeAttribute("disabled");
 				document.getElementById("txtHttpsKeyFile").removeAttribute("disabled");
 				document.getElementById("txtHttpsCertFile").removeAttribute("disabled");
-			}
-			else
-			{
-				if((element.checked == false) && (document.getElementById("chkUseHttp").checked == false))
-				{
+			} else {
+				if((element.checked == false) && (document.getElementById("chkUseHttp").checked == false)) {
 					const myModal = new bootstrap.Modal(document.getElementById('modalAtLeastOneNeedsActivation'));
 					document.getElementById("modalAtLeastOneNeedsActivationBtnOK").removeAttribute("onClick");
 					document.getElementById("modalAtLeastOneNeedsActivationBtnOK").setAttribute("onClick", `checkCheckField("chkUseHttps")`);
 					myModal.show();
-				}
-				else
-				{
+				} else {
 					document.getElementById("txtPortHttps").setAttribute("disabled", true);
 					document.getElementById("txtHttpsKeyFile").setAttribute("disabled", true);
 					document.getElementById("txtHttpsCertFile").setAttribute("disabled", true);
@@ -4528,27 +4167,20 @@ function changeValue(element)
 			}
 			break;
 		case "useUdpStaticPorts":
-			if(element.checked == true)
-			{
+			if(element.checked == true) {
 				var element = document.getElementsByTagName("INPUT");
 				var max = element.length;
-				for(var i=0; i<max; i++)
-				{
-					if(element[i].name.startsWith("udpPortsStation"))
-					{
+				for(var i=0; i<max; i++) {
+					if(element[i].name.startsWith("udpPortsStation")) {
 						var tempSerial = element[i].name.replace("udpPortsStation", "");
 						document.getElementById('txtUdpPortsStation' + tempSerial).removeAttribute("disabled");
 					}
 				}
-			}
-			else
-			{
+			} else {
 				var element = document.getElementsByTagName("INPUT");
 				var max = element.length;
-				for(var i=0; i<max; i++)
-				{
-					if(element[i].name.startsWith("udpPortsStation"))
-					{
+				for(var i=0; i<max; i++) {
+					if(element[i].name.startsWith("udpPortsStation")) {
 						var tempSerial = element[i].name.replace("udpPortsStation", "");
 						document.getElementById('txtUdpPortsStation' + tempSerial).setAttribute("disabled", true);
 					}
@@ -4556,100 +4188,77 @@ function changeValue(element)
 			}
 			break;
 		case "useUpdateStateIntervall":
-			if(element.checked == true)
-			{
-				if(document.getElementById("chkUpdateStateEvent").checked == true)
-				{
+			if(element.checked == true) {
+				if(document.getElementById("chkUpdateStateEvent").checked == true) {
 					const myModal = new bootstrap.Modal(document.getElementById('modalStateEventOrIntervall'));
 					document.getElementById("modalStateEventOrIntervallBtnOK").removeAttribute("onClick");
 					document.getElementById("modalStateEventOrIntervallBtnOK").setAttribute("onClick", `uncheckCheckField("chkUpdateStateEvent")`);
 					myModal.show();
 				}
 				document.getElementById("txtUpdateStateIntervallTimespan").removeAttribute("disabled");
-			}
-			else
-			{
+			} else {
 				document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
 			}
 			break;
 		case "useUpdateStateEvent":
-			if(element.checked == true)
-			{
-				if(document.getElementById("chkUpdateStateIntervall").checked == true)
-				{
+			if(element.checked == true) {
+				if(document.getElementById("chkUpdateStateIntervall").checked == true) {
 					const myModal = new bootstrap.Modal(document.getElementById('modalStateEventOrIntervall'));
 					document.getElementById("modalStateEventOrIntervallBtnOK").removeAttribute("onClick");
 					document.getElementById("modalStateEventOrIntervallBtnOK").setAttribute("onClick", `uncheckCheckField("chkUpdateStateIntervall")`);
 					myModal.show();
 				}
 				document.getElementById("txtUpdateStateIntervallTimespan").setAttribute("disabled", true);
+			} else {
+
 			}
-			else
-			{}
 			break;
 	}
 }
 
-function checkLogLevel(elementName, value)
-{
-	if(value == "0" || value == "1")
-	{
+function checkLogLevel(elementName, value) {
+	if(value == "0" || value == "1") {
 		document.getElementById(elementName).setAttribute("class", "alert alert-warning alert-dismissible fade show");
 		document.getElementById(elementName).setAttribute("role", "alert");
-		if(value == "0")
-		{
+		if(value == "0") {
 			document.getElementById(elementName).innerHTML = `${translateContent("lblLogLevelToHighTraceMessage")}<br />`;
-		}
-		if(value == "1")
-		{
+		} else if(value == "1") {
 			document.getElementById(elementName).innerHTML = `${translateContent("lblLogLevelToHighDebugMessage")}<br />`;
 		}
 		document.getElementById(elementName).innerHTML += `<small class="form-text text-muted">${translateContent("lblLogLevelToHighSubText")}</small>`;
-	}
-	else
-	{
+	} else {
 		document.getElementById(elementName).removeAttribute("class");
 		document.getElementById(elementName).removeAttribute("role");
 		document.getElementById(elementName).innerHTML = "";
 	}
 }
 
-function checkUDPPorts(elementName)
-{
+function checkUDPPorts(elementName) {
 	var element = document.getElementsByTagName("INPUT");
 	var cnt = 0;
 	var error = false;
 	var errorMessage = "";
 	var regex = new RegExp("^(1|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$");
 	var max = element.length;
-	for(var i=0; i<max; i++)
-	{
-		if(element[i].name.startsWith("udpPortsStation"))
-		{
+	for(var i=0; i<max; i++) {
+		if(element[i].name.startsWith("udpPortsStation")) {
 			cnt = cnt + 1;
 		}
 	}
-	if(elementName.value == "")
-	{
+	if(elementName.value == "") {
 		return;
 	}
-	if(!regex.test(elementName.value))
-	{
+	if(!regex.test(elementName.value)) {
 		error = true;
 		errorMessage = `${translateMessages("messageUdpPortNoNumberMessage")}<br /><br />${translateMessages("messageUdpPortInputRemoveMessage")}`;
 	}
-	if(error == false && cnt > 1)
-	{
+	if(error == false && cnt > 1) {
 		max = element.length;
-		for(var i=0; i<max; i++)
-		{
-			if(element[i].name.startsWith("udpPortsStation"))
-			{
+		for(var i=0; i<max; i++) {
+			if(element[i].name.startsWith("udpPortsStation")) {
 				var eName = 'txtUdpPortsStation' + element[i].name.replace("udpPortsStation", "");
-				if(eName != elementName.id)
-				{
-					if(document.getElementById('txtUdpPortsStation' + element[i].name.replace("udpPortsStation", "")).value == elementName.value)
-					{
+				if(eName != elementName.id) {
+					if(document.getElementById('txtUdpPortsStation' + element[i].name.replace("udpPortsStation", "")).value == elementName.value) {
 						error = true;
 						errorMessage = `${translateMessages("messageUdpPortPortAlreadyUsedMessage")}<br /><br />${translateMessages("messageUdpPortInputRemoveMessage")}`;
 						break;
@@ -4658,8 +4267,7 @@ function checkUDPPorts(elementName)
 			}
 		}
 	}
-	if(error == true)
-	{
+	if(error == true) {
 		const myModal = new bootstrap.Modal(document.getElementById('modalUDPPortsEqualWrong'));
 		document.getElementById("modalUDPPortsEqualWrongBtnOK").removeAttribute("onClick");
 		document.getElementById("modalUDPPortsEqualWrongBtnOK").setAttribute("onClick", `clearInputField("` + elementName.id + `")`);
@@ -4668,18 +4276,15 @@ function checkUDPPorts(elementName)
 	}
 }
 
-function checkCheckField(elementName)
-{
+function checkCheckField(elementName) {
 	document.getElementById(elementName).checked = true;
 }
 
-function uncheckCheckField(elementName)
-{
+function uncheckCheckField(elementName) {
 	document.getElementById(elementName).checked = false;
 }
 
-function clearInputField(elementName)
-{
+function clearInputField(elementName) {
 	document.getElementById(elementName).value = "";
 }
 //#endregion
@@ -4688,8 +4293,7 @@ function clearInputField(elementName)
  * Scripts for logfiles.html
  */
 //#region logfiles.html
-function initLogViewer(logfiletype, showLoading)
-{
+function initLogViewer(logfiletype, showLoading) {
 	codeMirrorEditor = CodeMirror(document.getElementById("logContent"), {
 		lineNumbers: false,
 		//mode: "logfile",
@@ -4839,8 +4443,7 @@ async function loadLogfile(logfiletype, showLoading) {
 
 async function emptyLogfile(logfiletype) {
 	var objResp, objErr, url;
-	switch(logfiletype)
-	{
+	switch(logfiletype) {
 		case "log":
 			url = `logfiles.cgi?action=emptyfile&file=${logfiletype}`;
 			break;
@@ -4905,8 +4508,7 @@ async function loadDataInfo(showLoading) {
 		waitElementId = "versionInfo";
 		waitMessage = "strLoadingVersionInfo";
 	}
-	if(serviceState == "running")
-	{
+	if(serviceState == "running") {
 		var objResp, objErr, info = "";
 		var url = `${location.protocol}//${location.hostname}:${port}/getApiInfo`;
 		await retrieveData("GET", url, 'application/json', undefined, waitElementId, waitMessage, undefined, undefined).then((result) => {
@@ -4946,9 +4548,7 @@ async function loadDataInfo(showLoading) {
 				toast.show();
 			}
 		});
-	}
-	else
-	{
+	} else {
 		var objResp, objErr, info = "";
 		var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=getServiceVersion`;
 		await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
@@ -4996,22 +4596,16 @@ async function loadDataInfo(showLoading) {
  * Scripts for restartWaiter.html
  */
 //#region restartWaiter.html
-async function restartAPIService()
-{
-	if(action == "captcha")
-	{
+async function restartAPIService() {
+	if(action == "captcha") {
 		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsErrorCaptcha");
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsErrorCaptcha");
 		checkServiceState(0, 0, 0);
-	}
-	else if(action == "tfa")
-	{
+	} else if(action == "tfa") {
 		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsErrorTfa");
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsErrorTfa");
 		checkServiceState(0, 0, 0);
-	}
-	else
-	{
+	} else {
 		document.getElementById("headerApiSettingsError").innerHTML = translateContent("lblHeaderApiSettingsError");
 		document.getElementById("messageApiSettingsError").innerHTML = translateContent("lblMessageApiSettingsError");
 		const toast = new bootstrap.Toast(toastOK);
@@ -5192,8 +4786,7 @@ async function checkServiceState(cntStart, cntInit, postInit) {
 	xmlHttp.send();
 }
 
-function delay(time)
-{
+function delay(time) {
 	return new Promise(resolve => setTimeout(resolve, time));
 }
 //#endregion

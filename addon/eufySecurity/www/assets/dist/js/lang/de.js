@@ -1,18 +1,16 @@
 /*
 Language File for German (de)
-Schema v9.33
-202050322
+Schema v9.34
+202050517
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20250322 (v9.33)";
+var languageVersion = "20250517 (v9.34)";
 
-function translateNavbarElement(element)
-{
-    switch(element)
-    {
+function translateNavbarElement(element) {
+    switch(element) {
         case "niMain":
             return "eufy Security für HomeMatic";
         case "niHome":
@@ -32,10 +30,8 @@ function translateNavbarElement(element)
     }
 }
 
-function translateStaticContentElement(element)
-{
-    switch(element)
-    {
+function translateStaticContentElement(element) {
+    switch(element) {
         case "divIndexJumbotronAddonHeader":
             return "eufy Security AddOn für HomeMatic";
 		case "divIndexJumbotronAddonInfo":		
@@ -488,10 +484,8 @@ function translateStaticContentElement(element)
     }
 }
 
-function translateMessages(message, ...options)
-{
-	switch(message)
-	{
+function translateMessages(message, ...options) {
+	switch(message) {
 		case "messageApiPortInactiveHeader":
 			return `Der Aufruf der API über ${options[0]} ist deaktiviert`;
 		case "messageApiPortInactiveSubText":
@@ -745,10 +739,8 @@ function translateMessages(message, ...options)
 	}
 }
 
-function translateContent(content, ...options)
-{
-	switch(content)
-	{
+function translateContent(content, ...options) {
+	switch(content) {
 		case "lblConfigNeededHeader":
 			return "Einstellungen unvollständig";
 		case "lblConfigNeeded":
@@ -1189,10 +1181,8 @@ function translateContent(content, ...options)
 	}
 }
 
-function translateString(content)
-{
-	switch(content)
-	{
+function translateString(content) {
+	switch(content) {
 		case "strLoadingSettings":
 			return "Laden der Einstellungen...";
 		case "strWaitWhileLoading":
@@ -1305,8 +1295,7 @@ function translateString(content)
 }
 
 function translateSystemVariableInfo(info) {
-	switch(info)
-	{
+	switch(info) {
 		case "eufyCurrentState":
 			return "aktueller Modus des eufy Systems";
 		case "eufyLastConnectionResult":
@@ -1328,10 +1317,8 @@ function translateSystemVariableInfo(info) {
 	}
 }
 
-function translateGuardMode(guardMode)
-{
-	switch(guardMode)
-	{
+function translateGuardMode(guardMode) {
+	switch(guardMode) {
 		case 0:
 			return "abwesend";
 		case 1:
@@ -1355,10 +1342,8 @@ function translateGuardMode(guardMode)
 	}
 }
 
-function translatePropertyName(propertyName)
-{
-	switch(propertyName)
-	{
+function translatePropertyName(propertyName) {
+	switch(propertyName) {
 		case "enabled":
 			return "Gerät aktivieren";
 		case "antitheftDetection":
@@ -1779,10 +1764,8 @@ function translatePropertyName(propertyName)
 	}
 }
 
-function translateDeviceStateValue(state, propertyName, value)
-{
-	switch(state)
-	{
+function translateDeviceStateValue(state, propertyName, value) {
+	switch(state) {
 		case "Humans only":
 		case "Person Alerts":
 			return "nur Menschen";
@@ -1828,11 +1811,9 @@ function translateDeviceStateValue(state, propertyName, value)
 		case "Schedule":
 			return "nach Zeitplan"
 		case "Off":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "watermark":
-					if(value == 1)
-					{
+					if(value == 1) {
 						return "ohne Logo";
 					}
 					return "aus";
@@ -1844,8 +1825,7 @@ function translateDeviceStateValue(state, propertyName, value)
 					return state;
 			}
 		case "On":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "watermark":
 					return "mit Logo";
 				case "nightvision":
@@ -1862,8 +1842,7 @@ function translateDeviceStateValue(state, propertyName, value)
 		case "Color Night Vision":
 			return "farbige Nachtsicht";
 		case "Low":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "speakerVolume":
 					return "leise";
 				case "videoStreamingQuality":
@@ -1877,15 +1856,13 @@ function translateDeviceStateValue(state, propertyName, value)
 					return state;
 			}
 		case "Min":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "rotationSpeed":
 				case "soundDetectionSensitivity":
 					return "minimal";
 			}
 		case "Medium":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "speakerVolume":
 				case "videoStreamingQuality":
 				case "lightSettingsBrightnessManual":
@@ -1896,8 +1873,7 @@ function translateDeviceStateValue(state, propertyName, value)
 					return state;
 			}
 		case "High":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "speakerVolume":
 					return "laut";
 				case "videoStreamingQuality":
@@ -1910,8 +1886,7 @@ function translateDeviceStateValue(state, propertyName, value)
 					return state;
 			}
 		case "Max":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "rotationSpeed":
 				case "soundDetectionSensitivity":
 					return "maximal";
@@ -2016,86 +1991,75 @@ function translateDeviceStateValue(state, propertyName, value)
 		case "Double view":
 			return "Anzeige beider Kameras";
 		case "Daily":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualLightingActiveMode":
 				case "lightSettingsScheduleLightingActiveMode":
 				case "lightSettingsMotionLightingActiveMode":
 					return "tageslichtweiß";
 			}
 		case "Colored":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualLightingActiveMode":
 				case "lightSettingsScheduleLightingActiveMode":
 				case "lightSettingsMotionLightingActiveMode":
 					return "farbig";
 			}
 		case "Dynamic":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualLightingActiveMode":
 				case "lightSettingsScheduleLightingActiveMode":
 				case "lightSettingsMotionLightingActiveMode":
 					return "dynamisch";
 			}
 		case "Cold":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualDailyLighting":
 				case "lightSettingsScheduleDailyLighting":
 				case "lightSettingsMotionDailyLighting":
 					return "kaltweiß";
 			}
 		case "Warm":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualDailyLighting":
 				case "lightSettingsScheduleDailyLighting":
 				case "lightSettingsMotionDailyLighting":
 					return "warmweiß";
 			}
 		case "Very warm":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualDailyLighting":
 				case "lightSettingsScheduleDailyLighting":
 				case "lightSettingsMotionDailyLighting":
 					return "sehr warmes weiß";
 			}
 		case "Aurora":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualDynamicLighting":
 				case "lightSettingsScheduleDynamicLighting":
 				case "lightSettingsMotionDynamicLighting":
 					return "Polarlicht";
 			}
 		case "Warmth":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualDynamicLighting":
 				case "lightSettingsScheduleDynamicLighting":
 				case "lightSettingsMotionDynamicLighting":
 					return "Wärme";
 			}
 		case "Let's Party":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsManualDynamicLighting":
 				case "lightSettingsScheduleDynamicLighting":
 				case "lightSettingsMotionDynamicLighting":
 					return "Partylicht";
 			}
 		case "Fast":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsMotionActivationMode":
 					return "schnell";
 			}
 		case "Smart":
-			switch(propertyName)
-			{
+			switch(propertyName) {
 				case "lightSettingsMotionActivationMode":
 					return "intelligent";
 			}
@@ -2116,48 +2080,42 @@ function translateDeviceStateValue(state, propertyName, value)
 		case "Closed":
 			return "zu";
 		case "0":
-			switch (propertyName)
-			{
+			switch (propertyName) {
 				case "notificationIntervalTime":
 					return "kein Abstand";
 				default:
 					return state;
 			}
 		case "1":
-			switch (propertyName)
-			{
+			switch (propertyName) {
 				case "notificationIntervalTime":
 					return "1min";
 				default:
 					return state;
 			}
 		case "2":
-			switch (propertyName)
-			{
+			switch (propertyName) {
 				case "notificationIntervalTime":
 					return "2min";
 				default:
 					return state;
 			}
 		case "3":
-			switch (propertyName)
-			{
+			switch (propertyName) {
 				case "notificationIntervalTime":
 					return "3min";
 				default:
 					return state;
 			}
 		case "4":
-			switch (propertyName)
-			{
+			switch (propertyName) {
 				case "notificationIntervalTime":
 					return "4min";
 				default:
 					return state;
 			}
 		case "5":
-			switch (propertyName)
-			{
+			switch (propertyName) {
 				case "notificationIntervalTime":
 					return "5min";
 				default:
@@ -2168,10 +2126,8 @@ function translateDeviceStateValue(state, propertyName, value)
 	}
 }
 
-function translateSdStatusMessageText(sdStatus)
-{
-	switch(sdStatus)
-	{
+function translateSdStatusMessageText(sdStatus) {
+	switch(sdStatus) {
 		case 0:
 			return `Der Speicher ist in Ordnung.`;
 		case 1:
