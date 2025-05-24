@@ -1162,7 +1162,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isBatteryDoorbellDualE340()) {
+        else if (device.isBatteryDoorbellDualE340() || device.isBatteryDoorbellC30() || device.isBatteryDoorbellC31()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1813,7 +1813,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if ((device.isBatteryDoorbell() && !device.isBatteryDoorbellDual()) || device.isWiredDoorbellDual()) {
+        else if ((device.isBatteryDoorbell() && !device.isBatteryDoorbellDual()) || device.isWiredDoorbellDual() || device.isBatteryDoorbell() && device.isBatteryDoorbellC30()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -4631,6 +4631,24 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             });
         }
         else if (device.isIndoorPanAndTiltCameraS350()) {
+            this.p2pSession.sendCommandWithStringPayload({
+                commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+                value: JSON.stringify({
+                    "account_id": this.rawStation.member.admin_user_id,
+                    "cmd": types_2.CommandType.CMD_INDOOR_ENABLE_PRIVACY_MODE_S350,
+                    "mChannel": device.getChannel(),
+                    "mValue3": 0,
+                    "payload": {
+                        "switch": param_value,
+                    }
+                }),
+                channel: device.getChannel()
+            }, {
+                property: propertyData
+            });
+        }
+        else if (device.isIndoorCamera() && (0, utils_1.isGreaterEqualMinVersion)("2.3.1.0", device.getSoftwareVersion()) && Station.isStationHomeBase3BySn(device.getStationSerial())) {
+            param_value = value === true ? 0 : 1;
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10169,7 +10187,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         }
         logging_1.rootHTTPLogger.debug(`Station preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
         if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || (device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera())) {
-            logging_1.rootHTTPLogger.info(`Station preset position [STANDALONE] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
+            logging_1.rootHTTPLogger.debug(`Station preset position [STANDALONE] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10184,7 +10202,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             });
         }
         else if (!device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera()) {
-            logging_1.rootHTTPLogger.info(`Station preset position [CONNECTED] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
+            logging_1.rootHTTPLogger.debug(`Station preset position [CONNECTED] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_FLOODLIGHT_SET_MOTION_PRESET_POSITION,
                 value: position,

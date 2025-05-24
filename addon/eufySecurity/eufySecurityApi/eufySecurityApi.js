@@ -2811,14 +2811,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.1.2";
+        return "3.2.0";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "3.1.1-ext1";
+        return "3.2.0";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;
