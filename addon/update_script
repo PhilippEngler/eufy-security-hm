@@ -5,16 +5,22 @@ CONFIG_DIR=/usr/local/etc/config
 ADDON_DIR=/usr/local/addons/${ADDONNAME}
 RCD_DIR=${CONFIG_DIR}/rc.d
 WWW_DIR=${CONFIG_DIR}/addons/www/${ADDONNAME}
+INSTALL_LOGFILE=/var/tmp/install_eufySecurity.log
+
+echo Starting installing $ADDONNAME > $INSTALL_LOGFILE
 
 # check for unsupported platforms (author: jens-maus)
 if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
+  echo Unsupported operating system found. Aborting. >> $INSTALL_LOGFILE
   exit 13
 fi
 
 # check for unsupported CCU1 and CCU2
 if [ "$1" = "" ]; then
+  echo Unsupported hardware found \(CCU1\). Aborting. >> $INSTALL_LOGFILE
   exit 14
 elif [ "$1" = "CCU2" ]; then
+  echo Unsupported hardware found \(CCU2\). Aborting. >> $INSTALL_LOGFILE
   exit 14
 fi
 
@@ -24,521 +30,333 @@ if [ $? -eq 1 ]; then
   mount /usr/local
 fi
 
-# if the service is available, stop it
-# (mainly for raspberrymatic)
+# if the service is available, stop it (mainly for raspberrymatic)
 if [ -e ${RCD_DIR}/eufySecurity ]; then
+  echo $ADDONNAME installed. Stopping service... >> $INSTALL_LOGFILE
   ${RCD_DIR}/eufySecurity stop
 fi
 
-# remove unused api files from versions lower than 1.1
+# extract the version information of the install package
+PACKAGE_VERSION=$(cat VERSION)
+PACKAGE_VERSION_MAIN=$(echo $PACKAGE_VERSION | cut -d "." -f 1)
+PACKAGE_VERSION_MINOR=$(echo $PACKAGE_VERSION | cut -d "." -f 2)
+PACKAGE_VERSION_BUILD=$(echo $PACKAGE_VERSION | cut -d "." -f 3)
+echo Want to install version $PACKAGE_VERSION >> $INSTALL_LOGFILE
+
+# handle update of addon
 if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
-  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http.service.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/http/http.service.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http.utils.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/http/http.utils.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http-request.models.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/http/http-request.models.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/http/http-response.models.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/http/http-response.models.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/cloud-lookup.service.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/cloud-lookup.service.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/command.model.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/command.model.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/device-client.service.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/device-client.service.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/ip.utils.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/ip.utils.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/local-lookup.service.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/local-lookup.service.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/message.utils.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/message.utils.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/payload.utils.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/p2p/payload.utils.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/push/fid.model.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/push/fid.model.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push.model.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/push/push.model.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push.utils.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/push/push.utils.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-client.service.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/push/push-client.service.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-client-parser.service.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/push/push-client-parser.service.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-register.service.js ]; then
-    rm -f ${ADDON_DIR}/eufySecurityApi/push/push-register.service.js
-  fi
-  # remove unused node_modules files from versions lower than 1.5
-  if [ -e ${ADDON_DIR}/node_modules/.bin ]; then
-    rm -r ${ADDON_DIR}/node_modules/.bin
-  fi
-  #if [ -e ${ADDON_DIR}/node_modules/@sindresorhus ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/@sindresorhus
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/@szmarczak ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/@szmarczak
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/cacheable-lookup ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/cacheable-lookup
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/cacheable-request ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/cacheable-request
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/decompress-response ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/decompress-response
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/defer-to-connect ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/defer-to-connect
-  #fi
-  if [ -e ${ADDON_DIR}/node_modules/fs-extra ]; then
-    rm -r ${ADDON_DIR}/node_modules/fs-extra
-  fi
-  #if [ -e ${ADDON_DIR}/node_modules/get-stream ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/get-stream
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/got ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/got
-  #fi
-  if [ -e ${ADDON_DIR}/node_modules/got-hm ]; then
-    rm -r ${ADDON_DIR}/node_modules/got-hm
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/graceful-fs ]; then
-    rm -r ${ADDON_DIR}/node_modules/graceful-fs
-  fi
-  #if [ -e ${ADDON_DIR}/node_modules/http2-wrapper ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/http2-wrapper
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/http-cache-semantics ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/http-cache-semantics
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/json-buffer ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/json-buffer
-  #fi
-  if [ -e ${ADDON_DIR}/node_modules/jsonfile ]; then
-    rm -r ${ADDON_DIR}/node_modules/jsonfile
-  fi
-  #if [ -e ${ADDON_DIR}/node_modules/keyv ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/keyv
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/lowercase-keys ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/lowercase-keys
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/mimic-response ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/mimic-response
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/normalize-url ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/normalize-url
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/p-cancelable ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/p-cancelable
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/quick-lru ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/quick-lru
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/resolve-alpn ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/resolve-alpn
-  #fi
-  #if [ -e ${ADDON_DIR}/node_modules/responselike ]; then
-  #  rm -r ${ADDON_DIR}/node_modules/responselike
-  #fi
-  if [ -e ${ADDON_DIR}/node_modules/universalify ]; then
-    rm -r ${ADDON_DIR}/node_modules/universalify
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/@babel ]; then
-    rm -r ${ADDON_DIR}/node_modules/@babel
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/ini ]; then
-    rm -r ${ADDON_DIR}/node_modules/ini
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/ansi-regex ]; then
-    rm -r ${ADDON_DIR}/node_modules/ansi-regex
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/ansi-styles ]; then
-    rm -r ${ADDON_DIR}/node_modules/ansi-styles
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/cliui ]; then
-    rm -r ${ADDON_DIR}/node_modules/cliui
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/color-convert ]; then
-    rm -r ${ADDON_DIR}/node_modules/color-convert
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/color-name ]; then
-    rm -r ${ADDON_DIR}/node_modules/color-name
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/define-properties ]; then
-    rm -r ${ADDON_DIR}/node_modules/define-properties
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/emoji-regex ]; then
-    rm -r ${ADDON_DIR}/node_modules/emoji-regex
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/escalade ]; then
-    rm -r ${ADDON_DIR}/node_modules/escalade
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/get-caller-file ]; then
-    rm -r ${ADDON_DIR}/node_modules/get-caller-file
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/has-property-descriptors ]; then
-    rm -r ${ADDON_DIR}/node_modules/has-property-descriptors
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/is-fullwidth-code-point ]; then
-    rm -r ${ADDON_DIR}/node_modules/is-fullwidth-code-point
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/is-nan ]; then
-    rm -r ${ADDON_DIR}/node_modules/is-nan
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/mediainfo.js ]; then
-    rm -r ${ADDON_DIR}/node_modules/mediainfo.js
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/object-keys ]; then
-    rm -r ${ADDON_DIR}/node_modules/object-keys
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/require-directory ]; then
-    rm -r ${ADDON_DIR}/node_modules/require-directory
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/string-width ]; then
-    rm -r ${ADDON_DIR}/node_modules/string-width
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/strip-ansi ]; then
-    rm -r ${ADDON_DIR}/node_modules/strip-ansi
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/wrap-ansi ]; then
-    rm -r ${ADDON_DIR}/node_modules/wrap-ansi
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/y18n ]; then
-    rm -r ${ADDON_DIR}/node_modules/y18n
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/yargs ]; then
-    rm -r ${ADDON_DIR}/node_modules/yargs
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/yargs-parser ]; then
-    rm -r ${ADDON_DIR}/node_modules/yargs-parser
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/@bropat ]; then
-    rm -r ${ADDON_DIR}/node_modules/@bropat
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/async ]; then
-    rm -r ${ADDON_DIR}/node_modules/async
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/isexe ]; then
-    rm -r ${ADDON_DIR}/node_modules/isexe
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/mime ]; then
-    rm -r ${ADDON_DIR}/node_modules/mime
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/which ]; then
-    rm -r ${ADDON_DIR}/node_modules/which
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/number-allocator/node-modules ]; then
-    rm -r ${ADDON_DIR}/node_modules/number-allocator/node-modules
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/.bin/mediainfo.js ]; then
-    rm ${ADDON_DIR}/node_modules/.bin/mediainfo.js
-  fi
-  # remove unused node_modules files from versions lower than 2.1
-  if [ -e ${ADDON_DIR}/node_modules/js-sdsl ]; then
-    rm -r ${ADDON_DIR}/node_modules/js-sdsl
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/protobuf-typescript ]; then
-    rm -r ${ADDON_DIR}/node_modules/protobuf-typescript
-  fi
-  # remove unused node_modules files from version lower than v3.0.0
-  if [ -e ${ADDON_DIR}/node_modules/clone-response ]; then
-    rm -r ${ADDON_DIR}/node_modules/clone-response
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/concat-map ]; then
-    rm -r ${ADDON_DIR}/node_modules/concat-map
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/duplexify ]; then
-    rm -r ${ADDON_DIR}/node_modules/duplexify
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/end-of-stream ]; then
-    rm -r ${ADDON_DIR}/node_modules/end-of-stream
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/has ]; then
-    rm -r ${ADDON_DIR}/node_modules/has
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/leven ]; then
-    rm -r ${ADDON_DIR}/node_modules/leven
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/minimatch ]; then
-    rm -r ${ADDON_DIR}/node_modules/minimatch
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/path-is-absolute ]; then
-    rm -r ${ADDON_DIR}/node_modules/path-is-absolute
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/pump ]; then
-    rm -r ${ADDON_DIR}/node_modules/pump
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/stream-shift ]; then
-    rm -r ${ADDON_DIR}/node_modules/stream-shift
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/xtend ]; then
-    rm -r ${ADDON_DIR}/node_modules/xtend
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/yallist ]; then
-    rm -r ${ADDON_DIR}/node_modules/yallist
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/balanced-match ]; then
-    rm -r ${ADDON_DIR}/node_modules/balanced-match
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/brace-expansion ]; then
-    rm -r ${ADDON_DIR}/node_modules/brace-expansion
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/inflight ]; then
-    rm -r ${ADDON_DIR}/node_modules/inflight
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/inflight ]; then
-    rm -r ${ADDON_DIR}/node_modules/inflight
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/once ]; then
-    rm -r ${ADDON_DIR}/node_modules/once
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/wrappy ]; then
-    rm -r ${ADDON_DIR}/node_modules/wrappy
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/fs.realpath ]; then
-    rm -r ${ADDON_DIR}/node_modules/fs.realpath
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/glob ]; then
-    rm -r ${ADDON_DIR}/node_modules/glob
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/@aashutoshrathi ]; then
-    rm -r ${ADDON_DIR}/node_modules/@aashutoshrathi
-  fi
-  if [ -e ${ADDON_DIR}/node_modules/@ungap ]; then
-    rm -r ${ADDON_DIR}/node_modules/@ungap
-  fi
-  # remove unused asset files
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/footer.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/footer.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/css/navbar-top-fixed.css ]; then
-    rm ${ADDON_DIR}/www/assets/dist/css/navbar-top-fixed.css
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.js ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.js.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/bootstrap.js.map
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/popper.min.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map ]; then
-    rm ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileAddonErrDownload.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileAddonErrDownload.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileAddonErrEmpty.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileAddonErrEmpty.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileAddonErrGetContent.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileAddonErrGetContent.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileAddonLogDownload.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileAddonLogDownload.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileAddonLogEmpty.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileAddonLogEmpty.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileAddonLogGetContent.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileAddonLogGetContent.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileClientDownload.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileClientDownload.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileClientEmpty.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileClientEmpty.cgi
-  fi
-  if [ -e ${ADDON_DIR}/www/logfileClientGetContent.cgi ]; then
-    rm ${ADDON_DIR}/www/logfileClientGetContent.cgi
-  fi
-  # remove renamed / deleted addon files
-  if [ -e ${ADDON_DIR}/eufySecurityApi/bases.js ]; then
-    rm ${ADDON_DIR}/eufySecurityApi/bases.js
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/eufysecurity.js ]; then
-    rm ${ADDON_DIR}/eufySecurityApi/eufysecurity.js
-  fi
-  if [ -e ${ADDON_DIR}/www/assets/devices ]; then
-    rm -r ${ADDON_DIR}/www/assets/devices
-  fi
-  if [ -e ${ADDON_DIR}/www/apiPorts.txt ]; then
-    rm ${ADDON_DIR}/www/apiPorts.txt
-  fi
-  if [ -e ${ADDON_DIR}/eufySecurityApi/utils/logging.js ]; then
-    rm ${ADDON_DIR}/eufySecurityApi/utils/logging.js
+  # an version is installed, so determine the version
+  if [ -e ${ADDON_DIR}/VERSION ]; then
+    CURRENT_VERSION=$(cat ${ADDON_DIR}/VERSION)
+  else
+    CURRENT_VERSION=0.0.0
+  fi
+  CURRENT_VERSION_MAIN=$(echo $CURRENT_VERSION | cut -d "." -f 1)
+  CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d "." -f 2)
+  CURRENT_VERSION_BUILD=$(echo $CURRENT_VERSION | cut -d "." -f 3)
+  echo Currently installed version is $CURRENT_VERSION. >> $INSTALL_LOGFILE
+  # remove unused files from versions lower than 3.0.0
+  if [ CURRENT_VERSION_MAIN -lt 3 ]; then
+    echo Installed version lower than 3.0.0 >> $INSTALL_LOGFILE
+    # remove the complete node_modules folder in case of updating from versions below 3.0.0
+    if [ -e ${ADDON_DIR}/node_modules ]; then
+      rm -r ${ADDON_DIR}/node_modules
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/http/http.service.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/http/http.service.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/http/http.utils.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/http/http.utils.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/http/http-request.models.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/http/http-request.models.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/http/http-response.models.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/http/http-response.models.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/cloud-lookup.service.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/p2p/cloud-lookup.service.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/command.model.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/p2p/command.model.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/device-client.service.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/p2p/device-client.service.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/ip.utils.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/p2p/ip.utils.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/local-lookup.service.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/p2p/local-lookup.service.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/message.utils.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/p2p/message.utils.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/p2p/payload.utils.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/p2p/payload.utils.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/push/fid.model.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/push/fid.model.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/push/push.model.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/push/push.model.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/push/push.utils.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/push/push.utils.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-client.service.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/push/push-client.service.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-client-parser.service.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/push/push-client-parser.service.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/push/push-register.service.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/push/push-register.service.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap.rtl.min.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.min.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-grid.rtl.min.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.min.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-reboot.rtl.min.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.min.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/bootstrap-utilities.rtl.min.css.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/footer.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/footer.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/css/navbar-top-fixed.css ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/css/navbar-top-fixed.css
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.js.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.bundle.min.js.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.js.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.esm.min.js.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.js ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/bootstrap.js.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/bootstrap.js.map
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/jquery-3.5.1.slim.min.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/popper.min.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map ]; then
+      rm -f ${ADDON_DIR}/www/assets/dist/js/popper.min.js.map
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/bases.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/bases.js
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/eufysecurity.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/eufysecurity.js
+    fi
+    if [ -e ${ADDON_DIR}/www/assets/devices ]; then
+      rm -r ${ADDON_DIR}/www/assets/devices
+    fi
+    if [ -e ${ADDON_DIR}/www/apiPorts.txt ]; then
+      rm -f ${ADDON_DIR}/www/apiPorts.txt
+    fi
+  else
+    echo Installed version is 3.0.0 or newer >> $INSTALL_LOGFILE
+  fi
+  # remove unused api files from versions lower than 3.1.1
+  if [ $CURRENT_VERSION_MAIN -lt 3 ] || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -lt 1 ]) || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -eq 1 ] && [ $CURRENT_VERSION_BUILD -lt 1 ]); then
+    echo Installed version lower than 3.1.1 >> $INSTALL_LOGFILE
+    if [ -e ${ADDON_DIR}/node_modules/@ungap ]; then
+      rm -r ${ADDON_DIR}/node_modules/@ungap
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileAddonErrDownload.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileAddonErrDownload.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileAddonErrEmpty.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileAddonErrEmpty.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileAddonErrGetContent.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileAddonErrGetContent.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileAddonLogDownload.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileAddonLogDownload.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileAddonLogEmpty.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileAddonLogEmpty.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileAddonLogGetContent.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileAddonLogGetContent.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileClientDownload.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileClientDownload.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileClientEmpty.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileClientEmpty.cgi
+    fi
+    if [ -e ${ADDON_DIR}/www/logfileClientGetContent.cgi ]; then
+      rm -f ${ADDON_DIR}/www/logfileClientGetContent.cgi
+    fi
+    if [ -e ${ADDON_DIR}/eufySecurityApi/utils/logging.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/utils/logging.js
+    fi
+  else
+    echo Installed version is 3.1.1 or newer >> $INSTALL_LOGFILE
   fi
 fi
 
 # create necessary directories
+echo Create directories... >> $INSTALL_LOGFILE
 mkdir -p ${ADDON_DIR}
 chmod 755 ${ADDON_DIR}
 mkdir -p ${RCD_DIR}
 chmod 755 ${RCD_DIR}
 
 # copy addon files
+echo Copy addon files... >> $INSTALL_LOGFILE
 cp -af eufySecurity/* ${ADDON_DIR}/
 cp -af eufySecurity-addon.cfg ${ADDON_DIR}/
 cp -af VERSION ${ADDON_DIR}/
 
 # make node executable
+echo Make node executable... >> $INSTALL_LOGFILE
 chmod 755 ${ADDON_DIR}/bin/node
 
-# exclude some directories from backup
-# (user will NEED to reinstall addon after restore)
+# exclude some directories from backup (user will NEED to reinstall addon after restore)
+echo Exclude directories from backup... >> $INSTALL_LOGFILE
 touch ${ADDON_DIR}/bin/.nobackup
 touch ${ADDON_DIR}/node_modules/.nobackup
 
 # copy startup script
+echo Copy startup script... >> $INSTALL_LOGFILE
 cp -af rc.d/* ${RCD_DIR}
 chmod 755 ${RCD_DIR}/eufySecurity
 
 # create www link
+echo Create website link... >> $INSTALL_LOGFILE
 if [ ! -e ${WWW_DIR} ]; then
   ln -sf ${ADDON_DIR}/www ${WWW_DIR}
 fi
 
 sync
 
-# exit with 0 to signal install succeeded
-# if device is raspberrymatic then no reboot is requiered
-# and so we have to start the service
-# the original ccu will reboot by default
+# exit with 0 to signal install succeeded if device is raspberrymatic then no reboot is requiered 
+# and so we have delete the logfiles and than start the service the original ccu will reboot by default
 if [ "$1" = "HM-RASPBERRYMATIC" ]; then
+  if [ -e /var/log/eufySecurity.err ]; then
+    echo Remove eufySecurity.err >> $INSTALL_LOGFILE
+    rm -f /var/log/eufySecurity.err
+  fi
+  if [ -e /var/log/eufySecurity.log ]; then
+    echo Remove eufySecurity.log >> $INSTALL_LOGFILE
+    rm -f /var/log/eufySecurity.log
+  fi
+  if [ -e /var/log/eufySecurityClient.log ]; then
+    echo Remove eufySecurityClient.log >> $INSTALL_LOGFILE
+    rm -f /var/log/eufySecurityClient.log
+  fi
+  echo Starting service... >> $INSTALL_LOGFILE
   ${RCD_DIR}/eufySecurity start
 fi
+echo Installation done >> $INSTALL_LOGFILE
+mv $INSTALL_LOGFILE ${ADDON_DIR}/install.log
 exit 0
