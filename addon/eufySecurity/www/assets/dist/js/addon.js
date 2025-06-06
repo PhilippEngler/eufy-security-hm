@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20250517
+ * 20250606
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.3.0";
+var version = "3.3.1";
 
 /**
  * common used java script functions
@@ -2988,7 +2988,7 @@ function showLoadingStatechange() {
 	document.getElementById("btnAwayAll").setAttribute("disabled", true);
 	document.getElementById("btnHomeAll").setAttribute("disabled", true);
 	document.getElementById("btnScheduleAll").setAttribute("disabled", true);
-	document.getElementById("btnDisarmAll").setAttribute("disabled", true);
+	document.getElementById("btnDisarmedAll").setAttribute("disabled", true);
 	document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateString("strWaitWhileLoading")}</small>`;
 	document.getElementById("stations").innerHTML = createWaitMessage(translateContent("lblWaitMessageLoadStations"));
 }
@@ -3011,7 +3011,7 @@ async function loadDataStatechange(showLoading) {
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnAway${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 0 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'away', 0)`}` , translateGuardMode(0), (objResp.data[station].guardMode != 0), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnHome${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 1 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'home', 1)`}`, translateGuardMode(1), (objResp.data[station].guardMode != 1), undefined, undefined, true)}</div>`;
 					buttons += `<div class="col-sm-6">${makeButtonElement(`btnSchedule${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 2 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'schedule', 2)`}`, translateGuardMode(2), (objResp.data[station].guardMode != 2), undefined, undefined, true)}</div>`;
-					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarm${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'disarm', 63)`}`, translateGuardMode(63), (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
+					buttons += `<div class="col-sm-6">${makeButtonElement(`btnDisarmed${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `${objResp.data[station].guardMode == 63 ? undefined : `setMode('${objResp.data[station].serialNumber}', 'disarmed', 63)`}`, translateGuardMode(63), (objResp.data[station].guardMode != 63), undefined, undefined, true)}</div>`;
 					if(objResp.data[station].deviceType === "indoorcamera" && objResp.data[station].privacyMode !== undefined) {
 						buttons += `<div class="col-sm-12">${makeButtonElement(`btnPrivacy${objResp.data[station].serialNumber}`, "btn btn-primary col-12 h-100", `setPrivacy('${objResp.data[station].serialNumber}', ${objResp.data[station].privacyMode === true ? `true` : `false`})`, `${objResp.data[station].privacyMode === true ? translateString("strActivate") : translateString("strDeactivate")}`, true, undefined, undefined, true)}</div>`;
 					}
@@ -3034,7 +3034,7 @@ async function loadDataStatechange(showLoading) {
 				document.getElementById("btnAwayAll").removeAttribute("disabled");
 				document.getElementById("btnHomeAll").removeAttribute("disabled");
 				document.getElementById("btnScheduleAll").removeAttribute("disabled");
-				document.getElementById("btnDisarmAll").removeAttribute("disabled");
+				document.getElementById("btnDisarmedAll").removeAttribute("disabled");
 				document.getElementById("stations").innerHTML =  text;
 				if(lastChangeTimeAll == -1) {
 					lastChangeTimeAll = translateContent("lblUnknown");
@@ -3046,7 +3046,7 @@ async function loadDataStatechange(showLoading) {
 				document.getElementById("btnAwayAll").setAttribute("disabled", true);
 				document.getElementById("btnHomeAll").setAttribute("disabled", true);
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
-				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
+				document.getElementById("btnDisarmedAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateContent("lblUnknown")}</small>`;
 				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageStationsNotFound"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 			}
@@ -3062,7 +3062,7 @@ async function loadDataStatechange(showLoading) {
 				document.getElementById("btnAwayAll").setAttribute("disabled", true);
 				document.getElementById("btnHomeAll").setAttribute("disabled", true);
 				document.getElementById("btnScheduleAll").setAttribute("disabled", true);
-				document.getElementById("btnDisarmAll").setAttribute("disabled", true);
+				document.getElementById("btnDisarmedAll").setAttribute("disabled", true);
 				document.getElementById("lastEventTimeAll").innerHTML = `<small class="text-muted">${translateContent("lblLastStateChange")}: ${translateContent("lblUnknown")}</small>`;
 				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageStationsNotFound"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState, "loadDataStatechange"));
 			}
@@ -3080,6 +3080,7 @@ async function setMode(stationSerial, modeName, modeId) {
 		document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}All`).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(modeId)}`;
 	} else {
 		url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationSerial}/${modeName}`;
+		alert(translateGuardMode(modeId));
 		document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}` + stationSerial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(modeId)}`;
 	}
 	

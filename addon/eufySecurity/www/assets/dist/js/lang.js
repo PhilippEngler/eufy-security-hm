@@ -61,7 +61,7 @@ function translateStaticPageContent(page)
             document.getElementById("btnAwayAll").innerHTML = translateGuardMode(0);
             document.getElementById("btnHomeAll").innerHTML = translateGuardMode(1);
             document.getElementById("btnScheduleAll").innerHTML = translateGuardMode(2);
-            document.getElementById("btnDisarmAll").innerHTML = translateGuardMode(63);
+            document.getElementById("btnDisarmedAll").innerHTML = translateGuardMode(63);
             translateInnerHtml("toastOkHeader");
             translateInnerHtml("toastOkText");
             translateInnerHtml("toastFailedHeader");
