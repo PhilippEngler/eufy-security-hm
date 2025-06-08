@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20250606
+ * 20250608
  */
 var action = "";
 var port = "";
@@ -3080,7 +3080,6 @@ async function setMode(stationSerial, modeName, modeId) {
 		document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}All`).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(modeId)}`;
 	} else {
 		url = `${location.protocol}//${location.hostname}:${port}/setMode/${stationSerial}/${modeName}`;
-		alert(translateGuardMode(modeId));
 		document.getElementById(`btn${modeName.charAt(0).toUpperCase() + modeName.slice(1)}` + stationSerial).innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;${translateGuardMode(modeId)}`;
 	}
 	
