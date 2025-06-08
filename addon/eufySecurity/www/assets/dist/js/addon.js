@@ -4038,6 +4038,18 @@ async function serviceManager(action) {
 	var deleteLogfile = document.getElementById("chkDeleteLogfile").checked;
 	var deleteErrfile = document.getElementById("chkDeleteErrfile").checked;
 	var deleteClientLogfile = document.getElementById("chkDeleteClientLogfile").checked;
+	if(action === "startService") {
+		document.getElementById("btnServiceManagerStartService").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;` + document.getElementById("btnServiceManagerStartService").innerHTML;
+	}
+	if(action === "stopService") {
+		document.getElementById("btnServiceManagerStopService").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;` + document.getElementById("btnServiceManagerStopService").innerHTML;
+	}
+	if(action === "restartService") {
+		document.getElementById("btnServiceManagerRestartService").innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 1.25rem; height: 1.25rem;" role="status" aria-hidden="true"></span>&nbsp;` + document.getElementById("btnServiceManagerRestartService").innerHTML;
+	}
+	document.getElementById("btnServiceManagerStartService").setAttribute("disabled", true);
+	document.getElementById("btnServiceManagerStopService").setAttribute("disabled", true);
+	document.getElementById("btnServiceManagerRestartService").setAttribute("disabled", true);
 	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=${action}&deleteLogfile=${deleteLogfile}&deleteErrfile=${deleteErrfile}&deleteClientLogfile=${deleteClientLogfile}`;
 	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
