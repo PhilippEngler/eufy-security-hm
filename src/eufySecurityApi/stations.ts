@@ -1493,6 +1493,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                 station.updateProperty(PropertyName.StationCurrentModeTime, timestamp !== undefined ? timestamp : 0);
                 rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
             }
+            this.api.updateStationCurrentModeSystemVariable(station.getSerial(), guardMode);
             await this.api.updateGuardModeStation(station.getSerial());
         } else {
             rootAddonLogger.debug(`Event "CurrentMode": The station: ${station.getSerial()} has no StationCurrentModeTime property.`);
