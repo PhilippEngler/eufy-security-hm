@@ -147,6 +147,13 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                         }
                     }
                 }
+                else if (param.param_type === types_1.ParamType.DEFAULT_SCHEDULE_MODE) {
+                    if (this.hasProperty(types_1.PropertyName.StationCurrentModeTime)) {
+                        if (this.getPropertyValue(types_1.PropertyName.StationCurrentModeTime) === 0) {
+                            this.updateProperty(types_1.PropertyName.StationCurrentModeTime, param.update_time * 1000);
+                        }
+                    }
+                }
             });
         }
         logging_1.rootHTTPLogger.debug("Update station cloud properties", { stationSN: this.getSerial(), properties: this.properties });

@@ -1554,6 +1554,12 @@ class EufySecurityApi {
                     else {
                         this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
+                    if (station.hasProperty(http_1.PropertyName.StationCurrentModeTime)) {
+                        this.setSystemVariableTime("eufyCentralCurrentModeChangeTime" + station.getSerial(), new Date(station.getPropertyValue(http_1.PropertyName.StationCurrentModeTime)));
+                    }
+                    else {
+                        this.setSystemVariableString("eufyCentralCurrentModeChangeTime" + station.getSerial(), "n/a");
+                    }
                 }
                 else {
                     json = { "success": false, "reason": `No station with serial ${stationSerial} found.` };
@@ -1698,12 +1704,28 @@ class EufySecurityApi {
         return JSON.stringify(json);
     }
     /**
-     * Set the systemvariable for a given station.
+     * Set the guard mode system variable for a given station.
      * @param stationSerial The serial of the station.
      * @param guardMode The guard mode to set.
      */
-    updateStationGuardModeSystemVariable(stationSerial, guardMode) {
+    async updateStationGuardModeSystemVariable(stationSerial, guardMode) {
+        const station = await this.stations.getStation(stationSerial);
         this.setSystemVariableString("eufyCentralState" + stationSerial, this.convertGuardModeToString(guardMode));
+        if (station.hasProperty(http_1.PropertyName.StationGuardModeTime)) {
+            this.setSystemVariableTime("eufyLastModeChangeTime" + stationSerial, new Date(station.getPropertyValue(http_1.PropertyName.StationGuardModeTime)));
+        }
+    }
+    /**
+     * Set the current mode system variable for a given station.
+     * @param stationSerial The serial of the station.
+     * @param guardMode The guard mode to set.
+     */
+    async updateStationCurrentModeSystemVariable(stationSerial, currentMode) {
+        const station = await this.stations.getStation(stationSerial);
+        this.setSystemVariableString("eufyCentralCurrentMode" + stationSerial, this.convertGuardModeToString(currentMode));
+        if (station.hasProperty(http_1.PropertyName.StationCurrentModeTime)) {
+            this.setSystemVariableTime("eufyCentralCurrentModeChangeTime" + stationSerial, new Date(station.getPropertyValue(http_1.PropertyName.StationCurrentModeTime)));
+        }
     }
     /**
      * Enable or disable the privacy mode of the device.
@@ -2294,6 +2316,14 @@ class EufySecurityApi {
                             if (availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial())) {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyLastModeChangeTime${station.getSerial()}`), 1);
                             }
+                            json.data.push({ "sysVarName": `eufyCentralCurrentMode${station.getSerial()}`, "sysVarInfo": `aktueller Modus der Basis ${station.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial()), "sysVarCurrent": true });
+                            if (availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralCurrentMode${station.getSerial()}`), 1);
+                            }
+                            json.data.push({ "sysVarName": `eufyCentralCurrentModeChangeTime${station.getSerial()}`, "sysVarInfo": `Zeitpunkt des letzten Wechsels des aktuellen Modus der Basis ${station.getSerial()}`, "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial()), "sysVarCurrent": true });
+                            if (availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralCurrentModeChangeTime${station.getSerial()}`), 1);
+                            }
                         }
                         for (const deviceSerial in devices) {
                             device = devices[deviceSerial];
@@ -2811,7 +2841,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.2.0";
+        return "3.2.1";
     }
     /**
      * Return the version of the library used for communicating with eufy.

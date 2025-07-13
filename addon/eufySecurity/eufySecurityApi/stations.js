@@ -23,7 +23,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     api;
     httpService;
     stations = {};
-    skipNextModeChangeEvent = new Map();
+    skipNextCurrentModeChangeEvent = new Map();
     loadingEmitter = new events_1.default();
     stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
     lightTimeouts = new Map();
@@ -82,7 +82,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
                     logging_1.rootAddonLogger.debug(`Set p2p connection type for device ${stationSerial} to value from settings (${p2p_1.P2PConnectionType[p2pMethod]}).`);
                 }
                 const new_station = http_1.Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
-                this.skipNextModeChangeEvent.set(stationSerial, false);
+                this.skipNextCurrentModeChangeEvent.set(stationSerial, true);
                 promises.push(new_station.then((station) => {
                     try {
                         if (this.api.getStateUpdateEventActive()) {
@@ -1434,14 +1434,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
             station.updateProperty(http_1.PropertyName.StationGuardModeTime, timestamp !== undefined ? timestamp : 0);
         }
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
-        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
-            logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
-            this.skipNextModeChangeEvent.set(station.getSerial(), false);
-        }
-        else {
-            logging_1.rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
-            await this.api.updateGuardModeStation(station.getSerial());
-        }
+        logging_1.rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+        await this.api.updateGuardModeStation(station.getSerial());
     }
     /**
      * The action to be done when event CurrentMode is fired.
@@ -1449,13 +1443,21 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
      * @param guardMode The new guard mode as GuardMode.
      */
     async onStationCurrentMode(station, guardMode) {
-        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
-            logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
-            this.skipNextModeChangeEvent.set(station.getSerial(), false);
+        if (station.hasProperty(http_1.PropertyName.StationCurrentModeTime)) {
+            if (this.skipNextCurrentModeChangeEvent.get(station.getSerial()) === true) {
+                logging_1.rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
+                this.skipNextCurrentModeChangeEvent.set(station.getSerial(), false);
+            }
+            else {
+                const timestamp = (0, utils_3.convertTimeStampToTimeStampMs)(new Date().getTime(), "ms");
+                station.updateProperty(http_1.PropertyName.StationCurrentModeTime, timestamp !== undefined ? timestamp : 0);
+                logging_1.rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+            }
+            this.api.updateStationCurrentModeSystemVariable(station.getSerial(), guardMode);
+            await this.api.updateGuardModeStation(station.getSerial());
         }
         else {
-            logging_1.rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
-            await this.api.updateGuardModeStation(station.getSerial());
+            logging_1.rootAddonLogger.debug(`Event "CurrentMode": The station: ${station.getSerial()} has no StationCurrentModeTime property.`);
         }
     }
     /**
