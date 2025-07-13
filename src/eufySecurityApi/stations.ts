@@ -22,7 +22,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private api: EufySecurityApi;
     private httpService: HTTPApi;
     private stations: { [stationSerial: string ]: Station } = {};
-    private skipNextModeChangeEvent = new Map<string, boolean>();
+    private skipNextCurrentModeChangeEvent = new Map<string, boolean>();
     private loadingEmitter = new EventEmitter();
     private stationsLoaded?: Promise<void> = waitForEvent<void>(this.loadingEmitter, "stations loaded");
     private lightTimeouts = new Map<string, NodeJS.Timeout>();
@@ -90,7 +90,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
                     rootAddonLogger.debug(`Set p2p connection type for device ${stationSerial} to value from settings (${P2PConnectionType[p2pMethod]}).`);
                 }
                 const new_station = Station.getInstance(this.httpService, resStations[stationSerial], undefined, udpPort, enableEmbeddedPKCS1Support, p2pMethod);
-                this.skipNextModeChangeEvent.set(stationSerial, false);
+                this.skipNextCurrentModeChangeEvent.set(stationSerial, true);
 
                 promises.push(new_station.then((station: Station) => {
                     try {
@@ -1474,13 +1474,8 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
             station.updateProperty(PropertyName.StationGuardModeTime, timestamp !== undefined ? timestamp : 0);
         }
         this.api.updateStationGuardModeSystemVariable(station.getSerial(), guardMode);
-        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
-            rootAddonLogger.debug("Event skipped due to locally forced changeGuardMode.");
-            this.skipNextModeChangeEvent.set(station.getSerial(), false);
-        } else {
-            rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
-            await this.api.updateGuardModeStation(station.getSerial());
-        }
+        rootAddonLogger.debug(`Event "GuardMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+        await this.api.updateGuardModeStation(station.getSerial());
     }
 
     /**
@@ -1489,12 +1484,18 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
      * @param guardMode The new guard mode as GuardMode.
      */
     private async onStationCurrentMode(station: Station, guardMode: number): Promise<void> {
-        if (this.skipNextModeChangeEvent.get(station.getSerial()) === true) {
-            rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
-            this.skipNextModeChangeEvent.set(station.getSerial(), false);
-        } else {
-            rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+        if(station.hasProperty(PropertyName.StationCurrentModeTime)) {
+            if (this.skipNextCurrentModeChangeEvent.get(station.getSerial()) === true) {
+                rootAddonLogger.debug("Event skipped due to locally forced changeCurrentMode.");
+                this.skipNextCurrentModeChangeEvent.set(station.getSerial(), false);
+            } else {
+                const timestamp = convertTimeStampToTimeStampMs(new Date().getTime(), "ms");
+                station.updateProperty(PropertyName.StationCurrentModeTime, timestamp !== undefined ? timestamp : 0);
+                rootAddonLogger.debug(`Event "CurrentMode": station: ${station.getSerial()} | guard mode: ${guardMode}`);
+            }
             await this.api.updateGuardModeStation(station.getSerial());
+        } else {
+            rootAddonLogger.debug(`Event "CurrentMode": The station: ${station.getSerial()} has no StationCurrentModeTime property.`);
         }
     }
 

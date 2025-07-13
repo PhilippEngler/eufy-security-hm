@@ -166,6 +166,13 @@ export class Station extends TypedEmitter<StationEvents> {
                         }
                     }
                 }
+                else if (param.param_type === ParamType.DEFAULT_SCHEDULE_MODE) {
+                    if (this.hasProperty(PropertyName.StationCurrentModeTime)) {
+                        if (this.getPropertyValue(PropertyName.StationCurrentModeTime) === 0) {
+                            this.updateProperty(PropertyName.StationCurrentModeTime, param.update_time * 1000);
+                        }
+                    }
+                }
             });
         }
         rootHTTPLogger.debug("Update station cloud properties", { stationSN: this.getSerial(), properties: this.properties });

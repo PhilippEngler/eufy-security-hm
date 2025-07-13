@@ -1652,6 +1652,11 @@ export class EufySecurityApi {
                     } else {
                         this.setSystemVariableString("eufyLastModeChangeTime" + station.getSerial(), "n/a");
                     }
+                    if (station.hasProperty(PropertyName.StationCurrentModeTime)) {
+                        this.setSystemVariableTime("eufyCentralCurrentModeChangeTime" + station.getSerial(), new Date(station.getPropertyValue(PropertyName.StationCurrentModeTime) as number));
+                    } else {
+                        this.setSystemVariableString("eufyCentralCurrentModeChangeTime" + station.getSerial(), "n/a");
+                    }
                 } else {
                     json = {"success":false, "reason":`No station with serial ${stationSerial} found.`};
                     this.setLastConnectionInfo(false);
@@ -1799,12 +1804,29 @@ export class EufySecurityApi {
     }
 
     /**
-     * Set the systemvariable for a given station.
+     * Set the guard mode system variable for a given station.
      * @param stationSerial The serial of the station.
      * @param guardMode The guard mode to set.
      */
-    public updateStationGuardModeSystemVariable(stationSerial: string, guardMode: PropertyValue): void {
+    public async updateStationGuardModeSystemVariable(stationSerial: string, guardMode: PropertyValue): Promise<void> {
+        const station = await this.stations.getStation(stationSerial);
         this.setSystemVariableString("eufyCentralState" + stationSerial, this.convertGuardModeToString(guardMode as GuardMode));
+        if (station.hasProperty(PropertyName.StationGuardModeTime)) {
+            this.setSystemVariableTime("eufyLastModeChangeTime" + stationSerial, new Date(station.getPropertyValue(PropertyName.StationGuardModeTime) as number));
+        }
+    }
+
+    /**
+     * Set the current mode system variable for a given station.
+     * @param stationSerial The serial of the station.
+     * @param guardMode The guard mode to set.
+     */
+    public async updateStationCurrentModeSystemVariable(stationSerial: string, currentMode: PropertyValue): Promise<void> {
+        const station = await this.stations.getStation(stationSerial);
+        this.setSystemVariableString("eufyCentralCurrentMode" + stationSerial, this.convertGuardModeToString(currentMode as GuardMode));
+        if (station.hasProperty(PropertyName.StationCurrentModeTime)) {
+            this.setSystemVariableTime("eufyCentralCurrentModeChangeTime" + stationSerial, new Date(station.getPropertyValue(PropertyName.StationCurrentModeTime) as number));
+        }
     }
 
     /**
@@ -2422,6 +2444,14 @@ export class EufySecurityApi {
                             json.data.push({"sysVarName":`eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo":`Zeitpunkt des letzten Moduswechsels der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()), "sysVarCurrent":true});
                             if (availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial())) {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyLastModeChangeTime${station.getSerial()}`), 1);
+                            }
+                            json.data.push({"sysVarName":`eufyCentralCurrentMode${station.getSerial()}`, "sysVarInfo":`aktueller Modus der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial()), "sysVarCurrent":true});
+                            if (availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralCurrentMode${station.getSerial()}`), 1);
+                            }
+                            json.data.push({"sysVarName":`eufyCentralCurrentModeChangeTime${station.getSerial()}`, "sysVarInfo":`Zeitpunkt des letzten Wechsels des aktuellen Modus der Basis ${station.getSerial()}`, "sysVarAvailable":availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial()), "sysVarCurrent":true});
+                            if (availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial())) {
+                                availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralCurrentModeChangeTime${station.getSerial()}`), 1);
                             }
                         }
 
