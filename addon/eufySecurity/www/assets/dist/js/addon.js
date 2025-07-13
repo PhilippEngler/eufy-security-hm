@@ -531,13 +531,13 @@ async function loadStations() {
 				if(objResp.data.length > 0) {
 					for(station in objResp.data) {
 						if(objResp.data[station].deviceType == "station") {
-							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnCurrentGuardMode", "text-nowrap", "", "", "bi-shield", translateContent("lblCurrentState"), `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? translateGuardMode(objResp.data[station].guardMode) : translateContent("lblPrivacy")}`)}</div>`, `<small class="text-muted">${translateContent("lblIpAddress")}: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
+							stations += createCardStation(objResp.data[station], true, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0">${generateColumnForProperty("col mb-0 pe-1", "spnFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), objResp.data[station].softwareVersion)}${generateColumnForProperty("col mb-0 pe-1", "spnCurrentGuardMode", "text-wrap", "", "", "bi-shield", translateContent("lblCurrentState"), `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? `${translateGuardMode(objResp.data[station].guardMode)}` : translateContent("lblPrivacy")}`, undefined, `(${translateGuardMode(objResp.data[station].currentMode)})`)}</div>`, `<small class="text-muted">${translateContent("lblIpAddress")}: ${objResp.data[station].lanIpAddress} (${objResp.data[station].wanIpAddress})</small></div>`);
 						}
 					}
 					if(stations == "") {
 						text = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-primary", translateMessages("messageNoManageableStationsFoundHeader"), translateMessages("messageNoManageableStationsFoundMessage"), translateMessages("messageNoManageableStationsFoundSubText"))}`
 					} else {
-						text = createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
+						text = createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-6 g-3", stations);
 					}
 					document.getElementById("stations").innerHTML =  text;
 				} else {
@@ -654,7 +654,7 @@ function createCardDevice(device) {
 
 	card += `<h6 class="card-subtitle mb-2 text-muted">${device.modelName}</h6>`;
 	card += `<p class="card-text mb-1">${device.serialNumber}</p>`;
-	card += `<div class="row g-0">`;
+	card += `<div class="row g-0 row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 row-cols-xl-3 row-cols-xxl-3 m-0 p-0">`;
 	if(device.softwareVersion !== undefined) {
 		card += generateColumnForProperty("col mb-0 pe-1", "spnDeviceFirmware", "text-nowrap", "", "", "bi-gear-wide-connected", translateContent("lblFirmware"), device.softwareVersion);
 	}
@@ -677,7 +677,7 @@ function createCardDevice(device) {
 
 function createDeviceTypeCardsContainer(typeName, firendlyTypeName, cards) {
 	if(cards != "") {
-		return `<p id="${typeName}"><h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3">${cards}</div></p>`;
+		return `<p id="${typeName}"><h4>${firendlyTypeName}</h4><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-6 g-3">${cards}</div></p>`;
 	} else {
 		return "";
 	}
@@ -711,7 +711,7 @@ function getDeviceLastEventTime(device) {
 	}
 }
 
-function generateColumnForProperty(divClass, spanName, spanClass, displayFormatStart, displayFormatEnd, imageName, title, value, unit) {
+function generateColumnForProperty(divClass, spanName, spanClass, displayFormatStart, displayFormatEnd, imageName, title, value, unit, subvalue) {
 	if(value === undefined) {
 		return "";
 	}
@@ -752,7 +752,7 @@ function generateColumnForProperty(divClass, spanName, spanClass, displayFormatS
 			}
 			break;
 	}
-	return `<div class="${divClass}${value === `---` ? ` text-muted` : ""}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<i class="${imageName}" title="${title}"></i>&nbsp;${value === false ? translateString("strOk") : value === true ? translateString("strLow") : value}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</span></div>`;
+	return `<div class="${divClass}${value === `---` ? ` text-muted` : ""}"><span id="${spanName}" class="${spanClass}">${displayFormatStart == "" ? "" : displayFormatStart}<div class="row"><div class="col col-2 me-1 pe-0"><i class="${imageName}" title="${title}"></i></div><div class="col ms-2 ps-1 me-0 pe-0">${value === false ? translateString("strOk") : value === true ? translateString("strLow") : value}${subvalue === undefined || subvalue == "" ? "" : `<small class="text-secondary"> ${subvalue}</small>`}${unit === undefined ? "" : unit}${displayFormatEnd == "" ? "" : displayFormatEnd}</div></div></span></div>`;
 }
 
 function generateStationDeviceSettingsSelectionModal(deviceId, deviceName) {
@@ -3028,9 +3028,9 @@ async function loadDataStatechange(showLoading) {
 					} else {
 						lastChangeTime = translateContent("lblNotAvailable");
 					}
-					stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1"><div class="col mb-1 pe-1"><span class="text-nowrap"><i class="bi-shield" title="${translateString("strCurrentState")}"></i>&nbsp;${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? translateGuardMode(objResp.data[station].guardMode) : translateString("strInactive")}</span></div></div><div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">${translateContent("lblLastStateChange")}: ${lastChangeTime}</small>`);
+					stations += createCardStation(objResp.data[station], false, `<h6 class="card-subtitle mb-2 text-muted">${objResp.data[station].modelName}</h6><p class="card-text mb-1">${objResp.data[station].serialNumber}</p><div class="row g-0 mb-1">${generateColumnForProperty("col mb-1 pe-1", "spnCurrentGuardMode", "text-wrap", "", "", "bi-shield", translateContent("lblCurrentState"), `${objResp.data[station].privacyMode === undefined || objResp.data[station].privacyMode == false ? `${translateGuardMode(objResp.data[station].guardMode)}` : translateContent("lblPrivacy")}`, undefined, `(${translateGuardMode(objResp.data[station].currentMode)})`)}<div class="card-text d-grid gap-2">${buttons}</div></div>`, `<small class="text-muted">${translateContent("lblLastStateChange")}: ${lastChangeTime}</small></div>`);
 				}
-				text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-5 row-cols-xxl-6 g-3", stations);
+				text += createStationTypeCardsContainer(translateContent("lblStations"), "row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-6 g-3", stations);
 				document.getElementById("btnAwayAll").removeAttribute("disabled");
 				document.getElementById("btnHomeAll").removeAttribute("disabled");
 				document.getElementById("btnScheduleAll").removeAttribute("disabled");
