@@ -71,15 +71,18 @@
 			</nav>
 		</header>
 		
-		<main class="container-fluid">
+		<error class="container-fluid">
 			<div id="serviceNotRunningError"></div>
 			<div id="loadApiSettingsError"></div>
-			<div id="content">
+		</error>
+
+		<main class="d-flex flex-column h-100 justify-content-center">
+			<div id="content" class="d-flex flex-column h-100 justify-content-center text-center">
 				<div id="divHeading"><h2 id="headerApiSettingsError"></h2></div>
                 <div id="divContentText"><p id="messageApiSettingsError"></p></div>
                 
-                <div class="d-flex align-items-center" id="serviceRestart"><div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><strong id="lblWaitServiceStart">{lblWaitServiceStart}</strong></div>
-                <div class="d-flex align-items-center" id="serviceInit"><i class="bi-circle fs-2 my-3 mx-4 float-left text-muted"></i><div class="fw-bold text-muted" id="lblWaitServiceInit">{lblWaitServiceInit}</div></div>
+                <div class="d-flex flex-column justify-content-center text-center align-items-center h-20" id="serviceRestart"><div class="spinner-border my-3 float-left text-info" role="status" aria-hidden="true"></div><strong id="lblWaitServiceStart">{lblWaitServiceStart}</strong></div>
+                <div class="d-flex flex-column justify-content-center text-center align-items-center h-20" id="serviceInit"><i class="bi-circle fs-2 mt-4 mb-2 float-center text-muted"></i><div class="fw-bold text-muted" id="lblWaitServiceInit">{lblWaitServiceInit}</div></div>
 			</div>
 		</main>
 

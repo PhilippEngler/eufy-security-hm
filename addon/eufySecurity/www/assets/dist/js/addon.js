@@ -4643,16 +4643,16 @@ async function checkServiceState(cntStart, cntInit, postInit) {
 						if(cntInit == 0) {
 							var startDone = "";
 							if(action == "captcha") {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
 							} else {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initStart = "";
 							if(action == "captcha") {
-								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
+								initStart = `<div class="spinner-border mt-4 mb-2 float-center text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
 							} else {
-								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
+								initStart = `<div class="spinner-border mt-4 mb-2 float-center text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initStart;
 						}
@@ -4670,16 +4670,16 @@ async function checkServiceState(cntStart, cntInit, postInit) {
 						if(cntInit == 0 && postInit == 0) {
 							var startDone = "";
 							if(action == "captcha") {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
 							} else {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initStart = "";
 							if(action == "captcha") {
-								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
+								initStart = `<div class="spinner-border mt-4 mb-2 float-center text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
 							} else {
-								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
+								initStart = `<div class="spinner-border mt-4 mb-2 float-center text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initStart;
 						}
@@ -4690,16 +4690,16 @@ async function checkServiceState(cntStart, cntInit, postInit) {
 						} else {
 							var startDone = "";
 							if(action == "captcha") {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
 							} else {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initDone = "";
 							if(action == "captcha") {
-								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strLoginFinished")}</div>`;
+								initDone = `<i class="bi-check-circle fs-2 mt-4 mb-2 float-center text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strLoginFinished")}</div>`;
 							} else {
-								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strInitFinished")}</div>`;
+								initDone = `<i class="bi-check-circle fs-2 mt-4 mb-2 float-center text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strInitFinished")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initDone;
 							await delay(5000);
@@ -4709,16 +4709,16 @@ async function checkServiceState(cntStart, cntInit, postInit) {
 						if(cntInit == 0 && postInit == 0) {
 							var startDone = "";
 							if(action == "captcha") {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
 							} else {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initStart = "";
 							if(action == "captcha") {
-								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
+								initStart = `<div class="spinner-border mt-4 mb-2 float-center text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileLogin")}</div>`;
 							} else {
-								initStart = `<div class="spinner-border m-4 float-left text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
+								initStart = `<div class="spinner-border mt-4 mb-2 float-center text-info" role="status" aria-hidden="true"></div><div class="fw-bold">${translateString("strWaitWhileInit")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initStart;
 						}
@@ -4729,16 +4729,16 @@ async function checkServiceState(cntStart, cntInit, postInit) {
 						} else {
 							var startDone = "";
 							if(action == "captcha") {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceRunning")}"></i><div class="fw-bold">${translateString("strServiceRunning")}</div>`;
 							} else {
-								startDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
+								startDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="${translateString("strServiceStarted")}"></i><div class="fw-bold">${translateString("strServiceStarted")}</div>`;
 							}
 							document.getElementById("serviceRestart").innerHTML = startDone;
 							var initDone = "";
 							if(action == "captcha") {
-								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strLoginFinished")}</div>`;
+								initDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strLoginFinished")}</div>`;
 							} else {
-								initDone = `<i class="bi-check-circle fs-2 my-3 mx-4 float-left text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strInitFinished")}</div>`;
+								initDone = `<i class="bi-check-circle fs-2 my-2 float-center text-success" title="Einstellungen"></i><div class="fw-bold">${translateString("strInitFinished")}</div>`;
 							}
 							document.getElementById("serviceInit").innerHTML = initDone;
 							await delay(5000);
