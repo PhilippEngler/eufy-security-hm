@@ -25,7 +25,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "^20.19.8",
+    "@types/node": "^20.19.9",
     "@types/node-rsa": "^1.1.4",
     "@types/node-schedule": "^2.1.8",
     "@types/qs": "^6.14.0",
@@ -43,7 +43,7 @@
     "i18n-iso-countries": "^7.14.0",
     "image-type": "^6.0.0",
     "long": "^5.3.2",
-    "mqtt": "^5.13.2",
+    "mqtt": "^5.13.3",
     "node-rsa": "^1.1.1",
     "node-schedule": "^2.1.1",
     "p-throttle": "^6.2.0",
@@ -53,6 +53,8 @@
     "tiny-typed-emitter": "^2.1.0",
     "typescript-logging": "^2.2.0",
     "typescript-logging-category-style": "^2.2.0",
-    "axios": "^1.10.0"
+    "axios": "^1.10.0",
+    "i18next": "^25.3.2",
+    "i18next-fs-backend": "^2.6.0"
   }
 }
