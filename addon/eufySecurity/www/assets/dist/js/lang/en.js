@@ -371,6 +371,36 @@ function translateStaticContentElement(element) {
 			return "Check the settings.";
 		case "modalUDPPortsEqualWrongBtnOK":
 			return "OK";
+		case "lblModalDeleteSystemVariableTitle":
+			return "Remove system variable";
+		case "modalDeleteSystemVariableBtnNo":
+			return "No";
+		case "modalDeleteSystemVariableBtnYes":
+			return "Yes, please remove";
+		case "lblModalDeleteEventInteractionTitle":
+			return "Remove interaction";
+		case "modalDeleteEventInteractionBtnNo":
+			return "No";
+		case "modalDeleteEventInteractionBtnYes":
+			return "Yes, please remove";
+		case "lblModalDeleteEventInteractionsTitle":
+			return "Remove interactions";
+		case "modalDeleteEventInteractionsBtnNo":
+			return "No";
+		case "modalDeleteEventInteractionsBtnYes":
+			return "Yes, please remove all";
+		case "lblModalDeleteTokenTitle":
+			return "Remove token";
+		case "modalDeleteTokenBtnNo":
+			return "No";
+		case "modalDeleteTokenBtnYes":
+			return "Yes, please remove";
+		case "lblModalEmptyLogfileTitle":
+			return "Empty file";
+		case "modalEmptyLogfileBtnNo":
+			return "No";
+		case "modalEmptyLogfileBtnYes":
+			return "Yes, please empty file";
 		case "logfileIntroHeader":
 			return "Logfiles";
 		case "tabHeaderAddonLog":
@@ -734,6 +764,16 @@ function translateMessages(message, ...options) {
 			return `An error has occurred while restarting the add-on.<br />Phase: '${options[0]}'`;
 		case "messageRestartWaitHeaderErrorMessage":
 			return `An error has occurred while restarting the add-on.<br />Error: '${options[0]}'`;
+		case "modalDeleteSystemVariableMessage":
+			return `Are you sure that the system variable '${options[0]}' should be deleted?<br />This process cannot be undone.`;
+		case "modalDeleteEventInteractionMessage":
+			return `Are you sure that the following interaction should be deleted?<br /><dl><dt>Device:</dt><dd>${options[1]} (${options[2]})</dd><dt>Interaction:</dt><dd>${options[3]}</dd></dl>This process cannot be undone.`;
+		case "modalDeleteEventInteractionsMessage":
+			return `Are you sure that all interactions should be deleted?<br />This process cannot be undone.`;
+		case "modalDeleteTokenMessage":
+			return `Are you sure that the token should be deleted?<br />This process cannot be undone.`;
+		case "modalEmptyLogfileMessage":
+			return `Are you sure that the file '<text class="font-monospace fs-6 fw-medium">${options[0]}</text>' should be emptied?<br />This process cannot be undone.`;
 		default:
 			return `{${message}}`;
 	}

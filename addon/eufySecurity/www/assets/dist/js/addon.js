@@ -1992,6 +1992,16 @@ async function testStoredEventInteraction(deviceId, deviceName, serialNumber, ev
 	});
 }
 
+async function deleteEventInteractionQuestion(deviceId, deviceName, serialNumber, event) {
+	const myModal = new bootstrap.Modal(document.getElementById('modalQuestionYesNo'));
+	document.getElementById("lblModalQuestionYesNoTitle").innerHTML = translateStaticContentElement("lblModalDeleteEventInteractionTitle");
+	document.getElementById("modalQuestionYesNoMessage").innerHTML = translateMessages("modalDeleteEventInteractionMessage", deviceId, deviceName, serialNumber, event);
+    document.getElementById("modalQuestionYesNoBtnNo").innerHTML = translateStaticContentElement("modalDeleteEventInteractionBtnNo");
+    document.getElementById("modalQuestionYesNoBtnYes").innerHTML = translateStaticContentElement("modalDeleteEventInteractionBtnYes");
+	document.getElementById("modalQuestionYesNoBtnYes").setAttribute("onclick", `deleteEventInteraction("` + deviceId + `", "` + deviceName + `", "` + serialNumber + `", "` + event + `")`);
+	myModal.show();
+}
+
 async function deleteEventInteraction(deviceId, deviceName, serialNumber, event) {
 	var eventType;
 	var eventType = getEventId(event);
@@ -2188,12 +2198,12 @@ function generateInteractionExpander(event, enabled, deviceProperties, deviceInt
 				interactionExpander += `
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestUnstoredEventInteraction`, "btn btn-outline-secondary", `testUnstoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play-circle" title="${translateString("strInteractionUnstoredTest")}"></i> ${translateString("strInteractionUnstoredTest")}`, enabled, undefined, undefined, setEventHandler)}
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, enabled, undefined, undefined, setEventHandler)}
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteractionQuestion('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
 			} else {
 				interactionExpander += `
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestUnstoredEventInteraction`, "btn btn-outline-secondary", `testUnstoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play-circle" title="${translateString("strInteractionUnstoredTest")}"></i> ${translateString("strInteractionUnstoredTest")}`, enabled, undefined, undefined, setEventHandler)}
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, enabled, undefined, undefined, setEventHandler)}
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteractionQuestion('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
 			}
 			interactionExpander += `
 													</div>
@@ -3639,7 +3649,7 @@ async function loadSystemVariables() {
 							sysVarToDelete = true;
 							sysVarDeprTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
 							sysVarDeprTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
-							sysVarDeprTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSysVar('${sysVarName}')`, translateContent("lblSystemVariableRemove"), true, undefined, undefined, true)}</div></td>`;
+							sysVarDeprTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `removeSystemVariableQuestion('${sysVarName}')`, translateContent("lblSystemVariableRemove"), true, undefined, undefined, true)}</div></td>`;
 							sysVarDeprTable += `</tr>`;
 						}
 					}
@@ -3765,7 +3775,17 @@ async function createSysVar(varName, varInfo) {
 	});
 }
 
-async function removeSysVar(varName) {
+async function removeSystemVariableQuestion(varName) {
+	const myModal = new bootstrap.Modal(document.getElementById('modalQuestionYesNo'));
+	document.getElementById("lblModalQuestionYesNoTitle").innerHTML = translateStaticContentElement("lblModalDeleteSystemVariableTitle");
+	document.getElementById("modalQuestionYesNoMessage").innerHTML = translateMessages("modalDeleteSystemVariableMessage", varName);
+    document.getElementById("modalQuestionYesNoBtnNo").innerHTML = translateStaticContentElement("modalDeleteSystemVariableBtnNo");
+    document.getElementById("modalQuestionYesNoBtnYes").innerHTML = translateStaticContentElement("modalDeleteSystemVariableBtnYes");
+	document.getElementById("modalQuestionYesNoBtnYes").setAttribute("onclick", `removeSystemVariable("` + varName + `")`);
+	myModal.show();
+}
+
+async function removeSystemVariable(varName) {
 	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/removeSystemVariable/${varName}`;
 	await retrieveData("GET", url, 'application/json', undefined, "divDeprecatedSystemVariables", "strSystemVariableUnusedRemoving", undefined, undefined).then((result) => {
@@ -3873,6 +3893,16 @@ async function uploadFile(filetype) {
 	});
 }
 
+async function removeInteractionsQuestion() {
+	const myModal = new bootstrap.Modal(document.getElementById('modalQuestionYesNo'));
+	document.getElementById("lblModalQuestionYesNoTitle").innerHTML = translateStaticContentElement("lblModalDeleteEventInteractionsTitle");
+	document.getElementById("modalQuestionYesNoMessage").innerHTML = translateMessages("modalDeleteEventInteractionsMessage");
+    document.getElementById("modalQuestionYesNoBtnNo").innerHTML = translateStaticContentElement("modalDeleteEventInteractionsBtnNo");
+    document.getElementById("modalQuestionYesNoBtnYes").innerHTML = translateStaticContentElement("modalDeleteEventInteractionsBtnYes");
+	document.getElementById("modalQuestionYesNoBtnYes").setAttribute("onclick", `removeInteractions()`);
+	myModal.show();
+}
+
 async function removeInteractions() {
 	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}:${port}/removeInteractions`;
@@ -3973,6 +4003,15 @@ async function reconnectStation() {
 		}
 	});
 }
+
+async function removeTokenDataQuestion() {
+	const myModal = new bootstrap.Modal(document.getElementById('modalQuestionYesNo'));
+	document.getElementById("lblModalQuestionYesNoTitle").innerHTML = translateStaticContentElement("lblModalDeleteTokenTitle");
+	document.getElementById("modalQuestionYesNoMessage").innerHTML = translateMessages("modalDeleteTokenMessage");
+    document.getElementById("modalQuestionYesNoBtnNo").innerHTML = translateStaticContentElement("modalDeleteTokenBtnNo");
+    document.getElementById("modalQuestionYesNoBtnYes").innerHTML = translateStaticContentElement("modalDeleteTokenBtnYes");
+	document.getElementById("modalQuestionYesNoBtnYes").setAttribute("onclick", `removeTokenData()`);
+	myModal.show();}
 
 async function removeTokenData() {
 	var objResp, objErr;
@@ -4341,7 +4380,7 @@ async function loadLogfile(logfiletype, showLoading) {
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '<text class="font-monospace fs-6 fw-medium">/var/log/eufySecurity.log</text>'`;
 			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('log', true)");
-			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfile('log')");
+			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfileQuestion('log', '/var/log/eufySecurity.log')");
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('log')");
 			break;
 		case "err":
@@ -4351,7 +4390,7 @@ async function loadLogfile(logfiletype, showLoading) {
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '<text class="font-monospace fs-6 fw-medium"><div-tab-code>/var/log/eufySecurity.err</div-tab-code></text>'`;
 			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('err', true)");
-			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfile('err')");
+			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfileQuestion('err', '/var/log/eufySecurity.err')");
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('err')");
 			break;
 		case "clientLog":
@@ -4361,7 +4400,7 @@ async function loadLogfile(logfiletype, showLoading) {
 			document.getElementById("tabHeaderClientLog").classList.add("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '<text class="font-monospace fs-6 fw-medium">/var/log/eufySecurityClient.log</text>'`;
 			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('clientLog', true)");
-			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfile('clientLog')");
+			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfileQuestion('clientLog', '/var/log/eufySecurityClient.log')");
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('clientLog')");
 			break;
 		default:
@@ -4455,6 +4494,16 @@ async function loadLogfile(logfiletype, showLoading) {
 			toast.show();
 		}
 	});
+}
+
+async function emptyLogfileQuestion(logfiletype, filePathAndName) {
+	const myModal = new bootstrap.Modal(document.getElementById('modalQuestionYesNo'));
+	document.getElementById("lblModalQuestionYesNoTitle").innerHTML = translateStaticContentElement("lblModalEmptyLogfileTitle");
+	document.getElementById("modalQuestionYesNoMessage").innerHTML = translateMessages("modalEmptyLogfileMessage", filePathAndName);
+    document.getElementById("modalQuestionYesNoBtnNo").innerHTML = translateStaticContentElement("modalEmptyLogfileBtnNo");
+    document.getElementById("modalQuestionYesNoBtnYes").innerHTML = translateStaticContentElement("modalEmptyLogfileBtnYes");
+	document.getElementById("modalQuestionYesNoBtnYes").setAttribute("onclick", `emptyLogfile("` + logfiletype + `")`);
+	myModal.show();
 }
 
 async function emptyLogfile(logfiletype) {

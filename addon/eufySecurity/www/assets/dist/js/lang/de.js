@@ -371,6 +371,36 @@ function translateStaticContentElement(element) {
 			return "Einstellungen überprüfen.";
 		case "modalUDPPortsEqualWrongBtnOK":
 			return "OK";
+		case "lblModalDeleteSystemVariableTitle":
+			return "Systemvariable entfernen";
+		case "modalDeleteSystemVariableBtnNo":
+			return "Nein";
+		case "modalDeleteSystemVariableBtnYes":
+			return "Ja, bitte entfernen";
+		case "lblModalDeleteEventInteractionTitle":
+			return "Interaktion entfernen";
+		case "modalDeleteEventInteractionBtnNo":
+			return "Nein";
+		case "modalDeleteEventInteractionBtnYes":
+			return "Ja, bitte entfernen";
+		case "lblModalDeleteEventInteractionsTitle":
+			return "Interaktionen entfernen";
+		case "modalDeleteEventInteractionsBtnNo":
+			return "Nein";
+		case "modalDeleteEventInteractionsBtnYes":
+			return "Ja, bitte alle entfernen";
+		case "lblModalDeleteTokenTitle":
+			return "Token entfernen";
+		case "modalDeleteTokenBtnNo":
+			return "Nein";
+		case "modalDeleteTokenBtnYes":
+			return "Ja, bitte entfernen";
+		case "lblModalEmptyLogfileTitle":
+			return "Datei leeren";
+		case "modalEmptyLogfileBtnNo":
+			return "Nein";
+		case "modalEmptyLogfileBtnYes":
+			return "Ja, bitte Datei leeren";
 		case "logfileIntroHeader":
 			return "Logdateien";
 		case "tabHeaderAddonLog":
@@ -734,6 +764,16 @@ function translateMessages(message, ...options) {
 			return `Es ist ein Fehler beim Neustart des Addons aufgetreten.<br />Phase: '${options[0]}'`;
 		case "messageRestartWaitHeaderErrorMessage":
 			return `Es ist ein Fehler beim Neustart des Addons aufgetreten.<br />Fehler: '${options[0]}'`;
+		case "modalDeleteSystemVariableMessage":
+			return `Sind Sie sicher, dass die Systemvariable '${options[0]}' gelöscht werden soll?<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
+		case "modalDeleteEventInteractionMessage":
+			return `Sind Sie sicher, dass folgende Interaktion gelöscht werden soll?<br /><dl><dt>Gerät:</dt><dd>${options[1]} (${options[2]})</dd><dt>Interaktion:</dt><dd>${options[3]}</dd></dl>Dieser Vorgang kann nicht rückgängig gemacht werden.`;
+		case "modalDeleteEventInteractionsMessage":
+			return `Sind Sie sicher, dass alle Systemvariablen gelöscht werden sollen?<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
+		case "modalDeleteTokenMessage":
+			return `Sind Sie sicher, dass das Token gelöscht werden soll?<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
+		case "modalEmptyLogfileMessage":
+			return `Sind Sie sicher, dass die Datei '<text class="font-monospace fs-6 fw-medium">${options[0]}</text>' geleert werden soll?<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
 		default:
 			return `{${message}}`;
 	}

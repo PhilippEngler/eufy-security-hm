@@ -99,7 +99,7 @@
 							<span class="text-nowrap">
 								<div class="btn-group mb-0 py-0" role="group">
 									<button id="btnReloadLogfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="loadLogfile('log', true)"><i id="imgReloadLogfileData" class="bi-arrow-clockwise" title="{imgReloadLogfileData}"></i></button>
-									<button id="btnDeleteLogfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="emptyLogfile('log')"><i id="imgDeleteLogfileData" class="bi-trash" title="{imgDeleteLogfileData}"></i></button>
+									<button id="btnDeleteLogfileData" type="button" class="btn btn-link btn-sm mb-0 py-0" onclick="emptyLogfileQuestion('log', '/var/log/eufySecurity.log')"><i id="imgDeleteLogfileData" class="bi-trash" title="{imgDeleteLogfileData}"></i></button>
 									<button id="btnDownloadLogfile" type="button" class="btn btn-link btn-sm mb-0 py-0 pe-0" onclick="downloadFile('log')"><i id="imgDownloadLogfile" class="bi-download" title="{imgDownloadLogfile}"></i></button>
 								</div>
 							</span>
@@ -138,6 +138,23 @@
 		<div class="modal fade" id="modalTfaCode" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalTfaCode" aria-hidden="true"></div>
 
 		<div class="modal fade" id="modalCaptchaCode" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalCaptchaCode" aria-hidden="true"></div>
+
+		<div class="modal fade" id="modalQuestionYesNo" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalQuestionYesNo" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header text-bg-warning">
+						<h5 class="modal-title" id="lblModalQuestionYesNoTitle">{lblModalQuestionYesNoTitle}</h5>
+					</div>
+					<div class="modal-body" id="modalQuestionYesNoMessage">
+						
+					</div>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="modalQuestionYesNoBtnNo" class="btn btn-primary" data-bs-dismiss="modal">{modalQuestionYesNoBtnNo}</button>
+						<button type="button" id="modalQuestionYesNoBtnYes" class="btn btn-outline-primary" data-bs-dismiss="modal">{modalQuestionYesNoBtnYes}</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		
 		<script src="assets/dist/js/bootstrap.min.js"></script>
 		<script src="assets/dist/js/addon.js"></script>

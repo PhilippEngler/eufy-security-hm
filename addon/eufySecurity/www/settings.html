@@ -444,7 +444,7 @@
 											<div class="form-label-group" class="container-fluid">
 												<h6 id="headerRemoveInteractions" class="text-muted">{headerRemoveInteractions}</h6>
 												<small class="form-text text-muted mt-0 mb-2" id="hintRemoveInteractions">{hintRemoveInteractions}</small><br />
-												<button id="btnRemoveInteractions" onclick="removeInteractions()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnRemoveInteractions}</button>
+												<button id="btnRemoveInteractions" onclick="removeInteractionsQuestion()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnRemoveInteractions}</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
@@ -460,7 +460,7 @@
 												<h6 id="headerDeleteTokenData" class="text-muted">{headerDeleteTokenData}</h6>
 												<small class="form-text text-muted my-0" id="hintTokenData"></small>
 												<small class="form-text text-muted mt-0 mb-2" id="hintDeleteToken">{hintDeleteToken}</small><br />
-												<button id="btnDeleteTokenData" onclick="removeTokenData()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnDeleteTokenData}</button>
+												<button id="btnDeleteTokenData" onclick="removeTokenDataQuestion()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnDeleteTokenData}</button>
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
@@ -578,6 +578,23 @@
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
 						<button type="button" id="modalServiceManagerBtnCancel" class="btn btn-primary btn-sm" data-bs-dismiss="modal">{modalServiceManagerBtnCancel}</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="modalQuestionYesNo" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalQuestionYesNo" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header text-bg-warning">
+						<h5 class="modal-title" id="lblModalQuestionYesNoTitle">{lblModalQuestionYesNoTitle}</h5>
+					</div>
+					<div class="modal-body" id="modalQuestionYesNoMessage">
+						
+					</div>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="modalQuestionYesNoBtnNo" class="btn btn-primary" data-bs-dismiss="modal">{modalQuestionYesNoBtnNo}</button>
+						<button type="button" id="modalQuestionYesNoBtnYes" class="btn btn-outline-primary" data-bs-dismiss="modal">{modalQuestionYesNoBtnYes}</button>
 					</div>
 				</div>
 			</div>
