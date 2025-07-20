@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.34
-20250517
+Schema v9.40
+20250720
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20250517 (v9.34)";
+var languageVersion = "20250720 (v9.40)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -377,6 +377,12 @@ function translateStaticContentElement(element) {
 			return "No";
 		case "modalDeleteSystemVariableBtnYes":
 			return "Yes, please remove";
+		case "lblModalUpdateSystemVariableTitle":
+			return "Update system variable";
+		case "modalUpdateSystemVariableBtnNo":
+			return "No";
+		case "modalUpdateSystemVariableBtnYes":
+			return "Yes, please update";
 		case "lblModalDeleteEventInteractionTitle":
 			return "Remove interaction";
 		case "modalDeleteEventInteractionBtnNo":
@@ -766,6 +772,8 @@ function translateMessages(message, ...options) {
 			return `An error has occurred while restarting the add-on.<br />Error: '${options[0]}'`;
 		case "modalDeleteSystemVariableMessage":
 			return `Are you sure that the system variable '${options[0]}' should be deleted?<br />This process cannot be undone.`;
+		case "modalUpdateSystemVariableMessage":
+			return `Are you sure that the system variable '${options[0]}' should be updated?<br /><b>Please note:</b><br />This process consists of two steps:<br /><ol type="1"><li>current system variable will be deleted</li><li>system variable is recreated with current parameters</li></ol>You must then update existing programs, scripts and middleware (e.g. Home Assistant, ioBroker, etc.) with the new system variable.<br />This process cannot be undone.`;
 		case "modalDeleteEventInteractionMessage":
 			return `Are you sure that the following interaction should be deleted?<br /><dl><dt>Device:</dt><dd>${options[1]} (${options[2]})</dd><dt>Interaction:</dt><dd>${options[3]}</dd></dl>This process cannot be undone.`;
 		case "modalDeleteEventInteractionsMessage":
@@ -1158,6 +1166,8 @@ function translateContent(content, ...options) {
 			return "Create System Variable";
 		case "lblSystemVariableRemove":
 			return "Remove System Variable";
+		case "lblSystemVariableUpdate":
+			return "Update System Variable";
 		case "lblSettingsTroubleShootingDisable":
 			return "Disable troubleshooting";
 		case "lblSettingsTroubleShootingEnable":

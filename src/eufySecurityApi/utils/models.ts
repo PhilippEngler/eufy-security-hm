@@ -53,6 +53,23 @@ export type HomeMaticSystemvariableValueType = "ivtBinary" | "ivtFloat" | "ivtIn
 export type HomeMaticSystemvariableValueSubType = "istPresent" | "istAlarm" | "istGeneric" | "istBool" | "istEnum" | "istChar8859";
 
 /**
+ * The interface for the generic system variables in HomeMatic
+ */
+export interface HomeMaticSystemvariableGeneric {
+    name: string;
+    info: string;
+    valueType: HomeMaticSystemvariableValueType;
+    valueSubType: HomeMaticSystemvariableValueSubType;
+    valueUnit: string;
+    valueMin: number | undefined;
+    valueMax: number | undefined,
+    valueName0: string | undefined;
+    valueName1: string | undefined;
+    valueList: string | undefined;
+    state: string | number | boolean;
+}
+
+/**
  * The interface for common system variables in HomeMatic
  */
 export interface HomeMaticSystemvariable {

@@ -6,6 +6,7 @@ import { rootAddonLogger } from "./logging";
 import { promisify } from "util";
 import { exec } from "child_process";
 import { extractEnclosedString } from "./utils/utils";
+import { HomeMaticSystemvariableBinary, HomeMaticSystemvariableFloat, HomeMaticSystemvariableInteger, HomeMaticSystemvariableString, HomeMaticSystemvariableValueSubType, HomeMaticSystemvariableValueType } from "./utils/models";
 
 /**
  * Interacting with the CCU.
@@ -203,81 +204,165 @@ export class HomematicApi {
     }
 
     /**
+     * Get the variable type as number of the given system variable.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
+     * @param variableName The name of the system variable to get the value type of.
+     * @returns The value type of the given number as HomeMaticSystemvariableValueType or undefined.
+     */
+    public async getSystemVariableValueType(hostName: string, useHttps: boolean, variableName: string): Promise<HomeMaticSystemvariableValueType | undefined> {
+        const requestData = `string result=dom.GetObject("${variableName}").ValueType();`;
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, true, hostName === "localhost" ? false : true);
+
+        let data = "";
+
+        try {
+            const response = await this.request(hostName, useHttps, requestData, requestConfig);
+            rootAddonLogger.debug(`Response content: request.data: ${JSON.stringify(response.data)}`);
+            rootAddonLogger.debug(`Response content: request.status: ${response.status} | request.statusText: ${response.statusText}`);
+            data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
+            rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
+
+            const systemvariableValueTypeNumber = parseInt(data);
+            switch (systemvariableValueTypeNumber) {
+            case 2:
+                return "ivtBinary";
+            case 4:
+                return "ivtFloat";
+            case 16:
+                return "ivtInteger";
+            case 20:
+                return "ivtString";
+            default:
+                return undefined;
+        }
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on getSystemVariableType: code: ${e.code}; message: ${e.message.trim()}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariableType:`, JSON.stringify(e));
+            return undefined;
+        }
+    }
+
+    /**
+     * Get the variable sub type as number of the given system variable.
+     * @param hostName The hostName of the ccu or localhost.
+     * @param useHttps The boolean value for using HTTPS (true) or not (false).
+     * @param variableName The name of the system variable to get the value type of.
+     * @returns The value sub type of the given number as HomeMaticSystemvariableValueSubType or undefined.
+     */
+    public async getSystemVariableValueSubType(hostName: string, useHttps: boolean, variableName: string): Promise<HomeMaticSystemvariableValueSubType | undefined> {
+        const requestData = `string result=dom.GetObject("${variableName}").ValueSubType();`;
+        const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, true, hostName === "localhost" ? false : true);
+
+        let data = "";
+
+        try {
+            const response = await this.request(hostName, useHttps, requestData, requestConfig);
+            rootAddonLogger.debug(`Response content: request.data: ${JSON.stringify(response.data)}`);
+            rootAddonLogger.debug(`Response content: request.status: ${response.status} | request.statusText: ${response.statusText}`);
+            data = extractEnclosedString(response.data, "<result>", "</result>", rootAddonLogger);
+            rootAddonLogger.debug(`Result of extractEnclosedString: ${data}`);
+
+            const systemvariableValueSubTypeNumber = parseInt(data);
+            switch (systemvariableValueSubTypeNumber) {
+            case 0:
+                return "istGeneric"
+            case 2:
+                return "istBool";
+            case 6:
+                return "istAlarm";
+            case 11:
+                return "istChar8859";
+            case 23:
+                return "istPresent";
+            case 29:
+                return "istEnum";
+            default:
+                return undefined;
+        }
+        } catch (e: any) {
+            rootAddonLogger.error(`CCU request error on getSystemVariableType: code: ${e.code}; message: ${e.message.trim()}`);
+            rootAddonLogger.debug(`CCU request error on getSystemVariableType:`, JSON.stringify(e));
+            return undefined;
+        }
+    }
+
+    /**
      * Create a system variable in the CCU.
      * @param hostName The hostName of the ccu or localhost.
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
-     * @param variableName The name of the system variable to create.
-     * @param variableInfo The info of the system variable to create.
+     * @param variableData The system variable data to create.
      */
-    public async createSystemVariable(hostName: string, useHttps: boolean, variableName: string, variableInfo: string): Promise<string | undefined> {
-        const requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);object svObj=dom.CreateObject(OT_VARDP);svObj.Name('${variableName}');sv.Add(svObj.ID());svObj.ValueType(ivtString);svObj.ValueSubType(istChar8859);svObj.DPInfo('${variableInfo}');svObj.ValueUnit('');svObj.DPArchive(false);svObj.State('???');svObj.Internal(false);svObj.Visible(true);dom.RTUpdate(false);`;
-        /*
-        public async createSystemVariable(hostName: string, useHttps: boolean, variableData: HomeMaticSystemvariableString | HomeMaticSystemvariableFloat | HomeMaticSystemvariableBinary | HomeMaticSystemvariableInteger): Promise<string | undefined> {
+    public async createSystemVariable(hostName: string, useHttps: boolean, variableData: HomeMaticSystemvariableString | HomeMaticSystemvariableFloat | HomeMaticSystemvariableBinary | HomeMaticSystemvariableInteger): Promise<string | undefined> {
         let requestData = "";
         switch (variableData.valueType) {
             case "ivtString":
                 variableData = variableData as HomeMaticSystemvariableString;
-                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
-                                object svObj=dom.CreateObject(OT_VARDP);
-                                svObj.Name('${variableData.name}');
-                                sv.Add(svObj.ID());
-                                svObj.ValueType(${variableData.valueType});
-                                svObj.ValueSubType(${variableData.valueSubType});
-                                svObj.DPInfo('${variableData.info}');
-                                svObj.ValueUnit('${variableData.valueUnit}');
-                                svObj.DPArchive(false);
-                                svObj.State('${variableData.state}');
-                                svObj.Internal(false);
-                                svObj.Visible(true);
-                                dom.RTUpdate(false);`;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
+                              `object svObj=dom.CreateObject(OT_VARDP);` +
+                              `svObj.Name('${variableData.name}');` +
+                              `sv.Add(svObj.ID());` +
+                              `svObj.ValueType(${variableData.valueType});` +
+                              `svObj.ValueSubType(${variableData.valueSubType});` +
+                              `svObj.DPInfo('${variableData.info}');` +
+                              `svObj.ValueUnit('${variableData.valueUnit}');` +
+                              `svObj.DPArchive(false);` +
+                              `svObj.State('${variableData.state}');` +
+                              `svObj.Internal(false);` +
+                              `svObj.Visible(true);` +
+                              `dom.RTUpdate(false);`;
                 break;
             case "ivtFloat":
                 variableData = variableData as HomeMaticSystemvariableFloat;
-                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
-                                object svObj=dom.CreateObject(OT_VARDP);
-                                svObj.Name('${variableData.name}');
-                                sv.Add(svObj.ID());
-                                svObj.ValueType(${variableData.valueType});
-                                svObj.ValueSubType(${variableData.valueSubType});
-                                svObj.DPInfo('${variableData.info}');
-                                svObj.ValueUnit('${variableData.valueUnit}');
-                                svObj.ValueMin(${variableData.valueMin});
-                                svObj.ValueMax(${variableData.valueMax});
-                                svObj.State(${variableData.state});
-                                svObj.Internal(false);
-                                svObj.Visible(true);
-                                dom.RTUpdate(false);`;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
+                              `object svObj=dom.CreateObject(OT_VARDP);` +
+                              `svObj.Name('${variableData.name}');` +
+                              `sv.Add(svObj.ID());` +
+                              `svObj.ValueType(${variableData.valueType});` +
+                              `svObj.ValueSubType(${variableData.valueSubType});` +
+                              `svObj.DPInfo('${variableData.info}');` +
+                              `svObj.ValueUnit('${variableData.valueUnit}');` +
+                              `svObj.ValueMin(${variableData.valueMin});` +
+                              `svObj.ValueMax(${variableData.valueMax});` +
+                              `svObj.State(${variableData.state});` +
+                              `svObj.Internal(false);` +
+                              `svObj.Visible(true);` +
+                              `dom.RTUpdate(false);`;
                 break;
             case "ivtBinary":
                 variableData = variableData as HomeMaticSystemvariableBinary;
-                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
-                                object svObj=dom.CreateObject(OT_VARDP);
-                                svObj.Name('${variableData.name}');
-                                sv.Add(svObj.ID());
-                                svObj.ValueType(${variableData.valueType});
-                                svObj.ValueSubType(${variableData.valueSubType});
-                                svObj.DPInfo('${variableData.info}');
-                                svObj.ValueUnit('${variableData.valueUnit}');
-                                svObj.ValueName0('${variableData.valueName0}');
-                                svObj.ValueName1('${variableData.valueName1}');
-                                svObj.State(${variableData.state});
-                                dom.RTUpdate(false);`;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
+                              `object svObj=dom.CreateObject(OT_VARDP);` +
+                              `svObj.Name('${variableData.name}');` +
+                              `sv.Add(svObj.ID());` +
+                              `svObj.ValueType(${variableData.valueType});` +
+                              `svObj.ValueSubType(${variableData.valueSubType});` +
+                              `svObj.DPInfo('${variableData.info}');` +
+                              `svObj.ValueUnit('${variableData.valueUnit}');` +
+                              `svObj.ValueName0('${variableData.valueName0}');` +
+                              `svObj.ValueName1('${variableData.valueName1}');` +
+                              `svObj.State(${variableData.state});` +
+                              `dom.RTUpdate(false);`;
                 break;
             case "ivtInteger":
                 variableData = variableData as HomeMaticSystemvariableInteger;
-                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);
-                                object svObj=dom.CreateObject(OT_VARDP);
-                                svObj.Name('${variableData.name}');
-                                sv.Add(svObj.ID());
-                                svObj.ValueType(${variableData.valueType});
-                                svObj.ValueSubType(${variableData.valueSubType});
-                                svObj.DPInfo('${variableData.info}');
-                                svObj.ValueList('${variableData.valueList}');
-                                svObj.State(${variableData.state});
-                                dom.RTUpdate(false);`;
+                requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
+                              `object svObj=dom.CreateObject(OT_VARDP);` +
+                              `svObj.Name('${variableData.name}');` +
+                              `sv.Add(svObj.ID());` +
+                              `svObj.ValueType(${variableData.valueType});` +
+                              `svObj.ValueSubType(${variableData.valueSubType});` +
+                              `svObj.DPInfo('${variableData.info}');` +
+                              `svObj.ValueList('${variableData.valueList}');` +
+                              `svObj.State(${variableData.state});` +
+                              `dom.RTUpdate(false);`;
                 break;
+            default:
+                rootAddonLogger.error(`CCU request error on createSystemVariable: message: The received variableType is unknown. received data: ${JSON.stringify(variableData)}`);
+                rootAddonLogger.debug(`CCU request error on createSystemVariable:`, JSON.stringify(variableData));
+                return undefined;
         }
-        */
+        
         const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, true, hostName === "localhost" ? false : true);
 
         let data = "";
@@ -370,6 +455,6 @@ export class HomematicApi {
      * Returns the version info of the homematic api.
      */
     public getHomematicApiVersion(): string {
-        return "3.2.0";
+        return "3.5.0";
     }
 }

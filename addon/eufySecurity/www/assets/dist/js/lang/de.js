@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.34
-202050517
+Schema v9.40
+202050720
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20250517 (v9.34)";
+var languageVersion = "20250720 (v9.40)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -377,6 +377,12 @@ function translateStaticContentElement(element) {
 			return "Nein";
 		case "modalDeleteSystemVariableBtnYes":
 			return "Ja, bitte entfernen";
+		case "lblModalUpdateSystemVariableTitle":
+			return "Systemvariable aktualisieren";
+		case "modalUpdateSystemVariableBtnNo":
+			return "Nein";
+		case "modalUpdateSystemVariableBtnYes":
+			return "Ja, bitte aktualisieren";
 		case "lblModalDeleteEventInteractionTitle":
 			return "Interaktion entfernen";
 		case "modalDeleteEventInteractionBtnNo":
@@ -766,6 +772,8 @@ function translateMessages(message, ...options) {
 			return `Es ist ein Fehler beim Neustart des Addons aufgetreten.<br />Fehler: '${options[0]}'`;
 		case "modalDeleteSystemVariableMessage":
 			return `Sind Sie sicher, dass die Systemvariable '${options[0]}' gelöscht werden soll?<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
+		case "modalUpdateSystemVariableMessage":
+			return `Sind Sie sicher, dass die Systemvariable '${options[0]}' aktualisiert werden soll?<br /><b>Bitte beachten Sie:</b><br />Dieser Vorgang umfasst zwei Schritte:<br /><ol type="1"><li>aktuelle Systemvariable wird gelöscht</li><li>Systemvariable wird mit aktuellen Parametern neu erstellt</li></ol>Sie müssen im Anschluss vorhandene Programme, Scripte sowie Middelware (bspw. Home Assistant, ioBroker, etc.) mit der neuen Systemvariable aktualisieren.<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
 		case "modalDeleteEventInteractionMessage":
 			return `Sind Sie sicher, dass folgende Interaktion gelöscht werden soll?<br /><dl><dt>Gerät:</dt><dd>${options[1]} (${options[2]})</dd><dt>Interaktion:</dt><dd>${options[3]}</dd></dl>Dieser Vorgang kann nicht rückgängig gemacht werden.`;
 		case "modalDeleteEventInteractionsMessage":
@@ -1158,6 +1166,8 @@ function translateContent(content, ...options) {
 			return "Systemvariable anlegen";
 		case "lblSystemVariableRemove":
 			return "Systemvariable entfernen";
+		case "lblSystemVariableUpdate":
+			return "Systemvariable aktualisieren";
 		case "lblSettingsTroubleShootingDisable":
 			return "Fehlerbehebung deaktivieren";
 		case "lblSettingsTroubleShootingEnable":

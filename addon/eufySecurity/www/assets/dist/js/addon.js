@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20250608
+ * 20250720
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.3.1";
+var version = "3.5.0";
 
 /**
  * common used java script functions
@@ -3616,7 +3616,7 @@ async function loadDataSettings() {
 
 async function loadSystemVariables() {
 	if(serviceState == "running") {
-		var objResp, objErr, systemVariable, sysVarName, sysVarInfo, sysVarAvailable, sysVarTable = "", sysVarDeprTable = "";
+		var objResp, objErr, systemVariable, sysVar, sysVarName, sysVarInfo, sysVarValueType, sysVarValueSubType, sysVarValueUnit, sysVarValueMin, sysVarValueMax, sysVarValueName0, sysVarValueName1, sysVarValueList, sysVarState, sysVarAvailable, sysVarValueTypeCorrect, sysVarTable = "", sysVarDeprTable = "";
 		var sysVarToDelete = false;
 		var url = `${location.protocol}//${location.hostname}:${port}/checkSystemVariables`;
 		await retrieveData("GET", url, 'application/json', undefined, "divSystemVariables", "strLoadingSystemVariables", undefined, undefined).then((result) => {
@@ -3626,20 +3626,38 @@ async function loadSystemVariables() {
 					document.getElementById("divSystemVariablesHint").innerHTML = createMessageContainer("alert alert-primary fade show", translateMessages("messageSystemVariableHintHeader"), translateMessages("messageSystemVariableHintMessage"), translateMessages("messageSystemVariableHintSubText"));
 					sysVarTable = `<table class="table mb-0"><thead class="thead-dark"><tr><th scope="col" class="align-middle text-center" style="width: 4%;">${translateString("strSystemVariablesTableHeaderState")}</th><th scope="col" style="width: 75%;">${translateString("strSystemVariablesTableHeaderSVName")}</th><th scope="col" style="width: 21%;"></th></tr></thead><tbody class="table-group-divider">`;
 					for(systemVariable in objResp.data) {
-						sysVarName = objResp.data[systemVariable].sysVarName;
-						sysVarInfo = objResp.data[systemVariable].sysVarInfo;
+						sysVar = objResp.data[systemVariable].sysVar;
+						sysVarName = sysVar.name;
+						sysVarInfo = sysVar.info;
+						sysVarValueType = sysVar.valueType;
+						sysVarValueSubType = sysVar.valueSubType;
+						sysVarValueUnit = sysVar.valueUnit;
+						sysVarValueMax = sysVar.valueMax;
+						sysVarValueName0 = sysVar.valueName0;
+						sysVarValueName1 = sysVar.valueName1;
+						sysVarValueList = sysVar.valueList;
+						sysVarState = sysVar.state;
 						sysVarAvailable = objResp.data[systemVariable].sysVarAvailable;
+						sysVarValueTypeCorrect = objResp.data[systemVariable].sysVarValueTypeCorrect;
 						if(objResp.data[systemVariable].sysVarCurrent==true) {
 							if(sysVarAvailable==true) {
-								sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+								if(sysVarValueTypeCorrect==true) {
+									sysVarTable += `<tr class="table-success"><th scope="row" class="align-middle text-center"><i class="bi-check-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+								} else {
+									sysVarTable += `<tr class="table-warning"><th scope="row" class="align-middle text-center"><i class="bi-exclamation-lg" title="${translateString("strSystemVariableAvailable")}"></i></th>`;
+								}
 							} else {
 								sysVarTable += `<tr class="table-danger"><th scope="row" class="align-middle text-center"><i class="bi-x-lg" title="${translateString("strSystemVariableNotAvailable")}"></i></th>`;
 							}
 							sysVarTable += `<td class="text-break align-middle">${sysVarName}<br /><small class="form-text text-muted">${sysVarInfo}</small></td>`;
 							if(sysVarAvailable==true) {
-								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-outline-primary mb-1", undefined, translateContent("lblSystemVariableAvailable"), false, undefined, undefined, false)}</div></td>`;
+								if(sysVarValueTypeCorrect==true) {
+									sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-outline-primary mb-1", undefined, translateContent("lblSystemVariableAvailable"), false, undefined, undefined, false)}</div></td>`;
+								} else {
+									sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `updateSystemVariableQuestion('${sysVarName}', '${sysVarInfo}', '${sysVarValueType}', '${sysVarValueSubType}', '${sysVarValueUnit}', '${sysVarValueMin}', '${sysVarValueMax}', '${sysVarValueName0}', '${sysVarValueName1}', '${sysVarValueList}', '${sysVarState}')`, translateContent("lblSystemVariableUpdate"), true, undefined, undefined, true)}</div></td>`;
+								}
 							} else {
-								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}')`, translateContent("lblSystemVariableCreate"), true, undefined, undefined, true)}</div></td>`;
+								sysVarTable += `<td class="align-middle text-center"><div class="d-grid">${makeButtonElement(`btn${sysVarName}`, "btn btn-primary mb-1", `createSysVar('${sysVarName}', '${sysVarInfo}', '${sysVarValueType}', '${sysVarValueSubType}', '${sysVarValueUnit}', '${sysVarValueMin}', '${sysVarValueMax}', '${sysVarValueName0}', '${sysVarValueName1}', '${sysVarValueList}', '${sysVarState}')`, translateContent("lblSystemVariableCreate"), true, undefined, undefined, true)}</div></td>`;
 							}
 							sysVarTable += `</tr>`;
 						} else {
@@ -3738,10 +3756,13 @@ async function saveConfig() {
 	});
 }
 
-async function createSysVar(varName, varInfo) {
+async function createSysVar(varName, varInfo, varValueType, varValueSubType, varValueUnit, varValueMin, varValueMax, varValueName0, varValueName1, varValueList, varState) {
+	var systemVariable;
+	systemVariable = `{"name": "${varName}", "info": "${varInfo}", "valueType": "${varValueType}", "valueSubType": "${varValueSubType}", "valueUnit": "${varValueUnit}", "valueMin": "${varValueMin}", "valueMax": "${varValueMax}", "valueName0": "${varValueName0}", "valueName1": "${varValueName1}", "valueList": "${varValueList}", "state": "${varState}"}`;
+
 	var objResp, objErr;
-	var url = `${location.protocol}//${location.hostname}:${port}/createSystemVariable/${varName}/${varInfo}`;
-	await retrieveData("GET", url, 'application/json', undefined, "divSystemVariables", "strSystemVariableCreating", undefined, undefined).then((result) => {
+	var url = `${location.protocol}//${location.hostname}:${port}/createSystemVariable`;
+	await retrieveData("POST", url, 'application/json', systemVariable, undefined, undefined, undefined, undefined).then((result) => {
 		try {
 			objResp = JSON.parse(result);
 			if(objResp.success == true) {
@@ -3801,9 +3822,9 @@ async function removeSystemVariable(varName) {
 			}
 		} catch (e) {
 			document.getElementById("divSystemVariablesHint").innerHTML = "";
-				document.getElementById("divSystemVariables").innerHTML = "";
-				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+			document.getElementById("divSystemVariables").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 		}
 	}).catch((err) => {
 		try {
@@ -3814,7 +3835,55 @@ async function removeSystemVariable(varName) {
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
 				document.getElementById("divSystemVariables").innerHTML = "";
 				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
-				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "removeSysVar"));
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "removeSystemVariable"));
+			}
+		} catch (e) {
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+		}
+	});
+}
+
+async function updateSystemVariableQuestion(varName, varInfo, varValueType, varValueSubType, varValueUnit, varValueMin, varValueMax, varValueName0, varValueName1, varValueList, varState) {
+	const myModal = new bootstrap.Modal(document.getElementById('modalQuestionYesNo'));
+	document.getElementById("lblModalQuestionYesNoTitle").innerHTML = translateStaticContentElement("lblModalUpdateSystemVariableTitle");
+	document.getElementById("modalQuestionYesNoMessage").innerHTML = translateMessages("modalUpdateSystemVariableMessage", varName);
+    document.getElementById("modalQuestionYesNoBtnNo").innerHTML = translateStaticContentElement("modalUpdateSystemVariableBtnNo");
+    document.getElementById("modalQuestionYesNoBtnYes").innerHTML = translateStaticContentElement("modalUpdateSystemVariableBtnYes");
+	document.getElementById("modalQuestionYesNoBtnYes").setAttribute("onclick", `updateSystemVariable("` + varName + `", "` + varInfo + `", "` + varValueType + `", "` + varValueSubType + `", "` + varValueUnit + `", "` + varValueMin + `", "` + varValueMax + `", "` + varValueName0 + `", "` + varValueName1 + `", "` + varValueList + `", "` + varState + `")`);
+	myModal.show();
+}
+
+async function updateSystemVariable(varName, varInfo, varValueType, varValueSubType, varValueUnit, varValueMin, varValueMax, varValueName0, varValueName1, varValueList, varState) {
+	var objResp, objErr;
+	var url = `${location.protocol}//${location.hostname}:${port}/removeSystemVariable/${varName}`;
+	await retrieveData("GET", url, 'application/json', undefined, "divDeprecatedSystemVariables", "strSystemVariableUnusedRemoving", undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				createSysVar(varName, varInfo, varValueType, varValueSubType, varValueUnit, varValueMin, varValueMax, varValueName0, varValueName1, varValueList, varState);
+			} else {
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
+				document.getElementById("divSystemVariables").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
+			}
+		} catch (e) {
+			document.getElementById("divSystemVariablesHint").innerHTML = "";
+			document.getElementById("divSystemVariables").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+
+		}
+	}).catch((err) => {
+		try {
+			objErr = JSON.parse(err);
+			if(objErr.cause == "ABORT") {
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+			} else {
+				document.getElementById("divSystemVariablesHint").innerHTML = "";
+				document.getElementById("divSystemVariables").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSystemVariablesUnusedRemoveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "removeSystemVariable"));
 			}
 		} catch (e) {
 			document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));

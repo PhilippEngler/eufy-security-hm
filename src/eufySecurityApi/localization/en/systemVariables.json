@@ -1,0 +1,50 @@
+{
+    "common": {
+        "eufyCurrentState": "Guard modus of the eufy system",
+        "eufyLastConnectionResult": "Result of last communication with eufy",
+        "eufyLastConnectionTime": "Timestamp of last communication with eufy",
+        "eufyLastStatusUpdateTime": "Timestamp of last update of the eufy systemstate",
+        "eufyLastModeChangeTime": "Timestamp of the last mode change"
+    },
+    "station": {
+        "eufyCentralState": "Guard mode of station {{stationSerial}}",
+        "eufyLastModeChangeTime": "Timestamp of the last mode change for station {{stationSerial}}",
+        "eufyCentralCurrentMode": "Current mode of station {{stationSerial}}",
+        "eufyCentralCurrentModeChangeTime": "Timestamp of the last current mode change for station {{stationSerial}}"
+    },
+    "device": {
+        "eufyCameraImageURL": "Still image for camera {{deviceSerial}}",
+        "eufyCameraVideoTime": "Timestamp of the still image for camera {{deviceSerial}}",
+        "eufyCameraVideoURL": "Last Video for camera {{deviceSerial}}"
+    },
+    "unknown": "unknown variable",
+    "mode": {
+        "unknown": "unknown",
+        "away": "away",
+        "home": "home",
+        "schedule": "schedule",
+        "custom1": "Custom 1",
+        "custom2": "Custom 2",
+        "custom3": "Custom 3",
+        "off": "off",
+        "geofencing": "geofencing",
+        "disabled": "disabled"
+    },
+    "guardMode0": "$t(mode.unknown)",
+    "guardMode1": "$t(mode.away)",
+    "guardMode2": "$t(mode.home)",
+    "guardMode3": "$t(mode.schedule)",
+    "guardMode4": "$t(mode.custom 1)",
+    "guardMode5": "$t(mode.custom 2)",
+    "guardMode6": "$t(mode.custom 3)",
+    "guardMode7": "$t(mode.off)",
+    "guardMode8": "$t(mode.geofencing)",
+    "guardMode9": "$t(mode.disabled)",
+    "currentMode0": "$t(mode.unknown)",
+    "currentMode1": "$t(mode.away)",
+    "currentMode2": "$t(mode.home)",
+    "currentMode3": "$t(mode.custom 1)",
+    "currentMode4": "$t(mode.custom 2)",
+    "currentMode5": "$t(mode.custom 3)",
+    "currentMode6": "$t(mode.disabled)"
+}

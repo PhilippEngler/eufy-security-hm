@@ -7,6 +7,7 @@ import { EufySecurityApi } from "./eufySecurityApi/eufySecurityApi";
 import { GuardMode } from "./eufySecurityApi/http";
 import { exec } from "child_process";
 import { dummyLogger, InternalLogger, rootAddonLogger } from "./eufySecurityApi/logging";
+import { HomeMaticSystemvariableGeneric } from "./eufySecurityApi/utils/models";
 
 process.chdir(__dirname);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -415,15 +416,6 @@ class ApiServer {
                         break;
                     case "checkSystemVariables":
                         responseData = await api.checkSystemVariables();
-                        break;
-                    case "createSystemVariable":
-                        if (url.length === 3) {
-                            responseData = await api.createSystemVariable(url[2], "");
-                        } else if (url.length === 4) {
-                            responseData = await api.createSystemVariable(url[2], decodeURIComponent(url[3]));
-                        } else {
-                            responseData = `{"success":false,"message":"Number of arguments not supported."}`;
-                        }
                         break;
                     case "removeSystemVariable":
                         if (url.length === 3) {
@@ -875,8 +867,28 @@ class ApiServer {
                             }
                         });
                         break;
+                    case "createSystemVariable":
+                        request.on("data", function (chunk) {
+                            postData += chunk.toString();
+                        });
+
+                        request.on("end", async function() {
+                            try {
+                                const resJson = JSON.parse(postData) as HomeMaticSystemvariableGeneric;
+                                responseData = await api.createSystemVariable(resJson);
+                                
+                                response.setHeader("Access-Control-Allow-Origin", "*");
+                                response.setHeader("Content-Type", "application/json; charset=UTF-8");
+
+                                response.writeHead(200);
+                                response.end(responseData);
+                            } catch (e: any) {
+                                rootAddonLogger.error(`Error occured at createSystemVariable: ${e.message}`, postData);
+                            }
+                        });
+                        break;
                     default:
-                        responseData = `{"success":false,"message":"Unknown command."}`;
+                        responseData = `{"success":false,"reason":"Unknown command."}`;
                         response.setHeader("Access-Control-Allow-Origin", "*");
                         response.setHeader("Content-Type", "application/json; charset=UTF-8");
 

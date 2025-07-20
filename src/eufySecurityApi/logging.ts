@@ -4,7 +4,7 @@ import { CategoryProvider } from "typescript-logging-category-style";
 import { pathToClientLog } from "./utils/utils";
 import util from "node:util";
 
-export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt" | "conf";
+export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt" | "conf" | "i18n";
 export const LogLevel = Level;
 
 export interface Logger {
@@ -99,6 +99,7 @@ export const rootMQTTLogger = provider.getCategory("mqtt");
 export const rootPushLogger = provider.getCategory("push");
 export const rootP2PLogger = provider.getCategory("p2p");
 export const rootConfLogger = provider.getCategory("conf");
+export const rootI18nLogger = provider.getCategory("i18n");
 
 export const setLoggingLevel = function(category: LoggingCategories = "all", level: Level = LogLevel.Off): void {
     switch(category) {
@@ -139,6 +140,11 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
             break;
         case "conf":
             provider.updateRuntimeSettingsCategory(rootConfLogger, {
+                level: level
+            });
+            break;
+        case "i18n":
+            provider.updateRuntimeSettingsCategory(rootI18nLogger, {
                 level: level
             });
             break;
