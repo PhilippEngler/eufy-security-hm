@@ -407,6 +407,12 @@ function translateStaticContentElement(element) {
 			return "Nein";
 		case "modalEmptyLogfileBtnYes":
 			return "Ja, bitte Datei leeren";
+		case "lblModalRebootStationTitle":
+			return "Station neu starten";
+		case "modalRebootStationBtnNo":
+			return "Nein";
+		case "modalRebootStationBtnYes":
+			return "Ja, bitte neu starten";
 		case "logfileIntroHeader":
 			return "Logdateien";
 		case "tabHeaderAddonLog":
@@ -782,6 +788,8 @@ function translateMessages(message, ...options) {
 			return `Sind Sie sicher, dass das Token gelöscht werden soll?<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
 		case "modalEmptyLogfileMessage":
 			return `Sind Sie sicher, dass die Datei '<text class="font-monospace fs-6 fw-medium">${options[0]}</text>' geleert werden soll?<br />Dieser Vorgang kann nicht rückgängig gemacht werden.`;
+		case "modalRebootStationMessage":
+			return `Sind Sie sicher, dass die Station ${options[1]} (${options[0]}) neu gestartet werden soll?<br />Bis die Station wieder vefügbar ist, können einige Minuten vergehen.`;
 		default:
 			return `{${message}}`;
 	}

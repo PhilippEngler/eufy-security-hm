@@ -407,6 +407,12 @@ function translateStaticContentElement(element) {
 			return "No";
 		case "modalEmptyLogfileBtnYes":
 			return "Yes, please empty file";
+		case "lblModalRebootStationTitle":
+			return "Reboot station";
+		case "modalRebootStationBtnNo":
+			return "No";
+		case "modalRebootStationBtnYes":
+			return "Yes, please reboot";
 		case "logfileIntroHeader":
 			return "Logfiles";
 		case "tabHeaderAddonLog":
@@ -782,6 +788,8 @@ function translateMessages(message, ...options) {
 			return `Are you sure that the token should be deleted?<br />This process cannot be undone.`;
 		case "modalEmptyLogfileMessage":
 			return `Are you sure that the file '<text class="font-monospace fs-6 fw-medium">${options[0]}</text>' should be emptied?<br />This process cannot be undone.`;
+		case "modalRebootStationMessage":
+			return `Are you sure that the station ${options[1]} (${options[0]}) should be reboot?<br />It may take a few minutes before the station is available again.`;
 		default:
 			return `{${message}}`;
 	}

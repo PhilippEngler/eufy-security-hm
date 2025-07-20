@@ -2846,7 +2846,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 	}
 	if(stationCommands.includes("stationReboot")) {
 		stationModal +=  `
-									${makeButtonElement("btnStationReboot", "btn btn-outline-danger", `sendCommand('Station', '${stationProperties.serialNumber}', '${stationProperties.name}', 'rebootStation')`, translateString("strRebootStation"), true, undefined, undefined, setEventHandler)}`;
+									${makeButtonElement("btnStationReboot", "btn btn-outline-danger", `rebootStationQuestion('${stationProperties.serialNumber}', '${stationProperties.name}')`, translateString("strRebootStation"), true, undefined, undefined, setEventHandler)}`;
 	}
 	stationModal +=  `
 								</div>
@@ -2904,6 +2904,16 @@ async function changeStationProperty(stationId, stationName, propertyName, prope
 			toast.show();
 		}
 	});
+}
+
+async function rebootStationQuestion(stationSerial, stationName) {
+	const myModal = new bootstrap.Modal(document.getElementById('modalQuestionYesNo'));
+	document.getElementById("lblModalQuestionYesNoTitle").innerHTML = translateStaticContentElement("lblModalRebootStationTitle");
+	document.getElementById("modalQuestionYesNoMessage").innerHTML = translateMessages("modalRebootStationMessage", stationSerial, stationName);
+    document.getElementById("modalQuestionYesNoBtnNo").innerHTML = translateStaticContentElement("modalRebootStationBtnNo");
+    document.getElementById("modalQuestionYesNoBtnYes").innerHTML = translateStaticContentElement("modalRebootStationBtnYes");
+	document.getElementById("modalQuestionYesNoBtnYes").setAttribute("onclick", `sendCommand('Station', '` + stationSerial + `', '` + stationName + `', 'rebootStation')`);
+	myModal.show();
 }
 
 async function sendCommand(deviceType, deviceId, deviceName, commandName, commandValue) {
