@@ -47,7 +47,7 @@ for ARCH in "${!architectures[@]}"
 do
     echo "Creating $ARCH addon packages..."
     echo "  Creating $ARCH tar.gz addon package..."
-    cp -a $CURRENT_DIR/AddOnData/node-$ARCH/. $WORK_DIR/eufySecurity/bin/
+    cp -a $CURRENT_DIR/AddOnData/bin-$ARCH/. $WORK_DIR/eufySecurity/bin/
     cd $WORK_DIR
     tar --owner=root --group=root -czf $CURRENT_DIR/build/$PKG_VERSION/eufySecurity-$ARCH-$PKG_VERSION.tar.gz *
     echo "  ...done."
@@ -70,7 +70,7 @@ do
         sed -i "s/{DEPENDS}/$DEPENDS/g" $file
     done
 
-    dpkg-deb --build $WORK_DIR/eufySecurity-$ARCH-$PKG_VERSION $CURRENT_DIR/build/$PKG_VERSION/eufySecurity-$ARCH-$PKG_VERSION.deb
+    dpkg-deb --build $WORK_DIR/eufySecurity-$ARCH-$PKG_VERSION $CURRENT_DIR/build/$PKG_VERSION/eufySecurity-$ARCH-$PKG_VERSION.deb >> /dev/null
     rm -rf $TARGET_DIR
 
     echo "  ...done."
