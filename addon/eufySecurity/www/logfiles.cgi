@@ -37,7 +37,8 @@ if {[dict size $queryStringParams] == 2} {
 	switch [dict get $queryStringParams file] {
 		log -
 		err -
-		clientLog {
+		clientLog -
+		installLog {
 			set fileExists [existFile [getFilePath [dict get $queryStringParams file]]]
 			set fileContent [getFileContent [getFilePath [dict get $queryStringParams file]]]
 		}
@@ -84,6 +85,9 @@ switch [dict get $queryStringParams action] {
 				clientLog {
 					puts "Content-Disposition: attachment; filename=eufySecurity_${host}_${currentDate}_client.log"
 				}
+				installLog {
+					puts "Content-Disposition: attachment; filename=install_${host}_${currentDate}.log"
+				}
 			}
 			puts ""
 			puts $fileContent
@@ -98,7 +102,8 @@ switch [dict get $queryStringParams action] {
 			switch [dict get $queryStringParams file] {
 				log -
 				err -
-				clientLog {
+				clientLog -
+				installLog {
 					set res [emptyFile [getFilePath [dict get $queryStringParams file]]]
 				}
 			}

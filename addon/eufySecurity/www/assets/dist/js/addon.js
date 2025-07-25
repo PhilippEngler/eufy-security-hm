@@ -461,6 +461,9 @@ function downloadFile(filetype) {
 		case "clientLog":
 			url = `logfiles.cgi?action=download&file=${filetype}`;
 			break;
+		case "installLog":
+			url = `logfiles.cgi?action=download&file=${filetype}`;
+			break;
 		case "conf":
 			url = `${location.protocol}//${location.hostname}:${port}/downloadConfig`;
 			break;
@@ -2202,8 +2205,8 @@ function generateInteractionExpander(event, enabled, deviceProperties, deviceInt
 			} else {
 				interactionExpander += `
 														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestUnstoredEventInteraction`, "btn btn-outline-secondary", `testUnstoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-play-circle" title="${translateString("strInteractionUnstoredTest")}"></i> ${translateString("strInteractionUnstoredTest")}`, enabled, undefined, undefined, setEventHandler)}
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, enabled, undefined, undefined, setEventHandler)}
-														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteractionQuestion('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, enabled, undefined, undefined, setEventHandler)}`;
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}TestStoredEventInteraction`, "btn btn-outline-secondary", `testStoredEventInteraction('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-file-play" title="${translateString("strInteractionStoredTest")}"></i> ${translateString("strInteractionStoredTest")}`, false, undefined, undefined, setEventHandler)}
+														${makeButtonElement(`btn${event.charAt(0).toUpperCase() + event.slice(1)}DeleteEventInteraction`, "btn btn-outline-secondary", `deleteEventInteractionQuestion('${deviceId}', '${deviceProperties.name}', '${deviceProperties.serialNumber}', '${event}')`, `<i class="bi-trash3" title="${translateString("strInteractionDelete")}"></i> ${translateString("strInteractionDelete")}`, false, undefined, undefined, setEventHandler)}`;
 			}
 			interactionExpander += `
 													</div>
@@ -4457,6 +4460,7 @@ async function loadLogfile(logfiletype, showLoading) {
 			document.getElementById("tabHeaderAddonLog").classList.add("active");
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
+			document.getElementById("tabHeaderInstallLog").classList.remove("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '<text class="font-monospace fs-6 fw-medium">/var/log/eufySecurity.log</text>'`;
 			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('log', true)");
 			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfileQuestion('log', '/var/log/eufySecurity.log')");
@@ -4467,6 +4471,7 @@ async function loadLogfile(logfiletype, showLoading) {
 			document.getElementById("tabHeaderAddonLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.add("active");
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
+			document.getElementById("tabHeaderInstallLog").classList.remove("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '<text class="font-monospace fs-6 fw-medium"><div-tab-code>/var/log/eufySecurity.err</div-tab-code></text>'`;
 			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('err', true)");
 			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfileQuestion('err', '/var/log/eufySecurity.err')");
@@ -4477,15 +4482,28 @@ async function loadLogfile(logfiletype, showLoading) {
 			document.getElementById("tabHeaderAddonLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.add("active");
+			document.getElementById("tabHeaderInstallLog").classList.remove("active");
 			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '<text class="font-monospace fs-6 fw-medium">/var/log/eufySecurityClient.log</text>'`;
 			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('clientLog', true)");
 			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfileQuestion('clientLog', '/var/log/eufySecurityClient.log')");
 			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('clientLog')");
 			break;
+		case "installLog":
+			url=`logfiles.cgi?action=getcontent&file=${logfiletype}`;
+			document.getElementById("tabHeaderAddonLog").classList.remove("active");
+			document.getElementById("tabHeaderAddonErr").classList.remove("active");
+			document.getElementById("tabHeaderClientLog").classList.remove("active");
+			document.getElementById("tabHeaderInstallLog").classList.add("active");
+			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileLocation')} '<text class="font-monospace fs-6 fw-medium">/usr/local/addons/eufySecurity/install.log</text>'`;
+			document.getElementById("btnReloadLogfileData").setAttribute("onclick","loadLogfile('clientLog', true)");
+			document.getElementById("btnDeleteLogfileData").setAttribute("onclick","emptyLogfileQuestion('installLog', '/usr/local/addons/eufySecurity/install.log')");
+			document.getElementById("btnDownloadLogfile").setAttribute("onclick","downloadFile('installLog')");
+			break;
 		default:
 			document.getElementById("tabHeaderAddonLog").classList.remove("active");
 			document.getElementById("tabHeaderAddonErr").classList.remove("active");
 			document.getElementById("tabHeaderClientLog").classList.remove("active");
+			document.getElementById("tabHeaderInstallLog").classList.remove("active");
 			document.getElementById("btnReloadLogfileData").setAttribute("disabled", true);
 			document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
 			document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
@@ -4516,6 +4534,9 @@ async function loadLogfile(logfiletype, showLoading) {
 						case "clientLog":
 							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/var/log/eufySecurityClient.log')}</code>`;
 							break;
+						case "installLog":
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsEmpty", '/usr/local/addons/eufySecurity/install.log')}</code>`;
+							break;
 					}
 					document.getElementById("btnReloadLogfileData").setAttribute("disabled", true);
 					document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
@@ -4533,6 +4554,9 @@ async function loadLogfile(logfiletype, showLoading) {
 							break;
 						case "clientLog":
 							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsNotAvailable", '/var/log/eufySecurityClient.log')}</code>`;
+							break;
+						case "installLog":
+							document.getElementById("logHandlingInfo").innerHTML = `<code>${translateContent("lblFileIsNotAvailable", '/usr/local/addons/eufySecurity/install.log')}</code>`;
 							break;
 					}
 				} else {
@@ -4595,6 +4619,9 @@ async function emptyLogfile(logfiletype) {
 			url = `logfiles.cgi?action=emptyfile&file=${logfiletype}`;
 			break;
 		case "clientLog":
+			url = `logfiles.cgi?action=emptyfile&file=${logfiletype}`;
+			break;
+		case "installLog":
 			url = `logfiles.cgi?action=emptyfile&file=${logfiletype}`;
 			break;
 		default:

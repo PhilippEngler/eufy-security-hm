@@ -427,6 +427,8 @@ function translateStaticContentElement(element) {
 			return "Addon - Errorfile";
 		case "tabHeaderClientLog":
 			return "Client - Logfile";
+		case "tabHeaderInstallLog":
+			return "Install - Logfile";
 		case "lblWaitServiceStart":
 			return "Waiting for the service to start...";
 		case "lblWaitServiceInit":

@@ -11,6 +11,9 @@ proc getFilePath {file} {
         clientLog {
             return /var/log/eufySecurityClient.log
         }
+        installLog {
+            return /usr/local/addons/eufySecurity/install.log
+        }
         default {
             return ""
         }

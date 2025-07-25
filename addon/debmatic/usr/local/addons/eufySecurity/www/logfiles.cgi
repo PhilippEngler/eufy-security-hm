@@ -37,7 +37,8 @@ if {[array size queryStringParams] == 2} {
 	switch $queryStringParams(file) {
 		log -
 		err -
-		clientLog {
+		clientLog -
+		installLog {
 			set fileExists [existFile [getFilePath $queryStringParams(file)]]
 			set fileContent [getFileContent [getFilePath $queryStringParams(file)]]
 		}
@@ -81,6 +82,9 @@ switch $queryStringParams(action) {
 			clientLog {
 				puts "Content-Disposition: attachment; filename=eufySecurity_${host}_${currentDate}_client.log"
 			}
+			installLog {
+				puts "Content-Disposition: attachment; filename=install_${host}_${currentDate}.log"
+			}
 		}
 		puts ""
 		if {$fileContent != "" && $fileContent != -1} {
@@ -93,7 +97,8 @@ switch $queryStringParams(action) {
 		switch $queryStringParams(file) {
 			log -
 			err -
-			clientLog {
+			clientLog -
+			installLog {
 				set res [emptyFile [getFilePath $queryStringParams(file)]]
 			}
 		}

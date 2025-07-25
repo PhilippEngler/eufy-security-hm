@@ -260,6 +260,7 @@ function translateStaticPageContent(page)
             translateTitle("imgDownloadLogfile");
             translateInnerHtml("tabHeaderAddonErr");
             translateInnerHtml("tabHeaderClientLog");
+            translateInnerHtml("tabHeaderInstallLog");
             break;
         case "info":
             translateInnerHtml("aboutIntroHeader");
