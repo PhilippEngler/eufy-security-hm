@@ -3,24 +3,25 @@
 ADDONNAME=eufySecurity
 CONFIG_DIR=/usr/local/etc/config
 ADDON_DIR=/usr/local/addons/${ADDONNAME}
+SETUP_DIR=$(pwd)
 RCD_DIR=${CONFIG_DIR}/rc.d
 WWW_DIR=${CONFIG_DIR}/addons/www/${ADDONNAME}
 INSTALL_LOGFILE=/var/tmp/install_eufySecurity.log
 
-echo Starting installing $ADDONNAME > $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Start installing $ADDONNAME >> $INSTALL_LOGFILE
 
 # check for unsupported platforms (author: jens-maus)
 if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
-  echo Unsupported operating system found. Aborting. >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Unsupported operating system found. Aborting. >> $INSTALL_LOGFILE
   exit 13
 fi
 
 # check for unsupported CCU1 and CCU2
 if [ "$1" = "" ]; then
-  echo Unsupported hardware found \(CCU1\). Aborting. >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Unsupported hardware found \(CCU1\). Aborting. >> $INSTALL_LOGFILE
   exit 14
 elif [ "$1" = "CCU2" ]; then
-  echo Unsupported hardware found \(CCU2\). Aborting. >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Unsupported hardware found \(CCU2\). Aborting. >> $INSTALL_LOGFILE
   exit 14
 fi
 
@@ -32,7 +33,7 @@ fi
 
 # if the service is available, stop it (mainly for raspberrymatic)
 if [ -e ${RCD_DIR}/eufySecurity ]; then
-  echo $ADDONNAME installed. Stopping service... >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") $ADDONNAME installed. Stopping service... >> $INSTALL_LOGFILE
   ${RCD_DIR}/eufySecurity stop
 fi
 
@@ -41,7 +42,7 @@ PACKAGE_VERSION=$(cat VERSION)
 PACKAGE_VERSION_MAIN=$(echo $PACKAGE_VERSION | cut -d "." -f 1)
 PACKAGE_VERSION_MINOR=$(echo $PACKAGE_VERSION | cut -d "." -f 2)
 PACKAGE_VERSION_BUILD=$(echo $PACKAGE_VERSION | cut -d "." -f 3)
-echo Want to install version $PACKAGE_VERSION >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Version to install: $PACKAGE_VERSION >> $INSTALL_LOGFILE
 
 # handle update of addon
 if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
@@ -54,10 +55,10 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   CURRENT_VERSION_MAIN=$(echo $CURRENT_VERSION | cut -d "." -f 1)
   CURRENT_VERSION_MINOR=$(echo $CURRENT_VERSION | cut -d "." -f 2)
   CURRENT_VERSION_BUILD=$(echo $CURRENT_VERSION | cut -d "." -f 3)
-  echo Currently installed version is $CURRENT_VERSION. >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Version currently installed: $CURRENT_VERSION >> $INSTALL_LOGFILE
   # remove unused files from versions lower than 3.0.0
   if [ CURRENT_VERSION_MAIN -lt 3 ]; then
-    echo Installed version lower than 3.0.0 >> $INSTALL_LOGFILE
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version lower than 3.0.0 >> $INSTALL_LOGFILE
     # remove the complete node_modules folder in case of updating from versions below 3.0.0
     if [ -e ${ADDON_DIR}/node_modules ]; then
       rm -r ${ADDON_DIR}/node_modules
@@ -261,11 +262,11 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
       rm -f ${ADDON_DIR}/www/apiPorts.txt
     fi
   else
-    echo Installed version is 3.0.0 or newer >> $INSTALL_LOGFILE
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version is 3.0.0 or newer >> $INSTALL_LOGFILE
   fi
   # remove unused api files from versions lower than 3.1.1
   if [ $CURRENT_VERSION_MAIN -lt 3 ] || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -lt 1 ]) || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -eq 1 ] && [ $CURRENT_VERSION_BUILD -lt 1 ]); then
-    echo Installed version lower than 3.1.1 >> $INSTALL_LOGFILE
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version lower than 3.1.1 >> $INSTALL_LOGFILE
     if [ -e ${ADDON_DIR}/node_modules/@ungap ]; then
       rm -r ${ADDON_DIR}/node_modules/@ungap
     fi
@@ -300,42 +301,80 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
       rm -f ${ADDON_DIR}/eufySecurityApi/utils/logging.js
     fi
   else
-    echo Installed version is 3.1.1 or newer >> $INSTALL_LOGFILE
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version is 3.1.1 or newer >> $INSTALL_LOGFILE
+  fi
+  # remove unused api files from versions lower than 3.2.2 
+  if [ $CURRENT_VERSION_MAIN -lt 3 ] || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -lt 2 ]) || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -eq 2 ] && [ $CURRENT_VERSION_BUILD -lt 2 ]); then
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version lower than 3.2.2 >> $INSTALL_LOGFILE
+    if [ -e ${ADDON_DIR}/bin/node ]; then
+      rm -r ${ADDON_DIR}/bin/node
+    fi
+    if [ -e ${ADDON_DIR}/bin/LICENSE ]; then
+      rm -f ${ADDON_DIR}/bin/LICENSE
+    fi
+  else
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version is 3.2.2 or newer >> $INSTALL_LOGFILE
   fi
 fi
 
 # create necessary directories
-echo Create directories... >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Create directories... >> $INSTALL_LOGFILE
 mkdir -p ${ADDON_DIR}
 chmod 755 ${ADDON_DIR}
 mkdir -p ${RCD_DIR}
 chmod 755 ${RCD_DIR}
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
 
 # copy addon files
-echo Copy addon files... >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Copy addon files... >> $INSTALL_LOGFILE
 cp -af eufySecurity/* ${ADDON_DIR}/
 cp -af eufySecurity-addon.cfg ${ADDON_DIR}/
 cp -af VERSION ${ADDON_DIR}/
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
 
 # make node executable
-echo Make node executable... >> $INSTALL_LOGFILE
-chmod 755 ${ADDON_DIR}/bin/node
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Make node executable... >> $INSTALL_LOGFILE
+chmod 755 ${ADDON_DIR}/bin/nodejs/bin/node
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
+
+# change directory
+cd ${ADDON_DIR}
+
+# check if nodes_modes exits
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Determine to install or update modules >> $INSTALL_LOGFILE
+if [ -d ${ADDON_DIR}/node_modules ]; then
+  # update modules
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Update modules by npm... >> $INSTALL_LOGFILE
+  bin/nodejs/bin/npm update --omit=dev >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
+else
+  # install modules
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Install modules by npm... >> $INSTALL_LOGFILE
+  bin/nodejs/bin/npm install --omit=dev >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done... >> $INSTALL_LOGFILE
+fi
+
+# change directory
+cd ${SETUP_DIR}
 
 # exclude some directories from backup (user will NEED to reinstall addon after restore)
-echo Exclude directories from backup... >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Exclude directories from backup... >> $INSTALL_LOGFILE
 touch ${ADDON_DIR}/bin/.nobackup
 touch ${ADDON_DIR}/node_modules/.nobackup
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
 
 # copy startup script
-echo Copy startup script... >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Copy startup script... >> $INSTALL_LOGFILE
 cp -af rc.d/* ${RCD_DIR}
 chmod 755 ${RCD_DIR}/eufySecurity
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
 
 # create www link
-echo Create website link... >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Create website link... >> $INSTALL_LOGFILE
 if [ ! -e ${WWW_DIR} ]; then
   ln -sf ${ADDON_DIR}/www ${WWW_DIR}
 fi
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
 
 sync
 
@@ -343,20 +382,20 @@ sync
 # and so we have delete the logfiles and than start the service the original ccu will reboot by default
 if [ "$1" = "HM-RASPBERRYMATIC" ]; then
   if [ -e /var/log/eufySecurity.err ]; then
-    echo Remove eufySecurity.err >> $INSTALL_LOGFILE
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Remove eufySecurity.err >> $INSTALL_LOGFILE
     rm -f /var/log/eufySecurity.err
   fi
   if [ -e /var/log/eufySecurity.log ]; then
-    echo Remove eufySecurity.log >> $INSTALL_LOGFILE
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Remove eufySecurity.log >> $INSTALL_LOGFILE
     rm -f /var/log/eufySecurity.log
   fi
   if [ -e /var/log/eufySecurityClient.log ]; then
-    echo Remove eufySecurityClient.log >> $INSTALL_LOGFILE
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Remove eufySecurityClient.log >> $INSTALL_LOGFILE
     rm -f /var/log/eufySecurityClient.log
   fi
-  echo Starting service... >> $INSTALL_LOGFILE
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Starting service... >> $INSTALL_LOGFILE
   ${RCD_DIR}/eufySecurity start
 fi
-echo Installation done >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installation done >> $INSTALL_LOGFILE
 mv $INSTALL_LOGFILE ${ADDON_DIR}/install.log
 exit 0
