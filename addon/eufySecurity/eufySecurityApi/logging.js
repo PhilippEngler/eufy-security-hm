@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setLoggingLevel = exports.rootConfLogger = exports.rootP2PLogger = exports.rootPushLogger = exports.rootMQTTLogger = exports.rootHTTPLogger = exports.rootAddonLogger = exports.rootMainLogger = exports.InternalLogger = exports.LogLevel = void 0;
+exports.setLoggingLevel = exports.rootI18nLogger = exports.rootConfLogger = exports.rootP2PLogger = exports.rootPushLogger = exports.rootMQTTLogger = exports.rootHTTPLogger = exports.rootAddonLogger = exports.rootMainLogger = exports.InternalLogger = exports.LogLevel = void 0;
 exports.formatDate = formatDate;
 const fs_1 = require("fs");
 const typescript_logging_1 = require("typescript-logging");
@@ -89,6 +89,7 @@ exports.rootMQTTLogger = provider.getCategory("mqtt");
 exports.rootPushLogger = provider.getCategory("push");
 exports.rootP2PLogger = provider.getCategory("p2p");
 exports.rootConfLogger = provider.getCategory("conf");
+exports.rootI18nLogger = provider.getCategory("i18n");
 const setLoggingLevel = function (category = "all", level = exports.LogLevel.Off) {
     switch (category) {
         case "all":
@@ -128,6 +129,11 @@ const setLoggingLevel = function (category = "all", level = exports.LogLevel.Off
             break;
         case "conf":
             provider.updateRuntimeSettingsCategory(exports.rootConfLogger, {
+                level: level
+            });
+            break;
+        case "i18n":
+            provider.updateRuntimeSettingsCategory(exports.rootI18nLogger, {
                 level: level
             });
             break;
