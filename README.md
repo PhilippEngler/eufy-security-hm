@@ -9,8 +9,13 @@
 With this addon for the ELV/eq-3 CCU3 (operated with RaspberryMatic) or a central based on RaspberryMatic or debmatic you can control your eufy security system and integrate it in your existing connected home environment. The addon provide a web-based user interface for configuration and monitoring. The communication between your eufy security system and your CCU is done by using predefined system variables. For interaction with your eufy security device there is an API.
 
 ## Features
-This addon supports multiple stations and multiple cams. The login token is stored in the config, so there is no need to login every time a connection to eufy is established. After retrieving the stations at startup, the local network address of each station is stored in the config and will be used for switching the guard mode.
-Since v2.6.0 the addon has a multi-language website. Currently German and English are supported.
+This addon supports multiple stations and multiple devices. The login token is stored in the config, so there is no need to login every time a connection to eufy is established. After retrieving the stations at startup, the local network address of each station is stored in the config and will be used for switching the guard mode.
+Since v2.6.0 the addon has a multi-language website, since v3.2.2 the system variables will be filled localized. Currently German and English are supported.
+Some of the key features are:
+* view and change the guard mode of your stations
+* view and edit settings of your stations and devices
+* some states (e.g. guard mode) are written to system variables (if configured)
+* execute interactions to specific events (e.g. motion detected) by using HMScript
 
 ## Devices
 Starting with v3.0.0, the addon will only run with RaspberryMatic and debmatic. The CCU3 with the original firmware provided by eq-3 and piVCCU will currently not support v3.0.0 and newer.
@@ -44,7 +49,7 @@ To install this addon on your CCU or RaspberryMatic follow these steps:
 3. Click on "Install" and wait about one minute.
 4. In the new popup, select "Start installation".
 5. - If you use the original CCU3 firmware: Wait at least 10 minutes to install. During this time, the WebUI is not accessible, and you will receive several error messages. Please ignore these messages. When the installation is done, the CCU will reboot automatically.
-   - If you use RaspberryMatic: The installation is much faster and the CCU will not reboot.
+   - If you use RaspberryMatic: The installation is much faster and the CCU will not reboot. Please ensure you have a working internet connection.
 6. When the installation is done, please go to [Configuration](#configuration).
 
 To install this addon on debmatic follow these steps:
@@ -68,7 +73,7 @@ For creating the needed system variables, please use the table of system variabl
 ### Account
 - Please do not use 2FA with the eufy security account you want to use with this addon.
 - Please do not use the account on multiple devices (use the account only for this addon).
-- You can share the stations and cams with the account *or* include the account to your created home.
+- You can share the stations and devices with the account *or* include the account to your created home.
 
 ### Addon
 - To reduce the size of the backup, some folders are excluded. The configfile is included in the backup. After restoring the CCU from the backup you must reinstall the addon.
@@ -77,7 +82,7 @@ For creating the needed system variables, please use the table of system variabl
 ### Firewall settings
 For communication between API and stations or devices you need to change the firewall settings of your CCU.
 - For communicating with the API, you have to open at least the two ports 52789 and 52790 (default values). You can specify individual ports for the API.
-- For communicating with the stations or devices you must set the firewall to open all ports (set the rule to ports open) if you are using the default setting. Alternatively, you can specify for each station one port and exclude these in the firewall settings.
+- For communicating with the stations or devices you must set the firewall to open all ports (set the rule to ports open) if you are using the default settings. Alternatively, you can specify for each station one port and exclude this in the firewall settings.
 
 ### CCU3 with original firmware provided by eq-3
 If you are using a CCU3 with the original firmware provided by eq-3, this addon will no longer be compatible. If you want to use the addon from v3.0.0 onwards with your CCU3, please update your CCU3 to RaspberryMatic. If your CCU3 is already running on RaspberryMatic, no additional steps are necessary.
@@ -96,7 +101,7 @@ For integrating into the CCU and debmatic environments the knowledge of
 
 was appreciated.
 
-The addons website is built on bootstrap [https://getbootstrap.com/](https://getbootstrap.com/).
+The addons website is built on [Bootstrap](https://getbootstrap.com/) The icons used are the [Bootstrap Icons](https://icons.getbootstrap.com/). To show the log files the [CodeMirror editor](https://codemirror.net/) is used.
 
 I would also like to thank the people who are sponsoring and supporting this project. I appreciate that. Thank you very much.
 
