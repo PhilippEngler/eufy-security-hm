@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.40
-20250720
+Schema v9.41
+20250802
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20250720 (v9.40)";
+var languageVersion = "20250802 (v9.41)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -539,7 +539,7 @@ function translateMessages(message, ...options) {
 		case "messageApiPortFileNotFoundMessageText":
 			return "Please check the apiPorts.json file in the website directory of this add-on.";
 		case "messageErrorPrintErrorMessage":
-			return `The following error has occurred: ${options[0]}`;
+			return `The following error has occurred: ${options[0]}${options[1] !== undefined ? ` [${options[1]}]` : ""}`;
 		case "messageErrorStatusAndReadyState":
 			return `Return value 'Status' is '${options[0]}'. Return value 'ReadyState' is '${options[1]}'.${options[2] !== undefined ? ` Function: '${options[2]}'.` : ""}`;
 		case "messageAbortLoadingHeader":
@@ -555,7 +555,7 @@ function translateMessages(message, ...options) {
 		case "messageErrorCheckingAddonStateHeader":
 			return "Error retrieving state of add-on.";
 		case "messageErrorAddonNotRunning":
-			return "The addon may not be executed. Restarting the add-on or the CCU could solve the problem.";
+			return "The addon may not be executed or the firewall configuration is blocking the communication. Restarting the add-on, the CCU or changeing the firewall settings could solve the problem.";
 		case "messageCaptchaError":
 			return "Error loading the captcha status.";
 		case "messageCaptchaSendError":

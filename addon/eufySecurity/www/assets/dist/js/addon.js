@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20250720
+ * 202500802
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.5.0";
+var version = "3.5.1";
 
 /**
  * common used java script functions
@@ -110,12 +110,16 @@ function retrieveData(method, url, mimeType, postData, waitElementId, waitMessag
 
 		xmlHttp.onload = function() {
 			//called when load finished successfully; readyState is 4; state is 200
-			resolve(this.responseText)
+			if(this.status === 200) {
+				resolve(this.responseText)
+			} else {
+				reject({"cause": "ERROR", "status": this.status, "readyState": this.readyState, "statusText": this.statusText});
+			}
 		};
 
 		xmlHttp.onerror = function() {
 			//called when load finished with error; readyState is 4; state is 0
-			reject({"cause": "ERROR", "readyState": this.readyState, "state": this.state});
+			reject({"cause": "ERROR", "status": this.status, "readyState": this.readyState, "statusText": this.statusText});
 		};
 
 		xmlHttp.onloadend = function() {
@@ -179,18 +183,18 @@ async function getAPIPort(page) {
 				}
 				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortInactiveHeader", location.protocol.replace(":", "")), "", translateMessages("messageApiPortInactiveSubText", location.protocol == "http:" ? "https-" : "http-"));
 			} catch (e) {
-				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_API_PORT_JSON"));
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("loadApiSettingsError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
 					document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState));
 				}
 			} catch (e) {
-				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("loadApiSettingsError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageApiPortFileNotFoundHeader"), translateMessages("messageApiPortFileNotFoundMessageText"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_API_PORT_REQUEST"));
 			}
 		});
 	} else {
@@ -249,21 +253,21 @@ async function checkConfigNeeded(page) {
 						initContent(page);
 					}
 				} else {
-					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
+					document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"));
 				}
 			} catch (e) {
-				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
+				document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_CONFIG_NEEDED_JSON"));
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
-					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "checkConfigNeeded"))}`;
+					document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "checkConfigNeeded"));
 				}
 			} catch (e) {
-				document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_CONFIG_NEEDED_REQUEST"));
 			}
 		});
 	} else {
@@ -285,21 +289,21 @@ async function checkTfaCaptchaState(page) {
 						generateCaptchaCodeModal(page, objResp);
 					}
 				} else {
-					document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
+					document.getElementById("captchaMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageCaptchaErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 				}
 			} catch (e) {
-				document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
+				document.getElementById("captchaMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_TFA_CAPTCHA_STATE_JSON"));
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("captchaMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
-					document.getElementById("captchaMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "checkTfaCaptchaState"))}`;
+					document.getElementById("captchaMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorCheckingAddonStateHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "checkTfaCaptchaState"));
 				}
 			} catch (e) {
-				document.getElementById("captchaMessage").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+				document.getElementById("captchaMessage").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_TFA_CAPTCHA_STATE_REQUEST"));
 			}
 		});
 	}
@@ -372,21 +376,21 @@ async function setTfaCode(page) {
 			if(objResp.success == true) {
 				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=tfa&redirect=${page}.html`;
 			} else {
-				document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
+				document.getElementById("tfaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 			}
 		} catch (e) {
-			document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
+			document.getElementById("tfaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_SET_TFA_JSON"));
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("tfaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
-				document.getElementById("tfaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "setTfaCode"))}`;
+				document.getElementById("tfaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageTfaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "setTfaCode"));
 			}
 		} catch (e) {
-			document.getElementById("tfaHint").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+			document.getElementById("tfaHint").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_SET_TFA_REQUEST"));
 		}
 	});
 }
@@ -430,21 +434,21 @@ async function setCaptchaCode(page) {
 			if(objResp.success == true) {
 				window.location.href = `${location.protocol}//${location.hostname}/addons/eufySecurity/restartWaiter.html?action=captcha&redirect=${page}.html`;
 			} else {
-				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaSendError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason))}`;
+				document.getElementById("captchaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageCaptchaSendError"), "", translateMessages("messageErrorPrintErrorMessage", objResp.reason));
 			}
 		} catch (e) {
-			document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
+			document.getElementById("captchaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_SET_CAPTCHA_JSON"));
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("captchaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
-				document.getElementById("captchaHint").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageCaptchaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "setCaptchCode"))}`;
+				document.getElementById("captchaHint").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageCaptchaSendError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "setCaptchCode"));
 			}
 		} catch (e) {
-			document.getElementById("captchaHint").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e));
+			document.getElementById("captchaHint").innerHTML = createMessageContainer("alert alert-warning alert-dismissible fade show", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorPrintErrorMessage", e, "ERR_SET_TFA_REQUEST"));
 		}
 	});
 }
@@ -554,7 +558,7 @@ async function loadStations() {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				document.getElementById("stations").innerHTML = `<h4>${translateContent("lblStations")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
 			} else {
@@ -632,7 +636,7 @@ async function loadDevices() {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				document.getElementById("devices").innerHTML = `<h4>${translateContent("lblDevices")}</h4>${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
 			} else {
@@ -908,13 +912,13 @@ async function getDevicePropertiesMetadata(deviceId) {
 				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DevicePropertiesMetadata"));
 			}
 		} catch (e) {
-			document.getElementById("modalDeviceSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
+			document.getElementById("modalDeviceSettings").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"));
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("modalDeviceSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("modalDeviceSettings").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DevicePropertiesMetadata"));
 			}
@@ -940,13 +944,13 @@ async function getDeviceProperties(deviceId, devicePropertiesMetadata) {
 				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DeviceProperties"));
 			}
 		} catch (e) {
-			document.getElementById("modalDeviceSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"))}`;
+			document.getElementById("modalDeviceSettings").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageErrorLoadingHeader"), translateMessages("messageErrorLoadingText"));
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("modalDeviceSettings").innerHTML = generateDeviceModalErrorMessage(translateMessages("messageErrorLoadDeviceForGetInfo", "DeviceProperties"));
 			}
@@ -1850,7 +1854,7 @@ async function saveEventInteraction(deviceId, deviceName, serialNumber, event) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -1908,7 +1912,7 @@ async function testUnstoredEventInteraction(deviceId, deviceName, serialNumber, 
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -1974,7 +1978,7 @@ async function testStoredEventInteraction(deviceId, deviceName, serialNumber, ev
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -2041,7 +2045,7 @@ async function deleteEventInteraction(deviceId, deviceName, serialNumber, event)
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -2263,7 +2267,7 @@ async function changeDeviceProperty(deviceId, deviceName, propertyName, property
 				}
 			}).catch((err) => {
 				try {
-					objErr = JSON.parse(err);
+					objErr = err;
 					if(objErr.cause == "ABORT") {
 						const toast = new bootstrap.Toast(toastFailed);
 						document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -2370,9 +2374,9 @@ async function getTimeZones(stationId) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("modalStationSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				
 			}
@@ -2402,9 +2406,9 @@ async function getStationPropertiesMetadata(stationId, timeZones) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("modalStationSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationPropertiesMetadata"));
 			}
@@ -2434,9 +2438,9 @@ async function getStationProperties(stationId, timeZones, stationPropertiesMetad
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("modalStationSettings").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("modalStationSettings").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("modalStationSettings").innerHTML = generateStationModalErrorMessage(translateMessages("messageErrorLoadStationForGetInfo", "StationProperties"));
 			}
@@ -2888,7 +2892,7 @@ async function changeStationProperty(stationId, stationName, propertyName, prope
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -2973,7 +2977,7 @@ async function sendCommand(deviceType, deviceId, deviceName, commandName, comman
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -3078,9 +3082,9 @@ async function loadDataStatechange(showLoading) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("stations").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("stations").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("btnAwayAll").setAttribute("disabled", true);
 				document.getElementById("btnHomeAll").setAttribute("disabled", true);
@@ -3131,7 +3135,7 @@ async function setMode(stationSerial, modeName, modeId) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -3181,7 +3185,7 @@ async function setPrivacy(stationserial, enabled) {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
 					const toast = new bootstrap.Toast(toastFailed);
 					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -3291,9 +3295,9 @@ async function generateNewTrustedDeviceName() {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				
 			}
@@ -3334,9 +3338,9 @@ async function loadCountries() {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("countrySelectionMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
 					document.getElementById("countrySelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageCountriesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadCountries"));
 					loadHouses();
@@ -3376,9 +3380,9 @@ async function loadHouses() {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("houseSelectionMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
 					document.getElementById("houseSelectionMessage").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageHousesLoadingFailedHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadHouses"));
 					loadStationsSettings();
@@ -3428,9 +3432,9 @@ async function loadStationsSettings() {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
 					document.getElementById("useUDPStaticPortsStations").innerHTML = createMessageContainer("alert alert-danger mt-2", translateMessages("messageStationsLoadingError"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState, "loadStationsSettings"));
 					document.getElementById('chkUseUdpStaticPorts').setAttribute("disabled", true);
@@ -3608,9 +3612,9 @@ async function loadDataSettings() {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("resultLoading").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
 					document.getElementById("resultLoading").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadDataSettings"));
 				}
@@ -3708,9 +3712,9 @@ async function loadSystemVariables() {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
-					document.getElementById("divSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 				} else {
 					document.getElementById("divSystemVariables").innerHTML = createMessageContainer("alert alert-danger mb-0", translateMessages("messageSystemVariablesLoadingErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", this.status, this.readyState, "loadSystemVariables"));
 					loadDataSettings();
@@ -3757,9 +3761,9 @@ async function saveConfig() {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("resultMessage").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("resultMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageSettingsSaveErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "saveConfig"));
 			}
@@ -3794,9 +3798,9 @@ async function createSysVar(varName, varInfo, varValueType, varValueSubType, var
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("divDeprecatedSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("divDeprecatedSystemVariablesHint").innerHTML = "";
 				document.getElementById("divDeprecatedSystemVariables").innerHTML = "";
@@ -3841,9 +3845,9 @@ async function removeSystemVariable(varName) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("divDeprecatedSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
 				document.getElementById("divSystemVariables").innerHTML = "";
@@ -3889,9 +3893,9 @@ async function updateSystemVariable(varName, varInfo, varValueType, varValueSubT
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("divDeprecatedSystemVariables").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("divDeprecatedSystemVariables").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else {
 				document.getElementById("divSystemVariablesHint").innerHTML = "";
 				document.getElementById("divSystemVariables").innerHTML = "";
@@ -3953,9 +3957,9 @@ async function uploadFile(filetype) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
-				document.getElementById("commonError").innerHTML = `${createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"))}`;
+				document.getElementById("commonError").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageAbortLoadingHeader"), translateMessages("messageAbortLoadingText"));
 			} else if(objErr.readyState != undefined && objErr.status != undefined) {
 				document.getElementById("resultUploadMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUploadConfigErrorHeader"), translateMessages("messageErrorAddonNotRunning"), translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "uploadFile"));
 				document.getElementById("btnSelectConfigFile").value = "";
@@ -4011,7 +4015,7 @@ async function removeInteractions() {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -4065,7 +4069,7 @@ async function reconnectStation() {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -4122,7 +4126,7 @@ async function removeTokenData() {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -4201,7 +4205,7 @@ async function serviceManager(action) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -4507,7 +4511,7 @@ async function loadLogfile(logfiletype, showLoading) {
 			document.getElementById("btnReloadLogfileData").setAttribute("disabled", true);
 			document.getElementById("btnDeleteLogfileData").setAttribute("disabled", true);
 			document.getElementById("btnDownloadLogfile").setAttribute("disabled", true);
-			document.getElementById("txtLogfileLocation").innerHTML = `${translateStaticContentElement('txtLogfileUnknown')}`;
+			document.getElementById("txtLogfileLocation").innerHTML = translateStaticContentElement('txtLogfileUnknown');
 			document.getElementById("logHandlingInfo").innerHTML = createMessageContainer("alert alert-danger m-0", translateMessages("messageLoadLogFileErrorHeader"), translateMessages("messageErrorLogfileUnknown", logfiletype), "");
 			return;
 	}
@@ -4576,21 +4580,19 @@ async function loadLogfile(logfiletype, showLoading) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
 				toast.show();
 			} else {
-				objErr = JSON.parse(err);
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorStatusAndReadyState", objErr.status, objErr.readyState, "loadLogfile");
 				toast.show();
 			}
 		} catch (e) {
-			objErr = JSON.parse(err);
 			const toast = new bootstrap.Toast(toastFailed);
 			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageLoadLogFileErrorHeader");
 			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
@@ -4647,7 +4649,7 @@ async function emptyLogfile(logfiletype) {
 		}
 	}).catch((err) => {
 		try {
-			objErr = JSON.parse(err);
+			objErr = err;
 			if(objErr.cause == "ABORT") {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -4700,7 +4702,7 @@ async function loadDataInfo(showLoading) {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
 					const toast = new bootstrap.Toast(toastFailed);
 					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
@@ -4740,7 +4742,7 @@ async function loadDataInfo(showLoading) {
 			}
 		}).catch((err) => {
 			try {
-				objErr = JSON.parse(err);
+				objErr = err;
 				if(objErr.cause == "ABORT") {
 					const toast = new bootstrap.Toast(toastFailed);
 					document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");

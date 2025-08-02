@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.40
-202050720
+Schema v9.41
+20250802
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20250720 (v9.40)";
+var languageVersion = "20250802 (v9.41)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -539,7 +539,7 @@ function translateMessages(message, ...options) {
 		case "messageApiPortFileNotFoundMessageText":
 			return "Bitte überprüfen Sie die Datei apiPorts.json im Webseitenverzeichnisses dieses AddOns.";
 		case "messageErrorPrintErrorMessage":
-			return `Es ist folgender Fehler aufgetreten: ${options[0]}`;
+			return `Es ist folgender Fehler aufgetreten: ${options[0]}${options[1] !== undefined ? ` [${options[1]}]` : ""}`;
 		case "messageErrorStatusAndReadyState":
 			return `Rückgabewert 'Status' ist '${options[0]}'. Rückgabewert 'ReadyState' ist '${options[1]}'.${options[2] !== undefined ? ` Funktion: '${options[2]}'.` : ""}`;
 		case "messageAbortLoadingHeader":
@@ -555,7 +555,7 @@ function translateMessages(message, ...options) {
 		case "messageErrorCheckingAddonStateHeader":
 			return "Fehler bei der Ermittlung des Status des Addons.";
 		case "messageErrorAddonNotRunning":
-			return "Eventuell wird das Addon nicht ausgeführt. Ein Neustart des Addons oder der CCU könnte das Problem beheben.";
+			return "Eventuell wird das Addon nicht ausgeführt oder die Firewalleinstellungen der CCU blockieren die Kommunikation. Ein Neustart des Addons, der CCU oder eine Änderung der Firewalleinstellungen könnte das Problem beheben.";
 		case "messageCaptchaError":
 			return "Fehler beim Laden des Captcha Status.";
 		case "messageCaptchaSendError":
