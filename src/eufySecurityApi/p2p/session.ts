@@ -545,8 +545,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     const error = ensureError(err);
                     rootP2PLogger.error(`connect - Socket Binding Error`, { error: getError(error), stationSN: this.rawStation.station_sn, host: host });
                 }
-            }
-            else {
+            } else {
                 try {
                     this.lookup(host);
                 } catch (err) {
@@ -1039,6 +1038,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         } else if (hasHeader(msg, ResponseMessageType.END)) {
             // Connection is closed by device
             rootP2PLogger.debug(`Received message - END`, { stationSN: this.rawStation.station_sn, remoteAddress: rinfo.address, remotePort: rinfo.port });
+            if (this.energySavingDevice && this.connected) {
+                this.closeEnergySavingDevice();
+            }
             this.onClose();
             return;
         } else if (hasHeader(msg, ResponseMessageType.ACK)) {
@@ -1940,7 +1942,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                                         this.emit("secondary command", result);
                                                         delete this.customDataStaging[commandType];
                                                     }
-                                                    rootP2PLogger.debug(`Handle DATA ${P2PDataType[message.dataType]} - CMD_NOTIFY_PAYLOAD Smart Lock  return code: ${returnCode}`, { stationSN: this.rawStation.station_sn, commandIdName: CommandType[json.cmd], commandId: json.cmd, decoded: data.toString("hex"), bleCommandCode: functionTypeCommand[fac.getCommandCode()!], returnCode: returnCode });
+                                                    rootP2PLogger.debug(`Handle DATA ${P2PDataType[message.dataType]} - CMD_NOTIFY_PAYLOAD Smart Lock  return code: ${returnCode}`, { stationSN: this.rawStation.station_sn, commandIdName: CommandType[json.cmd], commandId: json.cmd, decoded: data.toString("hex"), bleCommandCode: functionTypeCommand[fac.getCommandCode()!], returnCode: returnCode, channel: message.channel });
                                                     const parsePayload = new ParsePayload(data.subarray(1));
                                                     if (fac.getDataType() === SmartLockFunctionType.TYPE_2) {
                                                         switch (fac.getCommandCode()) {
@@ -2607,7 +2609,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         if (this.lockSeqNumber === -1) {
             let deviceType = undefined;
             let deviceSN = undefined;
-            if (this.rawStation?.devices !== undefined && this.rawStation?.devices.length > 0) {
+            if (this.rawStation?.devices?.length > 0) {
                 deviceType = this.rawStation?.devices[0]?.device_type;
                 deviceSN = this.rawStation?.devices[0]?.device_sn;
             }
@@ -2688,16 +2690,12 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
         this.channel = Station.getChannel(value.device_type);
 
-        if (this.rawStation.devices?.length > 0) {
+        if (Device.hasBattery(this.rawStation.device_type)) {
             if (!this.energySavingDevice) {
-                for (const device of this.rawStation.devices) {
-                    if (device.device_sn === this.rawStation.station_sn && Device.hasBattery(device.device_type)) {
-                        this.energySavingDevice = true;
-                        break;
-                    }
-                }
-                if (this.energySavingDevice)
-                    rootP2PLogger.debug(`Identified standalone battery device ${this.rawStation.station_sn} => activate p2p keepalive command`);
+                this.energySavingDevice = true;
+            }
+            if (this.energySavingDevice) {
+                rootP2PLogger.debug(`Identified standalone battery device ${this.rawStation.station_sn} => activate p2p keepalive command`);
             }
         } else {
             this.energySavingDevice = false;

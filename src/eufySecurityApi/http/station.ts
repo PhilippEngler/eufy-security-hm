@@ -660,7 +660,10 @@ export class Station extends TypedEmitter<StationEvents> {
                 value: parsedValue,
                 source: "p2p"
             };
-            this.emit("raw device property changed", this._getDeviceSerial(channel), params);
+            let deviceSerial = this._getDeviceSerial(channel);
+            if (deviceSerial !== undefined) {
+                this.emit("raw device property changed", deviceSerial, params);
+            }
         }
     }
 
@@ -918,13 +921,29 @@ export class Station extends TypedEmitter<StationEvents> {
         return false;
     }*/
 
-    private _getDeviceSerial(channel: number): string {
-        if (this.rawStation.devices)
+    private _getDeviceSerial(channel: number): string | undefined {
+        if (this.rawStation.devices) {
+            // The station has attached devices (the normal case)
             for (const device of this.rawStation.devices) {
                 if (device.device_channel === channel)
                     return device.device_sn;
             }
-        return "";
+        } else {
+            // The station has no attached devices but there might be a device with the stations serial number (the special case)
+            // e.g. Smart Lock C220 (T8506)
+            const devices = this.api.getDevices();
+            if (devices) {
+                const device = devices[this.getSerial()];
+                if (device) {
+                    return this.getSerial();
+                } else {
+                    rootHTTPLogger.error(`Station get device serial - No device with the same serial number as the station found`, {station: this.getSerial(), channel: channel});
+                }
+            } else {
+                rootHTTPLogger.error(`Station get device serial - No devices found`, {station: this.getSerial(), channel: channel});
+            }
+        }
+        return undefined;
     }
 
     private _handleCameraInfoParameters(devices: { [index: string]: RawValues; }, channel: number, type: number, value: string): void {
@@ -950,7 +969,7 @@ export class Station extends TypedEmitter<StationEvents> {
             }
         } else {
             const device_sn = this._getDeviceSerial(channel);
-            if (device_sn !== "") {
+            if (device_sn !== undefined) {
                 if (!devices[device_sn]) {
                     devices[device_sn] = {};
                 }
@@ -8335,23 +8354,38 @@ export class Station extends TypedEmitter<StationEvents> {
     }
 
     private onDeviceShakeAlarm(channel: number, event: SmartSafeShakeAlarmEvent): void {
-        this.emit("device shake alarm", this._getDeviceSerial(channel), event);
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device shake alarm", deviceSerial, event);
+        }
     }
 
     private onDevice911Alarm(channel: number, event: SmartSafeAlarm911Event): void {
-        this.emit("device 911 alarm", this._getDeviceSerial(channel), event);
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device 911 alarm", deviceSerial, event);
+        }
     }
 
     private onDeviceJammed(channel: number): void {
-        this.emit("device jammed", this._getDeviceSerial(channel));
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device jammed", deviceSerial);
+        }
     }
 
     private onDeviceLowBattery(channel: number): void {
-        this.emit("device low battery", this._getDeviceSerial(channel));
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device low battery", deviceSerial);
+        }
     }
 
     private onDeviceWrongTryProtectAlarm(channel: number): void {
-        this.emit("device wrong try-protect alarm", this._getDeviceSerial(channel));
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device wrong try-protect alarm", deviceSerial);
+        }
     }
 
     private onSdInfoEx(sdStatus: number, sdCapacity: number, sdAvailableCapacity: number): void {
@@ -10796,7 +10830,7 @@ export class Station extends TypedEmitter<StationEvents> {
         }
 
         rootHTTPLogger.debug(`Station preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || (device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera())) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || (device.isIntegratedDevice() && (device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423()))) {
             rootHTTPLogger.debug(`Station preset position [STANDALONE] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
@@ -10810,7 +10844,7 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 command: commandData
             });
-        } else if (!device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera()) {
+        } else if (!device.isIntegratedDevice() && (device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423())) {
             rootHTTPLogger.debug(`Station preset position [CONNECTED] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
             this.p2pSession.sendCommandWithIntString({
                 commandType: CommandType.CMD_FLOODLIGHT_SET_MOTION_PRESET_POSITION,
@@ -10840,7 +10874,7 @@ export class Station extends TypedEmitter<StationEvents> {
         }
 
         rootHTTPLogger.debug(`Station save preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10872,7 +10906,7 @@ export class Station extends TypedEmitter<StationEvents> {
         }
 
         rootHTTPLogger.debug(`Station delete preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
