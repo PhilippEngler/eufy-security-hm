@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.41
-20250802
+Schema v9.42
+20250921
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20250802 (v9.41)";
+var languageVersion = "20250921 (v9.42)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -210,6 +210,12 @@ function translateStaticContentElement(element) {
 			return "Activate securing access to api";
 		case "hintUseSecureApiAccessSid":
 			return "If you enable this setting a sid is needed to access some api endpoints. Please navigate to the CCUs WebUI and select Settings > Addons. There on the section for the eufy SECURITY-Addon select Setting.";
+		case "settingsHeaderConfigEnableEmbeddedPKCS1Support":
+			return "Settings for RSA PKCS#1 (Public-Key Cryptography Standards)";
+		case "lblUseEnableEmbeddedPKCS1Support":
+			return "Activate internal support of PKCS#1";
+		case "hintUseEnableEmbeddedPKCS1Support":
+			return "If you enable this setting the internal functionalities for PKCS#1 will be used because PKCS#1 has been removed from node.js due to a security issue (see CVE-2023-46809: Marvin attack on PKCS#1 padding). For node.js version 22 and newer this setting must be activated.";
 		case "settingsHeaderConfigLogLevel":
 			return "Settings for logging";
 		case "lblLogLevelAddon":

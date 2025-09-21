@@ -141,6 +141,9 @@ function translateStaticPageContent(page)
             translateInnerHtml("settingsHeaderConfigSecureApiAccessSid");
             translateInnerHtml("lblUseSecureApiAccessSid");
             translateInnerHtml("hintUseSecureApiAccessSid");
+            translateInnerHtml("settingsHeaderConfigEnableEmbeddedPKCS1Support");
+            translateInnerHtml("lblUseEnableEmbeddedPKCS1Support");
+            translateInnerHtml("hintUseEnableEmbeddedPKCS1Support");
             translateInnerHtml("settingsHeaderConfigLogLevel");
             translateInnerHtml("lblLogLevelAddon");
             translateInnerHtml("lblLogLevelMain");

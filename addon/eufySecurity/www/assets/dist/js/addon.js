@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 202500802
+ * 202500921
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.5.1";
+var version = "3.5.2";
 
 /**
  * common used java script functions
@@ -3551,6 +3551,9 @@ async function loadDataSettings() {
 					}
 					if(objResp.data.secureApiAccessBySid == true) {
 						document.getElementById("chkUseSecureApiAccessSid").setAttribute("checked", true);
+					}
+					if(objResp.data.enableEmbeddedPKCS1Support == true) {
+						document.getElementById("chkUseEnableEmbeddedPKCS1Support").setAttribute("checked", true);
 					}
 					if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6")) {
 						document.getElementById("cbLogLevelAddon").selectedIndex = 3;

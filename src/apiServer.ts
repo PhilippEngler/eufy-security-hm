@@ -640,6 +640,11 @@ class ApiServer {
                                     usesecureapiaccesssid = getDataFromPOSTData(postData, "useSecureApiAccessSid", "boolean");
                                 }
 
+                                let enableembeddedpkcs1support = false;
+                                if (postData.indexOf("enableembeddedpkcs1support") >= 0) {
+                                    enableembeddedpkcs1support = getDataFromPOSTData(postData, "enableembeddedpkcs1support", "boolean");
+                                }
+
                                 let logleveladdon = 6;
                                 if (postData.indexOf("logLevelAddon") >= 0) {
                                     logleveladdon = getDataFromPOSTData(postData, "logLevelAddon", "number");
@@ -719,7 +724,7 @@ class ApiServer {
                                 if (isDataOK === true) {
                                     apiPortFile(useHttp, Number(apiporthttp), useHttps, Number(apiporthttps));
 
-                                    responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, usesecureapiaccesssid, logleveladdon, loglevelmain, loglevelhttp, loglevelp2p, loglevelpush, loglevelmqtt);
+                                    responseData = await api.setConfig(username, password, country, language, trustedDeviceName, useHttp, apiporthttp, useHttps, apiporthttps, apikeyfile, apicertfile, apiacceptinvitations, apihouseid, apiconnectiontype, apiuseudpstaticports, apiudpports, useSystemVariables, useupdatestateevent, useupdatestateintervall, updatestatetimespan, usepushservice, usesecureapiaccesssid, enableembeddedpkcs1support, logleveladdon, loglevelmain, loglevelhttp, loglevelp2p, loglevelpush, loglevelmqtt);
                                 } else {
                                     responseData = `{"success":false,"serviceRestart":false,"message":"Got invalid settings data. Please check logfile and values."}`;
                                 }
