@@ -16,7 +16,18 @@ if grep -qim1 busmatic /www/api/methods/ccu/downloadFirmware.tcl; then
 fi
 
 dir="/usr/local/addons/eufySecurity"
-cmd="/usr/local/addons/eufySecurity/bin/nodejs/bin/node --security-revert=CVE-2023-46809 /usr/local/addons/eufySecurity/apiServer.js"
+# get nodejs version and make the cmd string
+#   1st line; get nodejs version and thereof only the main part (v20.19.4 will return v20)
+#   2nd line: remove the leading v (v20 will return 20)
+#   3rd line: check if nodejs main version is 20 or lower to include the reverting of the CVE-2023-46809 otherwise not (nodejs will crash on v22 and later if reverting CVE-2023-46809)
+NODEJS_VERSION_MAIN=$(echo $(/usr/local/addons/eufySecurity/bin/nodejs/bin/node -v) | cut -d "." -f 1)
+NODEJS_VERSION_MAIN=${NODEJS_VERSION_MAIN:1}
+if [ $NODEJS_VERSION_MAIN -le 20 ]; then
+    cmd="/usr/local/addons/eufySecurity/bin/nodejs/bin/node --security-revert=CVE-2023-46809 /usr/local/addons/eufySecurity/apiServer.js"
+else
+    cmd="/usr/local/addons/eufySecurity/bin/nodejs/bin/node /usr/local/addons/eufySecurity/apiServer.js"
+fi
+
 user="root"
 
 name=`basename $0`

@@ -590,6 +590,11 @@ export class Config {
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
             updated = true;
         }
+        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support && (Number.parseInt(process.versions.node.split('.')[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false)) {
+            rootConfLogger.info(`Set enableEmbeddedPKCS1Support to "true" because of Node.js is higher than v20 (v${process.versions.node.split('.')[0]})`);
+            this.configJson.apiConfig.enableEmbeddedPKCS1Support = true;
+            updated = true;
+        }
         if (this.configJson.logConfig.logLevelAddon < 0 || this.configJson.logConfig.logLevelAddon > 6) {
             rootConfLogger.info(`Set logLevelAddon to default value "2"`);
             this.configJson.logConfig.logLevelAddon = 2;
@@ -1630,11 +1635,10 @@ export class Config {
      * @returns Boolean for enableing or disableing.
      */
     public getEnableEmbeddedPKCS1Support(): boolean {
-        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined)
-        {
+        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined) {
             return this.configJson.apiConfig.enableEmbeddedPKCS1Support;
         } else {
-            return false;
+            return true;
         }
     }
 
@@ -1643,6 +1647,9 @@ export class Config {
      * @param enableEmbeddedPKCS1Support The value if securing api access by sid is used.
      */
     public setEnableEmbeddedPKCS1Support(enableEmbeddedPKCS1Support: boolean): void {
+        if (Number.parseInt(process.versions.node.split('.')[0]) > 20 && enableEmbeddedPKCS1Support === false) {
+            return;
+        }
         if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== enableEmbeddedPKCS1Support) {
             this.configJson.apiConfig.enableEmbeddedPKCS1Support = enableEmbeddedPKCS1Support;
             this.hasChanged = true;
