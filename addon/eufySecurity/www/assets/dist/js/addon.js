@@ -3555,6 +3555,11 @@ async function loadDataSettings() {
 					if(objResp.data.enableEmbeddedPKCS1Support == true) {
 						document.getElementById("chkUseEnableEmbeddedPKCS1Support").setAttribute("checked", true);
 					}
+					if(objResp.data.enableEmbeddedPKCS1SupportEditable == true) {
+						document.getElementById("chkUseEnableEmbeddedPKCS1Support").removeAttribute("disabled");
+					} else {
+						document.getElementById("chkUseEnableEmbeddedPKCS1Support").setAttribute("disabled", true);
+					}
 					if(objResp.data.logLevelAddon === undefined || (objResp.data.logLevelAddon < "0" || objResp.data.logLevelAddon > "6")) {
 						document.getElementById("cbLogLevelAddon").selectedIndex = 3;
 					} else {
