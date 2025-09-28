@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.42
-20250921
+Schema v9.43
+20250928
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20250921 (v9.42)";
+var languageVersion = "20250928 (v9.43)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -337,6 +337,26 @@ function translateStaticContentElement(element) {
 			return "Wenn Sie in der Logdatei den Fehler <code>401 (Unauthorized)</code> erhalten, können Sie versuchen, das vorhandene Token zu löschen. Dadurch wird bei der nächsten Anfrage ein neues Token erzeugt.";
 		case "btnDeleteTokenData":
 			return "Token löschen";
+		case "headerModulesManager":
+			return "Abhängigkeitsverwaltung";
+		case "hintModuleseManager":
+			return "Übersicht über die installierten Abhängigkeiten, die dieses AddOn benötigt.";
+		case "btnModulesManager":
+			return "Abhängigkeitsverwaltung starten...";
+		case "lblModalModulesManagerTitle":
+			return "Abhängigkeitsverwaltung";
+		case "modalModulesManagerMessage":
+			return "Hier finden Sie alle für das AddOn notwenigen Abhängigkeiten, deren aktuelle Version sowie deren Aktualisierungsstatus.";
+		case "tableHeaderModuleName":
+			return "Abhängigkeit";
+		case "tableHeaderModuleCurrentVersion":
+			return "aktuelle Version";
+		case "tableHeaderModuleWantedVersion":
+			return "kompatible Version";
+		case "modalModulesManagerBtnUpdate":
+			return "Aktualisierung starten"
+		case "modalModulesManagerBtnClose":
+			return "Schließen";
 		case "headerServiceManager":
 			return "Service Manager";
 		case "hintServiceManager":
@@ -778,6 +798,10 @@ function translateMessages(message, ...options) {
 			return "Die Station startet neu. Dies kann einige Minuten dauern.";
 		case "messageSaveSettingsOkMessage":
 			return "Die Station konnte nicht neu gestartet werden.";
+		case "messageInstalledModulesErrorHeader":
+			return "Fehler bei der Ermittlung der installierten Abhängigkeiten.";
+		case "messageUpdatedModulesErrorHeader":
+			return "Fehler bei der Ermittlung der aktualisierbaren Abhängigkeiten.";
 		case "messageRestartWaitErrorHeader":
 			return "Fehler beim Neustart des Addons.";
 		case "messageRestartWaitHeaderMessage":
@@ -1325,6 +1349,16 @@ function translateString(content) {
 			return "HomeMatic API";
 		case "strWebsite":
 			return "Webseite";
+		case "strLoadingModules":
+			return "Lade Liste der installierten Abhängigkeiten...";
+		case "strLoadingUpdates":
+			return "Ermittle Updates...";
+		case "strNoModuleUpdateFound":
+			return "Es wurde keine Abhängigkeiten gefunden, die aktualisiert werden können.";
+		case "strOneModuleUpdateFound":
+			return "Es wurde eine Abhängigkeit gefunden, die aktualisiert werden kann.";
+		case "strMoreModuleUpdateFound":
+			return "Es wurden mehrere Abhängigkeiten gefunden, die aktualisiert werden können.";
 		case "strServiceRunning":
 			return "Service läuft.";
 		case "strServiceStarted":

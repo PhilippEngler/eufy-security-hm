@@ -228,6 +228,17 @@ function translateStaticPageContent(page)
             translateInnerHtml("headerDeleteTokenData");
             translateInnerHtml("hintDeleteToken");
             translateInnerHtml("btnDeleteTokenData");
+            translateInnerHtml("headerModulesManager");
+            translateInnerHtml("hintModuleseManager");
+            translateInnerHtml("btnModulesManager");
+            translateInnerHtml("lblModalModulesManagerTitle");
+            translateInnerHtml("modalModulesManagerMessage");
+            translateInnerHtml("tableHeaderModuleName");
+            translateInnerHtml("tableHeaderModuleCurrentVersion");
+            translateInnerHtml("tableHeaderModuleWantedVersion");
+            translateInnerHtml("modalModulesManagerBtnUpdate");
+            translateInnerHtml("modalModulesManagerBtnClose");
+
             translateInnerHtml("headerServiceManager");
             translateInnerHtml("hintServiceManager");
             translateInnerHtml("btnServiceManager");

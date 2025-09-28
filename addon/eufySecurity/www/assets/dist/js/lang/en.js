@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.42
-20250921
+Schema v9.43
+20250928
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20250921 (v9.42)";
+var languageVersion = "20250928 (v9.43)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -337,6 +337,26 @@ function translateStaticContentElement(element) {
 			return "If you receive the error <code>401 (Unauthorized)</code> in the log file, you can try to delete the existing token. This will generate a new token for the next request.";
 		case "btnDeleteTokenData":
 			return "Delete token";
+		case "headerModulesManager":
+			return "Dependencies Manager";
+		case "hintModuleseManager":
+			return "Overview about all dependencies needed by this AddOn.";
+		case "btnModulesManager":
+			return "Open Dependencies Manager...";
+		case "lblModalModulesManagerTitle":
+			return "Dependencies Manager";
+		case "modalModulesManagerMessage":
+			return "Overview about all dependencies needed by this AddOn as well as the update state of them.";
+		case "tableHeaderModuleName":
+			return "Dependency";
+		case "tableHeaderModuleCurrentVersion":
+			return "Current Version";
+		case "tableHeaderModuleWantedVersion":
+			return "Compatible Version";
+		case "modalModulesManagerBtnUpdate":
+			return "Start Update"
+		case "modalModulesManagerBtnClose":
+			return "Close";
 		case "headerServiceManager":
 			return "Service Manager";
 		case "hintServiceManager":
@@ -778,6 +798,10 @@ function translateMessages(message, ...options) {
 			return "The station is rebooting. This may take some minutes.";
 		case "messageSaveSettingsOkMessage":
 			return "The station reboot failed.";
+		case "messageInstalledModulesErrorHeader":
+			return "Error while fetching installed Dependencies.";
+		case "messageUpdatedModulesErrorHeader":
+			return "Error while fetching updateable Dependencies.";
 		case "messageRestartWaitErrorHeader":
 			return "Error restarting the add-on.";
 		case "messageRestartWaitHeaderMessage":
@@ -1325,6 +1349,16 @@ function translateString(content) {
 			return "HomeMatic API";
 		case "strWebsite":
 			return "Website";
+		case "strLoadingModules":
+			return "Loading list of installed Dependencies...";
+		case "strLoadingUpdates":
+			return "Looking for Updates...";
+		case "strNoModuleUpdateFound":
+			return "No Dependencies found with available updates.";
+		case "strOneModuleUpdateFound":
+			return "One Dependency found that has a update available.";
+		case "strMoreModuleUpdateFound":
+			return "More Dependencies found that have a update available.";
 		case "strServiceRunning":
 			return "Service running.";
 		case "strServiceStarted":

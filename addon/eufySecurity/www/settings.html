@@ -492,6 +492,12 @@
 											</div>
 											<hr />
 											<div class="form-label-group" class="container-fluid">
+												<h6 id="headerModulesManager" class="text-muted">{headerModulesManager}</h6>
+												<small class="form-text text-muted" id="hintModuleseManager">{hintModuleseManager}</small><br />
+												<button id="btnModulesManager" onclick="openModulesManagerModal()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnModulesManager}</button>
+											</div>
+											<hr />
+											<div class="form-label-group" class="container-fluid">
 												<h6 id="headerServiceManager" class="text-muted">{headerServiceManager}</h6>
 												<small class="form-text text-muted" id="hintServiceManager">{hintServiceManager}</small><br />
 												<button id="btnServiceManager" onclick="openServiceManagerModal()" type="button" class="btn btn-outline-primary mt-2" disabled>{btnServiceManager}</button>
@@ -571,6 +577,43 @@
 					</div>
 					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
 						<button type="button" id="modalUDPPortsEqualWrongBtnOK" class="btn btn-primary" data-bs-dismiss="modal">{modalUDPPortsEqualWrongBtnOK}</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="modalModulesManager" role="alert" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lblModalModulesManager" aria-hidden="true">
+			<div class="modal-dialog modal-lg modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header text-bg-secondary" style="--bs-bg-opacity: .5;" >
+						<h5 class="modal-title" id="lblModalModulesManagerTitle">{lblModalModulesManagerTitle}</h5>
+					</div>
+					<div class="modal-body mb-0 pb-0" id="modalModulesManagerMessage">
+
+					</div>
+					<div class="modal-body mb-0 pb-0" id="modalModulesManagerWaitErrorMessage">
+
+					</div>
+					<div class="modal-body mb-0 pb-0" id="modalModulesManagerUpdateMessage">
+
+					</div>
+					<div class="modal-body" id="modalModulesManagerSettings">
+						<table class="table mt-0">
+							<thead class="thead-dark">
+								<tr>
+									<th scope="col" class="align-middle text-center" style="width: 50%;" id="tableHeaderModuleName">{tableHeaderModuleName}</th>
+									<th scope="col" class="align-middle text-center" style="width: 25%;" id="tableHeaderModuleCurrentVersion">{tableHeaderModuleCurrentVersion}</th>
+									<th scope="col" class="align-middle text-center" style="width: 25%;" id="tableHeaderModuleWantedVersion">{tableHeaderModuleWantedVersion}</th>
+								</tr>
+							</thead>
+							<tbody class="table-group-divider" id="tableContentModulesManager">
+								
+							</tbody>
+						</table>
+						<button type="button" id="modalModulesManagerBtnUpdate" class="btn btn-primary" data-bs-dismiss="modal" disabled>{modalModulesManagerBtnUpdate}</button>
+					</div>
+					<div class="modal-footer bg-secondary" style="--bs-bg-opacity: .5;">
+						<button type="button" id="modalModulesManagerBtnClose" class="btn btn-primary btn-sm" data-bs-dismiss="modal">{modalModulesManagerBtnClose}</button>
 					</div>
 				</div>
 			</div>
