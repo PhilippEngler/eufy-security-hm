@@ -4233,7 +4233,6 @@ async function checkModulesUpdates() {
 							updatesCounter ++;
 						}
 					} catch (e) {
-						alert(e)
 					}
 				}
 				document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = "";
