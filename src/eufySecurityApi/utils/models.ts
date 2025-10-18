@@ -43,23 +43,23 @@ export interface CameraEvent {
 }
 
 /**
- * The types for the value types of system variables in HomeMatic
+ * The types for the value types of system variables in OpenCCU
  */
-export type HomeMaticSystemvariableValueType = "ivtBinary" | "ivtFloat" | "ivtInteger" | "ivtString";
+export type OpenCcuSystemvariableValueType = "ivtBinary" | "ivtFloat" | "ivtInteger" | "ivtString";
 
 /**
- * The types for the value sub types of system variables in HomeMatic
+ * The types for the value sub types of system variables in OpenCCU
  */
-export type HomeMaticSystemvariableValueSubType = "istPresent" | "istAlarm" | "istGeneric" | "istBool" | "istEnum" | "istChar8859";
+export type OpenCcuSystemvariableValueSubType = "istPresent" | "istAlarm" | "istGeneric" | "istBool" | "istEnum" | "istChar8859";
 
 /**
- * The interface for the generic system variables in HomeMatic
+ * The interface for the generic system variables in OpenCCU
  */
-export interface HomeMaticSystemvariableGeneric {
+export interface OpenCcuSystemvariableGeneric {
     name: string;
     info: string;
-    valueType: HomeMaticSystemvariableValueType;
-    valueSubType: HomeMaticSystemvariableValueSubType;
+    valueType: OpenCcuSystemvariableValueType;
+    valueSubType: OpenCcuSystemvariableValueSubType;
     valueUnit: string;
     valueMin: number | undefined;
     valueMax: number | undefined,
@@ -70,19 +70,19 @@ export interface HomeMaticSystemvariableGeneric {
 }
 
 /**
- * The interface for common system variables in HomeMatic
+ * The interface for common system variables in OpenCCU
  */
-export interface HomeMaticSystemvariable {
+export interface OpenCcuSystemvariable {
     name: string;
     info: string;
-    valueType: HomeMaticSystemvariableValueType;
-    valueSubType: HomeMaticSystemvariableValueSubType;
+    valueType: OpenCcuSystemvariableValueType;
+    valueSubType: OpenCcuSystemvariableValueSubType;
 }
 
 /**
- * The interface for string system variables in HomeMatic.
+ * The interface for string system variables in OpenCCU
  */
-export interface HomeMaticSystemvariableString extends HomeMaticSystemvariable {
+export interface OpenCcuSystemvariableString extends OpenCcuSystemvariable {
     valueType: "ivtString";
     valueSubType: "istChar8859";
     valueUnit: "";
@@ -90,9 +90,9 @@ export interface HomeMaticSystemvariableString extends HomeMaticSystemvariable {
 }
 
 /**
- * The interface for float system variables in HomeMatic.
+ * The interface for float system variables in OpenCCU
  */
-export interface HomeMaticSystemvariableFloat extends HomeMaticSystemvariable {
+export interface OpenCcuSystemvariableFloat extends OpenCcuSystemvariable {
     valueType: "ivtFloat";
     valueSubType: "istGeneric";
     valueUnit: string;
@@ -102,9 +102,9 @@ export interface HomeMaticSystemvariableFloat extends HomeMaticSystemvariable {
 }
 
 /**
- * The interface for binary system variables in HomeMatic.
+ * The interface for binary system variables in OpenCCU
  */
-export interface HomeMaticSystemvariableBinary extends HomeMaticSystemvariable {
+export interface OpenCcuSystemvariableBinary extends OpenCcuSystemvariable {
     valueType: "ivtBinary";
     valueSubType: "istBool";
     valueUnit: "";
@@ -114,9 +114,9 @@ export interface HomeMaticSystemvariableBinary extends HomeMaticSystemvariable {
 }
 
 /**
- * The interface for integer system variables in HomeMatic.
+ * The interface for integer system variables in OpenCCU.
  */
-export interface HomeMaticSystemvariableInteger extends HomeMaticSystemvariable {
+export interface OpenCcuSystemvariableInteger extends OpenCcuSystemvariable {
     valueType: "ivtInteger";
     valueSubType: "istEnum";
     valueList: string;

@@ -1,18 +1,18 @@
 /*
 Language File for English (en)
-Schema v9.43
-20250928
+Schema v9.44
+20251018
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20250928 (v9.43)";
+var languageVersion = "20251018 (v9.44)";
 
 function translateNavbarElement(element) {
     switch(element) {
         case "niMain":
-            return "eufy Security for HomeMatic";
+            return "eufy Security for OpenCCU";
         case "niHome":
             return "Home";
         case "niDevices":
@@ -33,13 +33,13 @@ function translateNavbarElement(element) {
 function translateStaticContentElement(element) {
     switch(element) {
         case "divIndexJumbotronAddonHeader":
-            return "eufy Security AddOn for HomeMatic";
+            return "eufy Security AddOn for OpenCCU";
 		case "divIndexJumbotronAddonInfo":		
-			return "This AddOn allows you to control your eufy Security System with your CCU.";
+			return "This AddOn allows you to control your eufy Security System with your OpenCCU.";
         case "divIndexDescription01":
             return "On this website, you will find all stations and devices that are available for the eufy Security Account stored in the settings. Information about the devices is displayed, you can change the settings of the devices and you can check and change the current mode of your eufy Security System.";
 		case "divIndexDescription02":
-			return "With the help of the API provided by the add-on, you can also display the status of your devices in your CCU and you can also check and change the mode. There are various endpoints for this, which are described in the About tab.";
+			return "With the help of the API provided by the add-on, you can also display the status of your devices in your OpenCCU and you can also check and change the mode. There are various endpoints for this, which are described in the About tab.";
 		case "divDevicesIntroHeader":
 			return "Devices";
 		case "divDevicesIntroMessage":
@@ -151,13 +151,13 @@ function translateStaticContentElement(element) {
 		case "txtHttpsKeyFile":
 			return "Key file";
 		case "hintHttpsKeyFile":
-			return "Storage location of the key file on the CCU.";
+			return "Storage location of the key file on the OpenCCU.";
 		case "lblHttpsCertFile":
 			return "Storage location of the certificate.";
 		case "txtHttpsCertFile":
 			return "Certificate file";
 		case "hintHttpsCertFile":
-			return "Storage location of the certificate file on the CCU.";
+			return "Storage location of the certificate file on the OpenCCU.";
 		case "settingsHeaderConfigHouseAdministration":
 			return "Settings for the house management function";
 		case "lblAcceptInvitations":
@@ -460,7 +460,7 @@ function translateStaticContentElement(element) {
 		case "lblWaitServiceInit":
 			return "Waiting for the service to initialize...";
 		case "aboutIntroHeader":
-			return "About eufy Security AddOn for HomeMatic";
+			return "About eufy Security AddOn for OpenCCU";
 		case "headerVersionInfo":
 			return "Version information";
 		case "headerUsage":
@@ -520,7 +520,7 @@ function translateStaticContentElement(element) {
 		case "descApiSystemVariables":
 			return `With both variants, the corresponding system variables are set automatically if the option '${translateStaticContentElement("lblUseSystemVariables")}' has been activated in the settings.`;
 		case "descApiIpAddress":
-			return "Use the IP address of your CCU instead of <code>127.0.0.1</code> if you want to access the API from devices in your network (e.g. with a browser).";
+			return "Use the IP address of your OpenCCU instead of <code>127.0.0.1</code> if you want to access the API from devices in your network (e.g. with a browser).";
 		case "descApiTimeout":
 			return "The specification <code>max-time 20</code> (to RaspberryMatic 3.79.6.20241122) or the last argument of the system.Exec-function (<code>20000</code>, from RaspberryMatic 3.79.6.20250118, value in milliseconds)  means that the execution is aborted after 20 seconds. The API function <code>/setMode</code> can have a maximum runtime of approx. 10 seconds per station. For this reason, the value for <code>max-time</code> in the API function <code>/setMode</code> must be adjusted according to the number of stations. If you use RaspberryMatic-version from 3.79.6.20250118 and you are using the code from the older version, RaspberryMatic will exit the process automatically after 10 seconds.";
 		case "hintApiTimestamps":
@@ -544,7 +544,7 @@ function translateStaticContentElement(element) {
 		case "headerAboutWebsite":
 			return "Website:";
 		case "headerAboutAddOn":
-			return "CCU add-on:";
+			return "OpenCCU add-on:";
 		case "txtLogfileLocation":
 			return "Content of file";
 		case "txtLogfileUnknown":
@@ -581,7 +581,7 @@ function translateMessages(message, ...options) {
 		case "messageErrorCheckingAddonStateHeader":
 			return "Error retrieving state of add-on.";
 		case "messageErrorAddonNotRunning":
-			return "The addon may not be executed or the firewall configuration is blocking the communication. Restarting the add-on, the CCU or changeing the firewall settings could solve the problem.";
+			return "The addon may not be executed or the firewall configuration is blocking the communication. Restarting the add-on, the OpenCCU or changeing the firewall settings could solve the problem.";
 		case "messageCaptchaError":
 			return "Error loading the captcha status.";
 		case "messageCaptchaSendError":
@@ -617,9 +617,9 @@ function translateMessages(message, ...options) {
 		case "messageContinuousRecordingSheduleMessage":
 			return "The schedule for this function must currently be configured in the app.";
 		case "messageInteractionHintHeader":
-			return "Notes on interacting with the CCU.";
+			return "Notes on interacting with the OpenCCU.";
 		case "messageInteractionHintMessage":
-			return "The interactions are only carried out if there is a P2P connection to the base and an internet connection. If one of these connections does not exist, interaction with the CCU cannot be guaranteed.";
+			return "The interactions are only carried out if there is a P2P connection to the base and an internet connection. If one of these connections does not exist, interaction with the OpenCCU cannot be guaranteed.";
 		case "messageSaveInteractionHeader":
 			return "Save interaction.";
 		case "messageSaveInteractionUnknownInteractionMessage":
@@ -749,7 +749,7 @@ function translateMessages(message, ...options) {
 		case "messageSystemVariableHintHeader":
 			return `Option '${translateStaticContentElement("lblUseSystemVariables")}' is activated.`;
 		case "messageSystemVariableHintMessage":
-			return "The AddOn will update the corresponding system variables. In the following table you will find all the system variables that this AddOn requires on the CCU. If the respective line is green, the system variable has already been created on the CCU, otherwise the line is red.</br >If system variables are found that begin with 'eufy' and are no longer required (e.g. for deleted devices), these appear in a second table. These system variables can be deleted there.";
+			return "The AddOn will update the corresponding system variables. In the following table you will find all the system variables that this AddOn requires on the OpenCCU. If the respective line is green, the system variable has already been created on the OpenCCU, otherwise the line is red.</br >If system variables are found that begin with 'eufy' and are no longer required (e.g. for deleted devices), these appear in a second table. These system variables can be deleted there.";
 		case "messageSystemVariableHintSubText":
 			return `Please ensure that all system variables have been created. If you do not want the system variables to be updated, please deactivate the option '${translateStaticContentElement("lblUseSystemVariables")}'.`;
 		case "messageSystemVariablesDeactivatedHeader":
@@ -1111,7 +1111,7 @@ function translateContent(content, ...options) {
 		case "lblNotificationIntervalTime":
 			return "Time between Notifications";
 		case "lblHeaderInteractionCCU":
-			return "Interacting with the CCU";
+			return "Interacting with the OpenCCU";
 		case "lblInteractionMotion":
 			return "Response on Motion";
 		case "lblInteractionRadarMotion":
@@ -1219,7 +1219,7 @@ function translateContent(content, ...options) {
 		case "lblLogLevelToHighDebugMessage":
 			return "You have selected the scope of the logging so that DEBUG information are also logged. This can lead to a very large log file. For normal operation, select the logging level information or lower.";
 		case "lblLogLevelToHighSubText":
-			return "This setting remains permanently active even after a restart of the add-on or the CCU.";
+			return "This setting remains permanently active even after a restart of the add-on or the OpenCCU.";
 		case "lblFileIsEmpty":
 			return `The file '${options[0]}' is empty.`;
 		case "lblFileIsNotAvailable":
@@ -1347,8 +1347,8 @@ function translateString(content, ...options) {
 			return "eufy Security AddOn";
 		case "strClientName":
 			return "eufy Security Client";
-		case "strHomeMaticApi":
-			return "HomeMatic API";
+		case "strOpenCcuApi":
+			return "OpenCCU API";
 		case "strWebsite":
 			return "Website";
 		case "strLoadingModules":
@@ -1710,7 +1710,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventTarget":
 		case "sensorOpenEventTarget":
 		case "sensorCloseEventTarget":
-			return "CCU on which the interaction is to be executed";
+			return "OpenCCU on which the interaction is to be executed";
 		case "motionEventTargetHint":
 		case "radarMotionEventTargetHint":
 		case "personEventTargetHint":
@@ -1725,7 +1725,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventTargetHint":
 		case "sensorOpenEventTargetHint":
 		case "sensorCloseEventTargetHint":
-			return "Please enter 'localhost', the IP-address or the DNS-name of the target CCU without 'http://' or 'https://'.";
+			return "Please enter 'localhost', the IP-address or the DNS-name of the target OpenCCU without 'http://' or 'https://'.";
 		case "motionEventUseHttps":
 		case "radarMotionEventUseHttps":
 		case "personEventUseHttps":
@@ -1755,7 +1755,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventUseLocalCertificate":
 		case "sensorOpenEventUseLocalCertificate":
 		case "sensorCloseEventUseLocalCertificate":
-			return "Use certificate of the local CCU";
+			return "Use certificate of the local OpenCCU";
 		case "motionEventRejectUnauthorized":
 		case "radarMotionEventRejectUnauthorized":
 		case "personEventRejectUnauthorized":
@@ -1785,7 +1785,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventUser":
 		case "sensorOpenEventUser":
 		case "sensorCloseEventUser":
-			return "User name for logging in to the CCU";
+			return "User name for logging in to the OpenCCU";
 		case "motionEventUserHint":
 		case "radarMotionEventUserHint":
 		case "personEventUserHint":
@@ -1800,7 +1800,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventUserHint":
 		case "sensorOpenEventUserHint":
 		case "sensorCloseEventUserHint":
-			return "The user name is only required if you have activated authentication in the CCU settings and select a CCU other than the one on which this add-on is running.";
+			return "The user name is only required if you have activated authentication in the OpenCCU settings and select an OpenCCU other than the one on which this add-on is running.";
 		case "motionEventPassword":
 		case "radarMotionEventPassword":
 		case "personEventPassword":
@@ -1815,7 +1815,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventPassword":
 		case "sensorOpenEventPassword":
 		case "sensorCloseEventPassword":
-			return "Password for logging in to the CCU";
+			return "Password for logging in to the OpenCCU";
 		case "motionEventPasswordHint":
 		case "radarMotionEventPasswordHint":
 		case "personEventPasswordHint":
@@ -1830,7 +1830,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventPasswordHint":
 		case "sensorOpenEventPasswordHint":
 		case "sensorCloseEventPasswordHint":
-			return "The password is only required if you have activated authentication in the CCU settings and select a CCU other than the one on which this add-on is running.";
+			return "The password is only required if you have activated authentication in the OpenCCU settings and select an OpenCCU other than the one on which this add-on is running.";
 		case "motionEventCommand":
 		case "radarMotionEventCommand":
 		case "personEventCommand":
@@ -1860,7 +1860,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventCommandHint":
 		case "sensorOpenEventCommandHint":
 		case "sensorCloseEventCommandHint":
-			return "The command to be entered here should be tested in advance using the script test function of the CCU.";
+			return "The command to be entered here should be tested in advance using the script test function of the OpenCCU.";
 		case "notificationIntervalTime":
 			return "Duration between Notifications";
 		default:

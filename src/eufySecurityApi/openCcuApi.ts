@@ -6,12 +6,12 @@ import { rootAddonLogger } from "./logging";
 import { promisify } from "util";
 import { exec } from "child_process";
 import { extractEnclosedString } from "./utils/utils";
-import { HomeMaticSystemvariableBinary, HomeMaticSystemvariableFloat, HomeMaticSystemvariableInteger, HomeMaticSystemvariableString, HomeMaticSystemvariableValueSubType, HomeMaticSystemvariableValueType } from "./utils/models";
+import { OpenCcuSystemvariableBinary, OpenCcuSystemvariableFloat, OpenCcuSystemvariableInteger, OpenCcuSystemvariableString, OpenCcuSystemvariableValueSubType, OpenCcuSystemvariableValueType } from "./utils/models";
 
 /**
  * Interacting with the CCU.
  */
-export class HomematicApi {
+export class OpenCcuApi {
     private api: EufySecurityApi;
     private portHttp: number = 8181;
     private portHttps: number = 48181;
@@ -208,9 +208,9 @@ export class HomematicApi {
      * @param hostName The hostName of the ccu or localhost.
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get the value type of.
-     * @returns The value type of the given number as HomeMaticSystemvariableValueType or undefined.
+     * @returns The value type of the given number as OpenCcuSystemvariableValueType or undefined.
      */
-    public async getSystemVariableValueType(hostName: string, useHttps: boolean, variableName: string): Promise<HomeMaticSystemvariableValueType | undefined> {
+    public async getSystemVariableValueType(hostName: string, useHttps: boolean, variableName: string): Promise<OpenCcuSystemvariableValueType | undefined> {
         const requestData = `string result=dom.GetObject("${variableName}").ValueType();`;
         const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, true, hostName === "localhost" ? false : true);
 
@@ -248,9 +248,9 @@ export class HomematicApi {
      * @param hostName The hostName of the ccu or localhost.
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get the value type of.
-     * @returns The value sub type of the given number as HomeMaticSystemvariableValueSubType or undefined.
+     * @returns The value sub type of the given number as OpenCcuSystemvariableValueSubType or undefined.
      */
-    public async getSystemVariableValueSubType(hostName: string, useHttps: boolean, variableName: string): Promise<HomeMaticSystemvariableValueSubType | undefined> {
+    public async getSystemVariableValueSubType(hostName: string, useHttps: boolean, variableName: string): Promise<OpenCcuSystemvariableValueSubType | undefined> {
         const requestData = `string result=dom.GetObject("${variableName}").ValueSubType();`;
         const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, true, hostName === "localhost" ? false : true);
 
@@ -293,11 +293,11 @@ export class HomematicApi {
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableData The system variable data to create.
      */
-    public async createSystemVariable(hostName: string, useHttps: boolean, variableData: HomeMaticSystemvariableString | HomeMaticSystemvariableFloat | HomeMaticSystemvariableBinary | HomeMaticSystemvariableInteger): Promise<string | undefined> {
+    public async createSystemVariable(hostName: string, useHttps: boolean, variableData: OpenCcuSystemvariableString | OpenCcuSystemvariableFloat | OpenCcuSystemvariableBinary | OpenCcuSystemvariableInteger): Promise<string | undefined> {
         let requestData = "";
         switch (variableData.valueType) {
             case "ivtString":
-                variableData = variableData as HomeMaticSystemvariableString;
+                variableData = variableData as OpenCcuSystemvariableString;
                 requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
                               `object svObj=dom.CreateObject(OT_VARDP);` +
                               `svObj.Name('${variableData.name}');` +
@@ -313,7 +313,7 @@ export class HomematicApi {
                               `dom.RTUpdate(false);`;
                 break;
             case "ivtFloat":
-                variableData = variableData as HomeMaticSystemvariableFloat;
+                variableData = variableData as OpenCcuSystemvariableFloat;
                 requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
                               `object svObj=dom.CreateObject(OT_VARDP);` +
                               `svObj.Name('${variableData.name}');` +
@@ -330,7 +330,7 @@ export class HomematicApi {
                               `dom.RTUpdate(false);`;
                 break;
             case "ivtBinary":
-                variableData = variableData as HomeMaticSystemvariableBinary;
+                variableData = variableData as OpenCcuSystemvariableBinary;
                 requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
                               `object svObj=dom.CreateObject(OT_VARDP);` +
                               `svObj.Name('${variableData.name}');` +
@@ -345,7 +345,7 @@ export class HomematicApi {
                               `dom.RTUpdate(false);`;
                 break;
             case "ivtInteger":
-                variableData = variableData as HomeMaticSystemvariableInteger;
+                variableData = variableData as OpenCcuSystemvariableInteger;
                 requestData = `object sv=dom.GetObject(ID_SYSTEM_VARIABLES);` +
                               `object svObj=dom.CreateObject(OT_VARDP);` +
                               `svObj.Name('${variableData.name}');` +
@@ -452,9 +452,9 @@ export class HomematicApi {
     }
 
     /**
-     * Returns the version info of the homematic api.
+     * Returns the version info of the OpenCCU api.
      */
-    public getHomematicApiVersion(): string {
-        return "3.5.0";
+    public getOpenCcuApiVersion(): string {
+        return "3.6.0";
     }
 }

@@ -315,6 +315,15 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   else
     echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version is 3.2.2 or newer >> $INSTALL_LOGFILE
   fi
+  # remove unused api files from versions lower than 3.2.3 
+  if [ $CURRENT_VERSION_MAIN -lt 3 ] || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -lt 2 ]) || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -eq 2 ] && [ $CURRENT_VERSION_BUILD -lt 3 ]); then
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version lower than 3.2.3 >> $INSTALL_LOGFILE
+    if [ -e ${ADDON_DIR}/eufySecurityApi/homeMaticApi.js ]; then
+      rm -f ${ADDON_DIR}/eufySecurityApi/homeMaticApi.js
+    fi
+  else
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version is 3.2.3 or newer >> $INSTALL_LOGFILE
+  fi
 fi
 
 # check current and new Node.js versions

@@ -1,18 +1,18 @@
 /*
 Language File for German (de)
-Schema v9.43
-20250928
+Schema v9.44
+20251018
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20250928 (v9.43)";
+var languageVersion = "20251018 (v9.44)";
 
 function translateNavbarElement(element) {
     switch(element) {
         case "niMain":
-            return "eufy Security für HomeMatic";
+            return "eufy Security für OpenCCU";
         case "niHome":
             return "Home";
         case "niDevices":
@@ -33,13 +33,13 @@ function translateNavbarElement(element) {
 function translateStaticContentElement(element) {
     switch(element) {
         case "divIndexJumbotronAddonHeader":
-            return "eufy Security AddOn für HomeMatic";
+            return "eufy Security AddOn für OpenCCU";
 		case "divIndexJumbotronAddonInfo":		
-			return "Dieses AddOn ermöglicht die Steuerung Ihres eufy Security Systems mit Ihrer CCU.";
+			return "Dieses AddOn ermöglicht die Steuerung Ihres eufy Security Systems mit Ihrer OpenCCU.";
         case "divIndexDescription01":
             return "Sie finden auf dieser Webseite alle Stationen und Geräte, die für den in den Einstellungen hinterlegten eufy Security Account verfügbar sind. Es werden Informationen zu den Geräten angezeigt, Sie können die Einstellungen der Geräte ändern und Sie können den aktuellen Modus Ihrers eufy Security Systems überprüfen und ändern.";
 		case "divIndexDescription02":
-			return "Mit Hilfe der durch das AddOn bereitgestellten API haben Sie die Möglichkeit, den Status Ihrer Geräte auch in Ihrer CCU abzubilden und Sie können ebenfalls den Modus überprüfen und ändern. Dazu gibt es verschiedene Endpunkte, die im Reiter Über beschrieben werden.";
+			return "Mit Hilfe der durch das AddOn bereitgestellten API haben Sie die Möglichkeit, den Status Ihrer Geräte auch in Ihrer OpenCCU abzubilden und Sie können ebenfalls den Modus überprüfen und ändern. Dazu gibt es verschiedene Endpunkte, die im Reiter Über beschrieben werden.";
 		case "divDevicesIntroHeader":
 			return "Geräte";
 		case "divDevicesIntroMessage":
@@ -151,13 +151,13 @@ function translateStaticContentElement(element) {
 		case "txtHttpsKeyFile":
 			return "Schlüsseldatei";
 		case "hintHttpsKeyFile":
-			return "Speicherort der Schlüsseldatei auf der CCU.";
+			return "Speicherort der Schlüsseldatei auf der OpenCCU.";
 		case "lblHttpsCertFile":
 			return "Speicherort des Zertifikats.";
 		case "txtHttpsCertFile":
 			return "Zertifikatsdatei";
 		case "hintHttpsCertFile":
-			return "Speicherort der Zertifikatsdatei auf der CCU.";
+			return "Speicherort der Zertifikatsdatei auf der OpenCCU.";
 		case "settingsHeaderConfigHouseAdministration":
 			return "Einstellungen für die Hausverwaltungsfunktion";
 		case "lblAcceptInvitations":
@@ -209,7 +209,7 @@ function translateStaticContentElement(element) {
 		case "lblUseSecureApiAccessSid":
 			return "Sicherung des Zugriffs auf die API aktivieren";
 		case "hintUseSecureApiAccessSid":
-			return "Wenn Sie diese Einstellung aktivieren, wird für einige API-Funktionen eine gültige SID benötigt. Gehen Sie dazu bitte auf die WebUI der CCU, navigieren Sie zu Einstellungen > Zusatzsoftware und wählen Sie Einstellen in den Optionen des eufy SECURITY-Addons aus.";
+			return "Wenn Sie diese Einstellung aktivieren, wird für einige API-Funktionen eine gültige SID benötigt. Gehen Sie dazu bitte auf die WebUI der OpenCCU, navigieren Sie zu Einstellungen > Zusatzsoftware und wählen Sie Einstellen in den Optionen des eufy SECURITY-Addons aus.";
 		case "settingsHeaderConfigEnableEmbeddedPKCS1Support":
 			return "Einstellungen für RSA PKCS#1 (Public-Key Cryptography Standards)";
 		case "lblUseEnableEmbeddedPKCS1Support":
@@ -460,7 +460,7 @@ function translateStaticContentElement(element) {
 		case "lblWaitServiceInit":
 			return "Warte auf Initialisierung des Services...";
 		case "aboutIntroHeader":
-			return "Über eufy Security AddOn für HomeMatic";
+			return "Über eufy Security AddOn für OpenCCU";
 		case "headerVersionInfo":
 			return "Versionsinformationen";
 		case "headerUsage":
@@ -520,7 +520,7 @@ function translateStaticContentElement(element) {
 		case "descApiSystemVariables":
 			return `Bei beiden Varianten werden die entsprechenden Systemvariablen automatisch gesetzt, wenn in den Einstellungen die Option '${translateStaticContentElement("lblUseSystemVariables")}' aktiviert wurde.`;
 		case "descApiIpAddress":
-			return "Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer CCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.";
+			return "Verwenden Sie anstelle von <code>127.0.0.1</code> die IP-Adresse Ihrer OpenCCU, wenn Sie von Geräten in Ihrem Netzwerk (beispielsweise mit einem Browser) auf die API zugreifen möchten.";
 		case "descApiTimeout":
 			return "Die Angabe <code>max-time 20</code> (bis RaspberryMatic 3.79.6.20241122) bzw. das letzte Argument der system.Exec-Funktion (<code>20000</code>, ab RaspberryMatic 3.79.6.20250118, Angabe in Millisekunden) bedeutet, dass die Ausführung nach 20 Sekunden abgebrochen wird. Die API-Funktion <code>/setMode</code> kann je Station eine maximale Laufzeit von ca. 10 Sekunden haben. Aus diesem Grund muss der Wert für <code>max-time</code> bei der API-Funktion <code>/setMode</code> entsprechend der Anzahl der Stationen angepasst werden. Falls Sie bei RaspberryMatic-Versionen ab 3.79.6.20250118 den Code der älteren Version weiternutzen, bricht RaspberryMatic den Prozess automatisch nach 10 Sekunden ab.";
 		case "hintApiTimestamps":
@@ -544,7 +544,7 @@ function translateStaticContentElement(element) {
 		case "headerAboutWebsite":
 			return "Webseite:";
 		case "headerAboutAddOn":
-			return "CCU AddOn:";
+			return "OpenCCU AddOn:";
 		case "txtLogfileLocation":
 			return "Inhalt der Datei";
 		case "txtLogfileUnknown":
@@ -581,7 +581,7 @@ function translateMessages(message, ...options) {
 		case "messageErrorCheckingAddonStateHeader":
 			return "Fehler bei der Ermittlung des Status des Addons.";
 		case "messageErrorAddonNotRunning":
-			return "Eventuell wird das Addon nicht ausgeführt oder die Firewalleinstellungen der CCU blockieren die Kommunikation. Ein Neustart des Addons, der CCU oder eine Änderung der Firewalleinstellungen könnte das Problem beheben.";
+			return "Eventuell wird das Addon nicht ausgeführt oder die Firewalleinstellungen der OpenCCU blockieren die Kommunikation. Ein Neustart des Addons, der OpenCCU oder eine Änderung der Firewalleinstellungen könnte das Problem beheben.";
 		case "messageCaptchaError":
 			return "Fehler beim Laden des Captcha Status.";
 		case "messageCaptchaSendError":
@@ -617,9 +617,9 @@ function translateMessages(message, ...options) {
 		case "messageContinuousRecordingSheduleMessage":
 			return "Der Zeitplan für diese Funktion muss derzeit in der App konfiguriert werden.";
 		case "messageInteractionHintHeader":
-			return "Hinweise zur Interaktion mit der CCU.";
+			return "Hinweise zur Interaktion mit der OpenCCU.";
 		case "messageInteractionHintMessage":
-			return "Die Interaktionen werden nur dann ausgeführt, wenn eine P2P-Verbindung zur Basis sowie eine Internetverbindung besteht. Besteht eine dieser Verbindungen nicht, kann eine Interaktion mit der CCU nicht sichergestellt werden.";
+			return "Die Interaktionen werden nur dann ausgeführt, wenn eine P2P-Verbindung zur Basis sowie eine Internetverbindung besteht. Besteht eine dieser Verbindungen nicht, kann eine Interaktion mit der OpenCCU nicht sichergestellt werden.";
 		case "messageSaveInteractionHeader":
 			return "Interaktion speichern.";
 		case "messageSaveInteractionUnknownInteractionMessage":
@@ -749,7 +749,7 @@ function translateMessages(message, ...options) {
 		case "messageSystemVariableHintHeader":
 			return `Option '${translateStaticContentElement("lblUseSystemVariables")}' ist aktiviert.`;
 		case "messageSystemVariableHintMessage":
-			return "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der CCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der CCU bereits angelegt, ansonsten ist die Zeile rot.</br >Falls Systemvariablen gefunden werden, die mit 'eufy' beginnen und nicht mehr benötigt werden (beispielsweise für gelöschte Geräte), erscheinen diese in einer zweiten Tabelle. Dort können diese Systemvariablen gelöscht werden.";
+			return "Das AddOn wird die entsprechenden Systemvariablen aktualisieren. In der folgenden Tabelle finden Sie alle Systemvariablen, die dieses AddOn auf der OpenCCU benötigt. Wenn die jeweilige Zeile grün ist, ist die Systemvariable auf der OpenCCU bereits angelegt, ansonsten ist die Zeile rot.</br >Falls Systemvariablen gefunden werden, die mit 'eufy' beginnen und nicht mehr benötigt werden (beispielsweise für gelöschte Geräte), erscheinen diese in einer zweiten Tabelle. Dort können diese Systemvariablen gelöscht werden.";
 		case "messageSystemVariableHintSubText":
 			return `Bitte achten Sie darauf, dass alle Systemvariablen angelegt sind. Wenn Sie die Aktualisierung der Systemvariablen nicht wünschen, deaktivieren Sie bitte die Option '${translateStaticContentElement("lblUseSystemVariables")}'.`;
 		case "messageSystemVariablesDeactivatedHeader":
@@ -1111,7 +1111,7 @@ function translateContent(content, ...options) {
 		case "lblNotificationIntervalTime":
 			return "Zeit zwischen zwei Benachrichtigungen";
 		case "lblHeaderInteractionCCU":
-			return "Interaktion mit der CCU";
+			return "Interaktion mit der OpenCCU";
 		case "lblInteractionMotion":
 			return "Reaktion bei Bewegung";
 		case "lblInteractionRadarMotion":
@@ -1219,7 +1219,7 @@ function translateContent(content, ...options) {
 		case "lblLogLevelToHighDebugMessage":
 			return "Sie haben den Umfang der Protokollierung so gewählt, dass zusätzlich auch DEBUG Informationen protokolliert werden. Dies kann zu einer großen Protokolldatei führen. Wählen Sie für den normalen Betrieb die Protokollierungsstufe Information oder niedriger aus.";
 		case "lblLogLevelToHighSubText":
-			return "Diese Einstellung bleibt dauerhaft auch nach einem Neustart des Addons oder der CCU aktiv.";
+			return "Diese Einstellung bleibt dauerhaft auch nach einem Neustart des Addons oder der OpenCCU aktiv.";
 		case "lblFileIsEmpty":
 			return `Die Datei '${options[0]}' ist leer.`;
 		case "lblFileIsNotAvailable":
@@ -1347,8 +1347,8 @@ function translateString(content, ...options) {
 			return "eufy Security AddOn";
 		case "strClientName":
 			return "eufy Security Client";
-		case "strHomeMaticApi":
-			return "HomeMatic API";
+		case "strOpenCcuApi":
+			return "OpenCCU API";
 		case "strWebsite":
 			return "Webseite";
 		case "strLoadingModules":
@@ -1710,7 +1710,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventTarget":
 		case "sensorOpenEventTarget":
 		case "sensorCloseEventTarget":
-			return "CCU, auf der die Interaktion ausgeführt werden soll";
+			return "OpenCCU, auf der die Interaktion ausgeführt werden soll";
 		case "motionEventTargetHint":
 		case "radarMotionEventTargetHint":
 		case "personEventTargetHint":
@@ -1725,7 +1725,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventTargetHint":
 		case "sensorOpenEventTargetHint":
 		case "sensorCloseEventTargetHint":
-			return "Bitte entweder 'localhost', die IP-Adresse oder den DNS-Namen der Ziel-CCU eingeben, ohne die Angabe von 'http://' oder 'https://'.";
+			return "Bitte entweder 'localhost', die IP-Adresse oder den DNS-Namen der Ziel-OpenCCU eingeben, ohne die Angabe von 'http://' oder 'https://'.";
 		case "motionEventUseHttps":
 		case "radarMotionEventUseHttps":
 		case "personEventUseHttps":
@@ -1755,7 +1755,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventUseLocalCertificate":
 		case "sensorOpenEventUseLocalCertificate":
 		case "sensorCloseEventUseLocalCertificate":
-			return "Zertifikat der lokalen CCU benutzen";
+			return "Zertifikat der lokalen OpenCCU benutzen";
 		case "motionEventRejectUnauthorized":
 		case "radarMotionEventRejectUnauthorized":
 		case "personEventRejectUnauthorized":
@@ -1785,7 +1785,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventUser":
 		case "sensorOpenEventUser":
 		case "sensorCloseEventUser":
-			return "Benutzername zur Anmeldung and die CCU";
+			return "Benutzername zur Anmeldung and die OpenCCU";
 		case "motionEventUserHint":
 		case "radarMotionEventUserHint":
 		case "personEventUserHint":
@@ -1800,7 +1800,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventUserHint":
 		case "sensorOpenEventUserHint":
 		case "sensorCloseEventUserHint":
-			return "Der Benutzername wird nur benötigt, wenn Sie die Autentifizierung in den Einstellungen der CCU aktiviert haben und eine andere als die CCU auswählen, auf der dieses Addon ausgeführt wird.";
+			return "Der Benutzername wird nur benötigt, wenn Sie die Autentifizierung in den Einstellungen der OpenCCU aktiviert haben und eine andere als die OpenCCU auswählen, auf der dieses Addon ausgeführt wird.";
 		case "motionEventPassword":
 		case "radarMotionEventPassword":
 		case "personEventPassword":
@@ -1815,7 +1815,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventPassword":
 		case "sensorOpenEventPassword":
 		case "sensorCloseEventPassword":
-			return "Passwort zur Anmeldung and die CCU";
+			return "Passwort zur Anmeldung and die OpenCCU";
 		case "motionEventPasswordHint":
 		case "radarMotionEventPasswordHint":
 		case "personEventPasswordHint":
@@ -1830,7 +1830,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventPasswordHint":
 		case "sensorOpenEventPasswordHint":
 		case "sensorCloseEventPasswordHint":
-			return "Das Passwort wird nur benötigt, wenn Sie die Autentifizierung in den Einstellungen der CCU aktiviert haben und eine andere als die CCU auswählen, auf der dieses Addon ausgeführt wird.";
+			return "Das Passwort wird nur benötigt, wenn Sie die Autentifizierung in den Einstellungen der OpenCCU aktiviert haben und eine andere als die OpenCCU auswählen, auf der dieses Addon ausgeführt wird.";
 		case "motionEventCommand":
 		case "radarMotionEventCommand":
 		case "personEventCommand":
@@ -1860,7 +1860,7 @@ function translatePropertyName(propertyName) {
 		case "ringEventCommandHint":
 		case "sensorOpenEventCommandHint":
 		case "sensorCloseEventCommandHint":
-			return "Der hier einzugebende Befehl sollte im Vorfeld über die Skript-Testen-Funktion der CCU getestet werden.";
+			return "Der hier einzugebende Befehl sollte im Vorfeld über die Skript-Testen-Funktion der OpenCCU getestet werden.";
 		case "notificationIntervalTime":
 			return "Dauer zwischen zwei Benachrichtigungen";
 		default:

@@ -7,7 +7,7 @@ import { EufySecurityApi } from "./eufySecurityApi/eufySecurityApi";
 import { GuardMode } from "./eufySecurityApi/http";
 import { exec } from "child_process";
 import { dummyLogger, InternalLogger, rootAddonLogger } from "./eufySecurityApi/logging";
-import { HomeMaticSystemvariableGeneric } from "./eufySecurityApi/utils/models";
+import { OpenCcuSystemvariableGeneric } from "./eufySecurityApi/utils/models";
 
 process.chdir(__dirname);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -879,7 +879,7 @@ class ApiServer {
 
                         request.on("end", async function() {
                             try {
-                                const resJson = JSON.parse(postData) as HomeMaticSystemvariableGeneric;
+                                const resJson = JSON.parse(postData) as OpenCcuSystemvariableGeneric;
                                 responseData = await api.createSystemVariable(resJson);
                                 
                                 response.setHeader("Access-Control-Allow-Origin", "*");

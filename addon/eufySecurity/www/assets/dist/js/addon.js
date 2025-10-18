@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 202500928
+ * 20251018
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.5.3";
+var version = "3.5.4";
 
 /**
  * common used java script functions
@@ -4867,7 +4867,7 @@ async function loadDataInfo(showLoading) {
 			try {
 				objResp = JSON.parse(result);
 				if(objResp.success == true) {
-					info = `${translateString("strAddOnName")}: ${objResp.apiVersion}<br />${translateString("strClientName")}: ${objResp.eufySecurityClientVersion}<br />${translateString("strHomeMaticApi")}: ${objResp.homematicApiVersion}<br />${translateString("strWebsite")}: ${version}<br />${getLanguageInfo()}`;
+					info = `${translateString("strAddOnName")}: ${objResp.apiVersion}<br />${translateString("strClientName")}: ${objResp.eufySecurityClientVersion}<br />${translateString("strOpenCcuApi")}: ${objResp.openCcuApiVersion}<br />${translateString("strWebsite")}: ${version}<br />${getLanguageInfo()}`;
 					document.getElementById("versionInfo").innerHTML = info;
 				} else {
 					document.getElementById("versionInfo").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageLoadVersionInfoErrorHeader"), "", "");
