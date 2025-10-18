@@ -317,6 +317,31 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   fi
 fi
 
+# check current and new Node.js versions
+PACKAGE_NODEJS_VERSION=$(eufySecurity/bin/nodejs/bin/node -v)
+if [ -e ${ADDON_DIR}/bin/nodejs/bin/node ]; then
+  CURRENT_NODEJS_VERSION=$(${ADDON_DIR}/bin/nodejs/bin/node -v)
+else
+  CURRENT_NODEJS_VERSION=$PACKAGE_NODEJS_VERSION
+fi
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Node.js version installed: $CURRENT_NODEJS_VERSION >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Node.js version to install: $PACKAGE_NODEJS_VERSION >> $INSTALL_LOGFILE
+if [ $CURRENT_NODEJS_VERSION != $PACKAGE_NODEJS_VERSION ]; then
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Preparing Node.js install folder for new Node.js version... >> $INSTALL_LOGFILE
+  if [ -e ${ADDON_DIR}/bin/nodejs/include ]; then
+    rm -r ${ADDON_DIR}/bin/nodejs/include
+  fi
+  if [ -e ${ADDON_DIR}/bin/nodejs/lib ]; then
+    rm -r ${ADDON_DIR}/bin/nodejs/lib
+  fi
+  if [ -e ${ADDON_DIR}/bin/nodejs/share ]; then
+    rm -r ${ADDON_DIR}/bin/nodejs/share
+  fi
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") ...done >> $INSTALL_LOGFILE
+else
+  echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Node.js install folder is up to date >> $INSTALL_LOGFILE
+fi
+
 # create necessary directories
 echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Create directories... >> $INSTALL_LOGFILE
 mkdir -p ${ADDON_DIR}
