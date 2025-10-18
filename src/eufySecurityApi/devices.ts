@@ -26,6 +26,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
 
     private errorImage: Picture | undefined = undefined;
     private defaultImage: Picture | undefined = undefined;
+    private errorDeviceImage: Picture | undefined = undefined;
 
     /**
      * Create the Devices objects holding all devices in the account.
@@ -45,6 +46,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
         const filePath = "www/assets/images";
         const errorFile = "errorImage";
         const defaultImage = "defaultImage";
+        const errorDeviceImage = "errorDevice";
         const language = this.api.getLanguage();
 
         try {
@@ -73,6 +75,20 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             }
         } catch (e: any) {
             rootAddonLogger.error(`Error occured at loading default image. Error: ${e.message}.`, JSON.stringify(e));
+        }
+
+        try {
+            const errorDeviceImageType: ImageType = { ext: "jpg", mime: "image/jpeg" };
+            if (existsSync(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`)) {
+                this.errorDeviceImage = { data: readFileSync(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
+            } else if (existsSync(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`)) {
+                this.errorDeviceImage = { data: readFileSync(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
+            } else {
+                rootAddonLogger.error(`The file for the device error image ('${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}' or '${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}') could not be found.`);
+                this.errorDeviceImage = undefined;
+            }
+        } catch (e: any) {
+            rootAddonLogger.error(`Error occured at loading device error image. Error: ${e.message}.`, JSON.stringify(e));
         }
 
         this.httpService.on("devices", (devices: FullDevices) => this.handleDevices(devices));
@@ -423,6 +439,14 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Retrieve the error device image.
+     * @returns The error device image or undefined.
+     */
+    public getErrorDeviceImage(): Picture | undefined {
+        return this.errorDeviceImage;
     }
 
     /**

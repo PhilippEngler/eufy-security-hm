@@ -998,6 +998,10 @@ export class EufySecurityApi {
                 if (device.hasProperty(PropertyName.DevicePicture)) {
                     return device.getPropertyValue(PropertyName.DevicePicture) as Picture
                 }
+            } else if (this.devices) {
+                if (this.devices.getErrorDeviceImage() !== undefined) {
+                    return this.devices.getErrorDeviceImage();
+                }
             }
         } catch (e: any) {
             rootAddonLogger.error(`Error occured at getDeviceImage. Error: ${e.message}.`, JSON.stringify(e));
