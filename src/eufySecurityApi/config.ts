@@ -214,8 +214,8 @@ export class Config {
      * @returns true, if the config was updated, otherwise false.
      */
     private updateConfig(configJson: any): any {
+        let updated = false;
         if (configJson.configVersion < this.getConfigFileTemplateVersion()) {
-            let updated = false;
             if (configJson.configVersion < 12) {
                 rootConfLogger.info("Configfile needs Stage2 update to version 12...");
                 if (configJson.apiConfig.updateCloudInfoIntervall === undefined) {
@@ -1636,6 +1636,10 @@ export class Config {
      */
     public getEnableEmbeddedPKCS1Support(): boolean {
         if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined) {
+            if (Number.parseInt(process.versions.node.split('.')[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false) {
+                this.configJson.apiConfig.enableEmbeddedPKCS1Support = true;
+                this.hasChanged = true;
+            }     
             return this.configJson.apiConfig.enableEmbeddedPKCS1Support;
         } else {
             return true;
