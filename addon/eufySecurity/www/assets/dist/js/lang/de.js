@@ -802,6 +802,8 @@ function translateMessages(message, ...options) {
 			return "Fehler bei der Ermittlung der installierten Abhängigkeiten.";
 		case "messageUpdatedModulesErrorHeader":
 			return "Fehler bei der Ermittlung der aktualisierbaren Abhängigkeiten.";
+		case "messageInstallUpdatesModulesErrorHeader":
+			return "Fehler bei der Aktualisierung der Abhängigkeiten.";
 		case "messageRestartWaitErrorHeader":
 			return "Fehler beim Neustart des Addons.";
 		case "messageRestartWaitHeaderMessage":
@@ -1271,7 +1273,7 @@ function translateContent(content, ...options) {
 	}
 }
 
-function translateString(content) {
+function translateString(content, ...options) {
 	switch(content) {
 		case "strLoadingSettings":
 			return "Laden der Einstellungen...";
@@ -1353,12 +1355,14 @@ function translateString(content) {
 			return "Lade Liste der installierten Abhängigkeiten...";
 		case "strLoadingUpdates":
 			return "Ermittle Updates...";
+		case "strUpdatingModules":
+			return "Aktualisiere Abhängigkeiten...";
 		case "strNoModuleUpdateFound":
 			return "Es wurde keine Abhängigkeiten gefunden, die aktualisiert werden können.";
 		case "strOneModuleUpdateFound":
 			return "Es wurde eine Abhängigkeit gefunden, die aktualisiert werden kann.";
 		case "strMoreModuleUpdateFound":
-			return "Es wurden mehrere Abhängigkeiten gefunden, die aktualisiert werden können.";
+			return `Es wurden ${options[0]} Abhängigkeiten gefunden, die aktualisiert werden können.`;
 		case "strServiceRunning":
 			return "Service läuft.";
 		case "strServiceStarted":

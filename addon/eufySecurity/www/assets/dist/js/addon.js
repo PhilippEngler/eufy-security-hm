@@ -4157,13 +4157,16 @@ async function removeTokenData() {
 
 async function openModulesManagerModal() {
 	const myModal = new bootstrap.Modal(document.getElementById('modalModulesManager'));
-	myModal.show();
 	document.getElementById("modalModulesManagerUpdateMessage").setAttribute("hidden", true);
+	document.getElementById("modalModulesManagerUpdateMessage").innerHTML = "";
+	document.getElementById("tableContentModulesManager").innerHTML = "";
+	myModal.show();
+	await startModuleManager();
+}
+
+async function startModuleManager() {
 	await getInstalledModules();
 	await checkModulesUpdates();
-	
-	//myModal.show();
-	
 }
 
 async function getInstalledModules() {
@@ -4240,14 +4243,15 @@ async function checkModulesUpdates() {
 				if(updatesCounter == 0) {
 					document.getElementById("modalModulesManagerUpdateMessage").removeAttribute("hidden");
 					document.getElementById("modalModulesManagerUpdateMessage").innerHTML = translateString("strNoModuleUpdateFound");
+					document.getElementById("modalModulesManagerBtnUpdate").setAttribute("disabled", true);
 				} else {
 					document.getElementById("modalModulesManagerUpdateMessage").removeAttribute("hidden");
 					if(updatesCounter == 1) {
 						document.getElementById("modalModulesManagerUpdateMessage").innerHTML = translateString("strOneModuleUpdateFound");
 					} else {
-						document.getElementById("modalModulesManagerUpdateMessage").innerHTML = translateString("strMoreModuleUpdateFound");
+						document.getElementById("modalModulesManagerUpdateMessage").innerHTML = translateString("strMoreModuleUpdateFound", updatesCounter);
 					}
-					//document.getElementById("modalModulesManagerBtnUpdate").removeAttribute("disabled");
+					document.getElementById("modalModulesManagerBtnUpdate").removeAttribute("disabled");
 				}
 			} else {
 				document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
@@ -4270,6 +4274,45 @@ async function checkModulesUpdates() {
 		} catch (e) {
 			document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
 			document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageUpdatedModulesErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+		}
+	});
+}
+
+async function updateOutdatedModules() {
+	var objResp, objErr;
+	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/modulesManager.cgi?action=updateOutdatedModules`;
+	document.getElementById("modalModulesManagerUpdateMessage").setAttribute("hidden", true);
+	document.getElementById("modalModulesManagerUpdateMessage").innerHTML = "";
+	document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
+	document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = createWaitMessage(translateString("strUpdatingModules"));
+	document.getElementById("tableContentModulesManager").innerHTML = "";
+	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
+		try {
+			objResp = JSON.parse(result);
+			if(objResp.success == true) {
+				//updateResult = Object.keys(objResp.data);
+				startModuleManager();
+			} else {
+				document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
+				document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageInstallUpdatesModulesErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+			}
+		} catch (e) {
+			document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
+			document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageInstallUpdatesModulesErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+		}
+	}).catch((err) => {
+		try {
+			objErr = err;
+			if(objErr.cause == "ABORT") {
+				document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
+				document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageInstallUpdatesModulesErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+			} else {
+				document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
+				document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageInstallUpdatesModulesErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
+			}
+		} catch (e) {
+			document.getElementById("modalModulesManagerWaitErrorMessage").removeAttribute("hidden");
+			document.getElementById("modalModulesManagerWaitErrorMessage").innerHTML = createMessageContainer("alert alert-danger", translateMessages("messageInstallUpdatesModulesErrorHeader"), "", translateMessages("messageErrorPrintErrorMessage", e));
 		}
 	});
 }
@@ -4323,12 +4366,14 @@ async function serviceManager(action) {
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageStartFailedHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
 				toast.show();
+				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
 			}
 		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageStartFailedHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
 				toast.show();
+				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
 		}
 	}).catch((err) => {
 		try {
@@ -4338,17 +4383,20 @@ async function serviceManager(action) {
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageAbortLoadingHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
 				toast.show();
+				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
 			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
 				toast.show();
+				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
 			}
 		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
 			document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageErrorLoadingHeader");
 			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
 			toast.show();
+			document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
 		}
 	});
 }

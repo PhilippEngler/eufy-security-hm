@@ -40,6 +40,13 @@ switch [dict get $queryStringParams action] {
 			return
 		}
 	}
+	updateOutdatedModules {
+		if {[dict size $queryStringParams] == 1} {
+			set res [updateModules]
+			puts \{"success":true,"data":$res\}
+			return
+		}
+	}
 	default {
 		puts \{"success":false,"reason":"The\ command\ is\ unknown\ (got:\ '[dict get $queryStringParams action]')."\}
 		return

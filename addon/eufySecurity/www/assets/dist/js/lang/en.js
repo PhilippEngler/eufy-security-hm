@@ -802,6 +802,8 @@ function translateMessages(message, ...options) {
 			return "Error while fetching installed Dependencies.";
 		case "messageUpdatedModulesErrorHeader":
 			return "Error while fetching updateable Dependencies.";
+		case "messageInstallUpdatesModulesErrorHeader":
+			return "Error while installing Dependencies.";
 		case "messageRestartWaitErrorHeader":
 			return "Error restarting the add-on.";
 		case "messageRestartWaitHeaderMessage":
@@ -1271,7 +1273,7 @@ function translateContent(content, ...options) {
 	}
 }
 
-function translateString(content) {
+function translateString(content, ...options) {
 	switch(content) {
 		case "strLoadingSettings":
 			return "Loading Settings...";
@@ -1353,12 +1355,14 @@ function translateString(content) {
 			return "Loading list of installed Dependencies...";
 		case "strLoadingUpdates":
 			return "Looking for Updates...";
+		case "strUpdatingModules":
+			return "Update Dependencies...";
 		case "strNoModuleUpdateFound":
 			return "No Dependencies found with available updates.";
 		case "strOneModuleUpdateFound":
-			return "One Dependency found that has a update available.";
+			return "There was found one dependency for which an update is available.";
 		case "strMoreModuleUpdateFound":
-			return "More Dependencies found that have a update available.";
+			return `There were found ${options[0]} dependencies for which an update is available.`;
 		case "strServiceRunning":
 			return "Service running.";
 		case "strServiceStarted":
