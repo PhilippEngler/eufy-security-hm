@@ -197,8 +197,8 @@ class Config {
      * @returns true, if the config was updated, otherwise false.
      */
     updateConfig(configJson) {
+        let updated = false;
         if (configJson.configVersion < this.getConfigFileTemplateVersion()) {
-            let updated = false;
             if (configJson.configVersion < 12) {
                 logging_1.rootConfLogger.info("Configfile needs Stage2 update to version 12...");
                 if (configJson.apiConfig.updateCloudInfoIntervall === undefined) {
@@ -560,6 +560,11 @@ class Config {
         if (this.configJson.apiConfig.stateUpdateIntervallActive && (this.configJson.apiConfig.stateUpdateIntervallTimespan < 15 || this.configJson.apiConfig.stateUpdateIntervallTimespan > 240)) {
             logging_1.rootConfLogger.info(`Set stateUpdateIntervallTimespan to default value "15"`);
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
+            updated = true;
+        }
+        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support && (Number.parseInt(process.versions.node.split('.')[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false)) {
+            logging_1.rootConfLogger.info(`Set enableEmbeddedPKCS1Support to "true" because of Node.js is higher than v20 (v${process.versions.node.split('.')[0]})`);
+            this.configJson.apiConfig.enableEmbeddedPKCS1Support = true;
             updated = true;
         }
         if (this.configJson.logConfig.logLevelAddon < 0 || this.configJson.logConfig.logLevelAddon > 6) {
@@ -1556,10 +1561,14 @@ class Config {
      */
     getEnableEmbeddedPKCS1Support() {
         if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined) {
+            if (Number.parseInt(process.versions.node.split('.')[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false) {
+                this.configJson.apiConfig.enableEmbeddedPKCS1Support = true;
+                this.hasChanged = true;
+            }
             return this.configJson.apiConfig.enableEmbeddedPKCS1Support;
         }
         else {
-            return false;
+            return true;
         }
     }
     /**
@@ -1567,6 +1576,9 @@ class Config {
      * @param enableEmbeddedPKCS1Support The value if securing api access by sid is used.
      */
     setEnableEmbeddedPKCS1Support(enableEmbeddedPKCS1Support) {
+        if (Number.parseInt(process.versions.node.split('.')[0]) > 20 && enableEmbeddedPKCS1Support === false) {
+            return;
+        }
         if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== enableEmbeddedPKCS1Support) {
             this.configJson.apiConfig.enableEmbeddedPKCS1Support = enableEmbeddedPKCS1Support;
             this.hasChanged = true;

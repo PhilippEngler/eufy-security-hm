@@ -6,9 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDateTimeFromImageFilePath = exports.loadEventImage = exports.loadImageOverP2P = exports.getWaitSeconds = exports.isSmartLockNotification = exports.switchSmartLockNotification = exports.getLockEventType = exports.getFloodLightT8425Notification = exports.isFloodlightT8425NotitficationEnabled = exports.getIndoorNotification = exports.isIndoorNotitficationEnabled = exports.getIndoorS350DetectionMode = exports.isIndoorS350DetectionModeEnabled = exports.getT8170DetectionMode = exports.isT8170DetectionModeEnabled = exports.decryptTrackerData = exports.isPrioritySourceType = exports.getImage = exports.getImagePath = exports.decodeImage = exports.getImageKey = exports.getImageSeed = exports.getImageBaseCode = exports.getIdSuffix = exports.randomNumber = exports.hexStringScheduleToSchedule = exports.hexWeek = exports.hexTime = exports.hexDate = exports.encodePasscode = exports.ParsePayload = exports.WritePayload = exports.getAdvancedLockTimezone = exports.getEufyTimezone = exports.getHB3DetectionMode = exports.isHB3DetectionModeEnabled = exports.getDistances = exports.getBlocklist = exports.decryptAPIData = exports.encryptAPIData = exports.calculateCellularSignalLevel = exports.calculateWifiSignalLevel = exports.switchNotificationMode = exports.isNotificationSwitchMode = exports.getImageFilePath = exports.getAbsoluteFilePath = exports.getTimezoneGMTString = exports.pad = exports.isGreaterEqualMinVersion = void 0;
 const crypto_1 = require("crypto");
 const const_1 = require("./const");
-const md5_1 = __importDefault(require("crypto-js/md5"));
-const enc_hex_1 = __importDefault(require("crypto-js/enc-hex"));
-const sha256_1 = __importDefault(require("crypto-js/sha256"));
 const types_1 = require("./types");
 const error_1 = require("../error");
 const error_2 = require("./error");
@@ -533,7 +530,7 @@ const getImageSeed = function (p2pDid, code) {
     try {
         const ncode = Number.parseInt(code.substring(2));
         const prefix = 1000 - (0, exports.getIdSuffix)(p2pDid);
-        return (0, md5_1.default)(`${prefix}${ncode}`).toString(enc_hex_1.default).toUpperCase();
+        return (0, crypto_1.createHash)('md5').update(`${prefix}${ncode}`).digest('hex').toUpperCase();
     }
     catch (err) {
         const error = (0, error_1.ensureError)(err);
@@ -545,8 +542,8 @@ const getImageKey = function (serialnumber, p2pDid, code) {
     const basecode = (0, exports.getImageBaseCode)(serialnumber, p2pDid);
     const seed = (0, exports.getImageSeed)(p2pDid, code);
     const data = `01${basecode}${seed}`;
-    const hash = (0, sha256_1.default)(data);
-    const hashBytes = [...Buffer.from(hash.toString(enc_hex_1.default), "hex")];
+    const hash = (0, crypto_1.createHash)('sha256').update(data);
+    const hashBytes = [...Buffer.from(hash.digest('hex'), "hex")];
     const startByte = hashBytes[10];
     for (let i = 0; i < 32; i++) {
         const byte = hashBytes[i];

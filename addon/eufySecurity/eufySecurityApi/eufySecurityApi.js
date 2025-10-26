@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EufySecurityApi = void 0;
 const config_1 = require("./config");
 const http_1 = require("./http");
-const homematicApi_1 = require("./homematicApi");
+const openCcuApi_1 = require("./openCcuApi");
 const logging_1 = require("./logging");
 const pushService_1 = require("./pushService");
 const mqttService_1 = require("./mqttService");
@@ -23,7 +23,7 @@ class EufySecurityApi {
     config;
     translator;
     httpService;
-    homematicApi;
+    openCcuApi;
     pushService;
     mqttService;
     httpApiPersistentData = { user_id: "", email: "", nick_name: "", device_public_keys: {}, clientPrivateKey: "", serverPublicKey: "" };
@@ -50,7 +50,7 @@ class EufySecurityApi {
         (0, logging_1.setLoggingLevel)("push", this.config.getLogLevelPush());
         (0, logging_1.setLoggingLevel)("mqtt", this.config.getLogLevelMqtt());
         (0, logging_1.setLoggingLevel)("i18n", this.config.getLogLevelAddon());
-        this.homematicApi = new homematicApi_1.HomematicApi(this);
+        this.openCcuApi = new openCcuApi_1.OpenCcuApi(this);
         this.translator = new localization_1.Localization(this);
         this.initialize();
     }
@@ -226,7 +226,7 @@ class EufySecurityApi {
      * @returns true, if the sid is correct, otherwise false.
      */
     async checkSid(sid) {
-        return this.homematicApi.checkSid(sid);
+        return this.openCcuApi.checkSid(sid);
     }
     /**
      * Close the EufySecurityApi.
@@ -894,6 +894,11 @@ class EufySecurityApi {
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device.hasProperty(http_1.PropertyName.DevicePicture)) {
                     return device.getPropertyValue(http_1.PropertyName.DevicePicture);
+                }
+            }
+            else if (this.devices) {
+                if (this.devices.getErrorDeviceImage() !== undefined) {
+                    return this.devices.getErrorDeviceImage();
                 }
             }
         }
@@ -2148,7 +2153,7 @@ class EufySecurityApi {
     async getAPIConfigAsJson() {
         let json = {};
         json = { "success": true, "data": {} };
-        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "acceptInvitations": this.config.getAcceptInvitations(), "houseId": this.config.getHouseId(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "secureApiAccessBySid": this.config.getSecureApiAccessBySid(), "logLevelAddon": this.config.getLogLevelAddon(), "logLevelMain": this.config.getLogLevelMain(), "logLevelHttp": this.config.getLogLevelHttp(), "logLevelP2p": this.config.getLogLevelP2p(), "logLevelPush": this.config.getLogLevelPush(), "logLevelMqtt": this.config.getLogLevelMqtt(), "tokenExpire": this.config.getTokenExpire() };
+        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "acceptInvitations": this.config.getAcceptInvitations(), "houseId": this.config.getHouseId(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "secureApiAccessBySid": this.config.getSecureApiAccessBySid(), "enableEmbeddedPKCS1Support": this.config.getEnableEmbeddedPKCS1Support(), "enableEmbeddedPKCS1SupportEditable": Number.parseInt(process.versions.node.split('.')[0]) > 20 ? false : true, "logLevelAddon": this.config.getLogLevelAddon(), "logLevelMain": this.config.getLogLevelMain(), "logLevelHttp": this.config.getLogLevelHttp(), "logLevelP2p": this.config.getLogLevelP2p(), "logLevelPush": this.config.getLogLevelPush(), "logLevelMqtt": this.config.getLogLevelMqtt(), "tokenExpire": this.config.getTokenExpire() };
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -2176,6 +2181,7 @@ class EufySecurityApi {
      * @param stateUpdateIntervallTimespan The time between two scheduled runs of update state.
      * @param pushServiceActive Should the api use push service.
      * @param secureApiAccessSidActive Should the api check if a given sid represents a currently authenticated session.
+     * @param enableEmbeddedPKCS1Support Should the internal PKCS#1 functionality be used.
      * @param logLevelAddon The log level for addon.
      * @param logLevelMain The log level for main.
      * @param logLevelHttp The log level for http.
@@ -2184,7 +2190,7 @@ class EufySecurityApi {
      * @param logLevelMqtt The log level for mqtt.
      * @returns A JSON string containing the result.
      */
-    async setConfig(eMail, password, country, language, trustedDeviceName, httpActive, httpPort, httpsActive, httpsPort, httpsKeyFile, httpsCertFile, acceptInvitations, houseId, connectionTypeP2p, localStaticUdpPortsActive, localStaticUdpPorts, systemVariableActive, stateUpdateEventActive, stateUpdateIntervallActive, stateUpdateIntervallTimespan, pushServiceActive, secureApiAccessSidActive, logLevelAddon, logLevelMain, logLevelHttp, logLevelP2p, logLevelPush, logLevelMqtt) {
+    async setConfig(eMail, password, country, language, trustedDeviceName, httpActive, httpPort, httpsActive, httpsPort, httpsKeyFile, httpsCertFile, acceptInvitations, houseId, connectionTypeP2p, localStaticUdpPortsActive, localStaticUdpPorts, systemVariableActive, stateUpdateEventActive, stateUpdateIntervallActive, stateUpdateIntervallTimespan, pushServiceActive, secureApiAccessSidActive, enableEmbeddedPKCS1Support, logLevelAddon, logLevelMain, logLevelHttp, logLevelP2p, logLevelPush, logLevelMqtt) {
         let serviceRestart = false;
         let taskSetupStateNeeded = false;
         if (this.config.getEmailAddress() !== eMail || this.config.getPassword() !== password || this.config.getTrustedDeviceName() !== trustedDeviceName || this.config.getHttpActive() !== httpActive || this.config.getHttpPort() !== httpPort || this.config.getHttpsActive() !== httpsActive || this.config.getHttpsPort() !== httpsPort || this.config.getHttpsPKeyFile() !== httpsKeyFile || this.config.getHttpsCertFile() !== httpsCertFile || this.config.getHouseId() !== houseId || this.config.getConnectionType() !== connectionTypeP2p || this.config.getLocalStaticUdpPortsActive() !== localStaticUdpPortsActive || this.config.getStateUpdateEventActive() !== stateUpdateEventActive) {
@@ -2244,6 +2250,7 @@ class EufySecurityApi {
         }
         this.config.setPushServiceActive(pushServiceActive);
         this.config.setSecureApiAccessBySid(secureApiAccessSidActive);
+        this.config.setEnableEmbeddedPKCS1Support(enableEmbeddedPKCS1Support);
         this.config.setLogLevelAddon(logLevelAddon);
         this.config.setLogLevelMain(logLevelMain);
         this.config.setLogLevelHttp(logLevelHttp);
@@ -2288,7 +2295,7 @@ class EufySecurityApi {
      */
     async checkSystemVariables() {
         let json = {};
-        const availableSystemVariables = await this.homematicApi.getSystemVariables("localhost", false, "eufy");
+        const availableSystemVariables = await this.openCcuApi.getSystemVariables("localhost", false, "eufy");
         if (availableSystemVariables === undefined) {
             json = { "success": false, "reason": "Faild retrieving system variables from CCU." };
         }
@@ -2309,7 +2316,7 @@ class EufySecurityApi {
                         json = { "success": true, "data": [] };
                         for (const commonSystemVariable of commonSystemVariables) {
                             var isValueTypeCorrect = false;
-                            if (availableSystemVariables.includes(commonSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, commonSystemVariable.name) === commonSystemVariable.valueType) {
+                            if (availableSystemVariables.includes(commonSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, commonSystemVariable.name) === commonSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
                             json.data.push({ "sysVar": commonSystemVariable, "sysVarName": commonSystemVariable.name, "sysVarInfo": commonSystemVariable.info, "sysVarAvailable": availableSystemVariables.includes(commonSystemVariable.name), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
@@ -2323,7 +2330,7 @@ class EufySecurityApi {
                             station = stations[stationSerial];
                             isValueTypeCorrect = false;
                             tempSystemVariable = { "name": `eufyCentralState${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralState", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
                             json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralState${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralState", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralState" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
@@ -2332,7 +2339,7 @@ class EufySecurityApi {
                             }
                             isValueTypeCorrect = false;
                             tempSystemVariable = { "name": `eufyLastModeChangeTime${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyLastModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
                             json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyLastModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
@@ -2341,7 +2348,7 @@ class EufySecurityApi {
                             }
                             isValueTypeCorrect = false;
                             tempSystemVariable = { "name": `eufyCentralCurrentMode${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralCurrentMode", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
                             json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralCurrentMode${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralCurrentMode", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
@@ -2350,7 +2357,7 @@ class EufySecurityApi {
                             }
                             isValueTypeCorrect = false;
                             tempSystemVariable = { "name": `eufyCentralCurrentModeChangeTime${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralCurrentModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
                             json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralCurrentModeChangeTime${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralCurrentModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
@@ -2363,7 +2370,7 @@ class EufySecurityApi {
                             if (availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())) {
                                 isValueTypeCorrect = false;
                                 tempSystemVariable = { "name": `eufyCameraImageURL${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraImageURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                                if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                                if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                     isValueTypeCorrect = true;
                                 }
                                 json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraImageURL${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraImageURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": false });
@@ -2371,7 +2378,7 @@ class EufySecurityApi {
                             }
                             isValueTypeCorrect = false;
                             tempSystemVariable = { "name": `eufyCameraVideoTime${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraVideoTime", JSON.stringify({ 'deviceSerial': device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                            if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
                             json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraVideoTime", JSON.stringify({ 'deviceSerial': device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
@@ -2381,7 +2388,7 @@ class EufySecurityApi {
                             if (availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())) {
                                 isValueTypeCorrect = false;
                                 tempSystemVariable = { "name": `eufyCameraVideoURL${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraVideoURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                                if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                                if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                     isValueTypeCorrect = true;
                                 }
                                 json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraVideoURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": false });
@@ -2392,7 +2399,7 @@ class EufySecurityApi {
                             for (let i = 0; i < availableSystemVariables.length; i++) {
                                 isValueTypeCorrect = false;
                                 tempSystemVariable = { "name": `${availableSystemVariables[i]}`, "info": this.translator.translateString("systemVariables:unknown"), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
-                                if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.homematicApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
+                                if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                     isValueTypeCorrect = true;
                                 }
                                 json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `${availableSystemVariables[i]}`, "sysVarInfo": this.translator.translateString("systemVariables:unknown"), "sysVarAvailable": true, "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": false });
@@ -2465,7 +2472,7 @@ class EufySecurityApi {
                 return `{"success":false,"reason":"Error while creating system variable. Received data formatted incorrectly ('${systemVariableGeneric.valueType}')."}`;
         }
         if (systemVariable !== undefined) {
-            const res = await this.homematicApi.createSystemVariable("localhost", false, systemVariable);
+            const res = await this.openCcuApi.createSystemVariable("localhost", false, systemVariable);
             if (res !== undefined && res === systemVariable.name) {
                 return `{"success":true,"message":"System variable created."}`;
             }
@@ -2485,7 +2492,7 @@ class EufySecurityApi {
      * @param variableName The name of the system variable to create.
      */
     async removeSystemVariable(variableName) {
-        const res = await this.homematicApi.removeSystemVariable("localhost", false, variableName);
+        const res = await this.openCcuApi.removeSystemVariable("localhost", false, variableName);
         if (res !== undefined && res === "true") {
             return `{"success":true,"message":"System variable removed."}`;
         }
@@ -2526,7 +2533,7 @@ class EufySecurityApi {
      */
     setSystemVariableString(systemVariable, newValue) {
         if (this.config.getSystemVariableActive() === true) {
-            this.homematicApi.setSystemVariable("localhost", false, systemVariable, newValue);
+            this.openCcuApi.setSystemVariable("localhost", false, systemVariable, newValue);
         }
     }
     /**
@@ -2537,7 +2544,7 @@ class EufySecurityApi {
      */
     async sendInteractionCommand(hostName, useHttps, useLocalCertificate, rejectUnauthorized, user, password, command) {
         try {
-            return await this.homematicApi.sendInteractionCommand(hostName, useHttps, useLocalCertificate, rejectUnauthorized, user, password, command);
+            return await this.openCcuApi.sendInteractionCommand(hostName, useHttps, useLocalCertificate, rejectUnauthorized, user, password, command);
         }
         catch (e) {
             throw e;
@@ -2862,7 +2869,7 @@ class EufySecurityApi {
      * Return the version of this API as Json string.
      */
     getApiVersionAsJson() {
-        return `{"success":true,"platform":"${process.platform}","nodeVersion":"${process.version}","nodeArch":"${process.arch}","apiVersion":"${this.getEufySecurityApiVersion()}","homematicApiVersion":"${this.homematicApi.getHomematicApiVersion()}","eufySecurityClientVersion":"${this.getEufySecurityClientVersion()}"}`;
+        return `{"success":true,"platform":"${process.platform}","nodeVersion":"${process.version}","nodeArch":"${process.arch}","apiVersion":"${this.getEufySecurityApiVersion()}","openCcuApiVersion":"${this.openCcuApi.getOpenCcuApiVersion()}","eufySecurityClientVersion":"${this.getEufySecurityClientVersion()}"}`;
     }
     /**
      * Retrieves the state of api objects as Json string.
@@ -2944,14 +2951,14 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.2.2";
+        return "3.2.3";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "3.2.0";
+        return "3.4.0";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

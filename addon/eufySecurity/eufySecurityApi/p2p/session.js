@@ -1,14 +1,11 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.P2PClientProtocol = void 0;
 const dgram_1 = require("dgram");
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const stream_1 = require("stream");
 const sweet_collections_1 = require("sweet-collections");
-const date_and_time_1 = __importDefault(require("date-and-time"));
+const { parse } = require('date-and-time');
 const utils_1 = require("./utils");
 const types_1 = require("./types");
 const types_2 = require("../http/types");
@@ -956,6 +953,9 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
         else if ((0, utils_1.hasHeader)(msg, types_1.ResponseMessageType.END)) {
             // Connection is closed by device
             logging_1.rootP2PLogger.debug(`Received message - END`, { stationSN: this.rawStation.station_sn, remoteAddress: rinfo.address, remotePort: rinfo.port });
+            if (this.energySavingDevice && this.connected) {
+                this.closeEnergySavingDevice();
+            }
             this.onClose();
             return;
         }
@@ -1872,7 +1872,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                                         this.emit("secondary command", result);
                                                         delete this.customDataStaging[commandType];
                                                     }
-                                                    logging_1.rootP2PLogger.debug(`Handle DATA ${types_1.P2PDataType[message.dataType]} - CMD_NOTIFY_PAYLOAD Smart Lock  return code: ${returnCode}`, { stationSN: this.rawStation.station_sn, commandIdName: types_1.CommandType[json.cmd], commandId: json.cmd, decoded: data.toString("hex"), bleCommandCode: functionTypeCommand[fac.getCommandCode()], returnCode: returnCode });
+                                                    logging_1.rootP2PLogger.debug(`Handle DATA ${types_1.P2PDataType[message.dataType]} - CMD_NOTIFY_PAYLOAD Smart Lock  return code: ${returnCode}`, { stationSN: this.rawStation.station_sn, commandIdName: types_1.CommandType[json.cmd], commandId: json.cmd, decoded: data.toString("hex"), bleCommandCode: functionTypeCommand[fac.getCommandCode()], returnCode: returnCode, channel: message.channel });
                                                     const parsePayload = new utils_2.ParsePayload(data.subarray(1));
                                                     if (fac.getDataType() === types_1.SmartLockFunctionType.TYPE_2) {
                                                         switch (fac.getCommandCode()) {
@@ -2155,7 +2155,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                 const result = [];
                                 for (const record of data) {
                                     result.push({
-                                        day: date_and_time_1.default.parse(record.days, "YYYYMMDD"),
+                                        day: parse(record.days, "YYYYMMDD"),
                                         count: record.count
                                     });
                                 }
@@ -2181,8 +2181,8 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                             tmpRecord.history = {
                                                 device_type: tableRecord.device_type,
                                                 account: tableRecord.account,
-                                                start_time: date_and_time_1.default.parse(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss"),
-                                                end_time: date_and_time_1.default.parse(tableRecord.end_time, "YYYY-MM-DD HH:mm:ss"),
+                                                start_time: parse(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss"),
+                                                end_time: parse(tableRecord.end_time, "YYYY-MM-DD HH:mm:ss"),
                                                 frame_num: tableRecord.frame_num,
                                                 storage_type: tableRecord.storage_type,
                                                 storage_cloud: tableRecord.storage_cloud,
@@ -2220,13 +2220,13 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                                 detection_type: tableRecord.detection_type,
                                                 person_id: tableRecord.person_id,
                                                 crop_path: tableRecord.crop_path,
-                                                event_time: date_and_time_1.default.parse(tableRecord.event_time, "YYYY-MM-DD HH:mm:ss"),
+                                                event_time: parse(tableRecord.event_time, "YYYY-MM-DD HH:mm:ss"),
                                                 person_recog_flag: tableRecord.person_recog_flag,
                                                 crop_pic_quality: tableRecord.crop_pic_quality,
                                                 pic_marking_flag: tableRecord.pic_marking_flag,
                                                 group_id: tableRecord.group_id,
                                                 crop_id: tableRecord.crop_id,
-                                                start_time: date_and_time_1.default.parse(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss"),
+                                                start_time: parse(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss"),
                                                 storage_type: tableRecord.storage_type,
                                                 storage_status: tableRecord.storage_status,
                                                 storage_label: tableRecord.storage_label,
@@ -2545,7 +2545,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
         if (this.lockSeqNumber === -1) {
             let deviceType = undefined;
             let deviceSN = undefined;
-            if (this.rawStation?.devices !== undefined && this.rawStation?.devices.length > 0) {
+            if (this.rawStation?.devices?.length > 0) {
                 deviceType = this.rawStation?.devices[0]?.device_type;
                 deviceSN = this.rawStation?.devices[0]?.device_sn;
             }
@@ -2614,16 +2614,12 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
     updateRawStation(value) {
         this.rawStation = value;
         this.channel = http_1.Station.getChannel(value.device_type);
-        if (this.rawStation.devices?.length > 0) {
+        if (device_1.Device.hasBattery(this.rawStation.device_type)) {
             if (!this.energySavingDevice) {
-                for (const device of this.rawStation.devices) {
-                    if (device.device_sn === this.rawStation.station_sn && device_1.Device.hasBattery(device.device_type)) {
-                        this.energySavingDevice = true;
-                        break;
-                    }
-                }
-                if (this.energySavingDevice)
-                    logging_1.rootP2PLogger.debug(`Identified standalone battery device ${this.rawStation.station_sn} => activate p2p keepalive command`);
+                this.energySavingDevice = true;
+            }
+            if (this.energySavingDevice) {
+                logging_1.rootP2PLogger.debug(`Identified standalone battery device ${this.rawStation.station_sn} => activate p2p keepalive command`);
             }
         }
         else {

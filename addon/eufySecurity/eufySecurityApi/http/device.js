@@ -1073,6 +1073,7 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             type == types_1.DeviceType.CAMERA_GARAGE_T8452 ||
             type == types_1.DeviceType.CAMERA_FG ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_S350 ||
+            type == types_1.DeviceType.INDOOR_PT_CAMERA_E30 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C210 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C220 ||
             type == types_1.DeviceType.SMART_DROP)
@@ -1183,6 +1184,7 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             type == types_1.DeviceType.INDOOR_OUTDOOR_CAMERA_2K ||
             type == types_1.DeviceType.INDOOR_COST_DOWN_CAMERA ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_S350 ||
+            type == types_1.DeviceType.INDOOR_PT_CAMERA_E30 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C210 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C220)
             return true;
@@ -1196,6 +1198,7 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
             type == types_1.DeviceType.INDOOR_COST_DOWN_CAMERA ||
             type == types_1.DeviceType.OUTDOOR_PT_CAMERA ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_S350 ||
+            type == types_1.DeviceType.INDOOR_PT_CAMERA_E30 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C210 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C220)
             return true;
@@ -1209,6 +1212,7 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
     }
     static isIndoorPanAndTiltCameraS350(type) {
         if (type == types_1.DeviceType.INDOOR_PT_CAMERA_S350 ||
+            type == types_1.DeviceType.INDOOR_PT_CAMERA_E30 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C210 ||
             type == types_1.DeviceType.INDOOR_PT_CAMERA_C220)
             return true;
@@ -1225,6 +1229,11 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
     }
     static isFloodLightT8420X(type, serialnumber) {
         if (type == types_1.DeviceType.FLOODLIGHT && serialnumber.startsWith("T8420") && serialnumber.length > 7 && serialnumber.charAt(6) === "6")
+            return true;
+        return false;
+    }
+    static isFloodLightT8423(type) {
+        if (type == types_1.DeviceType.FLOODLIGHT_CAMERA_8423)
             return true;
         return false;
     }
@@ -1539,6 +1548,9 @@ class Device extends tiny_typed_emitter_1.TypedEmitter {
     }
     isFloodLightT8420X() {
         return Device.isFloodLightT8420X(this.rawDevice.device_type, this.rawDevice.device_sn);
+    }
+    isFloodLightT8423() {
+        return Device.isFloodLightT8423(this.rawDevice.device_type);
     }
     isFloodLightT8425() {
         return Device.isFloodLightT8425(this.rawDevice.device_type);

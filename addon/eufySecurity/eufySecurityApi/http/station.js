@@ -1,11 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Station = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
-const date_and_time_1 = __importDefault(require("date-and-time"));
+const { format } = require('date-and-time');
 const types_1 = require("./types");
 const parameter_1 = require("./parameter");
 const utils_1 = require("./utils");
@@ -605,7 +602,10 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 value: parsedValue,
                 source: "p2p"
             };
-            this.emit("raw device property changed", this._getDeviceSerial(channel), params);
+            let deviceSerial = this._getDeviceSerial(channel);
+            if (deviceSerial !== undefined) {
+                this.emit("raw device property changed", deviceSerial, params);
+            }
         }
     }
     onAlarmDelay(alarmDelayEvent, alarmDelay) {
@@ -855,12 +855,31 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         return false;
     }*/
     _getDeviceSerial(channel) {
-        if (this.rawStation.devices)
+        if (this.rawStation.devices) {
+            // The station has attached devices (the normal case)
             for (const device of this.rawStation.devices) {
                 if (device.device_channel === channel)
                     return device.device_sn;
             }
-        return "";
+        }
+        else {
+            // The station has no attached devices but there might be a device with the stations serial number (the special case)
+            // e.g. Smart Lock C220 (T8506)
+            const devices = this.api.getDevices();
+            if (devices) {
+                const device = devices[this.getSerial()];
+                if (device) {
+                    return this.getSerial();
+                }
+                else {
+                    logging_1.rootHTTPLogger.error(`Station get device serial - No device with the same serial number as the station found`, { station: this.getSerial(), channel: channel });
+                }
+            }
+            else {
+                logging_1.rootHTTPLogger.error(`Station get device serial - No devices found`, { station: this.getSerial(), channel: channel });
+            }
+        }
+        return undefined;
     }
     _handleCameraInfoParameters(devices, channel, type, value) {
         if (channel === Station.CHANNEL || channel === Station.CHANNEL_INDOOR || (this.isIntegratedDevice() && this.getDeviceType() !== types_1.DeviceType.HB3)) {
@@ -886,7 +905,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         }
         else {
             const device_sn = this._getDeviceSerial(channel);
-            if (device_sn !== "") {
+            if (device_sn !== undefined) {
                 if (!devices[device_sn]) {
                     devices[device_sn] = {};
                 }
@@ -7999,19 +8018,34 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         this._sendSmartSafeCommand(device, types_2.SmartSafeCommandCode.SET_VERIFY_PIN, payload, { command: commandData });
     }
     onDeviceShakeAlarm(channel, event) {
-        this.emit("device shake alarm", this._getDeviceSerial(channel), event);
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device shake alarm", deviceSerial, event);
+        }
     }
     onDevice911Alarm(channel, event) {
-        this.emit("device 911 alarm", this._getDeviceSerial(channel), event);
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device 911 alarm", deviceSerial, event);
+        }
     }
     onDeviceJammed(channel) {
-        this.emit("device jammed", this._getDeviceSerial(channel));
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device jammed", deviceSerial);
+        }
     }
     onDeviceLowBattery(channel) {
-        this.emit("device low battery", this._getDeviceSerial(channel));
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device low battery", deviceSerial);
+        }
     }
     onDeviceWrongTryProtectAlarm(channel) {
-        this.emit("device wrong try-protect alarm", this._getDeviceSerial(channel));
+        const deviceSerial = this._getDeviceSerial(channel);
+        if (deviceSerial !== undefined) {
+            this.emit("device wrong try-protect alarm", deviceSerial);
+        }
     }
     onSdInfoEx(sdStatus, sdCapacity, sdAvailableCapacity) {
         this.emit("sd info ex", this, sdStatus, sdCapacity, sdAvailableCapacity);
@@ -9081,12 +9115,12 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                         "count": 20,
                         "detection_type": detectionType,
                         "device_info": devices,
-                        "end_date": date_and_time_1.default.format(endDate, "YYYYMMDD"),
+                        "end_date": format(endDate, "YYYYMMDD"),
                         "event_type": eventType,
                         "flag": 0,
                         "res_unzip": 1,
-                        "start_date": date_and_time_1.default.format(startDate, "YYYYMMDD"),
-                        "start_time": `${date_and_time_1.default.format(endDate, "YYYYMMDD")}000000`,
+                        "start_date": format(startDate, "YYYYMMDD"),
+                        "start_time": `${format(endDate, "YYYYMMDD")}000000`,
                         "storage_cloud": storageType === types_2.FilterStorageType.NONE || (storageType !== types_2.FilterStorageType.LOCAL && storageType !== types_2.FilterStorageType.CLOUD) ? -1 : storageType,
                         "ai_type": 0
                     },
@@ -9153,8 +9187,8 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 "payload": {
                     "cmd": types_2.CommandType.CMD_DATABASE_COUNT_BY_DATE,
                     "payload": {
-                        "end_date": date_and_time_1.default.format(endDate, "YYYYMMDD"),
-                        "start_date": date_and_time_1.default.format(startDate, "YYYYMMDD"),
+                        "end_date": format(endDate, "YYYYMMDD"),
+                        "start_date": format(startDate, "YYYYMMDD"),
                     },
                     "table": "history_record_info",
                     "transaction": `${new Date().getTime()}`
@@ -10193,7 +10227,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_1.InvalidCommandValueError("Invalid value for this command", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
         logging_1.rootHTTPLogger.debug(`Station preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || (device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera())) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || (device.isIntegratedDevice() && (device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423()))) {
             logging_1.rootHTTPLogger.debug(`Station preset position [STANDALONE] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
@@ -10208,7 +10242,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 command: commandData
             });
         }
-        else if (!device.isIntegratedDevice() && device.isOutdoorPanAndTiltCamera()) {
+        else if (!device.isIntegratedDevice() && (device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423())) {
             logging_1.rootHTTPLogger.debug(`Station preset position [CONNECTED] - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_FLOODLIGHT_SET_MOTION_PRESET_POSITION,
@@ -10236,7 +10270,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_1.InvalidCommandValueError("Invalid value for this command", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
         logging_1.rootHTTPLogger.debug(`Station save preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -10266,7 +10300,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_1.InvalidCommandValueError("Invalid value for this command", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name, commandValue: commandData.value } });
         }
         logging_1.rootHTTPLogger.debug(`Station delete preset position - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), preset: types_1.PresetPositionType[position] });
-        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera()) {
+        if (device.isFloodLightT8425() || device.isIndoorPanAndTiltCameraS350() || device.isOutdoorPanAndTiltCamera() || device.isFloodLightT8423()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({

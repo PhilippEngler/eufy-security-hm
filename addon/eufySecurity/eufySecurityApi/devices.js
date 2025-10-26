@@ -27,6 +27,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     deviceSnoozeTimeout = new Map();
     errorImage = undefined;
     defaultImage = undefined;
+    errorDeviceImage = undefined;
     /**
      * Create the Devices objects holding all devices in the account.
      * @param api  The api.
@@ -43,6 +44,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         const filePath = "www/assets/images";
         const errorFile = "errorImage";
         const defaultImage = "defaultImage";
+        const errorDeviceImage = "errorDevice";
         const language = this.api.getLanguage();
         try {
             const errorImageType = { ext: "jpg", mime: "image/jpeg" };
@@ -75,6 +77,22 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         }
         catch (e) {
             logging_1.rootAddonLogger.error(`Error occured at loading default image. Error: ${e.message}.`, JSON.stringify(e));
+        }
+        try {
+            const errorDeviceImageType = { ext: "jpg", mime: "image/jpeg" };
+            if ((0, fs_1.existsSync)(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`)) {
+                this.errorDeviceImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
+            }
+            else if ((0, fs_1.existsSync)(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`)) {
+                this.errorDeviceImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
+            }
+            else {
+                logging_1.rootAddonLogger.error(`The file for the device error image ('${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}' or '${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}') could not be found.`);
+                this.errorDeviceImage = undefined;
+            }
+        }
+        catch (e) {
+            logging_1.rootAddonLogger.error(`Error occured at loading device error image. Error: ${e.message}.`, JSON.stringify(e));
         }
         this.httpService.on("devices", (devices) => this.handleDevices(devices));
     }
@@ -424,6 +442,13 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         else {
             return false;
         }
+    }
+    /**
+     * Retrieve the error device image.
+     * @returns The error device image or undefined.
+     */
+    getErrorDeviceImage() {
+        return this.errorDeviceImage;
     }
     /**
      * Checks if the device a battery powered device.

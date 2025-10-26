@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HomematicApi = void 0;
+exports.OpenCcuApi = void 0;
 const axios_1 = __importDefault(require("axios"));
 const https = __importStar(require("https"));
 const fs_1 = require("fs");
@@ -37,7 +37,7 @@ const utils_1 = require("./utils/utils");
 /**
  * Interacting with the CCU.
  */
-class HomematicApi {
+class OpenCcuApi {
     api;
     portHttp = 8181;
     portHttps = 48181;
@@ -215,7 +215,7 @@ class HomematicApi {
      * @param hostName The hostName of the ccu or localhost.
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get the value type of.
-     * @returns The value type of the given number as HomeMaticSystemvariableValueType or undefined.
+     * @returns The value type of the given number as OpenCcuSystemvariableValueType or undefined.
      */
     async getSystemVariableValueType(hostName, useHttps, variableName) {
         const requestData = `string result=dom.GetObject("${variableName}").ValueType();`;
@@ -252,7 +252,7 @@ class HomematicApi {
      * @param hostName The hostName of the ccu or localhost.
      * @param useHttps The boolean value for using HTTPS (true) or not (false).
      * @param variableName The name of the system variable to get the value type of.
-     * @returns The value sub type of the given number as HomeMaticSystemvariableValueSubType or undefined.
+     * @returns The value sub type of the given number as OpenCcuSystemvariableValueSubType or undefined.
      */
     async getSystemVariableValueSubType(hostName, useHttps, variableName) {
         const requestData = `string result=dom.GetObject("${variableName}").ValueSubType();`;
@@ -446,10 +446,10 @@ class HomematicApi {
         }
     }
     /**
-     * Returns the version info of the homematic api.
+     * Returns the version info of the OpenCCU api.
      */
-    getHomematicApiVersion() {
-        return "3.5.0";
+    getOpenCcuApiVersion() {
+        return "3.6.0";
     }
 }
-exports.HomematicApi = HomematicApi;
+exports.OpenCcuApi = OpenCcuApi;

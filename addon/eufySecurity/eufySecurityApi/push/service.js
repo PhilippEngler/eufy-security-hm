@@ -304,6 +304,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         const retry = 5;
         try {
             for (let retry_count = 1; retry_count <= retry; retry_count++) {
+                logging_1.rootPushLogger.debug(`Register GCM - Attempt ${retry_count} of ${retry}`, { androidId: androidId, fid: fid, securityToken: securityToken });
                 const response = await this.got(url, {
                     method: "post",
                     body: qs.stringify({
@@ -334,7 +335,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
                         Authorization: `AidLogin ${androidId}:${securityToken}`,
                         app: `${this.APP_PACKAGE}`,
                         gcm_ver: "201216023",
-                        "User-Agent": "Android-GCM/1.5 (OnePlus5 NMF26X)",
+                        "User-Agent": "Android-GCM/1.5",
                         "content-type": "application/x-www-form-urlencoded",
                     },
                     http2: false,
@@ -700,8 +701,8 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     getPersistentIds() {
         return this.persistentIds;
     }
-    async _open(renew = false) {
-        if (!this.credentials || Object.keys(this.credentials).length === 0 || (this.credentials && this.credentials.fidResponse && new Date().getTime() >= this.credentials.fidResponse.authToken.expiresAt)) {
+    async _open(renew = false, forceNew = false) {
+        if (forceNew || !this.credentials || Object.keys(this.credentials).length === 0 || (this.credentials && this.credentials.fidResponse && new Date().getTime() >= this.credentials.fidResponse.authToken.expiresAt)) {
             logging_1.rootPushLogger.debug(`Create new push credentials...`, { credentials: this.credentials, renew: renew });
             this.credentials = await this.createPushCredentials().catch(err => {
                 const error = (0, error_2.ensureError)(err);
@@ -727,6 +728,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
         }
         if (this.credentials) {
             this.emit("credential", this.credentials);
+            logging_1.rootPushLogger.debug("Push notification token received", { token: this.credentials.gcmResponse.token, credentials: this.credentials });
             this.clearCredentialsTimeout();
             this.credentialsTimeout = setTimeout(async () => {
                 logging_1.rootPushLogger.info("Push notification token is expiring, renew it.");
@@ -735,6 +737,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
             if (this.pushClient) {
                 this.pushClient.removeAllListeners();
             }
+            logging_1.rootPushLogger.debug('Init PushClient with credentials', { credentials: this.credentials });
             this.pushClient = await client_1.PushClient.init({
                 androidId: this.credentials.checkinResponse.androidId,
                 securityToken: this.credentials.checkinResponse.securityToken,
@@ -765,7 +768,7 @@ class PushNotificationService extends tiny_typed_emitter_1.TypedEmitter {
     async open() {
         if (!this.connecting && !this.connected) {
             this.connecting = true;
-            await this._open().catch((err) => {
+            await this._open(false, true).catch((err) => {
                 const error = (0, error_2.ensureError)(err);
                 logging_1.rootPushLogger.error(`Got exception trying to initialize push notifications`, { error: (0, utils_3.getError)(error), credentials: this.credentials });
             });
