@@ -3,9 +3,9 @@ import { Device, DeviceEvents, DeviceType, GuardMode, HTTPApi, HTTPApiEvents, St
 import { Logger } from "../logging";
 import { Stations } from "../stations";
 
-export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
+export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs/bin";
 export const pathToTemp = "/var/tmp/eufySecurity";
-export const pathToClientLog = "/var/log/eufySecurityClient.log";
+export const pathToLogFiles = "/var/log/";
 
 /**
  * Retrieve the model name of a given station or device.

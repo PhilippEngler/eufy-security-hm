@@ -1,8 +1,9 @@
 import { appendFileSync, closeSync, openSync } from "fs";
 import { LogLevel as Level } from "typescript-logging";
 import { CategoryProvider } from "typescript-logging-category-style";
-import { pathToClientLog } from "./utils/utils";
+import { pathToLogFiles } from "./utils/utils";
 import util from "node:util";
+import path from "node:path";
 
 export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt" | "conf" | "i18n";
 export const LogLevel = Level;
@@ -177,6 +178,7 @@ export function formatDate(millisSinceEpoch: number): string {
 }
 
 function logMessageForClient(message: string, ...messageArgs: any[]): void {
+    let pathToClientLog = path.join(pathToLogFiles, "eufySecurityClient.log");
     let fileHandle;
     try {
         fileHandle = openSync(pathToClientLog, "a");
