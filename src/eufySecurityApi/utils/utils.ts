@@ -57,6 +57,8 @@ export const getModelName = function(modelNumber: string): string {
             return "IndoorCam Mini 2k";
         case "T8416":
             return "IndoorCam S350";
+        case "T8417":
+            return "IndoorCam E30";
         //SoloCams
         case "T8122":
             return "SoloCam L20";

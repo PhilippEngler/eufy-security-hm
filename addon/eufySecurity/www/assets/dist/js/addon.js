@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20251018
+ * 20251029
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.5.4";
+var version = "3.5.5";
 
 /**
  * common used java script functions
@@ -2084,6 +2084,7 @@ function isStationOrDevicesKnown(modell) {
 		case "T8400":
 		case "T8410":
 		case "T8416":
+		case "T8417":
 		//Doorbells
 		case "T8210":
 		case "T8213":
