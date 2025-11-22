@@ -528,7 +528,7 @@ export class EufySecurityApi {
     private onTfaRequest(): void {
         //this.emit("tfa request");
         this.tfaCodeRequested = true
-        rootAddonLogger.info(`A tfa (two factor authentication) request received. This addon does not support tfa at the moment.`);
+        rootAddonLogger.info(`A tfa (two factor authentication) request received. The tfa support is in beta phase at the moment.`);
     }
 
     /**
