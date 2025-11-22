@@ -23,3 +23,13 @@ export enum EventInteractionType {
  * The type for refresh data target.
  */
 export type RefreshDataTarget = "all" | "devices" | "houses" | "stations";
+
+/**
+ * The types for the value types of system variables in OpenCCU
+ */
+export type OpenCcuSystemvariableValueType = "ivtBinary" | "ivtFloat" | "ivtInteger" | "ivtString";
+
+/**
+ * The types for the value sub types of system variables in OpenCCU
+ */
+export type OpenCcuSystemvariableValueSubType = "istPresent" | "istAlarm" | "istGeneric" | "istBool" | "istEnum" | "istChar8859";

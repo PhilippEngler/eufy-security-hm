@@ -1,3 +1,5 @@
+import { OpenCcuSystemvariableValueSubType, OpenCcuSystemvariableValueType } from "./types";
+
 /**
  * The interface for interactions.
  */
@@ -41,16 +43,6 @@ export interface CameraEvent {
     path: string;
     start_time: Date;
 }
-
-/**
- * The types for the value types of system variables in OpenCCU
- */
-export type OpenCcuSystemvariableValueType = "ivtBinary" | "ivtFloat" | "ivtInteger" | "ivtString";
-
-/**
- * The types for the value sub types of system variables in OpenCCU
- */
-export type OpenCcuSystemvariableValueSubType = "istPresent" | "istAlarm" | "istGeneric" | "istBool" | "istEnum" | "istChar8859";
 
 /**
  * The interface for the generic system variables in OpenCCU

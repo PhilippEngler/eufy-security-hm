@@ -6,7 +6,8 @@ import { rootAddonLogger } from "./logging";
 import { promisify } from "util";
 import { exec } from "child_process";
 import { extractEnclosedString } from "./utils/utils";
-import { OpenCcuSystemvariableBinary, OpenCcuSystemvariableFloat, OpenCcuSystemvariableInteger, OpenCcuSystemvariableString, OpenCcuSystemvariableValueSubType, OpenCcuSystemvariableValueType } from "./utils/models";
+import { OpenCcuSystemvariableBinary, OpenCcuSystemvariableFloat, OpenCcuSystemvariableInteger, OpenCcuSystemvariableString } from "./utils/models";
+import { OpenCcuSystemvariableValueSubType, OpenCcuSystemvariableValueType } from "./utils/types";
 
 /**
  * Interacting with the CCU.
