@@ -1,3 +1,5 @@
+import { TypedEmitter } from "tiny-typed-emitter";
+
 import { Config } from "./config";
 import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig } from "./http";
 import { OpenCcuApi } from "./openCcuApi";
@@ -18,8 +20,9 @@ import { countryData } from "./utils/const";
 import { apiServiceState, EventInteractionType, RefreshDataTarget } from "./utils/types";
 import { Localization } from "./localization/localization";
 import { OpenCcuSystemvariableBinary, OpenCcuSystemvariableFloat, OpenCcuSystemvariableGeneric, OpenCcuSystemvariableInteger, OpenCcuSystemvariableString } from "./utils/models";
+import { EufySecurityEvents } from "./interfaces";
 
-export class EufySecurityApi {
+export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
     private config: Config;
     private translator: Localization;
     private httpService !: HTTPApi;
@@ -44,6 +47,8 @@ export class EufySecurityApi {
      * Create the api object.
      */
     constructor() {
+        super();
+
         this.config = new Config();
         setLoggingLevel("addon", this.config.getLogLevelAddon());
         setLoggingLevel("main", this.config.getLogLevelMain());
@@ -402,7 +407,7 @@ export class EufySecurityApi {
 
         this.connected = false;
         this.setServiceState("disconnected");
-        //this.emit("close");
+        this.emit("close");
 
         if (this.retries < 3) {
             this.retries++;
@@ -423,7 +428,7 @@ export class EufySecurityApi {
         this.connected = false;
         this.setServiceState("disconnected");
         await this.close();
-        //this.emit("logout");
+        this.emit("logout");
         rootAddonLogger.info(`Successfully logged out. Manual intervention is required!`);
     }
 
@@ -433,7 +438,7 @@ export class EufySecurityApi {
     private async onAPIConnect(): Promise<void> {
         this.connected = true;
         this.retries = 0;
-        //this.emit("connect");
+        this.emit("connect");
 
         this.setCaptchaData("", "");
         this.tfaCodeRequested = false;
@@ -483,7 +488,7 @@ export class EufySecurityApi {
      * @param error The error occured.
      */
     private onAPIConnectionError(error: Error): void {
-        //this.emit("connection error", error);
+        this.emit("connection error", error);
         rootAddonLogger.error(`APIConnectionError occured. Error: ${error}`);
         this.setServiceState("disconnected");
     }
@@ -494,7 +499,7 @@ export class EufySecurityApi {
      * @param captcha The captcha image as base64 encoded string.
      */
     private onCaptchaRequest(captchaId: string, captcha: string): void {
-        //this.emit("captcha request", captchaId, captcha);
+        this.emit("captcha request", captchaId, captcha);
         this.setCaptchaData(captchaId, captcha);
         rootAddonLogger.info(`Entering captcha code needed. Please check the addon website.`);
     }
@@ -505,7 +510,7 @@ export class EufySecurityApi {
      * @param token_expiration The new token expiration time.
      */
     private onAuthTokenRenewed(token: string | null, token_expiration: Date): void {
-        //this.emit("auth token renewed", token, token_expiration);
+        this.emit("auth token renewed", token, token_expiration);
         if (token === null) {
             this.setTokenData(undefined, 0);
         } else {
@@ -518,7 +523,7 @@ export class EufySecurityApi {
      * Eventhandler for API Auth Token Invalidated event.
      */
     private onAuthTokenInvalidated(): void {
-        //this.emit("auth token invalidated");
+        this.emit("auth token invalidated");
         this.setTokenData(undefined, 0);
         this.setServiceState("disconnected");
         rootAddonLogger.info(`The authentication token is invalid and has been removed.`);
@@ -528,7 +533,7 @@ export class EufySecurityApi {
      * Eventhandler for API Tfa Request.
      */
     private onTfaRequest(): void {
-        //this.emit("tfa request");
+        this.emit("tfa request");
         this.tfaCodeRequested = true
         rootAddonLogger.info(`A tfa (two factor authentication) request received. The tfa support is in beta phase at the moment.`);
     }
@@ -3131,7 +3136,7 @@ export class EufySecurityApi {
      * @returns The version of this API.
      */
     public getEufySecurityApiVersion(): string {
-        return "3.2.3";
+        return "3.3.0";
     }
 
     /**

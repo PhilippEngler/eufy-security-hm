@@ -85,9 +85,12 @@ export interface EufySecurityEvents {
     "push message": (message: PushMessage) => void;
     "connect": () => void;
     "close": () => void;
+    "logout": () => void;
     "connection error": (error: Error) => void;
     "tfa request": () => void;
     "captcha request": (id: string, captcha: string) => void;
+    "auth token invalidated": () => void;
+    "auth token renewed": (token: string | null, token_expiration: Date) => void;
     "persistent data": (data: string) => void;
     "mqtt connect": () => void;
     "mqtt close": () => void;
