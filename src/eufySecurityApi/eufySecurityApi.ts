@@ -16,7 +16,7 @@ import { getDateTimeFromImageFilePath, randomNumber } from "./http/utils";
 import { PhoneModels, timeZoneData } from "./http/const";
 import { getModelName, getDeviceTypeAsString, makeDateTimeString, getStationTypeString, waitForStationEvent, waitForDeviceEvent, waitForHttpApiEvent, convertMapToObject } from "./utils/utils";
 import { countryData } from "./utils/const";
-import { EventInteractionType, RefreshDataTarget } from "./utils/types";
+import { apiServiceState, EventInteractionType, RefreshDataTarget } from "./utils/types";
 import { Localization } from "./localization/localization";
 import { OpenCcuSystemvariableBinary, OpenCcuSystemvariableFloat, OpenCcuSystemvariableGeneric, OpenCcuSystemvariableInteger, OpenCcuSystemvariableString } from "./utils/models";
 
@@ -33,7 +33,7 @@ export class EufySecurityApi {
     private stations !: Stations;
     private connected = false;
     private retries = 0;
-    private serviceState: string = "init";
+    private serviceState: apiServiceState = "init";
     private captchaState = { captchaId: "", captcha: "" };
     private tfaCodeRequested = false;
 
@@ -153,10 +153,8 @@ export class EufySecurityApi {
      * Set the state of the service to the given value.
      * @returns The state of the service.
      */
-    public setServiceState(state: string): void {
-        if (state === "init" || state === "configNeeded" || state === "ok" || state === "disconnected" || state === "shutdown") {
-            this.serviceState = state;
-        }
+    public setServiceState(state: apiServiceState): void {
+        this.serviceState = state;
     }
 
     /**

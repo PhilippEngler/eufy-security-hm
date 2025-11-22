@@ -30,6 +30,11 @@ export type RefreshDataTarget = "all" | "devices" | "houses" | "stations";
 export type OpenCcuSystemvariableValueType = "ivtBinary" | "ivtFloat" | "ivtInteger" | "ivtString";
 
 /**
- * The types for the value sub types of system variables in OpenCCU
+ * The types for the value sub types of system variables in OpenCCU.
  */
 export type OpenCcuSystemvariableValueSubType = "istPresent" | "istAlarm" | "istGeneric" | "istBool" | "istEnum" | "istChar8859";
+
+/**
+ * The types for the api service state.
+ */
+export type apiServiceState = "init" | "configNeeded" | "ok" | "disconnected" | "shutdown";
