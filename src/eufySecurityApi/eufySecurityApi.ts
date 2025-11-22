@@ -330,7 +330,7 @@ export class EufySecurityApi {
      */
     private async closeDevice(): Promise<void> {
         rootAddonLogger.info("Closing connections to all devices...");
-        if (this.devices !== null || this.devices !== undefined) {
+        if (this.devices !== null && this.devices !== undefined) {
             this.devices.closeDevices();
         }
     }
