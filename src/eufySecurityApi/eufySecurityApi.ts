@@ -495,7 +495,7 @@ export class EufySecurityApi {
      * @param captcha The captcha image as base64 encoded string.
      */
     private onCaptchaRequest(captchaId: string, captcha: string): void {
-        //this.emit("captcha request", id, captcha);
+        //this.emit("captcha request", captchaId, captcha);
         this.setCaptchaData(captchaId, captcha);
         rootAddonLogger.info(`Entering captcha code needed. Please check the addon website.`);
     }
@@ -506,6 +506,7 @@ export class EufySecurityApi {
      * @param token_expiration The new token expiration time.
      */
     private onAuthTokenRenewed(token: string | null, token_expiration: Date): void {
+        //this.emit("auth token renewed", token, token_expiration);
         if (token === null) {
             this.setTokenData(undefined, 0);
         } else {
@@ -518,8 +519,10 @@ export class EufySecurityApi {
      * Eventhandler for API Auth Token Invalidated event.
      */
     private onAuthTokenInvalidated(): void {
+        //this.emit("auth token invalidated");
         this.setTokenData(undefined, 0);
-        rootAddonLogger.info(`The authentication token is invalid and have been removed.`);
+        this.setServiceState("disconnected");
+        rootAddonLogger.info(`The authentication token is invalid and has been removed.`);
     }
 
     /**
