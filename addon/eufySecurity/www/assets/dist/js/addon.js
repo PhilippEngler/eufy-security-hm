@@ -4350,6 +4350,7 @@ async function serviceManager(action) {
 	document.getElementById("btnServiceManagerStopService").setAttribute("disabled", true);
 	document.getElementById("btnServiceManagerRestartService").setAttribute("disabled", true);
 	document.getElementById("modalServiceManagerBtnCancel").setAttribute("disabled", true);
+	document.getElementById("btnModalServiceManagerTitleClose").setAttribute("disabled", true);
 	var objResp, objErr;
 	var url = `${location.protocol}//${location.hostname}/addons/eufySecurity/serviceManager.cgi?action=${action}&deleteLogfile=${deleteLogfile}&deleteErrfile=${deleteErrfile}&deleteClientLogfile=${deleteClientLogfile}`;
 	await retrieveData("GET", url, 'application/json', undefined, undefined, undefined, undefined, undefined).then((result) => {
@@ -4368,6 +4369,7 @@ async function serviceManager(action) {
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
 				toast.show();
 				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
+				document.getElementById("btnModalServiceManagerTitleClose").removeAttribute("disabled");
 			}
 		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
@@ -4375,6 +4377,7 @@ async function serviceManager(action) {
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageStartFailedMessage");
 				toast.show();
 				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
+				document.getElementById("btnModalServiceManagerTitleClose").removeAttribute("disabled");
 		}
 	}).catch((err) => {
 		try {
@@ -4385,12 +4388,14 @@ async function serviceManager(action) {
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageAbortLoadingText");
 				toast.show();
 				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
+				document.getElementById("btnModalServiceManagerTitleClose").removeAttribute("disabled");
 			} else {
 				const toast = new bootstrap.Toast(toastFailed);
 				document.getElementById("toastFailedHeader").innerHTML = translateMessages("messageReconnectStationHeader");
 				document.getElementById("toastFailedText").innerHTML = translateMessages("messageReconnectStationFailedMessage");
 				toast.show();
 				document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
+				document.getElementById("btnModalServiceManagerTitleClose").removeAttribute("disabled");
 			}
 		} catch (e) {
 			const toast = new bootstrap.Toast(toastFailed);
@@ -4398,6 +4403,7 @@ async function serviceManager(action) {
 			document.getElementById("toastFailedText").innerHTML = translateMessages("messageErrorPrintErrorMessage", e);
 			toast.show();
 			document.getElementById("modalServiceManagerBtnCancel").removeAttribute("disabled");
+			document.getElementById("btnModalServiceManagerTitleClose").removeAttribute("disabled");
 		}
 	});
 }
@@ -4620,7 +4626,8 @@ function initLogViewer(logfiletype, showLoading) {
 		//mode: "logfile",
 		theme: "neo",
 		lineWrapping: false,
-		readOnly: true
+		readOnly: true,
+		editable: false
 	});
 	loadLogfile(logfiletype, showLoading);
 }
