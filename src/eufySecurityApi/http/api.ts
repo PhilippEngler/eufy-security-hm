@@ -418,6 +418,35 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         }
     }
 
+    public async logout(): Promise<boolean> {
+        try {
+            const response = await this.request({
+                method: "post",
+                endpoint: "v1/passport/logout",
+                data: {
+                    transaction: `${new Date().getTime()}`
+                }
+            });
+            if (response.status == 200) {
+                const result: ResultResponse = response.data;
+                if (result.code == ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    rootHTTPLogger.info("Logout from account successful.");
+                    this.invalidateToken();
+                    this.emit("logout");
+                } else {
+                    rootHTTPLogger.error("Logout - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                }
+            } else {
+                rootHTTPLogger.error("Logout - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+            }
+           return true;
+        } catch (err) {
+            const error = ensureError(err);
+            rootHTTPLogger.error("Logout - Generic Error", { error: getError(error) });
+        }
+        return false;
+    }
+
     public async sendVerifyCode(type?: VerfyCodeTypes): Promise<boolean> {
         try {
             if (!type)

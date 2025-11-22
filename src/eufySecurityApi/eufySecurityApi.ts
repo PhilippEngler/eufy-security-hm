@@ -102,6 +102,7 @@ export class EufySecurityApi {
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
 
             this.httpService.on("close", () => this.onAPIClose());
+            this.httpService.on("logout", () => this.onAPILogout());
             this.httpService.on("connect", () => this.onAPIConnect());
             this.httpService.on("captcha request", (captchaId: string, captcha: string) => this.onCaptchaRequest(captchaId, captcha));
             this.httpService.on("auth token renewed", (token, token_expiration) => this.onAuthTokenRenewed(token, token_expiration));
@@ -155,6 +156,14 @@ export class EufySecurityApi {
      */
     public setServiceState(state: apiServiceState): void {
         this.serviceState = state;
+    }
+
+    public async logout(): Promise<string> {
+        if (this.connected === true) {
+            return `{"success":${await this.httpService.logout()}}`;
+        } else {
+            return `{"success":false,"message":"Not connected"}`;
+        }
     }
 
     /**
@@ -402,6 +411,21 @@ export class EufySecurityApi {
         } else {
             rootAddonLogger.error(`Tried to re-authenticate to Eufy cloud, but failed in the process. Manual intervention is required!`);
         }
+    }
+
+    /**
+     * Eventhandler for the API Logout event.
+     */
+    private async onAPILogout(): Promise<void> {
+        if (this.refreshEufySecurityCloudTimeout !== undefined) {
+            clearTimeout(this.refreshEufySecurityCloudTimeout);
+        }
+
+        this.connected = false;
+        this.setServiceState("disconnected");
+        await this.close();
+        //this.emit("logout");
+        rootAddonLogger.info(`Successfully logged out. Manual intervention is required!`);
     }
 
     /**
