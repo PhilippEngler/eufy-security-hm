@@ -2,7 +2,6 @@ import { Config } from "./config";
 import { HTTPApi, GuardMode, Station, Device, PropertyName, LoginOptions, HouseDetail, PropertyValue, RawValues, InvalidPropertyError, PassportProfileResponse, ConfirmInvite, Invite, HouseInviteListResponse, HTTPApiPersistentData, Picture, DeviceType, DeviceConfig } from "./http";
 import { OpenCcuApi } from "./openCcuApi";
 import { rootAddonLogger, setLoggingLevel } from "./logging";
-
 import { PushService } from "./pushService";
 import { MqttService } from "./mqttService";
 import { generateUDID, generateSerialnumber, getError } from "./utils";

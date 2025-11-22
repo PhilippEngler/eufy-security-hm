@@ -1,4 +1,5 @@
 import { TypedEmitter } from "tiny-typed-emitter";
+
 import { EufySecurityApi } from "./eufySecurityApi";
 import { EufySecurityEvents } from "./interfaces";
 import { HTTPApi, HouseDetail, Houses } from "./http";

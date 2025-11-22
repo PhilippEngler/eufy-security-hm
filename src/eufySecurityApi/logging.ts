@@ -1,9 +1,11 @@
-import { appendFileSync, closeSync, openSync } from "fs";
-import { LogLevel as Level } from "typescript-logging";
-import { CategoryProvider } from "typescript-logging-category-style";
-import { pathToLogFiles } from "./utils/utils";
+import { appendFileSync, closeSync, openSync } from "node:fs";
 import util from "node:util";
 import path from "node:path";
+
+import { LogLevel as Level } from "typescript-logging";
+import { CategoryProvider } from "typescript-logging-category-style";
+
+import { pathToLogFiles } from "./utils/utils";
 
 export type LoggingCategories = "all" | "addon" | "main" | "http" | "p2p" | "push" | "mqtt" | "conf" | "i18n";
 export const LogLevel = Level;

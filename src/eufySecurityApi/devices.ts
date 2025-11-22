@@ -1,5 +1,8 @@
+import EventEmitter from "node:events";
+import { existsSync, readFileSync } from "node:fs";
+
 import { TypedEmitter } from "tiny-typed-emitter";
-import EventEmitter from "events";
+
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from "./eufySecurityApi";
 import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, DeviceType, IndoorS350DetectionTypes } from "./http";
@@ -10,7 +13,6 @@ import { DeviceInteractions, EventInteraction } from "./utils/models";
 import { EventInteractionType } from "./utils/types";
 import { EventInteractions } from "./eventInteractions";
 import { rootAddonLogger } from "./logging";
-import { existsSync, readFileSync } from "fs";
 
 /**
  * Represents all the Devices in the account.

@@ -1,8 +1,10 @@
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+
+import { LogLevel } from "typescript-logging";
+
 import { CheckinResponse, FidInstallationResponse, GcmRegisterResponse } from "./push/models";
 import { rootConfLogger, setLoggingLevel } from "./logging";
-import { LogLevel } from "typescript-logging";
-import { DeviceConfig, PropertyValue } from ".";
+import { DeviceConfig, PropertyValue } from "./http/interfaces";
 import { PhoneModels } from "./http/const";
 import { randomNumber } from "./http/utils";
 import { EventInteraction, Interactions } from "./utils/models";

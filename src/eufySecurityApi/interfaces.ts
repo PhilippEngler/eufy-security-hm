@@ -1,4 +1,4 @@
-import { Readable } from "stream";
+import { Readable } from "node:stream";
 
 import { Device } from "./http/device";
 import { Picture, PropertyValue, Schedule } from "./http/interfaces";

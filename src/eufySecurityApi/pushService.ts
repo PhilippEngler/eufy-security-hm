@@ -8,7 +8,7 @@ import { PushNotificationService } from "./push/service";
 import { CheckinResponse, Credentials, FidInstallationResponse, GcmRegisterResponse, PushMessage } from "./push/models";
 import { rootPushLogger } from "./logging";
 import { ServerPushEvent } from "./push/types";
-import { ensureError } from ".";
+import { ensureError } from "./error";
 import { getError } from "./utils";
 
 export class PushService extends TypedEmitter<EufySecurityEvents> {

@@ -1,10 +1,11 @@
+import { existsSync, readFileSync } from "node:fs";
+import * as https from 'node:https';
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
+
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import * as https from 'https';
-import { existsSync, readFileSync } from "fs";
 import { EufySecurityApi } from "./eufySecurityApi";
 import { rootAddonLogger } from "./logging";
-import { promisify } from "util";
-import { exec } from "child_process";
 import { extractEnclosedString } from "./utils/utils";
 import { OpenCcuSystemvariableBinary, OpenCcuSystemvariableFloat, OpenCcuSystemvariableInteger, OpenCcuSystemvariableString } from "./utils/models";
 import { OpenCcuSystemvariableValueSubType, OpenCcuSystemvariableValueType } from "./utils/types";
