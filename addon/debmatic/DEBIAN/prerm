@@ -25,6 +25,8 @@ case "$1" in
     rm -rf /usr/local/addons/eufySecurity/www
     rm -f /usr/local/addons/eufySecurity/apiServer.js
     rm -f /usr/local/addons/eufySecurity/apiServerRestarter.js
+    rm -f /usr/local/addons/eufySecurity/esOpenCcuAddOn.jsesOpenCcuAddOn
+    rm -f /usr/local/addons/eufySecurity/esOpenCcuAddOnRestarter.js
     rm -f /usr/local/addons/eufySecurity/eufySecurity-addon.cfg
     rm -f /usr/local/addons/eufySecurity/LICENCE
     rm -f /usr/local/addons/eufySecurity/LICENCE.eufy-security-client

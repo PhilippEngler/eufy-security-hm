@@ -1,4 +1,5 @@
-import { execFile } from "child_process";
+import { execFile } from "node:child_process";
+
 import { formatDate } from "./eufySecurityApi/logging";
 
 try {

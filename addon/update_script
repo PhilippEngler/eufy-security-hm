@@ -324,6 +324,18 @@ if [ -e ${ADDON_DIR}/eufySecurityApi ]; then
   else
     echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version is 3.2.3 or newer >> $INSTALL_LOGFILE
   fi
+  # remove unused api files from versions lower than 3.3.0 
+  if [ $CURRENT_VERSION_MAIN -lt 3 ] || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -lt 3 ]) || ([ $CURRENT_VERSION_MAIN -eq 3 ] && [ $CURRENT_VERSION_MINOR -eq 3 ] && [ $CURRENT_VERSION_BUILD -lt 0 ]); then
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version lower than 3.3.0 >> $INSTALL_LOGFILE
+    if [ -e ${ADDON_DIR}/apiServer.js ]; then
+      rm -f ${ADDON_DIR}/apiServer.js
+    fi
+    if [ -e ${ADDON_DIR}/apiServerRestarter.js ]; then
+      rm -f ${ADDON_DIR}/apiServerRestarter.js
+    fi
+  else
+    echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Installed version is 3.3.0 or newer >> $INSTALL_LOGFILE
+  fi
 fi
 
 # check current and new Node.js versions
@@ -333,8 +345,8 @@ if [ -e ${ADDON_DIR}/bin/nodejs/bin/node ]; then
 else
   CURRENT_NODEJS_VERSION=$PACKAGE_NODEJS_VERSION
 fi
-echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Node.js version installed: $CURRENT_NODEJS_VERSION >> $INSTALL_LOGFILE
 echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Node.js version to install: $PACKAGE_NODEJS_VERSION >> $INSTALL_LOGFILE
+echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Node.js version installed: $CURRENT_NODEJS_VERSION >> $INSTALL_LOGFILE
 if [ $CURRENT_NODEJS_VERSION != $PACKAGE_NODEJS_VERSION ]; then
   echo $(date +"%Y-%m-%d %H:%M:%S.%3N") Preparing Node.js install folder for new Node.js version... >> $INSTALL_LOGFILE
   if [ -e ${ADDON_DIR}/bin/nodejs/include ]; then

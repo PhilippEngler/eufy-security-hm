@@ -23,9 +23,9 @@ dir="/usr/local/addons/eufySecurity"
 NODEJS_VERSION_MAIN=$(echo $(/usr/local/addons/eufySecurity/bin/nodejs/bin/node -v) | cut -d "." -f 1)
 NODEJS_VERSION_MAIN=${NODEJS_VERSION_MAIN:1}
 if [ $NODEJS_VERSION_MAIN -le 20 ]; then
-    cmd="/usr/local/addons/eufySecurity/bin/nodejs/bin/node --security-revert=CVE-2023-46809 /usr/local/addons/eufySecurity/apiServer.js"
+    cmd="/usr/local/addons/eufySecurity/bin/nodejs/bin/node --security-revert=CVE-2023-46809 /usr/local/addons/eufySecurity/esOpenCcuAddOn.js"
 else
-    cmd="/usr/local/addons/eufySecurity/bin/nodejs/bin/node /usr/local/addons/eufySecurity/apiServer.js"
+    cmd="/usr/local/addons/eufySecurity/bin/nodejs/bin/node /usr/local/addons/eufySecurity/esOpenCcuAddOn.js"
 fi
 
 user="root"

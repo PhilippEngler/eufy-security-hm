@@ -12,7 +12,7 @@ Environment=LD_LIBRARY_PATH=/usr/local/addons/eufySecurity
 #ExecStartPre=/bin/touch /etc/config/hm_addons.cfg
 #ExecStartPre=/usr/local/addons/eufySecurity/update_addon eufySecurity /usr/local/addons/eufySecurity/eufySecurity_addon.cfg
 ExecStartPre=/bin/ln -sf /usr/local/addons/eufySecurity/www /usr/local/etc/config/addons/www/eufySecurity
-ExecStart=/usr/local/addons/eufySecurity/bin/node --security-revert=CVE-2023-46809 /usr/local/addons/eufySecurity/apiServer.js
+ExecStart=/usr/local/addons/eufySecurity/bin/nodejs/bin/node /usr/local/addons/eufySecurity/esOpenCcuAddOn.js
 StandardOutput=append:/var/log/eufySecurity.log
 StandardError=append:/var/log/eufySecurity.err
 
