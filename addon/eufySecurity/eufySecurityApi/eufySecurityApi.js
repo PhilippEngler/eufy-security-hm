@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EufySecurityApi = void 0;
+const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const config_1 = require("./config");
 const http_1 = require("./http");
 const openCcuApi_1 = require("./openCcuApi");
@@ -19,7 +20,7 @@ const const_1 = require("./http/const");
 const utils_4 = require("./utils/utils");
 const const_2 = require("./utils/const");
 const localization_1 = require("./localization/localization");
-class EufySecurityApi {
+class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
     config;
     translator;
     httpService;
@@ -42,6 +43,7 @@ class EufySecurityApi {
      * Create the api object.
      */
     constructor() {
+        super();
         this.config = new config_1.Config();
         (0, logging_1.setLoggingLevel)("addon", this.config.getLogLevelAddon());
         (0, logging_1.setLoggingLevel)("main", this.config.getLogLevelMain());
@@ -91,6 +93,7 @@ class EufySecurityApi {
             }
             this.httpService.setPhoneModel(this.config.getTrustedDeviceName());
             this.httpService.on("close", () => this.onAPIClose());
+            this.httpService.on("logout", () => this.onAPILogout());
             this.httpService.on("connect", () => this.onAPIConnect());
             this.httpService.on("captcha request", (captchaId, captcha) => this.onCaptchaRequest(captchaId, captcha));
             this.httpService.on("auth token renewed", (token, token_expiration) => this.onAuthTokenRenewed(token, token_expiration));
@@ -135,8 +138,14 @@ class EufySecurityApi {
      * @returns The state of the service.
      */
     setServiceState(state) {
-        if (state === "init" || state === "configNeeded" || state === "ok" || state === "disconnected" || state === "shutdown") {
-            this.serviceState = state;
+        this.serviceState = state;
+    }
+    async logout() {
+        if (this.connected === true) {
+            return `{"success":${await this.httpService.logout()}}`;
+        }
+        else {
+            return `{"success":false,"message":"Not connected"}`;
         }
     }
     /**
@@ -279,7 +288,7 @@ class EufySecurityApi {
      */
     async closeDevice() {
         logging_1.rootAddonLogger.info("Closing connections to all devices...");
-        if (this.devices !== null || this.devices !== undefined) {
+        if (this.devices !== null && this.devices !== undefined) {
             this.devices.closeDevices();
         }
     }
@@ -345,7 +354,7 @@ class EufySecurityApi {
         }
         this.connected = false;
         this.setServiceState("disconnected");
-        //this.emit("close");
+        this.emit("close");
         if (this.retries < 3) {
             this.retries++;
             await this.connect();
@@ -355,12 +364,25 @@ class EufySecurityApi {
         }
     }
     /**
+     * Eventhandler for the API Logout event.
+     */
+    async onAPILogout() {
+        if (this.refreshEufySecurityCloudTimeout !== undefined) {
+            clearTimeout(this.refreshEufySecurityCloudTimeout);
+        }
+        this.connected = false;
+        this.setServiceState("disconnected");
+        await this.close();
+        this.emit("logout");
+        logging_1.rootAddonLogger.info(`Successfully logged out. Manual intervention is required!`);
+    }
+    /**
      * Eventhandler for the API Connect event.
      */
     async onAPIConnect() {
         this.connected = true;
         this.retries = 0;
-        //this.emit("connect");
+        this.emit("connect");
         this.setCaptchaData("", "");
         this.tfaCodeRequested = false;
         this.saveCloudToken();
@@ -398,7 +420,7 @@ class EufySecurityApi {
      * @param error The error occured.
      */
     onAPIConnectionError(error) {
-        //this.emit("connection error", error);
+        this.emit("connection error", error);
         logging_1.rootAddonLogger.error(`APIConnectionError occured. Error: ${error}`);
         this.setServiceState("disconnected");
     }
@@ -408,7 +430,7 @@ class EufySecurityApi {
      * @param captcha The captcha image as base64 encoded string.
      */
     onCaptchaRequest(captchaId, captcha) {
-        //this.emit("captcha request", id, captcha);
+        this.emit("captcha request", captchaId, captcha);
         this.setCaptchaData(captchaId, captcha);
         logging_1.rootAddonLogger.info(`Entering captcha code needed. Please check the addon website.`);
     }
@@ -418,6 +440,7 @@ class EufySecurityApi {
      * @param token_expiration The new token expiration time.
      */
     onAuthTokenRenewed(token, token_expiration) {
+        this.emit("auth token renewed", token, token_expiration);
         if (token === null) {
             this.setTokenData(undefined, 0);
         }
@@ -430,16 +453,18 @@ class EufySecurityApi {
      * Eventhandler for API Auth Token Invalidated event.
      */
     onAuthTokenInvalidated() {
+        this.emit("auth token invalidated");
         this.setTokenData(undefined, 0);
-        logging_1.rootAddonLogger.info(`The authentication token is invalid and have been removed.`);
+        this.setServiceState("disconnected");
+        logging_1.rootAddonLogger.info(`The authentication token is invalid and has been removed.`);
     }
     /**
      * Eventhandler for API Tfa Request.
      */
     onTfaRequest() {
-        //this.emit("tfa request");
+        this.emit("tfa request");
         this.tfaCodeRequested = true;
-        logging_1.rootAddonLogger.info(`A tfa (two factor authentication) request received. This addon does not support tfa at the moment.`);
+        logging_1.rootAddonLogger.info(`A tfa (two factor authentication) request received. The tfa support is in beta phase at the moment.`);
     }
     /**
      * The action to be performed when event station removed is fired.
@@ -1901,6 +1926,9 @@ class EufySecurityApi {
                         }
                         await (0, utils_2.sleep)(1000);
                     }
+                    else {
+                        logging_1.rootAddonLogger.error(`P2p connection to station ${stationSerial} not established.`);
+                    }
                     if (connected === false) {
                         try {
                             await (0, utils_2.sleep)(1000);
@@ -1911,6 +1939,9 @@ class EufySecurityApi {
                             json = { "success": false, "message": `Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(e)}'.` };
                             return JSON.stringify(json);
                         }
+                    }
+                    else {
+                        logging_1.rootAddonLogger.error(`P2p connection to station ${stationSerial} already established.`);
                     }
                     json = { "success": res, "connected": connected };
                 }
@@ -2951,7 +2982,7 @@ class EufySecurityApi {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.2.3";
+        return "3.3.0";
     }
     /**
      * Return the version of the library used for communicating with eufy.

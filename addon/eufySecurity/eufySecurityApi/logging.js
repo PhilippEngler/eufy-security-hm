@@ -5,11 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setLoggingLevel = exports.rootI18nLogger = exports.rootConfLogger = exports.rootP2PLogger = exports.rootPushLogger = exports.rootMQTTLogger = exports.rootHTTPLogger = exports.rootAddonLogger = exports.rootMainLogger = exports.InternalLogger = exports.LogLevel = void 0;
 exports.formatDate = formatDate;
-const fs_1 = require("fs");
+const node_fs_1 = require("node:fs");
+const node_util_1 = __importDefault(require("node:util"));
+const node_path_1 = __importDefault(require("node:path"));
 const typescript_logging_1 = require("typescript-logging");
 const typescript_logging_category_style_1 = require("typescript-logging-category-style");
 const utils_1 = require("./utils/utils");
-const node_util_1 = __importDefault(require("node:util"));
 exports.LogLevel = typescript_logging_1.LogLevel;
 class InternalLogger {
     static logger;
@@ -166,19 +167,20 @@ function formatDate(millisSinceEpoch) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${millis}`;
 }
 function logMessageForClient(message, ...messageArgs) {
+    let pathToClientLog = node_path_1.default.join(utils_1.pathToLogFiles, "eufySecurityClient.log");
     let fileHandle;
     try {
-        fileHandle = (0, fs_1.openSync)(utils_1.pathToClientLog, "a");
+        fileHandle = (0, node_fs_1.openSync)(pathToClientLog, "a");
         if (messageArgs) {
             let messageArgsString = "";
             for (const arg in messageArgs) {
                 const message = node_util_1.default.format("%O", messageArgs[arg]);
                 messageArgsString += `${messageArgsString.length > 0 ? ` ${message}` : message}`;
             }
-            (0, fs_1.appendFileSync)(fileHandle, `${message} ${messageArgsString} \r\n`, "utf-8");
+            (0, node_fs_1.appendFileSync)(fileHandle, `${message} ${messageArgsString} \r\n`, "utf-8");
         }
         else {
-            (0, fs_1.appendFileSync)(fileHandle, message + "\r\n", "utf-8");
+            (0, node_fs_1.appendFileSync)(fileHandle, message + "\r\n", "utf-8");
         }
     }
     catch (e) {
@@ -186,7 +188,7 @@ function logMessageForClient(message, ...messageArgs) {
     }
     finally {
         if (fileHandle !== undefined) {
-            (0, fs_1.closeSync)(fileHandle);
+            (0, node_fs_1.closeSync)(fileHandle);
         }
     }
 }

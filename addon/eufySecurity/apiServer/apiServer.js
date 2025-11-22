@@ -1,74 +1,78 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const http_1 = require("http");
-const https_1 = require("https");
-const os_1 = __importDefault(require("os"));
-const fs_1 = require("fs");
-const process_1 = require("process");
-const eufySecurityApi_1 = require("./eufySecurityApi/eufySecurityApi");
-const http_2 = require("./eufySecurityApi/http");
-const child_process_1 = require("child_process");
-const logging_1 = require("./eufySecurityApi/logging");
-process.chdir(__dirname);
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let apiServer;
-const serverHttp = (0, http_1.createServer)();
-const serverHttps = (0, https_1.createServer)();
+exports.ApiServer = void 0;
+const node_http_1 = require("node:http");
+const node_https_1 = require("node:https");
+const node_os_1 = require("node:os");
+const node_fs_1 = require("node:fs");
+const node_url_1 = require("node:url");
+const node_path_1 = require("node:path");
+const logging_1 = require("../eufySecurityApi/logging");
+const eufySecurityApi_1 = require("../eufySecurityApi");
 let api;
+let openCCUAddOn;
 class ApiServer {
-    /**
-     * Create the ApiServer-Object.
-     */
-    constructor() {
+    serverHttp = (0, node_http_1.createServer)();
+    serverHttps = (0, node_https_1.createServer)();
+    constructor(esApi, esOpenCCUAddOn) {
         logging_1.InternalLogger.logger = logging_1.dummyLogger;
-        api = new eufySecurityApi_1.EufySecurityApi();
-        apiPortFile(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort());
-        this.startServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile());
+        api = esApi;
+        openCCUAddOn = esOpenCCUAddOn;
+        //this.initializeServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile());
     }
     /**
      * Start the apiServer.
+     */
+    async startServer() {
+        await this.initializeServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile());
+    }
+    /**
+     * Close all http and https connections and stop the apiServer.
+     */
+    stopServer() {
+        logging_1.rootAddonLogger.info("Stoping http server...");
+        this.serverHttp.closeAllConnections();
+        logging_1.rootAddonLogger.info("...http server stopped");
+        logging_1.rootAddonLogger.info("Stoping https server...");
+        this.serverHttps.closeAllConnections();
+        logging_1.rootAddonLogger.info("...https server stopped");
+    }
+    /**
+     * Initialize the apiServer.
      * @param httpActive The http should be used.
      * @param portHttp The HTTP port the server will serve.
      * @param httpsActive The https server should be used.
      * @param portHttps The HTTPS port the server will serve.
      * @param keyHttps The key for https.
      * @param certHttps The cert for https.
-     * @param logger The logger component.
      */
-    async startServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps) {
-        logging_1.rootAddonLogger.info(`eufy-security-hm version v${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
-        logging_1.rootAddonLogger.info(`  Host: ${os_1.default.hostname}`);
-        logging_1.rootAddonLogger.info(`  Platform: ${os_1.default.platform}_${os_1.default.arch}`);
-        logging_1.rootAddonLogger.info(`  Node: ${process.version}`);
+    async initializeServer(httpActive, portHttp, httpsActive, portHttps, keyHttps, certHttps) {
         if (httpActive === true) {
             logging_1.rootAddonLogger.info("Starting http server...");
-            serverHttp.on("error", this.errorListener);
-            serverHttp.on("request", this.requestListener);
-            serverHttp.listen(portHttp);
+            this.serverHttp.on("error", this.errorListener);
+            this.serverHttp.on("request", this.requestListener);
+            this.serverHttp.listen(portHttp);
             logging_1.rootAddonLogger.info(`...started. http listening on port '${portHttp}'`);
         }
         if (httpsActive === true) {
             logging_1.rootAddonLogger.info("Starting https server...");
-            if ((0, fs_1.existsSync)(keyHttps) && (0, fs_1.existsSync)(certHttps)) {
+            if ((0, node_fs_1.existsSync)(keyHttps) && (0, node_fs_1.existsSync)(certHttps)) {
                 const options = {
-                    key: (0, fs_1.readFileSync)(keyHttps),
-                    cert: (0, fs_1.readFileSync)(certHttps)
+                    key: (0, node_fs_1.readFileSync)(keyHttps),
+                    cert: (0, node_fs_1.readFileSync)(certHttps)
                 };
-                serverHttps.setSecureContext(options);
-                serverHttps.on("error", this.errorListener);
-                serverHttps.on("request", this.requestListener);
-                serverHttps.listen(portHttps);
+                this.serverHttps.setSecureContext(options);
+                this.serverHttps.on("error", this.errorListener);
+                this.serverHttps.on("request", this.requestListener);
+                this.serverHttps.listen(portHttps);
                 logging_1.rootAddonLogger.info(`...started. https listening on port '${portHttps}'`);
             }
             else {
                 let keyCertFileHint = "key file and/or cert file";
-                if (!(0, fs_1.existsSync)(keyHttps) && !(0, fs_1.existsSync)(certHttps)) {
+                if (!(0, node_fs_1.existsSync)(keyHttps) && !(0, node_fs_1.existsSync)(certHttps)) {
                     keyCertFileHint = "key file and cert file";
                 }
-                else if (!(0, fs_1.existsSync)(keyHttps) && (0, fs_1.existsSync)(certHttps)) {
+                else if (!(0, node_fs_1.existsSync)(keyHttps) && (0, node_fs_1.existsSync)(certHttps)) {
                     keyCertFileHint = "key file";
                 }
                 else {
@@ -98,7 +102,7 @@ class ApiServer {
     async requestListener(request, response) {
         let responseData = "";
         let contentType = "application/json";
-        let fileName = "";
+        let fileName = undefined;
         let url = request.url?.split("/");
         if (url === undefined) {
             url = [];
@@ -107,6 +111,98 @@ class ApiServer {
         if (request.method === "GET") {
             if (url.length > 1) {
                 switch (url[1]) {
+                    case "ui":
+                        if (request.url === undefined) {
+                            return;
+                        }
+                        const parsedUrl = (0, node_url_1.parse)(request.url.replace("/ui", ""));
+                        if (parsedUrl.pathname === null) {
+                            return;
+                        }
+                        const sanitizePath = (0, node_path_1.normalize)(parsedUrl.pathname).replace(/^(\.\.[\/\\])+/, '');
+                        let pathname = (0, node_path_1.join)(process.cwd(), "/www", sanitizePath);
+                        console.log(pathname);
+                        (0, node_fs_1.exists)(pathname, function (exist) {
+                            if (!exist) {
+                                // if the file is not found, return 404
+                                response.statusCode = 404;
+                                response.end(`File ${pathname} not found!`);
+                                return;
+                            }
+                            // if is a directory, then look for index.html
+                            if ((0, node_fs_1.statSync)(pathname).isDirectory()) {
+                                pathname += '/index.html';
+                            }
+                            // read file from file system
+                            (0, node_fs_1.readFile)(pathname, function (err, data) {
+                                if (err) {
+                                    response.statusCode = 500;
+                                    response.end(`Error getting the file: ${err}.`);
+                                }
+                                else {
+                                    // based on the URL path, extract the file extention. e.g. .js, .doc, ...
+                                    const ext = (0, node_path_1.parse)(pathname).ext;
+                                    // if the file is found, set Content-type and send data
+                                    let contentType = "";
+                                    switch (ext) {
+                                        case '.ico':
+                                            contentType = 'image/x-icon';
+                                            break;
+                                        case '.html':
+                                            contentType = 'text/html';
+                                            break;
+                                        case '.js':
+                                            contentType = 'text/javascript';
+                                            break;
+                                        case '.json':
+                                            contentType = 'application/json';
+                                            break;
+                                        case '.css':
+                                            contentType = 'text/css';
+                                            break;
+                                        case '.png':
+                                            contentType = 'image/png';
+                                            break;
+                                        case '.jpg':
+                                            contentType = 'image/jpeg';
+                                            break;
+                                        case '.wav':
+                                            contentType = 'audio/wav';
+                                            break;
+                                        case '.mp3':
+                                            contentType = 'audio/mpeg';
+                                            break;
+                                        case '.svg':
+                                            contentType = 'image/svg+xml';
+                                            break;
+                                        case '.pdf':
+                                            contentType = 'application/pdf';
+                                            break;
+                                        case '.zip':
+                                            contentType = 'application/zip';
+                                            break;
+                                        case '.doc':
+                                            contentType = 'application/msword';
+                                            break;
+                                        case '.eot':
+                                            contentType = 'application/vnd.ms-fontobject';
+                                            break;
+                                        case '.ttf':
+                                            contentType = 'application/x-font-ttf';
+                                            break;
+                                        default:
+                                            contentType = 'text/plain';
+                                    }
+                                    response.setHeader('Content-type', contentType);
+                                    response.end(data);
+                                }
+                            });
+                        });
+                        return;
+                        break;
+                    case "logout":
+                        responseData = await api.logout();
+                        break;
                     case "getServiceState":
                         responseData = `{"success":true,"message":"${api.getServiceState()}"}`;
                         break;
@@ -171,8 +267,8 @@ class ApiServer {
                         if (url.length === 3) {
                             const json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
                             if (json.success === true) {
-                                json.data.properties.serialNumber = replaceLastChars(json.data.properties.serialNumber, "X", 6);
-                                json.data.properties.stationSerialNumber = replaceLastChars(json.data.properties.stationSerialNumber, "X", 6);
+                                json.data.properties.serialNumber = this.replaceLastChars(json.data.properties.serialNumber, "X", 6);
+                                json.data.properties.stationSerialNumber = this.replaceLastChars(json.data.properties.stationSerialNumber, "X", 6);
                                 if (json.data.properties.rtspStreamUrl !== undefined) {
                                     json.data.properties.rtspStreamUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
@@ -261,7 +357,7 @@ class ApiServer {
                         if (url.length === 3) {
                             const json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
                             if (json.success === true) {
-                                json.data.properties.serialNumber = replaceLastChars(json.data.properties.serialNumber, "X", 6);
+                                json.data.properties.serialNumber = this.replaceLastChars(json.data.properties.serialNumber, "X", 6);
                                 json.data.properties.macAddress = "XX:XX:XX:XX:XX:XX";
                                 json.data.properties.lanIpAddress = "XXX.XXX.XXX.XXX";
                             }
@@ -338,31 +434,31 @@ class ApiServer {
                         if (url.length === 3) {
                             switch (url[2]) {
                                 case "away":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.AWAY);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.AWAY);
                                     break;
                                 case "custom1":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.CUSTOM1);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.CUSTOM1);
                                     break;
                                 case "custom2":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.CUSTOM2);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.CUSTOM2);
                                     break;
                                 case "custom3":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.CUSTOM3);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.CUSTOM3);
                                     break;
                                 case "disarmed":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.DISARMED);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.DISARMED);
                                     break;
                                 case "geo":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.GEO);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.GEO);
                                     break;
                                 case "home":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.HOME);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.HOME);
                                     break;
                                 case "off":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.OFF);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.OFF);
                                     break;
                                 case "schedule":
-                                    responseData = await api.setGuardMode(http_2.GuardMode.SCHEDULE);
+                                    responseData = await api.setGuardMode(eufySecurityApi_1.GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
                                     responseData = `{"success":false,"message":"This mode cannot be set for all stations."}`;
@@ -377,31 +473,31 @@ class ApiServer {
                         else if (url.length === 4) {
                             switch (url[3]) {
                                 case "away":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.AWAY);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.AWAY);
                                     break;
                                 case "custom1":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM1);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.CUSTOM1);
                                     break;
                                 case "custom2":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM2);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.CUSTOM2);
                                     break;
                                 case "custom3":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.CUSTOM3);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.CUSTOM3);
                                     break;
                                 case "disarmed":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.DISARMED);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.DISARMED);
                                     break;
                                 case "geo":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.GEO);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.GEO);
                                     break;
                                 case "home":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.HOME);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.HOME);
                                     break;
                                 case "off":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.OFF);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.OFF);
                                     break;
                                 case "schedule":
-                                    responseData = await api.setGuardModeStation(url[2], http_2.GuardMode.SCHEDULE);
+                                    responseData = await api.setGuardModeStation(url[2], eufySecurityApi_1.GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
                                     responseData = await api.setPrivacyMode(url[2], false);
@@ -519,20 +615,20 @@ class ApiServer {
                         break;
                     case "downloadConfig":
                         api.writeConfig();
-                        responseData = (0, fs_1.readFileSync)("config.json", "utf-8");
+                        responseData = (0, node_fs_1.readFileSync)("config.json", "utf-8");
                         contentType = "text/json";
-                        fileName = `config_${os_1.default.hostname}_${getDateTimeAsString(new Date())}.json`;
+                        fileName = `config_${node_os_1.hostname}_${this.getDateTimeAsString(new Date())}.json`;
                         break;
                     default:
                         responseData = `{"success":false,"message":"Unknown command."}`;
                 }
                 response.setHeader("Access-Control-Allow-Origin", "*");
                 response.setHeader("Content-Type", contentType + "; charset=UTF-8");
-                if (fileName === "") {
+                if (fileName === undefined) {
                     response.writeHead(200);
                     //response.end(responseData);
                 }
-                else if (fileName !== "") {
+                else if (fileName !== undefined && fileName !== "") {
                     response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
                     //response.end(responseData);
                 }
@@ -804,7 +900,7 @@ class ApiServer {
                                         }
                                     }
                                     else {
-                                        (0, fs_1.writeFileSync)("config.json.upload", fileContent, "utf-8");
+                                        (0, node_fs_1.writeFileSync)("config.json.upload", fileContent, "utf-8");
                                         responseData = `{"success":true,"serviceRestart":true,"message":"File uploaded and saved."}`;
                                     }
                                 }
@@ -905,13 +1001,26 @@ class ApiServer {
             response.end(responseData);
         }
     }
+    /**
+     * Returns the sting representation of a Date object as YYYYMMDD-HHMMSS.
+     * @param dateTime The date as Date object.
+     * @returns The date and time as string.
+     */
+    getDateTimeAsString(dateTime) {
+        return `${dateTime.getFullYear().toString()}${(dateTime.getMonth() + 1).toString().padStart(2, "0")}${dateTime.getDate().toString().padStart(2, "0")}-${dateTime.getHours().toString().padStart(2, "0")}${dateTime.getMinutes().toString().padStart(2, "0")}${dateTime.getSeconds().toString().padStart(2, "0")}`;
+    }
+    /**
+     * Returns a string with the first numberOfChars chars from input, all other chars will be replaced by X. replaceLastCars("ABCDEFGH", "X", 2) will return "ABXXXXXX".
+     * @param input The input string.
+     * @param char The char replaces each char after position numberOfChars.
+     * @param numberOfChars The number of chars which should not be replaced.
+     * @returns The result string.
+     */
+    replaceLastChars(input, char, numberOfChars) {
+        return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
+    }
 }
-/**
- * The main function will start the ApiServer
- */
-function main() {
-    apiServer = new ApiServer();
-}
+exports.ApiServer = ApiServer;
 /**
  * Create the apiPorts.json file needed for using the api on the website if file does not exist or update it when the ports have changed.
  * @param httpPort The new http port.
@@ -919,14 +1028,14 @@ function main() {
  */
 function apiPortFile(useHttp, httpPort, useHttps, httpsPort) {
     try {
-        if ((0, fs_1.existsSync)("www/apiPorts.json")) {
-            const resJson = JSON.parse((0, fs_1.readFileSync)("www/apiPorts.json", "utf-8"));
+        if ((0, node_fs_1.existsSync)("www/apiPorts.json")) {
+            const resJson = JSON.parse((0, node_fs_1.readFileSync)("www/apiPorts.json", "utf-8"));
             if (useHttp !== resJson.useHttp || httpPort !== Number.parseInt(resJson.httpPort) || useHttps !== resJson.useHttps || httpsPort !== Number.parseInt(resJson.httpsPort)) {
-                (0, fs_1.writeFileSync)("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
+                (0, node_fs_1.writeFileSync)("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
             }
         }
         else {
-            (0, fs_1.writeFileSync)("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
+            (0, node_fs_1.writeFileSync)("www/apiPorts.json", `{"useHttp":${useHttp},"httpPort":${httpPort},"useHttps":${useHttps},"httpsPort":${httpsPort}}`);
         }
     }
     catch (ENOENT) {
@@ -934,46 +1043,10 @@ function apiPortFile(useHttp, httpPort, useHttps, httpsPort) {
     }
 }
 /**
- * Checks if a given string is a number between two values.
- * @param value The value as string to check.
- * @param lowestValue The lowest value allowd.
- * @param highestValue The highest value allowed.
+ * Will write config and restart the server.
  */
-function checkNumberValue(value, lowestValue, highestValue) {
-    try {
-        const val = value;
-        if (val >= lowestValue && val <= highestValue) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    catch {
-        return false;
-    }
-}
-/**
- * Checks if a given string contains an array of number and each number is between two values.
- * @param values The value as string to check.
- * @param lowestValue The lowest value allowd.
- * @param highestValue The highest value allowed.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function checkNumbersValue(values, lowestValue, highestValue) {
-    if (values === "") {
-        return false;
-    }
-    const vals = (values.split(",")).map((i) => Number(i));
-    if (vals.length > 0) {
-        for (const val of vals) {
-            if (checkNumberValue(val, lowestValue, highestValue) === false) {
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;
+async function restartServer() {
+    await openCCUAddOn.restartAddOn();
 }
 /**
  * Extracting the given value from the POST data result.
@@ -1026,6 +1099,47 @@ function getAllUdpPortsForStations(postData) {
         pos = postData.indexOf("udpPortsStation", pos + 19);
     }
     return res;
+}
+/**
+ * Checks if a given string is a number between two values.
+ * @param value The value as string to check.
+ * @param lowestValue The lowest value allowd.
+ * @param highestValue The highest value allowed.
+ */
+function checkNumberValue(value, lowestValue, highestValue) {
+    try {
+        const val = value;
+        if (val >= lowestValue && val <= highestValue) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    catch {
+        return false;
+    }
+}
+/**
+ * Checks if a given string contains an array of number and each number is between two values.
+ * @param values The value as string to check.
+ * @param lowestValue The lowest value allowd.
+ * @param highestValue The highest value allowed.
+ */
+function checkNumbersValue(values, lowestValue, highestValue) {
+    if (values === "") {
+        return false;
+    }
+    const vals = (values.split(",")).map((i) => Number(i));
+    if (vals.length > 0) {
+        for (const val of vals) {
+            if (checkNumberValue(val, lowestValue, highestValue) === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
 }
 /**
  * Checks if the received post data could be a config.json.
@@ -1087,68 +1201,3 @@ function getUploadFileContent(postData) {
     }
     return postData.substring(start, end + 1);
 }
-/**
- * Will write config, stop the server and exit.
- */
-async function stopServer() {
-    logging_1.rootAddonLogger.info("Set service state to shutdown...");
-    api.setServiceState("shutdown");
-    logging_1.rootAddonLogger.info("Stopping scheduled tasks...");
-    api.clearScheduledTasks();
-    logging_1.rootAddonLogger.info("Stopping EufySecurityApi...");
-    await api.close();
-    logging_1.rootAddonLogger.info("Write config...");
-    api.writeConfig();
-    logging_1.rootAddonLogger.info("Stopping...");
-    serverHttp.close();
-    logging_1.rootAddonLogger.info("Stopped...");
-}
-/**
- * Will write config and restart the server.
- */
-async function restartServer() {
-    logging_1.rootAddonLogger.info("Going to restart with apiServerRestarter...");
-    (0, child_process_1.exec)(`/usr/local/addons/eufySecurity/bin/node "/usr/local/addons/eufySecurity/apiServerRestarter.js" >> "/var/log/eufySecurity.log" 2>> "/var/log/eufySecurity.err"`);
-}
-/**
- * Wait-function for waiting between stop and start when restarting.
- */
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
-function wait10Seconds() {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve("");
-        }, 10000);
-    });
-}
-process.on("SIGTERM", async () => {
-    logging_1.rootAddonLogger.info("SIGTERM signal received. Save config and shutdown server...");
-    await stopServer();
-    logging_1.rootAddonLogger.info("...done. Exiting");
-    (0, process_1.exit)(0);
-});
-process.on("SIGINT", async () => {
-    logging_1.rootAddonLogger.info("SIGINT signal received. Save config and shutdown server...");
-    await stopServer();
-    logging_1.rootAddonLogger.info("...done. Exiting");
-    (0, process_1.exit)(0);
-});
-/**
- * Returns a string with the first numberOfChars chars from input, all other chars will be replaced by X. replaceLastCars("ABCDEFGH", "X", 2) will return "ABXXXXXX".
- * @param input The input string.
- * @param char The char replaces each char after position numberOfChars.
- * @param numberOfChars The number of chars which should not be replaced.
- * @returns The result string.
- */
-function replaceLastChars(input, char, numberOfChars) {
-    return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
-}
-/**
- * Returns the sting representation of a Date object as YYYYMMDD-HHMMSS.
- * @param dateTime The date as Date object.
- * @returns The date and time as string.
- */
-function getDateTimeAsString(dateTime) {
-    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth() + 1).toString().padStart(2, "0")}${dateTime.getDate().toString().padStart(2, "0")}-${dateTime.getHours().toString().padStart(2, "0")}${dateTime.getMinutes().toString().padStart(2, "0")}${dateTime.getSeconds().toString().padStart(2, "0")}`;
-}
-main();

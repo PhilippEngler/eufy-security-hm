@@ -4,8 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Devices = void 0;
+const node_events_1 = __importDefault(require("node:events"));
+const node_fs_1 = require("node:fs");
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
-const events_1 = __importDefault(require("events"));
 const error_1 = require("./error");
 const http_1 = require("./http");
 const p2p_1 = require("./p2p");
@@ -13,7 +14,6 @@ const utils_1 = require("./utils");
 const types_1 = require("./utils/types");
 const eventInteractions_1 = require("./eventInteractions");
 const logging_1 = require("./logging");
-const fs_1 = require("fs");
 /**
  * Represents all the Devices in the account.
  */
@@ -22,7 +22,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
     httpService;
     eventInteractions;
     devices = {};
-    loadingEmitter = new events_1.default();
+    loadingEmitter = new node_events_1.default();
     devicesLoaded = (0, utils_1.waitForEvent)(this.loadingEmitter, "devices loaded");
     deviceSnoozeTimeout = new Map();
     errorImage = undefined;
@@ -48,11 +48,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         const language = this.api.getLanguage();
         try {
             const errorImageType = { ext: "jpg", mime: "image/jpeg" };
-            if ((0, fs_1.existsSync)(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`)) {
-                this.errorImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`), type: errorImageType };
+            if ((0, node_fs_1.existsSync)(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`)) {
+                this.errorImage = { data: (0, node_fs_1.readFileSync)(`${filePath}/${errorFile}_${language}.${errorImageType.ext}`), type: errorImageType };
             }
-            else if ((0, fs_1.existsSync)(`${filePath}/${errorFile}_en.${errorImageType.ext}`)) {
-                this.errorImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorFile}_en.${errorImageType.ext}`), type: errorImageType };
+            else if ((0, node_fs_1.existsSync)(`${filePath}/${errorFile}_en.${errorImageType.ext}`)) {
+                this.errorImage = { data: (0, node_fs_1.readFileSync)(`${filePath}/${errorFile}_en.${errorImageType.ext}`), type: errorImageType };
             }
             else {
                 logging_1.rootAddonLogger.error(`The file for the error image ('${filePath}/${errorFile}_${language}.${errorImageType.ext}' or '${filePath}/${errorFile}_en.${errorImageType.ext}') could not be found.`);
@@ -64,11 +64,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         }
         try {
             const defaultImageType = { ext: "jpg", mime: "image/jpeg" };
-            if ((0, fs_1.existsSync)(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`)) {
-                this.defaultImage = { data: (0, fs_1.readFileSync)(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`), type: defaultImageType };
+            if ((0, node_fs_1.existsSync)(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`)) {
+                this.defaultImage = { data: (0, node_fs_1.readFileSync)(`${filePath}/${defaultImage}_${language}.${defaultImageType.ext}`), type: defaultImageType };
             }
-            else if ((0, fs_1.existsSync)(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`)) {
-                this.defaultImage = { data: (0, fs_1.readFileSync)(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`), type: defaultImageType };
+            else if ((0, node_fs_1.existsSync)(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`)) {
+                this.defaultImage = { data: (0, node_fs_1.readFileSync)(`${filePath}/${defaultImage}_en.${defaultImageType.ext}`), type: defaultImageType };
             }
             else {
                 logging_1.rootAddonLogger.error(`The file for the default image ('${filePath}/${defaultImage}_${language}.${defaultImageType.ext}' or '${filePath}/${defaultImage}_en.${defaultImageType.ext}') could not be found.`);
@@ -80,11 +80,11 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
         }
         try {
             const errorDeviceImageType = { ext: "jpg", mime: "image/jpeg" };
-            if ((0, fs_1.existsSync)(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`)) {
-                this.errorDeviceImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
+            if ((0, node_fs_1.existsSync)(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`)) {
+                this.errorDeviceImage = { data: (0, node_fs_1.readFileSync)(`${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
             }
-            else if ((0, fs_1.existsSync)(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`)) {
-                this.errorDeviceImage = { data: (0, fs_1.readFileSync)(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
+            else if ((0, node_fs_1.existsSync)(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`)) {
+                this.errorDeviceImage = { data: (0, node_fs_1.readFileSync)(`${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}`), type: errorDeviceImageType };
             }
             else {
                 logging_1.rootAddonLogger.error(`The file for the device error image ('${filePath}/${errorDeviceImage}_${language}.${errorDeviceImageType.ext}' or '${filePath}/${errorDeviceImage}_en.${errorDeviceImageType.ext}') could not be found.`);

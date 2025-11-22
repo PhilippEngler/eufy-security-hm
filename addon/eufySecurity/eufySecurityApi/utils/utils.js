@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractEnclosedString = exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToClientLog = exports.pathToTemp = exports.pathToNodeJs = void 0;
+exports.extractEnclosedString = exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToLogFiles = exports.pathToTemp = exports.pathToNodeJs = void 0;
 exports.waitForStationEvent = waitForStationEvent;
 exports.waitForDeviceEvent = waitForDeviceEvent;
 exports.waitForHttpApiEvent = waitForHttpApiEvent;
 exports.convertMapToObject = convertMapToObject;
 const http_1 = require("../http");
-exports.pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs";
+exports.pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs/bin";
 exports.pathToTemp = "/var/tmp/eufySecurity";
-exports.pathToClientLog = "/var/log/eufySecurityClient.log";
+exports.pathToLogFiles = "/var/log/";
 /**
  * Retrieve the model name of a given station or device.
  * @param modelNumber The model number of the station or device.
@@ -59,6 +59,8 @@ const getModelName = function (modelNumber) {
             return "IndoorCam Mini 2k";
         case "T8416":
             return "IndoorCam S350";
+        case "T8417":
+            return "IndoorCam E30";
         //SoloCams
         case "T8122":
             return "SoloCam L20";

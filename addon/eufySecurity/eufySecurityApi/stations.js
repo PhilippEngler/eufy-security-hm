@@ -4,15 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Stations = void 0;
+const node_events_1 = __importDefault(require("node:events"));
+const node_path_1 = __importDefault(require("node:path"));
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const http_1 = require("./http");
 const utils_1 = require("./push/utils");
 const error_1 = require("./error");
-const events_1 = __importDefault(require("events"));
 const p2p_1 = require("./p2p");
 const utils_2 = require("./utils");
 const utils_3 = require("./utils/utils");
-const path_1 = __importDefault(require("path"));
 const logging_1 = require("./logging");
 const utils_4 = require("./p2p/utils");
 const utils_5 = require("./http/utils");
@@ -24,7 +24,7 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
     httpService;
     stations = {};
     skipNextCurrentModeChangeEvent = new Map();
-    loadingEmitter = new events_1.default();
+    loadingEmitter = new node_events_1.default();
     stationsLoaded = (0, utils_2.waitForEvent)(this.loadingEmitter, "stations loaded");
     lightTimeouts = new Map();
     P2P_REFRESH_INTERVAL_MIN = 720;
@@ -1804,8 +1804,8 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         this.emit("station image download", station, file, picture);
         this.api.getDevicesFromStation(station.getSerial()).then((devices) => {
             let channel = -1;
-            if (path_1.default.parse(file).name.includes("_c")) {
-                channel = Number.parseInt(path_1.default.parse(file).name.split("_c", 2)[1]);
+            if (node_path_1.default.parse(file).name.includes("_c")) {
+                channel = Number.parseInt(node_path_1.default.parse(file).name.split("_c", 2)[1]);
             }
             else if (file.includes("/Camera")) {
                 const res = file.split("/");

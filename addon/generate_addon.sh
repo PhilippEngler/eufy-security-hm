@@ -70,7 +70,7 @@ do
         sed -i "s/{DEPENDS}/$DEPENDS/g" $file
     done
 
-    dpkg-deb --build $WORK_DIR/eufySecurity-$ARCH-$PKG_VERSION $CURRENT_DIR/build/$PKG_VERSION/eufySecurity-$ARCH-$PKG_VERSION.deb >> /dev/null
+    dpkg-deb --root-owner-group --build $WORK_DIR/eufySecurity-$ARCH-$PKG_VERSION $CURRENT_DIR/build/$PKG_VERSION/eufySecurity-$ARCH-$PKG_VERSION.deb >> /dev/null
     rm -rf $TARGET_DIR
 
     echo "  ...done."

@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Config = void 0;
-const fs_1 = require("fs");
-const logging_1 = require("./logging");
+const node_fs_1 = require("node:fs");
 const typescript_logging_1 = require("typescript-logging");
+const logging_1 = require("./logging");
 const const_1 = require("./http/const");
 const utils_1 = require("./http/utils");
 class Config {
@@ -24,12 +24,12 @@ class Config {
             try {
                 this.configJson = this.checkConfigFile(this.loadConfigJson("./config.json.upload"));
                 this.hasChanged = true;
-                (0, fs_1.unlinkSync)("./config.json.upload");
+                (0, node_fs_1.unlinkSync)("./config.json.upload");
                 logging_1.rootConfLogger.info("Loaded config from uploaded file 'config.json.upload'. This file has now been removed.");
             }
             catch {
                 if (this.existUploadedConfig() === true) {
-                    (0, fs_1.unlinkSync)("./config.json.upload");
+                    (0, node_fs_1.unlinkSync)("./config.json.upload");
                 }
                 logging_1.rootConfLogger.info("Error while loading config from uploaded file 'config.json.upload'. This file has now been removed. Going now to load old config.json.");
                 if (this.isConfigFileAvailable() === false) {
@@ -75,7 +75,7 @@ class Config {
      * @returns true if config.json is available, otherwise false.
      */
     isConfigFileAvailable() {
-        if ((0, fs_1.existsSync)("./config.json")) {
+        if ((0, node_fs_1.existsSync)("./config.json")) {
             return true;
         }
         return false;
@@ -85,7 +85,7 @@ class Config {
      * @returns true, if there is a uploaded config, otherwise false.
      */
     existUploadedConfig() {
-        if ((0, fs_1.existsSync)("./config.json.upload")) {
+        if ((0, node_fs_1.existsSync)("./config.json.upload")) {
             return true;
         }
         return false;
@@ -106,7 +106,7 @@ class Config {
         let resConfigJson;
         try {
             this.hasChanged = false;
-            resConfigJson = JSON.parse((0, fs_1.readFileSync)(filePath, "utf-8"));
+            resConfigJson = JSON.parse((0, node_fs_1.readFileSync)(filePath, "utf-8"));
             this.taskSaveConfig24h = setInterval(async () => { this.writeConfig(this.configJson); }, (24 * 60 * 60 * 1000));
             if (this.updateConfigNeeded(resConfigJson)) {
                 resConfigJson = this.updateConfig(resConfigJson);
@@ -135,7 +135,7 @@ class Config {
     writeConfig(configJson) {
         if (this.hasChanged === true) {
             try {
-                (0, fs_1.writeFileSync)("./config.json", JSON.stringify(configJson));
+                (0, node_fs_1.writeFileSync)("./config.json", JSON.stringify(configJson));
                 this.hasChanged = false;
                 return "saved";
             }

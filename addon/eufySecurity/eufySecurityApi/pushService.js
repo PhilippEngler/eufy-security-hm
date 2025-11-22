@@ -5,7 +5,7 @@ const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const service_1 = require("./push/service");
 const logging_1 = require("./logging");
 const types_1 = require("./push/types");
-const _1 = require(".");
+const error_1 = require("./error");
 const utils_1 = require("./utils");
 class PushService extends tiny_typed_emitter_1.TypedEmitter {
     api;
@@ -146,7 +146,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                 }
             }
             catch (err) {
-                const error = (0, _1.ensureError)(err);
+                const error = (0, error_1.ensureError)(err);
                 logging_1.rootPushLogger.error(`Error processing server push notification for device invitation`, { error: (0, utils_1.getError)(error), message: message });
             }
             try {
@@ -155,7 +155,7 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                 }
             }
             catch (err) {
-                const error = (0, _1.ensureError)(err);
+                const error = (0, error_1.ensureError)(err);
                 logging_1.rootPushLogger.error(`Error processing server push notification for device/station/house removal`, { error: (0, utils_1.getError)(error), message: message });
             }
             try {
@@ -165,13 +165,13 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                         stations[stationSerial].processPushNotification(message);
                     }
                     catch (err) {
-                        const error = (0, _1.ensureError)(err);
+                        const error = (0, error_1.ensureError)(err);
                         logging_1.rootPushLogger.error(`Error processing push notification for station`, { error: (0, utils_1.getError)(error), stationSN: stationSerial, message: message });
                     }
                 }
             }
             catch (err) {
-                const error = (0, _1.ensureError)(err);
+                const error = (0, error_1.ensureError)(err);
                 logging_1.rootPushLogger.error("Process push notification for stations", { error: (0, utils_1.getError)(error), message: message });
             }
             try {
@@ -184,24 +184,24 @@ class PushService extends tiny_typed_emitter_1.TypedEmitter {
                                 devices[deviceSerial].processPushNotification(station, message, this.config.getEventDurationSeconds());
                             }
                             catch (err) {
-                                const error = (0, _1.ensureError)(err);
+                                const error = (0, error_1.ensureError)(err);
                                 logging_1.rootPushLogger.error(`Error processing push notification for device`, { error: (0, utils_1.getError)(error), deviceSN: deviceSerial, message: message });
                             }
                         }
                     }
                     catch (err) {
-                        const error = (0, _1.ensureError)(err);
+                        const error = (0, error_1.ensureError)(err);
                         logging_1.rootPushLogger.error("Process push notification for devices loading station", { error: (0, utils_1.getError)(error), message: message });
                     }
                 }
             }
             catch (err) {
-                const error = (0, _1.ensureError)(err);
+                const error = (0, error_1.ensureError)(err);
                 logging_1.rootPushLogger.error("Process push notification for devices", { error: (0, utils_1.getError)(error), message: message });
             }
         }
         catch (err) {
-            const error = (0, _1.ensureError)(err);
+            const error = (0, error_1.ensureError)(err);
             logging_1.rootPushLogger.error("OnPushMessage Generic Error", { error: (0, utils_1.getError)(error), message: message });
         }
     }

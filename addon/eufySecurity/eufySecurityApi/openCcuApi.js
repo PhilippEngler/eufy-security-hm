@@ -27,12 +27,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OpenCcuApi = void 0;
+const node_fs_1 = require("node:fs");
+const https = __importStar(require("node:https"));
+const node_child_process_1 = require("node:child_process");
+const node_util_1 = require("node:util");
 const axios_1 = __importDefault(require("axios"));
-const https = __importStar(require("https"));
-const fs_1 = require("fs");
 const logging_1 = require("./logging");
-const util_1 = require("util");
-const child_process_1 = require("child_process");
 const utils_1 = require("./utils/utils");
 /**
  * Interacting with the CCU.
@@ -87,9 +87,9 @@ class OpenCcuApi {
         requestConfig.headers = headers;
         if (useHttps === true) {
             let httpsAgent = new https.Agent({
-                ca: useLocalCertificate === true && (0, fs_1.existsSync)(this.api.getConfig().getHttpsCertFile()) === true ? (0, fs_1.readFileSync)(this.api.getConfig().getHttpsCertFile()) : undefined,
-                cert: useLocalCertificate === true && (0, fs_1.existsSync)(this.api.getConfig().getHttpsCertFile()) === true ? (0, fs_1.readFileSync)(this.api.getConfig().getHttpsCertFile()) : undefined,
-                key: useLocalCertificate === true && (0, fs_1.existsSync)(this.api.getConfig().getHttpsPKeyFile()) === true ? (0, fs_1.readFileSync)(this.api.getConfig().getHttpsPKeyFile()) : undefined,
+                ca: useLocalCertificate === true && (0, node_fs_1.existsSync)(this.api.getConfig().getHttpsCertFile()) === true ? (0, node_fs_1.readFileSync)(this.api.getConfig().getHttpsCertFile()) : undefined,
+                cert: useLocalCertificate === true && (0, node_fs_1.existsSync)(this.api.getConfig().getHttpsCertFile()) === true ? (0, node_fs_1.readFileSync)(this.api.getConfig().getHttpsCertFile()) : undefined,
+                key: useLocalCertificate === true && (0, node_fs_1.existsSync)(this.api.getConfig().getHttpsPKeyFile()) === true ? (0, node_fs_1.readFileSync)(this.api.getConfig().getHttpsPKeyFile()) : undefined,
                 rejectUnauthorized: rejectUnauthorized
             });
             requestConfig.httpsAgent = httpsAgent;
@@ -431,7 +431,7 @@ class OpenCcuApi {
      */
     async checkSid(sid) {
         try {
-            const promisifyExec = (0, util_1.promisify)(child_process_1.exec);
+            const promisifyExec = (0, node_util_1.promisify)(node_child_process_1.exec);
             const result = await promisifyExec(`tclsh /usr/local/addons/eufySecurity/www/sessionCheck.cgi ${sid}`);
             if (result.stdout.trim() === "1") {
                 return true;

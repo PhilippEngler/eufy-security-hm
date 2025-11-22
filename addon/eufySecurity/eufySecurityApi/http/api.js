@@ -410,6 +410,37 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             }
         }
     }
+    async logout() {
+        try {
+            const response = await this.request({
+                method: "post",
+                endpoint: "v1/passport/logout",
+                data: {
+                    transaction: `${new Date().getTime()}`
+                }
+            });
+            if (response.status == 200) {
+                const result = response.data;
+                if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    logging_1.rootHTTPLogger.info("Logout from account successful.");
+                    this.invalidateToken();
+                    this.emit("logout");
+                }
+                else {
+                    logging_1.rootHTTPLogger.error("Logout - Response code not ok", { code: result.code, msg: result.msg, data: response.data });
+                }
+            }
+            else {
+                logging_1.rootHTTPLogger.error("Logout - Status return code not 200", { status: response.status, statusText: response.statusText, data: response.data });
+            }
+            return true;
+        }
+        catch (err) {
+            const error = (0, error_1.ensureError)(err);
+            logging_1.rootHTTPLogger.error("Logout - Generic Error", { error: (0, utils_2.getError)(error) });
+        }
+        return false;
+    }
     async sendVerifyCode(type) {
         try {
             if (!type)
