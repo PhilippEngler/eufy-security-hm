@@ -2026,6 +2026,8 @@ export class EufySecurityApi {
                             return JSON.stringify(json);
                         }
                         await sleep(1000);
+                    } else {
+                        rootAddonLogger.error(`P2p connection to station ${stationSerial} not established.`);
                     }
 
                     if (connected === false) {
@@ -2037,6 +2039,8 @@ export class EufySecurityApi {
                             json = {"success":false, "message":`Error during reconnecting p2p connection to station ${stationSerial}. Error: '${JSON.stringify(e)}'.`};
                             return JSON.stringify(json);
                         }
+                    } else {
+                        rootAddonLogger.error(`P2p connection to station ${stationSerial} already established.`);
                     }
 
                     json = {"success":res, "connected":connected};
