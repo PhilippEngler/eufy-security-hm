@@ -1,28 +1,20 @@
 const supportedLanguages = ["de","en"];
 
-function getLanguageInfo()
-{
+function getLanguageInfo() {
     return `${translateString("strLanguageFile")}: ${languageDesc} (${language} - ${translateString("strVersion")}: ${languageVersion})`;
 }
-function getLanguage()
-{
+function getLanguage() {
     var lang = "en";
     var urlParams = new URLSearchParams(window.location.search);
-    if(getParameterFromURLSearchParams(urlParams, "lang"))
-	{
+    if(getParameterFromURLSearchParams(urlParams, "lang")) {
 		lang = urlParams.get(lang);
-	}
-    else
-    {
+	} else {
         lang = navigator.language.slice(0,2);
     }
-    if(supportedLanguages.includes(lang))
-    {
+    if(supportedLanguages.includes(lang)) {
         document.documentElement.setAttribute('lang',lang);
         return lang;
-    }
-    else
-    {
+    } else {
         document.documentElement.setAttribute('lang',"en");
         return "en";
     }
@@ -41,8 +33,7 @@ function translateNavbar()
 
 function translateStaticPageContent(page)
 {
-    switch(page)
-    {
+    switch(page) {
         case "index":
             translateInnerHtml("divIndexJumbotronAddonHeader");
             translateInnerHtml("divIndexJumbotronAddonInfo");
@@ -328,22 +319,18 @@ function translateStaticPageContent(page)
     }
 }
 
-function translateInnerHtml(elementId)
-{
+function translateInnerHtml(elementId) {
     document.getElementById(elementId).innerHTML = translateStaticContentElement(elementId);
 }
 
-function translateInnerHtmlByReplace(elementId)
-{
+function translateInnerHtmlByReplace(elementId) {
     document.getElementById(elementId).innerHTML = document.getElementById(elementId).innerHTML.replace(`{${elementId}}`, translateStaticContentElement(elementId));
 }
 
-function translatePlaceholer(elementId)
-{
+function translatePlaceholer(elementId) {
     document.getElementById(elementId).placeholder = translateStaticContentElement(elementId);
 }
 
-function translateTitle(elementId)
-{
+function translateTitle(elementId) {
     document.getElementById(elementId).title = translateStaticContentElement(elementId);
 }
