@@ -20,7 +20,6 @@ export class ApiServer {
         InternalLogger.logger = dummyLogger;
         api = esApi;
         openCCUAddOn = esOpenCCUAddOn;
-        //this.initializeServer(api.getHttpActive(), api.getHttpPort(), api.getHttpsActive(), api.getHttpsPort(), api.getHttpsPKeyFile(), api.getHttpsCertFile());
     }
     
     /**
@@ -117,6 +116,7 @@ export class ApiServer {
         // we use 'GET' for all api-functions exept setConfig and uploadConfig
         if (request.method === "GET") {
             if (url.length > 1) {
+                response.statusCode = 200;
                 switch (url[1]) {
                     case "logout":
                         responseData = await api.logout();
@@ -134,6 +134,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = api.setCaptchaCode(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -141,6 +142,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = api.setTfaCode(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -151,6 +153,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getDeviceAsJson(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -158,6 +161,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getDevicePropertiesMetadataAsJson(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -165,6 +169,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getDevicePropertiesAsJson(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -172,6 +177,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getDeviceParams(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -193,6 +199,7 @@ export class ApiServer {
                             }
                             responseData = JSON.stringify(json);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -200,6 +207,7 @@ export class ApiServer {
                         if (url.length === 5) {
                             responseData = await api.setDeviceProperty(url[2], url[3], url[4]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -210,9 +218,11 @@ export class ApiServer {
                                 responseData = picture.data;
                                 contentType = picture.type.mime;
                             } else {
+                                response.statusCode = 400;
                                 responseData = `{"success":false,"message":"No image for device."}`;
                             }
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -220,6 +230,7 @@ export class ApiServer {
                         if (url.length === 4) {
                             responseData = await api.moveToPresetPosition(url[2], url[3]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -232,6 +243,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getStationAsJson(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -239,6 +251,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getStationPropertiesMetadataAsJson(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -246,6 +259,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getStationPropertiesAsJson(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -253,6 +267,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getStationParams(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -266,6 +281,7 @@ export class ApiServer {
                             }
                             responseData = JSON.stringify(json);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -273,6 +289,7 @@ export class ApiServer {
                         if (url.length === 5) {
                             responseData = await api.setStationProperty(url[2], url[3], url[4]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -282,6 +299,7 @@ export class ApiServer {
                         } else if (url.length === 5 && url[2] === "moveToPreset") {
                             responseData = await api.moveToPresetPosition(url[3], url[4]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -292,6 +310,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.getHouseAsJson(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -301,6 +320,7 @@ export class ApiServer {
                         } else if (url.length === 3) {
                             responseData = await api.getGuardModeStation(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -309,9 +329,11 @@ export class ApiServer {
                             responseData = await api.getAPIConfigAsJson();
                         } else if (api.isSidCheckEnabled() === true && url.length === 3) {
                             if (url[2] === "" || !await api.checkSid(url[2])) {
+                                response.statusCode = 401;
                                 responseData = `{"success":false,"message":"The sid is not valid."}`;
                             }
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -355,12 +377,15 @@ export class ApiServer {
                                     responseData = await api.setGuardMode(GuardMode.SCHEDULE);
                                     break;
                                 case "privacyOn":
+                                    response.statusCode = 400;
                                     responseData = `{"success":false,"message":"This mode cannot be set for all stations."}`;
                                     break;
                                 case "privacyOff":
+                                    response.statusCode = 400;
                                     responseData = `{"success":false,"message":"This mode cannot be set for all stations."}`;
                                     break;
                                 default:
+                                    response.statusCode = 400;
                                     responseData = `{"success":false,"message":"Unknown mode to set."}`;
                             }
                         } else if (url.length === 4) {
@@ -399,9 +424,11 @@ export class ApiServer {
                                     responseData = await api.setPrivacyMode(url[2], true);
                                     break;
                                 default:
+                                    response.statusCode = 400;
                                     responseData = `{"success":false,"message":"Unknown mode to set."}`;
                             }
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -420,9 +447,11 @@ export class ApiServer {
                                     responseData = await api.refreshCloudDeviceData("stations");
                                     break;
                                 default:
+                                    response.statusCode = 400;
                                     responseData = `{"success":false,"message":"Argument not supported."}`;
                             }
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -433,6 +462,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.removeSystemVariable(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -440,6 +470,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.connectStation(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -447,6 +478,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.disconnectStation(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -454,6 +486,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             responseData = await api.reconnectStation(url[2]);
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -474,9 +507,11 @@ export class ApiServer {
                             try {
                                 responseData = await api.testStoredInteraction(url[2], Number.parseInt(url[3]));
                             } catch (error: any) {
+                                response.statusCode = 400;
                                 responseData = `{"success":false,"message":"Error occured. Error: ${error.message}"}`;
                             }
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -485,9 +520,11 @@ export class ApiServer {
                             try {
                                 responseData = await api.deleteInteraction(url[2], Number.parseInt(url[3]));
                             } catch (error: any) {
+                                response.statusCode = 400;
                                 responseData = `{"success":false,"message":"Error occured. Error: ${error.message}"}`;
                             }
                         } else {
+                            response.statusCode = 400;
                             responseData = `{"success":false,"message":"Number of arguments not supported."}`;
                         }
                         break;
@@ -502,6 +539,7 @@ export class ApiServer {
                         fileName = `config_${osHostname}_${this.getDateTimeAsString(new Date())}.json`;
                         break;
                     default:
+                        response.statusCode = 400;
                         responseData = `{"success":false,"message":"Unknown command."}`;
                 }
 
@@ -509,7 +547,7 @@ export class ApiServer {
                 response.setHeader("Content-Type", contentType + "; charset=UTF-8");
 
                 if (fileName === undefined) {
-                    response.writeHead(200);
+                    //response.writeHead(200);
                     //response.end(responseData);
                 } else if (fileName !== undefined && fileName !== "") {
                     response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
@@ -517,12 +555,13 @@ export class ApiServer {
                 }
                 response.end(responseData);
             } else {
+                response.statusCode = 400;
                 responseData = `{"success":false,"message":"Unknown command."}`;
 
                 response.setHeader("Access-Control-Allow-Origin", "*");
                 response.setHeader("Content-Type", "; charset=UTF-8");
 
-                response.writeHead(200);
+                //response.writeHead(200);
                 response.end(responseData);
             }
         } else if (request.method === "POST") {
