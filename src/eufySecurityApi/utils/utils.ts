@@ -3,9 +3,59 @@ import { Device, DeviceEvents, DeviceType, GuardMode, HTTPApi, HTTPApiEvents, St
 import { Logger } from "../logging";
 import { Stations } from "../stations";
 
-export const pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs/bin";
+var pathToNodeJs = "";
+var pathToApp = "";
+var pathToHttpServerFiles = "";
 export const pathToTemp = "/var/tmp/eufySecurity";
 export const pathToLogFiles = "/var/log/";
+
+/**
+ * Get the path to Node.js executable used to run the app.
+ * @returns The path to the Node.js executable.
+ */
+export function getPathToNodeJs(): string {
+    return pathToNodeJs;
+}
+
+/**
+ * Set the path to Node.js executable used to run the app.
+ * @param path The path to the Node.js executable.
+ */
+export function setPathToNodeJs(path: string) {
+    pathToNodeJs = path;
+}
+
+/**
+ * Get the path to the app.
+ * @returns The path to the app.
+ */
+export function getPathToApp(): string {
+    return pathToApp;
+}
+
+/**
+ * Set the path to the app.
+ * @param path The path to the app.
+ */
+export function setPathToApp(path: string) {
+    pathToApp = path;
+}
+
+/**
+ * Get the path to the files for the www server.
+ * @returns The path to the www server files.
+ */
+export function getPathToHttpServerFiles(): string {
+    return pathToHttpServerFiles;
+}
+
+/**
+ * Set the path to the files for the www server.
+ * @param path The path to the www server files.
+ */
+export function setPathToHttpServerFiles(path: string) {
+    pathToHttpServerFiles = path;
+}
 
 /**
  * Retrieve the model name of a given station or device.

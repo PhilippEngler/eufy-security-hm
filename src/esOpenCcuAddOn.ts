@@ -1,11 +1,12 @@
 import { exec } from "node:child_process";
 import { arch as osArch, hostname as osHostname, platform as osPlatform } from "node:os";
 import { exit } from "node:process";
+import { join } from "node:path";
 
 import { ApiServer } from "./apiServer/apiServer";
 import { dummyLogger, InternalLogger, rootAddonLogger } from "./eufySecurityApi/logging";
 import { EufySecurityApi } from "./eufySecurityApi/eufySecurityApi";
-import { pathToNodeJs } from "./eufySecurityApi/utils/utils";
+import { getPathToApp, getPathToHttpServerFiles, getPathToNodeJs, setPathToApp, setPathToHttpServerFiles, setPathToNodeJs } from "./eufySecurityApi/utils/utils";
 
 process.chdir(__dirname);
 let esOpenCcuAddOn: EsOpenCcuAddOn;
@@ -29,6 +30,9 @@ export class EsOpenCcuAddOn {
      */
     constructor() {
         InternalLogger.logger = dummyLogger;
+        setPathToNodeJs(process.execPath);
+        setPathToApp(__dirname);
+        setPathToHttpServerFiles(join(__dirname, "/www"));
     }
 
     /**
@@ -36,6 +40,10 @@ export class EsOpenCcuAddOn {
      */
     public async startAddOn(): Promise<void> {
         api = new EufySecurityApi();
+
+        rootAddonLogger.debug(`Set Node.js executable path to: '${getPathToNodeJs()}'`);
+        rootAddonLogger.debug(`Set add on path to: '${getPathToApp()}'`);
+        rootAddonLogger.debug(`Set http server files path to: '${getPathToHttpServerFiles()}'`);
 
         rootAddonLogger.info(`eufy-security-hm version v${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         rootAddonLogger.info(`  Host: ${osHostname}`);
@@ -69,7 +77,7 @@ export class EsOpenCcuAddOn {
     public async restartAddOn() {
         rootAddonLogger.info("Going to restart with esOpenCcuAddOnRestarter...");
         await this.stopAddOn();
-        exec(`${pathToNodeJs}/node "/usr/local/addons/eufySecurity/esOpenCcuAddOnRestarter.js" >> "/var/log/eufySecurity.log" 2>> "/var/log/eufySecurity.err"`);
+        exec(`${getPathToNodeJs()} "/usr/local/addons/eufySecurity/esOpenCcuAddOnRestarter.js" >> "/var/log/eufySecurity.log" 2>> "/var/log/eufySecurity.err"`);
     }
 }
 
