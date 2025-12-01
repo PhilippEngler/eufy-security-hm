@@ -556,7 +556,7 @@ export const getImageSeed = function(p2pDid: string, code: string): string {
     try {
         const ncode = Number.parseInt(code.substring(2));
         const prefix = 1000 - getIdSuffix(p2pDid);
-        return createHash('md5').update(`${prefix}${ncode}`).digest('hex').toUpperCase();
+        return createHash("md5").update(`${prefix}${ncode}`).digest("hex").toUpperCase();
     } catch(err) {
         const error = ensureError(err);
         throw new ImageBaseCodeError("Error generating image seed", { cause: error, context: { p2pDid: p2pDid, code: code } });
@@ -567,8 +567,8 @@ export const getImageKey = function(serialnumber: string, p2pDid: string, code: 
     const basecode = getImageBaseCode(serialnumber, p2pDid);
     const seed = getImageSeed(p2pDid, code);
     const data = `01${basecode}${seed}`;
-    const hash = createHash('sha256').update(data);
-    const hashBytes = [...Buffer.from(hash.digest('hex'), "hex")];
+    const hash = createHash("sha256").update(data);
+    const hashBytes = [...Buffer.from(hash.digest("hex"), "hex")];
     const startByte = hashBytes[10];
     for(let i = 0; i < 32; i++) {
         const byte = hashBytes[i];

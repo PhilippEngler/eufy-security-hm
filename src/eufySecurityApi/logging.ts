@@ -180,7 +180,7 @@ export function formatDate(millisSinceEpoch: number): string {
 }
 
 function logMessageForClient(message: string, ...messageArgs: any[]): void {
-    let pathToClientLog = path.join(pathToLogFiles, "eufySecurityClient.log");
+    const pathToClientLog = path.join(pathToLogFiles, "eufySecurityClient.log");
     let fileHandle;
     try {
         fileHandle = openSync(pathToClientLog, "a");

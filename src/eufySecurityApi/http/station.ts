@@ -1,6 +1,7 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
-const { format } = require('date-and-time');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { format } = require("date-and-time");
 
 import { HTTPApi } from "./api";
 import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty, PublicKeyType, MotionDetectionMode, VideoTypeStoreToNAS, HB3DetectionTypes, WalllightNotificationType, DailyLightingType, MotionActivationMode, BaseStationProperties, LightingActiveMode, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, MotionDetectionRangeType, ViewModeType, FloodlightT8425NotificationTypes, PresetPositionType, SmartLockNotification, IndoorS350DetectionTypes } from "./types";
@@ -207,7 +208,6 @@ export class Station extends TypedEmitter<StationEvents> {
         });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected handlePropertyChange(metadata: PropertyMetadataAny, oldValue: PropertyValue, newValue: PropertyValue): void {
         if (metadata.name === PropertyName.StationCurrentMode) {
             //TODO: Finish implementation!
@@ -660,7 +660,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 value: parsedValue,
                 source: "p2p"
             };
-            let deviceSerial = this._getDeviceSerial(channel);
+            const deviceSerial = this._getDeviceSerial(channel);
             if (deviceSerial !== undefined) {
                 this.emit("raw device property changed", deviceSerial, params);
             }
@@ -2155,7 +2155,7 @@ export class Station extends TypedEmitter<StationEvents> {
                     return;
                 }
                 const aiDetectionType = device.getRawProperty(device.getPropertyMetadata(propertyData.name).key as number) !== undefined ? device.getRawProperty(device.getPropertyMetadata(propertyData.name).key as number)! : "0";
-                let newAiDetectionType = getT8170DetectionMode(Number.parseInt(aiDetectionType), type as T8170DetectionTypes, value);
+                const newAiDetectionType = getT8170DetectionMode(Number.parseInt(aiDetectionType), type as T8170DetectionTypes, value);
                 this.p2pSession.sendCommandWithStringPayload({
                     commandType: CommandType.CMD_SET_PAYLOAD,
                     value: JSON.stringify({
@@ -2219,7 +2219,7 @@ export class Station extends TypedEmitter<StationEvents> {
                     return;
                 }
                 const aiDetectionType = device.getRawProperty(device.getPropertyMetadata(propertyData.name).key as number) !== undefined ? device.getRawProperty(device.getPropertyMetadata(propertyData.name).key as number)! : "0";
-                let newAiDetectionType = getIndoorS350DetectionMode(Number.parseInt(aiDetectionType), type as IndoorS350DetectionTypes, value);
+                const newAiDetectionType = getIndoorS350DetectionMode(Number.parseInt(aiDetectionType), type as IndoorS350DetectionTypes, value);
                 this.p2pSession.sendCommandWithStringPayload({
                     commandType: CommandType.CMD_SET_PAYLOAD,
                     value: JSON.stringify({
@@ -4342,6 +4342,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 try {
                     oldvalue = Number.parseInt(rawproperty);
                 } catch(error) {
+                    rootHTTPLogger.error(`Station set notification switch mode - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const pushMode = switchNotificationMode(oldvalue, mode, value);
@@ -4371,6 +4372,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 try {
                     oldvalue = Number.parseInt(rawproperty);
                 } catch(error) {
+                    rootHTTPLogger.error(`Station set notification switch mode - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const pushMode = switchNotificationMode(oldvalue, mode, value);
@@ -4431,6 +4433,7 @@ export class Station extends TypedEmitter<StationEvents> {
             try {
                 pushmode = Number.parseInt(rawproperty);
             } catch(error) {
+                rootHTTPLogger.error(`Station set notification start alarm delay - sending command`, { stationSN: this.getSerial(), value: value, error: error });
             }
         }
         const property = this.getPropertyMetadata(propertyData.name);
@@ -9315,6 +9318,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 try {
                     oldvalue = Number.parseInt(rawproperty);
                 } catch(error) {
+                    rootHTTPLogger.error(`Station set notification - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const notification = switchSmartLockNotification(oldvalue, SmartLockNotification.ENABLED, value);
@@ -9362,6 +9366,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 try {
                     oldvalue = Number.parseInt(rawproperty);
                 } catch(error) {
+                    rootHTTPLogger.error(`Station set notification locked - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const notification = switchSmartLockNotification(oldvalue, SmartLockNotification.LOCKED, value);
@@ -9409,6 +9414,7 @@ export class Station extends TypedEmitter<StationEvents> {
                 try {
                     oldvalue = Number.parseInt(rawproperty);
                 } catch(error) {
+                    rootHTTPLogger.error(`Station set notification unlock - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const notification = switchSmartLockNotification(oldvalue, SmartLockNotification.UNLOCKED, value);
@@ -11162,7 +11168,6 @@ export class Station extends TypedEmitter<StationEvents> {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private onSequenceError(channel: number, command: number, sequence: number, serialnumber: string): void {
         //TODO: Implement command retry for lock devices in case von sequence mismatch error
         rootHTTPLogger.debug(`Station lock sequence error`, { stationSN: this.getSerial(), channel: channel, command: command, sequence: sequence, serialnumber: serialnumber });

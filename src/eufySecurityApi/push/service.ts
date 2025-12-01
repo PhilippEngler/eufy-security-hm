@@ -189,7 +189,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
 
     private async createPushCredentials(): Promise<Credentials> {
         const generatedFid = generateFid();
- 
+
         return await this.registerFid(generatedFid)
             .then(async (registerFidResponse) => {
                 const checkinResponse = await this.executeCheckin();
@@ -305,7 +305,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
         try {
             for (let retry_count = 1; retry_count <= retry; retry_count++) {
                 rootPushLogger.debug(`Register GCM - Attempt ${retry_count} of ${retry}`, { androidId: androidId, fid: fid, securityToken: securityToken });
-            
+
                 const response = await this.got(url, {
                     method: "post",
                     body: qs.stringify({
@@ -742,7 +742,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             if (this.pushClient) {
                 this.pushClient.removeAllListeners();
             }
-            rootPushLogger.debug('Init PushClient with credentials', { credentials: this.credentials });
+            rootPushLogger.debug("Init PushClient with credentials", { credentials: this.credentials });
 
             this.pushClient = await PushClient.init({
                 androidId: this.credentials.checkinResponse.androidId,

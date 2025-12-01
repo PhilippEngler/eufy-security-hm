@@ -49,7 +49,7 @@ export class Localization{
      * Change the language for the localization.
      * @param language The language to set.
      */
-    public async changeLanguage(language: string) {
+    public async changeLanguage(language: string): Promise<void> {
         await i18n.changeLanguage(language);
         rootI18nLogger.info(`Language changed. New language: ${this.getCurrentLanguage()}`);
     }
@@ -64,7 +64,7 @@ export class Localization{
         if (additionalOptionsObj === undefined) {
             return i18n.t(textToTranslate);
         } else {
-            var additionalOptions = JSON.parse(additionalOptionsObj) as { string: string | string[] };
+            const additionalOptions = JSON.parse(additionalOptionsObj) as { string: string | string[] };
             return i18n.t(textToTranslate, additionalOptions);
         }
     }

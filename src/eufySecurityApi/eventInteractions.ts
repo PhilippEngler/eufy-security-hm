@@ -64,7 +64,7 @@ export class EventInteractions
                 if (this.interactions.deviceInteractions[deviceSerial] !== undefined) {
                     const eventInteraction = this.interactions.deviceInteractions[deviceSerial].eventInteractions[eventInteractionType];
                     if (eventInteraction !== undefined && eventInteraction !== null) {
-                        return {target: eventInteraction.target, useHttps: eventInteraction.useHttps, useLocalCertificate: eventInteraction.useLocalCertificate, rejectUnauthorized: eventInteraction.rejectUnauthorized, user: eventInteraction.user, password: eventInteraction.password, command: Buffer.from(eventInteraction.command, "base64").toString()} 
+                        return {target: eventInteraction.target, useHttps: eventInteraction.useHttps, useLocalCertificate: eventInteraction.useLocalCertificate, rejectUnauthorized: eventInteraction.rejectUnauthorized, user: eventInteraction.user, password: eventInteraction.password, command: Buffer.from(eventInteraction.command, "base64").toString()};
                     }
                 }
                 return null;

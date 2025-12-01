@@ -5,7 +5,7 @@ import { formatDate } from "./eufySecurityApi/logging";
 try {
     let timeStamp = Date.now();
     timeStamp = Date.now();
-    execFile('tclsh', ['/usr/local/addons/eufySecurity/www/serviceManager.cgi', 'action=restartService'], (err, stdout, stderr) => {
+    execFile("tclsh", ["/usr/local/addons/eufySecurity/www/serviceManager.cgi", "action=restartService"], (err, stdout, stderr) => {
         if(stdout.trim().includes(`{"success":true}`)) {
             console.log(`${formatDate(timeStamp)} INFO  [addon] ...restart command sent successfully.`);
         } else {

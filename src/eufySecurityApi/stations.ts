@@ -218,7 +218,7 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
     private async updateStation(hub: StationListResponse): Promise<void> {
         if (this.stationsLoaded)
             await this.stationsLoaded;
-        
+
         if (Object.keys(this.stations).includes(hub.station_sn)) {
             this.stations[hub.station_sn].update(hub);
             if (!this.stations[hub.station_sn].isConnected() && !this.stations[hub.station_sn].isEnergySavingDevice() && this.stations[hub.station_sn].isP2PConnectableDevice()) {

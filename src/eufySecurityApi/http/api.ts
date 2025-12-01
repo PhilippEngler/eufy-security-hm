@@ -1,4 +1,4 @@
-import type { Got, OptionsOfBufferResponseBody, OptionsOfJSONResponseBody, OptionsOfTextResponseBody, OptionsOfUnknownResponseBody } from "got" with {
+import type { Got, OptionsOfBufferResponseBody, OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got" with {
     "resolution-mode": "import"
 };
 import type { AnyFunction, ThrottledFunction } from "p-throttle" with {
@@ -671,7 +671,6 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
         await this.refreshDeviceData();
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public async request(request: HTTPApiRequest, withoutUrlPrefix = false): Promise<ApiResponse> {
         rootHTTPLogger.debug("Api request", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
         try {

@@ -3,7 +3,8 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import * as NodeRSA from "node-rsa";
 import { Readable } from "stream";
 import { SortedMap } from "sweet-collections";
-const { parse } = require('date-and-time');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { parse } = require("date-and-time");
 
 import { Address, CmdCameraInfoResponse, CmdNotifyPayload, CommandResult, ESLAdvancedLockStatusNotification, ESLStationP2PThroughData, SmartSafeSettingsNotification, SmartSafeStatusNotification, CustomData, ESLBleV12P2PThroughData, CmdDatabaseImageResponse, EntrySensorStatus, GarageDoorStatus, StorageInfoHB3, ESLAdvancedLockStatusNotificationT8530, SmartLockP2PThroughData, SmartLockP2PSequenceData } from "./models";
 import { sendMessage, hasHeader, buildCheckCamPayload, buildIntCommandPayload, buildIntStringCommandPayload, buildCommandHeader, MAGIC_WORD, buildCommandWithStringTypePayload, isPrivateIp, buildLookupWithKeyPayload, sortP2PMessageParts, buildStringTypeCommandPayload, getRSAPrivateKey, decryptAESData, getNewRSAPrivateKey, findStartCode, isIFrame, generateLockSequence, decodeLockPayload, generateBasicLockAESKey, getLockVectorBytes, decryptLockAESData, buildLookupWithKeyPayload2, buildCheckCamPayload2, buildLookupWithKeyPayload3, decodeBase64, getVideoCodec, checkT8420, buildVoidCommandPayload, isP2PQueueMessage, buildTalkbackAudioFrameHeader, getLocalIpAddress, decodeP2PCloudIPs, decodeSmartSafeData, decryptPayloadData, decryptP2PData, getP2PCommandEncryptionKey, getNullTerminatedString, generateSmartLockAESKey, readNullTerminatedBuffer } from "./utils";
@@ -146,7 +147,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         if (listeningPort >= 0)
             this.listeningPort = listeningPort;
         this.enableEmbeddedPKCS1Support = enableEmbeddedPKCS1Support;
-        
+
         if(connectionType !== undefined && connectionType !== null) {
             this.connectionType = connectionType;
         }
@@ -2469,7 +2470,6 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         this.currentMessageState[datatype].audioStream = null;
 
         this.currentMessageState[datatype].videoStream = new Readable({ autoDestroy: true,
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
             read() {}/*,
 
             destroy(this, error, _callback) {
@@ -2481,7 +2481,6 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
             }*/
         });
         this.currentMessageState[datatype].audioStream = new Readable({ autoDestroy: true,
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
             read() {}/*,
 
             destroy(this, error, _callback) {

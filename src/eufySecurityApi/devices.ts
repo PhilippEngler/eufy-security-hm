@@ -5,7 +5,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from "./eufySecurityApi";
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, DeviceType, IndoorS350DetectionTypes } from "./http";
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, IndoorS350DetectionTypes } from "./http";
 import { EufySecurityEvents } from "./interfaces";
 import { DynamicLighting, MotionZone, P2PConnectionType, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
@@ -452,7 +452,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
     }
 
     /**
-     * Checks if the device a battery powered device. 
+     * Checks if the device a battery powered device.
      * @param deviceSerial The deviceSerial of the device.
      * @returns True if device is a battery powered device, otherwise false.
      */

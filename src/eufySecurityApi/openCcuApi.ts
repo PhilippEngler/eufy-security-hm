@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import * as https from 'node:https';
+import * as https from "node:https";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -56,19 +56,19 @@ export class OpenCcuApi {
      * @returns The requestConfig object.
      */
     private getRequestConfig(contentyType: string, user: string | undefined, password: string | undefined, useHttps: boolean, useLocalCertificate: boolean, rejectUnauthorized: boolean): any {
-        let requestConfig: any = {};
+        const requestConfig: any = {};
 
-        let headers: any
-        headers = {
+        //const headers: any
+        const headers: any = {
             "Content-Type": contentyType
         };
         if (user !== undefined && password !== undefined) {
-            headers.Authorization = `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`;
+            headers.Authorization = `Basic ${Buffer.from(`${user}:${password}`).toString("base64")}`;
         }
         requestConfig.headers = headers;
 
         if (useHttps === true) {
-            let httpsAgent = new https.Agent({
+            const httpsAgent = new https.Agent({
                 ca: useLocalCertificate === true && existsSync(this.api.getConfig().getHttpsCertFile()) === true ? readFileSync(this.api.getConfig().getHttpsCertFile()) : undefined,
                 cert: useLocalCertificate === true && existsSync(this.api.getConfig().getHttpsCertFile()) === true ? readFileSync(this.api.getConfig().getHttpsCertFile()) : undefined,
                 key: useLocalCertificate === true && existsSync(this.api.getConfig().getHttpsPKeyFile()) === true ? readFileSync(this.api.getConfig().getHttpsPKeyFile()) : undefined,
@@ -227,17 +227,17 @@ export class OpenCcuApi {
 
             const systemvariableValueTypeNumber = parseInt(data);
             switch (systemvariableValueTypeNumber) {
-            case 2:
-                return "ivtBinary";
-            case 4:
-                return "ivtFloat";
-            case 16:
-                return "ivtInteger";
-            case 20:
-                return "ivtString";
-            default:
-                return undefined;
-        }
+                case 2:
+                    return "ivtBinary";
+                case 4:
+                    return "ivtFloat";
+                case 16:
+                    return "ivtInteger";
+                case 20:
+                    return "ivtString";
+                default:
+                    return undefined;
+            }
         } catch (e: any) {
             rootAddonLogger.error(`CCU request error on getSystemVariableType: code: ${e.code}; message: ${e.message.trim()}`);
             rootAddonLogger.debug(`CCU request error on getSystemVariableType:`, JSON.stringify(e));
@@ -267,21 +267,21 @@ export class OpenCcuApi {
 
             const systemvariableValueSubTypeNumber = parseInt(data);
             switch (systemvariableValueSubTypeNumber) {
-            case 0:
-                return "istGeneric"
-            case 2:
-                return "istBool";
-            case 6:
-                return "istAlarm";
-            case 11:
-                return "istChar8859";
-            case 23:
-                return "istPresent";
-            case 29:
-                return "istEnum";
-            default:
-                return undefined;
-        }
+                case 0:
+                    return "istGeneric"
+                case 2:
+                    return "istBool";
+                case 6:
+                    return "istAlarm";
+                case 11:
+                    return "istChar8859";
+                case 23:
+                    return "istPresent";
+                case 29:
+                    return "istEnum";
+                default:
+                    return undefined;
+            }
         } catch (e: any) {
             rootAddonLogger.error(`CCU request error on getSystemVariableType: code: ${e.code}; message: ${e.message.trim()}`);
             rootAddonLogger.debug(`CCU request error on getSystemVariableType:`, JSON.stringify(e));
@@ -364,7 +364,7 @@ export class OpenCcuApi {
                 rootAddonLogger.debug(`CCU request error on createSystemVariable:`, JSON.stringify(variableData));
                 return undefined;
         }
-        
+
         const requestConfig = this.getRequestConfig("text/plain", undefined, undefined, useHttps, true, hostName === "localhost" ? false : true);
 
         let data = "";

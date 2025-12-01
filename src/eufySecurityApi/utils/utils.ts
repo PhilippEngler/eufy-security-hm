@@ -3,8 +3,11 @@ import { Device, DeviceEvents, DeviceType, GuardMode, HTTPApi, HTTPApiEvents, St
 import { Logger } from "../logging";
 import { Stations } from "../stations";
 
+// eslint-disable-next-line no-var
 var pathToNodeJs = "";
+// eslint-disable-next-line no-var
 var pathToApp = "";
+// eslint-disable-next-line no-var
 var pathToHttpServerFiles = "";
 export const pathToTemp = "/var/tmp/eufySecurity";
 export const pathToLogFiles = "/var/log/";
@@ -21,7 +24,7 @@ export function getPathToNodeJs(): string {
  * Set the path to Node.js executable used to run the app.
  * @param path The path to the Node.js executable.
  */
-export function setPathToNodeJs(path: string) {
+export function setPathToNodeJs(path: string): void {
     pathToNodeJs = path;
 }
 
@@ -37,7 +40,7 @@ export function getPathToApp(): string {
  * Set the path to the app.
  * @param path The path to the app.
  */
-export function setPathToApp(path: string) {
+export function setPathToApp(path: string): void {
     pathToApp = path;
 }
 
@@ -53,7 +56,7 @@ export function getPathToHttpServerFiles(): string {
  * Set the path to the files for the www server.
  * @param path The path to the www server files.
  */
-export function setPathToHttpServerFiles(path: string) {
+export function setPathToHttpServerFiles(path: string): void {
     pathToHttpServerFiles = path;
 }
 

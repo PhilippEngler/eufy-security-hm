@@ -57,7 +57,7 @@ export class EsOpenCcuAddOn {
     /**
      * Preparation for stop the AddOn.
      */
-    public async stopAddOn() {
+    public async stopAddOn(): Promise<void> {
         rootAddonLogger.info("Set service state to shutdown...");
         api.setServiceState("shutdown");
         rootAddonLogger.info("Stopping scheduled tasks...");
@@ -74,7 +74,7 @@ export class EsOpenCcuAddOn {
     /**
      * Restart the AddOn.
      */
-    public async restartAddOn() {
+    public async restartAddOn(): Promise<void> {
         rootAddonLogger.info("Going to restart with esOpenCcuAddOnRestarter...");
         await this.stopAddOn();
         exec(`${getPathToNodeJs()} "/usr/local/addons/eufySecurity/esOpenCcuAddOnRestarter.js" >> "/var/log/eufySecurity.log" 2>> "/var/log/eufySecurity.err"`);

@@ -21,7 +21,7 @@ export class ApiServer {
         api = esApi;
         openCCUAddOn = esOpenCCUAddOn;
     }
-    
+
     /**
      * Start the apiServer.
      */
@@ -40,7 +40,7 @@ export class ApiServer {
         this.serverHttps.closeAllConnections();
         rootAddonLogger.info("...https server stopped");
     }
-    
+
     /**
      * Initialize the apiServer.
      * @param httpActive The http should be used.
@@ -96,7 +96,7 @@ export class ApiServer {
             rootAddonLogger.error(`Errorcode: ${error.code}: ${error.message}`);
         }
     }
-    
+
     /**
      * The request listener for the api.
      * @param request The request object.
@@ -829,7 +829,7 @@ export class ApiServer {
 
                                 response.writeHead(200);
                                 response.end(responseData);
-    
+
                                 rootAddonLogger.info("Error during saving settings. The sid is not valid.");
                             });
                         }
@@ -1012,7 +1012,7 @@ function apiPortFile(useHttp: boolean, httpPort: number, useHttps: boolean, http
         rootAddonLogger.info("Error during handling apiPortFile.", ENOENT);
     }
 }
-    
+
 /**
  * Will write config and restart the server.
  */
@@ -1097,7 +1097,7 @@ function checkNumberValue(value: number, lowestValue: number, highestValue: numb
  * @param lowestValue The lowest value allowd.
  * @param highestValue The highest value allowed.
  */
-function checkNumbersValue(values: string, lowestValue: number, highestValue: number): boolean {
+/*function checkNumbersValue(values: string, lowestValue: number, highestValue: number): boolean {
     if (values === "") {
         return false;
     }
@@ -1112,7 +1112,7 @@ function checkNumbersValue(values: string, lowestValue: number, highestValue: nu
         return true;
     }
     return false;
-}
+}*/
 
 /**
  * Checks if the received post data could be a config.json.
