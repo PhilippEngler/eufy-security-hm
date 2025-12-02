@@ -21,19 +21,19 @@
     "openccu"
   ],
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "license": "MIT",
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "^20.19.25",
+    "@types/node": "^22.19.1",
     "@types/node-rsa": "^1.1.4",
     "@types/node-schedule": "^2.1.8",
     "@types/qs": "^6.14.0",
-    "@typescript-eslint/eslint-plugin": "^8.48.0",
-    "@typescript-eslint/parser": "^8.48.0",
+    "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "@typescript-eslint/parser": "^8.48.1",
     "eslint": "^9.39.1",
-    "typescript": "5.5.4",
+    "typescript": "^5.9.3",
     "@types/ws": "^8.18.1"
   },
   "dependencies": {
@@ -55,7 +55,7 @@
     "typescript-logging": "^2.2.0",
     "typescript-logging-category-style": "^2.2.0",
     "axios": "^1.13.2",
-    "i18next": "^25.7.0",
+    "i18next": "^25.7.1",
     "i18next-fs-backend": "^2.6.1"
   }
 }

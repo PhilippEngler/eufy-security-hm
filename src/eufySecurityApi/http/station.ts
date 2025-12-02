@@ -1,7 +1,6 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { format } = require("date-and-time");
+import { format } from "date-and-time";
 
 import { HTTPApi } from "./api";
 import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty, PublicKeyType, MotionDetectionMode, VideoTypeStoreToNAS, HB3DetectionTypes, WalllightNotificationType, DailyLightingType, MotionActivationMode, BaseStationProperties, LightingActiveMode, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, MotionDetectionRangeType, ViewModeType, FloodlightT8425NotificationTypes, PresetPositionType, SmartLockNotification, IndoorS350DetectionTypes } from "./types";
@@ -15,7 +14,7 @@ import { AlarmEvent, CalibrateGarageType, CommandType, DatabaseReturnCode, Error
 import { Address, CmdCameraInfoResponse, CommandResult, ESLStationP2PThroughData, LockAdvancedOnOffRequestPayload, AdvancedLockSetParamsType, PropertyData, CustomData, CommandData, StorageInfoBodyHB3, AdvancedLockSetParamsTypeT8520 } from "../p2p/models";
 import { Device, DoorbellCamera, Lock, SmartSafe } from "./device";
 import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand, RGBColorToDecimal, getSmartLockP2PCommand, } from "../p2p/utils";
-import { InvalidCommandValueError, InvalidPropertyValueError, NotSupportedError, RTSPPropertyNotEnabledError, WrongStationError, StationConnectTimeoutError, PinNotVerifiedError, ensureError } from "../error";
+import { InvalidCommandValueError, InvalidPropertyValueError, NotSupportedError, RTSPPropertyNotEnabledError, WrongStationError, StationConnectTimeoutError, PinNotVerifiedError, ensureError, BaseError } from "../error";
 import { PushMessage } from "../push/models";
 import { CusPushEvent } from "../push/types";
 import { InvalidPropertyError, LivestreamAlreadyRunningError, LivestreamNotRunningError, PropertyNotSupportedError } from "./error";
@@ -152,7 +151,10 @@ export class Station extends TypedEmitter<StationEvents> {
         const metadata = this.getPropertiesMetadata(true);
         for(const property of Object.values(metadata)) {
             if (this.rawStation[property.key] !== undefined && typeof property.key === "string") {
-                this.updateProperty(property.name, this.convertRawPropertyValue(property, this.rawStation[property.key] as string));
+                const convertedValue = this.convertRawPropertyValue(property, this.rawStation[property.key] as string);
+                if (convertedValue !== undefined) {
+                    this.updateProperty(property.name, convertedValue);
+                }
             } else if (this.properties[property.name] === undefined && property.default !== undefined && !this.ready) {
                 this.updateProperty(property.name, property.default);
             }
@@ -264,7 +266,12 @@ export class Station extends TypedEmitter<StationEvents> {
             for(const property of Object.values(metadata)) {
                 if (property.key === type) {
                     try {
-                        this.updateProperty(property.name, this.convertRawPropertyValue(property, this.rawProperties[type].value));
+                        const convertedValue = this.convertRawPropertyValue(property, this.rawProperties[type].value);
+                        if (convertedValue !== undefined) {
+                            this.updateProperty(property.name, convertedValue);
+                        } else {
+                            throw new BaseError("Failed to convert value - Got undefined");
+                        }
                     } catch (err) {
                         const error = ensureError(err);
                         if (error instanceof PropertyNotSupportedError) {
@@ -280,7 +287,7 @@ export class Station extends TypedEmitter<StationEvents> {
         return false;
     }
 
-    protected convertRawPropertyValue(property: PropertyMetadataAny, value: string): PropertyValue {
+    protected convertRawPropertyValue(property: PropertyMetadataAny, value: string): PropertyValue | undefined {
         try {
             switch(property.key) {
                 case CommandType.CMD_GET_HUB_LAN_IP:

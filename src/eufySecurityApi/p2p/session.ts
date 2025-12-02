@@ -3,8 +3,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import * as NodeRSA from "node-rsa";
 import { Readable } from "stream";
 import { SortedMap } from "sweet-collections";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { parse } = require("date-and-time");
+import { parse } from "date-and-time";
 
 import { Address, CmdCameraInfoResponse, CmdNotifyPayload, CommandResult, ESLAdvancedLockStatusNotification, ESLStationP2PThroughData, SmartSafeSettingsNotification, SmartSafeStatusNotification, CustomData, ESLBleV12P2PThroughData, CmdDatabaseImageResponse, EntrySensorStatus, GarageDoorStatus, StorageInfoHB3, ESLAdvancedLockStatusNotificationT8530, SmartLockP2PThroughData, SmartLockP2PSequenceData } from "./models";
 import { sendMessage, hasHeader, buildCheckCamPayload, buildIntCommandPayload, buildIntStringCommandPayload, buildCommandHeader, MAGIC_WORD, buildCommandWithStringTypePayload, isPrivateIp, buildLookupWithKeyPayload, sortP2PMessageParts, buildStringTypeCommandPayload, getRSAPrivateKey, decryptAESData, getNewRSAPrivateKey, findStartCode, isIFrame, generateLockSequence, decodeLockPayload, generateBasicLockAESKey, getLockVectorBytes, decryptLockAESData, buildLookupWithKeyPayload2, buildCheckCamPayload2, buildLookupWithKeyPayload3, decodeBase64, getVideoCodec, checkT8420, buildVoidCommandPayload, isP2PQueueMessage, buildTalkbackAudioFrameHeader, getLocalIpAddress, decodeP2PCloudIPs, decodeSmartSafeData, decryptPayloadData, decryptP2PData, getP2PCommandEncryptionKey, getNullTerminatedString, generateSmartLockAESKey, readNullTerminatedBuffer } from "./utils";
