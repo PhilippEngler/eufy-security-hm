@@ -2031,6 +2031,9 @@ export class Stations extends TypedEmitter<EufySecurityEvents> {
         if (station.hasProperty(PropertyName.StationStorageInfoHdd)) {
             station.updateProperty(PropertyName.StationStorageInfoHdd, storageInfo.hdd_info);
         }
+        if (storageInfo.sd_card_info !== undefined && station.hasProperty(PropertyName.StationStorageInfoSdCard)) {
+            station.updateProperty(PropertyName.StationStorageInfoSdCard, storageInfo.sd_card_info);
+        }
     }
 
 
