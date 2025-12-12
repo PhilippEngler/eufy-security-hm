@@ -1915,7 +1915,6 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
 
         try {
             const res = await this.refreshData(target);
-            rootAddonLogger.info(`res: ${JSON.stringify(res)}`);
             if (target === "all") {
                 if (res.get("devices") === true && res.get("houses") === true && res.get("stations") === true) {
                     json = {"success":true, "data":convertMapToObject(res)};
