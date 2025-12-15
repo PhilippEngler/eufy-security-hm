@@ -26,20 +26,20 @@
   "license": "MIT",
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/node": "^22.19.2",
+    "@types/node": "^22.19.3",
     "@types/node-rsa": "^1.1.4",
     "@types/node-schedule": "^2.1.8",
     "@types/qs": "^6.14.0",
-    "@typescript-eslint/eslint-plugin": "^8.49.0",
-    "@typescript-eslint/parser": "^8.49.0",
-    "eslint": "^9.39.1",
+    "@typescript-eslint/eslint-plugin": "^8.50.0",
+    "@typescript-eslint/parser": "^8.50.0",
+    "eslint": "^9.39.2",
     "typescript": "^5.9.3",
     "@types/ws": "^8.18.1"
   },
   "dependencies": {
     "@cospired/i18n-iso-languages": "^4.2.0",
     "crypto-js": "^4.2.0",
-    "date-and-time": "^4.1.1",
+    "date-and-time": "^4.1.2",
     "got": "^14.6.5",
     "i18n-iso-countries": "^7.14.0",
     "image-type": "^6.0.0",
@@ -55,7 +55,7 @@
     "typescript-logging": "^2.2.0",
     "typescript-logging-category-style": "^2.2.0",
     "axios": "^1.13.2",
-    "i18next": "^25.7.2",
+    "i18next": "^25.7.3",
     "i18next-fs-backend": "^2.6.1"
   }
 }
