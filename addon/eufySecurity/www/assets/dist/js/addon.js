@@ -2691,7 +2691,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 										</div>
 									</div>`;
 	}
-	if(stationPropertiesMetadata.storageInfoEmmc !== undefined || stationPropertiesMetadata.storageInfoHdd !== undefined) {
+	if(stationPropertiesMetadata.storageInfoEmmc !== undefined || stationPropertiesMetadata.storageInfoHdd !== undefined || stationPropertiesMetadata.storageInfoSdCard !== undefined) {
 		var conversionFactor = 1024;
 		stationModal +=  `
 									<div class="card mb-3" id="cardStationStorageSettings">
@@ -2848,6 +2848,79 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
 			}
 		}
+		if(stationProperties.storageInfoSdCard !== undefined) {
+			stationModal +=  `
+											<hr>
+											<h5>${translateContent("lblInternalSdCardStorage")}</h5>`;
+			if(stationProperties.storageInfoSdCard.disk_size !== undefined && stationProperties.storageInfoSdCard.disk_size > 0 && stationProperties.storageInfoSdCard.system_size !== undefined && stationProperties.storageInfoSdCard.system_size >= 0 && stationProperties.storageInfoSdCard.disk_used !== undefined && stationProperties.storageInfoSdCard.disk_used >= 0 && stationProperties.storageInfoSdCard.video_size !== undefined && stationProperties.storageInfoSdCard.video_size >= 0 && stationProperties.storageInfoSdCard.video_used !== undefined && stationProperties.storageInfoSdCard.video_used >= 0) {
+				var capacityUnits = ["", "", "", ""];
+				var rawTempValue = stationProperties.storageInfoSdCard.disk_size/conversionFactor;
+				if(rawTempValue >= 1024) {
+					var sdCardCapacity = (rawTempValue/1024).toFixed(2);
+					capacityUnits[0] = "TB";
+				} else {
+					var sdCardCapacity = (rawTempValue).toFixed(2);
+					capacityUnits[0] = "GB";
+				}
+				rawTempValue = stationProperties.storageInfoSdCard.disk_used/conversionFactor;
+				if(rawTempValue >= 1024) {
+					var sdCardcCapacityUsed = (rawTempValue/1024).toFixed(2);
+					capacityUnits[1] = "TB";
+				} else {
+					var sdCardcCapacityUsed = (rawTempValue).toFixed(2);
+					capacityUnits[1] = "GB";
+				}
+				rawTempValue = (stationProperties.storageInfoSdCard.disk_size-stationProperties.storageInfoSdCard.disk_used)/conversionFactor;
+				if(rawTempValue >= 1024) {
+					var sdCardCapacityAvailable = (rawTempValue/1024).toFixed(2);
+					capacityUnits[2] = "TB";
+				} else {
+					var sdCardCapacityAvailable = (rawTempValue).toFixed(2);
+					capacityUnits[2] = "GB";
+				}
+				var sdCardCapacityUsedPercent = (stationProperties.storageInfoSdCard.disk_used/stationProperties.storageInfoSdCard.disk_size*100).toFixed(0);
+				rawTempValue = (stationProperties.storageInfoSdCard.video_used/conversionFactor)/conversionFactor;
+				if(rawTempValue >= 1024) {
+					var sdCardVideoUsed = (rawTempValue/1024).toFixed(2);
+					capacityUnits[3] = "TB";
+				} else {
+					var sdCardVideoUsed = (rawTempValue).toFixed(2);
+					capacityUnits[3] = "GB";
+				}
+				stationModal += `
+											${generateElementProgress("sdCardCapacityUsedPercent", sdCardCapacityUsedPercent)}
+											<div class="row gap-3">
+												<div class="col">
+													<h5>${stationProperties.storageInfoSdCard.disk_size !== undefined ? `${sdCardCapacity} ${capacityUnits[0]}` : ""}</h5>
+													${translateContent("sdCardCapacity")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoSdCard.disk_used !== undefined ? `${sdCardcCapacityUsed} ${capacityUnits[1]}` : ""}</h5>
+													${translateContent("sdCardcCapacityUsed")}
+												</div>
+												<div class="col">
+													<h5>${stationProperties.storageInfoSdCard.disk_size !== undefined && stationProperties.storageInfoSdCard.disk_used !== undefined !== undefined ? `${sdCardCapacityAvailable} ${capacityUnits[2]}` : ""}</h5>
+													${translateContent("sdCardCapacityAvailable")}
+												</div>
+											</div>
+											<div class="mt-3 row gap-3">
+												<div class="col">
+													<h5>${stationProperties.storageInfoSdCard.video_used !== undefined ? `${sdCardVideoUsed} ${capacityUnits[3]}` : ""}</h5>
+													${translateContent("sdCardVideoUsed")}
+												</div>
+												<div class="col">
+													
+												</div>
+												<div class="col">
+													
+												</div>
+											</div>`;
+			} else if(stationProperties.sdCapacity !== undefined && stationProperties.sdCapacity < 0 && stationProperties.sdCapacityAvailable !== undefined && stationProperties.sdCapacityAvailable < 0) {
+				stationModal += `
+											${createMessageContainer("alert alert-warning", "", translateMessages("messageStorageCapacityErrorHeader"), translateMessages("messageStorageCapacityErrorSubText"))}`;
+			}
+		}
+		
 		stationModal +=  `
 										</div>
 									</div>`;
