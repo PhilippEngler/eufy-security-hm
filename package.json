@@ -39,7 +39,6 @@
   "dependencies": {
     "@cospired/i18n-iso-languages": "^4.2.0",
     "crypto-js": "^4.2.0",
-    "date-and-time": "^4.1.2",
     "got": "^14.6.5",
     "i18n-iso-countries": "^7.14.0",
     "image-type": "^6.0.0",
