@@ -76,6 +76,8 @@ export const getModelName = function(modelNumber: string): string {
             return "HomeBase 2";
         case "T8023":
             return "MiniBase Chime";
+        case "T8025":
+            return "HomeBase mini";
         case "T8030":
             return "HomeBase 3";
         //eufyCams
@@ -95,6 +97,8 @@ export const getModelName = function(modelNumber: string): string {
             return "eufyCam 3";
         case "T8161":
             return "eufyCam 3C";
+        case "T8162":
+            return "eufyCam S3 Pro";
         case "T8600":
             return "eufyCam E330 (Professional)";
         //IndoorCams
@@ -112,6 +116,10 @@ export const getModelName = function(modelNumber: string): string {
             return "IndoorCam S350";
         case "T8417":
             return "IndoorCam E30";
+        case "T8419":
+            return "IndoorCam C210";
+        case "T8W11":
+            return "IndoorCam C220";
         //SoloCams
         case "T8122":
             return "SoloCam L20";
@@ -127,7 +135,9 @@ export const getModelName = function(modelNumber: string): string {
             return "SoloCam S220";
         case "T8170":
             return "SoloCam S340";
-        case "T8B00":
+        case "T8171":
+            return "SoloCam E30";
+        case "T8B0":
             return "SoloCam C210";
         //StarlightCams
         case "T8150":
@@ -166,6 +176,10 @@ export const getModelName = function(modelNumber: string): string {
             return "Video Doorbell 2E";
         case "T8222":
             return "Video Doorbell 1080p";
+        case "T8223":
+            return "Video Doorbell C31";
+        case "T8224":
+            return "Video Doorbell C30";
         //Floodlight
         case "T8420":
             return "FloodlightCam 1080p";
@@ -192,8 +206,20 @@ export const getModelName = function(modelNumber: string): string {
             return "Smart Lock Front Door";
         case "T8501":
             return "Solo Smart Lock D20";
+        case "T8502":
+            return "Smart Lock C210";
         case "T8503":
-            return "Smart Lock R10";
+            return "Retrofit Smart Lock E110";
+        case "T8504":
+            return "Retrofit Smart Lock E130";
+        case "T8506":
+            return "Smart Lock C220";
+        case "T8510":
+            return "Smart Lock S230";
+        case "T8520":
+            return "Smart Lock S231";
+        case "T8530":
+            return "Video Smart Lock S330";
         case "T8592":
             return "Smart Lock R20";
         case "T8519":
@@ -262,10 +288,13 @@ export const getStationTypeString = function(station: Station): string {
     switch (station.getDeviceType()) {
         case DeviceType.STATION:
         case DeviceType.HB3:
+        case DeviceType.HOMEBASE_MINI:
         case DeviceType.MINIBASE_CHIME:
             return `station`;
         case DeviceType.DOORBELL:
         case DeviceType.DOORBELL_SOLO:
+        case DeviceType.BATTERY_DOORBELL_C30:
+        case DeviceType.BATTERY_DOORBELL_C31:
         case DeviceType.BATTERY_DOORBELL:
         case DeviceType.BATTERY_DOORBELL_2:
         case DeviceType.BATTERY_DOORBELL_PLUS:
@@ -280,6 +309,8 @@ export const getStationTypeString = function(station: Station): string {
         case DeviceType.INDOOR_PT_CAMERA:
         case DeviceType.INDOOR_PT_CAMERA_1080:
         case DeviceType.INDOOR_PT_CAMERA_S350:
+        case DeviceType.INDOOR_PT_CAMERA_C210:
+        case DeviceType.INDOOR_PT_CAMERA_C220:
             return `indoorcamera`;
         case DeviceType.SOLO_CAMERA:
         case DeviceType.SOLO_CAMERA_PRO:
@@ -288,6 +319,7 @@ export const getStationTypeString = function(station: Station): string {
         case DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
         case DeviceType.SOLO_CAMERA_SOLAR:
         case DeviceType.SOLO_CAMERA_C210:
+        case DeviceType.SOLO_CAMERA_E30:
         case DeviceType.OUTDOOR_PT_CAMERA:
             return `solocamera`;
         case DeviceType.FLOODLIGHT:
@@ -295,6 +327,7 @@ export const getStationTypeString = function(station: Station): string {
         case DeviceType.FLOODLIGHT_CAMERA_8423:
         case DeviceType.FLOODLIGHT_CAMERA_8424:
         case DeviceType.FLOODLIGHT_CAMERA_8425:
+        case DeviceType.FLOODLIGHT_CAMERA_8426:
             return `floodlight`;
         case DeviceType.WALL_LIGHT_CAM:
         case DeviceType.WALL_LIGHT_CAM_81A0:
