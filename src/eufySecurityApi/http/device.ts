@@ -2,7 +2,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 
 import { HTTPApi } from "./api";
 import { CommandName, DeviceCommands, DeviceEvent, DeviceProperties, DeviceType, FloodlightMotionTriggeredDistance, GenericDeviceProperties, ParamType, PropertyName, DeviceDogDetectedProperty, DeviceDogLickDetectedProperty, DeviceDogPoopDetectedProperty, DeviceIdentityPersonDetectedProperty, DeviceMotionHB3DetectionTypeAllOtherMotionsProperty, DeviceMotionHB3DetectionTypeHumanProperty, DeviceMotionHB3DetectionTypeHumanRecognitionProperty, DeviceMotionHB3DetectionTypePetProperty, DeviceMotionHB3DetectionTypeVehicleProperty, DeviceStrangerPersonDetectedProperty, DeviceVehicleDetectedProperty, HB3DetectionTypes, DevicePersonDetectedProperty, DeviceMotionDetectedProperty, DevicePetDetectedProperty, DeviceSoundDetectedProperty, DeviceCryingDetectedProperty, DeviceDetectionStatisticsWorkingDaysProperty, DeviceDetectionStatisticsDetectedEventsProperty, DeviceDetectionStatisticsRecordedEventsProperty, DeviceEnabledSoloProperty, FloodlightT8420XDeviceProperties, WiredDoorbellT8200XDeviceProperties, GarageDoorState, SourceType, TrackerType, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DeviceAudioRecordingProperty, DeviceMotionDetectionSensitivityCamera2Property, DeviceVideoRecordingQualitySoloCamerasHB3Property, DeviceNotificationTypeProperty, DeviceMotionDetectionProperty, SmartLockNotification, LockT8510PDeviceProperties, LockT8520PDeviceProperties, DeviceMotionDetectionSensitivityBatteryDoorbellProperty, DeviceStatusLedIndoorS350Property, IndoorS350DetectionTypes } from "./types";
-import { DeviceListResponse, Voice, GarageDoorSensorsProperty, FloodlightDetectionRangeT8425Property, FloodlightLightSettingsMotionT8425Property, FloodlightLightSettingsBrightnessScheduleT8425Property } from "./models"
+import { DeviceListResponse, Voice, GarageDoorSensorsProperty, FloodlightDetectionRangeT8425Property, FloodlightLightSettingsMotionT8425Property, FloodlightLightSettingsBrightnessScheduleT8425Property } from "./models";
 import { ParameterHelper } from "./parameter";
 import { DeviceEvents, PropertyValue, PropertyValues, PropertyMetadataAny, IndexedProperty, RawValues, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, Voices, PropertyMetadataObject, DeviceConfig } from "./interfaces";
 import { CommandType, ESLAnkerBleConstant, TrackerCommandType } from "../p2p/types";
@@ -15,7 +15,7 @@ import { InvalidPropertyError, PropertyNotSupportedError } from "./error";
 import { DeviceSmartLockNotifyData } from "../mqtt/model";
 import { DynamicLighting, InternalColoredLighting, InternalDynamicLighting, RGBColor, VideoStreamingRecordingQuality } from "../p2p";
 import { BaseError, ensureError } from "../error";
-import { rootHTTPLogger } from "../logging"
+import { rootHTTPLogger } from "../logging";
 import { Station } from "./station";
 
 export class Device extends TypedEmitter<DeviceEvents> {
@@ -293,7 +293,7 @@ export class Device extends TypedEmitter<DeviceEvents> {
                     return numericProperty.default !== undefined ? numericProperty.default : (numericProperty.min !== undefined ? numericProperty.min : 0);
                 }
             } else if (property.key === CommandType.CMD_SMARTLOCK_AUTO_LOCK_SCHEDULE_STARTTIME || property.key === CommandType.CMD_SMARTLOCK_AUTO_LOCK_SCHEDULE_ENDTIME) {
-                const tmpBuffer = Buffer.from(value, "hex")
+                const tmpBuffer = Buffer.from(value, "hex");
                 return `${tmpBuffer.subarray(0, 1).readInt8().toString().padStart(2, "0")}:${tmpBuffer.subarray(1).readInt8().toString().padStart(2, "0")}`;
             } else if (property.key === CommandType.CMD_DOORBELL_DUAL_RADAR_WD_DETECTION_SENSITIVITY) {
                 const numericProperty = property as PropertyMetadataNumeric;
@@ -1215,7 +1215,8 @@ export class Device extends TypedEmitter<DeviceEvents> {
             type == DeviceType.INDOOR_PT_CAMERA_E30 ||
             type == DeviceType.INDOOR_PT_CAMERA_C210 ||
             type == DeviceType.INDOOR_PT_CAMERA_C220 ||
-            type == DeviceType.INDOOR_PT_CAMERA_C220_V2)
+            type == DeviceType.INDOOR_PT_CAMERA_C220_V2 ||
+            type == DeviceType.INDOOR_PT_CAMERA)
             return true;
         return false;
     }
@@ -1960,12 +1961,12 @@ export class Device extends TypedEmitter<DeviceEvents> {
     public getStateID(state: string, level = 2): string {
         switch (level) {
             case 0:
-                return `${this.getStationSerial()}.${this.getStateChannel()}`
+                return `${this.getStationSerial()}.${this.getStateChannel()}`;
             case 1:
-                return `${this.getStationSerial()}.${this.getStateChannel()}.${this.getSerial()}`
+                return `${this.getStationSerial()}.${this.getStateChannel()}.${this.getSerial()}`;
             default:
                 if (state)
-                    return `${this.getStationSerial()}.${this.getStateChannel()}.${this.getSerial()}.${state}`
+                    return `${this.getStationSerial()}.${this.getStateChannel()}.${this.getSerial()}.${state}`;
                 throw new Error("No state value passed.");
         }
     }
@@ -2046,7 +2047,7 @@ export class Camera extends Device {
 
     public async stopDetection(): Promise<void> {
         // Stop camera detection.
-        await this.setParameters([{ paramType: ParamType.DETECT_SWITCH, paramValue: 0 }])
+        await this.setParameters([{ paramType: ParamType.DETECT_SWITCH, paramValue: 0 }]);
     }
 
     public getState(): PropertyValue {
@@ -3652,7 +3653,7 @@ export class Lock extends Device {
         buf.writeUint8(Number.parseInt(time.split(":")[0]));
         buf.writeUint8(Number.parseInt(time.split(":")[1]), 1);
         return buf.readUInt16BE().toString(16).padStart(4, "0");
-    }
+    };
 
     public static encodeCmdSetLockParamAutoLockSchedule(enabled: boolean, schedule_start: string, schedule_end: string): Buffer {
         const payload = new WritePayload();
@@ -3751,7 +3752,7 @@ export class Lock extends Device {
         buf.writeUint8(Number.parseInt(time.split(":")[0]));
         buf.writeUint8(Number.parseInt(time.split(":")[1]), 1);
         return buf;
-    }
+    };
 
     public static encodeCmdSetSmartLockParamAutoLock(adminUserId: string, enabled: boolean, lockTimeSeconds: number, schedule: boolean, scheduleStart: string, scheduleEnd: string): Buffer {
         const payload = new WritePayload();

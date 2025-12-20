@@ -10,7 +10,7 @@ import { isValid as isValidLanguage } from "@cospired/i18n-iso-languages";
 import { createECDH, ECDH } from "crypto";
 import * as schedule from "node-schedule";
 
-import { ResultResponse, LoginResultResponse, TrustDevice, Cipher, Voice, EventRecordResponse, Invite, ConfirmInvite, SensorHistoryEntry, ApiResponse, CaptchaResponse, LoginRequest, HouseDetail, DeviceListResponse, StationListResponse, HouseInviteListResponse, HouseListResponse, PassportProfileResponse, UsersResponse, User, AddUserResponse } from "./models"
+import { ResultResponse, LoginResultResponse, TrustDevice, Cipher, Voice, EventRecordResponse, Invite, ConfirmInvite, SensorHistoryEntry, ApiResponse, CaptchaResponse, LoginRequest, HouseDetail, DeviceListResponse, StationListResponse, HouseInviteListResponse, HouseListResponse, PassportProfileResponse, UsersResponse, User, AddUserResponse } from "./models";
 import { HTTPApiEvents, Ciphers, FullDevices, Hubs, Voices, Invites, HTTPApiRequest, HTTPApiPersistentData, Houses, LoginOptions, Schedule } from "./interfaces";
 import { EventFilterType, PublicKeyType, ResponseErrorCode, StorageType, UserPasswordType, VerfyCodeTypes } from "./types";
 import { ParameterHelper } from "./parameter";
@@ -107,7 +107,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
             this.persistentData.serverPublicKey = this.SERVER_PUBLIC_KEY;
         } else {
             try {
-                this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex"))
+                this.ecdh.computeSecret(Buffer.from(this.persistentData.serverPublicKey, "hex"));
             } catch (err) {
                 const error = ensureError(err);
                 rootHTTPLogger.debug(`Invalid server public key, fallback to default server public key...`, { error: getError(error) });
@@ -789,7 +789,7 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
     public async setParameters(stationSN: string, deviceSN: string, params: { paramType: number; paramValue: any; }[]): Promise<boolean> {
         if (this.connected) {
-            const tmp_params: any[] = []
+            const tmp_params: any[] = [];
             params.forEach(param => {
                 tmp_params.push({ param_type: param.paramType, param_value: ParameterHelper.writeValue(param.paramType, param.paramValue) });
             });

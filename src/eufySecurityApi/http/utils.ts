@@ -70,28 +70,28 @@ export const pad = function(num: number): string {
 export const getTimezoneGMTString = function(): string {
     const tzo = -new Date().getTimezoneOffset();
     const dif = tzo >= 0 ? "+" : "-";
-    return `GMT${dif}${pad(tzo / 60)}:${pad(tzo % 60)}`
-}
+    return `GMT${dif}${pad(tzo / 60)}:${pad(tzo % 60)}`;
+};
 
 export const getAbsoluteFilePath = function(device_type:number, channel: number, filename: string): string {
     if (device_type === DeviceType.FLOODLIGHT) {
         return `/mnt/data/Camera${String(channel).padStart(2,"0")}/${filename}.dat`;
     }
     return `/media/mmcblk0p1/Camera${String(channel).padStart(2,"0")}/${filename}.dat`;
-}
+};
 
 export const getImageFilePath = function(device_type:number, channel: number, filename: string): string {
     if (device_type === DeviceType.FLOODLIGHT) {
         return `/mnt/data/video/${filename}_c${String(channel).padStart(2,"0")}.jpg`;
     }
     return `/media/mmcblk0p1/video/${filename}_c${String(channel).padStart(2,"0")}.jpg`;
-}
+};
 
 export const isNotificationSwitchMode = function(value: number, mode: NotificationSwitchMode): boolean {
     if (value === 1)
         value = 240;
     return (value & mode) !== 0;
-}
+};
 
 export const switchNotificationMode = function(currentValue: number, mode: NotificationSwitchMode, enable: boolean): number {
     let result = 0;
@@ -107,7 +107,7 @@ export const switchNotificationMode = function(currentValue: number, mode: Notif
         result = 1; /* ALL */
     }
     return result;
-}
+};
 
 export const calculateWifiSignalLevel = function(device: Device, rssi: number): SignalLevel {
     if (device.isWiredDoorbell()) {
@@ -162,7 +162,7 @@ export const calculateWifiSignalLevel = function(device: Device, rssi: number): 
         }
         return rssi >= -85 ? SignalLevel.NORMAL : SignalLevel.WEAK;
     }
-}
+};
 
 export const calculateCellularSignalLevel = function(rssi: number): SignalLevel {
     if (rssi >= 0) {
@@ -175,7 +175,7 @@ export const calculateCellularSignalLevel = function(rssi: number): SignalLevel 
         return SignalLevel.STRONG;
     }
     return rssi >= -105 ? SignalLevel.NORMAL : SignalLevel.WEAK;
-}
+};
 
 export const encryptAPIData = (data: string, key: Buffer): string => {
     const cipher = createCipheriv("aes-256-cbc", key, key.subarray(0, 16));
@@ -183,7 +183,7 @@ export const encryptAPIData = (data: string, key: Buffer): string => {
         cipher.update(data, "utf8", "base64") +
         cipher.final("base64")
     );
-}
+};
 
 export const decryptAPIData = (data: string, key: Buffer): Buffer => {
     const cipher = createDecipheriv("aes-256-cbc", key, key.subarray(0, 16));
@@ -191,7 +191,7 @@ export const decryptAPIData = (data: string, key: Buffer): Buffer => {
         cipher.update(data, "base64"),
         cipher.final()]
     );
-}
+};
 
 export const getBlocklist = function(directions: Array<number>): Array<number> {
     const result = [];
@@ -213,7 +213,7 @@ export const getBlocklist = function(directions: Array<number>): Array<number> {
         result.push(65535 & i);
     }
     return result;
-}
+};
 
 
 export const getDistances = function(blocklist: Array<number>): Array<number> {
@@ -233,7 +233,7 @@ export const getDistances = function(blocklist: Array<number>): Array<number> {
         }
     }
     return result;
-}
+};
 
 export const isHB3DetectionModeEnabled = function(value: number, type: HB3DetectionTypes): boolean {
     if (type === HB3DetectionTypes.HUMAN_RECOGNITION) {
@@ -242,7 +242,7 @@ export const isHB3DetectionModeEnabled = function(value: number, type: HB3Detect
         return (type & value) == type && (value & 1) == 1;
     }
     return (type & value) == type;
-}
+};
 
 export const getHB3DetectionMode = function(value: number, type: HB3DetectionTypes, enable: boolean): number {
     let result = 0;
@@ -266,7 +266,7 @@ export const getHB3DetectionMode = function(value: number, type: HB3DetectionTyp
         }
     }
     return result;
-}
+};
 
 export interface EufyTimezone {
     timeZoneName: string;
@@ -278,7 +278,7 @@ export interface EufyTimezone {
 export const getEufyTimezone = function(): EufyTimezone | undefined {
     for (const timezone of timeZoneData) {
         if (timezone.timeId === Intl.DateTimeFormat().resolvedOptions().timeZone) {
-            return timezone
+            return timezone;
         }
     }
     return undefined;
@@ -288,7 +288,7 @@ export const getAdvancedLockTimezone = function(stationSN: string): string {
     const timezone = getEufyTimezone();
     if (timezone !== undefined) {
         if (stationSN.startsWith("T8520") && isGreaterEqualMinVersion("1.2.8.6", stationSN))
-            return `${timezone.timeZoneGMT}|1.${timezone.timeSn}`
+            return `${timezone.timeZoneGMT}|1.${timezone.timeSn}`;
         else
             return timezone.timeZoneGMT;
     }
@@ -437,7 +437,7 @@ export const encodePasscode = function(pass: string): string {
     for (let i = 0; i < pass.length; i++)
         result += pass.charCodeAt(i).toString(16);
     return result;
-}
+};
 
 export const hexDate = function(date: Date): string {
     const buf = Buffer.allocUnsafe(4);
@@ -445,14 +445,14 @@ export const hexDate = function(date: Date): string {
     buf.writeUint8(date.getMonth() + 1, 1);
     buf.writeUint16BE(date.getFullYear(), 2);
     return buf.readUInt32LE().toString(16).padStart(8, "0");
-}
+};
 
 export const hexTime = function(date: Date): string {
     const buf = Buffer.allocUnsafe(2);
     buf.writeUint8(date.getHours());
     buf.writeUint8(date.getMinutes(), 1);
     return buf.readUInt16BE().toString(16).padStart(4, "0");
-}
+};
 
 export const hexWeek = function(schedule: Schedule): string {
     const SUNDAY    = 1;
@@ -490,7 +490,7 @@ export const hexWeek = function(schedule: Schedule): string {
         return result.toString(16);
     }
     return "ff";
-}
+};
 
 export const hexStringScheduleToSchedule = function(startDay: string, startTime: string, endDay:string, endTime: string, week: string): Schedule {
     const SUNDAY    = 1;
@@ -515,11 +515,11 @@ export const hexStringScheduleToSchedule = function(startDay: string, startTime:
             sunday: (weekNumber & SUNDAY) == SUNDAY,
         },
     };
-}
+};
 
 export const randomNumber = function(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+};
 
 export const getIdSuffix = function(p2pDid: string): number {
     let result = 0;
@@ -638,7 +638,7 @@ export const isPrioritySourceType = function(current: SourceType | undefined, up
         return true;
     }
     return false;
-}
+};
 
 export const decryptTrackerData = (data: Buffer, key: Buffer): Buffer => {
     const decipher = createDecipheriv("aes-128-ecb", key, null);
@@ -647,11 +647,11 @@ export const decryptTrackerData = (data: Buffer, key: Buffer): Buffer => {
         decipher.update(data),
         decipher.final()]
     );
-}
+};
 
 export const isT8170DetectionModeEnabled = function(value: number, type: T8170DetectionTypes): boolean {
     return (type & value) == type;
-}
+};
 
 export const getT8170DetectionMode = function(value: number, type: T8170DetectionTypes, enable: boolean): number {
     let result = 0;
@@ -663,11 +663,11 @@ export const getT8170DetectionMode = function(value: number, type: T8170Detectio
         result = type | value;
     }
     return result;
-}
+};
 
 export const isIndoorS350DetectionModeEnabled = function(value: number, type: IndoorS350DetectionTypes): boolean {
     return (type & value) == type;
-}
+};
 
 export const getIndoorS350DetectionMode = function(value: number, type: IndoorS350DetectionTypes, enable: boolean): number {
     let result = 0;
@@ -679,11 +679,11 @@ export const getIndoorS350DetectionMode = function(value: number, type: IndoorS3
         result = type | value;
     }
     return result;
-}
+};
 
 export const isIndoorNotitficationEnabled = function(value: number, type: IndoorS350NotificationTypes): boolean {
     return (type & value) == type;
-}
+};
 
 export const getIndoorNotification = function(value: number, type: IndoorS350NotificationTypes, enable: boolean): number {
     let result = 0;
@@ -693,11 +693,11 @@ export const getIndoorNotification = function(value: number, type: IndoorS350Not
         result = type | value;
     }
     return result;
-}
+};
 
 export const isFloodlightT8425NotitficationEnabled = function(value: number, type: FloodlightT8425NotificationTypes): boolean {
     return (type & value) == type;
-}
+};
 
 export const getFloodLightT8425Notification = function(value: number, type: FloodlightT8425NotificationTypes, enable: boolean): number {
     let result = 0;
@@ -707,7 +707,7 @@ export const getFloodLightT8425Notification = function(value: number, type: Floo
         result = type | value;
     }
     return result;
-}
+};
 
 export const getLockEventType = function(event: LockPushEvent): number {
     switch(event) {
@@ -733,7 +733,7 @@ export const getLockEventType = function(event: LockPushEvent): number {
             return 7;
     }
     return 0;
-}
+};
 
 export const switchSmartLockNotification = function(currentValue: number, mode: SmartLockNotification, enable: boolean): number {
     let result = 0;
@@ -743,11 +743,11 @@ export const switchSmartLockNotification = function(currentValue: number, mode: 
         result = ~mode & currentValue;
     }
     return result;
-}
+};
 
 export const isSmartLockNotification = function(value: number, mode: SmartLockNotification): boolean {
     return (value & mode) !== 0;
-}
+};
 
 export const getWaitSeconds = (device: Device): number => {
     let seconds = 60;
@@ -769,7 +769,7 @@ export const loadImageOverP2P = function (station: Station, device: Device, id: 
             p2pTimeouts.delete(id);
         }, seconds * 1000));
     }
-}
+};
 
 export const loadEventImage = function(station: Station, api: HTTPApi, device: Device, message: PushMessage, p2pTimeouts: Map<string, NodeJS.Timeout>): void {
     if (device.hasProperty(PropertyName.DevicePictureTime)) {
@@ -783,7 +783,7 @@ export const loadEventImage = function(station: Station, api: HTTPApi, device: D
                 if (image.data.length > 0) {
                     if (p2pTimeouts.get(device.getSerial()) !== undefined) {
                         clearTimeout(p2pTimeouts.get(device.getSerial()));
-                        p2pTimeouts.delete(device.getSerial())
+                        p2pTimeouts.delete(device.getSerial());
                     }
                     device.updateProperty(PropertyName.DevicePicture, image, true);
                 } else {
@@ -800,7 +800,7 @@ export const loadEventImage = function(station: Station, api: HTTPApi, device: D
             loadImageOverP2P(station, device, device.getSerial(), p2pTimeouts);
         }
     }
-}
+};
 
 export const getDateTimeFromImageFilePath = function(imageFilePath: string): Date | undefined {
     let timeString = "";
@@ -822,4 +822,4 @@ export const getDateTimeFromImageFilePath = function(imageFilePath: string): Dat
         return undefined;
     }
     return new Date(Number.parseInt(timeString.substring(0,4)), Number.parseInt(timeString.substring(4,6))-1, Number.parseInt(timeString.substring(6,8)), Number.parseInt(timeString.substring(8,10)), Number.parseInt(timeString.substring(10,12)), Number.parseInt(timeString.substring(12,14)));
-}
+};

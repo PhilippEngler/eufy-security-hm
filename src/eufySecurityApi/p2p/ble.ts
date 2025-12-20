@@ -41,7 +41,7 @@ export class BleCommandFactory {
             throw new BleInvalidDataHeaderError("Invalid BLE data header");
         }
         const fac = new BleCommandFactory();
-        fac.setVersionCode(data.readUint8(4))
+        fac.setVersionCode(data.readUint8(4));
         fac.setCommandCode(data.readUint8(6));
         fac.setDataType(data.readUint8());
         fac.setPackageFlag(data.readInt8(7));
@@ -69,7 +69,7 @@ export class BleCommandFactory {
         }
         const fac = new BleCommandFactory();
         const flags = data.readUint16BE(7);
-        fac.setVersionCode(data.readUint8(4))
+        fac.setVersionCode(data.readUint8(4));
         fac.setDataType(data.readUint8(6));
         fac.setPartial((flags >> 15) === 1);
         fac.setEncrypted(((flags  << 1) >> 15) === 1);
@@ -80,7 +80,7 @@ export class BleCommandFactory {
 
     public toString = (): string => {
         return `BleCommandFactory (versionCode: ${this.versionCode} commandCode: ${this.commandCode} dataType: ${this.dataType} partial: ${this.partial} encrypted: ${this.encrypted} data: ${this.data?.toString("hex")} packageFlag: ${this.packageFlag} responseCode: ${this.responseCode})`;
-    }
+    };
 
     private setResponseCode(code: number): void {
         this.responseCode = code;

@@ -1,6 +1,6 @@
 import { Socket } from "dgram";
 import NodeRSA, { Options as NodeRSAOptions } from "node-rsa";
-import * as CryptoJS from "crypto-js"
+import * as CryptoJS from "crypto-js";
 import { randomBytes, createCipheriv, createECDH, ECDH, createHmac, createDecipheriv } from "crypto";
 import * as os from "os";
 
@@ -29,7 +29,7 @@ export const isPrivateIp = (ip: string): boolean =>
 
 const stringWithLength = (input: string, chunkLength = 128): Buffer => {
     const stringAsBuffer = Buffer.from(input);
-    const bufferSize = stringAsBuffer.byteLength < chunkLength ? chunkLength : Math.ceil(stringAsBuffer.byteLength / chunkLength) * chunkLength
+    const bufferSize = stringAsBuffer.byteLength < chunkLength ? chunkLength : Math.ceil(stringAsBuffer.byteLength / chunkLength) * chunkLength;
     const result = Buffer.alloc(bufferSize);
     stringAsBuffer.copy(result);
     return result;
@@ -55,7 +55,7 @@ export const getLocalIpAddress = (init = ""): string => {
         rootP2PLogger.error(`getLocalIpAddress - Error`, { error: getError(error) });
         return init;
     }
-}
+};
 
 const p2pDidToBuffer = (p2pDid: string): Buffer => {
     const p2pArray = p2pDid.split("-");
@@ -68,11 +68,11 @@ const p2pDidToBuffer = (p2pDid: string): Buffer => {
 
 export const isP2PCommandEncrypted = function(cmd: CommandType): boolean {
     return [1001, 1002, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1015, 1017, 1019, 1035, 1045, 1056, 1145, 1146, 1152, 1200, 1207, 1210, 1213, 1214, 1226, 1227, 1229, 1230, 1233, 1236, 1240, 1241, 1243, 1246, 1272, 1273, 1275, 1400, 1401, 1402, 1403, 1408, 1409, 1410, 1412, 1413, 1506, 1507, 1607, 1609, 1610, 1611, 1702, 1703, 1704, 1705, 1706, 1707, 1708, 1709, 1013, 1202, 1205, 1206, 1024, 1025, 1132, 1215, 1216, 1217, 1414, 1026, 1164, 1201, 1027, 1047, 1048, 1029, 1034, 1036, 1043, 1057, 1203, 1218, 1219, 1220, 1221, 1222, 1223, 1224, 1232, 1234, 1235, 1237, 1238, 1248, 1253, 1257, 1269, 1800, 1037, 1040, 1038, 1049, 1050, 1051, 1054, 1060, 1204, 1254, 1255, 1256, 1258, 1259, 1260, 1261, 1262, 1264, 1271, 1350, 1404, 1101, 1106, 1108, 1110, 1111, 1112, 1113, 1114, 1116, 1117, 1118, 1119, 1121, 1103, 1129, 1211, 1228, 1231, 1242, 1249, 1250, 1251, 1252, 1405, 1406, 1407, 1700].includes(cmd);
-}
+};
 
 export const getP2PCommandEncryptionKey = function(serialNumber: string, p2pDid: string): string {
     return `${serialNumber.slice(-7)}${p2pDid.substring(p2pDid.indexOf("-"), p2pDid.indexOf("-") + 9)}`;
-}
+};
 
 export const encryptP2PData = (data: Buffer, key: Buffer): Buffer => {
     const cipher = createCipheriv("aes-128-ecb", key, null);
@@ -81,7 +81,7 @@ export const encryptP2PData = (data: Buffer, key: Buffer): Buffer => {
         cipher.update(data),
         cipher.final()]
     );
-}
+};
 
 export const decryptP2PData = (data: Buffer, key: Buffer): Buffer => {
     const decipher = createDecipheriv("aes-128-ecb", key, null);
@@ -90,14 +90,14 @@ export const decryptP2PData = (data: Buffer, key: Buffer): Buffer => {
         decipher.update(data),
         decipher.final()]
     );
-}
+};
 
 export const paddingP2PData = (data: Buffer, blocksize = 16): Buffer => {
-    const bufferSize = data.byteLength < blocksize ? blocksize : Math.ceil(data.byteLength / blocksize) * blocksize
+    const bufferSize = data.byteLength < blocksize ? blocksize : Math.ceil(data.byteLength / blocksize) * blocksize;
     const result = Buffer.alloc(bufferSize);
     data.copy(result);
     return result;
-}
+};
 
 export const buildLookupWithKeyPayload = (socket: Socket, p2pDid: string, dskKey: string): Buffer => {
     const p2pDidBuffer = p2pDidToBuffer(p2pDid);
@@ -316,7 +316,7 @@ export const sortP2PMessageParts = (messages: P2PMessageParts): Buffer => {
             completeMessage = Buffer.concat([completeMessage, messages[key]]);
         });
     return completeMessage;
-}
+};
 
 export const getRSAPrivateKey = (pem: string, enableEmbeddedPKCS1Support = false): NodeRSA => {
     const key = new NodeRSA();
@@ -329,25 +329,25 @@ export const getRSAPrivateKey = (pem: string, enableEmbeddedPKCS1Support = false
     key.importKey(pem, "pkcs8");
     const options: NodeRSAOptions = {
         encryptionScheme: "pkcs1"
-    }
+    };
     if (enableEmbeddedPKCS1Support) {
-        options.environment = "browser"
+        options.environment = "browser";
     }
     key.setOptions(options);
     return key;
-}
+};
 
 export const getNewRSAPrivateKey = (enableEmbeddedPKCS1Support = false): NodeRSA => {
     const key = new NodeRSA({ b: 1024 });
     const options: NodeRSAOptions = {
         encryptionScheme: "pkcs1"
-    }
+    };
     if (enableEmbeddedPKCS1Support) {
-        options.environment = "browser"
+        options.environment = "browser";
     }
     key.setOptions(options);
     return key;
-}
+};
 
 export const decryptAESData = (hexkey: string, data: Buffer): Buffer => {
     const key = CryptoJS.enc.Hex.parse(hexkey);
@@ -359,34 +359,34 @@ export const decryptAESData = (hexkey: string, data: Buffer): Buffer => {
         padding: CryptoJS.pad.NoPadding
     });
     return Buffer.from(CryptoJS.enc.Hex.stringify(decrypted), "hex");
-}
+};
 
 export const findStartCode = (data: Buffer): boolean => {
     if (data !== undefined && data.length > 0) {
         if (data.length >= 4) {
-            const startcode = [...data.subarray(0, 4)]
+            const startcode = [...data.subarray(0, 4)];
             if ((startcode[0] === 0 && startcode[1] === 0 && startcode[2] === 1) || (startcode[0] === 0 && startcode[1] === 0 && startcode[2] === 0 && startcode[3] === 1))
                 return true;
         } else if (data.length === 3) {
-            const startcode = [...data.subarray(0, 3)]
+            const startcode = [...data.subarray(0, 3)];
             if ((startcode[0] === 0 && startcode[1] === 0 && startcode[2] === 1))
                 return true;
         }
     }
     return false;
-}
+};
 
 export const isIFrame = (data: Buffer): boolean => {
     const validValues = [64, 66, 68, 78, 101, 103];
     if (data !== undefined && data.length > 0) {
         if (data.length >= 5) {
-            const startcode = [...data.subarray(0, 5)]
+            const startcode = [...data.subarray(0, 5)];
             if (validValues.includes(startcode[3]) || validValues.includes(startcode[4]))
                 return true;
         }
     }
     return false;
-}
+};
 
 export const decryptLockAESData = (key: string, iv: string, data: Buffer): Buffer => {
     const ekey = CryptoJS.enc.Hex.parse(key);
@@ -400,7 +400,7 @@ export const decryptLockAESData = (key: string, iv: string, data: Buffer): Buffe
         padding: CryptoJS.pad.Pkcs7
     });
     return Buffer.from(CryptoJS.enc.Hex.stringify(decrypted), "hex");
-}
+};
 
 export const encryptLockAESData = (key: string, iv: string, data: Buffer): Buffer => {
     const ekey = CryptoJS.enc.Hex.parse(key);
@@ -411,7 +411,7 @@ export const encryptLockAESData = (key: string, iv: string, data: Buffer): Buffe
         padding: CryptoJS.pad.Pkcs7
     });
     return Buffer.from(CryptoJS.enc.Hex.stringify(encrypted.ciphertext), "hex");
-}
+};
 
 export const generateBasicLockAESKey = (adminID: string, stationSN: string): string => {
 
@@ -425,18 +425,18 @@ export const generateBasicLockAESKey = (adminID: string, stationSN: string): str
     }
 
     return Buffer.from(array).toString("hex");
-}
+};
 
 export const getCurrentTimeInSeconds = function(): number {
     return Math.trunc(new Date().getTime() / 1000);
-}
+};
 
 export const generateLockSequence = (deviceType?: DeviceType, serialnumber?: string): number => {
     if (deviceType !== undefined && serialnumber !== undefined)
         if (Device.isLockWifi(deviceType, serialnumber) || Device.isLockWifiNoFinger(deviceType))
             return Math.trunc(Math.random() * 1000);
     return getCurrentTimeInSeconds();
-}
+};
 
 export const encodeLockPayload = (data: string): Buffer => {
     const encoder = new TextEncoder();
@@ -452,7 +452,7 @@ export const encodeLockPayload = (data: string): Buffer => {
     old_buffer.copy(new_buffer, 0);
 
     return new_buffer;
-}
+};
 
 export const getLockVectorBytes = (data: string): string => {
     const encoder = new TextEncoder();
@@ -466,19 +466,19 @@ export const getLockVectorBytes = (data: string): string => {
     old_buffer.copy(new_buffer, 0);
 
     return new_buffer.toString("hex");
-}
+};
 
 export const decodeLockPayload = (data: Buffer): string => {
     const decoder = new TextDecoder();
     return decoder.decode(data);
-}
+};
 
 export const decodeBase64 = (data: string): Buffer => {
     const base64RegExp = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$/;
     if (base64RegExp.test(data))
         return Buffer.from(data, "base64");
     return Buffer.from(data);
-}
+};
 
 export const eslTimestamp = function(timestamp_in_sec = new Date().getTime() / 1000): number[] {
     const array: number[] = [];
@@ -486,7 +486,7 @@ export const eslTimestamp = function(timestamp_in_sec = new Date().getTime() / 1
         array[pos] = ((timestamp_in_sec >> (pos * 8)) & 255);
     }
     return array;
-}
+};
 
 export const generateAdvancedLockAESKey = (): string => {
     const randomBytesArray = [...randomBytes(16)];
@@ -496,13 +496,13 @@ export const generateAdvancedLockAESKey = (): string => {
         result += "0123456789ABCDEF".charAt(randomBytesArray[pos] & 15);
     }
     return result;
-}
+};
 
 export const getVideoCodec = (data: Buffer): VideoCodec => {
     if (data !== undefined && data.length > 0) {
         if (data.length >= 5) {
             const h265Values = [38, 64, 66, 68, 78];
-            const startcode = [...data.subarray(0, 5)]
+            const startcode = [...data.subarray(0, 5)];
             if (h265Values.includes(startcode[3]) || h265Values.includes(startcode[4])) {
                 return VideoCodec.H265;
             } else if (startcode[3] === 103 || startcode[4] === 103) {
@@ -512,14 +512,14 @@ export const getVideoCodec = (data: Buffer): VideoCodec => {
         return VideoCodec.H264;
     }
     return VideoCodec.UNKNOWN; // Maybe return h264 as Eufy does?
-}
+};
 
 export const checkT8420 = (serialNumber: string): boolean => {
     if (!(serialNumber !== undefined && serialNumber !== null && serialNumber.length > 0 && serialNumber.startsWith("T8420")) || serialNumber.length <= 7 || serialNumber[6] != "6") {
         return false;
     }
     return true;
-}
+};
 
 export const buildVoidCommandPayload = (channel = 255): Buffer => {
     const headerBuffer = Buffer.from([0x00, 0x00]);
@@ -546,7 +546,7 @@ export const encryptPayloadData = (data: string | Buffer, key: Buffer, iv: Buffe
         cipher.update(data),
         cipher.final()]
     );
-}
+};
 
 export const decryptPayloadData = (data: Buffer, key: Buffer, iv: Buffer): Buffer => {
     const cipher = createDecipheriv("aes-128-cbc", key, iv);
@@ -554,7 +554,7 @@ export const decryptPayloadData = (data: Buffer, key: Buffer, iv: Buffer): Buffe
         cipher.update(data),
         cipher.final()]
     );
-}
+};
 
 export const eufyKDF = (key: Buffer): Buffer => {
     const hash_length = 32;
@@ -571,7 +571,7 @@ export const eufyKDF = (key: Buffer): Buffer => {
     }
 
     return buffer.subarray(0, digest_length);
-}
+};
 
 export const getAdvancedLockKey = (key: string, publicKey: string): string => {
     const ecdh: ECDH = createECDH("prime256v1");
@@ -588,7 +588,7 @@ export const getAdvancedLockKey = (key: string, publicKey: string): string => {
     const hmacDigest = hmac.digest();
 
     return Buffer.concat([Buffer.from(ecdh.getPublicKey("hex", "compressed"), "hex"), randomValue, encryptedData, hmacDigest]).toString("hex");
-}
+};
 
 export const getLockV12Key = (key: string, publicKey: string): string => {
     const ecdh: ECDH = createECDH("prime256v1");
@@ -605,7 +605,7 @@ export const getLockV12Key = (key: string, publicKey: string): string => {
     const hmacDigest = hmac.digest();
 
     return Buffer.concat([Buffer.from(ecdh.getPublicKey("hex", "compressed"), "hex"), randomValue, encryptedData, hmacDigest]).toString("hex");
-}
+};
 
 export const buildTalkbackAudioFrameHeader = (audioData: Buffer, channel = 0): Buffer => {
     const audioDataLength = Buffer.allocUnsafe(4);
@@ -627,7 +627,7 @@ export const buildTalkbackAudioFrameHeader = (audioData: Buffer, channel = 0): B
         emptyBuffer,
         audioDataHeader
     ]);
-}
+};
 
 export const decodeP2PCloudIPs = (data: string): Array<Address> => {
     const lookupTable = Buffer.from("4959433db5bf6da347534f6165e371e9677f02030badb3892b2f35c16b8b959711e5a70deff1050783fb9d3bc5c713171d1f2529d3df", "hex");
@@ -642,9 +642,9 @@ export const decodeP2PCloudIPs = (data: string): Array<Address> => {
             z = z ^ output[j];
         }
 
-        const x = (data.charCodeAt(i * 2 + 1) - "A".charCodeAt(0))
-        const y = (data.charCodeAt(i * 2) - "A".charCodeAt(0)) * 0x10
-        output[i] = z ^ lookupTable[i % lookupTable.length] ^ x + y
+        const x = (data.charCodeAt(i * 2 + 1) - "A".charCodeAt(0));
+        const y = (data.charCodeAt(i * 2) - "A".charCodeAt(0)) * 0x10;
+        output[i] = z ^ lookupTable[i % lookupTable.length] ^ x + y;
     }
 
     const result: Array<Address> = [];
@@ -654,7 +654,7 @@ export const decodeP2PCloudIPs = (data: string): Array<Address> => {
         }
     });
     return result;
-}
+};
 
 export const decodeSmartSafeData = function(deviceSN: string, data: Buffer): SmartSafeNotificationResponse {
     const response = BleCommandFactory.parseSmartSafe(data);
@@ -666,7 +666,7 @@ export const decodeSmartSafeData = function(deviceSN: string, data: Buffer): Sma
         responseCode: response.getResponseCode()!,
         data: decryptPayloadData(response.getData()!, Buffer.from(deviceSN), Buffer.from(SmartSafe.IV, "hex"))
     } as SmartSafeNotificationResponse;
-}
+};
 
 export const getSmartSafeP2PCommand = function(deviceSN: string, user_id: string, command: CommandType, intCommand: SmartSafeCommandCode, channel: number, sequence: number, data: Buffer): SmartSafeP2PCommandType {
     const encPayload = encryptPayloadData(data, Buffer.from(deviceSN), Buffer.from(SmartSafe.IV, "hex"));
@@ -694,7 +694,7 @@ export const getSmartSafeP2PCommand = function(deviceSN: string, user_id: string
         }),
         channel: channel
     };
-}
+};
 
 export const getLockP2PCommand = function(deviceSN: string, user_id: string, command: CommandType, channel: number, lockPublicKey: string, payload: any): LockP2PCommandType {
     const key = generateAdvancedLockAESKey();
@@ -717,7 +717,7 @@ export const getLockP2PCommand = function(deviceSN: string, user_id: string, com
         channel: channel,
         aesKey: key
     };
-}
+};
 
 export const getLockV12P2PCommand = function(deviceSN: string, user_id: string, command: CommandType | ESLCommand, channel: number, lockPublicKey: string, sequence: number, data: Buffer): LockV12P2PCommand {
     const key = generateAdvancedLockAESKey();
@@ -751,7 +751,7 @@ export const getLockV12P2PCommand = function(deviceSN: string, user_id: string, 
             } as LockV12P2PCommandPayloadType)
         }
     };
-}
+};
 
 export const DecimalToRGBColor = function(color: number): RGBColor {
     return {
@@ -759,42 +759,42 @@ export const DecimalToRGBColor = function(color: number): RGBColor {
         green: (color >> 8) & 0xff,
         blue: color & 0xff,
     };
-}
+};
 
 export const RGBColorToDecimal = function(color: RGBColor): number {
     return (color.red << 16) + (color.green << 8) + (color.blue);
-}
+};
 
 export const getNullTerminatedString = function(data: Buffer, encoding?: BufferEncoding): string {
     const index  = data.indexOf(0);
     return data.toString(encoding, 0, index === -1 ? data.length : index);
-}
+};
 
 export const isUsbCharging = function(value: number): boolean {
     return (value & 1) == 1;
-}
+};
 
 export const isSolarCharging = function(value: number): boolean {
     return ((value >> 2) & 1) == 1;
-}
+};
 
 export const isPlugSolarCharging = function(value: number): boolean {
     return ((value >> 3) & 1) == 1;
-}
+};
 
 export const isCharging = function(value: number): boolean {
     return isUsbCharging(value) || isSolarCharging(value) || isPlugSolarCharging(value);
-}
+};
 
 export const getSmartLockCurrentTimeInSeconds = function(): number {
     return Math.trunc(new Date().getTime() / 1000) | Math.trunc(Math.random() * 100);
-}
+};
 
 export const generateSmartLockAESKey = (adminUserId: string, time: number): Buffer => {
     const buffer = Buffer.allocUnsafe(4);
     buffer.writeUint32BE(time);
     return Buffer.concat([Buffer.from(adminUserId.substring(adminUserId.length - 12)), buffer]);
-}
+};
 
 export const getSmartLockP2PCommand = function(deviceSN: string, user_id: string, command: CommandType | SmartLockCommand, channel: number, sequence: number, data: Buffer, functionType = SmartLockFunctionType.TYPE_2): SmartLockP2PCommand {
     const time = getSmartLockCurrentTimeInSeconds();
@@ -834,18 +834,18 @@ export const getSmartLockP2PCommand = function(deviceSN: string, user_id: string
             } as SmartLockP2PCommandPayloadType)
         }
     };
-}
+};
 
 export const readNullTerminatedBuffer = (input: Buffer): Buffer => {
     const index = input.indexOf(new Uint8Array([0]));
 
     if (index === -1) {
-        const result = Buffer.alloc(input.length)
+        const result = Buffer.alloc(input.length);
         input.copy(result);
         return result;
     }
 
-    const result = Buffer.alloc(input.subarray(0, index).length)
+    const result = Buffer.alloc(input.subarray(0, index).length);
     input.subarray(0, index).copy(result);
     return result;
 };

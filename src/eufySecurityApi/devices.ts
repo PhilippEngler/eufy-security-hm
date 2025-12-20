@@ -301,7 +301,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             await this.devicesLoaded;
         }
         if (Object.keys(this.devices).includes(device.device_sn)) {
-            this.devices[device.device_sn].update(device)
+            this.devices[device.device_sn].update(device);
         } else {
             throw new DeviceNotFoundError(`Device with this serial ${device.device_sn} doesn't exists and couldn't be updated!`);
         }
@@ -1647,22 +1647,22 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 break;
             case PropertyName.DeviceAutoLock:
                 station.setAutoLock(device, value as boolean);
-                break
+                break;
             case PropertyName.DeviceAutoLockSchedule:
                 station.setAutoLockSchedule(device, value as boolean);
-                break
+                break;
             case PropertyName.DeviceAutoLockScheduleStartTime:
                 station.setAutoLockScheduleStartTime(device, value as string);
-                break
+                break;
             case PropertyName.DeviceAutoLockScheduleEndTime:
                 station.setAutoLockScheduleEndTime(device, value as string);
-                break
+                break;
             case PropertyName.DeviceAutoLockTimer:
                 station.setAutoLockTimer(device, value as number);
-                break
+                break;
             case PropertyName.DeviceOneTouchLocking:
                 station.setOneTouchLocking(device, value as boolean);
-                break
+                break;
             case PropertyName.DeviceSound:
                 station.setSound(device, value as number);
                 break;
@@ -1932,7 +1932,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 const tracker = device as Tracker;
                 const result = await tracker.setLeftBehindAlarm(value as boolean);
                 if (result) {
-                    device.updateProperty(name, value as boolean)
+                    device.updateProperty(name, value as boolean);
                 }
                 break;
             }
@@ -1940,7 +1940,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 const tracker = device as Tracker;
                 const result = await tracker.setFindPhone(value as boolean);
                 if (result) {
-                    device.updateProperty(name, value as boolean)
+                    device.updateProperty(name, value as boolean);
                 }
                 break;
             }
@@ -1948,7 +1948,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                 const tracker = device as Tracker;
                 const result = await tracker.setTrackerType(value as number);
                 if (result) {
-                    device.updateProperty(name, value as number)
+                    device.updateProperty(name, value as number);
                 }
                 break;
             }

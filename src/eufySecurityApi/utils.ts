@@ -15,13 +15,13 @@ export const getError = function(error: BaseError): ErrorObject {
         context: error.context,
         stacktrace: error.stack
     };
-}
+};
 
 export const removeLastChar = function(text: string, char: string): string {
     const strArr = [...text];
     strArr.splice(text.lastIndexOf(char), 1);
     return strArr.join("");
-}
+};
 
 export const generateUDID = function(): string {
     return crypto.randomBytes(8).readBigUInt64BE().toString(16);
@@ -130,7 +130,7 @@ export const parseJSON = function(data: string, log: Category): any {
         log.debug("JSON parse error", { error: getError(error), data: data });
     }
     return undefined;
-}
+};
 
 export const validValue = function(metadata: PropertyMetadataAny, value: unknown): void {
     if (metadata.type === "number") {
@@ -160,7 +160,7 @@ export const validValue = function(metadata: PropertyMetadataAny, value: unknown
             throw new InvalidPropertyValueError("Invalid value for this property according to metadata", { context: { propertyName: metadata.name, propertyValue: value, metadata: metadata } });
         }
     }
-}
+};
 
 export const mergeDeep = function (target: Record<string, any> | undefined,	source: Record<string, any>): Record<string, any> {
     target = target || {};
@@ -178,7 +178,7 @@ export const mergeDeep = function (target: Record<string, any> | undefined,	sour
         }
     }
     return target;
-}
+};
 
 export function waitForEvent<T>(emitter: EventEmitter, event: string): Promise<T> {
     return new Promise((resolve, reject) => {

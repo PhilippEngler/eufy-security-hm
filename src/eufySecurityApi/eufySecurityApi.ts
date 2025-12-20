@@ -7,7 +7,7 @@ import { rootAddonLogger, setLoggingLevel } from "./logging";
 import { PushService } from "./pushService";
 import { MqttService } from "./mqttService";
 import { generateUDID, generateSerialnumber, getError } from "./utils";
-import { Devices } from "./devices"
+import { Devices } from "./devices";
 import { Stations } from "./stations";
 import { DatabaseQueryLatestInfo, DatabaseQueryLatestInfoLocal, DatabaseQueryLocal, DatabaseReturnCode, P2PConnectionType } from "./p2p";
 import { sleep } from "./push/utils";
@@ -411,7 +411,7 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
 
         if (this.retries < 3) {
             this.retries++;
-            await this.connect()
+            await this.connect();
         } else {
             rootAddonLogger.error(`Tried to re-authenticate to Eufy cloud, but failed in the process. Manual intervention is required!`);
         }
@@ -534,7 +534,7 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
      */
     private onTfaRequest(): void {
         this.emit("tfa request");
-        this.tfaCodeRequested = true
+        this.tfaCodeRequested = true;
         rootAddonLogger.info(`A tfa (two factor authentication) request received. The tfa support is in beta phase at the moment.`);
     }
 
@@ -813,7 +813,7 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
         }
 
         if (this.config.getUpdateDeviceDataIntervall() > 0)
-            this.refreshEufySecurityCloudTimeout = setTimeout(() => { this.refreshCloudData() }, this.config.getUpdateDeviceDataIntervall() * 60 * 1000);
+            this.refreshEufySecurityCloudTimeout = setTimeout(() => { this.refreshCloudData(); }, this.config.getUpdateDeviceDataIntervall() * 60 * 1000);
         else
             rootAddonLogger.info(`Automatic retrieval of data from the cloud has been deactivated (config pollingIntervalMinutes: ${this.config.getUpdateDeviceDataIntervall()})`);
     }
@@ -1025,7 +1025,7 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
             if (this.devices && this.devices.existDevice(deviceSerial)) {
                 const device = await this.devices.getDevice(deviceSerial);
                 if (device.hasProperty(PropertyName.DevicePicture)) {
-                    return device.getPropertyValue(PropertyName.DevicePicture) as Picture
+                    return device.getPropertyValue(PropertyName.DevicePicture) as Picture;
                 }
             } else if (this.devices) {
                 if (this.devices.getErrorDeviceImage() !== undefined) {
@@ -1661,7 +1661,7 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
                 }
             }
         } catch {
-            mode = -1
+            mode = -1;
         }
 
         if (mode < -1) {
@@ -2093,9 +2093,9 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
         let lastModeChange = new Date(1970, 1, 1);
 
         for (const stationSerial in stations) {
-            station = stations[stationSerial]
+            station = stations[stationSerial];
             if (station.hasProperty(PropertyName.StationGuardModeTime)) {
-                tempModeChange = new Date(station.getPropertyValue(PropertyName.StationGuardModeTime) as number)
+                tempModeChange = new Date(station.getPropertyValue(PropertyName.StationGuardModeTime) as number);
                 if (lastModeChange < tempModeChange) {
                     lastModeChange = tempModeChange;
                 }
@@ -2883,7 +2883,7 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
      * @returns The event duration in seconds.
      */
     public getEventDurationSeconds(): number {
-        return this.config.getEventDurationSeconds()
+        return this.config.getEventDurationSeconds();
     }
 
     /**
@@ -2976,7 +2976,7 @@ export class EufySecurityApi extends TypedEmitter<EufySecurityEvents> {
             rootAddonLogger.info(`  getState scheduled (runs every ${this.config.getStateUpdateIntervallTimespan()} minutes).`);
         } else {
             clearInterval(this.taskUpdateState);
-            rootAddonLogger.info(`  scheduling getState disabled in settings${this.config.getStateUpdateEventActive() === true ? " (state changes will be received by event)": ""}.`)
+            rootAddonLogger.info(`  scheduling getState disabled in settings${this.config.getStateUpdateEventActive() === true ? " (state changes will be received by event)": ""}.`);
         }
 
         rootAddonLogger.info(`...done setting up scheduled tasks.`);

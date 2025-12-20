@@ -198,7 +198,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
         this.videoSeqNumber = 0;
         this.p2pDataSeqNumber = 0;
         this.connectAddress = undefined;
-        this.customDataStaging = {}
+        this.customDataStaging = {};
         this.encryption = EncryptionType.NONE;
         this.p2pKey = undefined;
         this.lockAESKeys.clear();
@@ -486,7 +486,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                 host = this.localIPAddress;
             } else {
                 const localIP = getLocalIpAddress();
-                host = localIP.substring(0, localIP.lastIndexOf(".") + 1).concat("255")
+                host = localIP.substring(0, localIP.lastIndexOf(".") + 1).concat("255");
             }
         }
         this.localLookup(host);
@@ -1081,7 +1081,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                         if (value === ackedSeqNo) {
                                             map.delete(key);
                                         }
-                                    })
+                                    });
                                     this.p2pDataSeqNumber--;
                                     rootP2PLogger.debug(`Result data for command CMD_GATEWAYINFO not received`, { stationSN: this.rawStation.station_sn, message: { sequence: msg_state.sequence, commandType: msg_state.commandType, nestedCommandType: msg_state.nestedCommandType, channel: msg_state.channel, acknowledged: msg_state.acknowledged, retries: msg_state.retries, returnCode: msg_state.returnCode, data: msg_state.data } });
                                 }
@@ -1299,7 +1299,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                         seqNo: (message.seqNo + this.offsetDataSeqNumber),
                         dataType: message.type,
                         data: completeMessage
-                    }
+                    };
                     this.handleData(data_message);
                     this.initializeMessageBuilder(message.type);
                     if (data.length > 0 && message.type === P2PDataType.DATA) {
@@ -1308,7 +1308,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                     }
                 }
                 runaway_limit++;
-            } while ((data.length > 0) && (runaway_limit < this.LOOP_RUNAWAY_LIMIT))
+            } while ((data.length > 0) && (runaway_limit < this.LOOP_RUNAWAY_LIMIT));
             if (runaway_limit >= this.LOOP_RUNAWAY_LIMIT) {
                 rootP2PLogger.warn(`Infinite loop detected (limit >= ${this.LOOP_RUNAWAY_LIMIT}) during parsing of p2p message`, { stationSN: this.rawStation.station_sn, seqNo: message.seqNo, dataType: P2PDataType[message.type], header: this.currentMessageBuilder[message.type].header, bytesRead: this.currentMessageBuilder[message.type].bytesRead, bytesToRead: this.currentMessageBuilder[message.type].header.bytesToRead, message: message.data.toString("hex"), messageSize: message.data.length });
                 this.initializeMessageBuilder(message.type);
@@ -1768,7 +1768,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                     //TODO: Handle decryption of encrypted Data (AES) - For decryption use the cached aeskey used for sending the command!
                                     const aesKey = this.getLockAESKey(json.cmd);
                                     if (aesKey !== undefined) {
-                                        const decryptedPayload = decryptPayloadData(Buffer.from(json.payload as string, "base64"), Buffer.from(aesKey, "hex"), Buffer.from(getLockVectorBytes(this.rawStation.station_sn), "hex")).toString()
+                                        const decryptedPayload = decryptPayloadData(Buffer.from(json.payload as string, "base64"), Buffer.from(aesKey, "hex"), Buffer.from(getLockVectorBytes(this.rawStation.station_sn), "hex")).toString();
                                         rootP2PLogger.debug(`Handle DATA ${P2PDataType[message.dataType]} - CMD_NOTIFY_PAYLOAD Lock - Received`, { stationSN: this.rawStation.station_sn, commandIdName: CommandType[json.cmd], commandId: json.cmd, decryptedPayload: decryptedPayload, aesKey: aesKey });
                                         switch (json.cmd) {
                                             case CommandType.P2P_ADD_PW:
@@ -1850,7 +1850,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                         let data = fac.getData()!;
                                         try {
                                             if (aesKey !== undefined) {
-                                                data = decryptPayloadData(data,  Buffer.from(aesKey, "hex"), Buffer.from(getLockVectorBytes(this.rawStation.station_sn), "hex"))
+                                                data = decryptPayloadData(data,  Buffer.from(aesKey, "hex"), Buffer.from(getLockVectorBytes(this.rawStation.station_sn), "hex"));
                                             }
                                             const returnCode = data.readInt8(0);
                                             const commandType = Number.parseInt(ESLCommand[ESLBleCommand[fac.getCommandCode()!] as unknown as number]);
@@ -2330,7 +2330,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                             if (value === message.seqNo) {
                                 map.delete(key);
                             }
-                        })
+                        });
                         this.p2pDataSeqNumber--;
                         this.messageStates.delete(message.seqNo);
                         this.sendQueuedMessage();
@@ -2344,7 +2344,7 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                             if (value === message.seqNo) {
                                 map.delete(key);
                             }
-                        })
+                        });
                         this.p2pDataSeqNumber--;
                         this.messageStates.delete(message.seqNo);
                         this.sendQueuedMessage();
@@ -2711,9 +2711,9 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
 
     private initializeTalkbackStream(channel = 0): void {
         this.talkbackStream = new TalkbackStream();
-        this.talkbackStream.on("data", (audioData) => { this.sendTalkbackAudioFrame(audioData, channel) });
-        this.talkbackStream.on("error", (error) => { this.onTalkbackStreamError(error) });
-        this.talkbackStream.on("close", () => { this.onTalkbackStreamClose() });
+        this.talkbackStream.on("data", (audioData) => { this.sendTalkbackAudioFrame(audioData, channel); });
+        this.talkbackStream.on("error", (error) => { this.onTalkbackStreamError(error); });
+        this.talkbackStream.on("close", () => { this.onTalkbackStreamClose(); });
     }
 
     private sendTalkbackAudioFrame(audioData: Buffer, channel: number): void {

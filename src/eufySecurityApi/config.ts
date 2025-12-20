@@ -347,7 +347,7 @@ export class Config {
                             } else {
                                 rootConfLogger.info(`  skipping adding 'useLocalCertificate' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
                             }
-                            const newEventInteraction: EventInteraction = {target: oldEventInteraction.target, useHttps: oldEventInteraction.useHttps, useLocalCertificate: oldEventInteraction.useLocalCertificate === undefined ? false : oldEventInteraction.useLocalCertificate, rejectUnauthorized: oldEventInteraction.rejectUnauthorized === undefined ? true : oldEventInteraction.rejectUnauthorized, user: oldEventInteraction.user, password: oldEventInteraction.password, command: oldEventInteraction.command}
+                            const newEventInteraction: EventInteraction = {target: oldEventInteraction.target, useHttps: oldEventInteraction.useHttps, useLocalCertificate: oldEventInteraction.useLocalCertificate === undefined ? false : oldEventInteraction.useLocalCertificate, rejectUnauthorized: oldEventInteraction.rejectUnauthorized === undefined ? true : oldEventInteraction.rejectUnauthorized, user: oldEventInteraction.user, password: oldEventInteraction.password, command: oldEventInteraction.command};
                             interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType] = newEventInteraction;
                         }
                     }
@@ -371,7 +371,7 @@ export class Config {
      */
     private checkConfigFile(configJson: any): any
     {
-        const newConfigJson = this.createEmptyConfigJson()
+        const newConfigJson = this.createEmptyConfigJson();
         if (configJson.configVersion !== undefined) {
             newConfigJson.configVersion = configJson.configVersion;
         }
@@ -646,7 +646,7 @@ export class Config {
         } else {
             const stations = [];
             stations.push(station);
-            this.configJson.stations = stations
+            this.configJson.stations = stations;
         }
 
         this.hasChanged = true;
@@ -1842,7 +1842,7 @@ export class Config {
      */
     public getCredentialsGcmResponse(): GcmRegisterResponse | null {
         try {
-            const res: GcmRegisterResponse = {token: this.configJson.pushData.gcmResponseToken}
+            const res: GcmRegisterResponse = {token: this.configJson.pushData.gcmResponseToken};
             return res;
         } catch {
             return null;

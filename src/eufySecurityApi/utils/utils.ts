@@ -218,7 +218,7 @@ export const getModelName = function(modelNumber: string): string {
         default:
             return "unknown";
     }
-}
+};
 
 /**
  * Returns a string with the type of the device.
@@ -241,7 +241,7 @@ export const getDeviceTypeAsString = function(device: Device): string {
     } else if(device.isGarageCamera()) {
         return "garagecamera";
     } else if(device.isStarlight4GLTE()) {
-        return "starlight4glte"
+        return "starlight4glte";
     } else if(device.isLock()) {
         return "lock";
     } else if(device.isEntrySensor() || device.isMotionSensor()) {
@@ -251,7 +251,7 @@ export const getDeviceTypeAsString = function(device: Device): string {
     } else {
         return `unknown(${device.getRawDevice().device_type})`;
     }
-}
+};
 
 /**
  * Returns a string with the type of the station.
@@ -320,7 +320,7 @@ export const getStationTypeString = function(station: Station): string {
         default:
             return `unknown(${station.getDeviceType()})`;
     }
-}
+};
 
 /**
  * Converts the given timestamp to the german dd.mm.yyyy hh:mm string.
@@ -329,7 +329,7 @@ export const getStationTypeString = function(station: Station): string {
 export const makeDateTimeString = function(timestamp: number): string {
     const dateTime = new Date(timestamp);
     return (`${dateTime.getDate().toString().padStart(2,"0")}.${(dateTime.getMonth()+1).toString().padStart(2,"0")}.${dateTime.getFullYear().toString()} ${dateTime.getHours().toString().padStart(2,"0")}:${dateTime.getMinutes().toString().padStart(2,"0")}`);
-}
+};
 
 /**
  * Recalculate the timestamp to get a timestamp in milliseconds.
@@ -346,7 +346,7 @@ export const convertTimeStampToTimeStampMs = function(timeStamp: number, timeSta
         default:
             return undefined;
     }
-}
+};
 
 /**
  * Extracts the string enclosed between the given startString and the given endString.
@@ -360,7 +360,7 @@ export const extractEnclosedString = function(data: string, startString: string,
         logger.debug(JSON.stringify({"data": data, "start": startString, "end": endString}));
     }
     return data.substring(data.indexOf(startString) + startString.length, data.indexOf(endString));
-}
+};
 
 /**
  * Wait for a given station event.

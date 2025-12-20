@@ -3,7 +3,7 @@ import { Readable } from "stream";
 
 import { HTTPApi } from "./api";
 import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty, PublicKeyType, MotionDetectionMode, VideoTypeStoreToNAS, HB3DetectionTypes, WalllightNotificationType, DailyLightingType, MotionActivationMode, BaseStationProperties, LightingActiveMode, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, MotionDetectionRangeType, ViewModeType, FloodlightT8425NotificationTypes, PresetPositionType, SmartLockNotification, IndoorS350DetectionTypes } from "./types";
-import { FloodlightDetectionRangeT8425Property, FloodlightLightSettingsMotionT8425Property, SnoozeDetail, StationListResponse, StationSecuritySettings } from "./models"
+import { FloodlightDetectionRangeT8425Property, FloodlightLightSettingsMotionT8425Property, SnoozeDetail, StationListResponse, StationSecuritySettings } from "./models";
 import { ParameterHelper } from "./parameter";
 import { IndexedProperty, PropertyMetadataAny, PropertyValue, PropertyValues, RawValues, StationEvents, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, PropertyMetadataObject } from "./interfaces";
 import { encodePasscode, getAdvancedLockTimezone, getBlocklist, getFloodLightT8425Notification, getHB3DetectionMode, getIndoorNotification, getIndoorS350DetectionMode, getT8170DetectionMode, hexDate, hexTime, hexWeek, isGreaterEqualMinVersion, isNotificationSwitchMode, isPrioritySourceType, switchNotificationMode, switchSmartLockNotification } from "./utils";
@@ -124,12 +124,12 @@ export class Station extends TypedEmitter<StationEvents> {
     public getStateID(state: string, level = 2): string {
         switch(level) {
             case 0:
-                return `${this.getSerial()}`
+                return `${this.getSerial()}`;
             case 1:
-                return `${this.getSerial()}.${this.getStateChannel()}`
+                return `${this.getSerial()}.${this.getStateChannel()}`;
             default:
                 if (state)
-                    return `${this.getSerial()}.${this.getStateChannel()}.${state}`
+                    return `${this.getSerial()}.${this.getStateChannel()}.${state}`;
                 throw new Error("No state value passed.");
         }
     }
@@ -583,7 +583,7 @@ export class Station extends TypedEmitter<StationEvents> {
             } else if (message.event_type === CusPushEvent.ALARM && message.station_sn === this.getSerial() && !this.isStation()) {
                 rootHTTPLogger.info("Received push notification for alarm event", { stationSN: message.station_sn, alarmType: message.alarm_type });
                 if (message.alarm_type !== undefined) {
-                    this.onAlarmEvent(message.alarm_type)
+                    this.onAlarmEvent(message.alarm_type);
                 }
             }
         } else if (message.msg_type === CusPushEvent.TFCARD && message.station_sn === this.getSerial() && message.tfcard_status !== undefined) {

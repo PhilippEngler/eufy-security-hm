@@ -3,7 +3,7 @@ export type Jsonable = string | number | boolean | object | null | undefined | r
 
 export class BaseError extends Error {
 
-    public readonly context?: Jsonable
+    public readonly context?: Jsonable;
 
     constructor(message: string, options: { cause?: Error, context?: Jsonable } = {}) {
         const { cause, context } = options;
@@ -17,7 +17,7 @@ export class BaseError extends Error {
 
 export function ensureError(value: unknown): BaseError {
     if (value instanceof Error)
-        return value
+        return value;
     let stringified = "[Unable to stringify the thrown value]";
     try {
         stringified = JSON.stringify(value);

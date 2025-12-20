@@ -16,7 +16,7 @@ export const RequestMessageType = {
     DATA:                   Buffer.from([0xF1, 0xD0]),
     ACK:                    Buffer.from([0xF1, 0xD1]),
     END:                    Buffer.from([0xF1, 0xF0])
-}
+};
 
 export const ResponseMessageType = {
     STUN:                   Buffer.from([0xF1, 0x01]),
@@ -36,7 +36,7 @@ export const ResponseMessageType = {
     CAM_ID:                 Buffer.from([0xF1, 0x42]),
     ACK:                    Buffer.from([0xF1, 0xD1]),
     DATA:                   Buffer.from([0xF1, 0xD0])
-}
+};
 
 export enum P2PDataType {
     UNKNOWN = -1,
@@ -51,7 +51,7 @@ export const P2PDataTypeHeader = {
     VIDEO:              Buffer.from([0xD1, P2PDataType.VIDEO]),
     CONTROL:            Buffer.from([0xD1, P2PDataType.CONTROL]),
     BINARY:             Buffer.from([0xD1, P2PDataType.BINARY])
-}
+};
 
 export enum CommandType {
     //com.oceanwing.battery.cam.zmedia.model.CommandType

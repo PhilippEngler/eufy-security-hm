@@ -33,7 +33,7 @@ export class OpenCcuApi {
      * @param requestConfig The config.
      */
     private async request(hostName: string, useHttps: boolean, data: string, requestConfig?: AxiosRequestConfig): Promise<AxiosResponse> {
-        return await axios.post(this.getUrl(hostName, useHttps), data, requestConfig)
+        return await axios.post(this.getUrl(hostName, useHttps), data, requestConfig);
     }
 
     /**
@@ -74,7 +74,7 @@ export class OpenCcuApi {
                 key: useLocalCertificate === true && existsSync(this.api.getConfig().getHttpsPKeyFile()) === true ? readFileSync(this.api.getConfig().getHttpsPKeyFile()) : undefined,
                 rejectUnauthorized: rejectUnauthorized
             });
-            requestConfig.httpsAgent = httpsAgent
+            requestConfig.httpsAgent = httpsAgent;
         }
 
         rootAddonLogger.debug(`RequestConfig: ${JSON.stringify(requestConfig)}`);
@@ -268,7 +268,7 @@ export class OpenCcuApi {
             const systemvariableValueSubTypeNumber = parseInt(data);
             switch (systemvariableValueSubTypeNumber) {
                 case 0:
-                    return "istGeneric"
+                    return "istGeneric";
                 case 2:
                     return "istBool";
                 case 6:

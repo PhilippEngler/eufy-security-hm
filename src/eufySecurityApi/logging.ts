@@ -33,7 +33,7 @@ const getMethodName = function(): string | undefined {
         return matches[2];
     }
     return undefined;
-}
+};
 
 const provider = CategoryProvider.createProvider("EufySecurityClientProvider", {
     level: LogLevel.Off,
@@ -43,7 +43,7 @@ const provider = CategoryProvider.createProvider("EufySecurityClientProvider", {
         write: (msg, _formatArg) => {
             const methodName = getMethodName();
             const method = methodName ? `[${methodName}] ` : "";
-            const logLevel = `${LogLevel[msg.level].toUpperCase()}`.padEnd(5, " ")
+            const logLevel = `${LogLevel[msg.level].toUpperCase()}`.padEnd(5, " ");
             const logNames = `[${msg.logNames}]`.padEnd(7, " ");
             if (msg.args) {
                 console.log(`${formatDate(msg.timeInMillis)} ${logLevel} ${logNames} ${msg.message}`, ...msg.args);
@@ -165,7 +165,7 @@ export const setLoggingLevel = function(category: LoggingCategories = "all", lev
             logMessageForClient(`${formatDate(Date.now())} INFO  [log]   [Logging.setLoggingLevel] Logging for category ${category} has been set to ${LogLevel[level]}.`);
         }
     }
-}
+};
 
 export function formatDate(millisSinceEpoch: number): string {
     const date = new Date(millisSinceEpoch);

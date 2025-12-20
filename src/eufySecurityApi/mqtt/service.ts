@@ -1,4 +1,4 @@
-import * as mqtt from "mqtt"
+import * as mqtt from "mqtt";
 import { TypedEmitter } from "tiny-typed-emitter";
 import { readFileSync } from "fs";
 import * as path from "path";

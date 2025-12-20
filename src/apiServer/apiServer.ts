@@ -53,7 +53,7 @@ export class ApiServer {
     private async initializeServer(httpActive: boolean, portHttp: number, httpsActive: boolean, portHttps: number, keyHttps: string, certHttps: string): Promise<void> {
         if (httpActive === true) {
             rootAddonLogger.info("Starting http server...");
-            this.serverHttp.on("error", this.errorListener)
+            this.serverHttp.on("error", this.errorListener);
             this.serverHttp.on("request", this.requestListener);
             this.serverHttp.listen(portHttp);
             rootAddonLogger.info(`...started. http listening on port '${portHttp}'`);
@@ -67,7 +67,7 @@ export class ApiServer {
                     cert: readFileSync(certHttps)
                 };
                 this.serverHttps.setSecureContext(options);
-                this.serverHttps.on("error", this.errorListener)
+                this.serverHttps.on("error", this.errorListener);
                 this.serverHttps.on("request", this.requestListener);
                 this.serverHttps.listen(portHttps);
                 rootAddonLogger.info(`...started. https listening on port '${portHttps}'`);

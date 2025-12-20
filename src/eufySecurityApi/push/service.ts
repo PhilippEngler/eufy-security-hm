@@ -395,7 +395,7 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             type: -1,
             station_sn: "",
             device_sn: ""
-        }
+        };
         if (message.payload.payload) {
             const payload = message.payload;
             // CusPush
@@ -409,9 +409,9 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
             if (normalizedMessage.type in ServerPushEvent) {
                 // server push notification
                 const serverPushData = payload.payload as ServerPushData;
-                normalizedMessage.email = serverPushData.email
-                normalizedMessage.person_name = serverPushData.nick_name
-                normalizedMessage.verify_code = serverPushData.verify_code
+                normalizedMessage.email = serverPushData.email;
+                normalizedMessage.person_name = serverPushData.nick_name;
+                normalizedMessage.verify_code = serverPushData.verify_code;
 
                 switch (normalizedMessage.type) {
                     case ServerPushEvent.ALARM_NOTIFY:
@@ -608,16 +608,16 @@ export class PushNotificationService extends TypedEmitter<PushNotificationServic
 
                     if (Device.isStarlight4GLTE(normalizedMessage.type)) {
                         if (cusPushData.channel && cusPushData.channel !== null && cusPushData.channel !== undefined) {
-                            normalizedMessage.channel = cusPushData.channel
+                            normalizedMessage.channel = cusPushData.channel;
                         }
                         if (cusPushData.cipher && cusPushData.cipher !== null && cusPushData.cipher !== undefined) {
-                            normalizedMessage.cipher = cusPushData.cipher
+                            normalizedMessage.cipher = cusPushData.cipher;
                         }
                         if (cusPushData.event_type && cusPushData.event_type !== null && cusPushData.event_type !== undefined) {
-                            normalizedMessage.event_type = cusPushData.event_type
+                            normalizedMessage.event_type = cusPushData.event_type;
                         }
                         if (cusPushData.file_path && cusPushData.file_path !== null && cusPushData.file_path !== undefined) {
-                            normalizedMessage.file_path = cusPushData.file_path
+                            normalizedMessage.file_path = cusPushData.file_path;
                         }
                         normalizedMessage.msg_type = cusPushData.msg_type;
                     } else if (Device.isSmartDrop(normalizedMessage.type)) {

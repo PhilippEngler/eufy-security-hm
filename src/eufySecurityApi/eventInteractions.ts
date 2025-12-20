@@ -36,7 +36,7 @@ export class EventInteractions
             return true;
         } catch (e: any) {
             rootAddonLogger.error(`Error while adding integration to config. Error: ${e.message}`);
-            throw new Error(`Error while adding integration to config. Error: ${e.message}`)
+            throw new Error(`Error while adding integration to config. Error: ${e.message}`);
         }
     }
 
@@ -101,7 +101,7 @@ export class EventInteractions
             throw new Error(`No interactions for device ${deviceSerial}.`);
         } catch (e: any) {
             rootAddonLogger.error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
-            throw new Error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`)
+            throw new Error(`Error occured while deleting interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
         }
     }
 
@@ -138,7 +138,7 @@ export class EventInteractions
             }
         } catch (e: any) {
             rootAddonLogger.error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
-            throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`)
+            throw new Error(`Error occured while adding new interaction ${eventInteractionType} for device ${deviceSerial}. Error: ${e.message}`);
         }
     }
 
