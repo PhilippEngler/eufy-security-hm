@@ -567,7 +567,7 @@ function translateMessages(message, ...options) {
 		case "messageErrorPrintErrorMessage":
 			return `The following error has occurred: ${options[0]}${options[1] !== undefined ? ` [${options[1]}]` : ""}`;
 		case "messageErrorStatusAndReadyState":
-			return `Return value 'Status' is '${options[0]}'. Return value 'ReadyState' is '${options[1]}'.${options[2] !== undefined ? ` Function: '${options[2]}'.` : ""}`;
+			return `Return value 'Status' is '${options[0]}'. Return value 'ReadyState' is '${options[1]}'.${options[2] !== undefined ? ` Function: '${options[2]}'.` : ""}<br />Further information can be found in the <a href="logfiles.html?type=err">log files</a>.`;
 		case "messageAbortLoadingHeader":
 			return "Canceled loading.";
 		case "messageAbortLoadingText":

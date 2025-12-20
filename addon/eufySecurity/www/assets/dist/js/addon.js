@@ -4702,6 +4702,11 @@ function initLogViewer(logfiletype, showLoading) {
 		readOnly: true,
 		editable: false
 	});
+
+	var urlParams = new URLSearchParams(window.location.search);
+	if(getParameterFromURLSearchParams(urlParams, "type")) {
+		logfiletype = getParameterFromURLSearchParams(urlParams, "type");
+	}
 	loadLogfile(logfiletype, showLoading);
 }
 

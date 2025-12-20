@@ -567,7 +567,7 @@ function translateMessages(message, ...options) {
 		case "messageErrorPrintErrorMessage":
 			return `Es ist folgender Fehler aufgetreten: ${options[0]}${options[1] !== undefined ? ` [${options[1]}]` : ""}`;
 		case "messageErrorStatusAndReadyState":
-			return `Rückgabewert 'Status' ist '${options[0]}'. Rückgabewert 'ReadyState' ist '${options[1]}'.${options[2] !== undefined ? ` Funktion: '${options[2]}'.` : ""}`;
+			return `Rückgabewert 'Status' ist '${options[0]}'. Rückgabewert 'ReadyState' ist '${options[1]}'.${options[2] !== undefined ? ` Funktion: '${options[2]}'.` : ""}<br />Weitere Informationen können Sie in den <a href="logfiles.html?type=err">Logdateien</a> finden.`;
 		case "messageAbortLoadingHeader":
 			return "Anfrage wurde abgebrochen.";
 		case "messageAbortLoadingText":
