@@ -1085,4 +1085,4 @@ export const countryData : Array<EufyCountry> =
         "countryPhoneCode": "263",
         "countryCode": "ZW"
     }
-]
+];
