@@ -81,6 +81,8 @@ export const getModelName = function(modelNumber: string): string {
         case "T8030":
             return "HomeBase 3";
         //eufyCams
+        case "T8110":
+            return "eufyCam C35";
         case "T8111":
             return "eufyCam";
         case "T8112":

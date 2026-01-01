@@ -3,7 +3,7 @@ import { timeZoneData } from "./const";
 
 import { Device } from "./device";
 import { Picture, Schedule } from "./interfaces";
-import { NotificationSwitchMode, DeviceType, SignalLevel, HB3DetectionTypes, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, FloodlightT8425NotificationTypes, SmartLockNotification, PropertyName, CommandName, NotificationType, IndoorS350DetectionTypes } from "./types";
+import { NotificationSwitchMode, DeviceType, SignalLevel, HB3DetectionTypes, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, FloodlightT8425NotificationTypes, SmartLockNotification, PropertyName, CommandName, NotificationType, IndoorS350DetectionTypes, EufyCamC35DetectionTypes } from "./types";
 import { HTTPApi } from "./api";
 import { ensureError } from "../error";
 import { ImageBaseCodeError } from "./error";
@@ -656,6 +656,22 @@ export const isT8170DetectionModeEnabled = function(value: number, type: T8170De
 export const getT8170DetectionMode = function(value: number, type: T8170DetectionTypes, enable: boolean): number {
     let result = 0;
     if ((Object.values(T8170DetectionTypes).includes(type) && Object.values(T8170DetectionTypes).includes(value)) && !enable)
+        return value;
+    if (!enable) {
+        result = type ^ value;
+    } else {
+        result = type | value;
+    }
+    return result;
+};
+
+export const isT8110DetectionModeEnabled = function(value: number, type: EufyCamC35DetectionTypes): boolean {
+    return (type & value) == type;
+};
+
+export const getT8110DetectionMode = function(value: number, type: EufyCamC35DetectionTypes, enable: boolean): number {
+    let result = 0;
+    if ((Object.values(EufyCamC35DetectionTypes).includes(type) && Object.values(EufyCamC35DetectionTypes).includes(value)) && !enable)
         return value;
     if (!enable) {
         result = type ^ value;

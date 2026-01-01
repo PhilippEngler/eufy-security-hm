@@ -84,7 +84,8 @@ export enum DeviceType {
     WALL_LIGHT_CAM_81A0 = 10005,
     INDOOR_PT_CAMERA_C220 = 10008, // T8W11C
     INDOOR_PT_CAMERA_C210 = 10009, // T8419 / T8W11P?
-    INDOOR_PT_CAMERA_C220_V2 = 10010 // T8W11C (Type 10010)
+    INDOOR_PT_CAMERA_C220_V2 = 10010, // T8W11C (Type 10010)
+    CAMERA_C35 = 10035 //T8110
 }
 
 export enum ParamType {
@@ -382,6 +383,13 @@ export enum IndoorDetectionTypes {
 export enum IndoorMiniDetectionTypes {
     PERSON_DETECTION = 1,
     ALL_MOTION = 4,
+}
+
+export enum EufyCamC35DetectionTypes {
+    HUMAN_DETECTION = 3,
+    VEHICLE_DETECTION = 4,
+    PET_DETECTION = 8,
+    ALL_OTHER_MOTION = 32768,
 }
 
 export enum IndoorS350NotificationTypes {
@@ -1227,6 +1235,15 @@ export const DeviceNightvisionS350Property: PropertyMetadataNumeric = {
         0: "Off",
         1: "Auto",
         3: "On",
+    },
+};
+
+export const DeviceNightvisionCameraC35Property: PropertyMetadataNumeric = {
+    ...DeviceNightvisionProperty,
+    states: {
+        0: "PureColor",
+        1: "Infrared",
+        2: "Spotlight",
     },
 };
 
@@ -2536,6 +2553,15 @@ export const DeviceVideoStreamingQualityDoorbellE340Property: PropertyMetadataNu
     commandId: CommandType.CMD_BAT_DOORBELL_VIDEO_QUALITY2,
 };
 
+export const DeviceVideoStreamingQualityCameraC35Property: PropertyMetadataNumeric = {
+    ...DeviceVideoStreamingQualityDoorbellE340Property,
+    states: {
+        0: "Auto",
+        2: "Medium",
+        3: "High"
+    }
+};
+
 export const DeviceVideoStreamingQualityS350Property: PropertyMetadataNumeric = {
     ...DeviceVideoStreamingQualityDoorbellE340Property,
     states: {
@@ -2693,6 +2719,16 @@ export const DeviceVideoRecordingQualityT8530Property: PropertyMetadataNumeric =
         1: "2K HD",
         2: "Full HD",
         3: "Storage Saver",
+    },
+    commandId: CommandType.CMD_SET_RECORD_QUALITY,
+};
+
+export const DeviceVideoRecordingQualityCameraC35Property: PropertyMetadataNumeric = {
+    ...DeviceVideoRecordingQualityIndoorProperty,
+    key: IndoorSoloSmartdropCommandType.CMD_VIDEO_RECORD_QUALITY,
+    states: {
+        2: "Medium",
+        3: "High",
     },
     commandId: CommandType.CMD_SET_RECORD_QUALITY,
 };
@@ -8236,6 +8272,61 @@ export const DeviceProperties: Properties = {
         [PropertyName.DeviceLeftBehindAlarm]: DeviceLeftBehindAlarmProperty,
         [PropertyName.DeviceFindPhone]: DeviceFindPhoneProperty,
     },
+    [DeviceType.CAMERA_C35]: {
+        ...GenericDeviceProperties,
+        // FIXED FOR STANDALLONE
+        [PropertyName.DeviceState]: DeviceStateProperty,
+        [PropertyName.DeviceBattery]: DeviceBatteryProperty,
+        [PropertyName.DeviceBatteryTemp]: DeviceBatteryTempProperty,
+        [PropertyName.DevicePowerSource]: DevicePowerSourceProperty,
+        [PropertyName.DeviceChargingStatus]: DeviceChargingStatusProperty,
+        [PropertyName.DeviceLastChargingDays]: DeviceLastChargingDaysProperty,
+        [PropertyName.DeviceLastChargingRecordedEvents]: DeviceLastChargingRecordedEventsProperty,
+        [PropertyName.DeviceLastChargingTotalEvents]: DeviceLastChargingTotalEventsProperty,
+        [PropertyName.DeviceBatteryUsageLastWeek]: DeviceBatteryUsageLastWeekProperty,
+        [PropertyName.DeviceWifiRSSI]: DeviceWifiRSSIProperty,
+        [PropertyName.DeviceWifiSignalLevel]: DeviceWifiSignalLevelProperty,
+        [PropertyName.DeviceEnabled]: DeviceEnabledProperty,
+        [PropertyName.DeviceStatusLed]: DeviceStatusLedProperty,
+        [PropertyName.DeviceLight]: DeviceFloodlightLightProperty,
+        [PropertyName.DeviceLightSettingsEnable]: DeviceFloodlightLightSettingsEnableProperty,
+        [PropertyName.DeviceLightSettingsMotionTriggered]: DeviceFloodlightLightSettingsMotionTriggeredT8425Property,
+        [PropertyName.DeviceLightSettingsBrightnessManual]: DeviceFloodlightLightSettingsBrightnessManualProperty,
+        [PropertyName.DeviceMotionDetection]: DeviceMotionDetectionIndoorSoloFloodProperty,
+        [PropertyName.DeviceMotionDetectionSensitivity]: DeviceMotionDetectionSensitivitySoloProperty,
+        [PropertyName.DeviceMotionDetectionTypeHuman]: DeviceMotionHB3DetectionTypeHumanProperty,
+        [PropertyName.DeviceMotionDetectionTypeVehicle]: DeviceMotionHB3DetectionTypeVehicleProperty,
+        [PropertyName.DeviceMotionDetectionTypePet]: DeviceMotionHB3DetectionTypePetProperty,
+        [PropertyName.DeviceMotionDetectionTypeAllOtherMotions]: DeviceMotionHB3DetectionTypeAllOtherMotionsProperty,
+        [PropertyName.DevicePowerWorkingMode]: DevicePowerWorkingModeProperty,
+        [PropertyName.DeviceWatermark]: DeviceWatermarkProperty,
+        [PropertyName.DeviceNightvision]: DeviceNightvisionCameraC35Property,
+        [PropertyName.DeviceMicrophone]: DeviceMicrophoneProperty,
+        [PropertyName.DeviceAudioRecording]: DeviceAudioRecordingIndoorSoloFloodlightProperty,
+        [PropertyName.DeviceSpeaker]: DeviceSpeakerProperty,
+        [PropertyName.DeviceSpeakerVolume]: DeviceSpeakerVolumeIndoorFloodDoorbellProperty,
+        [PropertyName.DeviceRecordingClipLength]: DeviceRecordingClipLengthProperty,
+        [PropertyName.DeviceRecordingRetriggerInterval]: DeviceRecordingRetriggerIntervalProperty,
+        [PropertyName.DeviceRecordingEndClipMotionStops]: DeviceRecordingEndClipMotionStopsProperty,
+        [PropertyName.DeviceVideoRecordingQuality]: DeviceVideoRecordingQualityCameraC35Property,
+        [PropertyName.DeviceVideoStreamingQuality]: DeviceVideoStreamingQualityCameraC35Property,
+        [PropertyName.DevicePicture]: DevicePictureProperty,
+        [PropertyName.DevicePictureTime]: DevicePictureTimeProperty,
+        [PropertyName.DevicePictureUrl]: DevicePictureUrlProperty,
+        [PropertyName.DeviceNotificationType]: DeviceNotificationTypeIndoorFloodlightProperty,
+        [PropertyName.DeviceNotificationPerson]: DeviceNotificationPersonS350Property,
+        [PropertyName.DeviceNotificationPet]: DeviceNotificationPetS350Property,
+        [PropertyName.DeviceNotificationVehicle]: DeviceNotificationVehicleProperty,
+        [PropertyName.DeviceNotificationAllOtherMotion]: DeviceNotificationAllOtherMotionS350Property,
+        [PropertyName.DeviceMotionDetected]: DeviceMotionDetectedProperty,
+        [PropertyName.DevicePersonDetected]: DevicePersonDetectedProperty,
+        [PropertyName.DevicePetDetected]: DevicePetDetectedProperty,
+        [PropertyName.DeviceVehicleDetected]: DeviceVehicleDetectedProperty,
+        [PropertyName.DeviceSnooze]: DeviceSnoozeProperty,
+        [PropertyName.DeviceSnoozeTime]: DeviceSnoozeTimeProperty,
+        [PropertyName.DeviceSnoozeStartTime]: DeviceSnoozeStartTimeProperty,
+        [PropertyName.DevicePersonName]: DevicePersonNameProperty,
+    },
 };
 
 DeviceProperties[DeviceType.INDOOR_PT_CAMERA_C220_V2] = DeviceProperties[DeviceType.INDOOR_PT_CAMERA_C220];
@@ -9020,6 +9111,9 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationNotificationSwitchModeSchedule]: StationNotificationSwitchModeScheduleProperty,
+        [PropertyName.StationNotificationSwitchModeGeofence]: StationNotificationSwitchModeGeofenceProperty,
+        [PropertyName.StationNotificationSwitchModeApp]: StationNotificationSwitchModeAppProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA_E30]: {
         ...BaseStationProperties,
@@ -9521,6 +9615,25 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+    },
+    [DeviceType.CAMERA_C35]: {
+        ...BaseStationProperties,
+        [PropertyName.StationLANIpAddress]: StationLanIpAddressProperty,
+        [PropertyName.StationMacAddress]: StationMacAddressProperty,
+        [PropertyName.StationGuardMode]: StationGuardModeProperty,
+        [PropertyName.StationGuardModeTime]: StationGuardModeTimeProperty,
+        [PropertyName.StationCurrentMode]: StationCurrentModeProperty,
+        [PropertyName.StationCurrentModeTime]: StationCurrentModeTimeProperty,
+        [PropertyName.StationTimeFormat]: StationTimeFormatProperty,
+        [PropertyName.StationTimeZone]: StationTimeZoneProperty,
+        [PropertyName.StationAlarm]: StationAlarmProperty,
+        [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationNotificationSwitchModeSchedule]: StationNotificationSwitchModeScheduleProperty,
+        [PropertyName.StationNotificationSwitchModeGeofence]: StationNotificationSwitchModeGeofenceProperty,
+        [PropertyName.StationNotificationSwitchModeApp]: StationNotificationSwitchModeAppProperty,
+        [PropertyName.StationSdStatus]: StationSdStatusProperty,
+        [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
+        [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
     },
 };
 
@@ -10194,6 +10307,15 @@ export const DeviceCommands: Commands = {
         CommandName.DeviceStopTalkback,
         CommandName.DeviceOpen,
     ],
+    [DeviceType.CAMERA_C35]: [
+        CommandName.DeviceStartLivestream,
+        CommandName.DeviceStopLivestream,
+        CommandName.DeviceStartDownload,
+        CommandName.DeviceCancelDownload,
+        CommandName.DeviceStartTalkback,
+        CommandName.DeviceStopTalkback,
+        CommandName.DeviceSnooze,
+    ],
 };
 
 DeviceCommands[DeviceType.INDOOR_PT_CAMERA_C220_V2] = DeviceCommands[DeviceType.INDOOR_PT_CAMERA_C220];
@@ -10564,6 +10686,15 @@ export const StationCommands: Commands = {
     [DeviceType.SMART_TRACK_CARD]: [],
     [DeviceType.SMART_TRACK_LINK]: [],
     [DeviceType.SMART_DROP]: [
+    ],
+    [DeviceType.CAMERA_C35]: [
+        CommandName.StationReboot,
+        CommandName.StationTriggerAlarmSound,
+        CommandName.StationDownloadImage,
+        CommandName.StationDatabaseQueryLatestInfo,
+        CommandName.StationDatabaseQueryLocal,
+        CommandName.StationDatabaseCountByDate,
+        CommandName.StationDatabaseDelete,
     ],
 };
 

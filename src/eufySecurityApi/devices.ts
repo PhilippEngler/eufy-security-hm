@@ -5,7 +5,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 
 import { DeviceNotFoundError, ReadOnlyPropertyError, ensureError } from "./error";
 import { EufySecurityApi } from "./eufySecurityApi";
-import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, IndoorS350DetectionTypes } from "./http";
+import { HTTPApi, PropertyValue, FullDevices, Device, Camera, IndoorCamera, FloodlightCamera, SoloCamera, PropertyName, RawValues, Keypad, EntrySensor, MotionSensor, Lock, UnknownDevice, BatteryDoorbellCamera, WiredDoorbellCamera, DeviceListResponse, NotificationType, SmartSafe, InvalidPropertyError, Station, HB3DetectionTypes, CommandName, WallLightCam, GarageCamera, Tracker, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, FloodlightT8425NotificationTypes, DoorbellLock, LockKeypad, SmartDrop, Picture, ImageType, IndoorS350DetectionTypes, EufyCamC35DetectionTypes } from "./http";
 import { EufySecurityEvents } from "./interfaces";
 import { DynamicLighting, MotionZone, P2PConnectionType, RGBColor, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p";
 import { getError, isValidUrl, parseValue, waitForEvent } from "./utils";
@@ -1526,7 +1526,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             case PropertyName.DeviceNotificationPerson:
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setNotificationIndoor(device, IndoorS350NotificationTypes.HUMAN, value as boolean);
-                } else if (device.isFloodLightT8425()) {
+                } else if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, FloodlightT8425NotificationTypes.HUMAN, value as boolean);
                 } else {
                     station.setNotificationPerson(device, value as boolean);
@@ -1535,7 +1535,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             case PropertyName.DeviceNotificationPet:
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setNotificationIndoor(device, IndoorS350NotificationTypes.PET, value as boolean);
-                } else if (device.isFloodLightT8425()) {
+                } else if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, FloodlightT8425NotificationTypes.PET, value as boolean);
                 } else {
                     station.setNotificationPet(device, value as boolean);
@@ -1544,7 +1544,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             case PropertyName.DeviceNotificationAllOtherMotion:
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setNotificationIndoor(device, IndoorS350NotificationTypes.ALL_OTHER_MOTION, value as boolean);
-                } else if (device.isFloodLightT8425()) {
+                } else if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, FloodlightT8425NotificationTypes.ALL_OTHER_MOTION, value as boolean);
                 } else {
                     station.setNotificationAllOtherMotion(device, value as boolean);
@@ -1564,7 +1564,7 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                     station.setNotificationCrying(device, value as boolean);
                 }
             case PropertyName.DeviceNotificationVehicle:
-                if (device.isFloodLightT8425()) {
+                if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, FloodlightT8425NotificationTypes.VEHICLE, value as boolean);
                 } else {
                     throw new InvalidPropertyError("Station has no writable property", { context: { station: station.getSerial(), propertyName: name, propertyValue: value } });
@@ -1853,6 +1853,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             case PropertyName.DeviceMotionDetectionTypePet:
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setMotionDetectionTypeHB3(device, IndoorS350DetectionTypes.PET_DETECTION, value as boolean);
+                } else if (device.isCameraC35()) {
+                    station.setMotionDetectionTypeHB3(device, EufyCamC35DetectionTypes.PET_DETECTION, value as boolean);
                 } else {
                     station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.PET_DETECTION, value as boolean);
                 }
@@ -1860,6 +1862,8 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
             case PropertyName.DeviceMotionDetectionTypeVehicle:
                 if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, T8170DetectionTypes.VEHICLE_DETECTION, value as boolean);
+                } else if (device.isCameraC35()) {
+                    station.setMotionDetectionTypeHB3(device, EufyCamC35DetectionTypes.VEHICLE_DETECTION, value as boolean);
                 } else {
                     station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.VEHICLE_DETECTION, value as boolean);
                 }
@@ -1869,10 +1873,12 @@ export class Devices extends TypedEmitter<EufySecurityEvents> {
                     station.setMotionDetectionTypeAllOtherMotions(device, value as boolean);
                 } else if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, T8170DetectionTypes.ALL_OTHER_MOTION, value as boolean);
-                } else if (device.isSoloCameras()) {
+                } else if (device.isSoloCameras() && (!device.isCameraC35())) {
                     station.setMotionDetectionTypeHB3(device, SoloCameraDetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 } else if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setMotionDetectionTypeHB3(device, IndoorS350DetectionTypes.ALL_OTHER_MOTION, value as boolean);
+                } else if (device.isCameraC35()) {
+                    station.setMotionDetectionTypeHB3(device, EufyCamC35DetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 } else {
                     station.setMotionDetectionTypeHB3(device, HB3DetectionTypes.ALL_OTHER_MOTION, value as boolean);
                 }
