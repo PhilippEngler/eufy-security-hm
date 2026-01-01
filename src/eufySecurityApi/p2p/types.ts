@@ -740,7 +740,8 @@ export enum TFCardStatus {
     MOUNT_RERR_E2FSCK_TIMEOUT = 21,
     UNNORMAL_IO_ERROR = 22,
     RISK = 23,
-    MOUNTING = 24
+    MOUNTING = 24,
+    UDISK_NEED_FORMATING = 26
 }
 
 export enum AlarmEvent {
