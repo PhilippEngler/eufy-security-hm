@@ -1,13 +1,13 @@
 /*
 Language File for German (de)
-Schema v9.44
-20251018
+Schema v9.45
+20251231
 createdBy: PhilippEngler
 */
 var language = "de";
 var languageDesc = "deutsch";
 var languageAuthor = "PhilippEngler";
-var languageVersion = "20251018 (v9.44)";
+var languageVersion = "20251231 (v9.45)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -1552,6 +1552,8 @@ function translatePropertyName(propertyName) {
 			return "wenn Menschen erkannt";
 		case "notificationPet":
 			return "wenn Haustier erkannt";
+		case "notificationVehicle":
+			return "wenn Fahrzeug erkannt";
 		case "notificationCrying":
 			return "wenn Weinen erkannt";
 		case "notificationAllSound":
@@ -2014,6 +2016,10 @@ function translateDeviceStateValue(state, propertyName, value) {
 			return "Standard";
 		case "Advanced":
 			return "Erweitert";
+		case "Infrared":
+			return "Infrarot";
+		case "Spotlight":
+			return "Scheinwerfer";
 		case "Alarm sound 1":
 			return "Alarmton 1";
 		case "Alarm sound 2":
@@ -2269,6 +2275,8 @@ function translateSdStatusMessageText(sdStatus) {
 			return `Es wurde ein Problem mit der Speicherkarte festgestellt.`;
 		case 24:
 			return `Der Speicher wird gemountet.`;
+		case 26:
+			return `Der angeschlossene USB Speicherstick muss formatiert werden.`;
 		default:
 			return `Der Speicher hat einen unbekannten Zustand (${sdStatus}).`;
 	}

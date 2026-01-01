@@ -1,13 +1,13 @@
 /*
 Language File for English (en)
-Schema v9.44
-20251018
+Schema v9.45
+20251231
 createdBy: PhilippEngler (via DeepL)
 */
 var language = "en";
 var languageDesc = "english";
 var languageAuthor = "PhilippEngler (via DeepL)";
-var languageVersion = "20251018 (v9.44)";
+var languageVersion = "20251231 (v9.45)";
 
 function translateNavbarElement(element) {
     switch(element) {
@@ -1552,6 +1552,8 @@ function translatePropertyName(propertyName) {
 			return "On Person Detected";
 		case "notificationPet":
 			return "On Pet Detected";
+		case "notificationVehicle":
+			return "On Vehicle Detected";
 		case "notificationCrying":
 			return "On Crying Detected";
 		case "notificationAllSound":
@@ -2014,6 +2016,10 @@ function translateDeviceStateValue(state, propertyName, value) {
 			return "Standard";
 		case "Advanced":
 			return "Advanced";
+		case "Infrared":
+			return "Infrared";
+		case "Spotlight":
+			return "Spotlight";
 		case "Alarm sound 1":
 			return "Alarm sound 1";
 		case "Alarm sound 2":
@@ -2269,6 +2275,8 @@ function translateSdStatusMessageText(sdStatus) {
 			return `A problem was detected with the memory card.`;
 		case 24:
 			return `The memory is being mounted.`;
+		case 26:
+			return `The connected USB memory stick must be formatted`;
 		default:
 			return `The memory has an unknown status (${sdStatus}).`;
 	}

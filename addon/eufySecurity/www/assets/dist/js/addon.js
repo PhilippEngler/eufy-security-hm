@@ -1,6 +1,6 @@
 /**
  * Javascript for eufySecurity Addon
- * 20251029
+ * 20251231
  */
 var action = "";
 var port = "";
@@ -8,7 +8,7 @@ var redirectTarget = "";
 var sid = "";
 var codeMirrorEditor = undefined;
 var serviceState = undefined;
-var version = "3.5.5";
+var version = "3.5.6";
 
 /**
  * common used java script functions
@@ -1585,27 +1585,37 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 		deviceModal += `
 								<div class="card mb-3" id="cardDeviceLightSettings">
 									<h5 class="card-header">${translateContent("lblHeaderLightSettings")}</h5>
-									<div class="card-body">
+									<div class="card-body">`;
+		if (devicePropertiesMetadata.lightSettingsBrightnessManual !== undefined || devicePropertiesMetadata.lightSettingsManualLightingActiveMode !== undefined || devicePropertiesMetadata.lightSettingsManualDailyLighting !== undefined || devicePropertiesMetadata.lightSettingsManualDynamicLighting !== undefined) {
+			deviceModal += `
 										<h5>${translateContent("lblManualLighting")}</h5>
-										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessManual.name, deviceProperties.lightSettingsBrightnessManual, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessManual.unit, devicePropertiesMetadata.lightSettingsBrightnessManual.min, devicePropertiesMetadata.lightSettingsBrightnessManual.max, devicePropertiesMetadata.lightSettingsBrightnessManual.default)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsManualLightingActiveMode.name, deviceProperties.lightSettingsManualLightingActiveMode, setEventHandler, devicePropertiesMetadata.lightSettingsManualLightingActiveMode.states)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsManualDailyLighting.name, deviceProperties.lightSettingsManualDailyLighting, setEventHandler, devicePropertiesMetadata.lightSettingsManualDailyLighting.states)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsManualDynamicLighting.name, deviceProperties.lightSettingsManualDynamicLighting, setEventHandler, devicePropertiesMetadata.lightSettingsManualDynamicLighting.states)}
-										<hr />
+										${devicePropertiesMetadata.lightSettingsBrightnessManual === undefined ? "" : generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessManual.name, deviceProperties.lightSettingsBrightnessManual, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessManual.unit, devicePropertiesMetadata.lightSettingsBrightnessManual.min, devicePropertiesMetadata.lightSettingsBrightnessManual.max, devicePropertiesMetadata.lightSettingsBrightnessManual.default)}
+										${devicePropertiesMetadata.lightSettingsManualLightingActiveMode === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsManualLightingActiveMode.name, deviceProperties.lightSettingsManualLightingActiveMode, setEventHandler, devicePropertiesMetadata.lightSettingsManualLightingActiveMode.states)}
+										${devicePropertiesMetadata.lightSettingsManualDailyLighting === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsManualDailyLighting.name, deviceProperties.lightSettingsManualDailyLighting, setEventHandler, devicePropertiesMetadata.lightSettingsManualDailyLighting.states)}
+										${devicePropertiesMetadata.lightSettingsManualDynamicLighting === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsManualDynamicLighting.name, deviceProperties.lightSettingsManualDynamicLighting, setEventHandler, devicePropertiesMetadata.lightSettingsManualDynamicLighting.states)}`;
+		}
+		if (devicePropertiesMetadata.lightSettingsBrightnessSchedule !== undefined || devicePropertiesMetadata.lightSettingsScheduleLightingActiveMode !== undefined || devicePropertiesMetadata.lightSettingsScheduleDailyLighting !== undefined || devicePropertiesMetadata.lightSettingsScheduleDynamicLighting !== undefined) {
+			deviceModal += `
+										${devicePropertiesMetadata.lightSettingsBrightnessManual !== undefined || devicePropertiesMetadata.lightSettingsManualLightingActiveMode !== undefined || devicePropertiesMetadata.lightSettingsManualDailyLighting !== undefined || devicePropertiesMetadata.lightSettingsManualDynamicLighting !== undefined ? "<hr />" : ""}
 										<h5>${translateContent("lblScheduleLighting")}</h5>
-										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessSchedule.name, deviceProperties.lightSettingsBrightnessSchedule, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessSchedule.unit, devicePropertiesMetadata.lightSettingsBrightnessSchedule.min, devicePropertiesMetadata.lightSettingsBrightnessSchedule.max, devicePropertiesMetadata.lightSettingsBrightnessSchedule.default)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsScheduleLightingActiveMode.name, deviceProperties.lightSettingsScheduleLightingActiveMode, setEventHandler, devicePropertiesMetadata.lightSettingsScheduleLightingActiveMode.states)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsScheduleDailyLighting.name, deviceProperties.lightSettingsScheduleDailyLighting, setEventHandler, devicePropertiesMetadata.lightSettingsScheduleDailyLighting.states)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsScheduleDynamicLighting.name, deviceProperties.lightSettingsScheduleDynamicLighting, setEventHandler, devicePropertiesMetadata.lightSettingsScheduleDynamicLighting.states)}
-										<hr />
+										${devicePropertiesMetadata.lightSettingsBrightnessSchedule === undefined ? "" : generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessSchedule.name, deviceProperties.lightSettingsBrightnessSchedule, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessSchedule.unit, devicePropertiesMetadata.lightSettingsBrightnessSchedule.min, devicePropertiesMetadata.lightSettingsBrightnessSchedule.max, devicePropertiesMetadata.lightSettingsBrightnessSchedule.default)}
+										${devicePropertiesMetadata.lightSettingsScheduleLightingActiveMode === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsScheduleLightingActiveMode.name, deviceProperties.lightSettingsScheduleLightingActiveMode, setEventHandler, devicePropertiesMetadata.lightSettingsScheduleLightingActiveMode.states)}
+										${devicePropertiesMetadata.lightSettingsScheduleDailyLighting === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsScheduleDailyLighting.name, deviceProperties.lightSettingsScheduleDailyLighting, setEventHandler, devicePropertiesMetadata.lightSettingsScheduleDailyLighting.states)}
+										${devicePropertiesMetadata.lightSettingsScheduleDynamicLighting === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsScheduleDynamicLighting.name, deviceProperties.lightSettingsScheduleDynamicLighting, setEventHandler, devicePropertiesMetadata.lightSettingsScheduleDynamicLighting.states)}`;
+		}
+		if (devicePropertiesMetadata.lightSettingsMotionTriggered !== undefined || devicePropertiesMetadata.lightSettingsMotionTriggeredTimer !== undefined || devicePropertiesMetadata.lightSettingsMotionActivationMode !== undefined || devicePropertiesMetadata.lightSettingsBrightnessMotion !== undefined || devicePropertiesMetadata.lightSettingsMotionLightingActiveMode !== undefined || devicePropertiesMetadata.lightSettingsMotionDailyLighting !== undefined || devicePropertiesMetadata.lightSettingsMotionDynamicLighting !== undefined) {
+			deviceModal += `
+										${devicePropertiesMetadata.lightSettingsBrightnessManual !== undefined || devicePropertiesMetadata.lightSettingsManualLightingActiveMode !== undefined || devicePropertiesMetadata.lightSettingsManualDailyLighting !== undefined || devicePropertiesMetadata.lightSettingsManualDynamicLighting !== undefined || devicePropertiesMetadata.lightSettingsBrightnessSchedule !== undefined || devicePropertiesMetadata.lightSettingsScheduleLightingActiveMode !== undefined || devicePropertiesMetadata.lightSettingsScheduleDailyLighting !== undefined || devicePropertiesMetadata.lightSettingsScheduleDynamicLighting !== undefined ? "<hr />" : ""}
 										<h5>${translateContent("lblMotionLighting")}</h5>
-										${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionTriggered.name, deviceProperties.lightSettingsMotionTriggered, devicePropertiesMetadata.lightSettingsMotionTriggered.writeable, setEventHandler)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionTriggeredTimer.name, deviceProperties.lightSettingsMotionTriggeredTimer, setEventHandler, devicePropertiesMetadata.lightSettingsMotionTriggeredTimer.states)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionActivationMode.name, deviceProperties.lightSettingsMotionActivationMode, setEventHandler, devicePropertiesMetadata.lightSettingsMotionActivationMode.states)}
-										${generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessMotion.name, deviceProperties.lightSettingsBrightnessMotion, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessMotion.unit, devicePropertiesMetadata.lightSettingsBrightnessMotion.min, devicePropertiesMetadata.lightSettingsBrightnessMotion.max, devicePropertiesMetadata.lightSettingsBrightnessMotion.default)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionLightingActiveMode.name, deviceProperties.lightSettingsMotionLightingActiveMode, setEventHandler, devicePropertiesMetadata.lightSettingsMotionLightingActiveMode.states)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionDailyLighting.name, deviceProperties.lightSettingsMotionDailyLighting, setEventHandler, devicePropertiesMetadata.lightSettingsMotionDailyLighting.states)}
-										${generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionDynamicLighting.name, deviceProperties.lightSettingsMotionDynamicLighting, setEventHandler, devicePropertiesMetadata.lightSettingsMotionDynamicLighting.states)}
+										${devicePropertiesMetadata.lightSettingsMotionTriggered === undefined ? "" : generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionTriggered.name, deviceProperties.lightSettingsMotionTriggered, devicePropertiesMetadata.lightSettingsMotionTriggered.writeable, setEventHandler)}
+										${devicePropertiesMetadata.lightSettingsMotionTriggeredTimer === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionTriggeredTimer.name, deviceProperties.lightSettingsMotionTriggeredTimer, setEventHandler, devicePropertiesMetadata.lightSettingsMotionTriggeredTimer.states)}
+										${devicePropertiesMetadata.lightSettingsMotionActivationMode === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionActivationMode.name, deviceProperties.lightSettingsMotionActivationMode, setEventHandler, devicePropertiesMetadata.lightSettingsMotionActivationMode.states)}
+										${devicePropertiesMetadata.lightSettingsBrightnessMotion === undefined ? "" : generateElementRange("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsBrightnessMotion.name, deviceProperties.lightSettingsBrightnessMotion, setEventHandler, devicePropertiesMetadata.lightSettingsBrightnessMotion.unit, devicePropertiesMetadata.lightSettingsBrightnessMotion.min, devicePropertiesMetadata.lightSettingsBrightnessMotion.max, devicePropertiesMetadata.lightSettingsBrightnessMotion.default)}
+										${devicePropertiesMetadata.lightSettingsMotionLightingActiveMode === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionLightingActiveMode.name, deviceProperties.lightSettingsMotionLightingActiveMode, setEventHandler, devicePropertiesMetadata.lightSettingsMotionLightingActiveMode.states)}
+										${devicePropertiesMetadata.lightSettingsMotionDailyLighting === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionDailyLighting.name, deviceProperties.lightSettingsMotionDailyLighting, setEventHandler, devicePropertiesMetadata.lightSettingsMotionDailyLighting.states)}
+										${devicePropertiesMetadata.lightSettingsMotionDynamicLighting === undefined ? "" : generateElementSelect("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.lightSettingsMotionDynamicLighting.name, deviceProperties.lightSettingsMotionDynamicLighting, setEventHandler, devicePropertiesMetadata.lightSettingsMotionDynamicLighting.states)}`;
+		}
+		deviceModal += `
 									</div>
 								</div>`;
 	}
@@ -1676,6 +1686,7 @@ function fillDeviceSettingsModal(deviceId, devicePropertiesMetadata, modelName, 
 										<h5>${translateContent("lblNotificationSend")}</h5>
 										${deviceProperties.notificationPerson !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationPerson.name, deviceProperties.notificationPerson, devicePropertiesMetadata.notificationPerson.writeable, setEventHandler)}` : ""}
 										${deviceProperties.notificationPet !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationPet.name, deviceProperties.notificationPet, devicePropertiesMetadata.notificationPet.writeable, setEventHandler)}` : ""}
+										${deviceProperties.notificationVehicle !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationVehicle.name, deviceProperties.notificationVehicle, devicePropertiesMetadata.notificationVehicle.writeable, setEventHandler)}` : ""}
 										${deviceProperties.notificationAllOtherMotion !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllOtherMotion.name, deviceProperties.notificationAllOtherMotion, devicePropertiesMetadata.notificationAllOtherMotion.writeable, setEventHandler)}` : ""}
 										${deviceProperties.notificationCrying !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationCrying.name, deviceProperties.notificationCrying, devicePropertiesMetadata.notificationCrying.writeable, setEventHandler)}` : ""}
 										${deviceProperties.notificationAllSound !== undefined ? `${generateElementSwitch("Device", deviceProperties.serialNumber, deviceProperties.name, devicePropertiesMetadata.notificationAllSound.name, deviceProperties.notificationAllSound, devicePropertiesMetadata.notificationAllSound.writeable, setEventHandler)}` : ""}
@@ -2073,6 +2084,7 @@ function isStationOrDevicesKnown(modell) {
 		case "T8010":
 		case "T8030":
 		//eufyCams
+		case "T8110":
 		case "T8112":
 		case "T8113":
 		case "T8114":
