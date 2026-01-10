@@ -3657,7 +3657,7 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 property: propertyData
             });
-        } else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425()) {
+        } else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isCameraC35() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3748,7 +3748,7 @@ export class Station extends TypedEmitter<StationEvents> {
             }, {
                 property: propertyData
             });
-        } else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425()) {
+        } else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isCameraC35() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -4654,7 +4654,7 @@ export class Station extends TypedEmitter<StationEvents> {
         validValue(property, value);
 
         rootHTTPLogger.debug(`Station set watermark - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isCamera2Product() || device.isCamera3Product() || device.isSoloCameraSolar() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isSoloCameraC210() || device.isFloodLightT8425()) {
+        if (device.isCamera2Product() || device.isCamera3Product() || device.isSoloCameraSolar() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isSoloCameraC210() || device.isFloodLightT8425() || device.isCameraC35()) {
             if (!Object.values(WatermarkSetting3).includes(value as WatermarkSetting3)) {
                 rootHTTPLogger.error(`The device ${device.getSerial()} accepts only this type of values:`, Object.values(WatermarkSetting3).filter((value) => typeof value === "number"));
                 return;

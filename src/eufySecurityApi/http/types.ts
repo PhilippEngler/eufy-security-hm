@@ -2712,6 +2712,14 @@ export const DeviceVideoRecordingQualitySoloCamerasHB3Property: PropertyMetadata
     },
 };
 
+export const DeviceVideoRecordingQualityCameraC35HB3Property: PropertyMetadataNumeric = {
+    ...DeviceVideoRecordingQualityWalllightProperty,
+    states: {
+        2: "Medium",
+        3: "High",
+    },
+};
+
 export const DeviceVideoRecordingQualityT8530Property: PropertyMetadataNumeric = {
     ...DeviceVideoRecordingQualityIndoorProperty,
     key: CommandType.CMD_SET_RECORD_QUALITY,
