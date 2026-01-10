@@ -12,7 +12,7 @@ import { P2PClientProtocol } from "../p2p/session";
 import { AlarmEvent, CalibrateGarageType, CommandType, DatabaseReturnCode, ErrorCode, ESLBleCommand, ESLCommand, FilterDetectType, FilterEventType, FilterStorageType, IndoorSoloSmartdropCommandType, LockV12P2PCommand, P2PConnectionType, PanTiltDirection, SmartLockCommand, SmartSafeAlarm911Event, SmartSafeCommandCode, SmartSafeShakeAlarmEvent, TFCardStatus, VideoCodec, WatermarkSetting1, WatermarkSetting2, WatermarkSetting3, WatermarkSetting4, WatermarkSetting5 } from "../p2p/types";
 import { Address, CmdCameraInfoResponse, CommandResult, ESLStationP2PThroughData, LockAdvancedOnOffRequestPayload, AdvancedLockSetParamsType, PropertyData, CustomData, CommandData, StorageInfoBodyHB3, AdvancedLockSetParamsTypeT8520 } from "../p2p/models";
 import { Device, DoorbellCamera, Lock, SmartSafe } from "./device";
-import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand, RGBColorToDecimal, getSmartLockP2PCommand, } from "../p2p/utils";
+import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand, RGBColorToDecimal, getSmartLockP2PCommand } from "../p2p/utils";
 import { InvalidCommandValueError, InvalidPropertyValueError, NotSupportedError, RTSPPropertyNotEnabledError, WrongStationError, StationConnectTimeoutError, PinNotVerifiedError, ensureError, BaseError } from "../error";
 import { PushMessage } from "../push/models";
 import { CusPushEvent } from "../push/types";

@@ -323,6 +323,7 @@ export const getStationTypeString = function(station: Station): string {
         case DeviceType.SOLO_CAMERA_C210:
         case DeviceType.SOLO_CAMERA_E30:
         case DeviceType.OUTDOOR_PT_CAMERA:
+        case DeviceType.CAMERA_C35:
             return `solocamera`;
         case DeviceType.FLOODLIGHT:
         case DeviceType.FLOODLIGHT_CAMERA_8422:
