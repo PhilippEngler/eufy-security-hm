@@ -2847,7 +2847,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 													${translateContent("hddVideoUsed")}
 												</div>
 												<div class="col">
-													<h5>${stationProperties.storageInfoHdd.hdd_type !== undefined ? `${hddHddType === -10 ? translateContent("hddIsHdd") : hddHddType === 1 ? translateContent("hddIsSsd") : `${translateContent("hddIsUnknown")} (${hddHddType})`}` : ""}</h5>
+													<h5>${stationProperties.storageInfoHdd.hdd_type !== undefined ? `${hddHddType === 1 ? translateContent("hddIsSsd") : hddHddType === 2 ? translateContent("hddIsHdd") : `${translateContent("hddIsUnknown")} (${hddHddType})`}` : ""}</h5>
 													${translateContent("hddHddType")}
 												</div>
 												<div class="col">
