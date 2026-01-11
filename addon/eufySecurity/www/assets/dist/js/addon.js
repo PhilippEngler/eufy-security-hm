@@ -2832,7 +2832,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 					var hddVideoUsed = (rawStorageInfoHddDiskVideoUsedValue/1024).toFixed(2);
 					capacityUnits[3] = "TB";
 				} else if(rawStorageInfoHddDiskVideoUsedValue < 0.01) {
-					var emmcVideoUsed = (rawStorageInfoHddDiskVideoUsedValue*conversionFactor).toFixed(2);
+					var hddVideoUsed = (rawStorageInfoHddDiskVideoUsedValue*conversionFactor).toFixed(2);
 					capacityUnits[3] = "MB";
 				} else {
 					var hddVideoUsed = (rawStorageInfoHddDiskVideoUsedValue).toFixed(2);
@@ -2902,7 +2902,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 					var sdCardCapacityAvailable = (rawStorageInfoSdCardCapacityAvailableValue/1024).toFixed(2);
 					capacityUnits[2] = "TB";
 				} else if(rawStorageInfoSdCardCapacityAvailableValue < 0.01) {
-					var hddCapacityAvailable = (rawStorageInfoSdCardCapacityAvailableValue*conversionFactor).toFixed(2);
+					var sdCardCapacityAvailable = (rawStorageInfoSdCardCapacityAvailableValue*conversionFactor).toFixed(2);
 					capacityUnits[2] = "MB";
 				} else {
 					var sdCardCapacityAvailable = (rawStorageInfoSdCardCapacityAvailableValue).toFixed(2);
@@ -2914,7 +2914,7 @@ function fillStationSettingsModal(stationId, modelName, isP2PConnected, isEnergy
 					var sdCardVideoUsed = (rawStorageInfoSdCardVideoUsedValue/1024).toFixed(2);
 					capacityUnits[3] = "TB";
 				} else if(rawStorageInfoSdCardVideoUsedValue < 0.01) {
-					var emmcVideoUsed = (rawStorageInfoSdCardVideoUsedValue*conversionFactor).toFixed(2);
+					var sdCardVideoUsed = (rawStorageInfoSdCardVideoUsedValue*conversionFactor).toFixed(2);
 					capacityUnits[3] = "MB";
 				} else {
 					var sdCardVideoUsed = (rawStorageInfoSdCardVideoUsedValue).toFixed(2);
