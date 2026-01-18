@@ -5,7 +5,6 @@ const dgram_1 = require("dgram");
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const stream_1 = require("stream");
 const sweet_collections_1 = require("sweet-collections");
-const { parse } = require('date-and-time');
 const utils_1 = require("./utils");
 const types_1 = require("./types");
 const types_2 = require("../http/types");
@@ -1178,7 +1177,11 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                 }
                 else {
                     // finish message and print
-                    if (this.currentMessageBuilder[message.type].header.bytesToRead - this.currentMessageBuilder[message.type].bytesRead <= data.length) {
+                    if (this.currentMessageBuilder[message.type].header.bytesToRead - this.currentMessageBuilder[message.type].bytesRead === 0 && data.length > this.P2P_DATA_HEADER_BYTES) {
+                        logging_1.rootP2PLogger.debug(`Parsing message - DATA ${types_1.P2PDataType[message.type]} - Discarding unexpected data (infinite loop prevention)`, { stationSN: this.rawStation.station_sn, seqNo: message.seqNo, dataSize: data.length, data: data.toString("hex") });
+                        data = Buffer.from([]);
+                    }
+                    else if (this.currentMessageBuilder[message.type].header.bytesToRead - this.currentMessageBuilder[message.type].bytesRead <= data.length) {
                         const payload = data.subarray(0, this.currentMessageBuilder[message.type].header.bytesToRead - this.currentMessageBuilder[message.type].bytesRead);
                         this.currentMessageBuilder[message.type].messages[message.seqNo] = payload;
                         this.currentMessageBuilder[message.type].bytesRead += payload.byteLength;
@@ -2155,7 +2158,7 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                 const result = [];
                                 for (const record of data) {
                                     result.push({
-                                        day: parse(record.days, "YYYYMMDD"),
+                                        day: (0, utils_3.parseDate)(record.days, "YYYYMMDD", logging_1.rootP2PLogger),
                                         count: record.count
                                     });
                                 }
@@ -2181,8 +2184,8 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                             tmpRecord.history = {
                                                 device_type: tableRecord.device_type,
                                                 account: tableRecord.account,
-                                                start_time: parse(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss"),
-                                                end_time: parse(tableRecord.end_time, "YYYY-MM-DD HH:mm:ss"),
+                                                start_time: (0, utils_3.parseDate)(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss", logging_1.rootP2PLogger),
+                                                end_time: (0, utils_3.parseDate)(tableRecord.end_time, "YYYY-MM-DD HH:mm:ss", logging_1.rootP2PLogger),
                                                 frame_num: tableRecord.frame_num,
                                                 storage_type: tableRecord.storage_type,
                                                 storage_cloud: tableRecord.storage_cloud,
@@ -2220,13 +2223,13 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
                                                 detection_type: tableRecord.detection_type,
                                                 person_id: tableRecord.person_id,
                                                 crop_path: tableRecord.crop_path,
-                                                event_time: parse(tableRecord.event_time, "YYYY-MM-DD HH:mm:ss"),
+                                                event_time: (0, utils_3.parseDate)(tableRecord.event_time, "YYYY-MM-DD HH:mm:ss", logging_1.rootP2PLogger),
                                                 person_recog_flag: tableRecord.person_recog_flag,
                                                 crop_pic_quality: tableRecord.crop_pic_quality,
                                                 pic_marking_flag: tableRecord.pic_marking_flag,
                                                 group_id: tableRecord.group_id,
                                                 crop_id: tableRecord.crop_id,
-                                                start_time: parse(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss"),
+                                                start_time: (0, utils_3.parseDate)(tableRecord.start_time, "YYYY-MM-DD HH:mm:ss", logging_1.rootP2PLogger),
                                                 storage_type: tableRecord.storage_type,
                                                 storage_status: tableRecord.storage_status,
                                                 storage_label: tableRecord.storage_label,
@@ -2416,7 +2419,6 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
         this.currentMessageState[datatype].videoStream = null;
         this.currentMessageState[datatype].audioStream = null;
         this.currentMessageState[datatype].videoStream = new stream_1.Readable({ autoDestroy: true,
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
             read() { } /*,
 
             destroy(this, error, _callback) {
@@ -2428,7 +2430,6 @@ class P2PClientProtocol extends tiny_typed_emitter_1.TypedEmitter {
             }*/
         });
         this.currentMessageState[datatype].audioStream = new stream_1.Readable({ autoDestroy: true,
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
             read() { } /*,
 
             destroy(this, error, _callback) {

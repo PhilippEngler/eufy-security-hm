@@ -5,7 +5,7 @@ const logging_1 = require("./eufySecurityApi/logging");
 try {
     let timeStamp = Date.now();
     timeStamp = Date.now();
-    (0, node_child_process_1.execFile)('tclsh', ['/usr/local/addons/eufySecurity/www/serviceManager.cgi', 'action=restartService'], (err, stdout, stderr) => {
+    (0, node_child_process_1.execFile)("tclsh", ["/usr/local/addons/eufySecurity/www/serviceManager.cgi", "action=restartService"], (err, stdout, stderr) => {
         if (stdout.trim().includes(`{"success":true}`)) {
             console.log(`${(0, logging_1.formatDate)(timeStamp)} INFO  [addon] ...restart command sent successfully.`);
         }

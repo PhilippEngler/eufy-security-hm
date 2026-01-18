@@ -118,7 +118,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
                     this.pushService = new pushService_1.PushService(this, this.httpService, this.config);
                 }
                 catch (e) {
-                    logging_1.rootAddonLogger.info("No country and/or language given. Skipping creating push service.");
+                    logging_1.rootAddonLogger.info("No country and/or language given. Skipping creating push service.", { error: e });
                 }
             }
             this.mqttService = new mqttService_1.MqttService(this, this.config);
@@ -725,7 +725,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
      * Refresh all Devices, Station and/or Houses and the settings of them.
      */
     async refreshData(target) {
-        let result = new Map();
+        const result = new Map();
         switch (target) {
             case "all":
                 result.set("devices", await (0, utils_4.waitForHttpApiEvent)(this.httpService, "devices", 1000));
@@ -1561,7 +1561,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
                 }
             }
         }
-        catch (e) {
+        catch {
             mode = -1;
         }
         if (mode < -1) {
@@ -1810,8 +1810,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
     async refreshCloudDeviceData(target) {
         let json = {};
         try {
-            let res = await this.refreshData(target);
-            logging_1.rootAddonLogger.info(`res: ${JSON.stringify(res)}`);
+            const res = await this.refreshData(target);
             if (target === "all") {
                 if (res.get("devices") === true && res.get("houses") === true && res.get("stations") === true) {
                     json = { "success": true, "data": (0, utils_4.convertMapToObject)(res) };
@@ -1839,7 +1838,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
     async connectStation(stationSerial) {
         let json = {};
         if (this.stations) {
-            let station = await this.stations.getStation(stationSerial);
+            const station = await this.stations.getStation(stationSerial);
             if (station) {
                 if (station.isConnected()) {
                     json = { "success": false, "message": "P2P connection to station already established." };
@@ -1873,7 +1872,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
     async disconnectStation(stationSerial) {
         let json = {};
         if (this.stations) {
-            let station = await this.stations.getStation(stationSerial);
+            const station = await this.stations.getStation(stationSerial);
             if (station) {
                 if (!station.isConnected()) {
                     json = { "success": false, "message": "No P2P connection to station established." };
@@ -1907,13 +1906,13 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
     async reconnectStation(stationSerial) {
         let json = {};
         if (this.stations) {
-            let station = await this.stations.getStation(stationSerial);
+            const station = await this.stations.getStation(stationSerial);
             if (station) {
                 if (!station.isP2PConnectableDevice()) {
                     json = { "success": false, "message": "Not a P2P connectable device." };
                 }
                 else {
-                    let connected = station.isConnected();
+                    const connected = station.isConnected();
                     let res = false;
                     if (connected === true) {
                         try {
@@ -2184,7 +2183,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
     async getAPIConfigAsJson() {
         let json = {};
         json = { "success": true, "data": {} };
-        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "acceptInvitations": this.config.getAcceptInvitations(), "houseId": this.config.getHouseId(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "secureApiAccessBySid": this.config.getSecureApiAccessBySid(), "enableEmbeddedPKCS1Support": this.config.getEnableEmbeddedPKCS1Support(), "enableEmbeddedPKCS1SupportEditable": Number.parseInt(process.versions.node.split('.')[0]) > 20 ? false : true, "logLevelAddon": this.config.getLogLevelAddon(), "logLevelMain": this.config.getLogLevelMain(), "logLevelHttp": this.config.getLogLevelHttp(), "logLevelP2p": this.config.getLogLevelP2p(), "logLevelPush": this.config.getLogLevelPush(), "logLevelMqtt": this.config.getLogLevelMqtt(), "tokenExpire": this.config.getTokenExpire() };
+        json.data = { "configVersion": this.config.getConfigFileVersion(), "eMail": this.config.getEmailAddress(), "password": this.config.getPassword(), "country": this.config.getCountry(), "language": this.config.getLanguage(), "trustedDeviceName": this.config.getTrustedDeviceName(), "httpActive": this.config.getHttpActive(), "httpPort": this.config.getHttpPort(), "httpsActive": this.config.getHttpsActive(), "httpsPort": this.config.getHttpsPort(), "httpsPKeyFile": this.config.getHttpsPKeyFile(), "httpsCertFile": this.config.getHttpsCertFile(), "acceptInvitations": this.config.getAcceptInvitations(), "houseId": this.config.getHouseId(), "connectionTypeP2p": this.config.getConnectionType(), "localStaticUdpPortsActive": this.config.getLocalStaticUdpPortsActive(), "localStaticUdpPorts": [], "systemVariableActive": this.config.getSystemVariableActive(), "updateCloudInfoIntervall": this.config.getUpdateCloudInfoIntervall(), "updateDeviceDataIntervall": this.config.getUpdateDeviceDataIntervall(), "stateUpdateEventActive": this.config.getStateUpdateEventActive(), "stateUpdateIntervallActive": this.config.getStateUpdateIntervallActive(), "stateUpdateIntervallTimespan": this.config.getStateUpdateIntervallTimespan(), "pushServiceActive": this.config.getPushServiceActive(), "secureApiAccessBySid": this.config.getSecureApiAccessBySid(), "enableEmbeddedPKCS1Support": this.config.getEnableEmbeddedPKCS1Support(), "enableEmbeddedPKCS1SupportEditable": Number.parseInt(process.versions.node.split(".")[0]) > 20 ? false : true, "logLevelAddon": this.config.getLogLevelAddon(), "logLevelMain": this.config.getLogLevelMain(), "logLevelHttp": this.config.getLogLevelHttp(), "logLevelP2p": this.config.getLogLevelP2p(), "logLevelPush": this.config.getLogLevelPush(), "logLevelMqtt": this.config.getLogLevelMqtt(), "tokenExpire": this.config.getTokenExpire() };
         json.data.localStaticUdpPorts = await this.getLocalStaticUdpPorts();
         return JSON.stringify(json);
     }
@@ -2338,7 +2337,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
                         let device;
                         const stations = await this.stations.getStations();
                         const devices = await this.devices.getDevices();
-                        var commonSystemVariables = [];
+                        const commonSystemVariables = [];
                         commonSystemVariables.push({ "name": "eufyCurrentState", "info": this.translator.translateString("systemVariables:common.eufyCurrentState"), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" });
                         commonSystemVariables.push({ "name": "eufyLastConnectionResult", "info": this.translator.translateString("systemVariables:common.eufyLastConnectionResult"), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" });
                         commonSystemVariables.push({ "name": "eufyLastConnectionTime", "info": this.translator.translateString("systemVariables:common.eufyLastConnectionTime"), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" });
@@ -2346,7 +2345,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
                         commonSystemVariables.push({ "name": "eufyLastModeChangeTime", "info": this.translator.translateString("systemVariables:common.eufyLastModeChangeTime"), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" });
                         json = { "success": true, "data": [] };
                         for (const commonSystemVariable of commonSystemVariables) {
-                            var isValueTypeCorrect = false;
+                            let isValueTypeCorrect = false;
                             if (availableSystemVariables.includes(commonSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, commonSystemVariable.name) === commonSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
@@ -2355,43 +2354,43 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(commonSystemVariable.name), 1);
                             }
                         }
-                        var tempSystemVariable;
-                        var isValueTypeCorrect = false;
+                        let tempSystemVariable;
+                        let isValueTypeCorrect = false;
                         for (const stationSerial in stations) {
                             station = stations[stationSerial];
                             isValueTypeCorrect = false;
-                            tempSystemVariable = { "name": `eufyCentralState${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralState", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
+                            tempSystemVariable = { "name": `eufyCentralState${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralState", JSON.stringify({ "stationSerial": station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
                             if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
-                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralState${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralState", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralState" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
+                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralState${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralState", JSON.stringify({ "stationSerial": station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralState" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
                             if (availableSystemVariables.includes("eufyCentralState" + station.getSerial())) {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralState${station.getSerial()}`), 1);
                             }
                             isValueTypeCorrect = false;
-                            tempSystemVariable = { "name": `eufyLastModeChangeTime${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyLastModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
+                            tempSystemVariable = { "name": `eufyLastModeChangeTime${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyLastModeChangeTime", JSON.stringify({ "stationSerial": station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
                             if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
-                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyLastModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
+                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyLastModeChangeTime${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyLastModeChangeTime", JSON.stringify({ "stationSerial": station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
                             if (availableSystemVariables.includes("eufyLastModeChangeTime" + station.getSerial())) {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyLastModeChangeTime${station.getSerial()}`), 1);
                             }
                             isValueTypeCorrect = false;
-                            tempSystemVariable = { "name": `eufyCentralCurrentMode${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralCurrentMode", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
+                            tempSystemVariable = { "name": `eufyCentralCurrentMode${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralCurrentMode", JSON.stringify({ "stationSerial": station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
                             if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
-                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralCurrentMode${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralCurrentMode", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
+                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralCurrentMode${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralCurrentMode", JSON.stringify({ "stationSerial": station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
                             if (availableSystemVariables.includes("eufyCentralCurrentMode" + station.getSerial())) {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralCurrentMode${station.getSerial()}`), 1);
                             }
                             isValueTypeCorrect = false;
-                            tempSystemVariable = { "name": `eufyCentralCurrentModeChangeTime${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralCurrentModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
+                            tempSystemVariable = { "name": `eufyCentralCurrentModeChangeTime${station.getSerial()}`, "info": this.translator.translateString("systemVariables:station.eufyCentralCurrentModeChangeTime", JSON.stringify({ "stationSerial": station.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
                             if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
-                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralCurrentModeChangeTime${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralCurrentModeChangeTime", JSON.stringify({ 'stationSerial': station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
+                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCentralCurrentModeChangeTime${station.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:station.eufyCentralCurrentModeChangeTime", JSON.stringify({ "stationSerial": station.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
                             if (availableSystemVariables.includes("eufyCentralCurrentModeChangeTime" + station.getSerial())) {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCentralCurrentModeChangeTime${station.getSerial()}`), 1);
                             }
@@ -2400,29 +2399,29 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
                             device = devices[deviceSerial];
                             if (availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial())) {
                                 isValueTypeCorrect = false;
-                                tempSystemVariable = { "name": `eufyCameraImageURL${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraImageURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
+                                tempSystemVariable = { "name": `eufyCameraImageURL${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraImageURL", JSON.stringify({ "deviceSerial": device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
                                 if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                     isValueTypeCorrect = true;
                                 }
-                                json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraImageURL${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraImageURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": false });
+                                json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraImageURL${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraImageURL", JSON.stringify({ "deviceSerial": device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraImageURL" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": false });
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraImageURL${device.getSerial()}`), 1);
                             }
                             isValueTypeCorrect = false;
-                            tempSystemVariable = { "name": `eufyCameraVideoTime${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraVideoTime", JSON.stringify({ 'deviceSerial': device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
+                            tempSystemVariable = { "name": `eufyCameraVideoTime${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraVideoTime", JSON.stringify({ "deviceSerial": device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
                             if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                 isValueTypeCorrect = true;
                             }
-                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraVideoTime", JSON.stringify({ 'deviceSerial': device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
+                            json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraVideoTime${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraVideoTime", JSON.stringify({ "deviceSerial": device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": true });
                             if (availableSystemVariables.includes("eufyCameraVideoTime" + device.getSerial())) {
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoTime${device.getSerial()}`), 1);
                             }
                             if (availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial())) {
                                 isValueTypeCorrect = false;
-                                tempSystemVariable = { "name": `eufyCameraVideoURL${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraVideoURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
+                                tempSystemVariable = { "name": `eufyCameraVideoURL${device.getSerial()}`, "info": this.translator.translateString("systemVariables:device.eufyCameraVideoURL", JSON.stringify({ "deviceSerial": device.getSerial() })), "valueType": "ivtString", "valueSubType": "istChar8859", "valueUnit": "", "state": "" };
                                 if (availableSystemVariables.includes(tempSystemVariable.name) === true && await this.openCcuApi.getSystemVariableValueType("localhost", false, tempSystemVariable.name) === tempSystemVariable.valueType) {
                                     isValueTypeCorrect = true;
                                 }
-                                json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraVideoURL", JSON.stringify({ 'deviceSerial': device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": false });
+                                json.data.push({ "sysVar": tempSystemVariable, "sysVarName": `eufyCameraVideoURL${device.getSerial()}`, "sysVarInfo": this.translator.translateString("systemVariables:device.eufyCameraVideoURL", JSON.stringify({ "deviceSerial": device.getSerial() })), "sysVarAvailable": availableSystemVariables.includes("eufyCameraVideoURL" + device.getSerial()), "sysVarValueTypeCorrect": isValueTypeCorrect, "sysVarCurrent": false });
                                 availableSystemVariables.splice(availableSystemVariables.indexOf(`eufyCameraVideoURL${device.getSerial()}`), 1);
                             }
                         }
@@ -2460,7 +2459,7 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
      * @param systemVariableGeneric The generic system variable to create.
      */
     async createSystemVariable(systemVariableGeneric) {
-        var systemVariable;
+        let systemVariable;
         switch (systemVariableGeneric.valueType) {
             case "ivtBinary":
                 try {
@@ -2982,14 +2981,14 @@ class EufySecurityApi extends tiny_typed_emitter_1.TypedEmitter {
      * @returns The version of this API.
      */
     getEufySecurityApiVersion() {
-        return "3.3.0";
+        return "3.3.1";
     }
     /**
      * Return the version of the library used for communicating with eufy.
      * @returns The version of the used eufy-security-client.
      */
     getEufySecurityClientVersion() {
-        return "3.4.0";
+        return "3.5.0";
     }
 }
 exports.EufySecurityApi = EufySecurityApi;

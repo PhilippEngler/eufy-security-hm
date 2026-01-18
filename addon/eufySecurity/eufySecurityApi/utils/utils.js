@@ -1,14 +1,67 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractEnclosedString = exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToLogFiles = exports.pathToTemp = exports.pathToNodeJs = void 0;
+exports.extractEnclosedString = exports.convertTimeStampToTimeStampMs = exports.makeDateTimeString = exports.getStationTypeString = exports.getDeviceTypeAsString = exports.getModelName = exports.pathToLogFiles = exports.pathToTemp = void 0;
+exports.getPathToNodeJs = getPathToNodeJs;
+exports.setPathToNodeJs = setPathToNodeJs;
+exports.getPathToApp = getPathToApp;
+exports.setPathToApp = setPathToApp;
+exports.getPathToHttpServerFiles = getPathToHttpServerFiles;
+exports.setPathToHttpServerFiles = setPathToHttpServerFiles;
 exports.waitForStationEvent = waitForStationEvent;
 exports.waitForDeviceEvent = waitForDeviceEvent;
 exports.waitForHttpApiEvent = waitForHttpApiEvent;
 exports.convertMapToObject = convertMapToObject;
 const http_1 = require("../http");
-exports.pathToNodeJs = "/usr/local/addons/eufySecurity/bin/nodejs/bin";
+// eslint-disable-next-line no-var
+var pathToNodeJs = "";
+// eslint-disable-next-line no-var
+var pathToApp = "";
+// eslint-disable-next-line no-var
+var pathToHttpServerFiles = "";
 exports.pathToTemp = "/var/tmp/eufySecurity";
 exports.pathToLogFiles = "/var/log/";
+/**
+ * Get the path to Node.js executable used to run the app.
+ * @returns The path to the Node.js executable.
+ */
+function getPathToNodeJs() {
+    return pathToNodeJs;
+}
+/**
+ * Set the path to Node.js executable used to run the app.
+ * @param path The path to the Node.js executable.
+ */
+function setPathToNodeJs(path) {
+    pathToNodeJs = path;
+}
+/**
+ * Get the path to the app.
+ * @returns The path to the app.
+ */
+function getPathToApp() {
+    return pathToApp;
+}
+/**
+ * Set the path to the app.
+ * @param path The path to the app.
+ */
+function setPathToApp(path) {
+    pathToApp = path;
+}
+/**
+ * Get the path to the files for the www server.
+ * @returns The path to the www server files.
+ */
+function getPathToHttpServerFiles() {
+    return pathToHttpServerFiles;
+}
+/**
+ * Set the path to the files for the www server.
+ * @param path The path to the www server files.
+ */
+function setPathToHttpServerFiles(path) {
+    pathToHttpServerFiles = path;
+}
 /**
  * Retrieve the model name of a given station or device.
  * @param modelNumber The model number of the station or device.
@@ -25,9 +78,13 @@ const getModelName = function (modelNumber) {
             return "HomeBase 2";
         case "T8023":
             return "MiniBase Chime";
+        case "T8025":
+            return "HomeBase mini";
         case "T8030":
             return "HomeBase 3";
         //eufyCams
+        case "T8110":
+            return "eufyCam C35";
         case "T8111":
             return "eufyCam";
         case "T8112":
@@ -44,6 +101,8 @@ const getModelName = function (modelNumber) {
             return "eufyCam 3";
         case "T8161":
             return "eufyCam 3C";
+        case "T8162":
+            return "eufyCam S3 Pro";
         case "T8600":
             return "eufyCam E330 (Professional)";
         //IndoorCams
@@ -61,6 +120,10 @@ const getModelName = function (modelNumber) {
             return "IndoorCam S350";
         case "T8417":
             return "IndoorCam E30";
+        case "T8419":
+            return "IndoorCam C210";
+        case "T8W11":
+            return "IndoorCam C220";
         //SoloCams
         case "T8122":
             return "SoloCam L20";
@@ -76,7 +139,9 @@ const getModelName = function (modelNumber) {
             return "SoloCam S220";
         case "T8170":
             return "SoloCam S340";
-        case "T8B00":
+        case "T8171":
+            return "SoloCam E30";
+        case "T8B0":
             return "SoloCam C210";
         //StarlightCams
         case "T8150":
@@ -115,6 +180,10 @@ const getModelName = function (modelNumber) {
             return "Video Doorbell 2E";
         case "T8222":
             return "Video Doorbell 1080p";
+        case "T8223":
+            return "Video Doorbell C31";
+        case "T8224":
+            return "Video Doorbell C30";
         //Floodlight
         case "T8420":
             return "FloodlightCam 1080p";
@@ -141,8 +210,20 @@ const getModelName = function (modelNumber) {
             return "Smart Lock Front Door";
         case "T8501":
             return "Solo Smart Lock D20";
+        case "T8502":
+            return "Smart Lock C210";
         case "T8503":
-            return "Smart Lock R10";
+            return "Retrofit Smart Lock E110";
+        case "T8504":
+            return "Retrofit Smart Lock E130";
+        case "T8506":
+            return "Smart Lock C220";
+        case "T8510":
+            return "Smart Lock S230";
+        case "T8520":
+            return "Smart Lock S231";
+        case "T8530":
+            return "Video Smart Lock S330";
         case "T8592":
             return "Smart Lock R20";
         case "T8519":
@@ -222,10 +303,13 @@ const getStationTypeString = function (station) {
     switch (station.getDeviceType()) {
         case http_1.DeviceType.STATION:
         case http_1.DeviceType.HB3:
+        case http_1.DeviceType.HOMEBASE_MINI:
         case http_1.DeviceType.MINIBASE_CHIME:
             return `station`;
         case http_1.DeviceType.DOORBELL:
         case http_1.DeviceType.DOORBELL_SOLO:
+        case http_1.DeviceType.BATTERY_DOORBELL_C30:
+        case http_1.DeviceType.BATTERY_DOORBELL_C31:
         case http_1.DeviceType.BATTERY_DOORBELL:
         case http_1.DeviceType.BATTERY_DOORBELL_2:
         case http_1.DeviceType.BATTERY_DOORBELL_PLUS:
@@ -240,6 +324,8 @@ const getStationTypeString = function (station) {
         case http_1.DeviceType.INDOOR_PT_CAMERA:
         case http_1.DeviceType.INDOOR_PT_CAMERA_1080:
         case http_1.DeviceType.INDOOR_PT_CAMERA_S350:
+        case http_1.DeviceType.INDOOR_PT_CAMERA_C210:
+        case http_1.DeviceType.INDOOR_PT_CAMERA_C220:
             return `indoorcamera`;
         case http_1.DeviceType.SOLO_CAMERA:
         case http_1.DeviceType.SOLO_CAMERA_PRO:
@@ -248,13 +334,16 @@ const getStationTypeString = function (station) {
         case http_1.DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR:
         case http_1.DeviceType.SOLO_CAMERA_SOLAR:
         case http_1.DeviceType.SOLO_CAMERA_C210:
+        case http_1.DeviceType.SOLO_CAMERA_E30:
         case http_1.DeviceType.OUTDOOR_PT_CAMERA:
+        case http_1.DeviceType.CAMERA_C35:
             return `solocamera`;
         case http_1.DeviceType.FLOODLIGHT:
         case http_1.DeviceType.FLOODLIGHT_CAMERA_8422:
         case http_1.DeviceType.FLOODLIGHT_CAMERA_8423:
         case http_1.DeviceType.FLOODLIGHT_CAMERA_8424:
         case http_1.DeviceType.FLOODLIGHT_CAMERA_8425:
+        case http_1.DeviceType.FLOODLIGHT_CAMERA_8426:
             return `floodlight`;
         case http_1.DeviceType.WALL_LIGHT_CAM:
         case http_1.DeviceType.WALL_LIGHT_CAM_81A0:

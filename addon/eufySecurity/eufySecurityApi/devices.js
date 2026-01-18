@@ -1493,7 +1493,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.HUMAN, value);
                 }
-                else if (device.isFloodLightT8425()) {
+                else if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.HUMAN, value);
                 }
                 else {
@@ -1504,7 +1504,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.PET, value);
                 }
-                else if (device.isFloodLightT8425()) {
+                else if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.PET, value);
                 }
                 else {
@@ -1515,7 +1515,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setNotificationIndoor(device, http_1.IndoorS350NotificationTypes.ALL_OTHER_MOTION, value);
                 }
-                else if (device.isFloodLightT8425()) {
+                else if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.ALL_OTHER_MOTION, value);
                 }
                 else {
@@ -1538,7 +1538,7 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                     station.setNotificationCrying(device, value);
                 }
             case http_1.PropertyName.DeviceNotificationVehicle:
-                if (device.isFloodLightT8425()) {
+                if (device.isFloodLightT8425() || device.isCameraC35()) {
                     station.setNotificationFloodlightT8425(device, http_1.FloodlightT8425NotificationTypes.VEHICLE, value);
                 }
                 else {
@@ -1833,6 +1833,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setMotionDetectionTypeHB3(device, http_1.IndoorS350DetectionTypes.PET_DETECTION, value);
                 }
+                else if (device.isCameraC35()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.EufyCamC35DetectionTypes.PET_DETECTION, value);
+                }
                 else {
                     station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.PET_DETECTION, value);
                 }
@@ -1840,6 +1843,9 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
             case http_1.PropertyName.DeviceMotionDetectionTypeVehicle:
                 if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, http_1.T8170DetectionTypes.VEHICLE_DETECTION, value);
+                }
+                else if (device.isCameraC35()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.EufyCamC35DetectionTypes.VEHICLE_DETECTION, value);
                 }
                 else {
                     station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.VEHICLE_DETECTION, value);
@@ -1852,11 +1858,14 @@ class Devices extends tiny_typed_emitter_1.TypedEmitter {
                 else if (device.isOutdoorPanAndTiltCamera()) {
                     station.setMotionDetectionTypeHB3(device, http_1.T8170DetectionTypes.ALL_OTHER_MOTION, value);
                 }
-                else if (device.isSoloCameras()) {
+                else if (device.isSoloCameras() && (!device.isCameraC35())) {
                     station.setMotionDetectionTypeHB3(device, http_1.SoloCameraDetectionTypes.ALL_OTHER_MOTION, value);
                 }
                 else if (device.isIndoorPanAndTiltCameraS350()) {
                     station.setMotionDetectionTypeHB3(device, http_1.IndoorS350DetectionTypes.ALL_OTHER_MOTION, value);
+                }
+                else if (device.isCameraC35()) {
+                    station.setMotionDetectionTypeHB3(device, http_1.EufyCamC35DetectionTypes.ALL_OTHER_MOTION, value);
                 }
                 else {
                     station.setMotionDetectionTypeHB3(device, http_1.HB3DetectionTypes.ALL_OTHER_MOTION, value);

@@ -8,33 +8,49 @@ const types_2 = require("./types");
 const utils_3 = require("./utils");
 const error_1 = require("../error");
 class ParameterHelper {
+    static JSON_PARSE_BASE64_PARAMS = new Set([
+        types_2.ParamType.SNOOZE_MODE,
+        types_2.ParamType.CAMERA_MOTION_ZONES,
+        types_1.CommandType.CMD_SET_DOORSENSOR_ALWAYS_OPEN_DELAY,
+        types_1.CommandType.CMD_SET_DOORSENSOR_ALWAYS_OPEN,
+        types_1.CommandType.ARM_DELAY_HOME,
+        types_1.CommandType.ARM_DELAY_AWAY,
+        types_1.CommandType.ARM_DELAY_CUS1,
+        types_1.CommandType.ARM_DELAY_CUS2,
+        types_1.CommandType.ARM_DELAY_CUS3,
+        types_1.CommandType.ARM_DELAY_OFF,
+        types_1.CommandType.CELLULAR_INFO,
+        types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_MANUAL_COLORED_LIGHTING,
+        types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_SCHEDULE_COLORED_LIGHTING,
+        types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_COLORED_LIGHTING_COLORS,
+        types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_DYNAMIC_LIGHTING_THEMES,
+        types_1.CommandType.CMD_INDOOR_DET_SET_ACTIVE_ZONE,
+        types_1.CommandType.CMD_SET_PRIVACYPARAM,
+        types_1.CommandType.CMD_BAT_DOORBELL_VIDEO_QUALITY2,
+        types_1.CommandType.CMD_BAT_DOORBELL_RECORD_QUALITY2,
+        types_1.CommandType.CMD_SET_CROSS_TRACKING_CAMERA_LIST,
+        types_1.CommandType.CMD_SET_CROSS_TRACKING_GROUP_LIST,
+        types_1.CommandType.CMD_FLOODLIGHT_SET_DETECTION_RANGE_T8425,
+        types_1.CommandType.CMD_SET_LIGHT_CTRL_BRIGHT_PIR_T8425,
+        types_1.CommandType.CMD_SET_LIGHT_CTRL_BRIGHT_SCH_T8425
+    ]);
+    static JSON_PARSE_PLAIN_PARAMS = new Set([
+        types_1.CommandType.CMD_BAT_DOORBELL_SET_NOTIFICATION_MODE,
+        types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_DETECTION_SENSITIVITY,
+        types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_AUTO_RESPONSE,
+        types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_STRAND_TIME,
+        types_1.CommandType.CMD_DOORBELL_DUAL_RING_AUTO_RESPONSE,
+        types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_GUARD_TIME,
+        types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_DISTANCE,
+        types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_TIME,
+        types_1.CommandType.CMD_DOORBELL_DUAL_DELIVERY_GUARD_SWITCH,
+        types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_GUARD_VOICE,
+        types_1.CommandType.CMD_CAMERA_GARAGE_DOOR_SENSORS,
+        types_1.CommandType.CMD_MOTION_SET_LEAVING_REACTIONS
+    ]);
     static readValue(serialNumber, type, value, log) {
         if (value) {
-            if (type === types_2.ParamType.SNOOZE_MODE ||
-                type === types_2.ParamType.CAMERA_MOTION_ZONES ||
-                type === types_1.CommandType.CMD_SET_DOORSENSOR_ALWAYS_OPEN_DELAY ||
-                type === types_1.CommandType.CMD_SET_DOORSENSOR_ALWAYS_OPEN ||
-                type === types_1.CommandType.ARM_DELAY_HOME ||
-                type === types_1.CommandType.ARM_DELAY_AWAY ||
-                type === types_1.CommandType.ARM_DELAY_CUS1 ||
-                type === types_1.CommandType.ARM_DELAY_CUS2 ||
-                type === types_1.CommandType.ARM_DELAY_CUS3 ||
-                type === types_1.CommandType.ARM_DELAY_OFF ||
-                type === types_1.CommandType.CELLULAR_INFO ||
-                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_MANUAL_COLORED_LIGHTING ||
-                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_SCHEDULE_COLORED_LIGHTING ||
-                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_MANUAL_COLORED_LIGHTING ||
-                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_COLORED_LIGHTING_COLORS ||
-                type === types_1.CommandType.CMD_WALL_LIGHT_SETTINGS_DYNAMIC_LIGHTING_THEMES ||
-                type === types_1.CommandType.CMD_INDOOR_DET_SET_ACTIVE_ZONE ||
-                type === types_1.CommandType.CMD_SET_PRIVACYPARAM ||
-                type === types_1.CommandType.CMD_BAT_DOORBELL_VIDEO_QUALITY2 ||
-                type === types_1.CommandType.CMD_BAT_DOORBELL_RECORD_QUALITY2 ||
-                type === types_1.CommandType.CMD_SET_CROSS_TRACKING_CAMERA_LIST ||
-                type === types_1.CommandType.CMD_SET_CROSS_TRACKING_GROUP_LIST ||
-                type === types_1.CommandType.CMD_FLOODLIGHT_SET_DETECTION_RANGE_T8425 ||
-                type === types_1.CommandType.CMD_SET_LIGHT_CTRL_BRIGHT_PIR_T8425 ||
-                type === types_1.CommandType.CMD_SET_LIGHT_CTRL_BRIGHT_SCH_T8425) {
+            if (ParameterHelper.JSON_PARSE_BASE64_PARAMS.has(type)) {
                 if (typeof value === "string") {
                     const parsedValue = (0, utils_2.parseJSON)((0, utils_1.getNullTerminatedString)((0, utils_1.decodeBase64)(value), "utf-8"), log);
                     if (parsedValue === undefined) {
@@ -46,18 +62,7 @@ class ParameterHelper {
                     return value; //return object
                 }
             }
-            else if (type === types_1.CommandType.CMD_BAT_DOORBELL_SET_NOTIFICATION_MODE ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_DETECTION_SENSITIVITY ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_AUTO_RESPONSE ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_STRAND_TIME ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_RING_AUTO_RESPONSE ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_GUARD_TIME ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_DISTANCE ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_RADAR_WD_TIME ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_DELIVERY_GUARD_SWITCH ||
-                type === types_1.CommandType.CMD_DOORBELL_DUAL_PACKAGE_GUARD_VOICE ||
-                type === types_1.CommandType.CMD_CAMERA_GARAGE_DOOR_SENSORS ||
-                type === types_1.CommandType.CMD_MOTION_SET_LEAVING_REACTIONS) {
+            else if (ParameterHelper.JSON_PARSE_PLAIN_PARAMS.has(type)) {
                 if (typeof value === "string") {
                     const parsedValue = (0, utils_2.parseJSON)(value, log);
                     if (parsedValue === undefined) {

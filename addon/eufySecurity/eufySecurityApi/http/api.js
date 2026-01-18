@@ -15,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HTTPApi = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
@@ -131,7 +141,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             }
         });
         const result = response.body;
-        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+        if (result.code == types_1.ResponseErrorCode.CODE_OK) {
             return `https://${result.data.domain}`;
         }
         throw new error_2.ApiBaseLoadError("Error identifying API base from cloud", { context: { code: result.code, message: result.msg } });
@@ -329,7 +339,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 if (response.status == 200) {
                     const result = response.data;
                     if (result.data !== undefined) {
-                        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                             const dataresult = result.data;
                             if (dataresult.server_secret_info?.public_key)
                                 this.persistentData.serverPublicKey = dataresult.server_secret_info.public_key;
@@ -421,7 +431,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             });
             if (response.status == 200) {
                 const result = response.data;
-                if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                     logging_1.rootHTTPLogger.info("Logout from account successful.");
                     this.invalidateToken();
                     this.emit("logout");
@@ -455,7 +465,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             });
             if (response.status == 200) {
                 const result = response.data;
-                if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                     logging_1.rootHTTPLogger.info(`Requested verification code for 2FA`);
                     return true;
                 }
@@ -482,7 +492,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data && result.data.list) {
                             return result.data.list;
                         }
@@ -516,7 +526,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 logging_1.rootHTTPLogger.debug("Add trust device - Response trust device", { verifyCode: verifyCode, data: response.data });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         logging_1.rootHTTPLogger.info(`2FA authentication successfully done. Device trusted.`);
                         const trusted_devices = await this.listTrustDevice();
                         trusted_devices.forEach((trusted_device) => {
@@ -669,7 +679,6 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
         //Get Devices
         await this.refreshDeviceData();
     }
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     async request(request, withoutUrlPrefix = false) {
         logging_1.rootHTTPLogger.debug("Api request", { method: request.method, endpoint: request.endpoint, responseType: request.responseType, token: this.token, data: request.data });
         try {
@@ -844,7 +853,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data) {
                             const ciphers = {};
                             const decrypted = this.decryptAPIData(result.data);
@@ -881,7 +890,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data) {
                             const voices = {};
                             result.data.forEach((voice) => {
@@ -1047,7 +1056,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data) {
                             const invites = {};
                             const decrypted = this.decryptAPIData(result.data);
@@ -1092,7 +1101,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         return true;
                     }
                     else {
@@ -1124,7 +1133,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     });
                     if (response.status == 200) {
                         const result = response.data;
-                        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                             if (result.data) {
                                 if (type === types_1.PublicKeyType.LOCK)
                                     this.persistentData.device_public_keys[deviceSN] = result.data.public_key;
@@ -1188,7 +1197,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data) {
                             const entries = result.data;
                             return entries;
@@ -1222,7 +1231,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data) {
                             const houseDetail = this.decryptAPIData(result.data);
                             logging_1.rootHTTPLogger.debug("Get house detail - Decrypted house detail data", { details: houseDetail });
@@ -1256,7 +1265,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data) {
                             logging_1.rootHTTPLogger.debug("Get house list - houses", { houses: result.data });
                             return result.data;
@@ -1291,7 +1300,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data) {
                             //const houseInviteList = this.decryptAPIData(result.data) as Array<HouseInviteListResponse>;   // No more encrypted!?
                             //rootHTTPLogger.debug("Get house invite list - Decrypted house invite list data", houseInviteList);
@@ -1331,7 +1340,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         return true;
                     }
                     else {
@@ -1360,7 +1369,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             });
             if (response.status == 200) {
                 const result = response.data;
-                if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                     if (result.data) {
                         const profile = this.decryptAPIData(result.data);
                         logging_1.rootHTTPLogger.debug("Get passport profile - Decrypted passport profile data", { profile: profile });
@@ -1399,7 +1408,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         if (result.data)
                             return result.data;
                     }
@@ -1433,7 +1442,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         return true;
                     }
                     else {
@@ -1459,7 +1468,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
             });
             if (response.status == 200) {
                 const result = response.data;
-                if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                     if (result.data) {
                         const usersResponse = result.data;
                         return usersResponse.user_list;
@@ -1516,7 +1525,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                     });
                     if (response.status == 200) {
                         const result = response.data;
-                        if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                        if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                             return true;
                         }
                         else {
@@ -1589,7 +1598,7 @@ class HTTPApi extends tiny_typed_emitter_1.TypedEmitter {
                 });
                 if (response.status == 200) {
                     const result = response.data;
-                    if (result.code == types_1.ResponseErrorCode.CODE_WHATEVER_ERROR) {
+                    if (result.code == types_1.ResponseErrorCode.CODE_OK) {
                         return true;
                     }
                     else {

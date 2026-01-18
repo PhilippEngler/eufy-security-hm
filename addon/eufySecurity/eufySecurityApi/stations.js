@@ -1959,6 +1959,9 @@ class Stations extends tiny_typed_emitter_1.TypedEmitter {
         if (station.hasProperty(http_1.PropertyName.StationStorageInfoHdd)) {
             station.updateProperty(http_1.PropertyName.StationStorageInfoHdd, storageInfo.hdd_info);
         }
+        if (storageInfo.sd_card_info !== undefined && station.hasProperty(http_1.PropertyName.StationStorageInfoSdCard)) {
+            station.updateProperty(http_1.PropertyName.StationStorageInfoSdCard, storageInfo.sd_card_info);
+        }
     }
     /**
      * Set the given property for the given station to the given value.

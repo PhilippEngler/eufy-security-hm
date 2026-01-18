@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Station = void 0;
 const tiny_typed_emitter_1 = require("tiny-typed-emitter");
-const { format } = require('date-and-time');
 const types_1 = require("./types");
 const parameter_1 = require("./parameter");
 const utils_1 = require("./utils");
@@ -16,6 +15,7 @@ const error_2 = require("./error");
 const utils_3 = require("../utils");
 const repl_1 = require("repl");
 const logging_1 = require("../logging");
+const utils_4 = require("../utils");
 class Station extends tiny_typed_emitter_1.TypedEmitter {
     api;
     rawStation;
@@ -128,7 +128,10 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const metadata = this.getPropertiesMetadata(true);
         for (const property of Object.values(metadata)) {
             if (this.rawStation[property.key] !== undefined && typeof property.key === "string") {
-                this.updateProperty(property.name, this.convertRawPropertyValue(property, this.rawStation[property.key]));
+                const convertedValue = this.convertRawPropertyValue(property, this.rawStation[property.key]);
+                if (convertedValue !== undefined) {
+                    this.updateProperty(property.name, convertedValue);
+                }
             }
             else if (this.properties[property.name] === undefined && property.default !== undefined && !this.ready) {
                 this.updateProperty(property.name, property.default);
@@ -183,7 +186,6 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             this.updateRawProperty(param_type, values[param_type].value, values[param_type].source);
         });
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     handlePropertyChange(metadata, oldValue, newValue) {
         if (metadata.name === types_1.PropertyName.StationCurrentMode) {
             //TODO: Finish implementation!
@@ -237,7 +239,13 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             for (const property of Object.values(metadata)) {
                 if (property.key === type) {
                     try {
-                        this.updateProperty(property.name, this.convertRawPropertyValue(property, this.rawProperties[type].value));
+                        const convertedValue = this.convertRawPropertyValue(property, this.rawProperties[type].value);
+                        if (convertedValue !== undefined) {
+                            this.updateProperty(property.name, convertedValue);
+                        }
+                        else {
+                            throw new error_1.BaseError("Failed to convert value - Got undefined");
+                        }
                     }
                     catch (err) {
                         const error = (0, error_1.ensureError)(err);
@@ -270,22 +278,22 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     {
                         switch (property.name) {
                             case types_1.PropertyName.StationNotificationSwitchModeSchedule:
-                                if (!(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
+                                if (this.isStationHomeBase2OrOlder() && !(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
                                     return value !== undefined ? (value === "1" ? true : false) : false;
                                 }
                                 return value !== undefined ? (0, utils_1.isNotificationSwitchMode)(Number.parseInt(value), types_1.NotificationSwitchMode.SCHEDULE) : false;
                             case types_1.PropertyName.StationNotificationSwitchModeGeofence:
-                                if (!(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
+                                if (this.isStationHomeBase2OrOlder() && !(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
                                     throw new error_2.PropertyNotSupportedError("Property not supported for station with this software version", { context: { propertName: property.name, station: this.getSerial(), softwareVersion: this.getSoftwareVersion() } });
                                 }
                                 return value !== undefined ? (0, utils_1.isNotificationSwitchMode)(Number.parseInt(value), types_1.NotificationSwitchMode.GEOFENCE) : false;
                             case types_1.PropertyName.StationNotificationSwitchModeApp:
-                                if (!(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
+                                if (this.isStationHomeBase2OrOlder() && !(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
                                     throw new error_2.PropertyNotSupportedError("Property not supported for station with this software version", { context: { propertName: property.name, station: this.getSerial(), softwareVersion: this.getSoftwareVersion() } });
                                 }
                                 return value !== undefined ? (0, utils_1.isNotificationSwitchMode)(Number.parseInt(value), types_1.NotificationSwitchMode.APP) : false;
                             case types_1.PropertyName.StationNotificationSwitchModeKeypad:
-                                if (!(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
+                                if (this.isStationHomeBase2OrOlder() && !(0, utils_1.isGreaterEqualMinVersion)("2.1.1.6", this.getSoftwareVersion())) {
                                     throw new error_2.PropertyNotSupportedError("Property not supported for station with this software version", { context: { propertName: property.name, station: this.getSerial(), softwareVersion: this.getSoftwareVersion() } });
                                 }
                                 return value !== undefined ? (0, utils_1.isNotificationSwitchMode)(Number.parseInt(value), types_1.NotificationSwitchMode.KEYPAD) : false;
@@ -444,19 +452,49 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         return Station.isStation(type) === true ? (device_1.Device.isIndoorCamera(type) ? Station.CHANNEL_INDOOR : Station.CHANNEL) : 0;
     }
     static isStation(type) {
-        return type === types_1.DeviceType.STATION || type === types_1.DeviceType.HB3 || type === types_1.DeviceType.MINIBASE_CHIME;
+        return type === types_1.DeviceType.STATION || type === types_1.DeviceType.HB3 || type === types_1.DeviceType.MINIBASE_CHIME || type === types_1.DeviceType.HOMEBASE_MINI;
     }
     isStation() {
         return Station.isStation(this.rawStation.device_type);
     }
+    static isStationHomeBase2OrOlder(type) {
+        return type === types_1.DeviceType.STATION;
+    }
     static isStationHomeBase3(type) {
         return type === types_1.DeviceType.HB3;
+    }
+    static isStationHomeBaseMini(type) {
+        return type === types_1.DeviceType.HOMEBASE_MINI;
     }
     static isStationHomeBase3BySn(sn) {
         return sn.startsWith("T8030");
     }
+    static isStationHomeBaseMiniBySn(sn) {
+        return sn.startsWith("T8025");
+    }
+    isStationHomeBase2OrOlder() {
+        return Station.isStationHomeBase2OrOlder(this.rawStation.device_type);
+    }
     isStationHomeBase3() {
         return Station.isStationHomeBase3(this.rawStation.device_type);
+    }
+    isStationHomeBaseMini() {
+        return Station.isStationHomeBaseMini(this.rawStation.device_type);
+    }
+    /**
+     * Checks if the station is a HomeBase 3 or HomeBase mini for determining if SoloDevices are connected to a supported HomeBase.
+     * @returns Returns true, if this is a HomeBase 3 or a HomeBase mini, otherwise false.
+     */
+    isDeviceControlledByHomeBase() {
+        return (this.isStationHomeBase3() || this.isStationHomeBaseMini());
+    }
+    /**
+     * Checks if the station is a HomeBase 3 or HomeBase mini for determining if SoloDevices are connected to a supported HomeBase The check will be done by the given serial number.
+     * @param sn The serial of the station to check.
+     * @returns Returns true, if this is a HomeBase 3 or a HomeBase mini, otherwise false.
+     */
+    static isDeviceControlledByHomeBaseBySn(sn) {
+        return (Station.isStationHomeBase3BySn(sn) || Station.isStationHomeBaseMiniBySn(sn));
     }
     isIntegratedDevice() {
         //TODO: Recheck this implementation considering HomeBase 3 integration
@@ -602,7 +640,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 value: parsedValue,
                 source: "p2p"
             };
-            let deviceSerial = this._getDeviceSerial(channel);
+            const deviceSerial = this._getDeviceSerial(channel);
             if (deviceSerial !== undefined) {
                 this.emit("raw device property changed", deviceSerial, params);
             }
@@ -723,10 +761,10 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
     }
     getStorageInfoEx() {
         logging_1.rootHTTPLogger.debug(`Station send get storage info command`, { stationSN: this.getSerial() });
-        if (this.isStation() && this.rawStation.device_type !== types_1.DeviceType.HB3 && (0, utils_1.isGreaterEqualMinVersion)("3.2.7.6", this.getSoftwareVersion())) {
+        if (this.isStation() && this.rawStation.device_type !== types_1.DeviceType.HB3 && this.rawStation.device_type !== types_1.DeviceType.HOMEBASE_MINI && (0, utils_1.isGreaterEqualMinVersion)("3.2.7.6", this.getSoftwareVersion())) {
             this.p2pSession.sendCommandWithoutData(types_2.CommandType.CMD_SDINFO_EX, Station.CHANNEL);
         }
-        else if (this.rawStation.device_type === types_1.DeviceType.HB3) {
+        else if (this.rawStation.device_type === types_1.DeviceType.HB3 || this.rawStation.device_type === types_1.DeviceType.HOMEBASE_MINI) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1025,7 +1063,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set status led - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isCamera2Product() || device.isCamera3Product() || device.getDeviceType() === types_1.DeviceType.CAMERA || device.getDeviceType() === types_1.DeviceType.CAMERA_E || device.isCameraProfessional247()) {
+        if (device.isCamera2Product() || device.isCamera3Product() || device.getDeviceType() === types_1.DeviceType.CAMERA || device.getDeviceType() === types_1.DeviceType.CAMERA_E || device.isCameraProfessional247() || (device.isCameraC35() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_DEV_LED_SWITCH,
                 value: value === true ? 1 : 0,
@@ -1045,7 +1083,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.getDeviceType() === types_1.DeviceType.FLOODLIGHT_CAMERA_8424) {
+        else if (device.getDeviceType() === types_1.DeviceType.FLOODLIGHT_CAMERA_8424 || (device.isCameraC35() && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1066,7 +1104,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.getDeviceType() === types_1.DeviceType.FLOODLIGHT_CAMERA_8423 || device.isFloodLightT8425() || (device.getDeviceType() === types_1.DeviceType.FLOODLIGHT && !device.isFloodLightT8420X()) || device.isGarageCamera() || (device.isIndoorPanAndTiltCameraS350() && this.isStationHomeBase3()) || (device.isSoloCameras() && this.isStationHomeBase3())) {
+        else if (device.getDeviceType() === types_1.DeviceType.FLOODLIGHT_CAMERA_8423 || device.isFloodLightT8425() || (device.getDeviceType() === types_1.DeviceType.FLOODLIGHT && !device.isFloodLightT8420X()) || device.isGarageCamera() || (device.isIndoorPanAndTiltCameraS350() && this.isDeviceControlledByHomeBase()) || (device.isSoloCameras() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_DEV_LED_SWITCH,
                 value: value === true ? 1 : 0,
@@ -1154,7 +1192,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isSoloCameras() && !this.isStationHomeBase3()) {
+        else if (device.isSoloCameras() && !this.isDeviceControlledByHomeBase()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1308,7 +1346,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set night vision - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425()) {
+        if (device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || device.isCameraC35()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1358,7 +1396,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set motion detection - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isSoloCameraSolar() || device.isOutdoorPanAndTiltCamera() || device.isSoloCameraC210() || (device.isIndoorPanAndTiltCameraS350() && !this.isStationHomeBase3())) {
+        if (device.isSoloCameraSolar() || device.isOutdoorPanAndTiltCamera() || device.isSoloCameraC210() || ((device.isIndoorPanAndTiltCameraS350() || device.isCameraC35()) && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1683,7 +1721,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         logging_1.rootHTTPLogger.debug(`Station switch light - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
         if ((device.isFloodLight() && !device.isFloodLightT8425()) || device.isSoloCameraSpotlight1080() || device.isSoloCameraSpotlight2k() ||
             device.isSoloCameraSpotlightSolar() || device.isCamera2C() || device.isCamera2CPro() ||
-            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247() || device.isCamera3Pro()) {
+            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247() || device.isCamera3Pro() || (device.isCameraC35() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_SET_FLOODLIGHT_MANUAL_SWITCH,
                 value: value === true ? 1 : 0,
@@ -1726,7 +1764,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isWallLightCam()) {
+        else if (device.isWallLightCam() || (device.isCameraC35() && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1758,7 +1796,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set motion detection sensitivity - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if ((device.isFloodLight() && device.getDeviceType() !== types_1.DeviceType.FLOODLIGHT && !device.isFloodLightT8425()) || (device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || device.isFloodLightT8420X() || device.isGarageCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isStationHomeBase3())) {
+        if ((device.isFloodLight() && device.getDeviceType() !== types_1.DeviceType.FLOODLIGHT && !device.isFloodLightT8425()) || (device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || device.isFloodLightT8420X() || device.isGarageCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1795,7 +1833,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if ((device.isSoloCameras() && !this.isStationHomeBase3()) || device.isWiredDoorbellT8200X() || device.isStarlight4GLTE()) {
+        else if ((device.isSoloCameras() && !this.isDeviceControlledByHomeBase()) || device.isWiredDoorbellT8200X() || device.isStarlight4GLTE()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -1959,7 +1997,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isCamera3Product() || device.isSmartDrop() || (device.isSoloCameras() && this.isStationHomeBase3())) {
+        else if (device.isCamera3Product() || device.isSmartDrop() || (device.isSoloCameras() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_SET_PIRSENSITIVITY,
                 value: value,
@@ -2095,7 +2133,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     return;
                 }
                 const aiDetectionType = device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) !== undefined ? device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) : "0";
-                let newAiDetectionType = (0, utils_1.getT8170DetectionMode)(Number.parseInt(aiDetectionType), type, value);
+                const newAiDetectionType = (0, utils_1.getT8170DetectionMode)(Number.parseInt(aiDetectionType), type, value);
                 this.p2pSession.sendCommandWithStringPayload({
                     commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                     value: JSON.stringify({
@@ -2119,6 +2157,39 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             catch (err) {
                 const error = (0, error_1.ensureError)(err);
                 logging_1.rootHTTPLogger.error(`setMotionDetectionTypeHB3 T8170DetectionTypes Error`, { error: (0, utils_3.getError)(error), stationSN: this.getSerial(), deviceSN: device.getSerial() });
+            }
+        }
+        else if (device.isCameraC35()) {
+            try {
+                if (!Object.values(types_1.EufyCamC35DetectionTypes).includes(type)) {
+                    logging_1.rootHTTPLogger.error(`The device ${device.getSerial()} accepts only this type of values:`, Object.values(types_1.EufyCamC35DetectionTypes).filter((value) => typeof value === "number"));
+                    return;
+                }
+                const aiDetectionType = device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) !== undefined ? device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) : "0";
+                const newAiDetectionType = (0, utils_1.getT8110DetectionMode)(Number.parseInt(aiDetectionType), type, value);
+                this.p2pSession.sendCommandWithStringPayload({
+                    commandType: types_2.CommandType.CMD_SET_PAYLOAD,
+                    value: JSON.stringify({
+                        "account_id": this.rawStation.member.admin_user_id,
+                        "cmd": types_2.CommandType.CMD_SET_MOTION_DETECTION_TYPE_HB3,
+                        "mChannel": device.getChannel(),
+                        "mValue3": 0,
+                        "payload": {
+                            "ai_detect_type": newAiDetectionType,
+                            "channel": device.getChannel(),
+                        }
+                    }),
+                    channel: device.getChannel()
+                }, {
+                    property: propertyData,
+                    onSuccess: () => {
+                        device.updateRawProperty(types_2.CommandType.CMD_SET_MOTION_DETECTION_TYPE_HB3, newAiDetectionType.toString(), "p2p");
+                    }
+                });
+            }
+            catch (err) {
+                const error = (0, error_1.ensureError)(err);
+                logging_1.rootHTTPLogger.error(`setMotionDetectionTypeHB3 EufyCamC35DetectionTypes Error`, { error: (0, utils_3.getError)(error), stationSN: this.getSerial(), deviceSN: device.getSerial() });
             }
         }
         else if (device.isSoloCameras()) {
@@ -2163,7 +2234,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     return;
                 }
                 const aiDetectionType = device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) !== undefined ? device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) : "0";
-                let newAiDetectionType = (0, utils_1.getIndoorS350DetectionMode)(Number.parseInt(aiDetectionType), type, value);
+                const newAiDetectionType = (0, utils_1.getIndoorS350DetectionMode)(Number.parseInt(aiDetectionType), type, value);
                 this.p2pSession.sendCommandWithStringPayload({
                     commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                     value: JSON.stringify({
@@ -2363,7 +2434,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isOutdoorPanAndTiltCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isStationHomeBase3())) {
+        else if (device.isOutdoorPanAndTiltCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -2380,7 +2451,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if ((device.isFloodLight() && !device.isFloodLightT8425()) || (device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCameras() && !this.isStationHomeBase3()) || device.isStarlight4GLTE()) {
+        else if ((device.isFloodLight() && !device.isFloodLightT8425()) || (device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCameras() && !this.isDeviceControlledByHomeBase()) || device.isStarlight4GLTE()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -2413,7 +2484,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isBatteryDoorbellDualE340() || device.isSmartDrop() || device.isLockWifiVideo() || device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isSoloCameras() && this.isStationHomeBase3())) {
+        else if (device.isBatteryDoorbellDualE340() || device.isSmartDrop() || device.isLockWifiVideo() || device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isSoloCameras() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -2787,7 +2858,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set notification type - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if ((device.isFloodLight() && !device.isFloodLightT8425()) || (device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCameras() && !this.isStationHomeBase3()) || device.isStarlight4GLTE() || device.isGarageCamera()) {
+        if ((device.isFloodLight() && !device.isFloodLightT8425()) || (device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCameras() && !this.isDeviceControlledByHomeBase()) || device.isStarlight4GLTE() || device.isGarageCamera()) {
             if (!Object.values(types_1.NotificationType).includes(value)) {
                 logging_1.rootHTTPLogger.error(`The device ${device.getSerial()} accepts only this type of values:`, Object.values(types_1.NotificationType).filter((value) => typeof value === "number"));
                 return;
@@ -2812,7 +2883,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isIndoorPanAndTiltCameraS350() && !this.isStationHomeBase3()) {
+        else if (device.isIndoorPanAndTiltCameraS350() && !this.isDeviceControlledByHomeBase()) {
             if (!Object.values(types_1.NotificationType).includes(value)) {
                 logging_1.rootHTTPLogger.error(`The device ${device.getSerial()} accepts only this type of values:`, Object.values(types_1.NotificationType).filter((value) => typeof value === "number"));
                 return;
@@ -2912,7 +2983,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isCameraProfessional247() || (device.isIndoorPanAndTiltCameraS350() && this.isStationHomeBase3()) || device.isFloodLightT8425() || (device.isSoloCameras() && this.isStationHomeBase3())) {
+        else if (device.isCameraProfessional247() || (device.isIndoorPanAndTiltCameraS350() && this.isDeviceControlledByHomeBase()) || device.isFloodLightT8425() || (device.isSoloCameras() && this.isDeviceControlledByHomeBase())) {
             if (!Object.values(types_1.NotificationType).includes(value)) {
                 logging_1.rootHTTPLogger.error(`The device ${device.getSerial()} accepts only this type of values:`, Object.values(types_1.NotificationType).filter((value) => typeof value === "number"));
                 return;
@@ -3360,7 +3431,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isOutdoorPanAndTiltCamera() || (device.isSoloCameras() && !this.isStationHomeBase3())) {
+        else if (device.isOutdoorPanAndTiltCamera() || (device.isSoloCameras() && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3520,7 +3591,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425()) {
+        else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isCameraC35() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3540,7 +3611,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isIndoorCamera() || (device.isSoloCameras() && !this.isStationHomeBase3()) || device.isFloodLight() || device.isWiredDoorbell() || device.isStarlight4GLTE() || device.isGarageCamera()) {
+        else if (device.isIndoorCamera() || (device.isSoloCameras() && !this.isDeviceControlledByHomeBase()) || device.isFloodLight() || device.isWiredDoorbell() || device.isStarlight4GLTE() || device.isGarageCamera()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3566,7 +3637,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isBatteryDoorbell() || device.isCamera2CPro() || device.isWiredDoorbellDual() || device.isCamera3() || device.isCamera3C() || device.isCamera3Pro() || device.isSmartDrop() || device.isLockWifiVideo() || device.isCameraProfessional247() || (device.isSoloCameras() && this.isStationHomeBase3())) {
+        else if (device.isBatteryDoorbell() || device.isCamera2CPro() || device.isWiredDoorbellDual() || device.isCamera3() || device.isCamera3C() || device.isCamera3Pro() || device.isSmartDrop() || device.isLockWifiVideo() || device.isCameraProfessional247() || (device.isSoloCameras() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_BAT_DOORBELL_VIDEO_QUALITY,
                 value: value,
@@ -3614,7 +3685,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425()) {
+        else if (device.isOutdoorPanAndTiltCamera() || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isCameraC35() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3634,7 +3705,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isIndoorCamera() || device.isWiredDoorbell() || device.isFloodLight() || (device.isSoloCameras() && !this.isStationHomeBase3()) || device.isStarlight4GLTE() || device.isGarageCamera()) {
+        else if (device.isIndoorCamera() || device.isWiredDoorbell() || device.isFloodLight() || (device.isSoloCameras() && !this.isDeviceControlledByHomeBase()) || device.isStarlight4GLTE() || device.isGarageCamera()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3660,7 +3731,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isCamera2CPro() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247() || device.isCamera3Pro()) {
+        else if (device.isCamera2CPro() || device.isCamera3() || device.isCamera3C() || device.isCameraProfessional247() || device.isCamera3Pro() || (device.isCameraC35() && this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3676,7 +3747,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if ((device.isSoloCameras() && this.isStationHomeBase3()) || device.isLockWifiVideo()) {
+        else if ((device.isSoloCameras() && this.isDeviceControlledByHomeBase()) || device.isLockWifiVideo()) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -3761,7 +3832,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         logging_1.rootHTTPLogger.debug(`Station set light settings brightness manual - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
         if (device.isFloodLight() || device.isSoloCameraSpotlight1080() || device.isSoloCameraSpotlight2k() ||
             device.isSoloCameraSpotlightSolar() || device.isCamera2C() || device.isCamera2CPro() ||
-            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isCamera3Pro() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247()) {
+            device.isIndoorOutdoorCamera1080p() || device.isIndoorOutdoorCamera2k() || device.isCamera3() || device.isCamera3C() || device.isCamera3Pro() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247() || device.isCameraC35()) {
             this.p2pSession.sendCommandWithIntString({
                 commandType: types_2.CommandType.CMD_SET_FLOODLIGHT_BRIGHT_VALUE,
                 value: value,
@@ -3938,7 +4009,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set light settings motion triggered - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isFloodLightT8425()) {
+        if (device.isFloodLightT8425() || device.isCameraC35()) {
             const rawProperty = device.getRawProperty(types_2.CommandType.CMD_SET_LIGHT_CTRL_BRIGHT_PIR_T8425);
             if (rawProperty !== undefined) {
                 const payload = {
@@ -4285,6 +4356,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     oldvalue = Number.parseInt(rawproperty);
                 }
                 catch (error) {
+                    logging_1.rootHTTPLogger.error(`Station set notification switch mode - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const pushMode = (0, utils_1.switchNotificationMode)(oldvalue, mode, value);
@@ -4308,7 +4380,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 }
             });
         }
-        else if (this.getDeviceType() === types_1.DeviceType.OUTDOOR_PT_CAMERA || device_1.Device.isSoloCameraC210(this.getDeviceType())) {
+        else if (this.getDeviceType() === types_1.DeviceType.OUTDOOR_PT_CAMERA || device_1.Device.isSoloCameraC210(this.getDeviceType()) || device_1.Device.isCameraC35(this.getDeviceType()) && !this.isDeviceControlledByHomeBase()) {
             let oldvalue = 0;
             const rawproperty = this.getRawProperty(types_2.CommandType.CMD_HUB_NOTIFY_MODE);
             if (rawproperty !== undefined) {
@@ -4316,6 +4388,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     oldvalue = Number.parseInt(rawproperty);
                 }
                 catch (error) {
+                    logging_1.rootHTTPLogger.error(`Station set notification switch mode - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const pushMode = (0, utils_1.switchNotificationMode)(oldvalue, mode, value);
@@ -4377,6 +4450,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 pushmode = Number.parseInt(rawproperty);
             }
             catch (error) {
+                logging_1.rootHTTPLogger.error(`Station set notification start alarm delay - sending command`, { stationSN: this.getSerial(), value: value, error: error });
             }
         }
         const property = this.getPropertyMetadata(propertyData.name);
@@ -4515,7 +4589,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set watermark - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), value: value });
-        if (device.isCamera2Product() || device.isCamera3Product() || device.isSoloCameraSolar() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isSoloCameraC210() || device.isFloodLightT8425()) {
+        if (device.isCamera2Product() || device.isCamera3Product() || device.isSoloCameraSolar() || device.isOutdoorPanAndTiltCamera() || device.isCameraProfessional247() || device.isIndoorPanAndTiltCameraS350() || device.isSoloCameraC210() || device.isFloodLightT8425() || device.isCameraC35()) {
             if (!Object.values(types_2.WatermarkSetting3).includes(value)) {
                 logging_1.rootHTTPLogger.error(`The device ${device.getSerial()} accepts only this type of values:`, Object.values(types_2.WatermarkSetting3).filter((value) => typeof value === "number"));
                 return;
@@ -4673,7 +4747,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 property: propertyData
             });
         }
-        else if (device.isIndoorCamera() && (0, utils_1.isGreaterEqualMinVersion)("2.3.1.0", device.getSoftwareVersion()) && Station.isStationHomeBase3BySn(device.getStationSerial())) {
+        else if (device.isIndoorCamera() && (0, utils_1.isGreaterEqualMinVersion)("2.3.1.0", device.getSoftwareVersion()) && Station.isDeviceControlledByHomeBaseBySn(device.getStationSerial())) {
             param_value = value === true ? 0 : 1;
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
@@ -4879,7 +4953,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 command: commandData
             });
         }
-        else if ((device.isIndoorPanAndTiltCameraS350() && this.isStationHomeBase3()) || device.isFloodLightT8425()) {
+        else if (((device.isIndoorPanAndTiltCameraS350() || device.isIndoorCamC24()) && this.isDeviceControlledByHomeBase()) || device.isFloodLightT8425()) {
             logging_1.rootHTTPLogger.debug(`Station start livestream - sending command using CMD_SET_PAYLOAD`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), videoCodec: videoCodec, main_sw_version: this.getSoftwareVersion() });
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_SET_PAYLOAD,
@@ -7650,7 +7724,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_2.LivestreamNotRunningError("Livestream for device is not running", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name } });
         }
         logging_1.rootHTTPLogger.debug(`Station start talkback - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial() });
-        if ((device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCamera() && !this.isStationHomeBase3()) || (device.isFloodLight() && !device.isFloodLightT8425()) || device.isWiredDoorbell() || device.isStarlight4GLTE() || device.isWallLightCam() || device.isGarageCamera() || device.isOutdoorPanAndTiltCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isStationHomeBase3())) {
+        if ((device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCamera() && !this.isDeviceControlledByHomeBase()) || (device.isFloodLight() && !device.isFloodLightT8425()) || device.isWiredDoorbell() || device.isStarlight4GLTE() || device.isWallLightCam() || device.isGarageCamera() || device.isOutdoorPanAndTiltCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -7661,7 +7735,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 command: commandData
             });
         }
-        else if ((device.isBatteryDoorbell() && (0, utils_1.isGreaterEqualMinVersion)("2.0.6.8", this.getSoftwareVersion())) || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isSoloCamera() && this.isStationHomeBase3()) || device.isLockWifiVideo() || device.isSmartDrop()) {
+        else if ((device.isBatteryDoorbell() && (0, utils_1.isGreaterEqualMinVersion)("2.0.6.8", this.getSoftwareVersion())) || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isSoloCamera() && this.isDeviceControlledByHomeBase()) || device.isLockWifiVideo() || device.isSmartDrop()) {
             this.p2pSession.sendCommandWithInt({
                 commandType: types_2.CommandType.CMD_START_TALKBACK,
                 value: 0,
@@ -7696,7 +7770,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             throw new error_2.LivestreamNotRunningError("Livestream for device is not running", { context: { device: device.getSerial(), station: this.getSerial(), commandName: commandData.name } });
         }
         logging_1.rootHTTPLogger.debug(`Station stop talkback - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial() });
-        if ((device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCamera() && !this.isStationHomeBase3()) || (device.isFloodLight() && !device.isFloodLightT8425()) || device.isWiredDoorbell() || device.isStarlight4GLTE() || device.isWallLightCam() || device.isGarageCamera() || device.isOutdoorPanAndTiltCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isStationHomeBase3())) {
+        if ((device.isIndoorCamera() && !device.isIndoorPanAndTiltCameraS350()) || (device.isSoloCamera() && !this.isDeviceControlledByHomeBase()) || (device.isFloodLight() && !device.isFloodLightT8425()) || device.isWiredDoorbell() || device.isStarlight4GLTE() || device.isWallLightCam() || device.isGarageCamera() || device.isOutdoorPanAndTiltCamera() || (device.isIndoorPanAndTiltCameraS350() && !this.isDeviceControlledByHomeBase())) {
             this.p2pSession.sendCommandWithStringPayload({
                 commandType: types_2.CommandType.CMD_DOORBELL_SET_PAYLOAD,
                 value: JSON.stringify({
@@ -7707,7 +7781,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 command: commandData
             });
         }
-        else if ((device.isBatteryDoorbell() && (0, utils_1.isGreaterEqualMinVersion)("2.0.6.8", this.getSoftwareVersion())) || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isSoloCamera() && this.isStationHomeBase3()) || device.isLockWifiVideo() || device.isSmartDrop()) {
+        else if ((device.isBatteryDoorbell() && (0, utils_1.isGreaterEqualMinVersion)("2.0.6.8", this.getSoftwareVersion())) || device.isIndoorPanAndTiltCameraS350() || device.isFloodLightT8425() || (device.isSoloCamera() && this.isDeviceControlledByHomeBase()) || device.isLockWifiVideo() || device.isSmartDrop()) {
             this.p2pSession.sendCommandWithInt({
                 commandType: types_2.CommandType.CMD_STOP_TALKBACK,
                 value: 0,
@@ -8766,6 +8840,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     oldvalue = Number.parseInt(rawproperty);
                 }
                 catch (error) {
+                    logging_1.rootHTTPLogger.error(`Station set notification - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const notification = (0, utils_1.switchSmartLockNotification)(oldvalue, 1 /* SmartLockNotification.ENABLED */, value);
@@ -8815,6 +8890,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     oldvalue = Number.parseInt(rawproperty);
                 }
                 catch (error) {
+                    logging_1.rootHTTPLogger.error(`Station set notification locked - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const notification = (0, utils_1.switchSmartLockNotification)(oldvalue, 4 /* SmartLockNotification.LOCKED */, value);
@@ -8864,6 +8940,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                     oldvalue = Number.parseInt(rawproperty);
                 }
                 catch (error) {
+                    logging_1.rootHTTPLogger.error(`Station set notification unlock - sending command`, { stationSN: this.getSerial(), value: value, error: error });
                 }
             }
             const notification = (0, utils_1.switchSmartLockNotification)(oldvalue, 2 /* SmartLockNotification.UNLOCKED */, value);
@@ -9115,12 +9192,12 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                         "count": 20,
                         "detection_type": detectionType,
                         "device_info": devices,
-                        "end_date": format(endDate, "YYYYMMDD"),
+                        "end_date": (0, utils_4.formatDate)(endDate, "YYYYMMDD", logging_1.rootHTTPLogger),
                         "event_type": eventType,
                         "flag": 0,
                         "res_unzip": 1,
-                        "start_date": format(startDate, "YYYYMMDD"),
-                        "start_time": `${format(endDate, "YYYYMMDD")}000000`,
+                        "start_date": (0, utils_4.formatDate)(startDate, "YYYYMMDD", logging_1.rootHTTPLogger),
+                        "start_time": `${(0, utils_4.formatDate)(endDate, "YYYYMMDD", logging_1.rootHTTPLogger)}000000`,
                         "storage_cloud": storageType === types_2.FilterStorageType.NONE || (storageType !== types_2.FilterStorageType.LOCAL && storageType !== types_2.FilterStorageType.CLOUD) ? -1 : storageType,
                         "ai_type": 0
                     },
@@ -9187,8 +9264,8 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
                 "payload": {
                     "cmd": types_2.CommandType.CMD_DATABASE_COUNT_BY_DATE,
                     "payload": {
-                        "end_date": format(endDate, "YYYYMMDD"),
-                        "start_date": format(startDate, "YYYYMMDD"),
+                        "end_date": (0, utils_4.formatDate)(endDate, "YYYYMMDD", logging_1.rootHTTPLogger),
+                        "start_date": (0, utils_4.formatDate)(startDate, "YYYYMMDD", logging_1.rootHTTPLogger),
                     },
                     "table": "history_record_info",
                     "transaction": `${new Date().getTime()}`
@@ -10177,7 +10254,7 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
         const property = device.getPropertyMetadata(propertyData.name);
         (0, utils_3.validValue)(property, value);
         logging_1.rootHTTPLogger.debug(`Station set notification type floodlight T8425 - sending command`, { stationSN: this.getSerial(), deviceSN: device.getSerial(), type: type, value: value });
-        if (device.isFloodLightT8425()) {
+        if (device.isFloodLightT8425() || device.isCameraC35()) {
             try {
                 const notification = device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) !== undefined ? device.getRawProperty(device.getPropertyMetadata(propertyData.name).key) : "0";
                 let newNotification = (0, utils_1.getFloodLightT8425Notification)(Number.parseInt(notification), type, value);
@@ -10504,7 +10581,6 @@ class Station extends tiny_typed_emitter_1.TypedEmitter {
             });
         }
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onSequenceError(channel, command, sequence, serialnumber) {
         //TODO: Implement command retry for lock devices in case von sequence mismatch error
         logging_1.rootHTTPLogger.debug(`Station lock sequence error`, { stationSN: this.getSerial(), channel: channel, command: command, sequence: sequence, serialnumber: serialnumber });

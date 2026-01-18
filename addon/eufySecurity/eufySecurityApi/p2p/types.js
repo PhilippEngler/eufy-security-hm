@@ -740,6 +740,7 @@ var TFCardStatus;
     TFCardStatus[TFCardStatus["UNNORMAL_IO_ERROR"] = 22] = "UNNORMAL_IO_ERROR";
     TFCardStatus[TFCardStatus["RISK"] = 23] = "RISK";
     TFCardStatus[TFCardStatus["MOUNTING"] = 24] = "MOUNTING";
+    TFCardStatus[TFCardStatus["UDISK_NEED_FORMATING"] = 26] = "UDISK_NEED_FORMATING";
 })(TFCardStatus || (exports.TFCardStatus = TFCardStatus = {}));
 var AlarmEvent;
 (function (AlarmEvent) {

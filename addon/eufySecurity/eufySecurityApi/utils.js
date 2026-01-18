@@ -15,18 +15,30 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mergeDeep = exports.validValue = exports.parseJSON = exports.parseValue = exports.isEmpty = exports.handleUpdate = exports.md5 = exports.generateSerialnumber = exports.generateUDID = exports.removeLastChar = exports.getError = void 0;
 exports.waitForEvent = waitForEvent;
 exports.getShortUrl = getShortUrl;
 exports.isValidUrl = isValidUrl;
+exports.formatDate = formatDate;
+exports.parseDate = parseDate;
 const crypto = __importStar(require("crypto"));
 const error_1 = require("./error");
 const getError = function (error) {
@@ -54,7 +66,6 @@ const generateSerialnumber = function (length) {
 exports.generateSerialnumber = generateSerialnumber;
 const md5 = (contents) => crypto.createHash("md5").update(contents).digest("hex");
 exports.md5 = md5;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleUpdate = function (config, oldVersion) {
     if (oldVersion <= 1.24) {
         config.setToken("");
@@ -255,8 +266,68 @@ function isValidUrl(value, protocols = ["http", "https"]) {
                 : false
             : true;
     }
-    catch (err) {
+    catch {
         return false;
+    }
+}
+;
+function formatDate(date, format, log) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    /*const millis = date.getMilliseconds().toString().padStart(3, "0");*/
+    switch (format) {
+        case "YYYYMMDD":
+            return `${year}${month}${day}`;
+        case "YYYY-MM-DD HH:mm:ss":
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        default:
+            log.error(`Format date error: The given format '${format}' is currently not supported.`);
+            return "";
+    }
+}
+;
+function parseDate(date, format, log) {
+    switch (format) {
+        case "YYYYMMDD":
+            if (date.length >= 8) {
+                try {
+                    const year = Number.parseInt(date.substring(0, 4));
+                    const month = (Number.parseInt(date.substring(4, 6)) - 1);
+                    const day = Number.parseInt(date.substring(6, 8));
+                    return new Date(year, month, day);
+                }
+                catch (error) {
+                    log.error("Parse date error", { error: (0, exports.getError)(error), data: date });
+                    return new Date(NaN);
+                }
+            }
+            log.error(`Parse date error: To less chars. Got ${date.length} (${date}) want at least 8. (YYYYMMDD)`);
+            return new Date(NaN);
+        case "YYYY-MM-DD HH:mm:ss":
+            if (date.length >= 19) {
+                try {
+                    const year = Number.parseInt(date.substring(0, 4));
+                    const month = (Number.parseInt(date.substring(5, 7)) - 1);
+                    const day = Number.parseInt(date.substring(8, 10));
+                    const hours = Number.parseInt(date.substring(11, 13));
+                    const minutes = Number.parseInt(date.substring(14, 16));
+                    const seconds = Number.parseInt(date.substring(17));
+                    return new Date(year, month, day, hours, minutes, seconds);
+                }
+                catch (error) {
+                    log.error("Parse date error", { error: (0, exports.getError)(error), data: date });
+                    return new Date(NaN);
+                }
+            }
+            log.error(`Parse date error: To less chars. Got ${date.length} (${date}) want at least 19. (YYYY-MM-DD HH:mm:ss)`);
+            return new Date(NaN);
+        default:
+            log.error(`Parse date error: The given format '${format}' is currently not supported.`);
+            return new Date(NaN);
     }
 }
 ;

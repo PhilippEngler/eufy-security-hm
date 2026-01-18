@@ -313,10 +313,10 @@ class Config {
                     logging_1.rootConfLogger.info(" changing format of interactions.");
                     configJson.interactions = JSON.parse(configJson.interactions);
                     logging_1.rootConfLogger.info(" adding missing options to interactions...");
-                    let interactions = configJson.interactions;
-                    for (let deviceSerial in interactions["deviceInteractions"]) {
-                        for (let eventInteractionType in interactions["deviceInteractions"][deviceSerial]["eventInteractions"]) {
-                            let oldEventInteraction = interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType];
+                    const interactions = configJson.interactions;
+                    for (const deviceSerial in interactions["deviceInteractions"]) {
+                        for (const eventInteractionType in interactions["deviceInteractions"][deviceSerial]["eventInteractions"]) {
+                            const oldEventInteraction = interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType];
                             if (oldEventInteraction.rejectUnauthorized === undefined) {
                                 logging_1.rootConfLogger.info(`  adding 'rejectUnauthorized' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
                             }
@@ -329,7 +329,7 @@ class Config {
                             else {
                                 logging_1.rootConfLogger.info(`  skipping adding 'useLocalCertificate' to eventInteractionType "${eventInteractionType}" for device ${deviceSerial}.`);
                             }
-                            let newEventInteraction = { target: oldEventInteraction.target, useHttps: oldEventInteraction.useHttps, useLocalCertificate: oldEventInteraction.useLocalCertificate === undefined ? false : oldEventInteraction.useLocalCertificate, rejectUnauthorized: oldEventInteraction.rejectUnauthorized === undefined ? true : oldEventInteraction.rejectUnauthorized, user: oldEventInteraction.user, password: oldEventInteraction.password, command: oldEventInteraction.command };
+                            const newEventInteraction = { target: oldEventInteraction.target, useHttps: oldEventInteraction.useHttps, useLocalCertificate: oldEventInteraction.useLocalCertificate === undefined ? false : oldEventInteraction.useLocalCertificate, rejectUnauthorized: oldEventInteraction.rejectUnauthorized === undefined ? true : oldEventInteraction.rejectUnauthorized, user: oldEventInteraction.user, password: oldEventInteraction.password, command: oldEventInteraction.command };
                             interactions["deviceInteractions"][deviceSerial]["eventInteractions"][eventInteractionType] = newEventInteraction;
                         }
                     }
@@ -562,8 +562,8 @@ class Config {
             this.configJson.apiConfig.stateUpdateIntervallTimespan = 15;
             updated = true;
         }
-        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support && (Number.parseInt(process.versions.node.split('.')[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false)) {
-            logging_1.rootConfLogger.info(`Set enableEmbeddedPKCS1Support to "true" because of Node.js is higher than v20 (v${process.versions.node.split('.')[0]})`);
+        if (this.configJson.apiConfig.enableEmbeddedPKCS1Support && (Number.parseInt(process.versions.node.split(".")[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false)) {
+            logging_1.rootConfLogger.info(`Set enableEmbeddedPKCS1Support to "true" because of Node.js is higher than v20 (v${process.versions.node.split(".")[0]})`);
             this.configJson.apiConfig.enableEmbeddedPKCS1Support = true;
             updated = true;
         }
@@ -1561,7 +1561,7 @@ class Config {
      */
     getEnableEmbeddedPKCS1Support() {
         if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== undefined) {
-            if (Number.parseInt(process.versions.node.split('.')[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false) {
+            if (Number.parseInt(process.versions.node.split(".")[0]) > 20 && this.configJson.apiConfig.enableEmbeddedPKCS1Support === false) {
                 this.configJson.apiConfig.enableEmbeddedPKCS1Support = true;
                 this.hasChanged = true;
             }
@@ -1576,7 +1576,7 @@ class Config {
      * @param enableEmbeddedPKCS1Support The value if securing api access by sid is used.
      */
     setEnableEmbeddedPKCS1Support(enableEmbeddedPKCS1Support) {
-        if (Number.parseInt(process.versions.node.split('.')[0]) > 20 && enableEmbeddedPKCS1Support === false) {
+        if (Number.parseInt(process.versions.node.split(".")[0]) > 20 && enableEmbeddedPKCS1Support === false) {
             return;
         }
         if (this.configJson.apiConfig.enableEmbeddedPKCS1Support !== enableEmbeddedPKCS1Support) {

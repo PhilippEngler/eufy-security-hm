@@ -4,6 +4,7 @@ exports.EsOpenCcuAddOn = void 0;
 const node_child_process_1 = require("node:child_process");
 const node_os_1 = require("node:os");
 const node_process_1 = require("node:process");
+const node_path_1 = require("node:path");
 const apiServer_1 = require("./apiServer/apiServer");
 const logging_1 = require("./eufySecurityApi/logging");
 const eufySecurityApi_1 = require("./eufySecurityApi/eufySecurityApi");
@@ -28,12 +29,18 @@ class EsOpenCcuAddOn {
      */
     constructor() {
         logging_1.InternalLogger.logger = logging_1.dummyLogger;
+        (0, utils_1.setPathToNodeJs)(process.execPath);
+        (0, utils_1.setPathToApp)(__dirname);
+        (0, utils_1.setPathToHttpServerFiles)((0, node_path_1.join)(__dirname, "/www"));
     }
     /**
      * Start the AddOn.
      */
     async startAddOn() {
         api = new eufySecurityApi_1.EufySecurityApi();
+        logging_1.rootAddonLogger.debug(`Set Node.js executable path to: '${(0, utils_1.getPathToNodeJs)()}'`);
+        logging_1.rootAddonLogger.debug(`Set add on path to: '${(0, utils_1.getPathToApp)()}'`);
+        logging_1.rootAddonLogger.debug(`Set http server files path to: '${(0, utils_1.getPathToHttpServerFiles)()}'`);
         logging_1.rootAddonLogger.info(`eufy-security-hm version v${api.getEufySecurityApiVersion()} (${api.getEufySecurityClientVersion()})`);
         logging_1.rootAddonLogger.info(`  Host: ${node_os_1.hostname}`);
         logging_1.rootAddonLogger.info(`  Platform: ${node_os_1.platform}_${node_os_1.arch}`);
@@ -63,7 +70,7 @@ class EsOpenCcuAddOn {
     async restartAddOn() {
         logging_1.rootAddonLogger.info("Going to restart with esOpenCcuAddOnRestarter...");
         await this.stopAddOn();
-        (0, node_child_process_1.exec)(`${utils_1.pathToNodeJs}/node "/usr/local/addons/eufySecurity/esOpenCcuAddOnRestarter.js" >> "/var/log/eufySecurity.log" 2>> "/var/log/eufySecurity.err"`);
+        (0, node_child_process_1.exec)(`${(0, utils_1.getPathToNodeJs)()} "/usr/local/addons/eufySecurity/esOpenCcuAddOnRestarter.js" >> "/var/log/eufySecurity.log" 2>> "/var/log/eufySecurity.err"`);
     }
 }
 exports.EsOpenCcuAddOn = EsOpenCcuAddOn;

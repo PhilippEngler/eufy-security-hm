@@ -64,7 +64,7 @@ class Localization {
             return i18next_1.default.t(textToTranslate);
         }
         else {
-            var additionalOptions = JSON.parse(additionalOptionsObj);
+            const additionalOptions = JSON.parse(additionalOptionsObj);
             return i18next_1.default.t(textToTranslate, additionalOptions);
         }
     }

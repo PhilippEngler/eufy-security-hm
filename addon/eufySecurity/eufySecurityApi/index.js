@@ -19,9 +19,10 @@ __exportStar(require("./http"), exports);
 __exportStar(require("./p2p"), exports);
 __exportStar(require("./push"), exports);
 __exportStar(require("./interfaces"), exports);
+__exportStar(require("./eufysecurity"), exports);
 __exportStar(require("./error"), exports);
 var logging_1 = require("./logging");
 Object.defineProperty(exports, "LogLevel", { enumerable: true, get: function () { return logging_1.LogLevel; } });
 Object.defineProperty(exports, "dummyLogger", { enumerable: true, get: function () { return logging_1.dummyLogger; } });
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 exports.libVersion = require("../package.json").version;

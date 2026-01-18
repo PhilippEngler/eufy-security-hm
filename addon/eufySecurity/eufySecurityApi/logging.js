@@ -167,7 +167,7 @@ function formatDate(millisSinceEpoch) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${millis}`;
 }
 function logMessageForClient(message, ...messageArgs) {
-    let pathToClientLog = node_path_1.default.join(utils_1.pathToLogFiles, "eufySecurityClient.log");
+    const pathToClientLog = node_path_1.default.join(utils_1.pathToLogFiles, "eufySecurityClient.log");
     let fileHandle;
     try {
         fileHandle = (0, node_fs_1.openSync)(pathToClientLog, "a");
