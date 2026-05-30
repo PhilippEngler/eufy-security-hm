@@ -185,8 +185,8 @@ export class ApiServer {
                         if (url.length === 3) {
                             const json = JSON.parse(await api.getDevicePropertiesAsJson(url[2]));
                             if (json.success === true) {
-                                json.data.properties.serialNumber = this.replaceLastChars(json.data.properties.serialNumber, "X", 6);
-                                json.data.properties.stationSerialNumber = this.replaceLastChars(json.data.properties.stationSerialNumber, "X", 6);
+                                json.data.properties.serialNumber = replaceLastChars(json.data.properties.serialNumber, "X", 6);
+                                json.data.properties.stationSerialNumber = replaceLastChars(json.data.properties.stationSerialNumber, "X", 6);
                                 if (json.data.properties.rtspStreamUrl !== undefined) {
                                     json.data.properties.rtspStreamUrl = "REMOVED DUE TO PRIVACY REASONS.";
                                 }
@@ -275,7 +275,7 @@ export class ApiServer {
                         if (url.length === 3) {
                             const json = JSON.parse(await api.getStationPropertiesAsJson(url[2]));
                             if (json.success === true) {
-                                json.data.properties.serialNumber = this.replaceLastChars(json.data.properties.serialNumber, "X", 6);
+                                json.data.properties.serialNumber = replaceLastChars(json.data.properties.serialNumber, "X", 6);
                                 json.data.properties.macAddress = "XX:XX:XX:XX:XX:XX";
                                 json.data.properties.lanIpAddress = "XXX.XXX.XXX.XXX";
                             }
@@ -536,7 +536,7 @@ export class ApiServer {
                         api.writeConfig();
                         responseData = readFileSync("config.json", "utf-8");
                         contentType = "text/json";
-                        fileName = `config_${osHostname}_${this.getDateTimeAsString(new Date())}.json`;
+                        fileName = `config_${osHostname}_${getDateTimeAsString(new Date())}.json`;
                         break;
                     default:
                         response.statusCode = 400;
@@ -970,26 +970,26 @@ export class ApiServer {
             response.end(responseData);
         }
     }
+}
 
-    /**
-     * Returns the sting representation of a Date object as YYYYMMDD-HHMMSS.
-     * @param dateTime The date as Date object.
-     * @returns The date and time as string.
-     */
-    private getDateTimeAsString(dateTime: Date): string {
-        return `${dateTime.getFullYear().toString()}${(dateTime.getMonth()+1).toString().padStart(2, "0")}${dateTime.getDate().toString().padStart(2, "0")}-${dateTime.getHours().toString().padStart(2, "0")}${dateTime.getMinutes().toString().padStart(2, "0")}${dateTime.getSeconds().toString().padStart(2, "0")}`;
-    }
+/**
+ * Returns the sting representation of a Date object as YYYYMMDD-HHMMSS.
+ * @param dateTime The date as Date object.
+ * @returns The date and time as string.
+ */
+function getDateTimeAsString(dateTime: Date): string {
+    return `${dateTime.getFullYear().toString()}${(dateTime.getMonth()+1).toString().padStart(2, "0")}${dateTime.getDate().toString().padStart(2, "0")}-${dateTime.getHours().toString().padStart(2, "0")}${dateTime.getMinutes().toString().padStart(2, "0")}${dateTime.getSeconds().toString().padStart(2, "0")}`;
+}
 
-    /**
-     * Returns a string with the first numberOfChars chars from input, all other chars will be replaced by X. replaceLastCars("ABCDEFGH", "X", 2) will return "ABXXXXXX".
-     * @param input The input string.
-     * @param char The char replaces each char after position numberOfChars.
-     * @param numberOfChars The number of chars which should not be replaced.
-     * @returns The result string.
-     */
-    private replaceLastChars(input: string, char: string, numberOfChars: number): string {
-        return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
-    }
+/**
+ * Returns a string with the first numberOfChars chars from input, all other chars will be replaced by X. replaceLastCars("ABCDEFGH", "X", 2) will return "ABXXXXXX".
+ * @param input The input string.
+ * @param char The char replaces each char after position numberOfChars.
+ * @param numberOfChars The number of chars which should not be replaced.
+ * @returns The result string.
+ */
+function replaceLastChars(input: string, char: string, numberOfChars: number): string {
+    return input.substring(0, numberOfChars) + Array(input.length - numberOfChars + 1).join(char);
 }
 
 /**
