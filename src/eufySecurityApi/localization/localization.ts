@@ -23,6 +23,7 @@ export class Localization{
     private async initTranslator(): Promise<void> {
         i18n.use(Backend);
         await i18n.init({
+            showSupportNotice: false,
             fallbackLng: "en",
             lng: this.api.getLanguage(),
             ns: ["common", "systemVariables"],
