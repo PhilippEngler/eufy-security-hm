@@ -546,7 +546,7 @@ export class Config {
 
     private checkConfigValues(): boolean {
         let updated = false;
-        if (this.configJson.apiConfig.httpActive === true && (this.configJson.apiConfig.httpPort < 1 || this.configJson.httpPort > 65535)) {
+        if (this.configJson.apiConfig.httpActive === true && (this.configJson.apiConfig.httpPort < 1 || this.configJson.apiConfig.httpPort > 65535)) {
             rootConfLogger.info(`Set httpPort to default value "52789"`);
             this.configJson.apiConfig.httpPort = 52789;
             updated = true;
@@ -1073,8 +1073,8 @@ export class Config {
      * @param httpsPkeyFile The path to the key file for https.
      */
     public setHttpsPKeyFile(httpsPkeyFile: string): void {
-        if (this.configJson.apiConfig.httpsPKeyFile !== httpsPkeyFile) {
-            this.configJson.apiConfig.httpsPKeyFile = httpsPkeyFile;
+        if (this.configJson.apiConfig.httpsPkeyFile !== httpsPkeyFile) {
+            this.configJson.apiConfig.httpsPkeyFile = httpsPkeyFile;
             this.hasChanged = true;
         }
     }
