@@ -649,3 +649,20 @@ export interface FloodlightLightSettingsMotionT8425Property {
     mode: number;
     time: number;
 }
+
+interface GuardModeInformationEntry {
+    doorsensor_action: number;
+    title: string;
+    detail: string;
+    iconType: number;
+    mode: number,
+    mode_action: number;
+}
+
+export interface GuardModesInformationProperty {
+    account_id: string;
+    modes: Array<GuardModeInformationEntry>;
+    mode_id: number;
+    operate_type: number;
+    transaction: string;
+}

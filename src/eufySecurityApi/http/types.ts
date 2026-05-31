@@ -166,6 +166,8 @@ export enum ParamType {
 
     PRIVATE_MODE = 99904,
     CUSTOM_RTSP_URL = 999991,
+
+    GUARD_MODE_SETTINGS = 1256,
 }
 
 export enum AlarmMode {
@@ -910,6 +912,8 @@ export enum PropertyName {
     StationTrackingAssistance = "trackingAssistance",
     StationCrossTrackingCameraList = "crossTrackingCameraList",
     StationCrossTrackingGroupList = "crossTrackingGroupList",
+    StationGuardModesSettings = "guardModesSettings",
+    StationGuardModesInformation = "guardModesInformation",
 }
 
 export const DeviceNameProperty: PropertyMetadataString = {
@@ -8866,6 +8870,26 @@ export const StationCrossTrackingGroupListProperty: PropertyMetadataObject = {
     },
 };
 
+export const StationGuardModesProperty: PropertyMetadataObject = {
+    key: CommandType.CMD_SET_CUSTOM_MODE,
+    name: PropertyName.StationGuardModesSettings,
+    label: "Guard modes information",
+    readable: true,
+    writeable: false,
+    type: "object",
+    default: undefined,
+};
+
+export const StationGuardModesInformationProperty: PropertyMetadataObject = {
+    key: "custom_alarmDelayType",
+    name: PropertyName.StationGuardModesInformation,
+    label: "Guard modes information",
+    readable: true,
+    writeable: false,
+    type: "object",
+    default: undefined,
+};
+
 export const StationProperties: Properties = {
     [DeviceType.STATION]: {
         ...BaseStationProperties,
@@ -8900,6 +8924,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.HB3]: {
         ...BaseStationProperties,
@@ -8941,6 +8967,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTrackingAssistance]: StationTrackingAssistanceProperty,
         [PropertyName.StationCrossTrackingCameraList]: StationCrossTrackingCameraListProperty,
         [PropertyName.StationCrossTrackingGroupList]: StationCrossTrackingGroupListProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.MINIBASE_CHIME]: {
         ...BaseStationProperties,
@@ -8975,6 +9003,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.HOMEBASE_MINI]: {
         ...BaseStationProperties,
@@ -9009,6 +9039,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTrackingAssistance]: StationTrackingAssistanceProperty,
         [PropertyName.StationCrossTrackingCameraList]: StationCrossTrackingCameraListProperty,
         [PropertyName.StationCrossTrackingGroupList]: StationCrossTrackingGroupListProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_CAMERA]: {
         ...BaseStationProperties,
@@ -9022,6 +9054,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_CAMERA_1080]: {
         ...BaseStationProperties,
@@ -9035,6 +9069,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA]: {
         ...BaseStationProperties,
@@ -9051,6 +9087,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_COST_DOWN_CAMERA]: {
         ...BaseStationProperties,
@@ -9064,6 +9102,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA_1080]: {
         ...BaseStationProperties,
@@ -9077,6 +9117,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_OUTDOOR_CAMERA_1080P]: {
         ...BaseStationProperties,
@@ -9090,6 +9132,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_OUTDOOR_CAMERA_1080P_NO_LIGHT]: {
         ...BaseStationProperties,
@@ -9103,6 +9147,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA_S350]: {
         ...BaseStationProperties,
@@ -9122,6 +9168,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationNotificationSwitchModeSchedule]: StationNotificationSwitchModeScheduleProperty,
         [PropertyName.StationNotificationSwitchModeGeofence]: StationNotificationSwitchModeGeofenceProperty,
         [PropertyName.StationNotificationSwitchModeApp]: StationNotificationSwitchModeAppProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA_E30]: {
         ...BaseStationProperties,
@@ -9138,6 +9186,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA_C210]: {
         ...BaseStationProperties,
@@ -9154,6 +9204,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_PT_CAMERA_C220]: {
         ...BaseStationProperties,
@@ -9170,6 +9222,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.INDOOR_OUTDOOR_CAMERA_2K]: {
         ...BaseStationProperties,
@@ -9186,6 +9240,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.OUTDOOR_PT_CAMERA]: {
         ...BaseStationProperties,
@@ -9204,6 +9260,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
         [PropertyName.StationNotificationSwitchModeSchedule]: StationNotificationSwitchModeScheduleProperty,
         [PropertyName.StationNotificationSwitchModeApp]: StationNotificationSwitchModeAppProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.DOORBELL]: {
         ...BaseStationProperties,
@@ -9218,6 +9276,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.DOORBELL_SOLO]: {
         ...BaseStationProperties,
@@ -9232,6 +9292,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.BATTERY_DOORBELL_C30]: {
         ...BaseStationProperties,
@@ -9246,6 +9308,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.BATTERY_DOORBELL_C31]: {
         ...BaseStationProperties,
@@ -9260,6 +9324,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.BATTERY_DOORBELL_PLUS_E340]: {
         ...BaseStationProperties,
@@ -9274,6 +9340,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.CAMERA_FG]: {
         ...BaseStationProperties,
@@ -9292,6 +9360,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
         //[PropertyName.StationNotificationSwitchModeSchedule]: StationNotificationSwitchModeScheduleProperty, //TODO: Implement correctly
         //[PropertyName.StationNotificationSwitchModeApp]: StationNotificationSwitchModeAppProperty, //TODO: Implement correctly
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA]: {
         ...BaseStationProperties,
@@ -9308,6 +9378,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA_PRO]: {
         ...BaseStationProperties,
@@ -9324,6 +9396,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA_SPOTLIGHT_1080]: {
         ...BaseStationProperties,
@@ -9340,6 +9414,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA_SPOTLIGHT_2K]: {
         ...BaseStationProperties,
@@ -9356,6 +9432,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA_SPOTLIGHT_SOLAR]: {
         ...BaseStationProperties,
@@ -9374,6 +9452,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
         [PropertyName.StationNotificationSwitchModeSchedule]: StationNotificationSwitchModeScheduleProperty,
         [PropertyName.StationNotificationSwitchModeApp]: StationNotificationSwitchModeAppProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA_SOLAR]: {
         ...BaseStationProperties,
@@ -9390,6 +9470,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA_C210]: {
         ...BaseStationProperties,
@@ -9408,6 +9490,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.SOLO_CAMERA_E30]: {
         ...BaseStationProperties,
@@ -9426,6 +9510,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.FLOODLIGHT]: {
         ...BaseStationProperties,
@@ -9442,6 +9528,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.FLOODLIGHT_CAMERA_8422]: {
         ...BaseStationProperties,
@@ -9458,6 +9546,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.FLOODLIGHT_CAMERA_8423]: {
         ...BaseStationProperties,
@@ -9474,6 +9564,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.FLOODLIGHT_CAMERA_8424]: {
         ...BaseStationProperties,
@@ -9490,6 +9582,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.FLOODLIGHT_CAMERA_8425]: {
         ...BaseStationProperties,
@@ -9506,6 +9600,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.FLOODLIGHT_CAMERA_8426]: {
         ...BaseStationProperties,
@@ -9522,6 +9618,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.WALL_LIGHT_CAM]: {
         ...BaseStationProperties,
@@ -9539,6 +9637,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.WALL_LIGHT_CAM_81A0]: {
         ...BaseStationProperties,
@@ -9556,6 +9656,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.CAMERA_GARAGE_T8452]: {
         ...BaseStationProperties,
@@ -9623,6 +9725,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationTimeZone]: StationTimeZoneProperty,
         [PropertyName.StationAlarm]: StationAlarmProperty,
         [PropertyName.StationAlarmType]: StationAlarmTypeProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
     [DeviceType.CAMERA_C35]: {
         ...BaseStationProperties,
@@ -9642,6 +9746,8 @@ export const StationProperties: Properties = {
         [PropertyName.StationSdStatus]: StationSdStatusProperty,
         [PropertyName.StationSdCapacity]: StationSdCapacityProperty,
         [PropertyName.StationSdCapacityAvailable]: StationSdAvailableCapacityProperty,
+        [PropertyName.StationGuardModesSettings]: StationGuardModesProperty,
+        [PropertyName.StationGuardModesInformation]: StationGuardModesInformationProperty,
     },
 };
 
@@ -10693,8 +10799,7 @@ export const StationCommands: Commands = {
     [DeviceType.LOCK_WIFI_NO_FINGER]: [],
     [DeviceType.SMART_TRACK_CARD]: [],
     [DeviceType.SMART_TRACK_LINK]: [],
-    [DeviceType.SMART_DROP]: [
-    ],
+    [DeviceType.SMART_DROP]: [],
     [DeviceType.CAMERA_C35]: [
         CommandName.StationReboot,
         CommandName.StationTriggerAlarmSound,

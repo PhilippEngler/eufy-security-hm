@@ -3,7 +3,7 @@ import { Readable } from "stream";
 
 import { HTTPApi } from "./api";
 import { AlarmMode, AlarmTone, NotificationSwitchMode, DeviceType, FloodlightMotionTriggeredDistance, GuardMode, NotificationType, ParamType, PowerSource, PropertyName, StationProperties, TimeFormat, CommandName, StationCommands, StationGuardModeKeyPadProperty, StationCurrentModeKeyPadProperty, StationAutoEndAlarmProperty, StationSwitchModeWithAccessCodeProperty, StationTurnOffAlarmWithButtonProperty, PublicKeyType, MotionDetectionMode, VideoTypeStoreToNAS, HB3DetectionTypes, WalllightNotificationType, DailyLightingType, MotionActivationMode, BaseStationProperties, LightingActiveMode, SourceType, T8170DetectionTypes, IndoorS350NotificationTypes, SoloCameraDetectionTypes, MotionDetectionRangeType, ViewModeType, FloodlightT8425NotificationTypes, PresetPositionType, SmartLockNotification, IndoorS350DetectionTypes, EufyCamC35DetectionTypes } from "./types";
-import { FloodlightDetectionRangeT8425Property, FloodlightLightSettingsMotionT8425Property, SnoozeDetail, StationListResponse, StationSecuritySettings } from "./models";
+import { FloodlightDetectionRangeT8425Property, FloodlightLightSettingsMotionT8425Property, GuardModesInformationProperty, SnoozeDetail, StationListResponse, StationSecuritySettings } from "./models";
 import { ParameterHelper } from "./parameter";
 import { IndexedProperty, PropertyMetadataAny, PropertyValue, PropertyValues, RawValues, StationEvents, PropertyMetadataNumeric, PropertyMetadataBoolean, PropertyMetadataString, Schedule, PropertyMetadataObject } from "./interfaces";
 import { encodePasscode, getAdvancedLockTimezone, getBlocklist, getFloodLightT8425Notification, getHB3DetectionMode, getIndoorNotification, getIndoorS350DetectionMode, getT8110DetectionMode, getT8170DetectionMode, hexDate, hexTime, hexWeek, isGreaterEqualMinVersion, isNotificationSwitchMode, isPrioritySourceType, switchNotificationMode, switchSmartLockNotification } from "./utils";
@@ -12,7 +12,7 @@ import { P2PClientProtocol } from "../p2p/session";
 import { AlarmEvent, CalibrateGarageType, CommandType, DatabaseReturnCode, ErrorCode, ESLBleCommand, ESLCommand, FilterDetectType, FilterEventType, FilterStorageType, IndoorSoloSmartdropCommandType, LockV12P2PCommand, P2PConnectionType, PanTiltDirection, SmartLockCommand, SmartSafeAlarm911Event, SmartSafeCommandCode, SmartSafeShakeAlarmEvent, TFCardStatus, VideoCodec, WatermarkSetting1, WatermarkSetting2, WatermarkSetting3, WatermarkSetting4, WatermarkSetting5 } from "../p2p/types";
 import { Address, CmdCameraInfoResponse, CommandResult, ESLStationP2PThroughData, LockAdvancedOnOffRequestPayload, AdvancedLockSetParamsType, PropertyData, CustomData, CommandData, StorageInfoBodyHB3, AdvancedLockSetParamsTypeT8520 } from "../p2p/models";
 import { Device, DoorbellCamera, Lock, SmartSafe } from "./device";
-import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand, RGBColorToDecimal, getSmartLockP2PCommand } from "../p2p/utils";
+import { encodeLockPayload, encryptLockAESData, generateBasicLockAESKey, getLockVectorBytes, isPrivateIp, getSmartSafeP2PCommand, getLockV12P2PCommand, getLockP2PCommand, RGBColorToDecimal, getSmartLockP2PCommand, decodeBase64 } from "../p2p/utils";
 import { InvalidCommandValueError, InvalidPropertyValueError, NotSupportedError, RTSPPropertyNotEnabledError, WrongStationError, StationConnectTimeoutError, PinNotVerifiedError, ensureError, BaseError } from "../error";
 import { PushMessage } from "../push/models";
 import { CusPushEvent } from "../push/types";
@@ -232,6 +232,8 @@ export class Station extends TypedEmitter<StationEvents> {
             } /*else if (this.hasProperty(PropertyName.StationAlarmArmed)) { //TODO: Type !== HB3 or STATION
                 this.updateProperty(PropertyName.StationAlarmArmed, this.isAlarmArmable(newValue as AlarmMode));
             }*/
+        } else if (metadata.name === PropertyName.StationGuardModesSettings) {
+            this.updateProperty(PropertyName.StationGuardModesInformation, JSON.parse(decodeBase64(newValue.toString()).toString()));
         }
     }
 
@@ -788,6 +790,20 @@ export class Station extends TypedEmitter<StationEvents> {
         }
         const property = this.getPropertyMetadata(propertyData.name);
         validValue(property, mode);
+
+        if (this.hasProperty(PropertyName.StationGuardModesInformation) && (mode === GuardMode.CUSTOM1 || mode === GuardMode.CUSTOM2 || mode === GuardMode.CUSTOM3)) {
+            let found = false;
+            const customModes = this.getPropertyValue(PropertyName.StationGuardModesInformation) as GuardModesInformationProperty;
+            for (const customMode in customModes.modes) {
+                if (customModes.modes[customMode].mode === mode) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found === false) {
+                throw new NotSupportedError("The selected custom mode is not configured with the station", { context: { propertyName: propertyData.name, propertyValue: propertyData.value, station: this.getSerial()} });
+            }
+        }
 
         rootHTTPLogger.debug(`Station set guard mode - sending command`, { stationSN: this.getSerial(), mode: mode });
         if (((isGreaterEqualMinVersion("2.0.7.9", this.getSoftwareVersion()) && !Device.isIntegratedDeviceBySn(this.getSerial())) || Device.isSoloCameraBySn(this.getSerial())) || this.rawStation.device_type === DeviceType.HB3) {
